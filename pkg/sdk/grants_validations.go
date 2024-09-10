@@ -84,6 +84,7 @@ var validGrantToObjectTypes = []ObjectType{
 	ObjectTypeMaterializedView,
 	ObjectTypeModel,
 	ObjectTypeNetworkRule,
+	ObjectTypeNotebook,
 	ObjectTypePackagesPolicy,
 	ObjectTypePasswordPolicy,
 	ObjectTypePipe,
@@ -94,6 +95,7 @@ var validGrantToObjectTypes = []ObjectType{
 	ObjectTypeService,
 	ObjectTypeSessionPolicy,
 	ObjectTypeSequence,
+	ObjectTypeSnapshot,
 	ObjectTypeStage,
 	ObjectTypeStream,
 	ObjectTypeTable,
@@ -101,6 +103,7 @@ var validGrantToObjectTypes = []ObjectType{
 	ObjectTypeTask,
 	ObjectTypeView,
 	ObjectTypeStreamlit, // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2656
+	ObjectTypeDataset,   // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2807
 }
 
 // based on https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#restrictions-and-limitations

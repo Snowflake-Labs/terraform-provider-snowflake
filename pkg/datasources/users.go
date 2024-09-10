@@ -2,93 +2,87 @@ package datasources
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var usersSchema = map[string]*schema.Schema{
-	"pattern": {
-		Type:     schema.TypeString,
-		Required: true,
-		Description: "Users pattern for which to return metadata. Please refer to LIKE keyword from " +
-			"snowflake documentation : https://docs.snowflake.com/en/sql-reference/sql/show-users.html#parameters",
+	"with_describe": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: "Runs DESC USER for each user returned by SHOW USERS. The output of describe is saved to the description field. By default this value is set to true.",
+	},
+	"with_parameters": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: "Runs SHOW PARAMETERS FOR USER for each user returned by SHOW USERS. The output of describe is saved to the parameters field as a map. By default this value is set to true.",
+	},
+	"like": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).",
+	},
+	"starts_with": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Filters the output with **case-sensitive** characters indicating the beginning of the object name.",
+	},
+	"limit": {
+		Type:        schema.TypeList,
+		Optional:    true,
+		Description: "Limits the number of rows returned. If the `limit.from` is set, then the limit wll start from the first element matched by the expression. The expression is only used to match with the first element, later on the elements are not matched by the prefix, but you can enforce a certain pattern with `starts_with` or `like`.",
+		MaxItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"rows": {
+					Type:        schema.TypeInt,
+					Required:    true,
+					Description: "The maximum number of rows to return.",
+				},
+				"from": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Specifies a **case-sensitive** pattern that is used to match object name. After the first match, the limit on the number of rows will be applied.",
+				},
+			},
+		},
 	},
 	"users": {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "The users in the database",
+		Description: "Holds the aggregated output of all user details queries.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:     schema.TypeString,
-					Computed: true,
+				resources.ShowOutputAttributeName: {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "Holds the output of SHOW USERS.",
+					Elem: &schema.Resource{
+						Schema: schemas.ShowUserSchema,
+					},
 				},
-				"login_name": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+				resources.DescribeOutputAttributeName: {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "Holds the output of DESCRIBE USER.",
+					Elem: &schema.Resource{
+						Schema: schemas.UserDescribeSchema,
+					},
 				},
-				"comment": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"disabled": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Computed: true,
-				},
-				"default_warehouse": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"default_namespace": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"default_role": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"default_secondary_roles": {
-					Type:     schema.TypeSet,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					Optional: true,
-					Computed: true,
-				},
-				"has_rsa_public_key": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"email": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"display_name": {
-					Type:     schema.TypeString,
-					Computed: true,
-					Optional: true,
-				},
-				"first_name": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"last_name": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+				resources.ParametersAttributeName: {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "Holds the output of SHOW PARAMETERS FOR USER.",
+					Elem: &schema.Resource{
+						Schema: schemas.ShowUserParametersSchema,
+					},
 				},
 			},
 		},
@@ -97,57 +91,76 @@ var usersSchema = map[string]*schema.Schema{
 
 func Users() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadUsers,
-		Schema: usersSchema,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+		ReadContext: ReadUsers,
+		Schema:      usersSchema,
+		Description: "Datasource used to get details of filtered users. Filtering is aligned with the current possibilities for [SHOW USERS](https://docs.snowflake.com/en/sql-reference/sql/show-users) query. The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection. Important note is that when querying users you don't have permissions to, the querying options are limited. You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command cannot be called, so you have to set `with_describe = false`. Only `parameters` output is not affected by the lack of privileges.",
 	}
 }
 
-func ReadUsers(d *schema.ResourceData, meta interface{}) error {
+func ReadUsers(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+	var opts sdk.ShowUserOptions
 
-	userPattern := d.Get("pattern").(string)
-
-	account, err1 := client.ContextFunctions.CurrentAccount(ctx)
-	region, err2 := client.ContextFunctions.CurrentRegion(ctx)
-	if err1 != nil || err2 != nil {
-		log.Print("[DEBUG] unable to retrieve current account")
-		d.SetId("")
-		return nil
-	}
-
-	d.SetId(fmt.Sprintf("%s.%s", account, region))
-	extractedUsers, err := client.Users.Show(ctx, &sdk.ShowUserOptions{
-		Like: &sdk.Like{Pattern: sdk.String(userPattern)},
-	})
-	if err != nil {
-		log.Printf("[DEBUG] no users found in account (%s)", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	users := make([]map[string]any, len(extractedUsers))
-
-	for i, user := range extractedUsers {
-		users[i] = map[string]any{
-			"name":                    user.Name,
-			"login_name":              user.LoginName,
-			"comment":                 user.Comment,
-			"disabled":                user.Disabled,
-			"default_warehouse":       user.DefaultWarehouse,
-			"default_namespace":       user.DefaultNamespace,
-			"default_role":            user.DefaultRole,
-			"default_secondary_roles": strings.Split(helpers.ListContentToString(user.DefaultSecondaryRoles), ","),
-			"has_rsa_public_key":      user.HasRsaPublicKey,
-			"email":                   user.Email,
-			"display_name":            user.DisplayName,
-			"first_name":              user.FirstName,
-			"last_name":               user.LastName,
+	if likePattern, ok := d.GetOk("like"); ok {
+		opts.Like = &sdk.Like{
+			Pattern: sdk.String(likePattern.(string)),
 		}
 	}
 
-	return d.Set("users", users)
+	if startsWith, ok := d.GetOk("starts_with"); ok {
+		opts.StartsWith = sdk.String(startsWith.(string))
+	}
+
+	if limit, ok := d.GetOk("limit"); ok && len(limit.([]any)) == 1 {
+		limitMap := limit.([]any)[0].(map[string]any)
+
+		rows := limitMap["rows"].(int)
+		opts.Limit = &rows
+
+		if from, ok := limitMap["from"].(string); ok {
+			opts.From = &from
+		}
+	}
+
+	users, err := client.Users.Show(ctx, &opts)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId("users_read")
+
+	flattenedUsers := make([]map[string]any, len(users))
+
+	for i, user := range users {
+		user := user
+		var userDescription []map[string]any
+		if d.Get("with_describe").(bool) {
+			describeResult, err := client.Users.Describe(ctx, user.ID())
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			userDescription = schemas.UserDescriptionToSchema(*describeResult)
+		}
+
+		var userParameters []map[string]any
+		if d.Get("with_parameters").(bool) {
+			parameters, err := client.Users.ShowParameters(ctx, user.ID())
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			userParameters = []map[string]any{schemas.UserParametersToSchema(parameters)}
+		}
+
+		flattenedUsers[i] = map[string]any{
+			resources.ShowOutputAttributeName:     []map[string]any{schemas.UserToSchema(&user)},
+			resources.DescribeOutputAttributeName: userDescription,
+			resources.ParametersAttributeName:     userParameters,
+		}
+	}
+
+	err = d.Set("users", flattenedUsers)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }

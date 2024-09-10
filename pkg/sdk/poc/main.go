@@ -10,37 +10,40 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/example"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 )
 
 var definitionMapping = map[string]*generator.Interface{
-	"database_role_def.go":             example.DatabaseRole,
-	"network_policies_def.go":          sdk.NetworkPoliciesDef,
-	"session_policies_def.go":          sdk.SessionPoliciesDef,
-	"tasks_def.go":                     sdk.TasksDef,
-	"streams_def.go":                   sdk.StreamsDef,
-	"application_roles_def.go":         sdk.ApplicationRolesDef,
-	"views_def.go":                     sdk.ViewsDef,
-	"stages_def.go":                    sdk.StagesDef,
-	"functions_def.go":                 sdk.FunctionsDef,
-	"procedures_def.go":                sdk.ProceduresDef,
-	"event_tables_def.go":              sdk.EventTablesDef,
-	"application_packages_def.go":      sdk.ApplicationPackagesDef,
-	"storage_integration_def.go":       sdk.StorageIntegrationDef,
-	"managed_accounts_def.go":          sdk.ManagedAccountsDef,
-	"row_access_policies_def.go":       sdk.RowAccessPoliciesDef,
-	"applications_def.go":              sdk.ApplicationsDef,
-	"sequences_def.go":                 sdk.SequencesDef,
-	"materialized_views_def.go":        sdk.MaterializedViewsDef,
-	"api_integrations_def.go":          sdk.ApiIntegrationsDef,
-	"notification_integrations_def.go": sdk.NotificationIntegrationsDef,
-	"external_functions_def.go":        sdk.ExternalFunctionsDef,
-	"streamlits_def.go":                sdk.StreamlitsDef,
-	"network_rule_def.go":              sdk.NetworkRuleDef,
-	"security_integrations_def.go":     sdk.SecurityIntegrationsDef,
-	"cortex_search_services_def.go":    sdk.CortexSearchServiceDef,
+	"database_role_def.go":                   example.DatabaseRole,
+	"network_policies_def.go":                sdk.NetworkPoliciesDef,
+	"session_policies_def.go":                sdk.SessionPoliciesDef,
+	"tasks_def.go":                           sdk.TasksDef,
+	"streams_def.go":                         sdk.StreamsDef,
+	"application_roles_def.go":               sdk.ApplicationRolesDef,
+	"views_def.go":                           sdk.ViewsDef,
+	"stages_def.go":                          sdk.StagesDef,
+	"functions_def.go":                       sdk.FunctionsDef,
+	"procedures_def.go":                      sdk.ProceduresDef,
+	"event_tables_def.go":                    sdk.EventTablesDef,
+	"application_packages_def.go":            sdk.ApplicationPackagesDef,
+	"storage_integration_def.go":             sdk.StorageIntegrationDef,
+	"managed_accounts_def.go":                sdk.ManagedAccountsDef,
+	"row_access_policies_def.go":             sdk.RowAccessPoliciesDef,
+	"applications_def.go":                    sdk.ApplicationsDef,
+	"sequences_def.go":                       sdk.SequencesDef,
+	"materialized_views_def.go":              sdk.MaterializedViewsDef,
+	"api_integrations_def.go":                sdk.ApiIntegrationsDef,
+	"notification_integrations_def.go":       sdk.NotificationIntegrationsDef,
+	"external_functions_def.go":              sdk.ExternalFunctionsDef,
+	"streamlits_def.go":                      sdk.StreamlitsDef,
+	"network_rule_def.go":                    sdk.NetworkRuleDef,
+	"security_integrations_def.go":           sdk.SecurityIntegrationsDef,
+	"cortex_search_services_def.go":          sdk.CortexSearchServiceDef,
+	"data_metric_function_references_def.go": sdk.DataMetricFunctionReferenceDef,
+	"external_volumes_def.go":                sdk.ExternalVolumesDef,
 	"authentication_policies_def.go":   sdk.AuthenticationPoliciesDef,
 }
 
@@ -104,7 +107,9 @@ func runAllTemplatesAndSave(definition *generator.Interface, file string) {
 func runTemplateAndSave(def *generator.Interface, genFunc func(io.Writer, *generator.Interface), fileName string) {
 	buffer := bytes.Buffer{}
 	genFunc(&buffer, def)
-	generator.WriteCodeToFile(&buffer, fileName)
+	if err := genhelpers.WriteCodeToFile(&buffer, fileName); err != nil {
+		log.Panicln(err)
+	}
 }
 
 func filenameFor(prefix string, part string) string {

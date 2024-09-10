@@ -8,9 +8,11 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -288,6 +290,7 @@ var fileFormatSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the file format.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 type fileFormatID struct {
@@ -314,6 +317,10 @@ func FileFormat() *schema.Resource {
 		Read:   ReadFileFormat,
 		Update: UpdateFileFormat,
 		Delete: DeleteFileFormat,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(fileFormatSchema, FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: fileFormatSchema,
 		Importer: &schema.ResourceImporter{
@@ -542,6 +549,10 @@ func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
 	fileFormat, err := client.FileFormats.ShowByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("cannot read file format: %w", err)
+	}
+
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
 	}
 
 	if err := d.Set("name", fileFormat.Name.Name()); err != nil {

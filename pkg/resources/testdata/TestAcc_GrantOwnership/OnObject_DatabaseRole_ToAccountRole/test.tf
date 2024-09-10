@@ -15,6 +15,6 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_account_role.test.name
   on {
     object_type = "DATABASE ROLE"
-    object_name = "\"${snowflake_database_role.test.database}\".\"${snowflake_database_role.test.name}\""
+    object_name = snowflake_database_role.test.fully_qualified_name
   }
 }

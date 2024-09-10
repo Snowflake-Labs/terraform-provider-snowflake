@@ -35,14 +35,14 @@ func (opts *alterDatabaseRoleOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.Rename, opts.Set, opts.Unset) {
-		errs = append(errs, errExactlyOneOf("alterDatabaseRoleOptions", "Rename", "Set", "Unset"))
+	if !exactlyOneValueSet(opts.Rename, opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags) {
+		errs = append(errs, errExactlyOneOf("alterDatabaseRoleOptions", "Rename", "Set", "Unset", "SetTags", "UnsetTags"))
 	}
-	if rename := opts.Rename; valueSet(rename) {
-		if !ValidObjectIdentifier(rename.Name) {
-			errs = append(errs, ErrInvalidObjectIdentifier)
+	if opts.Rename != nil {
+		if !ValidObjectIdentifier(opts.Rename) {
+			errs = append(errs, errInvalidIdentifier("alterDatabaseRoleOptions", "Rename"))
 		}
-		if opts.name.DatabaseName() != rename.Name.DatabaseName() {
+		if opts.name.DatabaseName() != opts.Rename.DatabaseName() {
 			errs = append(errs, ErrDifferentDatabase)
 		}
 	}

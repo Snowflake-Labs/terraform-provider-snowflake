@@ -25,6 +25,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		Description:      "The fully qualified name of the database role to which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"privileges": {
 		Type:        schema.TypeSet,
@@ -74,6 +75,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		Description:      "The fully qualified name of the database on which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{
 			"on_database",
 			"on_schema",
@@ -99,6 +101,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 					ForceNew:         true,
 					Description:      "The fully qualified name of the schema.",
 					ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+					DiffSuppressFunc: suppressIdentifierQuoting,
 					ExactlyOneOf: []string{
 						"on_schema.0.schema_name",
 						"on_schema.0.all_schemas_in_database",
@@ -111,6 +114,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 					ForceNew:         true,
 					Description:      "The fully qualified name of the database.",
 					ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+					DiffSuppressFunc: suppressIdentifierQuoting,
 					ExactlyOneOf: []string{
 						"on_schema.0.schema_name",
 						"on_schema.0.all_schemas_in_database",
@@ -123,6 +127,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 					ForceNew:         true,
 					Description:      "The fully qualified name of the database.",
 					ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+					DiffSuppressFunc: suppressIdentifierQuoting,
 					ExactlyOneOf: []string{
 						"on_schema.0.schema_name",
 						"on_schema.0.all_schemas_in_database",
@@ -172,7 +177,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.all",
 						"on_schema_object.0.future",
 					},
-					ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
+					DiffSuppressFunc: suppressIdentifierQuoting,
 				},
 				"all": {
 					Type:        schema.TypeList,
@@ -230,6 +235,7 @@ func getGrantPrivilegesOnDatabaseRoleBulkOperationSchema(validGrantToObjectTypes
 			ForceNew:         true,
 			Description:      "The fully qualified name of the database.",
 			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
 		"in_schema": {
 			Type:             schema.TypeString,
@@ -237,6 +243,7 @@ func getGrantPrivilegesOnDatabaseRoleBulkOperationSchema(validGrantToObjectTypes
 			ForceNew:         true,
 			Description:      "The fully qualified name of the schema.",
 			ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
 	}
 }
@@ -342,11 +349,20 @@ func ImportGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 func CreateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	id := createGrantPrivilegesToDatabaseRoleIdFromSchema(d)
-	err := client.Grants.GrantPrivilegesToDatabaseRole(
+	id, err := createGrantPrivilegesToDatabaseRoleIdFromSchema(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	grantOn, err := getDatabaseRoleGrantOn(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = client.Grants.GrantPrivilegesToDatabaseRole(
 		ctx,
 		getDatabaseRolePrivilegesFromSchema(d),
-		getDatabaseRoleGrantOn(d),
+		grantOn,
 		sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(d.Get("database_role_name").(string)),
 		&sdk.GrantPrivilegesToDatabaseRoleOptions{
 			WithGrantOption: sdk.Bool(d.Get("with_grant_option").(bool)),
@@ -389,14 +405,17 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		_, allPrivileges := d.GetChange("all_privileges")
 
 		if !allPrivileges.(bool) {
+			grantOn, err := getDatabaseRoleGrantOn(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			err = client.Grants.RevokePrivilegesFromDatabaseRole(ctx, &sdk.DatabaseRoleGrantPrivileges{
 				AllPrivileges: sdk.Bool(true),
 			},
-				getDatabaseRoleGrantOn(d),
+				grantOn,
 				id.DatabaseRoleName,
 				new(sdk.RevokePrivilegesFromDatabaseRoleOptions),
 			)
-
 			if err != nil {
 				return diag.Diagnostics{
 					diag.Diagnostic{
@@ -441,7 +460,10 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 				}
 			}
 
-			grantOn := getDatabaseRoleGrantOn(d)
+			grantOn, err := getDatabaseRoleGrantOn(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 
 			if len(privilegesToAdd) > 0 {
 				privilegesToGrant := getDatabaseRolePrivileges(
@@ -512,14 +534,17 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		_, allPrivileges := d.GetChange("all_privileges")
 
 		if allPrivileges.(bool) {
+			grantOn, err := getDatabaseRoleGrantOn(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, &sdk.DatabaseRoleGrantPrivileges{
 				AllPrivileges: sdk.Bool(true),
 			},
-				getDatabaseRoleGrantOn(d),
+				grantOn,
 				id.DatabaseRoleName,
 				new(sdk.GrantPrivilegesToDatabaseRoleOptions),
 			)
-
 			if err != nil {
 				return diag.Diagnostics{
 					diag.Diagnostic{
@@ -539,10 +564,14 @@ func UpdateGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 	}
 
 	if id.AlwaysApply {
-		err := client.Grants.GrantPrivilegesToDatabaseRole(
+		grantOn, err := getDatabaseRoleGrantOn(d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = client.Grants.GrantPrivilegesToDatabaseRole(
 			ctx,
 			getDatabaseRolePrivilegesFromSchema(d),
-			getDatabaseRoleGrantOn(d),
+			grantOn,
 			id.DatabaseRoleName,
 			&sdk.GrantPrivilegesToDatabaseRoleOptions{
 				WithGrantOption: &id.WithGrantOption,
@@ -577,10 +606,14 @@ func DeleteGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		}
 	}
 
+	grantOn, err := getDatabaseRoleGrantOn(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	err = client.Grants.RevokePrivilegesFromDatabaseRole(
 		ctx,
 		getDatabaseRolePrivilegesFromSchema(d),
-		getDatabaseRoleGrantOn(d),
+		grantOn,
 		id.DatabaseRoleName,
 		&sdk.RevokePrivilegesFromDatabaseRoleOptions{},
 	)
@@ -840,7 +873,7 @@ func getDatabaseRolePrivileges(allPrivileges bool, privileges []string, onDataba
 	return databaseRoleGrantPrivileges
 }
 
-func getDatabaseRoleGrantOn(d *schema.ResourceData) *sdk.DatabaseRoleGrantOn {
+func getDatabaseRoleGrantOn(d *schema.ResourceData) (*sdk.DatabaseRoleGrantOn, error) {
 	onDatabase, onDatabaseOk := d.GetOk("on_database")
 	onSchemaBlock, onSchemaOk := d.GetOk("on_schema")
 	onSchemaObjectBlock, onSchemaObjectOk := d.GetOk("on_schema_object")
@@ -848,7 +881,11 @@ func getDatabaseRoleGrantOn(d *schema.ResourceData) *sdk.DatabaseRoleGrantOn {
 
 	switch {
 	case onDatabaseOk:
-		on.Database = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(onDatabase.(string)))
+		databaseId, err := sdk.ParseAccountObjectIdentifier(onDatabase.(string))
+		if err != nil {
+			return nil, err
+		}
+		on.Database = sdk.Pointer(databaseId)
 	case onSchemaOk:
 		onSchema := onSchemaBlock.([]any)[0].(map[string]any)
 
@@ -865,11 +902,23 @@ func getDatabaseRoleGrantOn(d *schema.ResourceData) *sdk.DatabaseRoleGrantOn {
 
 		switch {
 		case schemaNameOk:
-			grantOnSchema.Schema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(schemaName))
+			schemaId, err := sdk.ParseDatabaseObjectIdentifier(schemaName)
+			if err != nil {
+				return nil, err
+			}
+			grantOnSchema.Schema = sdk.Pointer(schemaId)
 		case allSchemasInDatabaseOk:
-			grantOnSchema.AllSchemasInDatabase = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(allSchemasInDatabase))
+			databaseId, err := sdk.ParseAccountObjectIdentifier(allSchemasInDatabase)
+			if err != nil {
+				return nil, err
+			}
+			grantOnSchema.AllSchemasInDatabase = sdk.Pointer(databaseId)
 		case futureSchemasInDatabaseOk:
-			grantOnSchema.FutureSchemasInDatabase = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(futureSchemasInDatabase))
+			databaseId, err := sdk.ParseAccountObjectIdentifier(futureSchemasInDatabase)
+			if err != nil {
+				return nil, err
+			}
+			grantOnSchema.FutureSchemasInDatabase = sdk.Pointer(databaseId)
 		}
 
 		on.Schema = grantOnSchema
@@ -892,25 +941,52 @@ func getDatabaseRoleGrantOn(d *schema.ResourceData) *sdk.DatabaseRoleGrantOn {
 
 		switch {
 		case objectTypeOk && objectNameOk:
+			objectType := sdk.ObjectType(objectType)
+			var id sdk.ObjectIdentifier
+			var err error
+			// TODO(SNOW-1569535): use a mapper from object type to parsing function
+			if objectType.IsWithArguments() {
+				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				id, err = sdk.ParseSchemaObjectIdentifier(objectName)
+				if err != nil {
+					return nil, err
+				}
+			}
 			grantOnSchemaObject.SchemaObject = &sdk.Object{
-				ObjectType: sdk.ObjectType(objectType),
-				Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(objectName),
+				ObjectType: objectType,
+				Name:       id,
 			}
 		case allOk:
-			grantOnSchemaObject.All = getGrantOnSchemaObjectIn(all[0].(map[string]any))
+			grantOnSchemaObjectIn, err := getGrantOnSchemaObjectIn(all[0].(map[string]any))
+			if err != nil {
+				return nil, err
+			}
+			grantOnSchemaObject.All = grantOnSchemaObjectIn
 		case futureOk:
-			grantOnSchemaObject.Future = getGrantOnSchemaObjectIn(future[0].(map[string]any))
+			grantOnSchemaObjectIn, err := getGrantOnSchemaObjectIn(future[0].(map[string]any))
+			if err != nil {
+				return nil, err
+			}
+			grantOnSchemaObject.Future = grantOnSchemaObjectIn
 		}
 
 		on.SchemaObject = grantOnSchemaObject
 	}
 
-	return on
+	return on, nil
 }
 
-func createGrantPrivilegesToDatabaseRoleIdFromSchema(d *schema.ResourceData) *GrantPrivilegesToDatabaseRoleId {
-	id := new(GrantPrivilegesToDatabaseRoleId)
-	id.DatabaseRoleName = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(d.Get("database_role_name").(string))
+func createGrantPrivilegesToDatabaseRoleIdFromSchema(d *schema.ResourceData) (id *GrantPrivilegesToDatabaseRoleId, err error) {
+	id = new(GrantPrivilegesToDatabaseRoleId)
+	roleId, err := sdk.ParseDatabaseObjectIdentifier(d.Get("database_role_name").(string))
+	if err != nil {
+		return nil, err
+	}
+	id.DatabaseRoleName = roleId
 	id.AllPrivileges = d.Get("all_privileges").(bool)
 	if p, ok := d.GetOk("privileges"); ok {
 		id.Privileges = expandStringList(p.(*schema.Set).List())
@@ -918,7 +994,10 @@ func createGrantPrivilegesToDatabaseRoleIdFromSchema(d *schema.ResourceData) *Gr
 	id.WithGrantOption = d.Get("with_grant_option").(bool)
 	id.AlwaysApply = d.Get("always_apply").(bool)
 
-	on := getDatabaseRoleGrantOn(d)
+	on, err := getDatabaseRoleGrantOn(d)
+	if err != nil {
+		return nil, err
+	}
 	switch {
 	case on.Database != nil:
 		id.Kind = OnDatabaseDatabaseRoleGrantKind
@@ -961,5 +1040,5 @@ func createGrantPrivilegesToDatabaseRoleIdFromSchema(d *schema.ResourceData) *Gr
 		id.Data = onSchemaObjectGrantData
 	}
 
-	return id
+	return id, nil
 }

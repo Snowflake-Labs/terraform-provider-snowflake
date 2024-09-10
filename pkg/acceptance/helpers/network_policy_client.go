@@ -42,12 +42,20 @@ func (c *NetworkPolicyClient) CreateNetworkPolicyWithRequest(t *testing.T, reque
 	return networkPolicy, c.DropNetworkPolicyFunc(t, request.GetName())
 }
 
+func (c *NetworkPolicyClient) Update(t *testing.T, request *sdk.AlterNetworkPolicyRequest) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, request)
+	require.NoError(t, err)
+}
+
 func (c *NetworkPolicyClient) DropNetworkPolicyFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 
 	return func() {
-		err := c.client().Drop(ctx, sdk.NewDropNetworkPolicyRequest(id).WithIfExists(sdk.Bool(true)))
+		err := c.client().Drop(ctx, sdk.NewDropNetworkPolicyRequest(id).WithIfExists(true))
 		require.NoError(t, err)
 	}
 }

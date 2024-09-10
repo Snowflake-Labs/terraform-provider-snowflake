@@ -38,13 +38,15 @@ func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
 		ReadContext:   ReadContextApiAuthenticationIntegrationWithJwtBearer(true),
 		UpdateContext: UpdateContextApiAuthenticationIntegrationWithJwtBearer,
 		DeleteContext: DeleteContextApiAuthenticationIntegrationWithJwtBearer,
-		Schema:        apiAuthJwtBearerSchema,
+		Description:   "Resource used to manage api authentication security integration objects with jwt bearer. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
+
+		Schema: apiAuthJwtBearerSchema,
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "comment"),
-			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
+			ComputedIfAnyAttributeChanged(apiAuthJwtBearerSchema, ShowOutputAttributeName, "enabled", "comment"),
+			ComputedIfAnyAttributeChanged(apiAuthJwtBearerSchema, DescribeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
 				"oauth_client_id", "oauth_client_auth_method", "oauth_authorization_endpoint",
 				"oauth_token_endpoint", "oauth_assertion_issuer"),
 		),
@@ -57,7 +59,10 @@ func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
 func ImportApiAuthenticationWithJwtBearer(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting api auth integration with jwt bearer import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -71,7 +76,7 @@ func ImportApiAuthenticationWithJwtBearer(ctx context.Context, d *schema.Resourc
 	if err := handleApiAuthImport(d, integration, properties); err != nil {
 		return nil, err
 	}
-	oauthAuthorizationEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+	oauthAuthorizationEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_AUTHORIZATION_ENDPOINT"
 	})
 	if err == nil {
@@ -79,7 +84,7 @@ func ImportApiAuthenticationWithJwtBearer(ctx context.Context, d *schema.Resourc
 			return nil, err
 		}
 	}
-	oauthAssertionIssuer, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ASSERTION_ISSUER" })
+	oauthAssertionIssuer, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ASSERTION_ISSUER" })
 	if err == nil {
 		if err = d.Set("oauth_assertion_issuer", oauthAssertionIssuer.Value); err != nil {
 			return nil, err
@@ -95,7 +100,12 @@ func CreateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context,
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id := sdk.NewAccountObjectIdentifier(commonCreate.name)
+
+	id, err := sdk.ParseAccountObjectIdentifier(commonCreate.name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	req := sdk.NewCreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id, commonCreate.enabled, d.Get("oauth_assertion_issuer").(string), commonCreate.oauthClientId, commonCreate.oauthClientSecret)
 	req.WithOauthGrantJwtBearer(true)
 	req.Comment = commonCreate.comment
@@ -112,14 +122,17 @@ func CreateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context,
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 	return ReadContextApiAuthenticationIntegrationWithJwtBearer(false)(ctx, d, meta)
 }
 
 func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -143,24 +156,24 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
-		oauthAuthorizationEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthAuthorizationEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_AUTHORIZATION_ENDPOINT"
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		oauthAssertionIssuer, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ASSERTION_ISSUER" })
+		oauthAssertionIssuer, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ASSERTION_ISSUER" })
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
+		if err := handleApiAuthRead(d, id, integration, properties, withExternalChangesMarking, []describeMapping{
 			{"oauth_authorization_endpoint", "oauth_authorization_endpoint", oauthAuthorizationEndpoint.Value, oauthAuthorizationEndpoint.Value, nil},
 			{"oauth_assertion_issuer", "oauth_assertion_issuer", oauthAssertionIssuer.Value, oauthAssertionIssuer.Value, nil},
 		}); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+		if err := setStateToValuesFromConfig(d, apiAuthJwtBearerSchema, []string{
 			"oauth_authorization_endpoint",
 			"oauth_assertion_issuer",
 		}); err != nil {
@@ -172,7 +185,10 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 
 func UpdateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	commonSet, commonUnset, err := handleApiAuthUpdate(d)
 	if err != nil {
 		return diag.FromErr(err)
@@ -207,10 +223,13 @@ func UpdateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context,
 }
 
 func DeleteContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

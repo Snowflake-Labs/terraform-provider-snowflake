@@ -3,14 +3,24 @@ package sdk
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 )
 
 // DataType is based on https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.
 type DataType string
 
+var allowedVectorInnerTypes = []DataType{
+	DataTypeInt,
+	DataTypeFloat,
+}
+
 const (
 	DataTypeNumber       DataType = "NUMBER"
+	DataTypeInt          DataType = "INT"
 	DataTypeFloat        DataType = "FLOAT"
 	DataTypeVARCHAR      DataType = "VARCHAR"
 	DataTypeString       DataType = "STRING"
@@ -27,6 +37,25 @@ const (
 	DataTypeArray        DataType = "ARRAY"
 	DataTypeGeography    DataType = "GEOGRAPHY"
 	DataTypeGeometry     DataType = "GEOMETRY"
+)
+
+var (
+	DataTypeNumberSynonyms       = []string{"NUMBER", "DECIMAL", "NUMERIC", "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
+	DataTypeFloatSynonyms        = []string{"FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "REAL"}
+	DataTypeVarcharSynonyms      = []string{"VARCHAR", "CHAR", "CHARACTER", "STRING", "TEXT"}
+	DataTypeBinarySynonyms       = []string{"BINARY", "VARBINARY"}
+	DataTypeBooleanSynonyms      = []string{"BOOLEAN", "BOOL"}
+	DataTypeTimestampLTZSynonyms = []string{"TIMESTAMP_LTZ"}
+	DataTypeTimestampTZSynonyms  = []string{"TIMESTAMP_TZ"}
+	DataTypeTimestampNTZSynonyms = []string{"DATETIME", "TIMESTAMP", "TIMESTAMP_NTZ"}
+	DataTypeTimeSynonyms         = []string{"TIME"}
+	DataTypeVectorSynonyms       = []string{"VECTOR"}
+)
+
+const (
+	DefaultNumberPrecision = 38
+	DefaultNumberScale     = 0
+	DefaultVarcharLength   = 16777216
 )
 
 func ToDataType(s string) (DataType, error) {
@@ -47,48 +76,36 @@ func ToDataType(s string) (DataType, error) {
 		return DataTypeGeometry, nil
 	}
 
-	numberSynonyms := []string{"NUMBER", "DECIMAL", "NUMERIC", "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
-	if slices.ContainsFunc(numberSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+	if slices.ContainsFunc(DataTypeNumberSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeNumber, nil
 	}
-
-	floatSynonyms := []string{"FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "REAL"}
-	if slices.ContainsFunc(floatSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+	if slices.ContainsFunc(DataTypeFloatSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeFloat, nil
 	}
-	varcharSynonyms := []string{"VARCHAR", "CHAR", "CHARACTER", "STRING", "TEXT"}
-	if slices.ContainsFunc(varcharSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+	if slices.ContainsFunc(DataTypeVarcharSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeVARCHAR, nil
 	}
-	binarySynonyms := []string{"BINARY", "VARBINARY"}
-	if slices.ContainsFunc(binarySynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+	if slices.ContainsFunc(DataTypeBinarySynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeBinary, nil
 	}
-	booleanSynonyms := []string{"BOOLEAN", "BOOL"}
-	if slices.Contains(booleanSynonyms, dType) {
+	if slices.Contains(DataTypeBooleanSynonyms, dType) {
 		return DataTypeBoolean, nil
 	}
-
-	timestampLTZSynonyms := []string{"TIMESTAMP_LTZ"}
-	if slices.ContainsFunc(timestampLTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+	if slices.ContainsFunc(DataTypeTimestampLTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeTimestampLTZ, nil
 	}
-
-	timestampTZSynonyms := []string{"TIMESTAMP_TZ"}
-	if slices.ContainsFunc(timestampTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+	if slices.ContainsFunc(DataTypeTimestampTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeTimestampTZ, nil
 	}
-
-	timestampNTZSynonyms := []string{"DATETIME", "TIMESTAMP", "TIMESTAMP_NTZ"}
-	if slices.ContainsFunc(timestampNTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+	if slices.ContainsFunc(DataTypeTimestampNTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeTimestampNTZ, nil
 	}
-
-	timeSynonyms := []string{"TIME"}
-	if slices.ContainsFunc(timeSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
+	if slices.ContainsFunc(DataTypeTimeSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
 		return DataTypeTime, nil
 	}
-
+	if slices.ContainsFunc(DataTypeVectorSynonyms, func(e string) bool { return strings.HasPrefix(dType, e) }) {
+		return DataType(dType), nil
+	}
 	return "", fmt.Errorf("invalid data type: %s", s)
 }
 
@@ -100,4 +117,60 @@ func IsStringType(_type string) bool {
 		strings.HasPrefix(t, "TEXT") ||
 		strings.HasPrefix(t, "NVARCHAR") ||
 		strings.HasPrefix(t, "NCHAR")
+}
+
+// ParseNumberDataTypeRaw extracts precision and scale from the raw number data type input.
+// It returns defaults if it can't parse arguments, data type is different, or no arguments were provided.
+// TODO [SNOW-1348103 or SNOW-1348106]: visit with functions and procedures rework
+func ParseNumberDataTypeRaw(rawDataType string) (int, int) {
+	r := util.TrimAllPrefixes(strings.TrimSpace(strings.ToUpper(rawDataType)), DataTypeNumberSynonyms...)
+	r = strings.TrimSpace(r)
+	if strings.HasPrefix(r, "(") && strings.HasSuffix(r, ")") {
+		parts := strings.Split(r[1:len(r)-1], ",")
+		switch l := len(parts); l {
+		case 1:
+			precision, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+			if err == nil {
+				return precision, DefaultNumberScale
+			} else {
+				logging.DebugLogger.Printf(`[DEBUG] Could not parse number precision "%s", err: %v`, parts[0], err)
+			}
+		case 2:
+			precision, err1 := strconv.Atoi(strings.TrimSpace(parts[0]))
+			scale, err2 := strconv.Atoi(strings.TrimSpace(parts[1]))
+			if err1 == nil && err2 == nil {
+				return precision, scale
+			} else {
+				logging.DebugLogger.Printf(`[DEBUG] Could not parse number precision "%s" or scale "%s", errs: %v, %v`, parts[0], parts[1], err1, err2)
+			}
+		default:
+			logging.DebugLogger.Printf("[DEBUG] Unexpected length of number arguments")
+		}
+	}
+	logging.DebugLogger.Printf("[DEBUG] Returning default number precision and scale")
+	return DefaultNumberPrecision, DefaultNumberScale
+}
+
+// ParseVarcharDataTypeRaw extracts length from the raw text data type input.
+// It returns default if it can't parse arguments, data type is different, or no length argument was provided.
+// TODO [SNOW-1348103 or SNOW-1348106]: visit with functions and procedures rework
+func ParseVarcharDataTypeRaw(rawDataType string) int {
+	r := util.TrimAllPrefixes(strings.TrimSpace(strings.ToUpper(rawDataType)), DataTypeVarcharSynonyms...)
+	r = strings.TrimSpace(r)
+	if strings.HasPrefix(r, "(") && strings.HasSuffix(r, ")") {
+		parts := strings.Split(r[1:len(r)-1], ",")
+		switch l := len(parts); l {
+		case 1:
+			length, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+			if err == nil {
+				return length
+			} else {
+				logging.DebugLogger.Printf(`[DEBUG] Could not parse varchar length "%s", err: %v`, parts[0], err)
+			}
+		default:
+			logging.DebugLogger.Printf("[DEBUG] Unexpected length of varchar arguments")
+		}
+	}
+	logging.DebugLogger.Printf("[DEBUG] Returning default varchar length")
+	return DefaultVarcharLength
 }

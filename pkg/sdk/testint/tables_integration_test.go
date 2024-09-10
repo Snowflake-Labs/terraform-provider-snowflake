@@ -10,9 +10,9 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,8 +54,8 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, id, table.ID())
 		assert.NotEmpty(t, table.CreatedOn)
 		assert.Equal(t, id.Name(), table.Name)
-		assert.Equal(t, testDb(t).Name, table.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, table.SchemaName)
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), table.DatabaseName)
+		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), table.SchemaName)
 		assert.Equal(t, "TABLE", table.Kind)
 		assert.Equal(t, 0, table.Rows)
 		assert.Equal(t, "ACCOUNTADMIN", table.Owner)
@@ -67,8 +67,8 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, id, table.ID())
 		assert.NotEmpty(t, table.CreatedOn)
 		assert.Equal(t, id.Name(), table.Name)
-		assert.Equal(t, testDb(t).Name, table.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, table.SchemaName)
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), table.DatabaseName)
+		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), table.SchemaName)
 		assert.Equal(t, "TABLE", table.Kind)
 		assert.Empty(t, table.Rows)
 		assert.Empty(t, table.Owner)
@@ -525,7 +525,7 @@ func TestInt_Table(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, 2, len(tableDetails))
-		// TODO [SNOW-999049]: make nicer during the identifiers rework
+		// TODO [SNOW-1348114]: make nicer during the table rework
 		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*tableDetails[0].PolicyName).FullyQualifiedName())
 
 		alterRequest := sdk.NewAlterTableRequest(id).
@@ -917,9 +917,9 @@ func TestInt_Table(t *testing.T) {
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest())
 		require.NoError(t, err)
 
-		t1, err := collections.FindOne(tables, func(t sdk.Table) bool { return t.ID().FullyQualifiedName() == table.ID().FullyQualifiedName() })
+		t1, err := collections.FindFirst(tables, func(t sdk.Table) bool { return t.ID().FullyQualifiedName() == table.ID().FullyQualifiedName() })
 		require.NoError(t, err)
-		t2, err := collections.FindOne(tables, func(t sdk.Table) bool { return t.ID().FullyQualifiedName() == table2.ID().FullyQualifiedName() })
+		t2, err := collections.FindFirst(tables, func(t sdk.Table) bool { return t.ID().FullyQualifiedName() == table2.ID().FullyQualifiedName() })
 		require.NoError(t, err)
 
 		assertTable(t, t1, table.ID())

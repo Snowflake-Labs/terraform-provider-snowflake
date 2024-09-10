@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
@@ -17,7 +18,7 @@ import (
 )
 
 func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -28,16 +29,18 @@ func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Stage),
 		Steps: []resource.TestStep{
 			{
-				Config: stageIntegrationConfig(name, "si1", "s3://foo/", acc.TestDatabaseName, acc.TestSchemaName),
+				Config: stageIntegrationConfig(id.Name(), "si1", "s3://foo/", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stage.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://foo/"),
 				),
 			},
 			{
-				Config: stageIntegrationConfig(name, "changed", "s3://changed/", acc.TestDatabaseName, acc.TestSchemaName),
+				Config: stageIntegrationConfig(id.Name(), "changed", "s3://changed/", acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stage.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://changed/"),
 				),
 			},
@@ -53,6 +56,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 	databaseName := acc.TestClient().Ids.Alpha()
 	schemaName := acc.TestClient().Ids.Alpha()
 	name := acc.TestClient().Ids.Alpha()
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 	url := "s3://foo/"
 	comment := random.Comment()
 	initialStorageIntegration := ""
@@ -119,6 +123,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "storage_integration", changedStorageIntegration.Name()),
 					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "encryption", changedEncryption),
@@ -138,6 +143,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "storage_integration", changedStorageIntegration.Name()),
 					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "encryption", changedEncryption),
@@ -162,6 +168,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "storage_integration", initialStorageIntegration),
 					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
 					resource.TestCheckResourceAttr(resourceName, "encryption", encryption),
@@ -196,4 +203,55 @@ resource "snowflake_stage" "test" {
 	schema = "%[5]s"
 }
 `, name, siNameSuffix, url, databaseName, schemaName)
+}
+
+func TestAcc_Stage_Issue2972(t *testing.T) {
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(stageId.SchemaId())
+	resourceName := "snowflake_stage.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Stage),
+		Steps: []resource.TestStep{
+			{
+				Config: stageIssue2972Config(stageId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database", stageId.DatabaseName()),
+					resource.TestCheckResourceAttr(resourceName, "schema", stageId.SchemaName()),
+					resource.TestCheckResourceAttr(resourceName, "name", stageId.Name()),
+				),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().Stage.Rename(t, stageId, newId)
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Config: stageIssue2972Config(stageId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "database", stageId.DatabaseName()),
+					resource.TestCheckResourceAttr(resourceName, "schema", stageId.SchemaName()),
+					resource.TestCheckResourceAttr(resourceName, "name", stageId.Name()),
+				),
+			},
+		},
+	})
+}
+
+func stageIssue2972Config(stageId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_stage" "test" {
+	name = "%[1]s"
+	database = "%[2]s"
+	schema = "%[3]s"
+}
+`, stageId.Name(), stageId.DatabaseName(), stageId.SchemaName())
 }

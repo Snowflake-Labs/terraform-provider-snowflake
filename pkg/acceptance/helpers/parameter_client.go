@@ -58,6 +58,28 @@ func (c *ParameterClient) ShowWarehouseParameters(t *testing.T, id sdk.AccountOb
 	return params
 }
 
+func (c *ParameterClient) ShowSchemaParameters(t *testing.T, id sdk.DatabaseObjectIdentifier) []*sdk.Parameter {
+	t.Helper()
+	params, err := c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Schema: id,
+		},
+	})
+	require.NoError(t, err)
+	return params
+}
+
+func (c *ParameterClient) ShowUserParameters(t *testing.T, id sdk.AccountObjectIdentifier) []*sdk.Parameter {
+	t.Helper()
+	params, err := c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			User: id,
+		},
+	})
+	require.NoError(t, err)
+	return params
+}
+
 func (c *ParameterClient) UpdateAccountParameterTemporarily(t *testing.T, parameter sdk.AccountParameter, newValue string) func() {
 	t.Helper()
 	ctx := context.Background()
@@ -98,9 +120,9 @@ func (c *ParameterClient) UnsetAccountParameter(t *testing.T, parameter sdk.Acco
 	require.NoError(t, err)
 }
 
-func FindParameter(t *testing.T, parameters []*sdk.Parameter, parameter sdk.AccountParameter) *sdk.Parameter {
+func FindParameter[T ~string](t *testing.T, parameters []*sdk.Parameter, parameter T) *sdk.Parameter {
 	t.Helper()
-	param, err := collections.FindOne(parameters, func(p *sdk.Parameter) bool { return p.Key == string(parameter) })
+	param, err := collections.FindFirst(parameters, func(p *sdk.Parameter) bool { return p.Key == string(parameter) })
 	require.NoError(t, err)
 	return *param
 }

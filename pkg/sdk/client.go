@@ -39,55 +39,57 @@ type Client struct {
 	ReplicationFunctions ReplicationFunctions
 
 	// DDL Commands
-	Accounts                 Accounts
-	Alerts                   Alerts
-	ApiIntegrations          ApiIntegrations
-	ApplicationPackages      ApplicationPackages
-	ApplicationRoles         ApplicationRoles
-	Applications             Applications
+	Accounts                     Accounts
+	Alerts                       Alerts
+	ApiIntegrations              ApiIntegrations
+	ApplicationPackages          ApplicationPackages
+	ApplicationRoles             ApplicationRoles
+	Applications                 Applications
 	AuthenticationPolicies   AuthenticationPolicies
-	Comments                 Comments
-	CortexSearchServices     CortexSearchServices
-	DatabaseRoles            DatabaseRoles
-	Databases                Databases
-	DynamicTables            DynamicTables
-	ExternalFunctions        ExternalFunctions
-	ExternalTables           ExternalTables
-	EventTables              EventTables
-	FailoverGroups           FailoverGroups
-	FileFormats              FileFormats
-	Functions                Functions
-	Grants                   Grants
-	ManagedAccounts          ManagedAccounts
-	MaskingPolicies          MaskingPolicies
-	MaterializedViews        MaterializedViews
-	NetworkPolicies          NetworkPolicies
-	NetworkRules             NetworkRules
-	NotificationIntegrations NotificationIntegrations
-	Parameters               Parameters
-	PasswordPolicies         PasswordPolicies
-	Pipes                    Pipes
-	PolicyReferences         PolicyReferences
-	Procedures               Procedures
-	ResourceMonitors         ResourceMonitors
-	Roles                    Roles
-	RowAccessPolicies        RowAccessPolicies
-	Schemas                  Schemas
-	SecurityIntegrations     SecurityIntegrations
-	Sequences                Sequences
-	SessionPolicies          SessionPolicies
-	Sessions                 Sessions
-	Shares                   Shares
-	Stages                   Stages
-	StorageIntegrations      StorageIntegrations
-	Streamlits               Streamlits
-	Streams                  Streams
-	Tables                   Tables
-	Tags                     Tags
-	Tasks                    Tasks
-	Users                    Users
-	Views                    Views
-	Warehouses               Warehouses
+	Comments                     Comments
+	CortexSearchServices         CortexSearchServices
+	DatabaseRoles                DatabaseRoles
+	Databases                    Databases
+	DataMetricFunctionReferences DataMetricFunctionReferences
+	DynamicTables                DynamicTables
+	ExternalFunctions            ExternalFunctions
+	ExternalVolumes              ExternalVolumes
+	ExternalTables               ExternalTables
+	EventTables                  EventTables
+	FailoverGroups               FailoverGroups
+	FileFormats                  FileFormats
+	Functions                    Functions
+	Grants                       Grants
+	ManagedAccounts              ManagedAccounts
+	MaskingPolicies              MaskingPolicies
+	MaterializedViews            MaterializedViews
+	NetworkPolicies              NetworkPolicies
+	NetworkRules                 NetworkRules
+	NotificationIntegrations     NotificationIntegrations
+	Parameters                   Parameters
+	PasswordPolicies             PasswordPolicies
+	Pipes                        Pipes
+	PolicyReferences             PolicyReferences
+	Procedures                   Procedures
+	ResourceMonitors             ResourceMonitors
+	Roles                        Roles
+	RowAccessPolicies            RowAccessPolicies
+	Schemas                      Schemas
+	SecurityIntegrations         SecurityIntegrations
+	Sequences                    Sequences
+	SessionPolicies              SessionPolicies
+	Sessions                     Sessions
+	Shares                       Shares
+	Stages                       Stages
+	StorageIntegrations          StorageIntegrations
+	Streamlits                   Streamlits
+	Streams                      Streams
+	Tables                       Tables
+	Tags                         Tags
+	Tasks                        Tasks
+	Users                        Users
+	Views                        Views
+	Warehouses                   Warehouses
 }
 
 func (c *Client) GetAccountLocator() string {
@@ -207,8 +209,10 @@ func (c *Client) initialize() {
 	c.CortexSearchServices = &cortexSearchServices{client: c}
 	c.DatabaseRoles = &databaseRoles{client: c}
 	c.Databases = &databases{client: c}
+	c.DataMetricFunctionReferences = &dataMetricFunctionReferences{client: c}
 	c.DynamicTables = &dynamicTables{client: c}
 	c.ExternalFunctions = &externalFunctions{client: c}
+	c.ExternalVolumes = &externalVolumes{client: c}
 	c.ExternalTables = &externalTables{client: c}
 	c.EventTables = &eventTables{client: c}
 	c.FailoverGroups = &failoverGroups{client: c}

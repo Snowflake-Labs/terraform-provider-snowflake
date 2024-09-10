@@ -75,7 +75,7 @@ func ReadContextFunctions(ctx context.Context, d *schema.ResourceData, meta inte
 	schemaName := d.Get("schema").(string)
 
 	request := sdk.NewShowFunctionRequest()
-	request.WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)})
+	request.WithIn(sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)})
 	functions, err := client.Functions.Show(ctx, request)
 	if err != nil {
 		id := d.Id()
@@ -92,7 +92,8 @@ func ReadContextFunctions(ctx context.Context, d *schema.ResourceData, meta inte
 
 	entities := []map[string]interface{}{}
 	for _, item := range functions {
-		signature, err := parseArguments(item.Arguments)
+		// TODO(SNOW-1596962): Create argument parsing function that takes argument names into consideration.
+		signature, err := parseArguments(item.ArgumentsRaw)
 		if err != nil {
 			return diag.FromErr(err)
 		}

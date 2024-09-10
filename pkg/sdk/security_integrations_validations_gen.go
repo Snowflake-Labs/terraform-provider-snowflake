@@ -143,6 +143,9 @@ func (opts *CreateScimSecurityIntegrationOptions) validate() error {
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateScimSecurityIntegrationOptions", "OrReplace", "IfNotExists"))
 	}
+	if opts.ScimClient == ScimSecurityIntegrationScimClientAzure && opts.SyncPassword != nil {
+		errs = append(errs, NewError("SyncPassword is not supported for Azure scim client"))
+	}
 	return JoinErrors(errs...)
 }
 

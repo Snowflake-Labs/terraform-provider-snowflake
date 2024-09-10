@@ -3,11 +3,13 @@ package resources
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -76,6 +78,7 @@ var managedAccountSchema = map[string]*schema.Schema{
 		Computed:    true,
 		Description: "URL for accessing the managed account, particularly through the web interface.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // ManagedAccount returns a pointer to the resource representing a managed account.
@@ -125,7 +128,7 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 
 	ctx := context.Background()
-	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	// We have to wait during the first read, since the locator takes some time to appear.
 	// This approach has a downside of not handling correctly the situation where managed account was removed externally.
@@ -133,8 +136,9 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	var managedAccount *sdk.ManagedAccount
 	var err error
 	err = util.Retry(5, 3*time.Second, func() (error, bool) {
-		managedAccount, err = client.ManagedAccounts.ShowByID(ctx, objectIdentifier)
+		managedAccount, err = client.ManagedAccounts.ShowByID(ctx, id)
 		if err != nil {
+			log.Printf("[DEBUG] retryable operation resulted in error: %v\n", err)
 			return nil, false
 		}
 		return nil, true
@@ -142,7 +146,9 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
+	}
 	if err := d.Set("name", managedAccount.Name); err != nil {
 		return err
 	}

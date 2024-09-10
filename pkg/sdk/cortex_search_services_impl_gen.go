@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ CortexSearchServices = (*cortexSearchServices)(nil)
@@ -41,7 +41,7 @@ func (v *cortexSearchServices) ShowByID(ctx context.Context, id SchemaObjectIden
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(cortexSearchServices, func(r CortexSearchService) bool { return r.Name == id.Name() })
+	return collections.FindFirst(cortexSearchServices, func(r CortexSearchService) bool { return r.Name == id.Name() })
 }
 
 func (v *cortexSearchServices) Describe(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchServiceDetails, error) {

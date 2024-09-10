@@ -6,8 +6,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -23,6 +21,7 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		Description:      "The fully qualified name of the account role to which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{
 			"account_role_name",
 			"database_role_name",
@@ -34,6 +33,7 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		Description:      "The fully qualified name of the database role to which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{
 			"account_role_name",
 			"database_role_name",
@@ -68,10 +68,11 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 					ValidateFunc: validation.StringInSlice(sdk.ValidGrantOwnershipObjectTypesString, true),
 				},
 				"object_name": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					ForceNew:    true,
-					Description: "Specifies the identifier for the object on which you are transferring ownership.",
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Description:      "Specifies the identifier for the object on which you are transferring ownership.",
+					DiffSuppressFunc: suppressIdentifierQuoting,
 					RequiredWith: []string{
 						"on.0.object_type",
 					},
@@ -131,6 +132,7 @@ func grantOwnershipBulkOperationSchema(branchName string) map[string]*schema.Sch
 			ForceNew:         true,
 			Description:      "The fully qualified name of the database.",
 			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			DiffSuppressFunc: suppressIdentifierQuoting,
 			ExactlyOneOf: []string{
 				fmt.Sprintf("on.0.%s.0.in_database", branchName),
 				fmt.Sprintf("on.0.%s.0.in_schema", branchName),
@@ -142,6 +144,7 @@ func grantOwnershipBulkOperationSchema(branchName string) map[string]*schema.Sch
 			ForceNew:         true,
 			Description:      "The fully qualified name of the schema.",
 			ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+			DiffSuppressFunc: suppressIdentifierQuoting,
 			ExactlyOneOf: []string{
 				fmt.Sprintf("on.0.%s.0.in_database", branchName),
 				fmt.Sprintf("on.0.%s.0.in_schema", branchName),
@@ -248,10 +251,14 @@ func CreateGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 		return diag.FromErr(err)
 	}
 
+	grantTo, err := getOwnershipGrantTo(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	err = client.Grants.GrantOwnership(
 		ctx,
 		*grantOn,
-		getOwnershipGrantTo(d),
+		grantTo,
 		getOwnershipGrantOpts(id),
 	)
 	if err != nil {
@@ -400,11 +407,6 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 
 // TODO(SNOW-1229218): Make sdk.ObjectType + string objectName to sdk.ObjectIdentifier mapping available in the sdk (for all object types).
 func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.ObjectIdentifier, error) {
-	identifier, err := helpers.DecodeSnowflakeParameterID(objectName)
-	if err != nil {
-		return nil, err
-	}
-
 	switch objectType {
 	case sdk.ObjectTypeComputePool,
 		sdk.ObjectTypeDatabase,
@@ -416,12 +418,10 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeRole,
 		sdk.ObjectTypeUser,
 		sdk.ObjectTypeWarehouse:
-		return sdk.NewAccountObjectIdentifier(objectName), nil
+		return sdk.ParseAccountObjectIdentifier(objectName)
 	case sdk.ObjectTypeDatabaseRole,
 		sdk.ObjectTypeSchema:
-		if _, ok := identifier.(sdk.DatabaseObjectIdentifier); !ok {
-			return nil, sdk.NewError(fmt.Sprintf("invalid object_name %s, expected database object identifier", objectName))
-		}
+		return sdk.ParseDatabaseObjectIdentifier(objectName)
 	case sdk.ObjectTypeAggregationPolicy,
 		sdk.ObjectTypeAlert,
 		sdk.ObjectTypeAuthenticationPolicy,
@@ -430,7 +430,6 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeEventTable,
 		sdk.ObjectTypeExternalTable,
 		sdk.ObjectTypeFileFormat,
-		sdk.ObjectTypeFunction,
 		sdk.ObjectTypeGitRepository,
 		sdk.ObjectTypeHybridTable,
 		sdk.ObjectTypeIcebergTable,
@@ -439,7 +438,6 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeNetworkRule,
 		sdk.ObjectTypePackagesPolicy,
 		sdk.ObjectTypePipe,
-		sdk.ObjectTypeProcedure,
 		sdk.ObjectTypeMaskingPolicy,
 		sdk.ObjectTypePasswordPolicy,
 		sdk.ObjectTypeProjectionPolicy,
@@ -453,14 +451,14 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeTag,
 		sdk.ObjectTypeTask,
 		sdk.ObjectTypeView:
-		if _, ok := identifier.(sdk.SchemaObjectIdentifier); !ok {
-			return nil, sdk.NewError(fmt.Sprintf("invalid object_name %s, expected schema object identifier", objectName))
-		}
+		return sdk.ParseSchemaObjectIdentifier(objectName)
+	case sdk.ObjectTypeFunction,
+		sdk.ObjectTypeProcedure,
+		sdk.ObjectTypeExternalFunction:
+		return sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
 	default:
 		return nil, sdk.NewError(fmt.Sprintf("object_type %s is not supported, please create a feature request for the provider if given object_type should be supported", objectType))
 	}
-
-	return identifier, nil
 }
 
 func getOwnershipGrantOn(d *schema.ResourceData) (*sdk.OwnershipGrantOn, error) {
@@ -484,26 +482,42 @@ func getOwnershipGrantOn(d *schema.ResourceData) (*sdk.OwnershipGrantOn, error) 
 			Name:       objectName,
 		}
 	case len(onAll) > 0:
-		ownershipGrantOn.All = getGrantOnSchemaObjectIn(onAll[0].(map[string]any))
+		grantOnSchemaObjectIn, err := getGrantOnSchemaObjectIn(onAll[0].(map[string]any))
+		if err != nil {
+			return nil, err
+		}
+		ownershipGrantOn.All = grantOnSchemaObjectIn
 	case len(onFuture) > 0:
-		ownershipGrantOn.Future = getGrantOnSchemaObjectIn(onFuture[0].(map[string]any))
+		grantOnSchemaObjectIn, err := getGrantOnSchemaObjectIn(onFuture[0].(map[string]any))
+		if err != nil {
+			return nil, err
+		}
+		ownershipGrantOn.Future = grantOnSchemaObjectIn
 	}
 
 	return ownershipGrantOn, nil
 }
 
-func getOwnershipGrantTo(d *schema.ResourceData) sdk.OwnershipGrantTo {
+func getOwnershipGrantTo(d *schema.ResourceData) (sdk.OwnershipGrantTo, error) {
 	var ownershipGrantTo sdk.OwnershipGrantTo
 
 	if accountRoleName, ok := d.GetOk("account_role_name"); ok {
-		ownershipGrantTo.AccountRoleName = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(accountRoleName.(string)))
+		accountRoleId, err := sdk.ParseAccountObjectIdentifier(accountRoleName.(string))
+		if err != nil {
+			return ownershipGrantTo, err
+		}
+		ownershipGrantTo.AccountRoleName = &accountRoleId
 	}
 
 	if databaseRoleName, ok := d.GetOk("database_role_name"); ok {
-		ownershipGrantTo.DatabaseRoleName = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName.(string)))
+		databaseRoleId, err := sdk.ParseDatabaseObjectIdentifier(databaseRoleName.(string))
+		if err != nil {
+			return ownershipGrantTo, err
+		}
+		ownershipGrantTo.DatabaseRoleName = sdk.Pointer(databaseRoleId)
 	}
 
-	return ownershipGrantTo
+	return ownershipGrantTo, nil
 }
 
 func getOwnershipGrantOpts(id *GrantOwnershipId) *sdk.GrantOwnershipOptions {
@@ -576,10 +590,18 @@ func createGrantOwnershipIdFromSchema(d *schema.ResourceData) (*GrantOwnershipId
 	switch {
 	case accountRoleNameOk:
 		id.GrantOwnershipTargetRoleKind = ToAccountGrantOwnershipTargetRoleKind
-		id.AccountRoleName = sdk.NewAccountObjectIdentifierFromFullyQualifiedName(accountRoleName.(string))
+		accountRoleId, err := sdk.ParseAccountObjectIdentifier(accountRoleName.(string))
+		if err != nil {
+			return nil, err
+		}
+		id.AccountRoleName = accountRoleId
 	case databaseRoleNameOk:
 		id.GrantOwnershipTargetRoleKind = ToDatabaseGrantOwnershipTargetRoleKind
-		id.DatabaseRoleName = sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName.(string))
+		databaseRoleId, err := sdk.ParseDatabaseObjectIdentifier(databaseRoleName.(string))
+		if err != nil {
+			return nil, err
+		}
+		id.DatabaseRoleName = databaseRoleId
 	}
 
 	outboundPrivileges, outboundPrivilegesOk := d.GetOk("outbound_privileges")
@@ -612,10 +634,18 @@ func createGrantOwnershipIdFromSchema(d *schema.ResourceData) (*GrantOwnershipId
 		}
 	case len(all) > 0:
 		id.Kind = OnAllGrantOwnershipKind
-		id.Data = getBulkOperationGrantData(getGrantOnSchemaObjectIn(all[0].(map[string]any)))
+		grantOn, err := getGrantOnSchemaObjectIn(all[0].(map[string]any))
+		if err != nil {
+			return nil, err
+		}
+		id.Data = getBulkOperationGrantData(grantOn)
 	case len(future) > 0:
 		id.Kind = OnFutureGrantOwnershipKind
-		id.Data = getBulkOperationGrantData(getGrantOnSchemaObjectIn(future[0].(map[string]any)))
+		grantOn, err := getGrantOnSchemaObjectIn(future[0].(map[string]any))
+		if err != nil {
+			return nil, err
+		}
+		id.Data = getBulkOperationGrantData(grantOn)
 	}
 
 	return id, nil

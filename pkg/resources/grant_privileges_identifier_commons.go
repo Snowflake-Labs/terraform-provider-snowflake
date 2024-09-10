@@ -39,7 +39,7 @@ func (d *OnSchemaGrantData) String() string {
 	case OnAllSchemasInDatabaseSchemaGrantKind, OnFutureSchemasInDatabaseSchemaGrantKind:
 		parts = append(parts, d.DatabaseName.FullyQualifiedName())
 	}
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 type OnSchemaObjectGrantData struct {
@@ -57,7 +57,7 @@ func (d *OnSchemaObjectGrantData) String() string {
 	case OnAllSchemaObjectGrantKind, OnFutureSchemaObjectGrantKind:
 		parts = append(parts, d.OnAllOrFuture.String())
 	}
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 type BulkOperationGrantKind string
@@ -84,7 +84,7 @@ func (d *BulkOperationGrantData) String() string {
 	case InSchemaBulkOperationGrantKind:
 		parts = append(parts, d.Schema.FullyQualifiedName())
 	}
-	return strings.Join(parts, helpers.IDDelimiter)
+	return helpers.EncodeResourceIdentifier(parts...)
 }
 
 func getBulkOperationGrantData(in *sdk.GrantOnSchemaObjectIn) *BulkOperationGrantData {
@@ -105,18 +105,26 @@ func getBulkOperationGrantData(in *sdk.GrantOnSchemaObjectIn) *BulkOperationGran
 	return bulkOperationGrantData
 }
 
-func getGrantOnSchemaObjectIn(allOrFuture map[string]any) *sdk.GrantOnSchemaObjectIn {
+func getGrantOnSchemaObjectIn(allOrFuture map[string]any) (*sdk.GrantOnSchemaObjectIn, error) {
 	grantOnSchemaObjectIn := &sdk.GrantOnSchemaObjectIn{
 		PluralObjectType: sdk.PluralObjectType(strings.ToUpper(allOrFuture["object_type_plural"].(string))),
 	}
 
 	if inDatabase, ok := allOrFuture["in_database"].(string); ok && len(inDatabase) > 0 {
-		grantOnSchemaObjectIn.InDatabase = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(inDatabase))
+		databaseId, err := sdk.ParseAccountObjectIdentifier(inDatabase)
+		if err != nil {
+			return nil, err
+		}
+		grantOnSchemaObjectIn.InDatabase = sdk.Pointer(databaseId)
 	}
 
 	if inSchema, ok := allOrFuture["in_schema"].(string); ok && len(inSchema) > 0 {
-		grantOnSchemaObjectIn.InSchema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(inSchema))
+		schemaId, err := sdk.ParseDatabaseObjectIdentifier(inSchema)
+		if err != nil {
+			return nil, err
+		}
+		grantOnSchemaObjectIn.InSchema = sdk.Pointer(schemaId)
 	}
 
-	return grantOnSchemaObjectIn
+	return grantOnSchemaObjectIn, nil
 }

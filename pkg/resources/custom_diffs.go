@@ -2,34 +2,35 @@ package resources
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/sdkv2enhancements"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func StringParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+func StringParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter T) schema.CustomizeDiffFunc {
 	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return value.(string) })
 }
 
-func IntParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+func IntParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter T) schema.CustomizeDiffFunc {
 	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.Itoa(value.(int)) })
 }
 
-func BoolParameterValueComputedIf(key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter sdk.AccountParameter) schema.CustomizeDiffFunc {
+func BoolParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter T) schema.CustomizeDiffFunc {
 	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.FormatBool(value.(bool)) })
 }
 
-func ParameterValueComputedIf(key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, accountParameter sdk.AccountParameter, valueToString func(v any) string) schema.CustomizeDiffFunc {
+func ParameterValueComputedIf[T ~string](key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, param T, valueToString func(v any) string) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		foundParameter, err := collections.FindOne(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(accountParameter) })
+		foundParameter, err := collections.FindFirst(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(param) })
 		if err != nil {
-			log.Printf("[WARN] failed to find account parameter: %s", accountParameter)
+			log.Printf("[WARN] failed to find parameter: %s", param)
 			return nil
 		}
 		parameter := *foundParameter
@@ -83,22 +84,43 @@ func ForceNewIfChangeToEmptyString(key string) schema.CustomizeDiffFunc {
 	})
 }
 
-// TODO [follow-up PR]: test
-func ComputedIfAnyAttributeChanged(key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
+// ComputedIfAnyAttributeChanged marks the given fields as computed if any of the listed fields changes.
+// It takes field-level diffSuppress into consideration based on the schema passed.
+// If the field is not found in the given schema, it continues without error. Only top level schema fields should be used.
+func ComputedIfAnyAttributeChanged(resourceSchema map[string]*schema.Schema, key string, changedAttributeKeys ...string) schema.CustomizeDiffFunc {
 	return customdiff.ComputedIf(key, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 		var result bool
 		for _, changedKey := range changedAttributeKeys {
 			if diff.HasChange(changedKey) {
-				log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: changed key: %s\n", changedKey)
+				oldValue, newValue := diff.GetChange(changedKey)
+				log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: changed key: %s old: %s new: %s\n", changedKey, oldValue, newValue)
+
+				if v, ok := resourceSchema[changedKey]; ok {
+					if diffSuppressFunc := v.DiffSuppressFunc; diffSuppressFunc != nil {
+						resourceData, resourceDataOk := sdkv2enhancements.CreateResourceDataFromResourceDiff(resourceSchema, diff)
+						if !resourceDataOk {
+							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: did not create resource data correctly, skipping\n")
+							continue
+						}
+						if !diffSuppressFunc(key, fmt.Sprintf("%v", oldValue), fmt.Sprintf("%v", newValue), resourceData) {
+							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: key %s was changed and the diff is not suppressed", changedKey)
+							result = true
+						} else {
+							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: key %s was changed but the diff is suppressed", changedKey)
+						}
+					} else {
+						log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: key %s was changed and it does not have a diff suppressor", changedKey)
+						result = true
+					}
+				}
 			}
-			result = result || diff.HasChange(changedKey)
 		}
 		return result
 	})
 }
 
-type parameter struct {
-	parameterName sdk.AccountParameter
+type parameter[T ~string] struct {
+	parameterName T
 	valueType     valueType
 	parameterType sdk.ParameterType
 }
@@ -115,7 +137,7 @@ type ResourceIdProvider interface {
 	Id() string
 }
 
-func ParametersCustomDiff(parametersProvider func(context.Context, ResourceIdProvider, any) ([]*sdk.Parameter, error), parameters ...parameter) schema.CustomizeDiffFunc {
+func ParametersCustomDiff[T ~string](parametersProvider func(context.Context, ResourceIdProvider, any) ([]*sdk.Parameter, error), parameters ...parameter[T]) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 		if d.Id() == "" {
 			return nil

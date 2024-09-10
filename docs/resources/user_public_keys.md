@@ -5,6 +5,8 @@ description: |-
   
 ---
 
+!> **Important** Starting from v0.95.0, it is advised to use this resource **only** if users are not managed through terraform. Check more in the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v094x--v0950).
+
 # snowflake_user_public_keys (Resource)
 
 

@@ -2,20 +2,21 @@ package resources_test
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/snowflakechecks"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -370,6 +371,7 @@ func TestAcc_Database_Complete(t *testing.T) {
 				ConfigVariables: completeConfigVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
 
@@ -467,12 +469,17 @@ func TestAcc_Database_Update(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
 				ConfigVariables: basicConfigVariables(id, comment),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "fully_qualified_name", id.FullyQualifiedName()),
+				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/complete_optionals_set"),
 				ConfigVariables: completeConfigVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "false"),
 					resource.TestCheckResourceAttr("snowflake_database.test", "comment", newComment),
 
@@ -703,7 +710,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ImportState:     true,
 				ConfigVariables: databaseWithIntParameterConfig(50),
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "50"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "data_retention_time_in_days", "50"),
 				),
 			},
 			// change the param value in config
@@ -761,9 +768,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "25"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeDatabase, "25"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "25")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(25).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeDatabase),
 				),
 			},
 			// remove the param from config
@@ -781,9 +788,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(1).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeSnowflakeDefault),
 				),
 			},
 			// import when param not in config (snowflake default)
@@ -792,7 +799,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ImportState:     true,
 				ConfigVariables: databaseBasicConfig,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "1"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "data_retention_time_in_days", "1"),
 				),
 			},
 			// change the param value in config to snowflake default
@@ -806,9 +813,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeDatabase, "1"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(1).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeDatabase),
 				),
 			},
 			// remove the param from config
@@ -826,9 +833,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"), // Database default
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1")), // Database default
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(1).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeSnowflakeDefault),
 				),
 			},
 			// change param value on account - change expected to be noop
@@ -849,9 +856,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(50).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeAccount),
 				),
 			},
 			// import when param not in config (set on account)
@@ -860,10 +867,10 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 				ImportState:     true,
 				ConfigVariables: databaseBasicConfig,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(id.Name(), "data_retention_time_in_days", "50"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "data_retention_time_in_days", "50"),
 				),
-				Check: resource.ComposeTestCheckFunc(
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
+				Check: assert.AssertThat(t,
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(50).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeAccount),
 				),
 			},
 			// change param value on database
@@ -880,9 +887,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", true),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, sdk.ParameterTypeAccount, "50"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "50")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(50).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeAccount),
 				),
 			},
 			// unset param on account
@@ -900,9 +907,9 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 						planchecks.ExpectComputed("snowflake_database.test", "data_retention_time_in_days", false),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1"),
-					snowflakechecks.CheckDatabaseDataRetentionTimeInDays(t, id, "", "1"),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", "1")),
+					objectparametersassert.DatabaseParameters(t, id).HasDataRetentionTimeInDays(1).HasDataRetentionTimeInDaysLevel(sdk.ParameterTypeSnowflakeDefault),
 				),
 			},
 		},
@@ -992,8 +999,13 @@ func TestAcc_Database_UpgradeWithTheSameFieldsAsInTheOldOne(t *testing.T) {
 				PreConfig: func() {
 					*dataRetentionTimeInDays = helpers.FindParameter(t, acc.TestClient().Parameter.ShowDatabaseParameters(t, id), sdk.AccountParameterDataRetentionTimeInDays).Value
 				},
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderBasic(id, comment),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: databaseStateUpgraderBasic(id, comment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1049,8 +1061,13 @@ func TestAcc_Database_UpgradeWithDataRetentionSet(t *testing.T) {
 				),
 			},
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderDataRetentionSet(id, comment, 10),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: databaseStateUpgraderDataRetentionSet(id, comment, 10),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1080,7 +1097,7 @@ resource "snowflake_database" "test" {
 
 func TestAcc_Database_WithReplication(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	secondaryAccountLocator := acc.SecondaryClient(t).GetAccountLocator()
+	secondaryAccountLocator := acc.SecondaryTestClient().GetAccountLocator()
 	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{
@@ -1160,158 +1177,87 @@ resource "snowflake_database" "test" {
 `, id.Name(), strconv.Quote(enableToAccount))
 }
 
-func TestAcc_Database_UpgradeFromShare(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-
+func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	secondaryClientLocator := acc.SecondaryClient(t).GetAccountLocator()
-
-	shareExternalId := createShareableDatabase(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acc.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.92.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: databaseStateUpgraderFromShareOld(id, secondaryClientLocator, shareExternalId),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "from_share.provider", secondaryClientLocator),
-					resource.TestCheckResourceAttr("snowflake_database.test", "from_share.share", shareExternalId.Name()),
+				Config: databaseWithDropPublicSchemaConfig(id, true),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name())),
+					objectassert.DatabaseDescribe(t, id).DoesNotContainPublicSchema(),
 				),
 			},
+			// Change in parameter shouldn't change the state Snowflake
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromShareNewAfterUpgrade(id),
-				ExpectError:              regexp.MustCompile("failed to upgrade the state with database created from share, please use snowflake_shared_database or deprecated snowflake_database_old instead"),
-			},
-			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromShareNew(id, shareExternalId),
-				ResourceName:             "snowflake_shared_database.test",
-				ImportStateId:            id.FullyQualifiedName(),
-				ImportState:              true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Config: databaseWithDropPublicSchemaConfig(id, false),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name())),
+					objectassert.DatabaseDescribe(t, id).DoesNotContainPublicSchema(),
+				),
 			},
 		},
 	})
 }
 
-func databaseStateUpgraderFromShareOld(id sdk.AccountObjectIdentifier, secondaryClientLocator string, externalShare sdk.ExternalObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-	from_share = {
-		provider = "%s"
-		share = "%s"
-	}
-}
-`, id.Name(), secondaryClientLocator, externalShare.Name())
-}
-
-func databaseStateUpgraderFromShareNewAfterUpgrade(id sdk.AccountObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-}
-`, id.Name())
-}
-
-func databaseStateUpgraderFromShareNew(id sdk.AccountObjectIdentifier, externalShare sdk.ExternalObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_shared_database" "test" {
-	name = "%s"
-	from_share = %s
-}
-`, id.Name(), strconv.Quote(externalShare.FullyQualifiedName()))
-}
-
-func TestAcc_Database_UpgradeFromReplica(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-
+func TestAcc_Database_WithPublicSchema(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	_, primaryDatabaseId, databaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
-		acc.TestClient().Account.GetAccountIdentifier(t),
-	})
-	t.Cleanup(databaseCleanup)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acc.TestAccPreCheck(t) },
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.92.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: databaseStateUpgraderFromReplicaOld(id, primaryDatabaseId),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "from_replica", primaryDatabaseId.FullyQualifiedName()),
+				Config: databaseWithDropPublicSchemaConfig(id, false),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name())),
+					objectassert.DatabaseDescribe(t, id).ContainsPublicSchema(),
 				),
 			},
+			// Change in parameter shouldn't change the state Snowflake
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromReplicaNewAfterUpgrade(id),
-				ExpectError:              regexp.MustCompile("failed to upgrade the state with database created from replica, please use snowflake_secondary_database or deprecated snowflake_database_old instead"),
-			},
-			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromReplicaNew(id, primaryDatabaseId),
-				ResourceName:             "snowflake_secondary_database.test",
-				ImportStateId:            id.FullyQualifiedName(),
-				ImportState:              true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Config: databaseWithDropPublicSchemaConfig(id, true),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name())),
+					objectassert.DatabaseDescribe(t, id).ContainsPublicSchema(),
+				),
 			},
 		},
 	})
 }
 
-func databaseStateUpgraderFromReplicaOld(id sdk.AccountObjectIdentifier, primaryDatabaseId sdk.ExternalObjectIdentifier) string {
+func databaseWithDropPublicSchemaConfig(id sdk.AccountObjectIdentifier, withDropPublicSchema bool) string {
 	return fmt.Sprintf(`
 resource "snowflake_database" "test" {
 	name = "%s"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-	from_replica = %s
+	drop_public_schema_on_creation = %s
 }
-`, id.Name(), strconv.Quote(primaryDatabaseId.FullyQualifiedName()))
-}
-
-func databaseStateUpgraderFromReplicaNewAfterUpgrade(id sdk.AccountObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	data_retention_time_in_days = 0
-}
-`, id.Name())
+`, id.Name(), strconv.FormatBool(withDropPublicSchema))
 }
 
-func databaseStateUpgraderFromReplicaNew(id sdk.AccountObjectIdentifier, primaryDatabaseId sdk.ExternalObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_secondary_database" "test" {
-	name = "%s"
-	as_replica_of = %s
-}
-`, id.Name(), strconv.Quote(id.FullyQualifiedName()))
-}
-
-func TestAcc_Database_UpgradeFromClonedDatabase(t *testing.T) {
+func TestAcc_Database_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	cloneId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1323,70 +1269,93 @@ func TestAcc_Database_UpgradeFromClonedDatabase(t *testing.T) {
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
-						VersionConstraint: "=0.92.0",
+						VersionConstraint: "=0.94.1",
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: databaseStateUpgraderFromDatabaseOld(id, cloneId),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.cloned", "id", cloneId.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.cloned", "name", cloneId.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.cloned", "from_database", id.Name()),
+				Config: databaseConfigBasic(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromDatabaseNewAfterUpgrade(id, cloneId),
-				ExpectError:              regexp.MustCompile("failed to upgrade the state with database created from database, please use snowflake_database or deprecated snowflake_database_old instead"),
-			},
-			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   databaseStateUpgraderFromDatabaseNew(id, cloneId),
-				ResourceName:             "snowflake_database.cloned",
-				ImportStateId:            cloneId.FullyQualifiedName(),
-				ImportState:              true,
+				Config:                   databaseConfigBasic(id.Name()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+				),
 			},
 		},
 	})
 }
 
-func databaseStateUpgraderFromDatabaseOld(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
+func databaseConfigBasic(name string) string {
+	return fmt.Sprintf(`resource "snowflake_database" "test" {
+		name = "%v"
+	}`, name)
 }
 
-resource "snowflake_database" "cloned" {
-	name = "%s"
-	data_retention_time_in_days = 0 # to avoid in-place update to -1
-	from_database = snowflake_database.test.name
-}
-`, id.Name(), secondId.Name())
+func TestAcc_Database_IdentifierQuotingDiffSuppression(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+
+	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
+	t.Cleanup(externalVolumeCleanup)
+	quotedExternalVolumeId := fmt.Sprintf(`\"%s\"`, externalVolumeId.Name())
+
+	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
+	t.Cleanup(catalogCleanup)
+	quotedCatalogId := fmt.Sprintf(`\"%s\"`, catalogId.Name())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Database),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             databaseConfigBasicWithExternalVolumeAndCatalog(quotedId, quotedExternalVolumeId, quotedCatalogId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   databaseConfigBasicWithExternalVolumeAndCatalog(quotedId, quotedExternalVolumeId, quotedCatalogId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "catalog", catalogId.Name()),
+					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
+				),
+			},
+		},
+	})
 }
 
-func databaseStateUpgraderFromDatabaseNewAfterUpgrade(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	data_retention_time_in_days = 0
-}
-
-resource "snowflake_database" "cloned" {
-	name = "%s"
-	data_retention_time_in_days = 0
-}
-`, id.Name(), secondId.Name())
-}
-
-func databaseStateUpgraderFromDatabaseNew(id sdk.AccountObjectIdentifier, secondId sdk.AccountObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-}
-
-resource "snowflake_database" "cloned" {
-	name = "%s"
-}
-`, id.Name(), secondId.Name())
+func databaseConfigBasicWithExternalVolumeAndCatalog(databaseName string, externalVolumeName string, catalogName string) string {
+	return fmt.Sprintf(`resource "snowflake_database" "test" {
+		name = "%v"
+		external_volume = "%v"
+		catalog = "%v"
+	}`, databaseName, externalVolumeName, catalogName)
 }

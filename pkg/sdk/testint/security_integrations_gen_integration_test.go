@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -171,7 +171,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 	// TODO(SNOW-1449579): move to helpers
 	assertFieldContainsList := func(details []sdk.SecurityIntegrationProperty, field, value, sep string) {
-		found, err := collections.FindOne(details, func(d sdk.SecurityIntegrationProperty) bool { return d.Name == field })
+		found, err := collections.FindFirst(details, func(d sdk.SecurityIntegrationProperty) bool { return d.Name == field })
 		assert.NoError(t, err)
 		values := strings.Split(found.Value, sep)
 		for _, exp := range strings.Split(value, sep) {
@@ -503,7 +503,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			r.WithBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
 				WithComment("a").
 				WithEnabled(true).
-				WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+				WithNetworkPolicy(networkPolicy.ID()).
 				WithOauthAllowNonTlsRedirectUri(true).
 				WithOauthClientRsaPublicKey(rsaKey).
 				WithOauthClientRsaPublicKey2(rsaKey).
@@ -578,7 +578,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		_, id := createSCIMIntegration(t, func(r *sdk.CreateScimSecurityIntegrationRequest) {
 			r.WithComment("a").
-				WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+				WithNetworkPolicy(networkPolicy.ID()).
 				WithSyncPassword(false)
 		})
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
@@ -1053,7 +1053,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithEnabled(true).
 					WithBlockedRolesList(sdk.BlockedRolesListRequest{BlockedRolesList: []sdk.AccountObjectIdentifier{role1.ID()}}).
 					WithComment("a").
-					WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+					WithNetworkPolicy(networkPolicy.ID()).
 					WithOauthAllowNonTlsRedirectUri(true).
 					WithOauthClientRsaPublicKey(rsaKey).
 					WithOauthClientRsaPublicKey2(rsaKey).
@@ -1160,8 +1160,8 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 					WithSaml2SpInitiatedLoginPageLabel("label").
 					WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
 					WithAllowedUserDomains([]sdk.UserDomain{{Domain: "example.com"}}),
-			// TODO(SNOW-1479617): fix after format clarification
-			// WithSaml2SnowflakeX509Cert(sdk.Pointer(cert)).
+				// TODO(SNOW-1479617): fix after format clarification
+				// WithSaml2SnowflakeX509Cert(sdk.Pointer(cert)).
 			)
 		err := client.SecurityIntegrations.AlterSaml2(ctx, setRequest)
 		require.NoError(t, err)
@@ -1257,7 +1257,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		setRequest := sdk.NewAlterScimSecurityIntegrationRequest(id).
 			WithSet(
 				*sdk.NewScimIntegrationSetRequest().
-					WithNetworkPolicy(sdk.NewAccountObjectIdentifier(networkPolicy.Name)).
+					WithNetworkPolicy(networkPolicy.ID()).
 					WithEnabled(false).
 					WithSyncPassword(false).
 					WithComment(sdk.StringAllowEmpty{Value: "altered"}),

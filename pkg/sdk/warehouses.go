@@ -28,6 +28,7 @@ type Warehouses interface {
 	Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*WarehouseDetails, error)
+	ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error)
 }
 
 var _ Warehouses = (*warehouses)(nil)
@@ -321,22 +322,27 @@ func (c *warehouses) Alter(ctx context.Context, id AccountObjectIdentifier, opts
 				return err
 			}
 			defer func() {
-				err := c.Alter(ctx, id, &AlterWarehouseOptions{Resume: Bool(true)})
+				err := c.Alter(ctx, id, &AlterWarehouseOptions{Resume: Bool(true), IfSuspended: Bool(true)})
 				if err != nil {
 					log.Printf("[DEBUG] error occurred during warehouse resumption, err=%v", err)
 				}
 			}()
 
 			// needed to make sure that warehouse is suspended
+			var warehouseSuspensionErrs []error
 			err = util.Retry(3, 1*time.Second, func() (error, bool) {
 				warehouse, err = c.ShowByID(ctx, id)
-				if err != nil || warehouse.State != WarehouseStateSuspended {
+				if err != nil {
+					warehouseSuspensionErrs = append(warehouseSuspensionErrs, err)
+					return nil, false
+				}
+				if warehouse.State != WarehouseStateSuspended {
 					return nil, false
 				}
 				return nil, true
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("warehouse suspension failed, err: %w, original errors: %w", err, errors.Join(warehouseSuspensionErrs...))
 			}
 		}
 	}
@@ -620,4 +626,12 @@ func (v *Warehouse) ID() AccountObjectIdentifier {
 
 func (v *Warehouse) ObjectType() ObjectType {
 	return ObjectTypeWarehouse
+}
+
+func (c *warehouses) ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error) {
+	return c.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
+		In: &ParametersIn{
+			Warehouse: id,
+		},
+	})
 }

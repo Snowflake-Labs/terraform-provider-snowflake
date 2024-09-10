@@ -1,0 +1,16 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert/gen.ResourceParametersAssertionsModel*/ -}}
+
+{{- $assertName := .Name | printf "%sShowOutputAssert" -}}
+{{- $nameLowerCase := FirstLetterLowercase .Name -}}
+{{- $assertVar := FirstLetter $nameLowerCase }}
+////////////////////////////
+// Attribute value checks //
+////////////////////////////
+
+{{ range .Attributes -}}
+    func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ .ConcreteType }}) *{{ $assertName }} {
+        {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}("{{ SnakeCase .Name }}", {{ RunMapper .Mapper "expected" }}))
+        return {{ $assertVar }}
+    }
+
+{{ end -}}

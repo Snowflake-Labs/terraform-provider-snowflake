@@ -21,9 +21,10 @@ import (
 
 var warehouseSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Identifier for the virtual warehouse; must be unique for your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      blocklistedCharactersFieldDescription("Identifier for the virtual warehouse; must be unique for your account."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"warehouse_type": {
 		Type:             schema.TypeString,
@@ -42,14 +43,14 @@ var warehouseSchema = map[string]*schema.Schema{
 	"max_cluster_count": {
 		Type:             schema.TypeInt,
 		Optional:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10)),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("max_cluster_count"),
 		Description:      "Specifies the maximum number of server clusters for the warehouse.",
 	},
 	"min_cluster_count": {
 		Type:             schema.TypeInt,
 		Optional:         true,
-		ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10)),
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("min_cluster_count"),
 		Description:      "Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).",
 	},
@@ -147,27 +148,22 @@ var warehouseSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowWarehouseParametersSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func warehouseParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	warehouseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-		In: &sdk.ParametersIn{
-			Warehouse: id,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	return warehouseParameters, nil
+	return parametersProvider(ctx, d, meta.(*provider.Context), warehouseParametersProviderFunc, sdk.ParseAccountObjectIdentifier)
+}
+
+func warehouseParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObjectIdentifier] {
+	return c.Warehouses.ShowParameters
 }
 
 func handleWarehouseParametersChanges(d *schema.ResourceData, set *sdk.WarehouseSet, unset *sdk.WarehouseUnset) diag.Diagnostics {
 	return JoinDiags(
-		handleValuePropertyChange[int](d, "max_concurrency_level", &set.MaxConcurrencyLevel, &unset.MaxConcurrencyLevel),
-		handleValuePropertyChange[int](d, "statement_queued_timeout_in_seconds", &set.StatementQueuedTimeoutInSeconds, &unset.StatementQueuedTimeoutInSeconds),
-		handleValuePropertyChange[int](d, "statement_timeout_in_seconds", &set.StatementTimeoutInSeconds, &unset.StatementTimeoutInSeconds),
+		handleParameterUpdate(d, sdk.ObjectParameterMaxConcurrencyLevel, &set.MaxConcurrencyLevel, &unset.MaxConcurrencyLevel),
+		handleParameterUpdate(d, sdk.ObjectParameterStatementQueuedTimeoutInSeconds, &set.StatementQueuedTimeoutInSeconds, &unset.StatementQueuedTimeoutInSeconds),
+		handleParameterUpdate(d, sdk.ObjectParameterStatementTimeoutInSeconds, &set.StatementTimeoutInSeconds, &unset.StatementTimeoutInSeconds),
 	)
 }
 
@@ -208,16 +204,18 @@ func Warehouse() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "resource_monitor", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
-			ComputedIfAnyAttributeChanged(ParametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)), strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)), strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
+			ComputedIfAnyAttributeChanged(warehouseSchema, ShowOutputAttributeName, "name", "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "resource_monitor", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
+			ComputedIfAnyAttributeChanged(warehouseSchema, ParametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)), strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)), strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
+			ComputedIfAnyAttributeChanged(warehouseSchema, FullyQualifiedNameAttributeName, "name"),
+
 			customdiff.ForceNewIfChange("warehouse_size", func(ctx context.Context, old, new, meta any) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
 			ParametersCustomDiff(
 				warehouseParametersProvider,
-				parameter{sdk.AccountParameterMaxConcurrencyLevel, valueTypeInt, sdk.ParameterTypeWarehouse},
-				parameter{sdk.AccountParameterStatementQueuedTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
-				parameter{sdk.AccountParameterStatementTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
+				parameter[sdk.AccountParameter]{sdk.AccountParameterMaxConcurrencyLevel, valueTypeInt, sdk.ParameterTypeWarehouse},
+				parameter[sdk.AccountParameter]{sdk.AccountParameterStatementQueuedTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
+				parameter[sdk.AccountParameter]{sdk.AccountParameterStatementTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
 			),
 		),
 
@@ -237,14 +235,15 @@ func ImportWarehouse(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
+
 	w, err := client.Warehouses.ShowByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = d.Set("name", w.Name); err != nil {
-		return nil, err
-	}
 	if err = d.Set("warehouse_type", w.Type); err != nil {
 		return nil, err
 	}
@@ -360,7 +359,7 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return GetReadWarehouseFunc(false)(ctx, d, meta)
 }
@@ -385,11 +384,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 			return diag.FromErr(err)
 		}
 
-		warehouseParameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
-			In: &sdk.ParametersIn{
-				Warehouse: id,
-			},
-		})
+		warehouseParameters, err := client.Warehouses.ShowParameters(ctx, id)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -410,8 +405,7 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 				return diag.FromErr(err)
 			}
 		}
-
-		if err = d.Set("name", w.Name); err != nil {
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 		if err = d.Set("comment", w.Comment); err != nil {
@@ -465,7 +459,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 			return diag.FromErr(err)
 		}
 
-		d.SetId(helpers.EncodeSnowflakeID(newId))
+		d.SetId(newId.Name())
 		id = newId
 	}
 

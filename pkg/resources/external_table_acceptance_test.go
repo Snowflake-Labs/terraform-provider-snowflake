@@ -75,12 +75,13 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					publishExternalTablesTestData(t, id, data)
+					acc.TestClient().ExternalTable.PublishDataToStage(t, id, data)
 				},
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "location", fmt.Sprintf(`@"%s"."%s"."%s"%s`, acc.TestDatabaseName, acc.TestSchemaName, name, innerDirectory)),
@@ -344,17 +345,6 @@ func externalTableContainsData(id sdk.SchemaObjectIdentifier, contains func(rows
 		}
 
 		return nil
-	}
-}
-
-func publishExternalTablesTestData(t *testing.T, stageName sdk.SchemaObjectIdentifier, data []byte) {
-	t.Helper()
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	_, err := client.ExecForTests(ctx, fmt.Sprintf(`copy into @%s/external_tables_test_data/test_data from (select parse_json('%s')) overwrite = true`, stageName.FullyQualifiedName(), string(data)))
-	if err != nil {
-		log.Fatal(err)
 	}
 }
 

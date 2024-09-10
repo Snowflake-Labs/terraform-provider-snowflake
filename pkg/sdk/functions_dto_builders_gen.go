@@ -16,23 +16,23 @@ func NewCreateForJavaFunctionRequest(
 	return &s
 }
 
-func (s *CreateForJavaFunctionRequest) WithOrReplace(OrReplace *bool) *CreateForJavaFunctionRequest {
-	s.OrReplace = OrReplace
+func (s *CreateForJavaFunctionRequest) WithOrReplace(OrReplace bool) *CreateForJavaFunctionRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithTemporary(Temporary *bool) *CreateForJavaFunctionRequest {
-	s.Temporary = Temporary
+func (s *CreateForJavaFunctionRequest) WithTemporary(Temporary bool) *CreateForJavaFunctionRequest {
+	s.Temporary = &Temporary
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithSecure(Secure *bool) *CreateForJavaFunctionRequest {
-	s.Secure = Secure
+func (s *CreateForJavaFunctionRequest) WithSecure(Secure bool) *CreateForJavaFunctionRequest {
+	s.Secure = &Secure
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateForJavaFunctionRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateForJavaFunctionRequest) WithIfNotExists(IfNotExists bool) *CreateForJavaFunctionRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
@@ -41,33 +41,33 @@ func (s *CreateForJavaFunctionRequest) WithArguments(Arguments []FunctionArgumen
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateForJavaFunctionRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateForJavaFunctionRequest) WithCopyGrants(CopyGrants bool) *CreateForJavaFunctionRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithReturnNullValues(ReturnNullValues *ReturnNullValues) *CreateForJavaFunctionRequest {
-	s.ReturnNullValues = ReturnNullValues
+func (s *CreateForJavaFunctionRequest) WithReturnNullValues(ReturnNullValues ReturnNullValues) *CreateForJavaFunctionRequest {
+	s.ReturnNullValues = &ReturnNullValues
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForJavaFunctionRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateForJavaFunctionRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateForJavaFunctionRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior *ReturnResultsBehavior) *CreateForJavaFunctionRequest {
-	s.ReturnResultsBehavior = ReturnResultsBehavior
+func (s *CreateForJavaFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForJavaFunctionRequest {
+	s.ReturnResultsBehavior = &ReturnResultsBehavior
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithRuntimeVersion(RuntimeVersion *string) *CreateForJavaFunctionRequest {
-	s.RuntimeVersion = RuntimeVersion
+func (s *CreateForJavaFunctionRequest) WithRuntimeVersion(RuntimeVersion string) *CreateForJavaFunctionRequest {
+	s.RuntimeVersion = &RuntimeVersion
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithComment(Comment *string) *CreateForJavaFunctionRequest {
-	s.Comment = Comment
+func (s *CreateForJavaFunctionRequest) WithComment(Comment string) *CreateForJavaFunctionRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -91,13 +91,13 @@ func (s *CreateForJavaFunctionRequest) WithSecrets(Secrets []Secret) *CreateForJ
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithTargetPath(TargetPath *string) *CreateForJavaFunctionRequest {
-	s.TargetPath = TargetPath
+func (s *CreateForJavaFunctionRequest) WithTargetPath(TargetPath string) *CreateForJavaFunctionRequest {
+	s.TargetPath = &TargetPath
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateForJavaFunctionRequest {
-	s.FunctionDefinition = FunctionDefinition
+func (s *CreateForJavaFunctionRequest) WithFunctionDefinition(FunctionDefinition string) *CreateForJavaFunctionRequest {
+	s.FunctionDefinition = &FunctionDefinition
 	return s
 }
 
@@ -111,8 +111,8 @@ func NewFunctionArgumentRequest(
 	return &s
 }
 
-func (s *FunctionArgumentRequest) WithDefaultValue(DefaultValue *string) *FunctionArgumentRequest {
-	s.DefaultValue = DefaultValue
+func (s *FunctionArgumentRequest) WithDefaultValue(DefaultValue string) *FunctionArgumentRequest {
+	s.DefaultValue = &DefaultValue
 	return s
 }
 
@@ -120,13 +120,13 @@ func NewFunctionReturnsRequest() *FunctionReturnsRequest {
 	return &FunctionReturnsRequest{}
 }
 
-func (s *FunctionReturnsRequest) WithResultDataType(ResultDataType *FunctionReturnsResultDataTypeRequest) *FunctionReturnsRequest {
-	s.ResultDataType = ResultDataType
+func (s *FunctionReturnsRequest) WithResultDataType(ResultDataType FunctionReturnsResultDataTypeRequest) *FunctionReturnsRequest {
+	s.ResultDataType = &ResultDataType
 	return s
 }
 
-func (s *FunctionReturnsRequest) WithTable(Table *FunctionReturnsTableRequest) *FunctionReturnsRequest {
-	s.Table = Table
+func (s *FunctionReturnsRequest) WithTable(Table FunctionReturnsTableRequest) *FunctionReturnsRequest {
+	s.Table = &Table
 	return s
 }
 
@@ -187,18 +187,18 @@ func NewCreateForJavascriptFunctionRequest(
 	return &s
 }
 
-func (s *CreateForJavascriptFunctionRequest) WithOrReplace(OrReplace *bool) *CreateForJavascriptFunctionRequest {
-	s.OrReplace = OrReplace
+func (s *CreateForJavascriptFunctionRequest) WithOrReplace(OrReplace bool) *CreateForJavascriptFunctionRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateForJavascriptFunctionRequest) WithTemporary(Temporary *bool) *CreateForJavascriptFunctionRequest {
-	s.Temporary = Temporary
+func (s *CreateForJavascriptFunctionRequest) WithTemporary(Temporary bool) *CreateForJavascriptFunctionRequest {
+	s.Temporary = &Temporary
 	return s
 }
 
-func (s *CreateForJavascriptFunctionRequest) WithSecure(Secure *bool) *CreateForJavascriptFunctionRequest {
-	s.Secure = Secure
+func (s *CreateForJavascriptFunctionRequest) WithSecure(Secure bool) *CreateForJavascriptFunctionRequest {
+	s.Secure = &Secure
 	return s
 }
 
@@ -207,28 +207,28 @@ func (s *CreateForJavascriptFunctionRequest) WithArguments(Arguments []FunctionA
 	return s
 }
 
-func (s *CreateForJavascriptFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateForJavascriptFunctionRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateForJavascriptFunctionRequest) WithCopyGrants(CopyGrants bool) *CreateForJavascriptFunctionRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func (s *CreateForJavascriptFunctionRequest) WithReturnNullValues(ReturnNullValues *ReturnNullValues) *CreateForJavascriptFunctionRequest {
-	s.ReturnNullValues = ReturnNullValues
+func (s *CreateForJavascriptFunctionRequest) WithReturnNullValues(ReturnNullValues ReturnNullValues) *CreateForJavascriptFunctionRequest {
+	s.ReturnNullValues = &ReturnNullValues
 	return s
 }
 
-func (s *CreateForJavascriptFunctionRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForJavascriptFunctionRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateForJavascriptFunctionRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateForJavascriptFunctionRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateForJavascriptFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior *ReturnResultsBehavior) *CreateForJavascriptFunctionRequest {
-	s.ReturnResultsBehavior = ReturnResultsBehavior
+func (s *CreateForJavascriptFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForJavascriptFunctionRequest {
+	s.ReturnResultsBehavior = &ReturnResultsBehavior
 	return s
 }
 
-func (s *CreateForJavascriptFunctionRequest) WithComment(Comment *string) *CreateForJavascriptFunctionRequest {
-	s.Comment = Comment
+func (s *CreateForJavascriptFunctionRequest) WithComment(Comment string) *CreateForJavascriptFunctionRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -246,23 +246,23 @@ func NewCreateForPythonFunctionRequest(
 	return &s
 }
 
-func (s *CreateForPythonFunctionRequest) WithOrReplace(OrReplace *bool) *CreateForPythonFunctionRequest {
-	s.OrReplace = OrReplace
+func (s *CreateForPythonFunctionRequest) WithOrReplace(OrReplace bool) *CreateForPythonFunctionRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithTemporary(Temporary *bool) *CreateForPythonFunctionRequest {
-	s.Temporary = Temporary
+func (s *CreateForPythonFunctionRequest) WithTemporary(Temporary bool) *CreateForPythonFunctionRequest {
+	s.Temporary = &Temporary
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithSecure(Secure *bool) *CreateForPythonFunctionRequest {
-	s.Secure = Secure
+func (s *CreateForPythonFunctionRequest) WithSecure(Secure bool) *CreateForPythonFunctionRequest {
+	s.Secure = &Secure
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateForPythonFunctionRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateForPythonFunctionRequest) WithIfNotExists(IfNotExists bool) *CreateForPythonFunctionRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
@@ -271,28 +271,28 @@ func (s *CreateForPythonFunctionRequest) WithArguments(Arguments []FunctionArgum
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateForPythonFunctionRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateForPythonFunctionRequest) WithCopyGrants(CopyGrants bool) *CreateForPythonFunctionRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithReturnNullValues(ReturnNullValues *ReturnNullValues) *CreateForPythonFunctionRequest {
-	s.ReturnNullValues = ReturnNullValues
+func (s *CreateForPythonFunctionRequest) WithReturnNullValues(ReturnNullValues ReturnNullValues) *CreateForPythonFunctionRequest {
+	s.ReturnNullValues = &ReturnNullValues
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForPythonFunctionRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateForPythonFunctionRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateForPythonFunctionRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior *ReturnResultsBehavior) *CreateForPythonFunctionRequest {
-	s.ReturnResultsBehavior = ReturnResultsBehavior
+func (s *CreateForPythonFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForPythonFunctionRequest {
+	s.ReturnResultsBehavior = &ReturnResultsBehavior
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithComment(Comment *string) *CreateForPythonFunctionRequest {
-	s.Comment = Comment
+func (s *CreateForPythonFunctionRequest) WithComment(Comment string) *CreateForPythonFunctionRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -316,8 +316,8 @@ func (s *CreateForPythonFunctionRequest) WithSecrets(Secrets []Secret) *CreateFo
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateForPythonFunctionRequest {
-	s.FunctionDefinition = FunctionDefinition
+func (s *CreateForPythonFunctionRequest) WithFunctionDefinition(FunctionDefinition string) *CreateForPythonFunctionRequest {
+	s.FunctionDefinition = &FunctionDefinition
 	return s
 }
 
@@ -333,23 +333,23 @@ func NewCreateForScalaFunctionRequest(
 	return &s
 }
 
-func (s *CreateForScalaFunctionRequest) WithOrReplace(OrReplace *bool) *CreateForScalaFunctionRequest {
-	s.OrReplace = OrReplace
+func (s *CreateForScalaFunctionRequest) WithOrReplace(OrReplace bool) *CreateForScalaFunctionRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithTemporary(Temporary *bool) *CreateForScalaFunctionRequest {
-	s.Temporary = Temporary
+func (s *CreateForScalaFunctionRequest) WithTemporary(Temporary bool) *CreateForScalaFunctionRequest {
+	s.Temporary = &Temporary
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithSecure(Secure *bool) *CreateForScalaFunctionRequest {
-	s.Secure = Secure
+func (s *CreateForScalaFunctionRequest) WithSecure(Secure bool) *CreateForScalaFunctionRequest {
+	s.Secure = &Secure
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithIfNotExists(IfNotExists *bool) *CreateForScalaFunctionRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateForScalaFunctionRequest) WithIfNotExists(IfNotExists bool) *CreateForScalaFunctionRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
@@ -358,33 +358,33 @@ func (s *CreateForScalaFunctionRequest) WithArguments(Arguments []FunctionArgume
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateForScalaFunctionRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateForScalaFunctionRequest) WithCopyGrants(CopyGrants bool) *CreateForScalaFunctionRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithReturnNullValues(ReturnNullValues *ReturnNullValues) *CreateForScalaFunctionRequest {
-	s.ReturnNullValues = ReturnNullValues
+func (s *CreateForScalaFunctionRequest) WithReturnNullValues(ReturnNullValues ReturnNullValues) *CreateForScalaFunctionRequest {
+	s.ReturnNullValues = &ReturnNullValues
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithNullInputBehavior(NullInputBehavior *NullInputBehavior) *CreateForScalaFunctionRequest {
-	s.NullInputBehavior = NullInputBehavior
+func (s *CreateForScalaFunctionRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateForScalaFunctionRequest {
+	s.NullInputBehavior = &NullInputBehavior
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior *ReturnResultsBehavior) *CreateForScalaFunctionRequest {
-	s.ReturnResultsBehavior = ReturnResultsBehavior
+func (s *CreateForScalaFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForScalaFunctionRequest {
+	s.ReturnResultsBehavior = &ReturnResultsBehavior
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithRuntimeVersion(RuntimeVersion *string) *CreateForScalaFunctionRequest {
-	s.RuntimeVersion = RuntimeVersion
+func (s *CreateForScalaFunctionRequest) WithRuntimeVersion(RuntimeVersion string) *CreateForScalaFunctionRequest {
+	s.RuntimeVersion = &RuntimeVersion
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithComment(Comment *string) *CreateForScalaFunctionRequest {
-	s.Comment = Comment
+func (s *CreateForScalaFunctionRequest) WithComment(Comment string) *CreateForScalaFunctionRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -398,13 +398,13 @@ func (s *CreateForScalaFunctionRequest) WithPackages(Packages []FunctionPackageR
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithTargetPath(TargetPath *string) *CreateForScalaFunctionRequest {
-	s.TargetPath = TargetPath
+func (s *CreateForScalaFunctionRequest) WithTargetPath(TargetPath string) *CreateForScalaFunctionRequest {
+	s.TargetPath = &TargetPath
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithFunctionDefinition(FunctionDefinition *string) *CreateForScalaFunctionRequest {
-	s.FunctionDefinition = FunctionDefinition
+func (s *CreateForScalaFunctionRequest) WithFunctionDefinition(FunctionDefinition string) *CreateForScalaFunctionRequest {
+	s.FunctionDefinition = &FunctionDefinition
 	return s
 }
 
@@ -420,18 +420,18 @@ func NewCreateForSQLFunctionRequest(
 	return &s
 }
 
-func (s *CreateForSQLFunctionRequest) WithOrReplace(OrReplace *bool) *CreateForSQLFunctionRequest {
-	s.OrReplace = OrReplace
+func (s *CreateForSQLFunctionRequest) WithOrReplace(OrReplace bool) *CreateForSQLFunctionRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateForSQLFunctionRequest) WithTemporary(Temporary *bool) *CreateForSQLFunctionRequest {
-	s.Temporary = Temporary
+func (s *CreateForSQLFunctionRequest) WithTemporary(Temporary bool) *CreateForSQLFunctionRequest {
+	s.Temporary = &Temporary
 	return s
 }
 
-func (s *CreateForSQLFunctionRequest) WithSecure(Secure *bool) *CreateForSQLFunctionRequest {
-	s.Secure = Secure
+func (s *CreateForSQLFunctionRequest) WithSecure(Secure bool) *CreateForSQLFunctionRequest {
+	s.Secure = &Secure
 	return s
 }
 
@@ -440,88 +440,86 @@ func (s *CreateForSQLFunctionRequest) WithArguments(Arguments []FunctionArgument
 	return s
 }
 
-func (s *CreateForSQLFunctionRequest) WithCopyGrants(CopyGrants *bool) *CreateForSQLFunctionRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateForSQLFunctionRequest) WithCopyGrants(CopyGrants bool) *CreateForSQLFunctionRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func (s *CreateForSQLFunctionRequest) WithReturnNullValues(ReturnNullValues *ReturnNullValues) *CreateForSQLFunctionRequest {
-	s.ReturnNullValues = ReturnNullValues
+func (s *CreateForSQLFunctionRequest) WithReturnNullValues(ReturnNullValues ReturnNullValues) *CreateForSQLFunctionRequest {
+	s.ReturnNullValues = &ReturnNullValues
 	return s
 }
 
-func (s *CreateForSQLFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior *ReturnResultsBehavior) *CreateForSQLFunctionRequest {
-	s.ReturnResultsBehavior = ReturnResultsBehavior
+func (s *CreateForSQLFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForSQLFunctionRequest {
+	s.ReturnResultsBehavior = &ReturnResultsBehavior
 	return s
 }
 
-func (s *CreateForSQLFunctionRequest) WithMemoizable(Memoizable *bool) *CreateForSQLFunctionRequest {
-	s.Memoizable = Memoizable
+func (s *CreateForSQLFunctionRequest) WithMemoizable(Memoizable bool) *CreateForSQLFunctionRequest {
+	s.Memoizable = &Memoizable
 	return s
 }
 
-func (s *CreateForSQLFunctionRequest) WithComment(Comment *string) *CreateForSQLFunctionRequest {
-	s.Comment = Comment
+func (s *CreateForSQLFunctionRequest) WithComment(Comment string) *CreateForSQLFunctionRequest {
+	s.Comment = &Comment
 	return s
 }
 
 func NewAlterFunctionRequest(
-	name SchemaObjectIdentifier,
-	ArgumentDataTypes []DataType,
+	name SchemaObjectIdentifierWithArguments,
 ) *AlterFunctionRequest {
 	s := AlterFunctionRequest{}
 	s.name = name
-	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }
 
-func (s *AlterFunctionRequest) WithIfExists(IfExists *bool) *AlterFunctionRequest {
-	s.IfExists = IfExists
+func (s *AlterFunctionRequest) WithIfExists(IfExists bool) *AlterFunctionRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
-func (s *AlterFunctionRequest) WithRenameTo(RenameTo *SchemaObjectIdentifier) *AlterFunctionRequest {
-	s.RenameTo = RenameTo
+func (s *AlterFunctionRequest) WithRenameTo(RenameTo SchemaObjectIdentifier) *AlterFunctionRequest {
+	s.RenameTo = &RenameTo
 	return s
 }
 
-func (s *AlterFunctionRequest) WithSetComment(SetComment *string) *AlterFunctionRequest {
-	s.SetComment = SetComment
+func (s *AlterFunctionRequest) WithSetComment(SetComment string) *AlterFunctionRequest {
+	s.SetComment = &SetComment
 	return s
 }
 
-func (s *AlterFunctionRequest) WithSetLogLevel(SetLogLevel *string) *AlterFunctionRequest {
-	s.SetLogLevel = SetLogLevel
+func (s *AlterFunctionRequest) WithSetLogLevel(SetLogLevel string) *AlterFunctionRequest {
+	s.SetLogLevel = &SetLogLevel
 	return s
 }
 
-func (s *AlterFunctionRequest) WithSetTraceLevel(SetTraceLevel *string) *AlterFunctionRequest {
-	s.SetTraceLevel = SetTraceLevel
+func (s *AlterFunctionRequest) WithSetTraceLevel(SetTraceLevel string) *AlterFunctionRequest {
+	s.SetTraceLevel = &SetTraceLevel
 	return s
 }
 
-func (s *AlterFunctionRequest) WithSetSecure(SetSecure *bool) *AlterFunctionRequest {
-	s.SetSecure = SetSecure
+func (s *AlterFunctionRequest) WithSetSecure(SetSecure bool) *AlterFunctionRequest {
+	s.SetSecure = &SetSecure
 	return s
 }
 
-func (s *AlterFunctionRequest) WithUnsetSecure(UnsetSecure *bool) *AlterFunctionRequest {
-	s.UnsetSecure = UnsetSecure
+func (s *AlterFunctionRequest) WithUnsetSecure(UnsetSecure bool) *AlterFunctionRequest {
+	s.UnsetSecure = &UnsetSecure
 	return s
 }
 
-func (s *AlterFunctionRequest) WithUnsetLogLevel(UnsetLogLevel *bool) *AlterFunctionRequest {
-	s.UnsetLogLevel = UnsetLogLevel
+func (s *AlterFunctionRequest) WithUnsetLogLevel(UnsetLogLevel bool) *AlterFunctionRequest {
+	s.UnsetLogLevel = &UnsetLogLevel
 	return s
 }
 
-func (s *AlterFunctionRequest) WithUnsetTraceLevel(UnsetTraceLevel *bool) *AlterFunctionRequest {
-	s.UnsetTraceLevel = UnsetTraceLevel
+func (s *AlterFunctionRequest) WithUnsetTraceLevel(UnsetTraceLevel bool) *AlterFunctionRequest {
+	s.UnsetTraceLevel = &UnsetTraceLevel
 	return s
 }
 
-func (s *AlterFunctionRequest) WithUnsetComment(UnsetComment *bool) *AlterFunctionRequest {
-	s.UnsetComment = UnsetComment
+func (s *AlterFunctionRequest) WithUnsetComment(UnsetComment bool) *AlterFunctionRequest {
+	s.UnsetComment = &UnsetComment
 	return s
 }
 
@@ -536,17 +534,15 @@ func (s *AlterFunctionRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *Alte
 }
 
 func NewDropFunctionRequest(
-	name SchemaObjectIdentifier,
-	ArgumentDataTypes []DataType,
+	name SchemaObjectIdentifierWithArguments,
 ) *DropFunctionRequest {
 	s := DropFunctionRequest{}
 	s.name = name
-	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }
 
-func (s *DropFunctionRequest) WithIfExists(IfExists *bool) *DropFunctionRequest {
-	s.IfExists = IfExists
+func (s *DropFunctionRequest) WithIfExists(IfExists bool) *DropFunctionRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
@@ -554,22 +550,20 @@ func NewShowFunctionRequest() *ShowFunctionRequest {
 	return &ShowFunctionRequest{}
 }
 
-func (s *ShowFunctionRequest) WithLike(Like *Like) *ShowFunctionRequest {
-	s.Like = Like
+func (s *ShowFunctionRequest) WithLike(Like Like) *ShowFunctionRequest {
+	s.Like = &Like
 	return s
 }
 
-func (s *ShowFunctionRequest) WithIn(In *In) *ShowFunctionRequest {
-	s.In = In
+func (s *ShowFunctionRequest) WithIn(In In) *ShowFunctionRequest {
+	s.In = &In
 	return s
 }
 
 func NewDescribeFunctionRequest(
-	name SchemaObjectIdentifier,
-	ArgumentDataTypes []DataType,
+	name SchemaObjectIdentifierWithArguments,
 ) *DescribeFunctionRequest {
 	s := DescribeFunctionRequest{}
 	s.name = name
-	s.ArgumentDataTypes = ArgumentDataTypes
 	return &s
 }

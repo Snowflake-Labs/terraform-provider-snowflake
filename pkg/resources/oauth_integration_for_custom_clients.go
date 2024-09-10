@@ -22,10 +22,11 @@ import (
 
 var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"oauth_client_type": {
 		Type:             schema.TypeString,
@@ -33,7 +34,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToOauthSecurityIntegrationClientTypeOption),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToOauthSecurityIntegrationClientTypeOption),
-		Description:      fmt.Sprintf("Specifies the type of client being registered. Snowflake supports both confidential and public clients. Valid options are: %v", sdk.AllOauthSecurityIntegrationClientTypes),
+		Description:      fmt.Sprintf("Specifies the type of client being registered. Snowflake supports both confidential and public clients. Valid options are: %v.", possibleValuesListed(sdk.AllOauthSecurityIntegrationClientTypes)),
 	},
 	"oauth_redirect_uri": {
 		Type:        schema.TypeString,
@@ -69,7 +70,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToOauthSecurityIntegrationUseSecondaryRolesOption),
-		Description:      fmt.Sprintf("Specifies whether default secondary roles set in the user properties are activated by default in the session being opened. Valid options are: %v", sdk.AllOauthSecurityIntegrationUseSecondaryRoles),
+		Description:      fmt.Sprintf("Specifies whether default secondary roles set in the user properties are activated by default in the session being opened. Valid options are: %v.", possibleValuesListed(sdk.AllOauthSecurityIntegrationUseSecondaryRoles)),
 	},
 	"pre_authorized_roles_list": {
 		Type: schema.TypeSet,
@@ -110,6 +111,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Description:      "Specifies an existing network policy. This network policy controls network traffic that is attempting to exchange an authorization code for an access or refresh token or to use a refresh token to obtain a new access token.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"oauth_client_rsa_public_key": {
 		Type:             schema.TypeString,
@@ -144,6 +146,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeOauthIntegrationForCustomClients,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func OauthIntegrationForCustomClients() *schema.Resource {
@@ -154,15 +157,17 @@ func OauthIntegrationForCustomClients() *schema.Resource {
 		ReadContext:   ReadContextOauthIntegrationForCustomClients(true),
 		UpdateContext: UpdateContextOauthIntegrationForCustomClients,
 		DeleteContext: DeleteContextOauthIntegrationForCustomClients,
+		Description:   "Resource used to manage oauth security integration for custom clients objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake).",
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(
+				oauthIntegrationForCustomClientsSchema,
 				ShowOutputAttributeName,
-				"name",
 				"enabled",
 				"comment",
 			),
 			ComputedIfAnyAttributeChanged(
+				oauthIntegrationForCustomClientsSchema,
 				DescribeOutputAttributeName,
 				"oauth_client_type",
 				"oauth_redirect_uri",
@@ -190,7 +195,14 @@ func OauthIntegrationForCustomClients() *schema.Resource {
 func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting oauth integration for custom clients import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -206,7 +218,7 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 		return nil, err
 	}
 
-	if allowNonTlsRedirectUri, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if allowNonTlsRedirectUri, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_ALLOW_NON_TLS_REDIRECT_URI"
 	}); err == nil {
 		if err = d.Set("oauth_allow_non_tls_redirect_uri", allowNonTlsRedirectUri.Value); err != nil {
@@ -214,7 +226,7 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	if enforcePkce, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if enforcePkce, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_ENFORCE_PKCE"
 	}); err == nil {
 		if err = d.Set("oauth_enforce_pkce", enforcePkce.Value); err != nil {
@@ -222,7 +234,7 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	if issueRefreshTokens, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if issueRefreshTokens, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_ISSUE_REFRESH_TOKENS"
 	}); err == nil {
 		if err = d.Set("oauth_issue_refresh_tokens", issueRefreshTokens.Value); err != nil {
@@ -230,7 +242,7 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	if refreshTokenValidity, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if refreshTokenValidity, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
 	}); err == nil {
 		refreshTokenValidityValue, err := strconv.ParseInt(refreshTokenValidity.Value, 10, 64)
@@ -247,8 +259,11 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 
 func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	oauthClientType, err := sdk.ToOauthSecurityIntegrationClientTypeOption(d.Get("oauth_client_type").(string))
 	if err != nil {
 		return diag.FromErr(err)
@@ -337,7 +352,7 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextOauthIntegrationForCustomClients(false)(ctx, d, meta)
 }
@@ -345,7 +360,10 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -370,8 +388,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
-
-		if err := d.Set("name", integration.Name); err != nil {
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -379,7 +396,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		oauthClientType, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthClientType, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_CLIENT_TYPE"
 		})
 		if err != nil {
@@ -389,7 +406,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		oauthRedirectUri, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthRedirectUri, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_REDIRECT_URI"
 		})
 		if err != nil {
@@ -399,7 +416,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		preAuthorizedRolesList, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		preAuthorizedRolesList, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "PRE_AUTHORIZED_ROLES_LIST"
 		})
 		if err != nil {
@@ -413,7 +430,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		blockedRolesList, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		blockedRolesList, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "BLOCKED_ROLES_LIST"
 		})
 		if err != nil {
@@ -427,7 +444,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		networkPolicy, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		networkPolicy, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "NETWORK_POLICY"
 		})
 		if err != nil {
@@ -444,35 +461,35 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 				return diag.FromErr(err)
 			}
 
-			oauthAllowNonTlsRedirectUri, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthAllowNonTlsRedirectUri, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_ALLOW_NON_TLS_REDIRECT_URI"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			oauthEnforcePkce, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthEnforcePkce, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_ENFORCE_PKCE"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			oauthUseSecondaryRoles, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthUseSecondaryRoles, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_USE_SECONDARY_ROLES"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			oauthIssueRefreshTokens, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthIssueRefreshTokens, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_ISSUE_REFRESH_TOKENS"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			oauthRefreshTokenValidity, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			oauthRefreshTokenValidity, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
 			})
 			if err != nil {
@@ -515,7 +532,11 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 
 func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	set, unset := sdk.NewOauthForCustomClientsIntegrationSetRequest(), sdk.NewOauthForCustomClientsIntegrationUnsetRequest()
 
 	if d.HasChange("oauth_redirect_uri") {
@@ -656,10 +677,13 @@ func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 }
 
 func DeleteContextOauthIntegrationForCustomClients(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

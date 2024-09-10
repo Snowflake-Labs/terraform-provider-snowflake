@@ -28,4 +28,7 @@ resource "snowflake_view" "test" {
   schema    = snowflake_schema.test.name
   is_secure = true
   statement = "select \"id\" from \"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\".\"${snowflake_table.test.name}\""
+  column {
+    column_name = "id"
+  }
 }

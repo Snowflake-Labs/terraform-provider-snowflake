@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -21,12 +22,13 @@ import (
 
 var privilegedRoles = []string{"ACCOUNTADMIN", "ORGADMIN", "SECURITYADMIN"}
 
-var oauthExternalIntegrationSchema = map[string]*schema.Schema{
+var externalOauthIntegrationSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"external_oauth_type": {
 		Type:             schema.TypeString,
@@ -147,25 +149,26 @@ var oauthExternalIntegrationSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowExternalOauthParametersSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func ExternalOauthIntegration() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 1,
-
 		CreateContext: CreateContextExternalOauthIntegration,
 		ReadContext:   ReadContextExternalOauthIntegration(true),
 		UpdateContext: UpdateContextExternalOauthIntegration,
 		DeleteContext: DeleteContextExternalOauthIntegration,
-		Schema:        oauthExternalIntegrationSchema,
+		Description:   "Resource used to manage external oauth security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external).",
+
+		Schema: externalOauthIntegrationSchema,
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key"),
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key_2"),
 			ForceNewIfChangeToEmptyString("external_oauth_scope_mapping_attribute"),
 			ForceNewIfChangeToEmptySet("external_oauth_jws_keys_url"),
 			ForceNewIfChangeToEmptySet("external_oauth_token_user_mapping_claim"),
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "external_oauth_type", "comment"),
-			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "external_oauth_issuer", "external_oauth_jws_keys_url", "external_oauth_any_role_mode",
+			ComputedIfAnyAttributeChanged(externalOauthIntegrationSchema, ShowOutputAttributeName, "enabled", "external_oauth_type", "comment"),
+			ComputedIfAnyAttributeChanged(externalOauthIntegrationSchema, DescribeOutputAttributeName, "enabled", "external_oauth_issuer", "external_oauth_jws_keys_url", "external_oauth_any_role_mode",
 				"external_oauth_rsa_public_key", "external_oauth_rsa_public_key_2", "external_oauth_blocked_roles_list", "external_oauth_allowed_roles_list",
 				"external_oauth_audience_list", "external_oauth_token_user_mapping_claim", "external_oauth_snowflake_user_mapping_attribute", "external_oauth_scope_delimiter",
 				"comment"),
@@ -173,8 +176,8 @@ func ExternalOauthIntegration() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportExternalOauthIntegration,
 		},
-		Description: "Resource used to manage external oauth security integrations. For more information, check [documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external).",
 
+		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,
@@ -189,7 +192,14 @@ func ExternalOauthIntegration() *schema.Resource {
 func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting external oauth integration import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -201,9 +211,6 @@ func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData,
 		return nil, err
 	}
 
-	if err = d.Set("name", integration.Name); err != nil {
-		return nil, err
-	}
 	if err = d.Set("enabled", integration.Enabled); err != nil {
 		return nil, err
 	}
@@ -212,33 +219,33 @@ func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData,
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "EXTERNAL_OAUTH_ISSUER" }); err == nil {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "EXTERNAL_OAUTH_ISSUER" }); err == nil {
 		if err = d.Set("external_oauth_issuer", prop.Value); err != nil {
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_JWS_KEYS_URL"
 	}); err == nil {
 		if err = d.Set("external_oauth_jws_keys_url", sdk.ParseCommaSeparatedStringArray(prop.Value, false)); err != nil {
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_ANY_ROLE_MODE"
 	}); err == nil {
 		if err = d.Set("external_oauth_any_role_mode", prop.Value); err != nil {
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_RSA_PUBLIC_KEY"
 	}); err == nil {
 		if err = d.Set("external_oauth_rsa_public_key", prop.Value); err != nil {
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2"
 	}); err == nil {
 		if err = d.Set("external_oauth_rsa_public_key_2", prop.Value); err != nil {
@@ -246,7 +253,7 @@ func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST"
 	}); err == nil {
 		roles := sdk.ParseCommaSeparatedStringArray(prop.Value, false)
@@ -254,42 +261,42 @@ func ImportExternalOauthIntegration(ctx context.Context, d *schema.ResourceData,
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST"
 	}); err == nil {
 		if err = d.Set("external_oauth_allowed_roles_list", sdk.ParseCommaSeparatedStringArray(prop.Value, false)); err != nil {
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_AUDIENCE_LIST"
 	}); err == nil {
 		if err = d.Set("external_oauth_audience_list", sdk.ParseCommaSeparatedStringArray(prop.Value, false)); err != nil {
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM"
 	}); err == nil {
 		if err = d.Set("external_oauth_token_user_mapping_claim", sdk.ParseCommaSeparatedStringArray(prop.Value, true)); err != nil {
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE"
 	}); err == nil {
 		if err = d.Set("external_oauth_snowflake_user_mapping_attribute", prop.Value); err != nil {
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "EXTERNAL_OAUTH_SCOPE_DELIMITER"
 	}); err == nil {
 		if err = d.Set("external_oauth_scope_delimiter", prop.Value); err != nil {
 			return nil, err
 		}
 	}
-	if prop, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "COMMENT" }); err == nil {
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "COMMENT" }); err == nil {
 		if err = d.Set("comment", prop.Value); err != nil {
 			return nil, err
 		}
@@ -317,7 +324,10 @@ func CreateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 	for _, v := range externalOauthTokenUserMappingClaimRaw {
 		externalOauthTokenUserMappingClaim = append(externalOauthTokenUserMappingClaim, sdk.TokenUserMappingClaim{Claim: v})
 	}
-	id := sdk.NewAccountObjectIdentifier(name)
+	id, err := sdk.ParseAccountObjectIdentifier(name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	req := sdk.NewCreateExternalOauthSecurityIntegrationRequest(id, enabled, integrationType, externalOauthIssuer, externalOauthTokenUserMappingClaim, externalOauthSnowflakeUserMappingAttribute)
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -389,7 +399,7 @@ func CreateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextExternalOauthIntegration(false)(ctx, d, meta)
 }
@@ -397,7 +407,10 @@ func CreateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -421,7 +434,7 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
-		if err := d.Set("name", integration.Name); err != nil {
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("comment", integration.Comment); err != nil {
@@ -439,65 +452,65 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 			return diag.FromErr(err)
 		}
 		if withExternalChangesMarking {
-			externalOauthIssuer, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "EXTERNAL_OAUTH_ISSUER" })
+			externalOauthIssuer, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "EXTERNAL_OAUTH_ISSUER" })
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			externalOauthJwsKeysUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			externalOauthJwsKeysUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "EXTERNAL_OAUTH_JWS_KEYS_URL"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			externalOauthAnyRoleMode, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			externalOauthAnyRoleMode, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "EXTERNAL_OAUTH_ANY_ROLE_MODE"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			externalOauthRsaPublicKey, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			externalOauthRsaPublicKey, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "EXTERNAL_OAUTH_RSA_PUBLIC_KEY"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			externalOauthRsaPublicKey2, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			externalOauthRsaPublicKey2, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "EXTERNAL_OAUTH_RSA_PUBLIC_KEY_2"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			externalOauthBlockedRolesList, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			externalOauthBlockedRolesList, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "EXTERNAL_OAUTH_BLOCKED_ROLES_LIST"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			externalOauthAllowedRolesList, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			externalOauthAllowedRolesList, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "EXTERNAL_OAUTH_ALLOWED_ROLES_LIST"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			externalOauthAudienceList, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			externalOauthAudienceList, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "EXTERNAL_OAUTH_AUDIENCE_LIST"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			externalOauthTokenUserMappingClaim, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			externalOauthTokenUserMappingClaim, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "EXTERNAL_OAUTH_TOKEN_USER_MAPPING_CLAIM"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			externalOauthSnowflakeUserMappingAttribute, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			externalOauthSnowflakeUserMappingAttribute, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "EXTERNAL_OAUTH_SNOWFLAKE_USER_MAPPING_ATTRIBUTE"
 			})
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			externalOauthScopeDelimiter, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			externalOauthScopeDelimiter, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "EXTERNAL_OAUTH_SCOPE_DELIMITER"
 			})
 			if err != nil {
@@ -520,7 +533,7 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 			}
 		}
 
-		if err = setStateToValuesFromConfig(d, warehouseSchema, []string{
+		if err = setStateToValuesFromConfig(d, externalOauthIntegrationSchema, []string{
 			"external_oauth_jws_keys_url",
 			"external_oauth_rsa_public_key",
 			"external_oauth_rsa_public_key_2",
@@ -555,7 +568,11 @@ func ReadContextExternalOauthIntegration(withExternalChangesMarking bool) schema
 
 func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	set, unset := sdk.NewExternalOauthIntegrationSetRequest(), sdk.NewExternalOauthIntegrationUnsetRequest()
 
 	if d.HasChange("comment") {
@@ -706,10 +723,13 @@ func UpdateContextExternalOauthIntegration(ctx context.Context, d *schema.Resour
 }
 
 func DeleteContextExternalOauthIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

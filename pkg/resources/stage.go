@@ -2,10 +2,12 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -91,7 +93,8 @@ var stageSchema = map[string]*schema.Schema{
 		// Description based on https://docs.snowflake.com/en/user-guide/data-load-s3-config-aws-iam-role#step-3-create-an-external-stage
 		Description: "An AWS IAM user created for your Snowflake account. This user is the same for every external S3 stage created in your account.",
 	},
-	"tag": tagReferenceSchema,
+	"tag":                           tagReferenceSchema,
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // TODO (SNOW-1019005): Remove snowflake package that is used in Create and Update operations
@@ -172,14 +175,17 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 
 	properties, err := client.Stages.Describe(ctx, id)
 	if err != nil {
-		d.SetId("")
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Failed to describe stage",
-				Detail:   fmt.Sprintf("Id: %s, Err: %s", d.Id(), err),
-			},
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to describe stage. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Stage: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
 		}
+		return diag.FromErr(err)
 	}
 
 	stage, err := client.Stages.ShowByID(ctx, id)
@@ -189,9 +195,12 @@ func ReadStage(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to show stage by id",
-				Detail:   fmt.Sprintf("Id: %s, Err: %s", d.Id(), err),
+				Detail:   fmt.Sprintf("Stage: %s, Err: %s", id.FullyQualifiedName(), err),
 			},
 		}
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", stage.Name); err != nil {

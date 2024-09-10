@@ -50,9 +50,9 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", accName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_stream.test_stream", "append_only", false),
-					checkBool("snowflake_stream.test_stream", "insert_only", false),
-					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "append_only", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "insert_only", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "show_initial_rows", "false"),
 				),
 			},
 		},
@@ -63,7 +63,7 @@ func TestAcc_StreamCreateOnStage(t *testing.T) {
 func TestAcc_Stream_OnTable(t *testing.T) {
 	tableName := acc.TestClient().Ids.Alpha()
 	tableName2 := acc.TestClient().Ids.Alpha()
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -74,9 +74,10 @@ func TestAcc_Stream_OnTable(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Stream),
 		Steps: []resource.TestStep{
 			{
-				Config: streamConfigOnTable(acc.TestDatabaseName, acc.TestSchemaName, tableName, name),
+				Config: streamConfigOnTable(acc.TestDatabaseName, acc.TestSchemaName, tableName, id.Name()),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", name),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("\"%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
@@ -87,9 +88,10 @@ func TestAcc_Stream_OnTable(t *testing.T) {
 				},
 			},
 			{
-				Config: streamConfigOnTable(acc.TestDatabaseName, acc.TestSchemaName, tableName2, name),
+				Config: streamConfigOnTable(acc.TestDatabaseName, acc.TestSchemaName, tableName2, id.Name()),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", name),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("\"%s\".\"%s\".%s", acc.TestDatabaseName, acc.TestSchemaName, tableName2)),
@@ -105,6 +107,9 @@ func TestAcc_Stream_OnTable(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2672
 func TestAcc_Stream_OnView(t *testing.T) {
+	// TODO(SNOW-1423486): Fix using warehouse in all tests and remove unsetting testenvs.ConfigureClientOnce
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	tableName := acc.TestClient().Ids.Alpha()
 	viewName := acc.TestClient().Ids.Alpha()
 	name := acc.TestClient().Ids.Alpha()
@@ -159,9 +164,9 @@ func TestAcc_Stream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_stream.test_stream", "append_only", false),
-					checkBool("snowflake_stream.test_stream", "insert_only", false),
-					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "append_only", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "insert_only", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "show_initial_rows", "false"),
 				),
 			},
 			{
@@ -172,9 +177,9 @@ func TestAcc_Stream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_stream.test_stream", "append_only", true),
-					checkBool("snowflake_stream.test_stream", "insert_only", false),
-					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "append_only", "true"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "insert_only", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "show_initial_rows", "false"),
 				),
 			},
 			{
@@ -185,9 +190,9 @@ func TestAcc_Stream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accNameExternalTable),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accNameExternalTable, accNameExternalTable, "STREAM_ON_EXTERNAL_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_stream.test_stream", "append_only", false),
-					checkBool("snowflake_stream.test_stream", "insert_only", false),
-					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "append_only", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "insert_only", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "show_initial_rows", "false"),
 				),
 			},
 			{
@@ -198,9 +203,9 @@ func TestAcc_Stream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accNameExternalTable),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_table", fmt.Sprintf("%s.%s.%s", accNameExternalTable, accNameExternalTable, "STREAM_ON_EXTERNAL_TABLE")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_stream.test_stream", "append_only", false),
-					checkBool("snowflake_stream.test_stream", "insert_only", true),
-					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "append_only", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "insert_only", "true"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "show_initial_rows", "false"),
 				),
 			},
 			{
@@ -211,9 +216,9 @@ func TestAcc_Stream(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "schema", accName),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "on_view", fmt.Sprintf("%s.%s.%s", accName, accName, "STREAM_ON_VIEW")),
 					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "comment", "Terraform acceptance test"),
-					checkBool("snowflake_stream.test_stream", "append_only", false),
-					checkBool("snowflake_stream.test_stream", "insert_only", false),
-					checkBool("snowflake_stream.test_stream", "show_initial_rows", false),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "append_only", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "insert_only", "false"),
+					resource.TestCheckResourceAttr("snowflake_stream.test_stream", "show_initial_rows", "false"),
 				),
 			},
 			{
@@ -287,8 +292,15 @@ resource "snowflake_view" "test" {
 	database = "%[1]s"
 	schema   = "%[2]s"
 	name     = "%[4]s"
+	change_tracking = true
 
 	statement = "select * from \"${snowflake_table.test.name}\""
+	column {
+		column_name = "column1"
+	}
+	column {
+		column_name = "column2"
+	}
 }
 
 resource "snowflake_stream" "test_stream" {

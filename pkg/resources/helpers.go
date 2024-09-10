@@ -5,16 +5,12 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-func isOk(_ interface{}, ok bool) bool {
-	return ok
-}
 
 func dataTypeValidateFunc(val interface{}, _ string) (warns []string, errs []error) {
 	if ok := sdk.IsValidDataType(val.(string)); !ok {
@@ -35,6 +31,39 @@ func dataTypeDiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 	return oldDT == newDT
 }
 
+// DataTypeIssue3007DiffSuppressFunc is a temporary solution to handle data type suppression problems.
+// Currently, it handles only number and text data types.
+// It falls back to Snowflake defaults for arguments if no arguments were provided for the data type.
+// TODO [SNOW-1348103 or SNOW-1348106]: visit with functions and procedures rework
+func DataTypeIssue3007DiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	oldDataType, err := sdk.ToDataType(old)
+	if err != nil {
+		return false
+	}
+	newDataType, err := sdk.ToDataType(new)
+	if err != nil {
+		return false
+	}
+	if oldDataType != newDataType {
+		return false
+	}
+	switch v := oldDataType; v {
+	case sdk.DataTypeNumber:
+		logging.DebugLogger.Printf("[DEBUG] DataTypeIssue3007DiffSuppressFunc: Handling number data type diff suppression")
+		oldPrecision, oldScale := sdk.ParseNumberDataTypeRaw(old)
+		newPrecision, newScale := sdk.ParseNumberDataTypeRaw(new)
+		return oldPrecision == newPrecision && oldScale == newScale
+	case sdk.DataTypeVARCHAR:
+		logging.DebugLogger.Printf("[DEBUG] DataTypeIssue3007DiffSuppressFunc: Handling text data type diff suppression")
+		oldLength := sdk.ParseVarcharDataTypeRaw(old)
+		newLength := sdk.ParseVarcharDataTypeRaw(new)
+		return oldLength == newLength
+	default:
+		logging.DebugLogger.Printf("[DEBUG] DataTypeIssue3007DiffSuppressFunc: Diff suppression for %s can't be currently handled", v)
+	}
+	return true
+}
+
 func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 	return strings.TrimSpace(old) == strings.TrimSpace(new)
 }
@@ -45,33 +74,6 @@ func ignoreCaseSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 
 func ignoreCaseAndTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 	return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
-}
-
-func setIntProperty(d *schema.ResourceData, key string, property *sdk.IntProperty) error {
-	if property != nil && property.Value != nil {
-		if err := d.Set(key, *property.Value); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func setStringProperty(d *schema.ResourceData, key string, property *sdk.StringProperty) error {
-	if property != nil {
-		if err := d.Set(key, property.Value); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func setBoolProperty(d *schema.ResourceData, key string, property *sdk.BoolProperty) error {
-	if property != nil {
-		if err := d.Set(key, property.Value); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func getTagObjectIdentifier(v map[string]any) sdk.ObjectIdentifier {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -36,6 +37,7 @@ type Databases interface {
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*DatabaseDetails, error)
 	Use(ctx context.Context, id AccountObjectIdentifier) error
+	ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error)
 }
 
 var _ Databases = (*databases)(nil)
@@ -49,7 +51,7 @@ type Database struct {
 	Name          string
 	IsDefault     bool
 	IsCurrent     bool
-	Origin        string
+	Origin        *ExternalObjectIdentifier
 	Owner         string
 	Comment       string
 	Options       string
@@ -96,8 +98,14 @@ func (row databaseRow) convert() *Database {
 	if row.IsCurrent.Valid {
 		database.IsCurrent = row.IsCurrent.String == "Y"
 	}
-	if row.Origin.Valid {
-		database.Origin = row.Origin.String
+	if row.Origin.Valid && row.Origin.String != "" {
+		originId, err := ParseExternalObjectIdentifier(row.Origin.String)
+		if err != nil {
+			// TODO(SNOW-1561641): Return error
+			log.Printf("[DEBUG] unable to parse origin ID: %v", row.Origin.String)
+		} else {
+			database.Origin = &originId
+		}
 	}
 	if row.Owner.Valid {
 		database.Owner = row.Owner.String
@@ -844,4 +852,12 @@ func (v *databases) Describe(ctx context.Context, id AccountObjectIdentifier) (*
 func (v *databases) Use(ctx context.Context, id AccountObjectIdentifier) error {
 	// proxy to sessions
 	return v.client.Sessions.UseDatabase(ctx, id)
+}
+
+func (v *databases) ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error) {
+	return v.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
+		In: &ParametersIn{
+			Database: id,
+		},
+	})
 }

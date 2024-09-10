@@ -41,7 +41,9 @@ type (
 
 var (
 	rootname  = acc.TestClient().Ids.AlphaContaining("_root_task")
+	rootId    = sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, rootname)
 	childname = acc.TestClient().Ids.AlphaContaining("_child_task")
+	childId   = sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, childname)
 	soloname  = acc.TestClient().Ids.AlphaContaining("_standalone_task")
 
 	initialState = &AccTaskTestSettings{ //nolint
@@ -201,10 +203,12 @@ func TestAcc_Task(t *testing.T) {
 			{
 				Config: taskConfig(initialState),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.root_task", "enabled", true),
-					checkBool("snowflake_task.child_task", "enabled", false),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
@@ -218,17 +222,19 @@ func TestAcc_Task(t *testing.T) {
 					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", initialState.RootTask.UserTaskTimeoutMs),
 					resource.TestCheckNoResourceAttr("snowflake_task.solo_task", "user_task_timeout_ms"),
 					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
-					checkBool("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", true),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", "true"),
 					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
 				),
 			},
 			{
 				Config: taskConfig(stepOne),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.root_task", "enabled", true),
-					checkBool("snowflake_task.child_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
@@ -241,17 +247,19 @@ func TestAcc_Task(t *testing.T) {
 					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepOne.RootTask.UserTaskTimeoutMs),
 					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepOne.SoloTask.UserTaskTimeoutMs),
 					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
-					checkBool("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", true),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", "true"),
 					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
 				),
 			},
 			{
 				Config: taskConfig(stepTwo),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.root_task", "enabled", true),
-					checkBool("snowflake_task.child_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
@@ -264,17 +272,19 @@ func TestAcc_Task(t *testing.T) {
 					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepTwo.RootTask.UserTaskTimeoutMs),
 					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepTwo.SoloTask.UserTaskTimeoutMs),
 					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
-					checkBool("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", true),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", "true"),
 					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
 				),
 			},
 			{
 				Config: taskConfig(stepThree),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.root_task", "enabled", false),
-					checkBool("snowflake_task.child_task", "enabled", false),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "false"),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
@@ -294,10 +304,12 @@ func TestAcc_Task(t *testing.T) {
 			{
 				Config: taskConfig(initialState),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.root_task", "enabled", true),
-					checkBool("snowflake_task.child_task", "enabled", false),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
@@ -316,7 +328,7 @@ func TestAcc_Task(t *testing.T) {
 					// USER_TASK_TIMEOUT_MS session variable.
 					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", initialState.ChildTask.UserTaskTimeoutMs),
 					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
-					checkBool("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", true),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", "true"),
 					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
 				),
 			},
@@ -559,7 +571,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 			{
 				Config: taskConfigManagedScheduled(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
@@ -570,7 +582,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 			{
 				Config: taskConfigManagedScheduled2(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
@@ -581,7 +593,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 			{
 				Config: taskConfigManagedScheduled(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
@@ -592,7 +604,7 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 			{
 				Config: taskConfigManagedScheduled3(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.test_task", "enabled", false),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "false"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
@@ -710,8 +722,8 @@ func TestAcc_Task_issue2207(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.root_task", "enabled", true),
-					checkBool("snowflake_task.child_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "true"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -724,8 +736,8 @@ func TestAcc_Task_issue2207(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
 				ConfigVariables: m2,
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.root_task", "enabled", true),
-					checkBool("snowflake_task.child_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
+					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "true"),
 				),
 			},
 		},
@@ -757,7 +769,7 @@ func TestAcc_Task_issue2036(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", ""),
 				),
 			},
@@ -766,7 +778,7 @@ func TestAcc_Task_issue2036(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", "TRUE"),
 				),
 			},
@@ -775,7 +787,7 @@ func TestAcc_Task_issue2036(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBool("snowflake_task.test_task", "enabled", true),
+					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", ""),
 				),
 			},

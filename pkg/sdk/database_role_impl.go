@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ DatabaseRoles = (*databaseRoles)(nil)
@@ -36,17 +36,21 @@ func (v *databaseRoles) Show(ctx context.Context, request *ShowDatabaseRoleReque
 
 	resultList := convertRows[databaseRoleDBRow, DatabaseRole](dbRows)
 
+	for i := range resultList {
+		resultList[i].DatabaseName = request.database.name
+	}
+
 	return resultList, nil
 }
 
 func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error) {
-	request := NewShowDatabaseRoleRequest(id.DatabaseId()).WithLike(id.Name())
+	request := NewShowDatabaseRoleRequest(id.DatabaseId()).WithLike(Like{Pointer(id.Name())})
 	databaseRoles, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 
-	return collections.FindOne(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
+	return collections.FindFirst(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
 }
 
 func (v *databaseRoles) Grant(ctx context.Context, request *GrantDatabaseRoleRequest) error {
@@ -80,11 +84,11 @@ func (s *CreateDatabaseRoleRequest) toOpts() *createDatabaseRoleOptions {
 
 func (s *AlterDatabaseRoleRequest) toOpts() *alterDatabaseRoleOptions {
 	opts := alterDatabaseRoleOptions{
-		IfExists: Bool(s.ifExists),
-		name:     s.name,
-	}
-	if s.rename != nil {
-		opts.Rename = &DatabaseRoleRename{s.rename.name}
+		IfExists:  Bool(s.ifExists),
+		name:      s.name,
+		Rename:    s.rename,
+		SetTags:   s.setTags,
+		UnsetTags: s.unsetTags,
 	}
 	if s.set != nil {
 		opts.Set = &DatabaseRoleSet{s.set.comment}
@@ -106,6 +110,7 @@ func (s *ShowDatabaseRoleRequest) toOpts() *showDatabaseRoleOptions {
 	return &showDatabaseRoleOptions{
 		Like:     s.like,
 		Database: s.database,
+		Limit:    s.limit,
 	}
 }
 

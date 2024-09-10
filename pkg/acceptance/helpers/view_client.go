@@ -43,7 +43,7 @@ func (c *ViewClient) RecreateView(t *testing.T, id sdk.SchemaObjectIdentifier, q
 	t.Helper()
 	ctx := context.Background()
 
-	err := c.client().Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(sdk.Bool(true)))
+	err := c.client().Create(ctx, sdk.NewCreateViewRequest(id, query).WithOrReplace(true))
 	require.NoError(t, err)
 
 	view, err := c.client().ShowByID(ctx, id)
@@ -52,12 +52,27 @@ func (c *ViewClient) RecreateView(t *testing.T, id sdk.SchemaObjectIdentifier, q
 	return view
 }
 
+func (c *ViewClient) Alter(t *testing.T, req *sdk.AlterViewRequest) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, req)
+	require.NoError(t, err)
+}
+
 func (c *ViewClient) DropViewFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 
 	return func() {
-		err := c.client().Drop(ctx, sdk.NewDropViewRequest(id).WithIfExists(sdk.Bool(true)))
+		err := c.client().Drop(ctx, sdk.NewDropViewRequest(id).WithIfExists(true))
 		require.NoError(t, err)
 	}
+}
+
+func (c *ViewClient) Show(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.View, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
 }

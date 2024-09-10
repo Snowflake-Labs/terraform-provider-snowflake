@@ -6,12 +6,17 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_SessionParameterWithUser(t *testing.T) {
-	prefix := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+
+	user, userCleanup := acc.TestClient().User.CreateUser(t)
+	t.Cleanup(userCleanup)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -22,11 +27,11 @@ func TestAcc_SessionParameterWithUser(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: sessionParameterWithUser(prefix, "BINARY_OUTPUT_FORMAT", "BASE64"),
+				Config: sessionParameterWithUser(user.ID(), "BINARY_OUTPUT_FORMAT", "BASE64"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_session_parameter.p", "key", "BINARY_OUTPUT_FORMAT"),
 					resource.TestCheckResourceAttr("snowflake_session_parameter.p", "value", "BASE64"),
-					resource.TestCheckResourceAttr("snowflake_session_parameter.p", "user", prefix),
+					resource.TestCheckResourceAttr("snowflake_session_parameter.p", "user", user.ID().Name()),
 					resource.TestCheckResourceAttr("snowflake_session_parameter.p", "on_account", "false"),
 				),
 			},
@@ -55,19 +60,14 @@ func TestAcc_SessionParameterOnAccount(t *testing.T) {
 	})
 }
 
-func sessionParameterWithUser(user, key, value string) string {
-	s := `
-resource "snowflake_user" "u" {
-	name = "%s"
-}
-
+func sessionParameterWithUser(userId sdk.AccountObjectIdentifier, key, value string) string {
+	return fmt.Sprintf(`
 resource "snowflake_session_parameter" "p" {
-	key = "%s"
-	value = "%s"
-	user = snowflake_user.u.name
+	key = "%[2]s"
+	value = "%[3]s"
+	user = %[1]s
 }
-`
-	return fmt.Sprintf(s, user, key, value)
+`, userId.FullyQualifiedName(), key, value)
 }
 
 func sessionParameterOnAccount(key, value string) string {

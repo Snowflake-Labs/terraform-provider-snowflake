@@ -11,19 +11,19 @@ var (
 )
 
 type CreateViewRequest struct {
-	OrReplace              *bool
-	Secure                 *bool
-	Temporary              *bool
-	Recursive              *bool
-	IfNotExists            *bool
-	name                   SchemaObjectIdentifier // required
-	Columns                []ViewColumnRequest
-	ColumnsMaskingPolicies []ViewColumnMaskingPolicyRequest
-	CopyGrants             *bool
-	Comment                *string
-	RowAccessPolicy        *ViewRowAccessPolicyRequest
-	Tag                    []TagAssociation
-	sql                    string // required
+	OrReplace         *bool
+	Secure            *bool
+	Temporary         *bool
+	Recursive         *bool
+	IfNotExists       *bool
+	name              SchemaObjectIdentifier // required
+	Columns           []ViewColumnRequest
+	CopyGrants        *bool
+	Comment           *string
+	RowAccessPolicy   *ViewRowAccessPolicyRequest
+	AggregationPolicy *ViewAggregationPolicyRequest
+	Tag               []TagAssociation
+	sql               string // required
 }
 
 func (r *CreateViewRequest) GetName() SchemaObjectIdentifier {
@@ -31,46 +31,83 @@ func (r *CreateViewRequest) GetName() SchemaObjectIdentifier {
 }
 
 type ViewColumnRequest struct {
-	Name    string // required
-	Comment *string
+	Name             string // required
+	ProjectionPolicy *ViewColumnProjectionPolicyRequest
+	MaskingPolicy    *ViewColumnMaskingPolicyRequest
+	Comment          *string
+	Tag              []TagAssociation
+}
+
+type ViewColumnProjectionPolicyRequest struct {
+	ProjectionPolicy SchemaObjectIdentifier // required
 }
 
 type ViewColumnMaskingPolicyRequest struct {
-	Name          string                 // required
 	MaskingPolicy SchemaObjectIdentifier // required
-	Using         []string
-	Tag           []TagAssociation
+	Using         []Column
 }
 
 type ViewRowAccessPolicyRequest struct {
 	RowAccessPolicy SchemaObjectIdentifier // required
-	On              []string               // required
+	On              []Column               // required
+}
+
+type ViewAggregationPolicyRequest struct {
+	AggregationPolicy SchemaObjectIdentifier // required
+	EntityKey         []Column
 }
 
 type AlterViewRequest struct {
-	IfExists                   *bool
-	name                       SchemaObjectIdentifier // required
-	RenameTo                   *SchemaObjectIdentifier
-	SetComment                 *string
-	UnsetComment               *bool
-	SetSecure                  *bool
-	SetChangeTracking          *bool
-	UnsetSecure                *bool
-	SetTags                    []TagAssociation
-	UnsetTags                  []ObjectIdentifier
-	AddRowAccessPolicy         *ViewAddRowAccessPolicyRequest
-	DropRowAccessPolicy        *ViewDropRowAccessPolicyRequest
-	DropAndAddRowAccessPolicy  *ViewDropAndAddRowAccessPolicyRequest
-	DropAllRowAccessPolicies   *bool
-	SetMaskingPolicyOnColumn   *ViewSetColumnMaskingPolicyRequest
-	UnsetMaskingPolicyOnColumn *ViewUnsetColumnMaskingPolicyRequest
-	SetTagsOnColumn            *ViewSetColumnTagsRequest
-	UnsetTagsOnColumn          *ViewUnsetColumnTagsRequest
+	IfExists                      *bool
+	name                          SchemaObjectIdentifier // required
+	RenameTo                      *SchemaObjectIdentifier
+	SetComment                    *string
+	UnsetComment                  *bool
+	SetSecure                     *bool
+	SetChangeTracking             *bool
+	UnsetSecure                   *bool
+	SetTags                       []TagAssociation
+	UnsetTags                     []ObjectIdentifier
+	AddDataMetricFunction         *ViewAddDataMetricFunctionRequest
+	DropDataMetricFunction        *ViewDropDataMetricFunctionRequest
+	ModifyDataMetricFunction      *ViewModifyDataMetricFunctionsRequest
+	SetDataMetricSchedule         *ViewSetDataMetricScheduleRequest
+	UnsetDataMetricSchedule       *ViewUnsetDataMetricScheduleRequest
+	AddRowAccessPolicy            *ViewAddRowAccessPolicyRequest
+	DropRowAccessPolicy           *ViewDropRowAccessPolicyRequest
+	DropAndAddRowAccessPolicy     *ViewDropAndAddRowAccessPolicyRequest
+	DropAllRowAccessPolicies      *bool
+	SetAggregationPolicy          *ViewSetAggregationPolicyRequest
+	UnsetAggregationPolicy        *ViewUnsetAggregationPolicyRequest
+	SetMaskingPolicyOnColumn      *ViewSetColumnMaskingPolicyRequest
+	UnsetMaskingPolicyOnColumn    *ViewUnsetColumnMaskingPolicyRequest
+	SetProjectionPolicyOnColumn   *ViewSetProjectionPolicyRequest
+	UnsetProjectionPolicyOnColumn *ViewUnsetProjectionPolicyRequest
+	SetTagsOnColumn               *ViewSetColumnTagsRequest
+	UnsetTagsOnColumn             *ViewUnsetColumnTagsRequest
 }
+
+type ViewAddDataMetricFunctionRequest struct {
+	DataMetricFunction []ViewDataMetricFunction // required
+}
+
+type ViewDropDataMetricFunctionRequest struct {
+	DataMetricFunction []ViewDataMetricFunction // required
+}
+
+type ViewModifyDataMetricFunctionsRequest struct {
+	DataMetricFunction []ViewModifyDataMetricFunction // required
+}
+
+type ViewSetDataMetricScheduleRequest struct {
+	DataMetricSchedule string // required
+}
+
+type ViewUnsetDataMetricScheduleRequest struct{}
 
 type ViewAddRowAccessPolicyRequest struct {
 	RowAccessPolicy SchemaObjectIdentifier // required
-	On              []string               // required
+	On              []Column               // required
 }
 
 type ViewDropRowAccessPolicyRequest struct {
@@ -82,14 +119,32 @@ type ViewDropAndAddRowAccessPolicyRequest struct {
 	Add  ViewAddRowAccessPolicyRequest  // required
 }
 
+type ViewSetAggregationPolicyRequest struct {
+	AggregationPolicy SchemaObjectIdentifier // required
+	EntityKey         []Column
+	Force             *bool
+}
+
+type ViewUnsetAggregationPolicyRequest struct{}
+
 type ViewSetColumnMaskingPolicyRequest struct {
 	Name          string                 // required
 	MaskingPolicy SchemaObjectIdentifier // required
-	Using         []string
+	Using         []Column
 	Force         *bool
 }
 
 type ViewUnsetColumnMaskingPolicyRequest struct {
+	Name string // required
+}
+
+type ViewSetProjectionPolicyRequest struct {
+	Name             string                 // required
+	ProjectionPolicy SchemaObjectIdentifier // required
+	Force            *bool
+}
+
+type ViewUnsetProjectionPolicyRequest struct {
 	Name string // required
 }
 
@@ -111,7 +166,7 @@ type DropViewRequest struct {
 type ShowViewRequest struct {
 	Terse      *bool
 	Like       *Like
-	In         *In
+	In         *ExtendedIn
 	StartsWith *string
 	Limit      *LimitFrom
 }

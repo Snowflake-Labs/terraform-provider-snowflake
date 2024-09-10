@@ -1,0 +1,34 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model/gen.ResourceConfigBuilderModel*/ -}}
+
+{{- $modelName := .Name | printf "%sModel" -}}
+{{- $nameLowerCase := FirstLetterLowercase .Name -}}
+{{- $modelVar := FirstLetter $nameLowerCase }}
+/////////////////////////////////
+// below all the proper values //
+/////////////////////////////////
+
+{{ range .Attributes -}}
+    {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
+    {{ if .AttributeType }}
+        func ({{ $modelVar }} *{{ $modelName }}) With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }}) *{{ $modelName }} {
+            {{ $modelVar }}.{{ $attributeNameCamel }} = tfconfig.{{ .VariableMethod }}({{ FirstLetterLowercase $attributeNameCamel }})
+            return {{ $modelVar }}
+        }
+    {{ else }}
+        // {{ .Name }} attribute type is not yet supported, so With{{ $attributeNameCamel }} can't be generated
+    {{ end }}
+
+{{ end -}}
+
+//////////////////////////////////////////
+// below it's possible to set any value //
+//////////////////////////////////////////
+
+{{ range .Attributes -}}
+    {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
+    func ({{ $modelVar }} *{{ $modelName }}) With{{ $attributeNameCamel }}Value(value tfconfig.Variable) *{{ $modelName }} {
+        {{ $modelVar }}.{{ $attributeNameCamel }} = value
+        return {{ $modelVar }}
+    }
+
+{{ end -}}

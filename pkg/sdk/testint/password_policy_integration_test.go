@@ -28,7 +28,7 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowPasswordPolicyOptions{
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		}
 		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)
@@ -44,7 +44,7 @@ func TestInt_PasswordPoliciesShow(t *testing.T) {
 				Pattern: sdk.String(passwordPolicyTest.Name),
 			},
 			In: &sdk.In{
-				Database: testDb(t).ID(),
+				Database: testClientHelper().Ids.DatabaseId(),
 			},
 		}
 		passwordPolicies, err := client.PasswordPolicies.Show(ctx, showOptions)

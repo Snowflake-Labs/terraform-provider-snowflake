@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -15,16 +14,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func testAccProcedure(t *testing.T, configDirectory string) {
+func testAccProcedure(t *testing.T, configDirectory string, args ...sdk.DataType) {
 	t.Helper()
 
-	name := acc.TestClient().Ids.Alpha()
-	newName := acc.TestClient().Ids.Alpha()
+	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(args...)
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(args...)
 
 	resourceName := "snowflake_procedure.p"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":       config.StringVariable(name),
+			"name":       config.StringVariable(oldId.Name()),
 			"database":   config.StringVariable(acc.TestDatabaseName),
 			"schema":     config.StringVariable(acc.TestSchemaName),
 			"comment":    config.StringVariable("Terraform acceptance test"),
@@ -32,7 +31,7 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 		}
 	}
 	variableSet2 := m()
-	variableSet2["name"] = config.StringVariable(newName)
+	variableSet2["name"] = config.StringVariable(newId.Name())
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 	variableSet2["execute_as"] = config.StringVariable("OWNER")
 
@@ -53,7 +52,8 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 				ConfigDirectory: acc.ConfigurationDirectory(configDirectory),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "name", oldId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", oldId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
@@ -77,7 +77,8 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", newName),
+					resource.TestCheckResourceAttr(resourceName, "name", newId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
@@ -99,7 +100,7 @@ func testAccProcedure(t *testing.T, configDirectory string) {
 }
 
 func TestAcc_Procedure_SQL(t *testing.T) {
-	testAccProcedure(t, "TestAcc_Procedure/sql")
+	testAccProcedure(t, "TestAcc_Procedure/sql", sdk.DataTypeVARCHAR)
 }
 
 /*
@@ -114,11 +115,11 @@ func TestAcc_Procedure_Javascript(t *testing.T) {
 }
 
 func TestAcc_Procedure_Java(t *testing.T) {
-	testAccProcedure(t, "TestAcc_Procedure/java")
+	testAccProcedure(t, "TestAcc_Procedure/java", sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
 }
 
 func TestAcc_Procedure_Scala(t *testing.T) {
-	testAccProcedure(t, "TestAcc_Procedure/scala")
+	testAccProcedure(t, "TestAcc_Procedure/scala", sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
 }
 
 func TestAcc_Procedure_complex(t *testing.T) {
@@ -226,8 +227,13 @@ func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
 				),
 			},
 			{
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   procedureConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: procedureConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
@@ -245,20 +251,20 @@ func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
 func procedureConfig(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_procedure" "p" {
-  database    = "%[1]s"
-  schema      = "%[2]s"
-  name        = "%[3]s"
-  language    = "JAVASCRIPT"
-  return_type = "VARCHAR"
-  statement   = <<EOT
-    return "Hi"
-  EOT
+ database    = "%[1]s"
+ schema      = "%[2]s"
+ name        = "%[3]s"
+ language    = "JAVASCRIPT"
+ return_type = "VARCHAR"
+ statement   = <<EOT
+   return "Hi"
+ EOT
 }
 `, database, schema, name)
 }
 
 func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR, sdk.DataTypeNumber})
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR, sdk.DataTypeNumber)
 	name := id.Name()
 	resourceName := "snowflake_procedure.p"
 
@@ -301,7 +307,7 @@ func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
 
 // TODO [SNOW-1348106]: diff suppression for the return type (the same with functions); finish this test
 func TestAcc_Procedure_returnTypePermanentDiff(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments([]sdk.DataType{sdk.DataTypeVARCHAR})
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 	name := id.Name()
 	resourceName := "snowflake_procedure.p"
 
@@ -347,24 +353,24 @@ func TestAcc_Procedure_returnTypePermanentDiff(t *testing.T) {
 func sqlProcedureConfigArgsPermanentDiff(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_procedure" "p" {
-  database    = "%[1]s"
-  schema      = "%[2]s"
-  name        = "%[3]s"
-  language    = "SQL"
-  return_type = "NUMBER(38,0)"
-  arguments {
-    name = "arg1"
-    type = "VARCHAR"
-  }
-  arguments {
-    name = "MY_INT"
-    type = "int"
-  }
-  statement   = <<EOT
+ database    = "%[1]s"
+ schema      = "%[2]s"
+ name        = "%[3]s"
+ language    = "SQL"
+ return_type = "NUMBER(38,0)"
+ arguments {
+   name = "arg1"
+   type = "VARCHAR"
+ }
+ arguments {
+   name = "MY_INT"
+   type = "int"
+ }
+ statement   = <<EOT
 BEGIN
-  RETURN 13.4;
+ RETURN 13.4;
 END;
-  EOT
+ EOT
 }
 `, database, schema, name)
 }
@@ -372,20 +378,195 @@ END;
 func sqlProcedureConfigReturnTypePermanentDiff(database string, schema string, name string) string {
 	return fmt.Sprintf(`
 resource "snowflake_procedure" "p" {
+ database    = "%[1]s"
+ schema      = "%[2]s"
+ name        = "%[3]s"
+ language    = "SQL"
+ return_type = "TABLE (NUM1 NUMBER(10,2))"
+ arguments {
+   name = "ARG1"
+   type = "VARCHAR"
+ }
+ statement   = <<EOT
+BEGIN
+ RETURN 13.4;
+END;
+ EOT
+}
+`, database, schema, name)
+}
+
+func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_procedure.p"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: procedureConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   procedureConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+		},
+	})
+}
+
+func procedureConfigWithMoreArguments(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_procedure" "p" {
   database    = "%[1]s"
   schema      = "%[2]s"
   name        = "%[3]s"
   language    = "SQL"
-  return_type = "TABLE (NUM1 NUMBER(10,2))"
+  return_type = "NUMBER(38,0)"
+  statement   = <<EOT
+    BEGIN
+      RETURN 13.4;
+    END;
+  EOT
+
   arguments {
-    name = "ARG1"
+    name = "A"
     type = "VARCHAR"
   }
+  arguments {
+    name = "B"
+    type = "FLOAT"
+  }
+  arguments {
+    name = "C"
+    type = "NUMBER"
+  }
+}
+`, database, schema, name)
+}
+
+func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950_WithoutArguments(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_procedure.p"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: procedureConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   procedureConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"()`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+		},
+	})
+}
+
+func procedureConfigWithoutArguments(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_procedure" "p" {
+  database    = "%[1]s"
+  schema      = "%[2]s"
+  name        = "%[3]s"
+  language    = "SQL"
+  return_type = "NUMBER(38,0)"
   statement   = <<EOT
-BEGIN
-  RETURN 13.4;
-END;
+    BEGIN
+      RETURN 13.4;
+    END;
   EOT
+}
+`, database, schema, name)
+}
+
+func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950_ArgumentSynonyms(t *testing.T) {
+	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	resourceName := "snowflake_procedure.p"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: procedureConfigWithArgumentSynonyms(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(NUMBER, VARCHAR)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   procedureConfigWithArgumentSynonyms(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(NUMBER, VARCHAR)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
+				),
+			},
+		},
+	})
+}
+
+func procedureConfigWithArgumentSynonyms(database string, schema string, name string) string {
+	return fmt.Sprintf(`
+resource "snowflake_procedure" "p" {
+  database        = "%[1]s"
+  schema          = "%[2]s"
+  name            = "%[3]s"
+  return_type     = "VARCHAR"
+  return_behavior = "IMMUTABLE"
+  statement   = <<EOT
+    BEGIN
+      RETURN B;
+    END;
+  EOT
+
+  arguments {
+    name = "A"
+    type = "INT"
+  }
+  arguments {
+    name = "B"
+    type = "TEXT"
+  }
 }
 `, database, schema, name)
 }

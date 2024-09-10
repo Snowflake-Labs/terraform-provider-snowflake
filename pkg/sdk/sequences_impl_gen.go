@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ Sequences = (*sequences)(nil)
@@ -38,7 +38,7 @@ func (v *sequences) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*S
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(sequences, func(r Sequence) bool { return r.Name == id.Name() })
+	return collections.FindFirst(sequences, func(r Sequence) bool { return r.Name == id.Name() })
 }
 
 func (v *sequences) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SequenceDetail, error) {

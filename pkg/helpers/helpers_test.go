@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -220,4 +221,169 @@ func Test_DecodeSnowflakeAccountIdentifier(t *testing.T) {
 
 		require.ErrorContains(t, err, fmt.Sprintf("unable to read identifier: %s", id))
 	})
+}
+
+func TestParseRootLocation(t *testing.T) {
+	tests := []struct {
+		name         string
+		location     string
+		expectedId   string
+		expectedPath string
+		expectedErr  string
+	}{
+		{
+			name:        "empty",
+			location:    ``,
+			expectedErr: "incompatible identifier",
+		},
+		{
+			name:       "unquoted",
+			location:   `@a.b.c`,
+			expectedId: `"a"."b"."c"`,
+		},
+		{
+			name:         "unquoted with path",
+			location:     `@a.b.c/foo`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo`,
+		},
+		{
+			name:       "partially quoted",
+			location:   `@"a".b.c`,
+			expectedId: `"a"."b"."c"`,
+		},
+		{
+			name:         "partially quoted with path",
+			location:     `@"a".b.c/foo`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo`,
+		},
+		{
+			name:       "quoted",
+			location:   `@"a"."b"."c"`,
+			expectedId: `"a"."b"."c"`,
+		},
+		{
+			name:         "quoted with path",
+			location:     `@"a"."b"."c"/foo`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo`,
+		},
+		{
+			name:         "unquoted with path with dots",
+			location:     `@a.b.c/foo.d`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo.d`,
+		},
+		{
+			name:         "quoted with path with dots",
+			location:     `@"a"."b"."c"/foo.d`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo.d`,
+		},
+		{
+			name:         "quoted with complex path",
+			location:     `@"a"."b"."c"/foo.a/bar.b//hoge.c`,
+			expectedId:   `"a"."b"."c"`,
+			expectedPath: `foo.a/bar.b/hoge.c`,
+		},
+		{
+			name:        "invalid location",
+			location:    `@foo`,
+			expectedErr: "expected 3 parts for location foo, got 1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotId, gotPath, gotErr := ParseRootLocation(tt.location)
+			if len(tt.expectedErr) > 0 {
+				assert.ErrorContains(t, gotErr, tt.expectedErr)
+			} else {
+				assert.NoError(t, gotErr)
+				assert.Equal(t, tt.expectedId, gotId.FullyQualifiedName())
+				assert.Equal(t, tt.expectedPath, gotPath)
+			}
+		})
+	}
+}
+
+func Test_ContainsIdentifierIgnoreQuotes(t *testing.T) {
+	testCases := []struct {
+		Name          string
+		Ids           []string
+		Id            string
+		ShouldContain bool
+	}{
+		{
+			Name: "validation: nil Ids",
+			Id:   "id",
+		},
+		{
+			Name: "validation: empty Id",
+			Ids:  []string{"id"},
+			Id:   "",
+		},
+		{
+			Name: "validation: Ids with too many parts",
+			Ids:  []string{"this.id.has.too.many.parts"},
+			Id:   "id",
+		},
+		{
+			Name: "validation: Id with too many parts",
+			Ids:  []string{"id"},
+			Id:   "this.id.has.too.many.parts",
+		},
+		{
+			Name: "validation: account object identifier in Ids ignore quotes with upper cased Id",
+			Ids:  []string{"object", "db.schema", "db.schema.object"},
+			Id:   "\"OBJECT\"",
+		},
+		{
+			Name: "validation: account object identifier in Ids ignore quotes with upper cased id in Ids",
+			Ids:  []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:   "\"object\"",
+		},
+		{
+			Name:          "account object identifier in Ids",
+			Ids:           []string{"object", "db.schema", "db.schema.object"},
+			Id:            "\"object\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "database object identifier in Ids",
+			Ids:           []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:            "\"db\".\"schema\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "schema object identifier in Ids",
+			Ids:           []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:            "\"db\".\"schema\".\"object\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "account object identifier in Ids upper-cased",
+			Ids:           []string{"OBJECT", "db.schema", "db.schema.object"},
+			Id:            "\"OBJECT\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "database object identifier in Ids upper-cased",
+			Ids:           []string{"object", "DB.SCHEMA", "db.schema.object"},
+			Id:            "\"DB\".\"SCHEMA\"",
+			ShouldContain: true,
+		},
+		{
+			Name:          "schema object identifier in Ids upper-cased",
+			Ids:           []string{"object", "db.schema", "DB.SCHEMA.OBJECT"},
+			Id:            "\"DB\".\"SCHEMA\".\"OBJECT\"",
+			ShouldContain: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			assert.Equal(t, tc.ShouldContain, ContainsIdentifierIgnoringQuotes(tc.Ids, tc.Id))
+		})
+	}
 }

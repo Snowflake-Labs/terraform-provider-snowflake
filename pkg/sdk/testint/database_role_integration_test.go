@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -50,7 +50,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		id := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		comment := random.Comment()
 
-		request := sdk.NewCreateDatabaseRoleRequest(id).WithComment(&comment).WithIfNotExists(true)
+		request := sdk.NewCreateDatabaseRoleRequest(id).WithComment(comment).WithIfNotExists(true)
 		err := client.DatabaseRoles.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupDatabaseRoleProvider(id))
@@ -101,7 +101,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(cleanupDatabaseRoleProvider(id))
 
-		alterRequest := sdk.NewAlterDatabaseRoleRequest(id).WithSetComment("new comment")
+		alterRequest := sdk.NewAlterDatabaseRoleRequest(id).WithSet(*sdk.NewDatabaseRoleSetRequest("new comment"))
 		err = client.DatabaseRoles.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -110,7 +110,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 
 		assert.Equal(t, "new comment", alteredDatabaseRole.Comment)
 
-		alterRequest = sdk.NewAlterDatabaseRoleRequest(id).WithUnsetComment()
+		alterRequest = sdk.NewAlterDatabaseRoleRequest(id).WithUnset(*sdk.NewDatabaseRoleUnsetRequest())
 		err = client.DatabaseRoles.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -163,11 +163,44 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		assert.ErrorIs(t, err, sdk.ErrDifferentDatabase)
 	})
 
+	t.Run("alter database_role: set and unset tag", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		databaseRole, cleanupDatabaseRole := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
+		t.Cleanup(cleanupDatabaseRole)
+
+		tagValue := "abc"
+		tags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: tagValue,
+			},
+		}
+
+		err := client.DatabaseRoles.Alter(ctx, sdk.NewAlterDatabaseRoleRequest(databaseRole.ID()).WithSetTags(tags))
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), databaseRole.ID(), sdk.ObjectTypeDatabaseRole)
+		require.NoError(t, err)
+
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		err = client.DatabaseRoles.Alter(ctx, sdk.NewAlterDatabaseRoleRequest(databaseRole.ID()).WithUnsetTags(unsetTags))
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), databaseRole.ID(), sdk.ObjectTypeDatabaseRole)
+		require.Error(t, err)
+	})
+
 	t.Run("show database_role: without like", func(t *testing.T) {
 		role1 := createDatabaseRole(t)
 		role2 := createDatabaseRole(t)
 
-		showRequest := sdk.NewShowDatabaseRoleRequest(testDb(t).ID())
+		showRequest := sdk.NewShowDatabaseRoleRequest(testClientHelper().Ids.DatabaseId())
 		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 		require.NoError(t, err)
 
@@ -180,7 +213,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role1 := createDatabaseRole(t)
 		role2 := createDatabaseRole(t)
 
-		showRequest := sdk.NewShowDatabaseRoleRequest(testDb(t).ID()).WithLike(role1.Name)
+		showRequest := sdk.NewShowDatabaseRoleRequest(testClientHelper().Ids.DatabaseId()).WithLike(sdk.Like{Pattern: &role1.Name})
 		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 
 		require.NoError(t, err)
@@ -189,8 +222,35 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		assert.NotContains(t, returnedDatabaseRoles, *role2)
 	})
 
+	t.Run("show database_role: with like and limit", func(t *testing.T) {
+		prefix := "SHOW_TEST_ROLE_"
+		roleId1 := testClientHelper().Ids.AlphaWithPrefix(prefix + "1")
+		roleId2 := testClientHelper().Ids.AlphaWithPrefix(prefix + "2")
+
+		role1, cleanupRole1 := testClientHelper().DatabaseRole.CreateDatabaseRoleWithName(t, roleId1)
+		t.Cleanup(cleanupRole1)
+
+		role2, cleanupRole2 := testClientHelper().DatabaseRole.CreateDatabaseRoleWithName(t, roleId2)
+		t.Cleanup(cleanupRole2)
+
+		showRequest := sdk.NewShowDatabaseRoleRequest(testClientHelper().Ids.DatabaseId()).
+			WithLike(sdk.Like{
+				Pattern: sdk.Pointer(prefix + "%"),
+			}).
+			WithLimit(sdk.LimitFrom{
+				Rows: sdk.Pointer(1),
+				From: sdk.Pointer(roleId1),
+			})
+		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
+
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(returnedDatabaseRoles))
+		assert.NotContains(t, returnedDatabaseRoles, *role1)
+		assert.Contains(t, returnedDatabaseRoles, *role2)
+	})
+
 	t.Run("show database_role: no matches", func(t *testing.T) {
-		showRequest := sdk.NewShowDatabaseRoleRequest(testDb(t).ID()).WithLike("non-existent")
+		showRequest := sdk.NewShowDatabaseRoleRequest(testClientHelper().Ids.DatabaseId()).WithLike(sdk.Like{Pattern: sdk.Pointer("non-existent")})
 		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 
 		require.NoError(t, err)
@@ -253,7 +313,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		share, shareCleanup := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)
 
-		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{Database: testDb(t).ID()}, share.ID())
+		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{Database: testClientHelper().Ids.DatabaseId()}, share.ID())
 		require.NoError(t, err)
 
 		grantRequest := sdk.NewGrantDatabaseRoleToShareRequest(roleId, share.ID())

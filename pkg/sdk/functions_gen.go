@@ -14,8 +14,8 @@ type Functions interface {
 	Alter(ctx context.Context, request *AlterFunctionRequest) error
 	Drop(ctx context.Context, request *DropFunctionRequest) error
 	Show(ctx context.Context, request *ShowFunctionRequest) ([]Function, error)
-	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Function, error)
-	Describe(ctx context.Context, request *DescribeFunctionRequest) ([]FunctionDetail, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]FunctionDetail, error)
 }
 
 // CreateForJavaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#java-handler.
@@ -167,31 +167,29 @@ type CreateForSQLFunctionOptions struct {
 
 // AlterFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-function.
 type AlterFunctionOptions struct {
-	alter             bool                    `ddl:"static" sql:"ALTER"`
-	function          bool                    `ddl:"static" sql:"FUNCTION"`
-	IfExists          *bool                   `ddl:"keyword" sql:"IF EXISTS"`
-	name              SchemaObjectIdentifier  `ddl:"identifier"`
-	ArgumentDataTypes []DataType              `ddl:"keyword,must_parentheses"`
-	RenameTo          *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	SetComment        *string                 `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
-	SetLogLevel       *string                 `ddl:"parameter,single_quotes" sql:"SET LOG_LEVEL"`
-	SetTraceLevel     *string                 `ddl:"parameter,single_quotes" sql:"SET TRACE_LEVEL"`
-	SetSecure         *bool                   `ddl:"keyword" sql:"SET SECURE"`
-	UnsetSecure       *bool                   `ddl:"keyword" sql:"UNSET SECURE"`
-	UnsetLogLevel     *bool                   `ddl:"keyword" sql:"UNSET LOG_LEVEL"`
-	UnsetTraceLevel   *bool                   `ddl:"keyword" sql:"UNSET TRACE_LEVEL"`
-	UnsetComment      *bool                   `ddl:"keyword" sql:"UNSET COMMENT"`
-	SetTags           []TagAssociation        `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags         []ObjectIdentifier      `ddl:"keyword" sql:"UNSET TAG"`
+	alter           bool                                `ddl:"static" sql:"ALTER"`
+	function        bool                                `ddl:"static" sql:"FUNCTION"`
+	IfExists        *bool                               `ddl:"keyword" sql:"IF EXISTS"`
+	name            SchemaObjectIdentifierWithArguments `ddl:"identifier"`
+	RenameTo        *SchemaObjectIdentifier             `ddl:"identifier" sql:"RENAME TO"`
+	SetComment      *string                             `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
+	SetLogLevel     *string                             `ddl:"parameter,single_quotes" sql:"SET LOG_LEVEL"`
+	SetTraceLevel   *string                             `ddl:"parameter,single_quotes" sql:"SET TRACE_LEVEL"`
+	SetSecure       *bool                               `ddl:"keyword" sql:"SET SECURE"`
+	UnsetSecure     *bool                               `ddl:"keyword" sql:"UNSET SECURE"`
+	UnsetLogLevel   *bool                               `ddl:"keyword" sql:"UNSET LOG_LEVEL"`
+	UnsetTraceLevel *bool                               `ddl:"keyword" sql:"UNSET TRACE_LEVEL"`
+	UnsetComment    *bool                               `ddl:"keyword" sql:"UNSET COMMENT"`
+	SetTags         []TagAssociation                    `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags       []ObjectIdentifier                  `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 // DropFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-function.
 type DropFunctionOptions struct {
-	drop              bool                   `ddl:"static" sql:"DROP"`
-	function          bool                   `ddl:"static" sql:"FUNCTION"`
-	IfExists          *bool                  `ddl:"keyword" sql:"IF EXISTS"`
-	name              SchemaObjectIdentifier `ddl:"identifier"`
-	ArgumentDataTypes []DataType             `ddl:"keyword,must_parentheses"`
+	drop     bool                                `ddl:"static" sql:"DROP"`
+	function bool                                `ddl:"static" sql:"FUNCTION"`
+	IfExists *bool                               `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifierWithArguments `ddl:"identifier"`
 }
 
 // ShowFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-user-functions.
@@ -231,7 +229,8 @@ type Function struct {
 	IsAnsi             bool
 	MinNumArguments    int
 	MaxNumArguments    int
-	Arguments          string
+	Arguments          []DataType
+	ArgumentsRaw       string
 	Description        string
 	CatalogName        string
 	IsTableFunction    bool
@@ -242,16 +241,15 @@ type Function struct {
 	IsMemoizable       bool
 }
 
-func (v *Function) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.CatalogName, v.SchemaName, v.Name)
+func (v *Function) ID() SchemaObjectIdentifierWithArguments {
+	return NewSchemaObjectIdentifierWithArguments(v.CatalogName, v.SchemaName, v.Name, v.Arguments...)
 }
 
 // DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.
 type DescribeFunctionOptions struct {
-	describe          bool                   `ddl:"static" sql:"DESCRIBE"`
-	function          bool                   `ddl:"static" sql:"FUNCTION"`
-	name              SchemaObjectIdentifier `ddl:"identifier"`
-	ArgumentDataTypes []DataType             `ddl:"keyword,must_parentheses"`
+	describe bool                                `ddl:"static" sql:"DESCRIBE"`
+	function bool                                `ddl:"static" sql:"FUNCTION"`
+	name     SchemaObjectIdentifierWithArguments `ddl:"identifier"`
 }
 
 type functionDetailRow struct {

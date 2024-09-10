@@ -15,6 +15,17 @@ create a resource with slightly different configuration in Snowflake (depending 
 current account configuration, and most-likely other factors). That is why we recommend setting optional fields where
 you want to ensure that the specified value has been set on the Snowflake side.
 
+Additionally, resources created before this change may experience force replacement plans on boolean fields
+after upgrading to the new version of the resource. That's because those fields now have different type and default value.
+The only way to prevent this behavior is to set this value in configuration to the value that was previously in state.
+Refer to [this issue](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3015) for more details.
+
+## Validations
+
+This point connects with the one on about the [default values](#default-values). First of all, we want to reduce the coupling between Snowflake and the provider. Secondly, some of the value limits are soft (consult issues [#2948](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2948) and [#1919](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1919)) which makes it difficult to align provider validations with the custom setups. Lastly, some values depend on the Snowflake edition used.
+
+Because of all that, we plan to reduce the number of validations (mostly numeric) on the provider side. We won't get rid of them entirely, so that successful plans but apply failures can be limited, but please be aware that you may encounter them. 
+
 ## "Empty" values
 The [Terraform SDK v2](https://github.com/hashicorp/terraform-plugin-sdk) that is currently used in our provider detects the presence of the attribute based on its non-zero Golang value. This means, that it is not possible to distinguish the removal of the value inside a config from setting it explicitely to a zero value, e.g. `0` for the numeric value (check [this thread](https://discuss.hashicorp.com/t/is-it-possible-to-differentiate-between-a-zero-value-and-a-removed-property-in-the-terraform-provider-sdk/43131)). Before we migrate to the new recommended [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) we want to handle such cases the same way inside the provider. It means that:
 - boolean attributes will be migrated to the string attributes with two values: `"true"` and `"false"` settable in the config and the special third value `"default"` that will mean, that the given attribute is not set inside the config.
@@ -24,7 +35,7 @@ It won't be possible to use the above values directly (it will be for the string
 
 ## Snowflake parameters
 [Snowflake parameters](https://docs.snowflake.com/en/sql-reference/parameters) have different types and hierarchies. In the earlier versions of the provider they have been handled non-intuitively by setting the deault values inside the provider (e.g. [#2356](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356)). We want to change that. Because of that we decided to:
-- make all parameters available for the given object available in the resource (without the need to use the `snowflake_object_parameter` resource which future will be discussed in the next few weeks)
+- make all parameters available for the given object available in the resource (without the need to use the `snowflake_object_parameter` resource which future will be discussed in the next few weeks; for the V1 ready resources, you should not use `snowflake_<object>` and `snowflake_object_parameter` together: if you manage `<object>` through terraform, and you want to set the parameter on the object's level, it must be done in `snowflake_<object>` resource)
 - remove the default values from Snowflake parameters in every resource before the V1. This is an important **breaking change**. In the previous versions usually not setting the given parameter resulted in using the provider default. This was different from creating the same object without the parameter by hand (because Snowflake just takes the parameter from the hierarchy in such case).
 - provider will identify both the internal and the external changes to these parameters on both `value` and `level` levels, e.g.:
   - setting the parameter inside the config and then manually unsetting it to the same value on the higher level will result in detecting a change
@@ -59,3 +70,7 @@ Because of that, we would like to shelve the idea of introducing cloning to the 
 object cloning is one of the topics we would like to take a closer look at. Right now, the cloning can be done manually
 and imported into normal resources, but in case there is any divergence between the normal and cloned object, the resources
 may act in an unexpected way. An alternative solution is to use plain SQL with [unsafe execute resources](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/unsafe_execute) for now.
+
+## Identifier design decisions
+The summary of design decisions taken during the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework)
+was put into a separate document ([here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)).

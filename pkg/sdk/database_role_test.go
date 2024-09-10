@@ -75,7 +75,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 
 	t.Run("validation: no alter action", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDatabaseRoleOptions", "Rename", "Set", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDatabaseRoleOptions", "Rename", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: multiple alter actions", func(t *testing.T) {
@@ -86,24 +86,22 @@ func TestDatabaseRoleAlter(t *testing.T) {
 		opts.Unset = &DatabaseRoleUnset{
 			Comment: true,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDatabaseRoleOptions", "Rename", "Set", "Unset"))
+		opts.SetTags = []TagAssociation{}
+		opts.UnsetTags = []ObjectIdentifier{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterDatabaseRoleOptions", "Rename", "Set", "Unset", "SetTags", "UnsetTags"))
 	})
 
 	t.Run("validation: invalid new name", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Rename = &DatabaseRoleRename{
-			Name: emptyDatabaseObjectIdentifier,
-		}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+		opts.Rename = &emptyDatabaseObjectIdentifier
+		assertOptsInvalidJoinedErrors(t, opts, errInvalidIdentifier("alterDatabaseRoleOptions", "Rename"))
 	})
 
 	t.Run("validation: new name from different db", func(t *testing.T) {
 		newId := randomDatabaseObjectIdentifier()
 
 		opts := defaultOpts()
-		opts.Rename = &DatabaseRoleRename{
-			Name: newId,
-		}
+		opts.Rename = &newId
 		assertOptsInvalidJoinedErrors(t, opts, ErrDifferentDatabase)
 	})
 
@@ -119,9 +117,7 @@ func TestDatabaseRoleAlter(t *testing.T) {
 		newId := randomDatabaseObjectIdentifierInDatabase(id.DatabaseId())
 
 		opts := defaultOpts()
-		opts.Rename = &DatabaseRoleRename{
-			Name: newId,
-		}
+		opts.Rename = &newId
 		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE ROLE %s RENAME TO %s`, id.FullyQualifiedName(), newId.FullyQualifiedName())
 	})
 
@@ -132,6 +128,22 @@ func TestDatabaseRoleAlter(t *testing.T) {
 			Comment: "new comment",
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE ROLE IF EXISTS %s SET COMMENT = 'new comment'`, id.FullyQualifiedName())
+	})
+
+	t.Run("set tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("123"),
+				Value: "value-123",
+			},
+			{
+				Name:  NewAccountObjectIdentifier("456"),
+				Value: "value-123",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE ROLE IF EXISTS %s SET TAG "123" = 'value-123', "456" = 'value-123'`, id.FullyQualifiedName())
 	})
 
 	t.Run("set comment to empty", func(t *testing.T) {
@@ -150,6 +162,16 @@ func TestDatabaseRoleAlter(t *testing.T) {
 			Comment: true,
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE ROLE IF EXISTS %s UNSET COMMENT`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("123"),
+			NewAccountObjectIdentifier("456"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER DATABASE ROLE IF EXISTS %s UNSET TAG "123", "456"`, id.FullyQualifiedName())
 	})
 }
 
@@ -222,6 +244,18 @@ func TestDatabaseRolesShow(t *testing.T) {
 			Pattern: String(id.Name()),
 		}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASE ROLES LIKE '%s' IN DATABASE %s`, id.Name(), id.FullyQualifiedName())
+	})
+
+	t.Run("show with like and limit from", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Like = &Like{
+			Pattern: String(id.Name()),
+		}
+		opts.Limit = &LimitFrom{
+			Rows: Int(10),
+			From: String("name"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `SHOW DATABASE ROLES LIKE '%s' IN DATABASE %s LIMIT 10 FROM 'name'`, id.Name(), id.FullyQualifiedName())
 	})
 }
 

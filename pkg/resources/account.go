@@ -3,13 +3,16 @@ package resources
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -202,6 +205,7 @@ var accountSchema = map[string]*schema.Schema{
 		Default:     3,
 		Description: "Specifies the number of days to wait before dropping the account. The default is 3 days.",
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func Account() *schema.Resource {
@@ -211,6 +215,10 @@ func Account() *schema.Resource {
 		Read:        ReadAccount,
 		Update:      UpdateAccount,
 		Delete:      DeleteAccount,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(accountSchema, FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: accountSchema,
 		Importer: &schema.ResourceImporter{
@@ -292,6 +300,7 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 	err = util.Retry(5, 3*time.Second, func() (error, bool) {
 		account, err = client.Accounts.ShowByID(ctx, objectIdentifier)
 		if err != nil {
+			log.Printf("[DEBUG] retryable operation resulted in error: %v\n", err)
 			return nil, false
 		}
 		return nil, true
@@ -316,11 +325,16 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 	err = util.Retry(5, 3*time.Second, func() (error, bool) {
 		acc, err = client.Accounts.ShowByID(ctx, id)
 		if err != nil {
+			log.Printf("[DEBUG] retryable operation resulted in error: %v\n", err)
 			return nil, false
 		}
 		return nil, true
 	})
 	if err != nil {
+		return err
+	}
+
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
 

@@ -57,6 +57,12 @@ type In struct {
 	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
 }
 
+type ExtendedIn struct {
+	In
+	Application        AccountObjectIdentifier `ddl:"identifier" sql:"APPLICATION"`
+	ApplicationPackage AccountObjectIdentifier `ddl:"identifier" sql:"APPLICATION PACKAGE"`
+}
+
 type Like struct {
 	Pattern *string `ddl:"keyword,single_quotes"`
 }
@@ -86,6 +92,12 @@ type IntProperty struct {
 type BoolProperty struct {
 	Value        bool
 	DefaultValue bool
+	Description  string
+}
+
+type FloatProperty struct {
+	Value        *float64
+	DefaultValue *float64
 	Description  string
 }
 
@@ -146,6 +158,28 @@ func (row *propertyRow) toBoolProperty() *BoolProperty {
 		defaultValue = false
 	}
 	return &BoolProperty{
+		Value:        value,
+		DefaultValue: defaultValue,
+		Description:  row.Description,
+	}
+}
+
+func (row *propertyRow) toFloatProperty() *FloatProperty {
+	var value *float64
+	var defaultValue *float64
+	v, err := strconv.ParseFloat(row.Value, 64)
+	if err == nil {
+		value = &v
+	} else {
+		value = nil
+	}
+	dv, err := strconv.ParseFloat(row.DefaultValue, 64)
+	if err == nil {
+		defaultValue = &dv
+	} else {
+		defaultValue = nil
+	}
+	return &FloatProperty{
 		Value:        value,
 		DefaultValue: defaultValue,
 		Description:  row.Description,

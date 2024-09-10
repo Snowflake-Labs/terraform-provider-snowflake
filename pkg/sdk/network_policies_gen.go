@@ -8,7 +8,7 @@ type NetworkPolicies interface {
 	Drop(ctx context.Context, request *DropNetworkPolicyRequest) error
 	Show(ctx context.Context, request *ShowNetworkPolicyRequest) ([]NetworkPolicy, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error)
-	Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyDescription, error)
+	Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyProperty, error)
 }
 
 // CreateNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-network-policy.
@@ -97,8 +97,9 @@ type DropNetworkPolicyOptions struct {
 
 // ShowNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-network-policies.
 type ShowNetworkPolicyOptions struct {
-	show            bool `ddl:"static" sql:"SHOW"`
-	networkPolicies bool `ddl:"static" sql:"NETWORK POLICIES"`
+	show            bool  `ddl:"static" sql:"SHOW"`
+	networkPolicies bool  `ddl:"static" sql:"NETWORK POLICIES"`
+	Like            *Like `ddl:"keyword" sql:"LIKE"`
 }
 
 type showNetworkPolicyDBRow struct {
@@ -121,6 +122,10 @@ type NetworkPolicy struct {
 	EntriesInBlockedNetworkRules int
 }
 
+func (v *NetworkPolicy) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(v.Name)
+}
+
 // DescribeNetworkPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy.
 type DescribeNetworkPolicyOptions struct {
 	describe      bool                    `ddl:"static" sql:"DESCRIBE"`
@@ -133,7 +138,7 @@ type describeNetworkPolicyDBRow struct {
 	Value string `db:"value"`
 }
 
-type NetworkPolicyDescription struct {
+type NetworkPolicyProperty struct {
 	Name  string
 	Value string
 }

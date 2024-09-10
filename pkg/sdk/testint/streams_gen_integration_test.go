@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,23 +15,23 @@ func TestInt_Streams(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	db := testDb(t)
-	schema := testSchema(t)
+	databaseId := testClientHelper().Ids.DatabaseId()
+	schemaId := testClientHelper().Ids.SchemaId()
 
 	assertStream := func(t *testing.T, s *sdk.Stream, id sdk.SchemaObjectIdentifier, sourceType string, mode string) {
 		t.Helper()
 		assert.NotNil(t, s)
 		assert.Nil(t, s.TableOn)
 		assert.Equal(t, id.Name(), s.Name)
-		assert.Equal(t, db.Name, s.DatabaseName)
-		assert.Equal(t, schema.Name, s.SchemaName)
+		assert.Equal(t, databaseId.Name(), s.DatabaseName)
+		assert.Equal(t, schemaId.Name(), s.SchemaName)
 		assert.Equal(t, "some comment", *s.Comment)
 		assert.Equal(t, sourceType, *s.SourceType)
 		assert.Equal(t, mode, *s.Mode)
 	}
 
 	t.Run("CreateOnTable", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -46,7 +46,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		// TODO [SNOW-999049]: make nicer during the identifiers rework
+		// TODO [SNOW-1348112]: make nicer during the stream rework
 		assert.Equal(t, table.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 		assertStream(t, s, id, "Table", "DEFAULT")
 	})
@@ -77,7 +77,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		// TODO [SNOW-999049]: make nicer during the identifiers rework
+		// TODO [SNOW-1348112]: make nicer during the stream rework
 		assert.Equal(t, externalTableId.FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 		assertStream(t, s, id, "External Table", "INSERT_ONLY")
 	})
@@ -102,7 +102,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("CreateOnView", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		view, cleanupView := testClientHelper().View.CreateView(t, fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName()))
@@ -124,7 +124,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Clone", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -148,12 +148,12 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 
 		assertStream(t, s, cloneId, "Table", "DEFAULT")
-		// TODO [SNOW-999049]: make nicer during the identifiers rework
+		// TODO [SNOW-1348112]: make nicer during the stream rework
 		assert.Equal(t, table.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 	})
 
 	t.Run("Alter tags", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -194,7 +194,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Alter comment", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -229,7 +229,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -248,7 +248,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Show terse", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -263,13 +263,13 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().WithTerse(sdk.Bool(true)))
 		require.NoError(t, err)
 
-		stream, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
+		stream, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
 		assert.NotNil(t, stream)
 		assert.Equal(t, id.Name(), stream.Name)
-		assert.Equal(t, db.Name, stream.DatabaseName)
-		assert.Equal(t, schema.Name, stream.SchemaName)
+		assert.Equal(t, databaseId.Name(), stream.DatabaseName)
+		assert.Equal(t, schemaId.Name(), stream.SchemaName)
 		assert.Equal(t, table.Name, *stream.TableOn)
 		assert.Nil(t, stream.Comment)
 		assert.Nil(t, stream.SourceType)
@@ -277,7 +277,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Show single with options", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -292,7 +292,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
 			WithTerse(sdk.Bool(false)).
 			WithIn(&sdk.In{
-				Schema: schema.ID(),
+				Schema: schemaId,
 			}).
 			WithLike(&sdk.Like{
 				Pattern: sdk.String(id.Name()),
@@ -304,14 +304,14 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(s))
 
-		stream, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
+		stream, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
 		assertStream(t, stream, id, "Table", "DEFAULT")
 	})
 
 	t.Run("Show multiple", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -336,10 +336,10 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(s))
 
-		stream, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
+		stream, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
-		stream2, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id2.Name() == stream.Name })
+		stream2, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id2.Name() == stream.Name })
 		require.NoError(t, err)
 
 		assertStream(t, stream, id, "Table", "DEFAULT")
@@ -347,7 +347,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Show multiple with options", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		idPrefix := "stream_show_"
@@ -373,7 +373,7 @@ func TestInt_Streams(t *testing.T) {
 		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
 			WithTerse(sdk.Bool(false)).
 			WithIn(&sdk.In{
-				Schema: schema.ID(),
+				Schema: schemaId,
 			}).
 			WithStartsWith(sdk.String(idPrefix)).
 			WithLimit(&sdk.LimitFrom{
@@ -382,10 +382,10 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(s))
 
-		stream, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
+		stream, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
-		stream2, err := collections.FindOne[sdk.Stream](s, func(stream sdk.Stream) bool { return id2.Name() == stream.Name })
+		stream2, err := collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id2.Name() == stream.Name })
 		require.NoError(t, err)
 
 		assertStream(t, stream, id, "Table", "DEFAULT")
@@ -393,7 +393,7 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("Describe", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, cleanupTable := testClientHelper().Table.CreateTableInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -410,11 +410,11 @@ func TestInt_Streams(t *testing.T) {
 		assert.NotNil(t, s)
 
 		assert.Equal(t, id.Name(), s.Name)
-		assert.Equal(t, db.Name, s.DatabaseName)
-		assert.Equal(t, schema.Name, s.SchemaName)
+		assert.Equal(t, databaseId.Name(), s.DatabaseName)
+		assert.Equal(t, schemaId.Name(), s.SchemaName)
 		assert.Nil(t, s.TableOn)
 		assert.Equal(t, "some comment", *s.Comment)
-		// TODO [SNOW-999049]: make nicer during the identifiers rework
+		// TODO [SNOW-1348112]: make nicer during the stream rework
 		assert.Equal(t, table.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*s.TableName).FullyQualifiedName())
 		assert.Equal(t, "Table", *s.SourceType)
 		assert.Equal(t, "DEFAULT", *s.Mode)

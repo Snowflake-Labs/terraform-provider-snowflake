@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -21,10 +22,11 @@ import (
 
 var saml2IntegrationSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the name of the SAML2 integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("Specifies the name of the SAML2 integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"enabled": {
 		Type:             schema.TypeString,
@@ -49,7 +51,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Required:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToSaml2SecurityIntegrationSaml2ProviderOption),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToSaml2SecurityIntegrationSaml2ProviderOption),
-		Description:      fmt.Sprintf("The string describing the IdP. Valid options are: %v.", sdk.AllSaml2SecurityIntegrationSaml2Providers),
+		Description:      fmt.Sprintf("The string describing the IdP. Valid options are: %v.", possibleValuesListed(sdk.AllSaml2SecurityIntegrationSaml2Providers)),
 	},
 	"saml2_x509_cert": {
 		Type:        schema.TypeString,
@@ -59,7 +61,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 	"saml2_sp_initiated_login_page_label": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_sp_initiated_login_page_label"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_sp_initiated_login_page_label"),
 		Description:      "The string containing the label to display after the Log In With button on the login page. If this field changes value from non-empty to empty, the whole resource is recreated because of Snowflake limitations.",
 	},
 	"saml2_enable_sp_initiated": {
@@ -67,7 +69,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_enable_sp_initiated"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_enable_sp_initiated"),
 		Description:      booleanStringFieldDescription("The Boolean indicating if the Log In With button will be shown on the login page. TRUE: displays the Log in With button on the login page. FALSE: does not display the Log in With button on the login page."),
 	},
 	"saml2_sign_request": {
@@ -75,20 +77,20 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_sign_request"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_sign_request"),
 		Description:      booleanStringFieldDescription("The Boolean indicating whether SAML requests are signed. TRUE: allows SAML requests to be signed. FALSE: does not allow SAML requests to be signed."),
 	},
 	"saml2_requested_nameid_format": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption), IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_requested_nameid_format")),
-		Description:      fmt.Sprintf("The SAML NameID format allows Snowflake to set an expectation of the identifying attribute of the user (i.e. SAML Subject) in the SAML assertion from the IdP to ensure a valid authentication to Snowflake. Valid options are: %v", sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToSaml2SecurityIntegrationSaml2RequestedNameidFormatOption), IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_requested_nameid_format")),
+		Description:      fmt.Sprintf("The SAML NameID format allows Snowflake to set an expectation of the identifying attribute of the user (i.e. SAML Subject) in the SAML assertion from the IdP to ensure a valid authentication to Snowflake. Valid options are: %v.", possibleValuesListed(sdk.AllSaml2SecurityIntegrationSaml2RequestedNameidFormats)),
 	},
 	"saml2_post_logout_redirect_url": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_post_logout_redirect_url"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_post_logout_redirect_url"),
 		Description:      "The endpoint to which Snowflake redirects users after clicking the Log Out button in the classic Snowflake web interface. Snowflake terminates the Snowflake session upon redirecting to the specified endpoint.",
 	},
 	"saml2_force_authn": {
@@ -96,20 +98,20 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_force_authn"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_force_authn"),
 		Description:      booleanStringFieldDescription("The Boolean indicating whether users, during the initial authentication flow, are forced to authenticate again to access Snowflake. When set to TRUE, Snowflake sets the ForceAuthn SAML parameter to TRUE in the outgoing request from Snowflake to the identity provider. TRUE: forces users to authenticate again to access Snowflake, even if a valid session with the identity provider exists. FALSE: does not force users to authenticate again to access Snowflake."),
 	},
 	"saml2_snowflake_issuer_url": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_snowflake_issuer_url"),
-		Description:      "The string containing the EntityID / Issuer for the Snowflake service provider. If an incorrect value is specified, Snowflake returns an error message indicating the acceptable values to use.",
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_snowflake_issuer_url"),
+		Description:      "The string containing the EntityID / Issuer for the Snowflake service provider. If an incorrect value is specified, Snowflake returns an error message indicating the acceptable values to use. Because Okta does not support underscores in URLs, the underscore in the account name must be converted to a hyphen. See [docs](https://docs.snowflake.com/en/user-guide/organizations-connect#okta-urls).",
 	},
 	"saml2_snowflake_acs_url": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("saml2_snowflake_acs_url"),
-		Description:      "The string containing the Snowflake Assertion Consumer Service URL to which the IdP will send its SAML authentication response back to Snowflake. This property will be set in the SAML authentication request generated by Snowflake when initiating a SAML SSO operation with the IdP. If an incorrect value is specified, Snowflake returns an error message indicating the acceptable values to use.",
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("saml2_snowflake_acs_url"),
+		Description:      "The string containing the Snowflake Assertion Consumer Service URL to which the IdP will send its SAML authentication response back to Snowflake. This property will be set in the SAML authentication request generated by Snowflake when initiating a SAML SSO operation with the IdP. If an incorrect value is specified, Snowflake returns an error message indicating the acceptable values to use. Because Okta does not support underscores in URLs, the underscore in the account name must be converted to a hyphen. See [docs](https://docs.snowflake.com/en/user-guide/organizations-connect#okta-urls).",
 	},
 	"allowed_user_domains": {
 		Type: schema.TypeSet,
@@ -148,6 +150,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeSaml2IntegrationSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 func SAML2Integration() *schema.Resource {
@@ -156,6 +159,7 @@ func SAML2Integration() *schema.Resource {
 		ReadContext:   ReadContextSAML2Integration(true),
 		UpdateContext: UpdateContextSAML2Integration,
 		DeleteContext: DeleteContextSAM2LIntegration,
+		Description:   "Resource used to manage saml2 security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2).",
 
 		Schema: saml2IntegrationSchema,
 		Importer: &schema.ResourceImporter{
@@ -168,8 +172,8 @@ func SAML2Integration() *schema.Resource {
 			ForceNewIfChangeToEmptyString("saml2_snowflake_issuer_url"),
 			ForceNewIfChangeToEmptyString("saml2_snowflake_acs_url"),
 			ForceNewIfChangeToEmptyString("saml2_sp_initiated_login_page_label"),
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "name", "enabled", "comment"),
-			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "saml2_issuer", "saml2_sso_url", "saml2_provider", "saml2_x509_cert",
+			ComputedIfAnyAttributeChanged(saml2IntegrationSchema, ShowOutputAttributeName, "enabled", "comment"),
+			ComputedIfAnyAttributeChanged(saml2IntegrationSchema, DescribeOutputAttributeName, "saml2_issuer", "saml2_sso_url", "saml2_provider", "saml2_x509_cert",
 				"saml2_sp_initiated_login_page_label", "saml2_enable_sp_initiated", "saml2_sign_request", "saml2_requtedted_nameid_format",
 				"saml2_post_logout_redirect_url", "saml2_force_authn", "saml2_snowflake_issuer_url", "saml2_snowflake_acs_url", "allowed_user_domains",
 				"allowed_email_patterns"),
@@ -180,7 +184,14 @@ func SAML2Integration() *schema.Resource {
 func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting saml2 integration import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -192,9 +203,6 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	if err := d.Set("name", sdk.NewAccountObjectIdentifier(integration.Name).Name()); err != nil {
-		return nil, err
-	}
 	if err := d.Set("comment", integration.Comment); err != nil {
 		return nil, err
 	}
@@ -202,7 +210,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	samlIssuer, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_ISSUER" })
+	samlIssuer, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_ISSUER" })
 	if err != nil {
 		return nil, fmt.Errorf("failed to find saml2 saml issuer, err = %w", err)
 	}
@@ -210,7 +218,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	ssoUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_SSO_URL" })
+	ssoUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_SSO_URL" })
 	if err != nil {
 		return nil, fmt.Errorf("failed to find saml2 sso url, err = %w", err)
 	}
@@ -218,7 +226,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	samlProvider, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_PROVIDER" })
+	samlProvider, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_PROVIDER" })
 	if err != nil {
 		return nil, fmt.Errorf("failed to find saml2 provider, err = %w", err)
 	}
@@ -230,7 +238,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	x509Cert, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_X509_CERT" })
+	x509Cert, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_X509_CERT" })
 	if err != nil {
 		return nil, fmt.Errorf("failed to find saml2 x509 cert, err = %w", err)
 	}
@@ -238,7 +246,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	spInitiatedLoginPageLabel, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	spInitiatedLoginPageLabel, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"
 	})
 	if err != nil {
@@ -248,7 +256,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	enableSpInitiated, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	enableSpInitiated, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_ENABLE_SP_INITIATED"
 	})
 	if err != nil {
@@ -258,7 +266,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	signRequest, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	signRequest, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_SIGN_REQUEST"
 	})
 	if err != nil {
@@ -268,7 +276,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	requestedNameIdFormat, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	requestedNameIdFormat, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_REQUESTED_NAMEID_FORMAT"
 	})
 	if err != nil {
@@ -278,7 +286,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	postLogoutRedirectUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	postLogoutRedirectUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_POST_LOGOUT_REDIRECT_URL"
 	})
 	if err != nil {
@@ -288,7 +296,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	forceAuthn, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	forceAuthn, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_FORCE_AUTHN"
 	})
 	if err != nil {
@@ -298,7 +306,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	snowflakeIssuerUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	snowflakeIssuerUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_SNOWFLAKE_ISSUER_URL"
 	})
 	if err != nil {
@@ -308,7 +316,7 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	snowflakeAcsUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+	snowflakeAcsUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "SAML2_SNOWFLAKE_ACS_URL"
 	})
 	if err != nil {
@@ -318,33 +326,35 @@ func ImportSaml2Integration(ctx context.Context, d *schema.ResourceData, meta an
 		return nil, err
 	}
 
-	allowedUserDomains, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
-		return property.Name == "ALLOWED_USER_DOMAINS"
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to find allowed user domains, err = %w", err)
-	}
-	if err := d.Set("allowed_user_domains", sdk.ParseCommaSeparatedStringArray(allowedUserDomains.Value, false)); err != nil {
+	if err := d.Set("allowed_user_domains", getOptionalListField(integrationProperties, "ALLOWED_USER_DOMAINS")); err != nil {
 		return nil, err
 	}
 
-	allowedEmailDomains, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
-		return property.Name == "ALLOWED_EMAIL_PATTERNS"
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to find allowed email patterns, err = %w", err)
-	}
-	if err := d.Set("allowed_email_patterns", sdk.ParseCommaSeparatedStringArray(allowedEmailDomains.Value, false)); err != nil {
+	if err := d.Set("allowed_email_patterns", getOptionalListField(integrationProperties, "ALLOWED_EMAIL_PATTERNS")); err != nil {
 		return nil, err
 	}
 
 	return []*schema.ResourceData{d}, nil
 }
 
+func getOptionalListField(props []sdk.SecurityIntegrationProperty, propName string) []string {
+	found, err := collections.FindFirst(props, func(property sdk.SecurityIntegrationProperty) bool {
+		return property.Name == propName
+	})
+	if err != nil {
+		log.Printf("[DEBUG] failed to find %s in object properties, err = %v", propName, err)
+		return make([]string, 0)
+	}
+	return sdk.ParseCommaSeparatedStringArray(found.Value, false)
+}
+
 func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 	samlProvider, err := sdk.ToSaml2SecurityIntegrationSaml2ProviderOption(d.Get("saml2_provider").(string))
 	if err != nil {
 		return diag.FromErr(err)
@@ -444,7 +454,7 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextSAML2Integration(false)(ctx, d, meta)
 }
@@ -452,7 +462,10 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -477,12 +490,11 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
-
-		if err := d.Set("name", sdk.NewAccountObjectIdentifier(integration.Name).Name()); err != nil {
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 
-		samlIssuer, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_ISSUER" })
+		samlIssuer, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_ISSUER" })
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find saml2 saml issuer, err = %w", err))
 		}
@@ -490,7 +502,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		ssoUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_SSO_URL" })
+		ssoUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_SSO_URL" })
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find saml2 sso url, err = %w", err))
 		}
@@ -498,7 +510,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		samlProvider, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_PROVIDER" })
+		samlProvider, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_PROVIDER" })
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find saml2 provider, err = %w", err))
 		}
@@ -510,7 +522,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		x509Cert, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_X509_CERT" })
+		x509Cert, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "SAML2_X509_CERT" })
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to find saml2 x509 cert, err = %w", err))
 		}
@@ -518,7 +530,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		postLogoutRedirectUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		postLogoutRedirectUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "SAML2_POST_LOGOUT_REDIRECT_URL"
 		})
 		if err != nil {
@@ -528,23 +540,11 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		allowedUserDomains, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
-			return property.Name == "ALLOWED_USER_DOMAINS"
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("failed to find allowed user domains, err = %w", err))
-		}
-		if err := d.Set("allowed_user_domains", sdk.ParseCommaSeparatedStringArray(allowedUserDomains.Value, false)); err != nil {
+		if err := d.Set("allowed_user_domains", getOptionalListField(integrationProperties, "ALLOWED_USER_DOMAINS")); err != nil {
 			return diag.FromErr(err)
 		}
 
-		allowedEmailDomains, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
-			return property.Name == "ALLOWED_EMAIL_PATTERNS"
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("failed to find allowed email patterns, err = %w", err))
-		}
-		if err := d.Set("allowed_email_patterns", sdk.ParseCommaSeparatedStringArray(allowedEmailDomains.Value, false)); err != nil {
+		if err := d.Set("allowed_email_patterns", getOptionalListField(integrationProperties, "ALLOWED_EMAIL_PATTERNS")); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -559,49 +559,49 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 				return diag.FromErr(err)
 			}
 
-			enableSpInitiated, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			enableSpInitiated, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_ENABLE_SP_INITIATED"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 enable sp initiated, err = %w", err))
 			}
 
-			signRequest, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			signRequest, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_SIGN_REQUEST"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 sign request, err = %w", err))
 			}
 
-			requestedNameIdFormat, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			requestedNameIdFormat, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_REQUESTED_NAMEID_FORMAT"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 requested nameid format, err = %w", err))
 			}
 
-			forceAuthn, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			forceAuthn, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_FORCE_AUTHN"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 force authn, err = %w", err))
 			}
 
-			snowflakeIssuerUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			snowflakeIssuerUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_SNOWFLAKE_ISSUER_URL"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 snowflake issuer url, err = %w", err))
 			}
 
-			snowflakeAcsUrl, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			snowflakeAcsUrl, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_SNOWFLAKE_ACS_URL"
 			})
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("failed to find saml2 snowflake acs url, err = %w", err))
 			}
 
-			spInitiatedLoginPageLabel, err := collections.FindOne(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			spInitiatedLoginPageLabel, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "SAML2_SP_INITIATED_LOGIN_PAGE_LABEL"
 			})
 			if err != nil {
@@ -648,7 +648,11 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 
 func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	set, unset := sdk.NewSaml2IntegrationSetRequest(), sdk.NewSaml2IntegrationUnsetRequest()
 
 	if d.HasChange("enabled") {
@@ -806,10 +810,13 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 }
 
 func DeleteContextSAM2LIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

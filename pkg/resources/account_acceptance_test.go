@@ -15,7 +15,7 @@ import (
 func TestAcc_Account_complete(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
-	accountName := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	password := acc.TestClient().Ids.AlphaContaining("123ABC")
 
 	resource.Test(t, resource.TestCase{
@@ -29,9 +29,10 @@ func TestAcc_Account_complete(t *testing.T) {
 		// unless we change the resource to return nil on destroy then this is unavoidable
 		Steps: []resource.TestStep{
 			{
-				Config: accountConfig(accountName, password, "Terraform acceptance test", 3),
+				Config: accountConfig(id.Name(), password, "Terraform acceptance test", 3),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account.test", "name", accountName),
+					resource.TestCheckResourceAttr("snowflake_account.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_account.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_account.test", "admin_name", "someadmin"),
 					resource.TestCheckResourceAttr("snowflake_account.test", "first_name", "Ad"),
 					resource.TestCheckResourceAttr("snowflake_account.test", "last_name", "Min"),
@@ -45,7 +46,7 @@ func TestAcc_Account_complete(t *testing.T) {
 			},
 			// Change Grace Period In Days
 			{
-				Config: accountConfig(accountName, password, "Terraform acceptance test", 4),
+				Config: accountConfig(id.Name(), password, "Terraform acceptance test", 4),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_account.test", "grace_period_in_days", "4"),
 				),

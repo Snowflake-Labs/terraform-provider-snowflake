@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -55,7 +55,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 
 	assertApplicationRoles := func(t *testing.T, appRoles []sdk.ApplicationRole, name string, comment string) {
 		t.Helper()
-		appRole, err := collections.FindOne(appRoles, func(role sdk.ApplicationRole) bool {
+		appRole, err := collections.FindFirst(appRoles, func(role sdk.ApplicationRole) bool {
 			return role.Name == name
 		})
 		require.NoError(t, err)

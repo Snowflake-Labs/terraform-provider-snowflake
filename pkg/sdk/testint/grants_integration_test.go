@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -129,7 +129,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 		}
 		on := &sdk.AccountRoleGrantOn{
 			Schema: &sdk.GrantOnSchema{
-				Schema: sdk.Pointer(testSchema(t).ID()),
+				Schema: sdk.Pointer(testClientHelper().Ids.SchemaId()),
 			},
 		}
 		err := client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, roleTest.ID(), nil)
@@ -167,7 +167,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				All: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeTables,
-					InSchema:         sdk.Pointer(testSchema(t).ID()),
+					InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 				},
 			},
 		}
@@ -179,7 +179,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		selectPrivilege, err := collections.FindOne[sdk.Grant](grants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaObjectPrivilegeSelect.String() })
+		selectPrivilege, err := collections.FindFirst[sdk.Grant](grants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaObjectPrivilegeSelect.String() })
 		require.NoError(t, err)
 		assert.Equal(t, tableTest.ID().FullyQualifiedName(), selectPrivilege.Name.FullyQualifiedName())
 
@@ -222,7 +222,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		selectPrivilege, err := collections.FindOne[sdk.Grant](grants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaObjectPrivilegeUsage.String() })
+		selectPrivilege, err := collections.FindFirst[sdk.Grant](grants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaObjectPrivilegeUsage.String() })
 		require.NoError(t, err)
 		assert.Equal(t, cortex.ID().FullyQualifiedName(), selectPrivilege.Name.FullyQualifiedName())
 
@@ -241,6 +241,10 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on all: cortex search service", func(t *testing.T) {
 		roleTest, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
+		table, tableTestCleanup := testClientHelper().Table.CreateTableWithPredefinedColumns(t)
+		t.Cleanup(tableTestCleanup)
+		cortex, cortexCleanup := testClientHelper().CortexSearchService.CreateCortexSearchService(t, table.ID())
+		t.Cleanup(cortexCleanup)
 
 		privileges := &sdk.AccountRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeUsage},
@@ -249,12 +253,36 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				All: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeCortexSearchServices,
-					InSchema:         sdk.Pointer(testSchema(t).ID()),
+					InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 				},
 			},
 		}
 		err := client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, roleTest.ID(), nil)
-		require.ErrorContains(t, err, "unexpected 'SEARCH'")
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Role: roleTest.ID(),
+			},
+		})
+		require.NoError(t, err)
+		usagePrivilege, err := collections.FindFirst[sdk.Grant](grants, func(g sdk.Grant) bool {
+			return g.Privilege == sdk.SchemaObjectPrivilegeUsage.String()
+		})
+		require.NoError(t, err)
+		assert.Equal(t, cortex.ID().FullyQualifiedName(), usagePrivilege.Name.FullyQualifiedName())
+		assert.Equal(t, sdk.ObjectTypeCortexSearchService, usagePrivilege.GrantedOn)
+
+		// now revoke and verify that the grant(s) are gone
+		err = client.Grants.RevokePrivilegesFromAccountRole(ctx, privileges, on, roleTest.ID(), nil)
+		require.NoError(t, err)
+		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Role: roleTest.ID(),
+			},
+		})
+		require.NoError(t, err)
+		assert.Equal(t, 0, len(grants))
 	})
 
 	t.Run("on future schema object", func(t *testing.T) {
@@ -267,7 +295,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeExternalTables,
-					InDatabase:       sdk.Pointer(testDb(t).ID()),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -452,7 +480,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 			DatabasePrivileges: []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
 		}
 		on := &sdk.DatabaseRoleGrantOn{
-			Database: sdk.Pointer(testDb(t).ID()),
+			Database: sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 		}
 
 		err := client.Grants.GrantPrivilegesToDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
@@ -467,11 +495,11 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		// Expecting two grants because database role has usage on database by default
 		require.Equal(t, 2, len(returnedGrants))
 
-		usagePrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeUsage.String() })
+		usagePrivilege, err := collections.FindFirst[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeUsage.String() })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, usagePrivilege.GrantedTo)
 
-		createSchemaPrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeCreateSchema.String() })
+		createSchemaPrivilege, err := collections.FindFirst[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeCreateSchema.String() })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeDatabase, createSchemaPrivilege.GrantedOn)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, createSchemaPrivilege.GrantedTo)
@@ -501,7 +529,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		}
 		on := &sdk.DatabaseRoleGrantOn{
 			Schema: &sdk.GrantOnSchema{
-				Schema: sdk.Pointer(testSchema(t).ID()),
+				Schema: sdk.Pointer(testClientHelper().Ids.SchemaId()),
 			},
 		}
 
@@ -517,11 +545,11 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		// Expecting two grants because database role has usage on database by default
 		require.Equal(t, 2, len(returnedGrants))
 
-		usagePrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeUsage.String() })
+		usagePrivilege, err := collections.FindFirst[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeUsage.String() })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, usagePrivilege.GrantedTo)
 
-		createAlertPrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaPrivilegeCreateAlert.String() })
+		createAlertPrivilege, err := collections.FindFirst[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaPrivilegeCreateAlert.String() })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeSchema, createAlertPrivilege.GrantedOn)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, createAlertPrivilege.GrantedTo)
@@ -554,7 +582,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				All: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeTables,
-					InSchema:         sdk.Pointer(testSchema(t).ID()),
+					InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 				},
 			},
 		}
@@ -570,11 +598,11 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		require.NoError(t, err)
 		// Expecting two grants because database role has usage on database by default
 		require.LessOrEqual(t, 2, len(returnedGrants))
-		usagePrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeUsage.String() })
+		usagePrivilege, err := collections.FindFirst[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeUsage.String() })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, usagePrivilege.GrantedTo)
 
-		selectPrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaObjectPrivilegeSelect.String() })
+		selectPrivilege, err := collections.FindFirst[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaObjectPrivilegeSelect.String() })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeTable, selectPrivilege.GrantedOn)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, selectPrivilege.GrantedTo)
@@ -624,11 +652,11 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		require.NoError(t, err)
 		// Expecting two grants because database role has usage on database by default
 		require.LessOrEqual(t, 2, len(returnedGrants))
-		usagePrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.GrantedOn == sdk.ObjectTypeDatabase })
+		usagePrivilege, err := collections.FindFirst[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.GrantedOn == sdk.ObjectTypeDatabase })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, usagePrivilege.GrantedTo)
 
-		selectPrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.GrantedOn == sdk.ObjectTypeCortexSearchService })
+		selectPrivilege, err := collections.FindFirst[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.GrantedOn == sdk.ObjectTypeCortexSearchService })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.SchemaObjectPrivilegeUsage.String(), selectPrivilege.Privilege)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, selectPrivilege.GrantedTo)
@@ -660,7 +688,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 			SchemaObject: &sdk.GrantOnSchemaObject{
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeExternalTables,
-					InDatabase:       sdk.Pointer(testDb(t).ID()),
+					InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 				},
 			},
 		}
@@ -817,40 +845,41 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
-	assertGrant := func(t *testing.T, grants []sdk.Grant, onId sdk.ObjectIdentifier, privilege sdk.ObjectPrivilege) {
+	assertGrant := func(t *testing.T, grants []sdk.Grant, onId sdk.ObjectIdentifier, privilege sdk.ObjectPrivilege, grantedOn sdk.ObjectType, granteeName sdk.ObjectIdentifier, shareName string) {
 		t.Helper()
-		var shareGrant *sdk.Grant
-		for i, grant := range grants {
-			if grant.GranteeName.Name() == shareTest.ID().Name() && grant.Privilege == string(privilege) {
-				shareGrant = &grants[i]
-				break
-			}
-		}
-		assert.NotNil(t, shareGrant)
-		assert.Equal(t, sdk.ObjectTypeTable, shareGrant.GrantedOn)
-		assert.Equal(t, sdk.ObjectTypeShare, shareGrant.GrantedTo)
-		assert.Equal(t, onId.FullyQualifiedName(), shareGrant.Name.FullyQualifiedName())
+		actualGrant, err := collections.FindFirst(grants, func(grant sdk.Grant) bool {
+			return grant.GranteeName.Name() == shareName && grant.Privilege == string(privilege)
+		})
+		require.NoError(t, err)
+		assert.Equal(t, grantedOn, actualGrant.GrantedOn)
+		assert.Equal(t, sdk.ObjectTypeShare, actualGrant.GrantedTo)
+		assert.Equal(t, granteeName.FullyQualifiedName(), actualGrant.GranteeName.FullyQualifiedName())
+		assert.Equal(t, onId.FullyQualifiedName(), actualGrant.Name.FullyQualifiedName())
 	}
 
-	t.Run("with options", func(t *testing.T) {
+	grantShareOnDatabase := func(t *testing.T, share *sdk.Share) {
+		t.Helper()
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: testDb(t).ID(),
-		}, shareTest.ID())
+			Database: testClientHelper().Ids.DatabaseId(),
+		}, share.ID())
 		require.NoError(t, err)
 
 		t.Cleanup(func() {
 			err := client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-				Database: testDb(t).ID(),
-			}, shareTest.ID())
+				Database: testClientHelper().Ids.DatabaseId(),
+			}, share.ID())
 			assert.NoError(t, err)
 		})
+	}
 
+	t.Run("with options", func(t *testing.T) {
+		grantShareOnDatabase(t, shareTest)
 		table, tableCleanup := testClientHelper().Table.CreateTable(t)
 		t.Cleanup(tableCleanup)
 
-		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
+		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
 			Table: &sdk.OnTable{
-				AllInSchema: testSchema(t).ID(),
+				AllInSchema: testClientHelper().Ids.SchemaId(),
 			},
 		}, shareTest.ID())
 		require.NoError(t, err)
@@ -864,7 +893,34 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		assertGrant(t, grants, table.ID(), sdk.ObjectPrivilegeSelect)
+		assertGrant(t, grants, table.ID(), sdk.ObjectPrivilegeSelect, sdk.ObjectTypeTable, shareTest.ID(), shareTest.ID().Name())
+
+		_, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Share: &sdk.ShowGrantsToShare{
+					Name: shareTest.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		function := testClientHelper().Function.CreateSecure(t)
+
+		err = client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
+			Function: function.ID(),
+		}, shareTest.ID())
+		require.NoError(t, err)
+
+		grants, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeFunction,
+					Name:       function.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		assertGrant(t, grants, function.ID(), sdk.ObjectPrivilegeUsage, sdk.ObjectTypeFunction, shareTest.ID(), shareTest.ID().Name())
 
 		_, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 			To: &sdk.ShowGrantsTo{
@@ -892,9 +948,44 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 
 		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
 			Table: &sdk.OnTable{
-				AllInSchema: testSchema(t).ID(),
+				AllInSchema: testClientHelper().Ids.SchemaId(),
 			},
 		}, shareTest.ID())
+		require.NoError(t, err)
+	})
+
+	t.Run("with a name containing dots", func(t *testing.T) {
+		shareTest, shareCleanup := testClientHelper().Share.CreateShareWithIdentifier(t, testClientHelper().Ids.RandomAccountObjectIdentifierContaining(".foo.bar"))
+		t.Cleanup(shareCleanup)
+		grantShareOnDatabase(t, shareTest)
+		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		t.Cleanup(tableCleanup)
+
+		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
+			Table: &sdk.OnTable{
+				AllInSchema: testClientHelper().Ids.SchemaId(),
+			},
+		}, shareTest.ID())
+		require.NoError(t, err)
+
+		grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			On: &sdk.ShowGrantsOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeTable,
+					Name:       table.ID(),
+				},
+			},
+		})
+		require.NoError(t, err)
+		assertGrant(t, grants, table.ID(), sdk.ObjectPrivilegeSelect, sdk.ObjectTypeTable, shareTest.ID(), shareTest.ID().Name())
+
+		_, err = client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Share: &sdk.ShowGrantsToShare{
+					Name: shareTest.ID(),
+				},
+			},
+		})
 		require.NoError(t, err)
 	})
 }
@@ -905,7 +996,7 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-		Database: testDb(t).ID(),
+		Database: testClientHelper().Ids.DatabaseId(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Run("without options", func(t *testing.T) {
@@ -914,7 +1005,7 @@ func TestInt_RevokePrivilegeToShare(t *testing.T) {
 	})
 	t.Run("with options", func(t *testing.T) {
 		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: testDb(t).ID(),
+			Database: testClientHelper().Ids.DatabaseId(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 	})
@@ -943,7 +1034,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		_, err = collections.FindOne(grants, func(grant sdk.Grant) bool {
+		_, err = collections.FindFirst(grants, func(grant sdk.Grant) bool {
 			return grant.Privilege == "OWNERSHIP" && grant.GranteeName.Name() == role.Name()
 		})
 		require.NoError(t, err)
@@ -1060,7 +1151,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 			&sdk.AccountRoleGrantOn{
 				AccountObject: &sdk.GrantOnAccountObject{
-					Warehouse: sdk.Pointer(testWarehouse(t).ID()),
+					Warehouse: sdk.Pointer(testClientHelper().Ids.WarehouseId()),
 				},
 			},
 			roleId,
@@ -1117,6 +1208,10 @@ func TestInt_GrantOwnership(t *testing.T) {
 		return ownershipGrantOnObject(sdk.ObjectTypePipe, pipe.ID())
 	}
 
+	ownershipGrantOnCortexSearchService := func(cortexSearchService *sdk.CortexSearchService) sdk.OwnershipGrantOn {
+		return ownershipGrantOnObject(sdk.ObjectTypeCortexSearchService, cortexSearchService.ID())
+	}
+
 	ownershipGrantOnTask := func(task *sdk.Task) sdk.OwnershipGrantOn {
 		return ownershipGrantOnObject(sdk.ObjectTypeTask, task.ID())
 	}
@@ -1150,11 +1245,11 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Expecting two grants because database role has usage on database by default
 		require.Equal(t, 2, len(returnedGrants))
 
-		usagePrivilege, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeUsage.String() })
+		usagePrivilege, err := collections.FindFirst[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.AccountObjectPrivilegeUsage.String() })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, usagePrivilege.GrantedTo)
 
-		ownership, err := collections.FindOne[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaObjectOwnership.String() })
+		ownership, err := collections.FindFirst[sdk.Grant](returnedGrants, func(g sdk.Grant) bool { return g.Privilege == sdk.SchemaObjectOwnership.String() })
 		require.NoError(t, err)
 		assert.Equal(t, sdk.ObjectTypeTable, ownership.GrantedOn)
 		assert.Equal(t, sdk.ObjectTypeDatabaseRole, ownership.GrantedTo)
@@ -1169,7 +1264,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		on := sdk.OwnershipGrantOn{
 			Future: &sdk.GrantOnSchemaObjectIn{
 				PluralObjectType: sdk.PluralObjectTypeExternalTables,
-				InDatabase:       sdk.Pointer(testDb(t).ID()),
+				InDatabase:       sdk.Pointer(testClientHelper().Ids.DatabaseId()),
 			},
 		}
 		to := sdk.OwnershipGrantTo{
@@ -1205,7 +1300,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		on := sdk.OwnershipGrantOn{
 			Object: &sdk.Object{
 				ObjectType: sdk.ObjectTypeWarehouse,
-				Name:       testWarehouse(t).ID(),
+				Name:       testClientHelper().Ids.WarehouseId(),
 			},
 		}
 		to := sdk.OwnershipGrantTo{
@@ -1281,7 +1376,13 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 			new(sdk.GrantOwnershipOptions),
 		)
-		require.ErrorContains(t, err, "Invalid object type 'CORTEX_SEARCH_SERVICE' for privilege 'OWNERSHIP'")
+		require.NoError(t, err)
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnCortexSearchService(cortex), role.ID())
+
+		currentRole := testClientHelper().Context.CurrentRole(t)
+
+		grantOwnershipToRole(t, currentRole, ownershipGrantOnCortexSearchService(cortex), nil)
+		checkOwnershipOnObjectToRole(t, ownershipGrantOnCortexSearchService(cortex), currentRole)
 	})
 
 	t.Run("on pipe - with operate and monitor privileges granted", func(t *testing.T) {
@@ -1522,7 +1623,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		onAllPipesInSchema := sdk.OwnershipGrantOn{
 			All: &sdk.GrantOnSchemaObjectIn{
 				PluralObjectType: sdk.PluralObjectTypePipes,
-				InSchema:         sdk.Pointer(testSchema(t).ID()),
+				InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 			},
 		}
 		err = client.Grants.GrantOwnership(
@@ -1726,7 +1827,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		onAllTasks := sdk.OwnershipGrantOn{
 			All: &sdk.GrantOnSchemaObjectIn{
 				PluralObjectType: sdk.PluralObjectTypeTasks,
-				InSchema:         sdk.Pointer(testSchema(t).ID()),
+				InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 			},
 		}
 		err = client.Grants.GrantOwnership(
@@ -1843,7 +1944,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		onAllTasks := sdk.OwnershipGrantOn{
 			All: &sdk.GrantOnSchemaObjectIn{
 				PluralObjectType: sdk.PluralObjectTypeTasks,
-				InSchema:         sdk.Pointer(testSchema(t).ID()),
+				InSchema:         sdk.Pointer(testClientHelper().Ids.SchemaId()),
 			},
 		}
 		err = client.Grants.GrantOwnership(
@@ -1883,12 +1984,12 @@ func TestInt_ShowGrants(t *testing.T) {
 	t.Cleanup(shareCleanup)
 
 	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-		Database: testDb(t).ID(),
+		Database: testClientHelper().Ids.DatabaseId(),
 	}, shareTest.ID())
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: testDb(t).ID(),
+			Database: testClientHelper().Ids.DatabaseId(),
 		}, shareTest.ID())
 		require.NoError(t, err)
 	})
@@ -1903,7 +2004,7 @@ func TestInt_ShowGrants(t *testing.T) {
 			On: &sdk.ShowGrantsOn{
 				Object: &sdk.Object{
 					ObjectType: sdk.ObjectTypeDatabase,
-					Name:       testDb(t).ID(),
+					Name:       testClientHelper().Ids.DatabaseId(),
 				},
 			},
 		})

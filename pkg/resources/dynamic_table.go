@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -156,6 +157,7 @@ var dynamicTableSchema = map[string]*schema.Schema{
 		Description: "Timestamp of the data in the base object(s) that is included in the dynamic table.",
 		Computed:    true,
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 // DynamicTable returns a pointer to the resource representing a dynamic table.
@@ -183,6 +185,9 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] dynamic table (%s) not found", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return err
 	}
 	if err := d.Set("name", dynamicTable.Name); err != nil {
 		return err

@@ -117,6 +117,12 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 		opts.Set.Parameters.AccountParameters.MinDataRetentionTimeInDays = Pointer(v)
 	case AccountParameterNetworkPolicy:
 		opts.Set.Parameters.AccountParameters.NetworkPolicy = &value
+	case AccountParameterOAuthAddPrivilegedRolesToBlockedList:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
+		}
+		opts.Set.Parameters.AccountParameters.OAuthAddPrivilegedRolesToBlockedList = b
 	case AccountParameterPeriodicDataRekeying:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
@@ -526,47 +532,175 @@ type UserParameter string
 const (
 	// User Parameters
 	UserParameterEnableUnredactedQuerySyntaxError UserParameter = "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"
+	UserParameterNetworkPolicy                    UserParameter = "NETWORK_POLICY"
+	UserParameterPreventUnloadToInternalStages    UserParameter = "PREVENT_UNLOAD_TO_INTERNAL_STAGES"
 
 	// Session Parameters (inherited)
-	UserParameterAbortDetachedQuery                    UserParameter = "ABORT_DETACHED_QUERY"
-	UserParameterAutocommit                            UserParameter = "AUTOCOMMIT"
-	UserParameterBinaryInputFormat                     UserParameter = "BINARY_INPUT_FORMAT"
-	UserParameterBinaryOutputFormat                    UserParameter = "BINARY_OUTPUT_FORMAT"
-	UserParameterClientMetadataRequestUseConnectionCtx UserParameter = "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"
-	UserParameterClientMetadataUseSessionDatabase      UserParameter = "CLIENT_METADATA_USE_SESSION_DATABASE"
-	UserParameterClientResultColumnCaseInsensitive     UserParameter = "CLIENT_RESULT_COLUMN_CASE_INSENSITIVE"
-	UserParameterDateInputFormat                       UserParameter = "DATE_INPUT_FORMAT"
-	UserParameterDateOutputFormat                      UserParameter = "DATE_OUTPUT_FORMAT"
-	UserParameterErrorOnNondeterministicMerge          UserParameter = "ERROR_ON_NONDETERMINISTIC_MERGE"
-	UserParameterErrorOnNondeterministicUpdate         UserParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
-	UserParameterGeographyOutputFormat                 UserParameter = "GEOGRAPHY_OUTPUT_FORMAT"
-	UserParameterJsonIndent                            UserParameter = "JSON_INDENT"
-	UserParameterLockTimeout                           UserParameter = "LOCK_TIMEOUT"
-	UserParameterMultiStatementCount                   UserParameter = "MULTI_STATEMENT_COUNT"
-	UserParameterNetworkPolicy                         UserParameter = "NETWORK_POLICY"
-	UserParameterQueryTag                              UserParameter = "QUERY_TAG"
-	UserParameterQuotedIdentifiersIgnoreCase           UserParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
-	UserParameterRowsPerResultset                      UserParameter = "ROWS_PER_RESULTSET"
-	UserParameterS3StageVpceDnsName                    UserParameter = "S3_STAGE_VPCE_DNS_NAME"
-	UserParameterSimulatedDataSharingConsumer          UserParameter = "SIMULATED_DATA_SHARING_CONSUMER"
-	UserParameterStatementTimeoutInSeconds             UserParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
-	UserParameterStrictJsonOutput                      UserParameter = "STRICT_JSON_OUTPUT"
-	UserParameterTimeInputFormat                       UserParameter = "TIME_INPUT_FORMAT"
-	UserParameterTimeOutputFormat                      UserParameter = "TIME_OUTPUT_FORMAT"
-	UserParameterTimestampDayIsAlways24h               UserParameter = "TIMESTAMP_DAY_IS_ALWAYS_24H"
-	UserParameterTimestampInputFormat                  UserParameter = "TIMESTAMP_INPUT_FORMAT"
-	UserParameterTimestampLtzOutputFormat              UserParameter = "TIMESTAMP_LTZ_OUTPUT_FORMAT"
-	UserParameterTimestampNtzOutputFormat              UserParameter = "TIMESTAMP_NTZ_OUTPUT_FORMAT"
-	UserParameterTimestampOutputFormat                 UserParameter = "TIMESTAMP_OUTPUT_FORMAT"
-	UserParameterTimestampTypeMapping                  UserParameter = "TIMESTAMP_TYPE_MAPPING"
-	UserParameterTimestampTzOutputFormat               UserParameter = "TIMESTAMP_TZ_OUTPUT_FORMAT"
-	UserParameterTimezone                              UserParameter = "TIMEZONE"
-	UserParameterTransactionDefaultIsolationLevel      UserParameter = "TRANSACTION_DEFAULT_ISOLATION_LEVEL"
-	UserParameterTwoDigitCenturyStart                  UserParameter = "TWO_DIGIT_CENTURY_START"
-	UserParameterUnsupportedDdlAction                  UserParameter = "UNSUPPORTED_DDL_ACTION"
-	UserParameterUseCachedResult                       UserParameter = "USE_CACHED_RESULT"
-	UserParameterWeekOfYearPolicy                      UserParameter = "WEEK_OF_YEAR_POLICY"
-	UserParameterWeekStart                             UserParameter = "WEEK_START"
+	UserParameterAbortDetachedQuery                       UserParameter = "ABORT_DETACHED_QUERY"
+	UserParameterAutocommit                               UserParameter = "AUTOCOMMIT"
+	UserParameterBinaryInputFormat                        UserParameter = "BINARY_INPUT_FORMAT"
+	UserParameterBinaryOutputFormat                       UserParameter = "BINARY_OUTPUT_FORMAT"
+	UserParameterClientMemoryLimit                        UserParameter = "CLIENT_MEMORY_LIMIT"
+	UserParameterClientMetadataRequestUseConnectionCtx    UserParameter = "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"
+	UserParameterClientPrefetchThreads                    UserParameter = "CLIENT_PREFETCH_THREADS"
+	UserParameterClientResultChunkSize                    UserParameter = "CLIENT_RESULT_CHUNK_SIZE"
+	UserParameterClientResultColumnCaseInsensitive        UserParameter = "CLIENT_RESULT_COLUMN_CASE_INSENSITIVE"
+	UserParameterClientSessionKeepAlive                   UserParameter = "CLIENT_SESSION_KEEP_ALIVE"
+	UserParameterClientSessionKeepAliveHeartbeatFrequency UserParameter = "CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY"
+	UserParameterClientTimestampTypeMapping               UserParameter = "CLIENT_TIMESTAMP_TYPE_MAPPING"
+	UserParameterDateInputFormat                          UserParameter = "DATE_INPUT_FORMAT"
+	UserParameterDateOutputFormat                         UserParameter = "DATE_OUTPUT_FORMAT"
+	UserParameterEnableUnloadPhysicalTypeOptimization     UserParameter = "ENABLE_UNLOAD_PHYSICAL_TYPE_OPTIMIZATION"
+	UserParameterErrorOnNondeterministicMerge             UserParameter = "ERROR_ON_NONDETERMINISTIC_MERGE"
+	UserParameterErrorOnNondeterministicUpdate            UserParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
+	UserParameterGeographyOutputFormat                    UserParameter = "GEOGRAPHY_OUTPUT_FORMAT"
+	UserParameterGeometryOutputFormat                     UserParameter = "GEOMETRY_OUTPUT_FORMAT"
+	UserParameterJdbcTreatDecimalAsInt                    UserParameter = "JDBC_TREAT_DECIMAL_AS_INT"
+	UserParameterJdbcTreatTimestampNtzAsUtc               UserParameter = "JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC"
+	UserParameterJdbcUseSessionTimezone                   UserParameter = "JDBC_USE_SESSION_TIMEZONE"
+	UserParameterJsonIndent                               UserParameter = "JSON_INDENT"
+	UserParameterLockTimeout                              UserParameter = "LOCK_TIMEOUT"
+	UserParameterLogLevel                                 UserParameter = "LOG_LEVEL"
+	UserParameterMultiStatementCount                      UserParameter = "MULTI_STATEMENT_COUNT"
+	UserParameterNoorderSequenceAsDefault                 UserParameter = "NOORDER_SEQUENCE_AS_DEFAULT"
+	UserParameterOdbcTreatDecimalAsInt                    UserParameter = "ODBC_TREAT_DECIMAL_AS_INT"
+	UserParameterQueryTag                                 UserParameter = "QUERY_TAG"
+	UserParameterQuotedIdentifiersIgnoreCase              UserParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
+	UserParameterRowsPerResultset                         UserParameter = "ROWS_PER_RESULTSET"
+	UserParameterS3StageVpceDnsName                       UserParameter = "S3_STAGE_VPCE_DNS_NAME"
+	UserParameterSearchPath                               UserParameter = "SEARCH_PATH"
+	UserParameterSimulatedDataSharingConsumer             UserParameter = "SIMULATED_DATA_SHARING_CONSUMER"
+	UserParameterStatementQueuedTimeoutInSeconds          UserParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
+	UserParameterStatementTimeoutInSeconds                UserParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
+	UserParameterStrictJsonOutput                         UserParameter = "STRICT_JSON_OUTPUT"
+	UserParameterTimestampDayIsAlways24h                  UserParameter = "TIMESTAMP_DAY_IS_ALWAYS_24H"
+	UserParameterTimestampInputFormat                     UserParameter = "TIMESTAMP_INPUT_FORMAT"
+	UserParameterTimestampLtzOutputFormat                 UserParameter = "TIMESTAMP_LTZ_OUTPUT_FORMAT"
+	UserParameterTimestampNtzOutputFormat                 UserParameter = "TIMESTAMP_NTZ_OUTPUT_FORMAT"
+	UserParameterTimestampOutputFormat                    UserParameter = "TIMESTAMP_OUTPUT_FORMAT"
+	UserParameterTimestampTypeMapping                     UserParameter = "TIMESTAMP_TYPE_MAPPING"
+	UserParameterTimestampTzOutputFormat                  UserParameter = "TIMESTAMP_TZ_OUTPUT_FORMAT"
+	UserParameterTimezone                                 UserParameter = "TIMEZONE"
+	UserParameterTimeInputFormat                          UserParameter = "TIME_INPUT_FORMAT"
+	UserParameterTimeOutputFormat                         UserParameter = "TIME_OUTPUT_FORMAT"
+	UserParameterTraceLevel                               UserParameter = "TRACE_LEVEL"
+	UserParameterTransactionAbortOnError                  UserParameter = "TRANSACTION_ABORT_ON_ERROR"
+	UserParameterTransactionDefaultIsolationLevel         UserParameter = "TRANSACTION_DEFAULT_ISOLATION_LEVEL"
+	UserParameterTwoDigitCenturyStart                     UserParameter = "TWO_DIGIT_CENTURY_START"
+	UserParameterUnsupportedDdlAction                     UserParameter = "UNSUPPORTED_DDL_ACTION"
+	UserParameterUseCachedResult                          UserParameter = "USE_CACHED_RESULT"
+	UserParameterWeekOfYearPolicy                         UserParameter = "WEEK_OF_YEAR_POLICY"
+	UserParameterWeekStart                                UserParameter = "WEEK_START"
+)
+
+var AllUserParameters = []UserParameter{
+	UserParameterAbortDetachedQuery,
+	UserParameterAutocommit,
+	UserParameterBinaryInputFormat,
+	UserParameterBinaryOutputFormat,
+	UserParameterClientMemoryLimit,
+	UserParameterClientMetadataRequestUseConnectionCtx,
+	UserParameterClientPrefetchThreads,
+	UserParameterClientResultChunkSize,
+	UserParameterClientResultColumnCaseInsensitive,
+	UserParameterClientSessionKeepAlive,
+	UserParameterClientSessionKeepAliveHeartbeatFrequency,
+	UserParameterClientTimestampTypeMapping,
+	UserParameterDateInputFormat,
+	UserParameterDateOutputFormat,
+	UserParameterEnableUnloadPhysicalTypeOptimization,
+	UserParameterErrorOnNondeterministicMerge,
+	UserParameterErrorOnNondeterministicUpdate,
+	UserParameterGeographyOutputFormat,
+	UserParameterGeometryOutputFormat,
+	UserParameterJdbcTreatDecimalAsInt,
+	UserParameterJdbcTreatTimestampNtzAsUtc,
+	UserParameterJdbcUseSessionTimezone,
+	UserParameterJsonIndent,
+	UserParameterLockTimeout,
+	UserParameterLogLevel,
+	UserParameterMultiStatementCount,
+	UserParameterNoorderSequenceAsDefault,
+	UserParameterOdbcTreatDecimalAsInt,
+	UserParameterQueryTag,
+	UserParameterQuotedIdentifiersIgnoreCase,
+	UserParameterRowsPerResultset,
+	UserParameterS3StageVpceDnsName,
+	UserParameterSearchPath,
+	UserParameterSimulatedDataSharingConsumer,
+	UserParameterStatementQueuedTimeoutInSeconds,
+	UserParameterStatementTimeoutInSeconds,
+	UserParameterStrictJsonOutput,
+	UserParameterTimestampDayIsAlways24h,
+	UserParameterTimestampInputFormat,
+	UserParameterTimestampLtzOutputFormat,
+	UserParameterTimestampNtzOutputFormat,
+	UserParameterTimestampOutputFormat,
+	UserParameterTimestampTypeMapping,
+	UserParameterTimestampTzOutputFormat,
+	UserParameterTimezone,
+	UserParameterTimeInputFormat,
+	UserParameterTimeOutputFormat,
+	UserParameterTraceLevel,
+	UserParameterTransactionAbortOnError,
+	UserParameterTransactionDefaultIsolationLevel,
+	UserParameterTwoDigitCenturyStart,
+	UserParameterUnsupportedDdlAction,
+	UserParameterUseCachedResult,
+	UserParameterWeekOfYearPolicy,
+	UserParameterWeekStart,
+	UserParameterEnableUnredactedQuerySyntaxError,
+	UserParameterNetworkPolicy,
+	UserParameterPreventUnloadToInternalStages,
+}
+
+type WarehouseParameter string
+
+const (
+	WarehouseParameterMaxConcurrencyLevel             WarehouseParameter = "MAX_CONCURRENCY_LEVEL"
+	WarehouseParameterStatementQueuedTimeoutInSeconds WarehouseParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
+	WarehouseParameterStatementTimeoutInSeconds       WarehouseParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
+)
+
+var AllSchemaParameters = []ObjectParameter{
+	ObjectParameterDataRetentionTimeInDays,
+	ObjectParameterMaxDataExtensionTimeInDays,
+	ObjectParameterExternalVolume,
+	ObjectParameterCatalog,
+	ObjectParameterReplaceInvalidCharacters,
+	ObjectParameterDefaultDDLCollation,
+	ObjectParameterStorageSerializationPolicy,
+	ObjectParameterLogLevel,
+	ObjectParameterTraceLevel,
+	ObjectParameterSuspendTaskAfterNumFailures,
+	ObjectParameterTaskAutoRetryAttempts,
+	ObjectParameterUserTaskManagedInitialWarehouseSize,
+	ObjectParameterUserTaskTimeoutMs,
+	ObjectParameterUserTaskMinimumTriggerIntervalInSeconds,
+	ObjectParameterQuotedIdentifiersIgnoreCase,
+	ObjectParameterEnableConsoleOutput,
+	ObjectParameterPipeExecutionPaused,
+}
+
+type DatabaseParameter string
+
+const (
+	DatabaseParameterDataRetentionTimeInDays                 DatabaseParameter = "DATA_RETENTION_TIME_IN_DAYS"
+	DatabaseParameterMaxDataExtensionTimeInDays              DatabaseParameter = "MAX_DATA_EXTENSION_TIME_IN_DAYS"
+	DatabaseParameterExternalVolume                          DatabaseParameter = "EXTERNAL_VOLUME"
+	DatabaseParameterCatalog                                 DatabaseParameter = "CATALOG"
+	DatabaseParameterReplaceInvalidCharacters                DatabaseParameter = "REPLACE_INVALID_CHARACTERS"
+	DatabaseParameterDefaultDdlCollation                     DatabaseParameter = "DEFAULT_DDL_COLLATION"
+	DatabaseParameterStorageSerializationPolicy              DatabaseParameter = "STORAGE_SERIALIZATION_POLICY"
+	DatabaseParameterLogLevel                                DatabaseParameter = "LOG_LEVEL"
+	DatabaseParameterTraceLevel                              DatabaseParameter = "TRACE_LEVEL"
+	DatabaseParameterSuspendTaskAfterNumFailures             DatabaseParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
+	DatabaseParameterTaskAutoRetryAttempts                   DatabaseParameter = "TASK_AUTO_RETRY_ATTEMPTS"
+	DatabaseParameterUserTaskManagedInitialWarehouseSize     DatabaseParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
+	DatabaseParameterUserTaskTimeoutMs                       DatabaseParameter = "USER_TASK_TIMEOUT_MS"
+	DatabaseParameterUserTaskMinimumTriggerIntervalInSeconds DatabaseParameter = "USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"
+	DatabaseParameterQuotedIdentifiersIgnoreCase             DatabaseParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
+	DatabaseParameterEnableConsoleOutput                     DatabaseParameter = "ENABLE_CONSOLE_OUTPUT"
 )
 
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
@@ -585,6 +719,7 @@ type AccountParameters struct {
 	InitialReplicationSizeLimitInTB                  *float64 `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
 	MinDataRetentionTimeInDays                       *int     `ddl:"parameter" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
 	NetworkPolicy                                    *string  `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
+	OAuthAddPrivilegedRolesToBlockedList             *bool    `ddl:"parameter" sql:"OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	PeriodicDataRekeying                             *bool    `ddl:"parameter" sql:"PERIODIC_DATA_REKEYING"`
 	PreventLoadFromInlineURL                         *bool    `ddl:"parameter" sql:"PREVENT_LOAD_FROM_INLINE_URL"`
 	PreventUnloadToInlineURL                         *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
@@ -646,6 +781,23 @@ const (
 	GeographyOutputFormatEWKB    GeographyOutputFormat = "EWKB"
 )
 
+func ToGeographyOutputFormat(s string) (GeographyOutputFormat, error) {
+	switch strings.ToUpper(s) {
+	case strings.ToUpper(string(GeographyOutputFormatGeoJSON)):
+		return GeographyOutputFormatGeoJSON, nil
+	case string(GeographyOutputFormatWKT):
+		return GeographyOutputFormatWKT, nil
+	case string(GeographyOutputFormatWKB):
+		return GeographyOutputFormatWKB, nil
+	case string(GeographyOutputFormatEWKT):
+		return GeographyOutputFormatEWKT, nil
+	case string(GeographyOutputFormatEWKB):
+		return GeographyOutputFormatEWKB, nil
+	default:
+		return "", fmt.Errorf("invalid geography output format: %s", s)
+	}
+}
+
 type GeometryOutputFormat string
 
 const (
@@ -656,6 +808,23 @@ const (
 	GeometryOutputFormatEWKB    GeometryOutputFormat = "EWKB"
 )
 
+func ToGeometryOutputFormat(s string) (GeometryOutputFormat, error) {
+	switch strings.ToUpper(s) {
+	case strings.ToUpper(string(GeometryOutputFormatGeoJSON)):
+		return GeometryOutputFormatGeoJSON, nil
+	case string(GeometryOutputFormatWKT):
+		return GeometryOutputFormatWKT, nil
+	case string(GeometryOutputFormatWKB):
+		return GeometryOutputFormatWKB, nil
+	case string(GeometryOutputFormatEWKT):
+		return GeometryOutputFormatEWKT, nil
+	case string(GeometryOutputFormatEWKB):
+		return GeometryOutputFormatEWKB, nil
+	default:
+		return "", fmt.Errorf("invalid geometry output format: %s", s)
+	}
+}
+
 type BinaryInputFormat string
 
 const (
@@ -664,6 +833,19 @@ const (
 	BinaryInputFormatUTF8   BinaryInputFormat = "UTF8"
 )
 
+func ToBinaryInputFormat(s string) (BinaryInputFormat, error) {
+	switch strings.ToUpper(s) {
+	case string(BinaryInputFormatHex):
+		return BinaryInputFormatHex, nil
+	case string(BinaryInputFormatBase64):
+		return BinaryInputFormatBase64, nil
+	case string(BinaryInputFormatUTF8), "UTF-8":
+		return BinaryInputFormatUTF8, nil
+	default:
+		return "", fmt.Errorf("invalid binary input format: %s", s)
+	}
+}
+
 type BinaryOutputFormat string
 
 const (
@@ -671,12 +853,34 @@ const (
 	BinaryOutputFormatBase64 BinaryOutputFormat = "BASE64"
 )
 
+func ToBinaryOutputFormat(s string) (BinaryOutputFormat, error) {
+	switch strings.ToUpper(s) {
+	case string(BinaryOutputFormatHex):
+		return BinaryOutputFormatHex, nil
+	case string(BinaryOutputFormatBase64):
+		return BinaryOutputFormatBase64, nil
+	default:
+		return "", fmt.Errorf("invalid binary output format: %s", s)
+	}
+}
+
 type ClientTimestampTypeMapping string
 
 const (
 	ClientTimestampTypeMappingLtz ClientTimestampTypeMapping = "TIMESTAMP_LTZ"
 	ClientTimestampTypeMappingNtz ClientTimestampTypeMapping = "TIMESTAMP_NTZ"
 )
+
+func ToClientTimestampTypeMapping(s string) (ClientTimestampTypeMapping, error) {
+	switch strings.ToUpper(s) {
+	case string(ClientTimestampTypeMappingLtz):
+		return ClientTimestampTypeMappingLtz, nil
+	case string(ClientTimestampTypeMappingNtz):
+		return ClientTimestampTypeMappingNtz, nil
+	default:
+		return "", fmt.Errorf("invalid client timestamp type mapping: %s", s)
+	}
+}
 
 type TimestampTypeMapping string
 
@@ -686,11 +890,33 @@ const (
 	TimestampTypeMappingTz  TimestampTypeMapping = "TIMESTAMP_TZ"
 )
 
+func ToTimestampTypeMapping(s string) (TimestampTypeMapping, error) {
+	switch strings.ToUpper(s) {
+	case string(TimestampTypeMappingLtz):
+		return TimestampTypeMappingLtz, nil
+	case string(TimestampTypeMappingNtz):
+		return TimestampTypeMappingNtz, nil
+	case string(TimestampTypeMappingTz):
+		return TimestampTypeMappingTz, nil
+	default:
+		return "", fmt.Errorf("invalid timestamp type mapping: %s", s)
+	}
+}
+
 type TransactionDefaultIsolationLevel string
 
 const (
 	TransactionDefaultIsolationLevelReadCommitted TransactionDefaultIsolationLevel = "READ COMMITTED"
 )
+
+func ToTransactionDefaultIsolationLevel(s string) (TransactionDefaultIsolationLevel, error) {
+	switch strings.ToUpper(s) {
+	case string(TransactionDefaultIsolationLevelReadCommitted):
+		return TransactionDefaultIsolationLevelReadCommitted, nil
+	default:
+		return "", fmt.Errorf("invalid transaction default isolation level: %s", s)
+	}
+}
 
 type UnsupportedDDLAction string
 
@@ -698,6 +924,17 @@ const (
 	UnsupportedDDLActionIgnore UnsupportedDDLAction = "IGNORE"
 	UnsupportedDDLActionFail   UnsupportedDDLAction = "FAIL"
 )
+
+func ToUnsupportedDDLAction(s string) (UnsupportedDDLAction, error) {
+	switch strings.ToUpper(s) {
+	case string(UnsupportedDDLActionIgnore):
+		return UnsupportedDDLActionIgnore, nil
+	case string(UnsupportedDDLActionFail):
+		return UnsupportedDDLActionFail, nil
+	default:
+		return "", fmt.Errorf("invalid ddl action: %s", s)
+	}
+}
 
 // SessionParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#session-parameters.
 type SessionParameters struct {
@@ -994,12 +1231,14 @@ func (v *ParametersIn) validate() error {
 type ParameterType string
 
 const (
-	ParameterTypeAccount   ParameterType = "ACCOUNT"
-	ParameterTypeUser      ParameterType = "USER"
-	ParameterTypeSession   ParameterType = "SESSION"
-	ParameterTypeObject    ParameterType = "OBJECT"
-	ParameterTypeWarehouse ParameterType = "WAREHOUSE"
-	ParameterTypeDatabase  ParameterType = "DATABASE"
+	ParameterTypeSnowflakeDefault ParameterType = ""
+	ParameterTypeAccount          ParameterType = "ACCOUNT"
+	ParameterTypeUser             ParameterType = "USER"
+	ParameterTypeSession          ParameterType = "SESSION"
+	ParameterTypeObject           ParameterType = "OBJECT"
+	ParameterTypeWarehouse        ParameterType = "WAREHOUSE"
+	ParameterTypeDatabase         ParameterType = "DATABASE"
+	ParameterTypeSchema           ParameterType = "SCHEMA"
 )
 
 type Parameter struct {

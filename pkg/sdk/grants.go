@@ -128,12 +128,12 @@ type grantPrivilegeToShareOptions struct {
 }
 
 type ShareGrantOn struct {
-	Database AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
-	Schema   DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
-	Function SchemaObjectIdentifier   `ddl:"identifier" sql:"FUNCTION"`
-	Table    *OnTable                 `ddl:"-"`
-	Tag      SchemaObjectIdentifier   `ddl:"identifier" sql:"TAG"`
-	View     SchemaObjectIdentifier   `ddl:"identifier" sql:"VIEW"`
+	Database AccountObjectIdentifier             `ddl:"identifier" sql:"DATABASE"`
+	Schema   DatabaseObjectIdentifier            `ddl:"identifier" sql:"SCHEMA"`
+	Function SchemaObjectIdentifierWithArguments `ddl:"identifier" sql:"FUNCTION"`
+	Table    *OnTable                            `ddl:"-"`
+	Tag      SchemaObjectIdentifier              `ddl:"identifier" sql:"TAG"`
+	View     SchemaObjectIdentifier              `ddl:"identifier" sql:"VIEW"`
 }
 
 type OnTable struct {
@@ -229,22 +229,6 @@ func (v *Grant) ID() ObjectIdentifier {
 func (row grantRow) convert() *Grant {
 	grantedTo := ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
 	grantTo := ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
-	var granteeName AccountObjectIdentifier
-	if grantedTo == ObjectTypeShare {
-		// TODO(SNOW-1058419): Change this logic during identifiers rework
-		parts := strings.Split(row.GranteeName, ".")
-		switch {
-		case len(parts) == 1:
-			granteeName = NewAccountObjectIdentifier(parts[0])
-		case len(parts) == 2:
-			granteeName = NewAccountObjectIdentifier(parts[1])
-		default:
-			log.Printf("unsupported case for share's grantee name: %s", row.GranteeName)
-		}
-	} else {
-		granteeName = NewAccountObjectIdentifier(row.GranteeName)
-	}
-
 	var grantedOn ObjectType
 	// true for current grants
 	if row.GrantedOn != "" {
@@ -263,22 +247,28 @@ func (row grantRow) convert() *Grant {
 		grantOn = ObjectTypeExternalVolume
 	}
 
-	// TODO(SNOW-1058419): Change identifier parsing during identifiers rework
-	name, err := ParseObjectIdentifier(row.Name)
+	var name ObjectIdentifier
+	var err error
+	// TODO(SNOW-1569535): use a mapper from object type to parsing function
+	if ObjectType(row.GrantedOn).IsWithArguments() {
+		name, err = ParseSchemaObjectIdentifierWithArgumentsAndReturnType(row.Name)
+	} else {
+		name, err = ParseObjectIdentifierString(row.Name)
+	}
 	if err != nil {
 		log.Printf("Failed to parse identifier [%s], err = \"%s\"; falling back to fully qualified name conversion", row.Name, err)
 		name = NewObjectIdentifierFromFullyQualifiedName(row.Name)
 	}
 
 	return &Grant{
-		CreatedOn:   row.CreatedOn,
-		Privilege:   row.Privilege,
-		GrantedOn:   grantedOn,
-		GrantOn:     grantOn,
-		GrantedTo:   grantedTo,
-		GrantTo:     grantTo,
-		Name:        name,
-		GranteeName: granteeName,
+		CreatedOn: row.CreatedOn,
+		Privilege: row.Privilege,
+		GrantedOn: grantedOn,
+		GrantOn:   grantOn,
+		GrantedTo: grantedTo,
+		GrantTo:   grantTo,
+		Name:      name,
+		// GranteeName is computed in Show operation. Its format is depending on the grant request options.
 		GrantOption: row.GrantOption,
 		GrantedBy:   NewAccountObjectIdentifier(row.GrantedBy),
 	}

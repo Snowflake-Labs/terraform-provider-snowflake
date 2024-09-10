@@ -40,12 +40,14 @@ func ApiAuthenticationIntegrationWithAuthorizationCodeGrant() *schema.Resource {
 		ReadContext:   ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(true),
 		UpdateContext: UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant,
 		DeleteContext: DeleteContextApiAuthenticationIntegrationWithAuthorizationCodeGrant,
+		Description:   "Resource used to manage api authentication security integration objects with authorization code grant. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
+
 		CustomizeDiff: customdiff.All(
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
-			ComputedIfAnyAttributeChanged(ShowOutputAttributeName, "enabled", "comment"),
-			ComputedIfAnyAttributeChanged(DescribeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
+			ComputedIfAnyAttributeChanged(apiAuthAuthorizationCodeGrantSchema, ShowOutputAttributeName, "enabled", "comment"),
+			ComputedIfAnyAttributeChanged(apiAuthAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
 				"oauth_client_id", "oauth_client_auth_method", "oauth_authorization_endpoint",
 				"oauth_token_endpoint", "oauth_allowed_scopes"),
 		),
@@ -59,7 +61,10 @@ func ApiAuthenticationIntegrationWithAuthorizationCodeGrant() *schema.Resource {
 func ImportApiAuthenticationWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting api auth integration with authorization code grant import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
 
 	integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 	if err != nil {
@@ -74,7 +79,7 @@ func ImportApiAuthenticationWithAuthorizationCodeGrant(ctx context.Context, d *s
 	if err := handleApiAuthImport(d, integration, properties); err != nil {
 		return nil, err
 	}
-	oauthAuthorizationEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+	oauthAuthorizationEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_AUTHORIZATION_ENDPOINT"
 	})
 	if err == nil {
@@ -82,7 +87,7 @@ func ImportApiAuthenticationWithAuthorizationCodeGrant(ctx context.Context, d *s
 			return nil, err
 		}
 	}
-	oauthAllowedScopes, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
+	oauthAllowedScopes, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
 	if err == nil {
 		if err = d.Set("oauth_allowed_scopes", sdk.ParseCommaSeparatedStringArray(oauthAllowedScopes.Value, false)); err != nil {
 			return nil, err
@@ -98,7 +103,12 @@ func CreateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx con
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	id := sdk.NewAccountObjectIdentifier(commonCreate.name)
+
+	id, err := sdk.ParseAccountObjectIdentifier(commonCreate.name)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	req := sdk.NewCreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id, commonCreate.enabled, commonCreate.oauthClientId, commonCreate.oauthClientSecret)
 	req.WithOauthGrantAuthorizationCode(true)
 	req.Comment = commonCreate.comment
@@ -124,14 +134,17 @@ func CreateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx con
 		return diag.FromErr(err)
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 	return ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(false)(ctx, d, meta)
 }
 
 func ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
 		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
 		if err != nil {
@@ -155,25 +168,25 @@ func ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(withExter
 		if c := integration.Category; c != sdk.SecurityIntegrationCategory {
 			return diag.FromErr(fmt.Errorf("expected %v to be a %s integration, got %v", id, sdk.SecurityIntegrationCategory, c))
 		}
-		oauthAuthorizationEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthAuthorizationEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_AUTHORIZATION_ENDPOINT"
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		oauthAllowedScopes, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
+		oauthAllowedScopes, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_ALLOWED_SCOPES" })
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		if err := handleApiAuthRead(d, integration, properties, withExternalChangesMarking, []describeMapping{
+		if err := handleApiAuthRead(d, id, integration, properties, withExternalChangesMarking, []describeMapping{
 			{"oauth_authorization_endpoint", "oauth_authorization_endpoint", oauthAuthorizationEndpoint.Value, oauthAuthorizationEndpoint.Value, nil},
 			{"oauth_allowed_scopes", "oauth_allowed_scopes", oauthAllowedScopes.Value, sdk.ParseCommaSeparatedStringArray(oauthAllowedScopes.Value, false), nil},
 		}); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+		if err := setStateToValuesFromConfig(d, apiAuthAuthorizationCodeGrantSchema, []string{
 			"oauth_authorization_endpoint",
 			"oauth_allowed_scopes",
 			"oauth_client_auth_method",
@@ -187,7 +200,11 @@ func ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(withExter
 
 func UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	commonSet, commonUnset, err := handleApiAuthUpdate(d)
 	if err != nil {
 		return diag.FromErr(err)
@@ -232,10 +249,13 @@ func UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx con
 }
 
 func DeleteContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(sdk.NewAccountObjectIdentifier(id.Name())).WithIfExists(true))
+	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{

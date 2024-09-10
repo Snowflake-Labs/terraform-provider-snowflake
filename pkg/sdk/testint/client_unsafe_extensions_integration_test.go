@@ -13,13 +13,13 @@ func TestInt_Client_UnsafeQuery(t *testing.T) {
 	ctx := testContext(t)
 
 	t.Run("test show databases", func(t *testing.T) {
-		sql := fmt.Sprintf("SHOW DATABASES LIKE '%%%s%%'", testDb(t).Name)
+		sql := fmt.Sprintf("SHOW DATABASES LIKE '%%%s%%'", testClientHelper().Ids.DatabaseId().Name())
 		results, err := client.QueryUnsafe(ctx, sql)
 		require.NoError(t, err)
 
 		assert.Len(t, results, 1)
 		row := results[0]
-		assert.Equal(t, testDb(t).Name, *row["name"])
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), *row["name"])
 		assert.NotEmpty(t, *row["created_on"])
 		assert.Equal(t, "STANDARD", *row["kind"])
 		assert.Equal(t, "ACCOUNTADMIN", *row["owner"])
@@ -46,7 +46,7 @@ func TestInt_Client_UnsafeQuery(t *testing.T) {
 		for i, r := range results {
 			names[i] = *r["name"]
 		}
-		assert.Contains(t, names, testDb(t).Name)
+		assert.Contains(t, names, testClientHelper().Ids.DatabaseId().Name())
 		assert.Contains(t, names, db1.Name)
 		assert.Contains(t, names, db2.Name)
 		assert.Contains(t, names, db3.Name)

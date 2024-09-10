@@ -87,6 +87,20 @@ func TestParseGrantOwnershipId(t *testing.T) {
 			},
 		},
 		{
+			Name:       "grant ownership on all tables in database to account role - empty database id",
+			Identifier: `ToAccountRole|"account-role"||OnAll|TABLES|InDatabase|`,
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("account-role"),
+				Kind:                         OnAllGrantOwnershipKind,
+				Data: &BulkOperationGrantData{
+					ObjectNamePlural: sdk.PluralObjectTypeTables,
+					Kind:             InDatabaseBulkOperationGrantKind,
+					Database:         sdk.Pointer(sdk.NewAccountObjectIdentifier("")),
+				},
+			},
+		},
+		{
 			Name:       "grant ownership on all tables in schema to account role",
 			Identifier: `ToAccountRole|"account-role"||OnAll|TABLES|InSchema|"database-name"."schema-name"`,
 			Expected: GrantOwnershipId{
@@ -116,6 +130,21 @@ func TestParseGrantOwnershipId(t *testing.T) {
 			},
 		},
 		{
+			Name:       "grant ownership on future tables in database to account role - empty database",
+			Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|TABLES|InDatabase|`,
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("account-role"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(CopyOutboundPrivilegesBehavior),
+				Kind:                         OnFutureGrantOwnershipKind,
+				Data: &BulkOperationGrantData{
+					ObjectNamePlural: sdk.PluralObjectTypeTables,
+					Kind:             InDatabaseBulkOperationGrantKind,
+					Database:         sdk.Pointer(sdk.NewAccountObjectIdentifier("")),
+				},
+			},
+		},
+		{
 			Name:       "grant ownership on future tables in schema to account role",
 			Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|TABLES|InSchema|"database-name"."schema-name"`,
 			Expected: GrantOwnershipId{
@@ -127,6 +156,34 @@ func TestParseGrantOwnershipId(t *testing.T) {
 					ObjectNamePlural: sdk.PluralObjectTypeTables,
 					Kind:             InSchemaBulkOperationGrantKind,
 					Schema:           sdk.Pointer(sdk.NewDatabaseObjectIdentifier("database-name", "schema-name")),
+				},
+			},
+		},
+		{
+			Name:       "grant ownership on function to account role",
+			Identifier: `ToAccountRole|"account-role"|COPY|OnObject|FUNCTION|"database-name"."schema-name"."function-name"(FLOAT)`,
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToAccountGrantOwnershipTargetRoleKind,
+				AccountRoleName:              sdk.NewAccountObjectIdentifier("account-role"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(CopyOutboundPrivilegesBehavior),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeFunction,
+					ObjectName: sdk.NewSchemaObjectIdentifierWithArguments("database-name", "schema-name", "function-name", sdk.DataTypeFloat),
+				},
+			},
+		},
+		{
+			Name:       "grant ownership on function without arguments to database role",
+			Identifier: `ToDatabaseRole|"database-name"."database-role"|REVOKE|OnObject|FUNCTION|"database-name"."schema-name"."function-name"()`,
+			Expected: GrantOwnershipId{
+				GrantOwnershipTargetRoleKind: ToDatabaseGrantOwnershipTargetRoleKind,
+				DatabaseRoleName:             sdk.NewDatabaseObjectIdentifier("database-name", "database-role"),
+				OutboundPrivilegesBehavior:   sdk.Pointer(RevokeOutboundPrivilegesBehavior),
+				Kind:                         OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeFunction,
+					ObjectName: sdk.NewSchemaObjectIdentifierWithArguments("database-name", "schema-name", "function-name", []sdk.DataType{}...),
 				},
 			},
 		},
@@ -160,16 +217,11 @@ func TestParseGrantOwnershipId(t *testing.T) {
 			Identifier: `ToAccountRole|"account-role"|COPY|OnAll|TABLES|InvalidOption|"some-identifier"`,
 			Error:      "invalid BulkOperationGrantKind: InvalidOption, valid options are InDatabase | InSchema",
 		},
-		// {
-		//	Name:       "TODO(SNOW-999049 - no error because of bad identifiers): validation: OnAll in database - missing database identifier",
-		//	Identifier: `ToAccountRole|"account-role"|COPY|OnAll|InvalidTarget|InDatabase|`,
-		//	Error:      "TODO",
-		// },
-		// {
-		//	Name:       "TODO(SNOW-999049 - panic because of bad identifiers): validation: OnAll in database - missing schema identifier",
-		//	Identifier: `ToAccountRole|"account-role"|COPY|OnAll|InvalidTarget|InSchema|`,
-		//	Error:      "TODO",
-		// },
+		{
+			Name:       "validation: OnAll in database - missing schema identifier",
+			Identifier: `ToAccountRole|"account-role"|COPY|OnAll|InvalidTarget|InSchema|`,
+			Error:      "incompatible identifier: ",
+		},
 		{
 			Name:       "validation: not enough parts for OnFuture kind",
 			Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|TABLES`,
@@ -180,16 +232,11 @@ func TestParseGrantOwnershipId(t *testing.T) {
 			Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|TABLES|InvalidOption|"some-identifier"`,
 			Error:      "invalid BulkOperationGrantKind: InvalidOption, valid options are InDatabase | InSchema",
 		},
-		// {
-		//	Name:       "TODO(SNOW-999049 - no error because of bad identifiers): validation: OnFuture in database - missing database identifier",
-		//	Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|InvalidTarget|InDatabase|`,
-		//	Error:      "TODO",
-		// },
-		// {
-		//	Name:       "TODO(SNOW-999049 - panic because of bad identifiers): validation: OnFuture in database - missing schema identifier",
-		//	Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|InvalidTarget|InSchema|`,
-		//	Error:      "TODO",
-		// },
+		{
+			Name:       "validation: OnFuture in database - missing schema identifier",
+			Identifier: `ToAccountRole|"account-role"|COPY|OnFuture|InvalidTarget|InSchema|`,
+			Error:      "incompatible identifier: ",
+		},
 	}
 
 	for _, tt := range testCases {

@@ -62,7 +62,7 @@ resource "snowflake_database_role" "test" {
 }
 
 resource "snowflake_grant_ownership" "test" {
-  database_role_name  = "\"${snowflake_database_role.test.database}\".\"${snowflake_database_role.test.name}\""
+  database_role_name  = snowflake_database_role.test.fully_qualified_name
   outbound_privileges = "REVOKE"
   on {
     object_type = "SCHEMA"
@@ -207,6 +207,8 @@ resource "snowflake_schema" "test" {
   name       = "schema"
 }
 ```
+-> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
+<!-- TODO(SNOW-1634854): include an example showing both methods-->
 
 ## Granting ownership on pipes
 To transfer ownership of a pipe, there must be additional conditions met. Otherwise, additional manual work

@@ -26,6 +26,17 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 			},
 		},
 		{
+			Name:       "grant account role on account - empty role name",
+			Identifier: `|false|false|CREATE DATABASE,CREATE USER|OnAccount`,
+			Expected: GrantPrivilegesToAccountRoleId{
+				RoleName:        sdk.NewAccountObjectIdentifier(""),
+				WithGrantOption: false,
+				Privileges:      []string{"CREATE DATABASE", "CREATE USER"},
+				Kind:            OnAccountAccountRoleGrantKind,
+				Data:            new(OnAccountGrantData),
+			},
+		},
+		{
 			Name:       "grant account role on account - always apply with grant option",
 			Identifier: `"account-role"|true|true|CREATE DATABASE,CREATE USER|OnAccount`,
 			Expected: GrantPrivilegesToAccountRoleId{
@@ -118,6 +129,40 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 					Object: &sdk.Object{
 						ObjectType: sdk.ObjectTypeTable,
 						Name:       sdk.NewSchemaObjectIdentifier("database-name", "schema-name", "table-name"),
+					},
+				},
+			},
+		},
+		{
+			Name:       "grant account role on function",
+			Identifier: `"account-role"|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|"database-name"."schema-name"."function-name"(FLOAT)`,
+			Expected: GrantPrivilegesToAccountRoleId{
+				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
+				WithGrantOption: false,
+				Privileges:      []string{"USAGE"},
+				Kind:            OnSchemaObjectAccountRoleGrantKind,
+				Data: &OnSchemaObjectGrantData{
+					Kind: OnObjectSchemaObjectGrantKind,
+					Object: &sdk.Object{
+						ObjectType: sdk.ObjectTypeFunction,
+						Name:       sdk.NewSchemaObjectIdentifierWithArguments("database-name", "schema-name", "function-name", sdk.DataTypeFloat),
+					},
+				},
+			},
+		},
+		{
+			Name:       "grant account role on function without arguments",
+			Identifier: `"account-role"|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|"database-name"."schema-name"."function-name"()`,
+			Expected: GrantPrivilegesToAccountRoleId{
+				RoleName:        sdk.NewAccountObjectIdentifier("account-role"),
+				WithGrantOption: false,
+				Privileges:      []string{"USAGE"},
+				Kind:            OnSchemaObjectAccountRoleGrantKind,
+				Data: &OnSchemaObjectGrantData{
+					Kind: OnObjectSchemaObjectGrantKind,
+					Object: &sdk.Object{
+						ObjectType: sdk.ObjectTypeFunction,
+						Name:       sdk.NewSchemaObjectIdentifierWithArguments("database-name", "schema-name", "function-name", []sdk.DataType{}...),
 					},
 				},
 			},
@@ -233,42 +278,42 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 		},
 		{
 			Name:       "validation: grant account role not enough parts for OnAccountObject kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnAccountObject`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnAccountObject`,
 			Error:      `account role identifier should hold at least 7 parts "<role_name>|<with_grant_option>|<always_apply>|<privileges>|OnAccountObject|<object_type>|<object_name>"`,
 		},
 		{
 			Name:       "validation: grant account role not enough parts for OnSchema kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|OnAllSchemasInDatabase`,
 			Error:      "account role identifier should hold at least 7 parts",
 		},
 		{
 			Name:       "validation: grant account role not enough parts for OnSchemaObject kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject`,
 			Error:      "account role identifier should hold at least 7 parts",
 		},
 		{
 			Name:       "validation: grant account role not enough parts for OnSchemaObject kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnObject|TABLE`,
 			Error:      "account role identifier should hold 8 parts",
 		},
 		{
 			Name:       "validation: grant account role not enough parts for OnSchemaObject.InDatabase kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|OnAll|TABLES|InDatabase`,
 			Error:      "account role identifier should hold 9 parts",
 		},
 		{
 			Name:       "validation: grant account role invalid AccountRoleGrantKind kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|some-kind|some-data`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|some-kind|some-data`,
 			Error:      "invalid AccountRoleGrantKind: some-kind",
 		},
 		{
 			Name:       "validation: grant account role invalid OnSchemaGrantKind kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|some-kind|some-data`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchema|some-kind|some-data`,
 			Error:      "invalid OnSchemaGrantKind: some-kind",
 		},
 		{
 			Name:       "validation: grant account role invalid OnSchemaObjectGrantKind kind",
-			Identifier: `"database-name"."role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|some-kind|some-data`,
+			Identifier: `"role-name"|false|false|CREATE SCHEMA,USAGE,MONITOR|OnSchemaObject|some-kind|some-data`,
 			Error:      "invalid OnSchemaObjectGrantKind: some-kind",
 		},
 		{
@@ -285,11 +330,6 @@ func TestParseGrantPrivilegesToAccountRoleId(t *testing.T) {
 			Name:       "validation: grant account role empty always apply",
 			Identifier: `"account-role"|false||ALL PRIVILEGES|OnAccount`,
 			Error:      `invalid AlwaysApply value: , should be either "true" or "false"`,
-		},
-		{
-			Name:       "validation: grant account role empty role name",
-			Identifier: `|false|false|ALL PRIVILEGES|OnAccount`,
-			Error:      "invalid (empty) AccountRoleName value: , should be a fully qualified name of account object <name>",
 		},
 		{
 			Name:       "validation: account role empty type",

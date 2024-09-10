@@ -1,0 +1,53 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model/gen.ResourceConfigBuilderModel*/ -}}
+
+{{- $modelName := .Name | printf "%sModel" -}}
+{{- $nameLowerCase := FirstLetterLowercase .Name -}}
+{{- $modelVar := FirstLetter $nameLowerCase }}
+
+type {{ $modelName }} struct {
+    {{ range .Attributes -}}
+        {{ SnakeCaseToCamel .Name }} tfconfig.Variable `json:"{{ .Name }},omitempty"`
+    {{ end }}
+    *config.ResourceModelMeta
+}
+
+/////////////////////////////////////////////////
+// Basic builders (resource name and required) //
+/////////////////////////////////////////////////
+
+func {{ .Name }}(
+    resourceName string,
+    {{ range .Attributes -}}
+        {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
+        {{ if .Required -}}
+            {{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }},
+        {{ end }}
+    {{- end -}}
+) *{{ $modelName }} {
+    {{ $modelVar }} := &{{ $modelName }}{ResourceModelMeta: config.Meta(resourceName, resources.{{ .Name }})}
+    {{ range .Attributes -}}
+        {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
+        {{ if .Required -}}
+            {{ $modelVar }}.With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }})
+        {{ end }}
+    {{- end -}}
+    return {{ $modelVar }}
+}
+
+func {{ .Name }}WithDefaultMeta(
+    {{ range .Attributes -}}
+        {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
+        {{ if .Required -}}
+            {{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }},
+        {{ end }}
+    {{- end -}}
+) *{{ $modelName }} {
+    {{ $modelVar }} := &{{ $modelName }}{ResourceModelMeta: config.DefaultMeta(resources.{{ .Name }})}
+    {{ range .Attributes -}}
+        {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
+        {{ if .Required -}}
+            {{ $modelVar }}.With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }})
+        {{ end }}
+    {{- end -}}
+    return {{ $modelVar }}
+}

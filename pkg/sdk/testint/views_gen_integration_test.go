@@ -1,18 +1,22 @@
 package testint
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-1016430]: add tests for setting masking policy on creation
-// TODO [SNOW-1016430]: add tests for setting recursive on creation
 func TestInt_Views(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -24,20 +28,20 @@ func TestInt_Views(t *testing.T) {
 
 	assertViewWithOptions := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier, isSecure bool, comment string) {
 		t.Helper()
-		assert.NotEmpty(t, view.CreatedOn)
-		assert.Equal(t, id.Name(), view.Name)
-		// Kind is filled out only in TERSE response.
-		assert.Empty(t, view.Kind)
-		assert.Empty(t, view.Reserved)
-		assert.Equal(t, testDb(t).Name, view.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, view.SchemaName)
-		assert.Equal(t, "ACCOUNTADMIN", view.Owner)
-		assert.Equal(t, comment, view.Comment)
-		assert.NotEmpty(t, view.Text)
-		assert.Equal(t, isSecure, view.IsSecure)
-		assert.Equal(t, false, view.IsMaterialized)
-		assert.Equal(t, "ROLE", view.OwnerRoleType)
-		assert.Equal(t, "OFF", view.ChangeTracking)
+		assertions.AssertThatObject(t, objectassert.ViewFromObject(t, view).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasKind("").
+			HasReserved("").
+			HasDatabaseName(testClientHelper().Ids.DatabaseId().Name()).
+			HasSchemaName(testClientHelper().Ids.SchemaId().Name()).
+			HasOwner(snowflakeroles.Accountadmin.Name()).
+			HasComment(comment).
+			HasNonEmptyText().
+			HasIsSecure(isSecure).
+			HasIsMaterialized(false).
+			HasOwnerRoleType("ROLE").
+			HasChangeTracking("OFF"))
 	}
 
 	assertView := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier) {
@@ -47,21 +51,21 @@ func TestInt_Views(t *testing.T) {
 
 	assertViewTerse := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
-		assert.NotEmpty(t, view.CreatedOn)
-		assert.Equal(t, id.Name(), view.Name)
-		assert.Equal(t, "VIEW", view.Kind)
-		assert.Equal(t, testDb(t).Name, view.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, view.SchemaName)
-
-		// all below are not contained in the terse response, that's why all of them we expect to be empty
-		assert.Empty(t, view.Reserved)
-		assert.Empty(t, view.Owner)
-		assert.Empty(t, view.Comment)
-		assert.Empty(t, view.Text)
-		assert.Empty(t, view.IsSecure)
-		assert.Empty(t, view.IsMaterialized)
-		assert.Empty(t, view.OwnerRoleType)
-		assert.Empty(t, view.ChangeTracking)
+		assertions.AssertThatObject(t, objectassert.ViewFromObject(t, view).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasKind("VIEW").
+			HasDatabaseName(testClientHelper().Ids.DatabaseId().Name()).
+			HasSchemaName(testClientHelper().Ids.SchemaId().Name()).
+			// all below are not contained in the terse response, that's why all of them we expect to be empty
+			HasReserved("").
+			HasOwner("").
+			HasComment("").
+			HasText("").
+			HasIsSecure(false).
+			HasIsMaterialized(false).
+			HasOwnerRoleType("").
+			HasChangeTracking(""))
 	}
 
 	assertViewDetailsRow := func(t *testing.T, viewDetails *sdk.ViewDetails) {
@@ -79,6 +83,36 @@ func TestInt_Views(t *testing.T) {
 			Comment:    nil,
 			PolicyName: nil,
 		}, *viewDetails)
+	}
+
+	assertPolicyReference := func(t *testing.T, policyRef sdk.PolicyReference,
+		policyId sdk.SchemaObjectIdentifier,
+		policyType string,
+		viewId sdk.SchemaObjectIdentifier,
+		refColumnName *string,
+	) {
+		t.Helper()
+		assert.Equal(t, policyId.Name(), policyRef.PolicyName)
+		assert.Equal(t, policyType, policyRef.PolicyKind)
+		assert.Equal(t, viewId.Name(), policyRef.RefEntityName)
+		assert.Equal(t, "VIEW", policyRef.RefEntityDomain)
+		assert.Equal(t, "ACTIVE", policyRef.PolicyStatus)
+		if refColumnName != nil {
+			assert.NotNil(t, policyRef.RefColumnName)
+			assert.Equal(t, *refColumnName, *policyRef.RefColumnName)
+		} else {
+			assert.Nil(t, policyRef.RefColumnName)
+		}
+	}
+
+	assertDataMetricFunctionReference := func(t *testing.T, dataMetricFunctionReference sdk.DataMetricFunctionReference,
+		viewId sdk.SchemaObjectIdentifier,
+		schedule string,
+	) {
+		t.Helper()
+		assert.Equal(t, viewId.Name(), dataMetricFunctionReference.RefEntityName)
+		assert.Equal(t, "View", dataMetricFunctionReference.RefEntityDomain)
+		assert.Equal(t, schedule, dataMetricFunctionReference.Schedule)
 	}
 
 	cleanupViewProvider := func(id sdk.SchemaObjectIdentifier) func() {
@@ -132,23 +166,27 @@ func TestInt_Views(t *testing.T) {
 		assertView(t, view, request.GetName())
 	})
 
-	t.Run("create view: almost complete case", func(t *testing.T) {
+	t.Run("create view: almost complete case - without masking and projection policies", func(t *testing.T) {
 		rowAccessPolicy, rowAccessPolicyCleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(rowAccessPolicyCleanup)
+
+		aggregationPolicy, aggregationPolicyCleanup := testClientHelper().AggregationPolicy.CreateAggregationPolicy(t)
+		t.Cleanup(aggregationPolicyCleanup)
 
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
 		request := createViewBasicRequest(t).
-			WithOrReplace(sdk.Bool(true)).
-			WithSecure(sdk.Bool(true)).
-			WithTemporary(sdk.Bool(true)).
+			WithOrReplace(true).
+			WithSecure(true).
+			WithTemporary(true).
 			WithColumns([]sdk.ViewColumnRequest{
-				*sdk.NewViewColumnRequest("COLUMN_WITH_COMMENT").WithComment(sdk.String("column comment")),
+				*sdk.NewViewColumnRequest("column_with_comment").WithComment("column comment"),
 			}).
-			WithCopyGrants(sdk.Bool(true)).
-			WithComment(sdk.String("comment")).
-			WithRowAccessPolicy(sdk.NewViewRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"column_with_comment"})).
+			WithCopyGrants(true).
+			WithComment("comment").
+			WithRowAccessPolicy(*sdk.NewViewRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.Column{{Value: "column_with_comment"}})).
+			WithAggregationPolicy(*sdk.NewViewAggregationPolicyRequest(aggregationPolicy).WithEntityKey([]sdk.Column{{Value: "column_with_comment"}})).
 			WithTag([]sdk.TagAssociation{{
 				Name:  tag.ID(),
 				Value: "v2",
@@ -159,13 +197,55 @@ func TestInt_Views(t *testing.T) {
 		view := createViewWithRequest(t, request)
 
 		assertViewWithOptions(t, view, id, true, "comment")
-		rowAccessPolicyReference, err := testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.PolicyEntityDomainView)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicy.Name, rowAccessPolicyReference.PolicyName)
-		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)
-		assert.Equal(t, view.ID().Name(), rowAccessPolicyReference.RefEntityName)
-		assert.Equal(t, "VIEW", rowAccessPolicyReference.RefEntityDomain)
-		assert.Equal(t, "ACTIVE", rowAccessPolicyReference.PolicyStatus)
+		assert.Len(t, rowAccessPolicyReferences, 2)
+		slices.SortFunc(rowAccessPolicyReferences, func(x, y sdk.PolicyReference) int {
+			return cmp.Compare(x.PolicyKind, y.PolicyKind)
+		})
+
+		assertPolicyReference(t, rowAccessPolicyReferences[0], aggregationPolicy, "AGGREGATION_POLICY", view.ID(), nil)
+
+		assertPolicyReference(t, rowAccessPolicyReferences[1], rowAccessPolicy.ID(), "ROW_ACCESS_POLICY", view.ID(), nil)
+		require.NotNil(t, rowAccessPolicyReferences[1].RefArgColumnNames)
+		refArgColumnNames := sdk.ParseCommaSeparatedStringArray(*rowAccessPolicyReferences[1].RefArgColumnNames, true)
+		assert.Len(t, refArgColumnNames, 1)
+		assert.Equal(t, "column_with_comment", refArgColumnNames[0])
+	})
+
+	t.Run("create view: masking and projection policies", func(t *testing.T) {
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeNumber)
+		t.Cleanup(maskingPolicyCleanup)
+
+		projectionPolicy, projectionPolicyCleanup := testClientHelper().ProjectionPolicy.CreateProjectionPolicy(t)
+		t.Cleanup(projectionPolicyCleanup)
+
+		request := createViewBasicRequest(t).
+			WithOrReplace(true).
+			WithRecursive(true).
+			WithColumns([]sdk.ViewColumnRequest{
+				*sdk.NewViewColumnRequest("col1").WithMaskingPolicy(
+					*sdk.NewViewColumnMaskingPolicyRequest(maskingPolicy.ID()).WithUsing([]sdk.Column{{Value: "col1"}}),
+				).WithProjectionPolicy(
+					*sdk.NewViewColumnProjectionPolicyRequest(projectionPolicy),
+				),
+			})
+
+		id := request.GetName()
+
+		view := createViewWithRequest(t, request)
+
+		assertViewWithOptions(t, view, id, false, "")
+		assert.Contains(t, view.Text, "RECURSIVE VIEW")
+		rowAccessPolicyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.PolicyEntityDomainView)
+		require.NoError(t, err)
+		assert.Len(t, rowAccessPolicyReferences, 2)
+		slices.SortFunc(rowAccessPolicyReferences, func(x, y sdk.PolicyReference) int {
+			return cmp.Compare(x.PolicyKind, y.PolicyKind)
+		})
+
+		assertPolicyReference(t, rowAccessPolicyReferences[0], maskingPolicy.ID(), "MASKING_POLICY", view.ID(), sdk.Pointer("col1"))
+		assertPolicyReference(t, rowAccessPolicyReferences[1], projectionPolicy, "PROJECTION_POLICY", view.ID(), sdk.Pointer("col1"))
 	})
 
 	t.Run("drop view: existing", func(t *testing.T) {
@@ -195,7 +275,7 @@ func TestInt_Views(t *testing.T) {
 		require.NoError(t, err)
 
 		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		alterRequest := sdk.NewAlterViewRequest(id).WithRenameTo(&newId)
+		alterRequest := sdk.NewAlterViewRequest(id).WithRenameTo(newId)
 
 		err = client.Views.Alter(ctx, alterRequest)
 		if err != nil {
@@ -218,7 +298,7 @@ func TestInt_Views(t *testing.T) {
 		view := createView(t)
 		id := view.ID()
 
-		alterRequest := sdk.NewAlterViewRequest(id).WithSetComment(sdk.String("new comment"))
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetComment("new comment")
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -227,7 +307,7 @@ func TestInt_Views(t *testing.T) {
 
 		assert.Equal(t, "new comment", alteredView.Comment)
 
-		alterRequest = sdk.NewAlterViewRequest(id).WithSetSecure(sdk.Bool(true))
+		alterRequest = sdk.NewAlterViewRequest(id).WithSetSecure(true)
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -236,7 +316,7 @@ func TestInt_Views(t *testing.T) {
 
 		assert.Equal(t, true, alteredView.IsSecure)
 
-		alterRequest = sdk.NewAlterViewRequest(id).WithSetChangeTracking(sdk.Bool(true))
+		alterRequest = sdk.NewAlterViewRequest(id).WithSetChangeTracking(true)
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -245,7 +325,7 @@ func TestInt_Views(t *testing.T) {
 
 		assert.Equal(t, "ON", alteredView.ChangeTracking)
 
-		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetComment(sdk.Bool(true))
+		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetComment(true)
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -254,7 +334,7 @@ func TestInt_Views(t *testing.T) {
 
 		assert.Equal(t, "", alteredView.Comment)
 
-		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetSecure(sdk.Bool(true))
+		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetSecure(true)
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -263,7 +343,7 @@ func TestInt_Views(t *testing.T) {
 
 		assert.Equal(t, false, alteredView.IsSecure)
 
-		alterRequest = sdk.NewAlterViewRequest(id).WithSetChangeTracking(sdk.Bool(false))
+		alterRequest = sdk.NewAlterViewRequest(id).WithSetChangeTracking(false)
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -311,7 +391,7 @@ func TestInt_Views(t *testing.T) {
 		require.Error(t, err)
 	})
 
-	t.Run("alter view: set and unset masking policy", func(t *testing.T) {
+	t.Run("alter view: set and unset masking policy on column", func(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeNumber)
 		t.Cleanup(maskingPolicyCleanup)
 
@@ -319,29 +399,54 @@ func TestInt_Views(t *testing.T) {
 		id := view.ID()
 
 		alterRequest := sdk.NewAlterViewRequest(id).WithSetMaskingPolicyOnColumn(
-			sdk.NewViewSetColumnMaskingPolicyRequest("id", maskingPolicy.ID()),
+			*sdk.NewViewSetColumnMaskingPolicyRequest("ID", maskingPolicy.ID()),
 		)
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		alteredViewDetails, err := client.Views.Describe(ctx, id)
+		policyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.PolicyEntityDomainView)
 		require.NoError(t, err)
+		require.Len(t, policyReferences, 1)
 
-		assert.Equal(t, 1, len(alteredViewDetails))
-		// TODO [SNOW-999049]: make nicer during the identifiers rework
-		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*alteredViewDetails[0].PolicyName).FullyQualifiedName())
+		assertPolicyReference(t, policyReferences[0], maskingPolicy.ID(), "MASKING_POLICY", view.ID(), sdk.Pointer("ID"))
 
 		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetMaskingPolicyOnColumn(
-			sdk.NewViewUnsetColumnMaskingPolicyRequest("id"),
+			*sdk.NewViewUnsetColumnMaskingPolicyRequest("ID"),
 		)
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		alteredViewDetails, err = client.Views.Describe(ctx, id)
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.PolicyEntityDomainView)
+		require.Error(t, err, "no rows in result set")
+	})
+
+	t.Run("alter view: set and unset projection policy on column", func(t *testing.T) {
+		projectionPolicy, projectionPolicyCleanup := testClientHelper().ProjectionPolicy.CreateProjectionPolicy(t)
+		t.Cleanup(projectionPolicyCleanup)
+
+		view := createView(t)
+		id := view.ID()
+
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetProjectionPolicyOnColumn(
+			*sdk.NewViewSetProjectionPolicyRequest("ID", projectionPolicy),
+		)
+		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		assert.Equal(t, 1, len(alteredViewDetails))
-		assert.Empty(t, alteredViewDetails[0].PolicyName)
+		rowAccessPolicyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.PolicyEntityDomainView)
+		require.NoError(t, err)
+		require.Len(t, rowAccessPolicyReferences, 1)
+
+		assertPolicyReference(t, rowAccessPolicyReferences[0], projectionPolicy, "PROJECTION_POLICY", view.ID(), sdk.Pointer("ID"))
+
+		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetProjectionPolicyOnColumn(
+			*sdk.NewViewUnsetProjectionPolicyRequest("ID"),
+		)
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.PolicyEntityDomainView)
+		require.Error(t, err, "no rows in result set")
 	})
 
 	t.Run("alter view: set and unset tags on column", func(t *testing.T) {
@@ -360,7 +465,7 @@ func TestInt_Views(t *testing.T) {
 		}
 
 		alterRequest := sdk.NewAlterViewRequest(id).WithSetTagsOnColumn(
-			sdk.NewViewSetColumnTagsRequest("id", tags),
+			*sdk.NewViewSetColumnTagsRequest("ID", tags),
 		)
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
@@ -375,7 +480,7 @@ func TestInt_Views(t *testing.T) {
 		}
 
 		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetTagsOnColumn(
-			sdk.NewViewUnsetColumnTagsRequest("id", unsetTags),
+			*sdk.NewViewUnsetColumnTagsRequest("ID", unsetTags),
 		)
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
@@ -394,53 +499,165 @@ func TestInt_Views(t *testing.T) {
 		id := view.ID()
 
 		// add policy
-		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"ID"}))
+		alterRequest := sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.Column{{Value: "ID"}}))
 		err := client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err := testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err := testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.PolicyEntityDomainView)
 		require.NoError(t, err)
-		assert.Equal(t, rowAccessPolicy.ID().Name(), rowAccessPolicyReference.PolicyName)
-		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)
-		assert.Equal(t, view.ID().Name(), rowAccessPolicyReference.RefEntityName)
-		assert.Equal(t, "VIEW", rowAccessPolicyReference.RefEntityDomain)
-		assert.Equal(t, "ACTIVE", rowAccessPolicyReference.PolicyStatus)
+
+		assertPolicyReference(t, *rowAccessPolicyReference, rowAccessPolicy.ID(), "ROW_ACCESS_POLICY", view.ID(), nil)
 
 		// remove policy
-		alterRequest = sdk.NewAlterViewRequest(id).WithDropRowAccessPolicy(sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicy.ID()))
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropRowAccessPolicy(*sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicy.ID()))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.PolicyEntityDomainView)
 		require.Error(t, err, "no rows in result set")
 
 		// add policy again
-		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"ID"}))
+		alterRequest = sdk.NewAlterViewRequest(id).WithAddRowAccessPolicy(*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []sdk.Column{{Value: "ID"}}))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.PolicyEntityDomainView)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy.ID().Name(), rowAccessPolicyReference.PolicyName)
 
 		// drop and add other policy simultaneously
-		alterRequest = sdk.NewAlterViewRequest(id).WithDropAndAddRowAccessPolicy(sdk.NewViewDropAndAddRowAccessPolicyRequest(
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropAndAddRowAccessPolicy(*sdk.NewViewDropAndAddRowAccessPolicyRequest(
 			*sdk.NewViewDropRowAccessPolicyRequest(rowAccessPolicy.ID()),
-			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2.ID(), []string{"ID"}),
+			*sdk.NewViewAddRowAccessPolicyRequest(rowAccessPolicy2.ID(), []sdk.Column{{Value: "ID"}}),
 		))
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		rowAccessPolicyReference, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		rowAccessPolicyReference, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.PolicyEntityDomainView)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy2.ID().Name(), rowAccessPolicyReference.PolicyName)
 
 		// drop all policies
-		alterRequest = sdk.NewAlterViewRequest(id).WithDropAllRowAccessPolicies(sdk.Bool(true))
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropAllRowAccessPolicies(true)
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = testClientHelper().RowAccessPolicy.GetRowAccessPolicyFor(t, view.ID(), sdk.ObjectTypeView)
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.PolicyEntityDomainView)
+		require.Error(t, err, "no rows in result set")
+	})
+
+	t.Run("alter view: add and drop data metrics", func(t *testing.T) {
+		view := createView(t)
+		id := view.ID()
+
+		dataMetricFunction, dataMetricFunctionCleanup := testClientHelper().DataMetricFunctionClient.CreateDataMetricFunction(t, id)
+		t.Cleanup(dataMetricFunctionCleanup)
+		dataMetricFunction2, dataMetricFunction2Cleanup := testClientHelper().DataMetricFunctionClient.CreateDataMetricFunction(t, id)
+		t.Cleanup(dataMetricFunction2Cleanup)
+
+		// set cron schedule
+		cron := "*/5 * * * * UTC"
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*sdk.NewViewSetDataMetricScheduleRequest("USING CRON " + cron))
+		err := client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		// add data metric function
+		alterRequest = sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{
+			{
+				DataMetricFunction: dataMetricFunction,
+				On:                 []sdk.Column{{Value: "ID"}},
+			},
+		}))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		dataMetricFunctionReferences := testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFuncionRefEntityDomainView)
+		require.Len(t, dataMetricFunctionReferences, 1)
+
+		assertDataMetricFunctionReference(t, dataMetricFunctionReferences[0], view.ID(), cron)
+
+		// remove function
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropDataMetricFunction(*sdk.NewViewDropDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{
+			{
+				DataMetricFunction: dataMetricFunction,
+				On:                 []sdk.Column{{Value: "ID"}},
+			},
+		}))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		dataMetricFunctionReferences = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFuncionRefEntityDomainView)
+		require.NoError(t, err)
+		require.Len(t, dataMetricFunctionReferences, 0)
+
+		// add two functions
+		alterRequest = sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest([]sdk.ViewDataMetricFunction{
+			{
+				DataMetricFunction: dataMetricFunction,
+				On:                 []sdk.Column{{Value: "ID"}},
+			},
+			{
+				DataMetricFunction: dataMetricFunction2,
+				On:                 []sdk.Column{{Value: "ID"}},
+			},
+		}))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		dataMetricFunctionReferences = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFuncionRefEntityDomainView)
+		require.Len(t, dataMetricFunctionReferences, 2)
+
+		assertDataMetricFunctionReference(t, dataMetricFunctionReferences[0], view.ID(), cron)
+		assertDataMetricFunctionReference(t, dataMetricFunctionReferences[1], view.ID(), cron)
+
+		// drop all functions
+		alterRequest = sdk.NewAlterViewRequest(id).WithDropAllRowAccessPolicies(true)
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.PolicyEntityDomainView)
+		require.Error(t, err, "no rows in result set")
+	})
+
+	t.Run("alter view: set and unset aggregation policies", func(t *testing.T) {
+		aggregationPolicy, aggregationPolicyCleanup := testClientHelper().AggregationPolicy.CreateAggregationPolicy(t)
+		t.Cleanup(aggregationPolicyCleanup)
+		aggregationPolicy2, aggregationPolicy2Cleanup := testClientHelper().AggregationPolicy.CreateAggregationPolicy(t)
+		t.Cleanup(aggregationPolicy2Cleanup)
+
+		view := createView(t)
+		id := view.ID()
+
+		// set policy
+		alterRequest := sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*sdk.NewViewSetAggregationPolicyRequest(aggregationPolicy).WithEntityKey([]sdk.Column{{Value: "ID"}}))
+		err := client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		rowAccessPolicyReferences, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.PolicyEntityDomainView)
+		require.NoError(t, err)
+		require.Len(t, rowAccessPolicyReferences, 1)
+
+		assertPolicyReference(t, rowAccessPolicyReferences[0], aggregationPolicy, "AGGREGATION_POLICY", view.ID(), nil)
+
+		// set policy with force
+		alterRequest = sdk.NewAlterViewRequest(id).WithSetAggregationPolicy(*sdk.NewViewSetAggregationPolicyRequest(aggregationPolicy2).
+			WithEntityKey([]sdk.Column{{Value: "ID"}}).
+			WithForce(true))
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		rowAccessPolicyReferences, err = testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.PolicyEntityDomainView)
+		require.NoError(t, err)
+		require.Len(t, rowAccessPolicyReferences, 1)
+
+		assertPolicyReference(t, rowAccessPolicyReferences[0], aggregationPolicy2, "AGGREGATION_POLICY", view.ID(), nil)
+
+		// remove policy
+		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetAggregationPolicy(*sdk.NewViewUnsetAggregationPolicyRequest())
+		err = client.Views.Alter(ctx, alterRequest)
+		require.NoError(t, err)
+
+		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.PolicyEntityDomainView)
 		require.Error(t, err, "no rows in result set")
 	})
 
@@ -460,7 +677,7 @@ func TestInt_Views(t *testing.T) {
 	t.Run("show view: terse", func(t *testing.T) {
 		view := createView(t)
 
-		showRequest := sdk.NewShowViewRequest().WithTerse(sdk.Bool(true))
+		showRequest := sdk.NewShowViewRequest().WithTerse(true)
 		returnedViews, err := client.Views.Show(ctx, showRequest)
 		require.NoError(t, err)
 
@@ -473,9 +690,9 @@ func TestInt_Views(t *testing.T) {
 		view2 := createView(t)
 
 		showRequest := sdk.NewShowViewRequest().
-			WithLike(&sdk.Like{Pattern: &view1.Name}).
-			WithIn(&sdk.In{Schema: testClientHelper().Ids.SchemaId()}).
-			WithLimit(&sdk.LimitFrom{Rows: sdk.Int(5)})
+			WithLike(sdk.Like{Pattern: &view1.Name}).
+			WithIn(sdk.ExtendedIn{In: sdk.In{Schema: testClientHelper().Ids.SchemaId()}}).
+			WithLimit(sdk.LimitFrom{Rows: sdk.Int(5)})
 		returnedViews, err := client.Views.Show(ctx, showRequest)
 
 		require.NoError(t, err)

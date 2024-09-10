@@ -6,12 +6,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_PossibleValuesListed(t *testing.T) {
+func Test_PossibleValuesListedStrings(t *testing.T) {
 	values := []string{"abc", "DEF"}
 
 	result := possibleValuesListed(values)
 
 	assert.Equal(t, "`abc` | `DEF`", result)
+}
+
+func Test_PossibleValuesListedInts(t *testing.T) {
+	values := []int{42, 21}
+
+	result := possibleValuesListed(values)
+
+	assert.Equal(t, "`42` | `21`", result)
 }
 
 func Test_PossibleValuesListed_empty(t *testing.T) {

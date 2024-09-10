@@ -25,6 +25,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		Description:      "The fully qualified name of the account role to which privileges will be granted.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	// According to docs https://docs.snowflake.com/en/user-guide/data-exchange-marketplace-privileges#usage-notes IMPORTED PRIVILEGES
 	// will be returned as USAGE in SHOW GRANTS command. In addition, USAGE itself is a valid privilege, but both cannot be set at the
@@ -122,6 +123,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					ForceNew:         true,
 					Description:      "The fully qualified name of the object on which privileges will be granted.",
 					ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+					DiffSuppressFunc: suppressIdentifierQuoting,
 				},
 			},
 		},
@@ -146,6 +148,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					ForceNew:         true,
 					Description:      "The fully qualified name of the schema.",
 					ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+					DiffSuppressFunc: suppressIdentifierQuoting,
 					ExactlyOneOf: []string{
 						"on_schema.0.schema_name",
 						"on_schema.0.all_schemas_in_database",
@@ -158,6 +161,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					ForceNew:         true,
 					Description:      "The fully qualified name of the database.",
 					ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+					DiffSuppressFunc: suppressIdentifierQuoting,
 					ExactlyOneOf: []string{
 						"on_schema.0.schema_name",
 						"on_schema.0.all_schemas_in_database",
@@ -170,6 +174,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					ForceNew:         true,
 					Description:      "The fully qualified name of the database.",
 					ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+					DiffSuppressFunc: suppressIdentifierQuoting,
 					ExactlyOneOf: []string{
 						"on_schema.0.schema_name",
 						"on_schema.0.all_schemas_in_database",
@@ -220,7 +225,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.all",
 						"on_schema_object.0.future",
 					},
-					ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
+					DiffSuppressFunc: suppressIdentifierQuoting,
 				},
 				"all": {
 					Type:        schema.TypeList,
@@ -277,12 +282,14 @@ func getGrantPrivilegesOnAccountRoleBulkOperationSchema(validGrantToObjectTypes 
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
 		"in_schema": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
 	}
 }
@@ -405,13 +412,21 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	logging.DebugLogger.Printf("[DEBUG] Entering create grant privileges to account role")
 	client := meta.(*provider.Context).Client
 
-	id := createGrantPrivilegesToAccountRoleIdFromSchema(d)
+	id, err := createGrantPrivilegesToAccountRoleIdFromSchema(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	logging.DebugLogger.Printf("[DEBUG] created identifier from schema: %s", id.String())
 
-	err := client.Grants.GrantPrivilegesToAccountRole(
+	grantOn, err := getAccountRoleGrantOn(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = client.Grants.GrantPrivilegesToAccountRole(
 		ctx,
 		getAccountRolePrivilegesFromSchema(d),
-		getAccountRoleGrantOn(d),
+		grantOn,
 		sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("account_role_name").(string)),
 		&sdk.GrantPrivilegesToAccountRoleOptions{
 			WithGrantOption: sdk.Bool(d.Get("with_grant_option").(bool)),
@@ -459,14 +474,17 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 		if !allPrivileges.(bool) {
 			logging.DebugLogger.Printf("[DEBUG] Revoking all privileges")
+			grantOn, err := getAccountRoleGrantOn(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			err = client.Grants.RevokePrivilegesFromAccountRole(ctx, &sdk.AccountRoleGrantPrivileges{
 				AllPrivileges: sdk.Bool(true),
 			},
-				getAccountRoleGrantOn(d),
+				grantOn,
 				id.RoleName,
 				new(sdk.RevokePrivilegesFromAccountRoleOptions),
 			)
-
 			if err != nil {
 				return diag.Diagnostics{
 					diag.Diagnostic{
@@ -513,7 +531,10 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 				}
 			}
 
-			grantOn := getAccountRoleGrantOn(d)
+			grantOn, err := getAccountRoleGrantOn(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 
 			if len(privilegesToAdd) > 0 {
 				logging.DebugLogger.Printf("[DEBUG] Granting privileges: %v", privilegesToAdd)
@@ -589,14 +610,17 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 		if allPrivileges.(bool) {
 			logging.DebugLogger.Printf("[DEBUG] Granting all privileges")
+			grantOn, err := getAccountRoleGrantOn(d)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			err = client.Grants.GrantPrivilegesToAccountRole(ctx, &sdk.AccountRoleGrantPrivileges{
 				AllPrivileges: sdk.Bool(true),
 			},
-				getAccountRoleGrantOn(d),
+				grantOn,
 				id.RoleName,
 				new(sdk.GrantPrivilegesToAccountRoleOptions),
 			)
-
 			if err != nil {
 				return diag.Diagnostics{
 					diag.Diagnostic{
@@ -617,10 +641,14 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 	if id.AlwaysApply {
 		logging.DebugLogger.Printf("[DEBUG] Performing always_apply re-grant")
-		err := client.Grants.GrantPrivilegesToAccountRole(
+		grantOn, err := getAccountRoleGrantOn(d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = client.Grants.GrantPrivilegesToAccountRole(
 			ctx,
 			getAccountRolePrivilegesFromSchema(d),
-			getAccountRoleGrantOn(d),
+			grantOn,
 			id.RoleName,
 			&sdk.GrantPrivilegesToAccountRoleOptions{
 				WithGrantOption: &id.WithGrantOption,
@@ -659,10 +687,15 @@ func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	}
 	logging.DebugLogger.Printf("[DEBUG] Parsed identifier: %s", id.String())
 
+	grantOn, err := getAccountRoleGrantOn(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	err = client.Grants.RevokePrivilegesFromAccountRole(
 		ctx,
 		getAccountRolePrivilegesFromSchema(d),
-		getAccountRoleGrantOn(d),
+		grantOn,
 		id.RoleName,
 		&sdk.RevokePrivilegesFromAccountRoleOptions{},
 	)
@@ -966,7 +999,7 @@ func getAccountRolePrivileges(allPrivileges bool, privileges []string, onAccount
 	return accountRoleGrantPrivileges
 }
 
-func getAccountRoleGrantOn(d *schema.ResourceData) *sdk.AccountRoleGrantOn {
+func getAccountRoleGrantOn(d *schema.ResourceData) (*sdk.AccountRoleGrantOn, error) {
 	_, onAccountOk := d.GetOk("on_account")
 	onAccountObjectBlock, onAccountObjectOk := d.GetOk("on_account_object")
 	onSchemaBlock, onSchemaOk := d.GetOk("on_schema")
@@ -983,7 +1016,10 @@ func getAccountRoleGrantOn(d *schema.ResourceData) *sdk.AccountRoleGrantOn {
 
 		objectType := onAccountObject["object_type"].(string)
 		objectName := onAccountObject["object_name"].(string)
-		objectIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(objectName)
+		objectIdentifier, err := sdk.ParseAccountObjectIdentifier(objectName)
+		if err != nil {
+			return nil, err
+		}
 
 		switch sdk.ObjectType(objectType) {
 		case sdk.ObjectTypeDatabase:
@@ -1023,11 +1059,23 @@ func getAccountRoleGrantOn(d *schema.ResourceData) *sdk.AccountRoleGrantOn {
 
 		switch {
 		case schemaNameOk:
-			grantOnSchema.Schema = sdk.Pointer(sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(schemaName))
+			schemaId, err := sdk.ParseDatabaseObjectIdentifier(schemaName)
+			if err != nil {
+				return nil, err
+			}
+			grantOnSchema.Schema = sdk.Pointer(schemaId)
 		case allSchemasInDatabaseOk:
-			grantOnSchema.AllSchemasInDatabase = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(allSchemasInDatabase))
+			databaseId, err := sdk.ParseAccountObjectIdentifier(allSchemasInDatabase)
+			if err != nil {
+				return nil, err
+			}
+			grantOnSchema.AllSchemasInDatabase = sdk.Pointer(databaseId)
 		case futureSchemasInDatabaseOk:
-			grantOnSchema.FutureSchemasInDatabase = sdk.Pointer(sdk.NewAccountObjectIdentifierFromFullyQualifiedName(futureSchemasInDatabase))
+			databaseId, err := sdk.ParseAccountObjectIdentifier(futureSchemasInDatabase)
+			if err != nil {
+				return nil, err
+			}
+			grantOnSchema.FutureSchemasInDatabase = sdk.Pointer(databaseId)
 		}
 
 		on.Schema = grantOnSchema
@@ -1050,25 +1098,51 @@ func getAccountRoleGrantOn(d *schema.ResourceData) *sdk.AccountRoleGrantOn {
 
 		switch {
 		case objectTypeOk && objectNameOk:
+			objectType := sdk.ObjectType(objectType)
+			var id sdk.ObjectIdentifier
+			var err error
+			// TODO(SNOW-1569535): use a mapper from object type to parsing function
+			if objectType.IsWithArguments() {
+				id, err = sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				id, err = sdk.ParseSchemaObjectIdentifier(objectName)
+				if err != nil {
+					return nil, err
+				}
+			}
 			grantOnSchemaObject.SchemaObject = &sdk.Object{
-				ObjectType: sdk.ObjectType(objectType),
-				Name:       sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(objectName),
+				ObjectType: objectType,
+				Name:       id,
 			}
 		case allOk:
-			grantOnSchemaObject.All = getGrantOnSchemaObjectIn(all[0].(map[string]any))
+			grantOnSchemaObjectIn, err := getGrantOnSchemaObjectIn(all[0].(map[string]any))
+			if err != nil {
+				return nil, err
+			}
+			grantOnSchemaObject.All = grantOnSchemaObjectIn
 		case futureOk:
-			grantOnSchemaObject.Future = getGrantOnSchemaObjectIn(future[0].(map[string]any))
+			grantOnSchemaObjectIn, err := getGrantOnSchemaObjectIn(future[0].(map[string]any))
+			if err != nil {
+				return nil, err
+			}
+			grantOnSchemaObject.Future = grantOnSchemaObjectIn
 		}
 
 		on.SchemaObject = grantOnSchemaObject
 	}
 
-	return on
+	return on, nil
 }
 
-func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) *GrantPrivilegesToAccountRoleId {
-	id := new(GrantPrivilegesToAccountRoleId)
-	id.RoleName = sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("account_role_name").(string))
+func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) (id *GrantPrivilegesToAccountRoleId, err error) {
+	id = new(GrantPrivilegesToAccountRoleId)
+	id.RoleName, err = sdk.ParseAccountObjectIdentifier(d.Get("account_role_name").(string))
+	if err != nil {
+		return nil, err
+	}
 	id.AllPrivileges = d.Get("all_privileges").(bool)
 	if p, ok := d.GetOk("privileges"); ok {
 		id.Privileges = expandStringList(p.(*schema.Set).List())
@@ -1076,7 +1150,10 @@ func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) *Gra
 	id.WithGrantOption = d.Get("with_grant_option").(bool)
 	id.AlwaysApply = d.Get("always_apply").(bool)
 
-	on := getAccountRoleGrantOn(d)
+	on, err := getAccountRoleGrantOn(d)
+	if err != nil {
+		return nil, err
+	}
 	switch {
 	case on.Account != nil:
 		id.Kind = OnAccountAccountRoleGrantKind
@@ -1149,5 +1226,5 @@ func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) *Gra
 		id.Data = onSchemaObjectGrantData
 	}
 
-	return id
+	return id, nil
 }

@@ -1,9 +1,11 @@
 package sdk
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUserCreate(t *testing.T) {
@@ -12,6 +14,46 @@ func TestUserCreate(t *testing.T) {
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &CreateUserOptions{}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("with only required attributes", func(t *testing.T) {
+		opts := &CreateUserOptions{
+			name: id,
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE USER %s`, id.FullyQualifiedName())
+	})
+
+	t.Run("empty secondary roles", func(t *testing.T) {
+		opts := &CreateUserOptions{
+			name: id,
+			ObjectProperties: &UserObjectProperties{
+				DefaultSecondaryRoles: &SecondaryRoles{None: Bool(true)},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE USER %s DEFAULT_SECONDARY_ROLES = ()`, id.FullyQualifiedName())
+	})
+
+	t.Run("with empty secondary roles", func(t *testing.T) {
+		opts := &CreateUserOptions{
+			name: id,
+			ObjectProperties: &UserObjectProperties{
+				DefaultSecondaryRoles: &SecondaryRoles{},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("SecondaryRoles", "All", "None"))
+	})
+
+	t.Run("with both options in secondary roles", func(t *testing.T) {
+		opts := &CreateUserOptions{
+			name: id,
+			ObjectProperties: &UserObjectProperties{
+				DefaultSecondaryRoles: &SecondaryRoles{
+					All:  Bool(true),
+					None: Bool(true),
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("SecondaryRoles", "All", "None"))
 	})
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -24,15 +66,21 @@ func TestUserCreate(t *testing.T) {
 		}
 		password := random.Password()
 		loginName := random.String()
+		defaultRoleId := randomAccountObjectIdentifier()
+		defaultWarehouseId := randomAccountObjectIdentifier()
+		var defaultNamespaceId ObjectIdentifier = randomDatabaseObjectIdentifier()
 
 		opts := &CreateUserOptions{
 			OrReplace:   Bool(true),
 			name:        id,
 			IfNotExists: Bool(true),
 			ObjectProperties: &UserObjectProperties{
-				Password:    &password,
-				LoginName:   &loginName,
-				DefaultRole: String("foo"),
+				Password:              &password,
+				LoginName:             &loginName,
+				DefaultRole:           Pointer(defaultRoleId),
+				DefaultNamespace:      Pointer(defaultNamespaceId),
+				DefaultWarehouse:      Pointer(defaultWarehouseId),
+				DefaultSecondaryRoles: &SecondaryRoles{All: Bool(true)},
 			},
 			ObjectParameters: &UserObjectParameters{
 				EnableUnredactedQuerySyntaxError: Bool(true),
@@ -44,7 +92,7 @@ func TestUserCreate(t *testing.T) {
 			Tags: tags,
 		}
 
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' DEFAULT_ROLE = foo ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG (%s = 'v1')`, id.FullyQualifiedName(), password, loginName, tagId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE USER IF NOT EXISTS %s PASSWORD = '%s' LOGIN_NAME = '%s' DEFAULT_WAREHOUSE = %s DEFAULT_NAMESPACE = %s DEFAULT_ROLE = %s DEFAULT_SECONDARY_ROLES = ('ALL') ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true AUTOCOMMIT = true WITH TAG (%s = 'v1')`, id.FullyQualifiedName(), password, loginName, defaultWarehouseId.FullyQualifiedName(), defaultNamespaceId.FullyQualifiedName(), defaultRoleId.FullyQualifiedName(), tagId.FullyQualifiedName())
 	})
 }
 
@@ -61,6 +109,44 @@ func TestUserAlter(t *testing.T) {
 			name: id,
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterUserOptions", "NewName", "ResetPassword", "AbortAllQueries", "AddDelegatedAuthorization", "RemoveDelegatedAuthorization", "Set", "Unset", "SetTag", "UnsetTag"))
+	})
+
+	t.Run("validation: no set", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set:  &UserSet{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
+	})
+
+	t.Run("two sets", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				SessionParameters: &SessionParameters{AbortDetachedQuery: Bool(true)},
+				ObjectParameters:  &UserObjectParameters{EnableUnredactedQuerySyntaxError: Bool(true)},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true ABORT_DETACHED_QUERY = true", id.FullyQualifiedName())
+	})
+
+	t.Run("validation: no unset", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name:  id,
+			Unset: &UserUnset{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
+	})
+
+	t.Run("validation: two incompatible unsets", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Unset: &UserUnset{
+				SessionParameters: &SessionParametersUnset{BinaryOutputFormat: Bool(true)},
+				ObjectParameters:  &UserObjectParametersUnset{EnableUnredactedQuerySyntaxError: Bool(true)},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
 	})
 
 	t.Run("with setting a policy", func(t *testing.T) {
@@ -107,9 +193,13 @@ func TestUserAlter(t *testing.T) {
 
 	t.Run("with setting properties and parameters", func(t *testing.T) {
 		password := random.Password()
-		objectProperties := UserObjectProperties{
-			Password:             &password,
-			DefaultSeconaryRoles: &SecondaryRoles{Roles: []SecondaryRole{{Value: "ALL"}}},
+		objectProperties := UserAlterObjectProperties{
+			UserObjectProperties: UserObjectProperties{
+				Password: &password,
+				DefaultSecondaryRoles: &SecondaryRoles{
+					All: Bool(true),
+				},
+			},
 		}
 		opts := &AlterUserOptions{
 			name: id,
@@ -117,7 +207,7 @@ func TestUserAlter(t *testing.T) {
 				ObjectProperties: &objectProperties,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET PASSWORD = '%s' DEFAULT_SECONDARY_ROLES = ( 'ALL' )", id.FullyQualifiedName(), password)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET PASSWORD = '%s' DEFAULT_SECONDARY_ROLES = ('ALL')", id.FullyQualifiedName(), password)
 
 		objectParameters := UserObjectParameters{
 			EnableUnredactedQuerySyntaxError: Bool(true),
@@ -141,6 +231,35 @@ func TestUserAlter(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET AUTOCOMMIT = true", id.FullyQualifiedName())
+	})
+
+	t.Run("alter: set object properties", func(t *testing.T) {
+		objectProperties := UserAlterObjectProperties{
+			UserObjectProperties: UserObjectProperties{
+				FirstName: String("name"),
+			},
+			DisableMfa: Bool(true),
+		}
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				ObjectProperties: &objectProperties,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET FIRST_NAME = '%s' DISABLE_MFA = true", id.FullyQualifiedName(), "name")
+	})
+
+	t.Run("alter: set disable mfa only", func(t *testing.T) {
+		objectProperties := UserAlterObjectProperties{
+			DisableMfa: Bool(true),
+		}
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				ObjectProperties: &objectProperties,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET DISABLE_MFA = true", id.FullyQualifiedName())
 	})
 
 	t.Run("reset password", func(t *testing.T) {
@@ -238,6 +357,37 @@ func TestUserAlter(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s REMOVE DELEGATED AUTHORIZATION OF ROLE %s FROM SECURITY INTEGRATION %s", id.FullyQualifiedName(), role, integration)
 	})
+
+	t.Run("empty secondary roles", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				ObjectProperties: &UserAlterObjectProperties{
+					UserObjectProperties: UserObjectProperties{
+						DefaultSecondaryRoles: &SecondaryRoles{},
+					},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("SecondaryRoles", "All", "None"))
+	})
+
+	t.Run("with empty secondary roles", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				ObjectProperties: &UserAlterObjectProperties{
+					UserObjectProperties: UserObjectProperties{
+						DefaultSecondaryRoles: &SecondaryRoles{
+							All:  Bool(true),
+							None: Bool(true),
+						},
+					},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("SecondaryRoles", "All", "None"))
+	})
 }
 
 func TestUserDrop(t *testing.T) {
@@ -321,4 +471,404 @@ func TestUserDescribe(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, "DESCRIBE USER %s", id.FullyQualifiedName())
 	})
+}
+
+func Test_User_ToGeographyOutputFormat(t *testing.T) {
+	type test struct {
+		input string
+		want  GeographyOutputFormat
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "geojson", want: GeographyOutputFormatGeoJSON},
+
+		// Supported Values
+		{input: string(GeographyOutputFormatGeoJSON), want: GeographyOutputFormatGeoJSON},
+		{input: string(GeographyOutputFormatWKT), want: GeographyOutputFormatWKT},
+		{input: string(GeographyOutputFormatWKB), want: GeographyOutputFormatWKB},
+		{input: string(GeographyOutputFormatEWKT), want: GeographyOutputFormatEWKT},
+		{input: string(GeographyOutputFormatEWKB), want: GeographyOutputFormatEWKB},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'GeoJSON'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToGeographyOutputFormat(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToGeographyOutputFormat(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToGeometryOutputFormat(t *testing.T) {
+	type test struct {
+		input string
+		want  GeometryOutputFormat
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "geojson", want: GeometryOutputFormatGeoJSON},
+
+		// Supported Values
+		{input: string(GeometryOutputFormatGeoJSON), want: GeometryOutputFormatGeoJSON},
+		{input: string(GeometryOutputFormatWKT), want: GeometryOutputFormatWKT},
+		{input: string(GeometryOutputFormatWKB), want: GeometryOutputFormatWKB},
+		{input: string(GeometryOutputFormatEWKT), want: GeometryOutputFormatEWKT},
+		{input: string(GeometryOutputFormatEWKB), want: GeometryOutputFormatEWKB},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'GeoJSON'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToGeometryOutputFormat(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToGeometryOutputFormat(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToBinaryInputFormat(t *testing.T) {
+	type test struct {
+		input string
+		want  BinaryInputFormat
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "hex", want: BinaryInputFormatHex},
+
+		// Supported Values
+		{input: string(BinaryInputFormatHex), want: BinaryInputFormatHex},
+		{input: string(BinaryInputFormatBase64), want: BinaryInputFormatBase64},
+		{input: string(BinaryInputFormatUTF8), want: BinaryInputFormatUTF8},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'HEX'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToBinaryInputFormat(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToBinaryInputFormat(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToBinaryOutputFormat(t *testing.T) {
+	type test struct {
+		input string
+		want  BinaryOutputFormat
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "hex", want: BinaryOutputFormatHex},
+
+		// Supported Values
+		{input: string(BinaryOutputFormatHex), want: BinaryOutputFormatHex},
+		{input: string(BinaryOutputFormatBase64), want: BinaryOutputFormatBase64},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'HEX'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToBinaryOutputFormat(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToBinaryOutputFormat(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToClientTimestampTypeMapping(t *testing.T) {
+	type test struct {
+		input string
+		want  ClientTimestampTypeMapping
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "timestamp_ltz", want: ClientTimestampTypeMappingLtz},
+
+		// Supported Values
+		{input: string(ClientTimestampTypeMappingLtz), want: ClientTimestampTypeMappingLtz},
+		{input: string(ClientTimestampTypeMappingNtz), want: ClientTimestampTypeMappingNtz},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'TIMESTAMP_LTZ'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToClientTimestampTypeMapping(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToClientTimestampTypeMapping(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToTimestampTypeMapping(t *testing.T) {
+	type test struct {
+		input string
+		want  TimestampTypeMapping
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "timestamp_ltz", want: TimestampTypeMappingLtz},
+
+		// Supported Values
+		{input: string(TimestampTypeMappingLtz), want: TimestampTypeMappingLtz},
+		{input: string(TimestampTypeMappingNtz), want: TimestampTypeMappingNtz},
+		{input: string(TimestampTypeMappingTz), want: TimestampTypeMappingTz},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'TIMESTAMP_LTZ'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToTimestampTypeMapping(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToTimestampTypeMapping(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToTransactionDefaultIsolationLevel(t *testing.T) {
+	type test struct {
+		input string
+		want  TransactionDefaultIsolationLevel
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "read committed", want: TransactionDefaultIsolationLevelReadCommitted},
+
+		// Supported Values
+		{input: string(TransactionDefaultIsolationLevelReadCommitted), want: TransactionDefaultIsolationLevelReadCommitted},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'READ COMMITTED'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToTransactionDefaultIsolationLevel(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToTransactionDefaultIsolationLevel(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToUnsupportedDDLAction(t *testing.T) {
+	type test struct {
+		input string
+		want  UnsupportedDDLAction
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "ignore", want: UnsupportedDDLActionIgnore},
+
+		// Supported Values
+		{input: string(UnsupportedDDLActionIgnore), want: UnsupportedDDLActionIgnore},
+		{input: string(UnsupportedDDLActionFail), want: UnsupportedDDLActionFail},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+
+		// not supported values (single-quoted)
+		{input: "'IGNORE'"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToUnsupportedDDLAction(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToUnsupportedDDLAction(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_ToSecondaryRolesOption(t *testing.T) {
+	type test struct {
+		input string
+		want  SecondaryRolesOption
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "none", want: SecondaryRolesOptionNone},
+
+		// Supported Values
+		{input: "NONE", want: SecondaryRolesOptionNone},
+		{input: "ALL", want: SecondaryRolesOptionAll},
+		{input: "DEFAULT", want: SecondaryRolesOptionDefault},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToSecondaryRolesOption(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToSecondaryRolesOption(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_User_GetSecondaryRolesOptionFrom(t *testing.T) {
+	type test struct {
+		input string
+		want  SecondaryRolesOption
+	}
+
+	valid := []test{
+		{input: "", want: SecondaryRolesOptionDefault},
+		{input: "[]", want: SecondaryRolesOptionNone},
+		{input: `["ALL"]`, want: SecondaryRolesOptionAll},
+		{input: `["any"]`, want: SecondaryRolesOptionAll},
+		{input: `["more", "than", "one"]`, want: SecondaryRolesOptionAll},
+		{input: `no list`, want: SecondaryRolesOptionAll},
+	}
+
+	for _, tc := range valid {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			got := GetSecondaryRolesOptionFrom(tc.input)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range valid {
+		tc := tc
+		t.Run(fmt.Sprintf("invoked from user: %s", tc.input), func(t *testing.T) {
+			user := User{DefaultSecondaryRoles: tc.input}
+			got := user.GetSecondaryRolesOption()
+			require.Equal(t, tc.want, got)
+		})
+	}
 }

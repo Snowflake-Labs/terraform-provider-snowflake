@@ -21,8 +21,8 @@ func TestInt_Tasks(t *testing.T) {
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
 		assert.NotEmpty(t, task.Id)
-		assert.Equal(t, testDb(t).Name, task.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, task.SchemaName)
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), task.DatabaseName)
+		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
 		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
 		assert.Equal(t, "", task.Comment)
 		assert.Equal(t, "", task.Warehouse)
@@ -46,8 +46,8 @@ func TestInt_Tasks(t *testing.T) {
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
 		assert.NotEmpty(t, task.Id)
-		assert.Equal(t, testDb(t).Name, task.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, task.SchemaName)
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), task.DatabaseName)
+		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
 		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
 		assert.Equal(t, comment, task.Comment)
 		assert.Equal(t, warehouse, task.Warehouse)
@@ -75,8 +75,8 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
 		assert.Equal(t, id.Name(), task.Name)
-		assert.Equal(t, testDb(t).Name, task.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, task.SchemaName)
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), task.DatabaseName)
+		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
 		assert.Equal(t, schedule, task.Schedule)
 
 		// all below are not contained in the terse response, that's why all of them we expect to be empty
@@ -150,7 +150,7 @@ func TestInt_Tasks(t *testing.T) {
 	t.Run("create task: almost complete case", func(t *testing.T) {
 		request := createTaskBasicRequest(t).
 			WithOrReplace(sdk.Bool(true)).
-			WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testWarehouse(t).ID()))).
+			WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testClientHelper().Ids.WarehouseId()))).
 			WithSchedule(sdk.String("10 MINUTE")).
 			WithConfig(sdk.String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)).
 			WithAllowOverlappingExecution(sdk.Bool(true)).
@@ -165,7 +165,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		task := createTaskWithRequest(t, request)
 
-		assertTaskWithOptions(t, task, id, "some comment", testWarehouse(t).Name, "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
+		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {

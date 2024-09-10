@@ -1,8 +1,12 @@
 package resources_test
 
 import (
-	"context"
+	"fmt"
+	"strconv"
 	"testing"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 
@@ -20,10 +24,13 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
-	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
 		acc.TestClient().Account.GetAccountIdentifier(t),
 	})
-	t.Cleanup(primaryDatabaseCleanup)
+	t.Cleanup(func() {
+		// TODO(SNOW-1562172): Create a better solution for this type of situations
+		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
+	})
 
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	newComment := random.Comment()
@@ -87,6 +94,7 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/basic"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
 
@@ -114,6 +122,7 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/basic"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", newComment),
 
@@ -151,10 +160,13 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
-	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
-		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
+	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+		sdk.NewAccountIdentifierFromAccountLocator(acc.TestClient().GetAccountLocator()),
 	})
-	t.Cleanup(primaryDatabaseCleanup)
+	t.Cleanup(func() {
+		// TODO(SNOW-1562172): Create a better solution for this type of situations
+		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
+	})
 
 	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
 	t.Cleanup(externalVolumeCleanup)
@@ -391,13 +403,15 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
-	_, externalPrimaryId, primaryDatabaseCleanup := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
-		sdk.NewAccountIdentifierFromAccountLocator(acc.Client(t).GetAccountLocator()),
+	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+		sdk.NewAccountIdentifierFromAccountLocator(acc.TestClient().GetAccountLocator()),
 	})
-	t.Cleanup(primaryDatabaseCleanup)
+	t.Cleanup(func() {
+		// TODO(SNOW-1562172): Create a better solution for this type of situations
+		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
+	})
 
-	accountDataRetentionTimeInDays, err := acc.Client(t).Parameters.ShowAccountParameter(context.Background(), sdk.AccountParameterDataRetentionTimeInDays)
-	require.NoError(t, err)
+	accountDataRetentionTimeInDays := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
 
 	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
 	t.Cleanup(externalVolumeCleanup)
@@ -502,6 +516,108 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays.Value),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_SecondaryDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+		sdk.NewAccountIdentifierFromAccountLocator(acc.TestClient().GetAccountLocator()),
+	})
+	t.Cleanup(func() {
+		// TODO(SNOW-1562172): Create a better solution for this type of situations
+		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: secondaryDatabaseConfigBasic(id.Name(), externalPrimaryId.FullyQualifiedName()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   secondaryDatabaseConfigBasic(id.Name(), externalPrimaryId.FullyQualifiedName()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func secondaryDatabaseConfigBasic(name, externalDatabaseId string) string {
+	return fmt.Sprintf(`resource "snowflake_secondary_database" "test" {
+		name = "%v"
+		as_replica_of = %v
+	}`, name, strconv.Quote(externalDatabaseId))
+}
+
+func TestAcc_SecondaryDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+
+	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
+		sdk.NewAccountIdentifierFromAccountLocator(acc.TestClient().GetAccountLocator()),
+	})
+	unquotedExternalPrimaryId := fmt.Sprintf("%s.%s.%s", externalPrimaryId.AccountIdentifier().OrganizationName(), externalPrimaryId.AccountIdentifier().AccountName(), externalPrimaryId.Name())
+	t.Cleanup(func() {
+		// TODO(SNOW-1562172): Create a better solution for this type of situations
+		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             secondaryDatabaseConfigBasic(quotedId, unquotedExternalPrimaryId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   secondaryDatabaseConfigBasic(quotedId, unquotedExternalPrimaryId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_secondary_database.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_secondary_database.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
 				),
 			},
 		},

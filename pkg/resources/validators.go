@@ -51,7 +51,8 @@ func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentif
 			}
 		}
 
-		// TODO(SNOW-1163071): Right now we have to skip validation for AccountObjectIdentifier to handle a case where identifier contains dots
+		// TODO(SNOW-1495079): Right now we have to skip validation for AccountObjectIdentifier to handle a case where identifier contains dots
+		// TODO(SNOW-1495079): with sdk.AccountObjectIdentifier{} (or a new type of identifier) we should be able to validate individual part of the identifier field (e.g. "database" or "schema" field)
 		if _, ok := any(sdk.AccountObjectIdentifier{}).(T); ok {
 			return nil
 		}
@@ -173,6 +174,24 @@ func StringInSlice(valid []string, ignoreCase bool) schema.SchemaValidateDiagFun
 	}
 }
 
+// IntInSlice has the same implementation as validation.StringInSlice, but adapted to schema.SchemaValidateDiagFunc
+func IntInSlice(valid []int) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		v, ok := i.(int)
+		if !ok {
+			return diag.Errorf("expected type of %v to be integer", path)
+		}
+
+		for _, validInt := range valid {
+			if v == validInt {
+				return nil
+			}
+		}
+
+		return diag.Errorf("expected %v to be one of %q, got %d", path, valid, v)
+	}
+}
+
 func sdkValidation[T any](normalize func(string) (T, error)) schema.SchemaValidateDiagFunc {
 	return func(val interface{}, _ cty.Path) diag.Diagnostics {
 		_, err := normalize(val.(string))
@@ -180,5 +199,42 @@ func sdkValidation[T any](normalize func(string) (T, error)) schema.SchemaValida
 			return diag.FromErr(err)
 		}
 		return nil
+	}
+}
+
+func isNotEqualTo(notExpectedValue string, errorMessage string) schema.SchemaValidateDiagFunc {
+	return func(value any, path cty.Path) diag.Diagnostics {
+		if value != nil {
+			if stringValue, ok := value.(string); ok {
+				if stringValue == notExpectedValue {
+					return diag.Diagnostics{
+						{
+							Severity: diag.Error,
+							Summary:  "Invalid value set",
+							Detail:   fmt.Sprintf("invalid value (%s) set for a field %v. %s", notExpectedValue, path, errorMessage),
+						},
+					}
+				}
+			} else {
+				return diag.Errorf("isNotEqualTo validator: expected string type, got %T", value)
+			}
+		}
+
+		return nil
+	}
+}
+
+func isValidSecondaryRole() func(value any, path cty.Path) diag.Diagnostics {
+	return func(value any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		if secondaryRole, ok := value.(string); !ok || strings.ToUpper(secondaryRole) != "ALL" {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       fmt.Sprintf("Unsupported secondary role '%s'", secondaryRole),
+				Detail:        `The only supported default secondary roles value is currently 'ALL'. For more details check: https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties.`,
+				AttributePath: nil,
+			})
+		}
+		return diags
 	}
 }

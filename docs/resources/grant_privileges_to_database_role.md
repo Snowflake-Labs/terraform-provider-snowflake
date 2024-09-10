@@ -16,8 +16,17 @@ description: |-
 ## Example Usage
 
 ```terraform
+resource "snowflake_database" "db" {
+  name = "database"
+}
+
+resource "snowflake_schema" "my_schema" {
+  database = snowflake_database.db.name
+  name     = "my_schema"
+}
+
 resource "snowflake_database_role" "db_role" {
-  database = "database"
+  database = snowflake_database.db.name
   name     = "db_role_name"
 }
 
@@ -28,13 +37,13 @@ resource "snowflake_database_role" "db_role" {
 # list of privileges
 resource "snowflake_grant_privileges_to_database_role" "example" {
   privileges         = ["CREATE", "MONITOR"]
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_database        = snowflake_database_role.db_role.database
 }
 
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_database_role" "example" {
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_database        = snowflake_database_role.db_role.database
   all_privileges     = true
   with_grant_option  = true
@@ -42,7 +51,7 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 
 # all privileges + grant option + always apply
 resource "snowflake_grant_privileges_to_database_role" "example" {
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_database        = snowflake_database_role.db_role.database
   always_apply       = true
   all_privileges     = true
@@ -56,17 +65,17 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 # list of privileges
 resource "snowflake_grant_privileges_to_database_role" "example" {
   privileges         = ["MODIFY", "CREATE TABLE"]
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_schema {
-    schema_name = "\"${snowflake_database_role.db_role.database}\".\"my_schema\"" # note this is a fully qualified name!
+    schema_name = snowflake_schema.my_schema.fully_qualified_name # note this is a fully qualified name!
   }
 }
 
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_database_role" "example" {
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_schema {
-    schema_name = "\"${snowflake_database_role.db_role.database}\".\"my_schema\"" # note this is a fully qualified name!
+    schema_name = snowflake_schema.my_schema.fully_qualified_name # note this is a fully qualified name!
   }
   all_privileges    = true
   with_grant_option = true
@@ -75,7 +84,7 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 # all schemas in database
 resource "snowflake_grant_privileges_to_database_role" "example" {
   privileges         = ["MODIFY", "CREATE TABLE"]
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_schema {
     all_schemas_in_database = snowflake_database_role.db_role.database
   }
@@ -84,7 +93,7 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 # future schemas in database
 resource "snowflake_grant_privileges_to_database_role" "example" {
   privileges         = ["MODIFY", "CREATE TABLE"]
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_schema {
     future_schemas_in_database = snowflake_database_role.db_role.database
   }
@@ -97,19 +106,19 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 # list of privileges
 resource "snowflake_grant_privileges_to_database_role" "example" {
   privileges         = ["SELECT", "REFERENCES"]
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_schema_object {
     object_type = "VIEW"
-    object_name = "\"${snowflake_database_role.db_role.database}\".\"my_schema\".\"my_view\"" # note this is a fully qualified name!
+    object_name = snowflake_view.my_view.fully_qualified_name # note this is a fully qualified name!
   }
 }
 
 # all privileges + grant option
 resource "snowflake_grant_privileges_to_database_role" "example" {
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_schema_object {
     object_type = "VIEW"
-    object_name = "\"${snowflake_database_role.db_role.database}\".\"my_schema\".\"my_view\"" # note this is a fully qualified name!
+    object_name = snowflake_view.my_view.fully_qualified_name # note this is a fully qualified name!
   }
   all_privileges    = true
   with_grant_option = true
@@ -118,7 +127,7 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 # all in database
 resource "snowflake_grant_privileges_to_database_role" "example" {
   privileges         = ["SELECT", "INSERT"]
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_schema_object {
     all {
       object_type_plural = "TABLES"
@@ -130,11 +139,11 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 # all in schema
 resource "snowflake_grant_privileges_to_database_role" "example" {
   privileges         = ["SELECT", "INSERT"]
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_schema_object {
     all {
       object_type_plural = "TABLES"
-      in_schema          = "\"${snowflake_database_role.db_role.database}\".\"my_schema\"" # note this is a fully qualified name!
+      in_schema          = snowflake_schema.my_schema.fully_qualified_name # note this is a fully qualified name!
     }
   }
 }
@@ -142,7 +151,7 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 # future in database
 resource "snowflake_grant_privileges_to_database_role" "example" {
   privileges         = ["SELECT", "INSERT"]
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_schema_object {
     future {
       object_type_plural = "TABLES"
@@ -154,15 +163,17 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 # future in schema
 resource "snowflake_grant_privileges_to_database_role" "example" {
   privileges         = ["SELECT", "INSERT"]
-  database_role_name = "\"${snowflake_database_role.db_role.database}\".\"${snowflake_database_role.db_role.name}\""
+  database_role_name = snowflake_database_role.db_role.fully_qualified_name
   on_schema_object {
     future {
       object_type_plural = "TABLES"
-      in_schema          = "\"${snowflake_database_role.db_role.database}\".\"my_schema\"" # note this is a fully qualified name!
+      in_schema          = snowflake_schema.my_schema.fully_qualified_name # note this is a fully qualified name!
     }
   }
 }
 ```
+-> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
+<!-- TODO(SNOW-1634854): include an example showing both methods-->
 
 <!-- schema generated by tfplugindocs -->
 ## Schema
@@ -204,14 +215,14 @@ Optional:
 - `all` (Block List, Max: 1) Configures the privilege to be granted on all objects in either a database or schema. (see [below for nested schema](#nestedblock--on_schema_object--all))
 - `future` (Block List, Max: 1) Configures the privilege to be granted on future objects in either a database or schema. (see [below for nested schema](#nestedblock--on_schema_object--future))
 - `object_name` (String) The fully qualified name of the object on which privileges will be granted.
-- `object_type` (String) The object type of the schema object on which privileges will be granted. Valid values are: AGGREGATION POLICY | ALERT | AUTHENTICATION POLICY | CORTEX SEARCH SERVICE | DATA METRIC FUNCTION | DYNAMIC TABLE | EVENT TABLE | EXTERNAL TABLE | FILE FORMAT | FUNCTION | GIT REPOSITORY | HYBRID TABLE | IMAGE REPOSITORY | ICEBERG TABLE | MASKING POLICY | MATERIALIZED VIEW | MODEL | NETWORK RULE | PACKAGES POLICY | PASSWORD POLICY | PIPE | PROCEDURE | PROJECTION POLICY | ROW ACCESS POLICY | SECRET | SERVICE | SESSION POLICY | SEQUENCE | STAGE | STREAM | TABLE | TAG | TASK | VIEW | STREAMLIT
+- `object_type` (String) The object type of the schema object on which privileges will be granted. Valid values are: AGGREGATION POLICY | ALERT | AUTHENTICATION POLICY | CORTEX SEARCH SERVICE | DATA METRIC FUNCTION | DYNAMIC TABLE | EVENT TABLE | EXTERNAL TABLE | FILE FORMAT | FUNCTION | GIT REPOSITORY | HYBRID TABLE | IMAGE REPOSITORY | ICEBERG TABLE | MASKING POLICY | MATERIALIZED VIEW | MODEL | NETWORK RULE | NOTEBOOK | PACKAGES POLICY | PASSWORD POLICY | PIPE | PROCEDURE | PROJECTION POLICY | ROW ACCESS POLICY | SECRET | SERVICE | SESSION POLICY | SEQUENCE | SNAPSHOT | STAGE | STREAM | TABLE | TAG | TASK | VIEW | STREAMLIT | DATASET
 
 <a id="nestedblock--on_schema_object--all"></a>
 ### Nested Schema for `on_schema_object.all`
 
 Required:
 
-- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | CORTEX SEARCH SERVICES | DATA METRIC FUNCTIONS | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | IMAGE REPOSITORIES | ICEBERG TABLES | MASKING POLICIES | MATERIALIZED VIEWS | MODELS | NETWORK RULES | PACKAGES POLICIES | PASSWORD POLICIES | PIPES | PROCEDURES | PROJECTION POLICIES | ROW ACCESS POLICIES | SECRETS | SERVICES | SESSION POLICIES | SEQUENCES | STAGES | STREAMS | TABLES | TAGS | TASKS | VIEWS | STREAMLITS.
+- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: AGGREGATION POLICIES | ALERTS | AUTHENTICATION POLICIES | CORTEX SEARCH SERVICES | DATA METRIC FUNCTIONS | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | IMAGE REPOSITORIES | ICEBERG TABLES | MASKING POLICIES | MATERIALIZED VIEWS | MODELS | NETWORK RULES | NOTEBOOKS | PACKAGES POLICIES | PASSWORD POLICIES | PIPES | PROCEDURES | PROJECTION POLICIES | ROW ACCESS POLICIES | SECRETS | SERVICES | SESSION POLICIES | SEQUENCES | SNAPSHOTS | STAGES | STREAMS | TABLES | TAGS | TASKS | VIEWS | STREAMLITS | DATASETS.
 
 Optional:
 
@@ -224,7 +235,7 @@ Optional:
 
 Required:
 
-- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | AUTHENTICATION POLICIES | DATA METRIC FUNCTIONS | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | ICEBERG TABLES | MATERIALIZED VIEWS | MODELS | NETWORK RULES | PASSWORD POLICIES | PIPES | PROCEDURES | SECRETS | SERVICES | SEQUENCES | STAGES | STREAMS | TABLES | TASKS | VIEWS.
+- `object_type_plural` (String) The plural object type of the schema object on which privileges will be granted. Valid values are: ALERTS | AUTHENTICATION POLICIES | DATA METRIC FUNCTIONS | DYNAMIC TABLES | EVENT TABLES | EXTERNAL TABLES | FILE FORMATS | FUNCTIONS | GIT REPOSITORIES | HYBRID TABLES | ICEBERG TABLES | MATERIALIZED VIEWS | MODELS | NETWORK RULES | NOTEBOOKS | PASSWORD POLICIES | PIPES | PROCEDURES | SECRETS | SERVICES | SEQUENCES | SNAPSHOTS | STAGES | STREAMS | TABLES | TASKS | VIEWS | DATASETS.
 
 Optional:
 

@@ -1,21 +1,22 @@
 package resources_test
 
 import (
-	"context"
+	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
@@ -82,6 +83,7 @@ func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SharedDatabase/basic"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "from_share", shareExternalId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "comment", comment),
 
@@ -111,6 +113,7 @@ func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", newId.Name()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "fully_qualified_name", newId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "from_share", shareExternalId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "comment", newComment),
 
@@ -143,6 +146,9 @@ func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 }
 
 func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 	externalShareId := createShareableDatabase(t)
@@ -174,6 +180,8 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 		"enable_console_output":                         config.BoolVariable(true),
 	}
 
+	acc.TestClient().Database.CreateDatabaseFromShareTemporarily(t, externalShareId)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -187,6 +195,7 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SharedDatabase/complete"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "from_share", externalShareId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_shared_database.test", "comment", comment),
 
@@ -266,34 +275,115 @@ func TestAcc_CreateSharedDatabase_InvalidValues(t *testing.T) {
 func createShareableDatabase(t *testing.T) sdk.ExternalObjectIdentifier {
 	t.Helper()
 
-	ctx := context.Background()
-
 	share, shareCleanup := acc.SecondaryTestClient().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
 	sharedDatabase, sharedDatabaseCleanup := acc.SecondaryTestClient().Database.CreateDatabase(t)
 	t.Cleanup(sharedDatabaseCleanup)
 
-	err := acc.SecondaryClient(t).Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-		Database: sharedDatabase.ID(),
-	}, share.ID())
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		err := acc.SecondaryClient(t).Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: sharedDatabase.ID(),
-		}, share.ID())
-		require.NoError(t, err)
-	})
+	revoke := acc.SecondaryTestClient().Grant.GrantPrivilegeOnDatabaseToShare(t, sharedDatabase.ID(), share.ID(), []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage})
+	t.Cleanup(revoke)
 
-	err = acc.SecondaryClient(t).Shares.Alter(ctx, share.ID(), &sdk.AlterShareOptions{
-		IfExists: sdk.Bool(true),
-		Set: &sdk.ShareSet{
-			Accounts: []sdk.AccountIdentifier{
-				acc.TestClient().Account.GetAccountIdentifier(t),
+	acc.SecondaryTestClient().Share.SetAccountOnShare(t, acc.TestClient().Account.GetAccountIdentifier(t), share.ID())
+
+	return sdk.NewExternalObjectIdentifier(acc.SecondaryTestClient().Account.GetAccountIdentifier(t), share.ID())
+}
+
+func TestAcc_SharedDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	externalShareId := createShareableDatabase(t)
+
+	acc.TestClient().Database.CreateDatabaseFromShareTemporarily(t, externalShareId)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SharedDatabase),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: sharedDatabaseConfigBasic(id.Name(), externalShareId.FullyQualifiedName()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   sharedDatabaseConfigBasic(id.Name(), externalShareId.FullyQualifiedName()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+				),
 			},
 		},
 	})
-	require.NoError(t, err)
+}
 
-	return sdk.NewExternalObjectIdentifier(acc.SecondaryTestClient().Account.GetAccountIdentifier(t), share.ID())
+func sharedDatabaseConfigBasic(name, externalShareId string) string {
+	return fmt.Sprintf(`resource "snowflake_shared_database" "test" {
+		name = "%v"
+		from_share = %v
+	}`, name, strconv.Quote(externalShareId))
+}
+
+func TestAcc_SharedDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+
+	externalShareId := createShareableDatabase(t)
+	unquotedExternalShareId := fmt.Sprintf("%s.%s.%s", externalShareId.AccountIdentifier().OrganizationName(), externalShareId.AccountIdentifier().AccountName(), externalShareId.Name())
+
+	acc.TestClient().Database.CreateDatabaseFromShareTemporarily(t, externalShareId)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SharedDatabase),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.94.1",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Config:             sharedDatabaseConfigBasic(quotedId, unquotedExternalShareId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   sharedDatabaseConfigBasic(quotedId, unquotedExternalShareId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_shared_database.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_shared_database.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+				),
+			},
+		},
+	})
 }

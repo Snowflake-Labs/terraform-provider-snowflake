@@ -65,7 +65,7 @@ test: test-client ## run unit and integration tests
 	go test -v -cover -timeout=45m ./...
 
 test-acceptance: ## run acceptance tests
-	TF_ACC=1 SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX=1 go test -run "^TestAcc_" -v -cover -timeout=60m ./...
+	TF_ACC=1 SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX=1 go test -run "^TestAcc_" -v -cover -timeout=90m ./...
 
 test-integration: ## run SDK integration tests
 	TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX=1 go test -run "^TestInt_" -v -cover -timeout=45m ./...
@@ -122,5 +122,45 @@ generate-show-output-schemas: ## Generate show output schemas with mappers
 
 clean-show-output-schemas: ## Clean generated show output schemas
 	rm -f ./pkg/schemas/*_gen.go
+
+generate-snowflake-object-assertions: ## Generate snowflake object assertions
+	go generate ./pkg/acceptance/bettertestspoc/assert/objectassert/generate.go
+
+clean-snowflake-object-assertions: ## Clean snowflake object assertions
+	rm -f ./pkg/acceptance/bettertestspoc/assert/objectassert/*_gen.go
+
+generate-snowflake-object-parameters-assertions: ## Generate snowflake object parameters assertions
+	go generate ./pkg/acceptance/bettertestspoc/assert/objectparametersassert/generate.go
+
+clean-snowflake-object-parameters-assertions: ## Clean snowflake object parameters assertions
+	rm -f ./pkg/acceptance/bettertestspoc/assert/objectparametersassert/*_gen.go
+
+generate-resource-assertions: ## Generate resource assertions
+	go generate ./pkg/acceptance/bettertestspoc/assert/resourceassert/generate.go
+
+clean-resource-assertions: ## Clean resource assertions
+	rm -f ./pkg/acceptance/bettertestspoc/assert/resourceassert/*_gen.go
+
+generate-resource-parameters-assertions: ## Generate resource parameters assertions
+	go generate ./pkg/acceptance/bettertestspoc/assert/resourceparametersassert/generate.go
+
+clean-resource-parameters-assertions: ## Clean resource parameters assertions
+	rm -f ./pkg/acceptance/bettertestspoc/assert/resourceparametersassert/*_gen.go
+
+generate-resource-show-output-assertions: ## Generate resource parameters assertions
+	go generate ./pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert/generate.go
+
+clean-resource-show-output-assertions: ## Clean resource parameters assertions
+	rm -f ./pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert/*_gen.go
+
+generate-resource-model-builders: ## Generate resource model builders
+	go generate ./pkg/acceptance/bettertestspoc/config/model/generate.go
+
+clean-resource-model-builders: ## Clean resource model builders
+	rm -f ./pkg/acceptance/bettertestspoc/config/model/*_gen.go
+
+clean-all-assertions-and-config-models: clean-snowflake-object-assertions clean-snowflake-object-parameters-assertions clean-resource-assertions clean-resource-parameters-assertions clean-resource-show-output-assertions clean-resource-model-builders ## clean all generated assertions and config models
+
+generate-all-assertions-and-config-models: generate-snowflake-object-assertions generate-snowflake-object-parameters-assertions generate-resource-assertions generate-resource-parameters-assertions generate-resource-show-output-assertions generate-resource-model-builders ## generate all assertions and config models
 
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf

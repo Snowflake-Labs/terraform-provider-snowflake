@@ -15,7 +15,7 @@ func Comment() string {
 }
 
 func Password() string {
-	return StringN(12)
+	return StringN(30)
 }
 
 // AdminName returns admin name acceptable by Snowflake:
@@ -43,4 +43,8 @@ func AlphanumericN(num int) string {
 
 func AlphaN(num int) string {
 	return gofakeit.Password(true, true, false, false, false, num)
+}
+
+func Email() string {
+	return gofakeit.Email()
 }

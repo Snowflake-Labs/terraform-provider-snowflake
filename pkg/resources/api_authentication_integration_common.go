@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -13,10 +14,11 @@ import (
 
 var apiAuthCommonSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the identifier (i.e. name) for the integration. This value must be unique in your account.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("Specifies the identifier (i.e. name) for the integration. This value must be unique in your account."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"enabled": {
 		Type:        schema.TypeBool,
@@ -42,7 +44,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption), IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_client_auth_method")),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption), IgnoreChangeToCurrentSnowflakeListValueInDescribe("oauth_client_auth_method")),
 		Description:      fmt.Sprintf("Specifies that POST is used as the authentication method to the external service. If removed from the config, the resource is recreated. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AsStringList(sdk.AllApiAuthenticationSecurityIntegrationOauthClientAuthMethodOption))),
 	},
 	"oauth_access_token_validity": {
@@ -51,14 +53,14 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 		ValidateFunc:     validation.IntAtLeast(0),
 		Default:          IntDefault,
 		Description:      "Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_access_token_validity"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("oauth_access_token_validity"),
 	},
 	"oauth_refresh_token_validity": {
 		Type:             schema.TypeInt,
 		Optional:         true,
 		ValidateFunc:     validation.IntAtLeast(1),
 		Description:      "Specifies the value to determine the validity of the refresh token obtained from the OAuth server.",
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_refresh_token_validity"),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("oauth_refresh_token_validity"),
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -81,6 +83,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 			Schema: schemas.DescribeApiAuthSecurityIntegrationSchema,
 		},
 	},
+	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
 type commonApiAuthSet struct {
@@ -209,9 +212,10 @@ func handleApiAuthCreate(d *schema.ResourceData) (commonApiAuthCreate, error) {
 func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegration,
 	properties []sdk.SecurityIntegrationProperty,
 ) error {
-	if err := d.Set("name", integration.Name); err != nil {
+	if _, err := ImportName[sdk.AccountObjectIdentifier](context.Background(), d, nil); err != nil {
 		return err
 	}
+
 	if err := d.Set("enabled", integration.Enabled); err != nil {
 		return err
 	}
@@ -219,7 +223,7 @@ func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegr
 		return err
 	}
 
-	oauthAccessTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+	oauthAccessTokenValidity, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_ACCESS_TOKEN_VALIDITY"
 	})
 	if err == nil {
@@ -231,7 +235,7 @@ func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegr
 			return err
 		}
 	}
-	oauthRefreshTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+	oauthRefreshTokenValidity, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
 	})
 	if err == nil {
@@ -243,13 +247,13 @@ func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegr
 			return err
 		}
 	}
-	oauthClientId, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_CLIENT_ID" })
+	oauthClientId, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_CLIENT_ID" })
 	if err == nil {
 		if err = d.Set("oauth_client_id", oauthClientId.Value); err != nil {
 			return err
 		}
 	}
-	oauthClientAuthMethod, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+	oauthClientAuthMethod, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 		return property.Name == "OAUTH_CLIENT_AUTH_METHOD"
 	})
 	if err == nil {
@@ -257,7 +261,7 @@ func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegr
 			return err
 		}
 	}
-	oauthTokenEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_TOKEN_ENDPOINT" })
+	oauthTokenEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_TOKEN_ENDPOINT" })
 	if err == nil {
 		if err = d.Set("oauth_token_endpoint", oauthTokenEndpoint.Value); err != nil {
 			return err
@@ -268,12 +272,13 @@ func handleApiAuthImport(d *schema.ResourceData, integration *sdk.SecurityIntegr
 }
 
 func handleApiAuthRead(d *schema.ResourceData,
+	id sdk.AccountObjectIdentifier,
 	integration *sdk.SecurityIntegration,
 	properties []sdk.SecurityIntegrationProperty,
 	withExternalChangesMarking bool,
 	extraFieldsDescribeMappings []describeMapping,
 ) error {
-	if err := d.Set("name", integration.Name); err != nil {
+	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
 	if err := d.Set("comment", integration.Comment); err != nil {
@@ -283,33 +288,33 @@ func handleApiAuthRead(d *schema.ResourceData,
 		return err
 	}
 	if withExternalChangesMarking {
-		oauthAccessTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthAccessTokenValidity, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_ACCESS_TOKEN_VALIDITY"
 		})
 		if err != nil {
 			return err
 		}
 
-		oauthRefreshTokenValidity, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthRefreshTokenValidity, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_REFRESH_TOKEN_VALIDITY"
 		})
 		if err != nil {
 			return err
 		}
 
-		oauthClientId, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_CLIENT_ID" })
+		oauthClientId, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_CLIENT_ID" })
 		if err != nil {
 			return err
 		}
 
-		oauthClientAuthMethod, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool {
+		oauthClientAuthMethod, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "OAUTH_CLIENT_AUTH_METHOD"
 		})
 		if err != nil {
 			return err
 		}
 
-		oauthTokenEndpoint, err := collections.FindOne(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_TOKEN_ENDPOINT" })
+		oauthTokenEndpoint, err := collections.FindFirst(properties, func(property sdk.SecurityIntegrationProperty) bool { return property.Name == "OAUTH_TOKEN_ENDPOINT" })
 		if err != nil {
 			return err
 		}
@@ -335,7 +340,7 @@ func handleApiAuthRead(d *schema.ResourceData,
 			return err
 		}
 	}
-	if err := setStateToValuesFromConfig(d, warehouseSchema, []string{
+	if err := setStateToValuesFromConfig(d, apiAuthCommonSchema, []string{
 		"oauth_access_token_validity",
 		"oauth_refresh_token_validity",
 		"oauth_client_id",

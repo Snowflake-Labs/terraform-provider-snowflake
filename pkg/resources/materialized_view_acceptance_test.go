@@ -39,7 +39,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "Terraform test resource"),
-					checkBool("snowflake_materialized_view.test", "is_secure", true),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "is_secure", "true"),
 				),
 			},
 			// update parameters
@@ -52,7 +52,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "other comment"),
-					checkBool("snowflake_materialized_view.test", "is_secure", false),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "is_secure", "false"),
 				),
 			},
 			// change statement
@@ -65,7 +65,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "other comment"),
-					checkBool("snowflake_materialized_view.test", "is_secure", false),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "is_secure", "false"),
 				),
 			},
 			// change statement externally
@@ -81,7 +81,7 @@ func TestAcc_MaterializedView(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "warehouse", acc.TestWarehouseName),
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "comment", "other comment"),
-					checkBool("snowflake_materialized_view.test", "is_secure", false),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "is_secure", "false"),
 				),
 			},
 			// IMPORT
@@ -160,6 +160,7 @@ func TestAcc_MaterializedView_Rename(t *testing.T) {
 				Config: materializedViewConfig(acc.TestWarehouseName, tableId, viewId, queryEscaped, "Terraform test resource", true, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", viewId.Name()),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "fully_qualified_name", viewId.FullyQualifiedName()),
 				),
 			},
 			// rename with one param change
@@ -167,6 +168,7 @@ func TestAcc_MaterializedView_Rename(t *testing.T) {
 				Config: materializedViewConfig(acc.TestWarehouseName, tableId, newViewId, queryEscaped, "Terraform test resource", false, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "name", newViewId.Name()),
+					resource.TestCheckResourceAttr("snowflake_materialized_view.test", "fully_qualified_name", newViewId.FullyQualifiedName()),
 				),
 			},
 		},

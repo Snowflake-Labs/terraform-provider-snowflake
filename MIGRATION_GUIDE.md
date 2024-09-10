@@ -4,7 +4,390 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.94.x ➞ v0.95.0
+
+### *(breaking change)* database roles data source; field rename, schema structure changes, and adding missing filtering options
+
+- `database` renamed to `in_database`
+- Added `like` and `limit` filtering options
+- `SHOW DATABASE ROLES` output is now put inside `database_roles.*.show_output`. Here's the list of currently available fields:
+    - `created_on`
+    - `name`
+    - `is_default`
+    - `is_current`
+    - `is_inherited`
+    - `granted_to_roles`
+    - `granted_to_database_roles`
+    - `granted_database_roles`
+    - `owner`
+    - `comment`
+    - `owner_role_type`
+
+### snowflake_views data source changes
+New filtering options:
+- `in`
+- `like`
+- `starts_with`
+- `limit`
+- `with_describe`
+
+New output fields
+- `show_output`
+- `describe_output`
+
+Breaking changes:
+- `database` and `schema` are right now under `in` field
+- `views` field now organizes output of show under `show_output` field and the output of describe under `describe_output` field. 
+
+### snowflake_view resource changes
+New fields:
+  - `row_access_policy`
+  - `aggregation_policy`
+  - `change_tracking`
+  - `is_recursive`
+  - `is_temporary`
+  - `data_metric_schedule`
+  - `data_metric_function`
+  - `column`
+- added `show_output` field that holds the response from SHOW VIEWS.
+- added `describe_output` field that holds the response from DESCRIBE VIEW. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on the tables used in this view. Otherwise, this field is not filled.
+
+#### *(breaking change)* Removed fields from snowflake_view resource
+Removed fields:
+- `or_replace` - `OR REPLACE` is added by the provider automatically when `copy_grants` is set to `"true"`
+- `tag` - Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
+The value of these field will be removed from the state automatically.
+
+#### *(breaking change)* Required warehouse
+For this resource, the provider now uses [policy references](https://docs.snowflake.com/en/sql-reference/functions/policy_references) which requires a warehouse in the connection. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the provider configuration.
+
+### Identifier changes
+
+#### *(breaking change)* resource identifiers for schema and streamlit
+During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`).
+Exception to that rule will be identifiers that consist of multiple parts (like in the case of [grant_privileges_to_account_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)'s resource id).
+The change was applied to already refactored resources (only in the case of `snowflake_schema` and `snowflake_streamlit` this will be a breaking change, because the rest of the objects are single part identifiers in the format of `<name>`):
+- `snowflake_api_authentication_integration_with_authorization_code_grant`
+- `snowflake_api_authentication_integration_with_client_credentials`
+- `snowflake_api_authentication_integration_with_jwt_bearer`
+- `snowflake_oauth_integration_for_custom_clients`
+- `snowflake_oauth_integration_for_partner_applications`
+- `snowflake_external_oauth_integration`
+- `snowflake_saml2_integration`
+- `snowflake_scim_integration`
+- `snowflake_database`
+- `snowflake_shared_database`
+- `snowflake_secondary_database`
+- `snowflake_account_role`
+- `snowflake_network_policy`
+- `snowflake_warehouse`
+
+No change is required, the state will be migrated automatically.
+The rest of the objects will be changed when working on them during [v1 object preparations](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1).
+
+#### *(breaking change)* diff suppress for identifier quoting
+(The same set of resources listed above was adjusted)
+To prevent issues like [this one](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2982), we added diff suppress function that prevents Terraform from showing differences,
+when only quoting is different. In some cases, Snowflake output (mostly from SHOW commands) was dictating which field should be additionally quoted and which shouldn't, but that should no longer be the case.
+Like in the change above, the rest of the objects will be changed when working on them during [v1 object preparations](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1).
+
+### New `fully_qualified_name` field in the resources.
+We added a new `fully_qualified_name` to snowflake resources. This should help with referencing other resources in fields that expect a fully qualified name. For example, instead of
+writing
+
+```object_name = “\”${snowflake_table.database}\”.\”${snowflake_table.schema}\”.\”${snowflake_table.name}\””```
+
+ now we can write
+
+```object_name = snowflake_table.fully_qualified_name```
+
+See more details in [identifiers guide](./docs/guides/identifiers.md#new-computed-fully-qualified-name-field-in-resources).
+
+See [example usage](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role).
+
+Some of the resources are excluded from this change:
+- deprecated resources
+  - `snowflake_database_old`
+  - `snowflake_oauth_integration`
+  - `snowflake_saml_integration`
+- resources for which fully qualified name is not appropriate
+  - `snowflake_account_parameter`
+  - `snowflake_account_password_policy_attachment`
+  - `snowflake_network_policy_attachment`
+  - `snowflake_session_parameter`
+  - `snowflake_table_constraint`
+  - `snowflake_table_column_masking_policy_application`
+  - `snowflake_tag_masking_policy_association`
+  - `snowflake_tag_association`
+  - `snowflake_user_password_policy_attachment`
+  - `snowflake_user_public_keys`
+  - grant resources
+
+#### *(breaking change)* removed `qualified_name` from `snowflake_masking_policy`, `snowflake_network_rule`, `snowflake_password_policy` and `snowflake_table`
+Because of introducing a new `fully_qualified_name` field for all of the resources, `qualified_name` was removed from `snowflake_masking_policy`, `snowflake_network_rule`,  `snowflake_password_policy` and `snowflake_table`. Please adjust your configurations. State is automatically migrated.
+
+### snowflake_stage resource changes
+
+#### *(bugfix)* Correctly handle renamed/deleted stage
+
+Correctly handle the situation when stage was rename/deleted externally (earlier it resulted in a permanent loop). No action is required on the user's side.
+
+Connected issues: [#2972](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2972) 
+
+### snowflake_table resource changes
+
+#### *(bugfix)* Handle data type diff suppression better for text and number
+
+Data types are not entirely correctly handled inside the provider (read more e.g. in [#2735](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2735)). It will be still improved with the upcoming function, procedure, and table rework. Currently, diff suppression was fixed for text and number data types in the table resource with the following assumptions/limitations:
+- for numbers the default precision is 38 and the default scale is 0 (following the [docs](https://docs.snowflake.com/en/sql-reference/data-types-numeric#number))
+- for number types the following types are treated as synonyms: `NUMBER`, `DECIMAL`, `NUMERIC`, `INT`, `INTEGER`, `BIGINT`, `SMALLINT`, `TINYINT`, `BYTEINT`
+- for text the default length is 16777216 (following the [docs](https://docs.snowflake.com/en/sql-reference/data-types-text#varchar))
+- for text types the following types are treated as synonyms: `VARCHAR`, `CHAR`, `CHARACTER`, `STRING`, `TEXT`
+- whitespace and casing is ignored
+- if the type arguments cannot be parsed the defaults are used and therefore diff may be suppressed unexpectedly (please report such cases)
+
+No action is required on the user's side.
+
+Connected issues: [#3007](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3007)
+
+### snowflake_user resource changes
+
+Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping. Also, check the [design decisions](./v1-preparations/CHANGES_BEFORE_V1.md).
+
+#### *(breaking change)* user parameters added to snowflake_user resource
+
+On our road to V1 we changed the approach to Snowflake parameters on the object level; now, we add them directly to the resource. This is a **breaking change** because now:
+- Leaving the config empty does not set the default value on the object level but uses the one from hierarchy on Snowflake level instead (so after version bump, the diff running `UNSET` statements is expected).
+- This change is not compatible with `snowflake_object_parameter` - you have to set the parameter inside `snowflake_user` resource **IF** you manage users through terraform **AND** you want to set the parameter on the user level.
+
+For more details, check the [Snowflake parameters](./v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters).
+
+The following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added to the `snowflake_user` resource:
+ - [ABORT_DETACHED_QUERY](https://docs.snowflake.com/en/sql-reference/parameters#abort-detached-query)
+ - [AUTOCOMMIT](https://docs.snowflake.com/en/sql-reference/parameters#autocommit)
+ - [BINARY_INPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#binary-input-format)
+ - [BINARY_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#binary-output-format)
+ - [CLIENT_MEMORY_LIMIT](https://docs.snowflake.com/en/sql-reference/parameters#client-memory-limit)
+ - [CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX](https://docs.snowflake.com/en/sql-reference/parameters#client-metadata-request-use-connection-ctx)
+ - [CLIENT_PREFETCH_THREADS](https://docs.snowflake.com/en/sql-reference/parameters#client-prefetch-threads)
+ - [CLIENT_RESULT_CHUNK_SIZE](https://docs.snowflake.com/en/sql-reference/parameters#client-result-chunk-size)
+ - [CLIENT_RESULT_COLUMN_CASE_INSENSITIVE](https://docs.snowflake.com/en/sql-reference/parameters#client-result-column-case-insensitive)
+ - [CLIENT_SESSION_KEEP_ALIVE](https://docs.snowflake.com/en/sql-reference/parameters#client-session-keep-alive)
+ - [CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY](https://docs.snowflake.com/en/sql-reference/parameters#client-session-keep-alive-heartbeat-frequency)
+ - [CLIENT_TIMESTAMP_TYPE_MAPPING](https://docs.snowflake.com/en/sql-reference/parameters#client-timestamp-type-mapping)
+ - [DATE_INPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#date-input-format)
+ - [DATE_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#date-output-format)
+ - [ENABLE_UNLOAD_PHYSICAL_TYPE_OPTIMIZATION](https://docs.snowflake.com/en/sql-reference/parameters#enable-unload-physical-type-optimization)
+ - [ERROR_ON_NONDETERMINISTIC_MERGE](https://docs.snowflake.com/en/sql-reference/parameters#error-on-nondeterministic-merge)
+ - [ERROR_ON_NONDETERMINISTIC_UPDATE](https://docs.snowflake.com/en/sql-reference/parameters#error-on-nondeterministic-update)
+ - [GEOGRAPHY_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#geography-output-format)
+ - [GEOMETRY_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#geometry-output-format)
+ - [JDBC_TREAT_DECIMAL_AS_INT](https://docs.snowflake.com/en/sql-reference/parameters#jdbc-treat-decimal-as-int)
+ - [JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC](https://docs.snowflake.com/en/sql-reference/parameters#jdbc-treat-timestamp-ntz-as-utc)
+ - [JDBC_USE_SESSION_TIMEZONE](https://docs.snowflake.com/en/sql-reference/parameters#jdbc-use-session-timezone)
+ - [JSON_INDENT](https://docs.snowflake.com/en/sql-reference/parameters#json-indent)
+ - [LOCK_TIMEOUT](https://docs.snowflake.com/en/sql-reference/parameters#lock-timeout)
+ - [LOG_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters#log-level)
+ - [MULTI_STATEMENT_COUNT](https://docs.snowflake.com/en/sql-reference/parameters#multi-statement-count)
+ - [NOORDER_SEQUENCE_AS_DEFAULT](https://docs.snowflake.com/en/sql-reference/parameters#noorder-sequence-as-default)
+ - [ODBC_TREAT_DECIMAL_AS_INT](https://docs.snowflake.com/en/sql-reference/parameters#odbc-treat-decimal-as-int)
+ - [QUERY_TAG](https://docs.snowflake.com/en/sql-reference/parameters#query-tag)
+ - [QUOTED_IDENTIFIERS_IGNORE_CASE](https://docs.snowflake.com/en/sql-reference/parameters#quoted-identifiers-ignore-case)
+ - [ROWS_PER_RESULTSET](https://docs.snowflake.com/en/sql-reference/parameters#rows-per-resultset)
+ - [S3_STAGE_VPCE_DNS_NAME](https://docs.snowflake.com/en/sql-reference/parameters#s3-stage-vpce-dns-name)
+ - [SEARCH_PATH](https://docs.snowflake.com/en/sql-reference/parameters#search-path)
+ - [SIMULATED_DATA_SHARING_CONSUMER](https://docs.snowflake.com/en/sql-reference/parameters#simulated-data-sharing-consumer)
+ - [STATEMENT_QUEUED_TIMEOUT_IN_SECONDS](https://docs.snowflake.com/en/sql-reference/parameters#statement-queued-timeout-in-seconds)
+ - [STATEMENT_TIMEOUT_IN_SECONDS](https://docs.snowflake.com/en/sql-reference/parameters#statement-timeout-in-seconds)
+ - [STRICT_JSON_OUTPUT](https://docs.snowflake.com/en/sql-reference/parameters#strict-json-output)
+ - [TIMESTAMP_DAY_IS_ALWAYS_24H](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-day-is-always-24h)
+ - [TIMESTAMP_INPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-input-format)
+ - [TIMESTAMP_LTZ_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-ltz-output-format)
+ - [TIMESTAMP_NTZ_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-ntz-output-format)
+ - [TIMESTAMP_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-output-format)
+ - [TIMESTAMP_TYPE_MAPPING](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-type-mapping)
+ - [TIMESTAMP_TZ_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#timestamp-tz-output-format)
+ - [TIMEZONE](https://docs.snowflake.com/en/sql-reference/parameters#timezone)
+ - [TIME_INPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#time-input-format)
+ - [TIME_OUTPUT_FORMAT](https://docs.snowflake.com/en/sql-reference/parameters#time-output-format)
+ - [TRACE_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters#trace-level)
+ - [TRANSACTION_ABORT_ON_ERROR](https://docs.snowflake.com/en/sql-reference/parameters#transaction-abort-on-error)
+ - [TRANSACTION_DEFAULT_ISOLATION_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters#transaction-default-isolation-level)
+ - [TWO_DIGIT_CENTURY_START](https://docs.snowflake.com/en/sql-reference/parameters#two-digit-century-start)
+ - [UNSUPPORTED_DDL_ACTION](https://docs.snowflake.com/en/sql-reference/parameters#unsupported-ddl-action)
+ - [USE_CACHED_RESULT](https://docs.snowflake.com/en/sql-reference/parameters#use-cached-result)
+ - [WEEK_OF_YEAR_POLICY](https://docs.snowflake.com/en/sql-reference/parameters#week-of-year-policy)
+ - [WEEK_START](https://docs.snowflake.com/en/sql-reference/parameters#week-start)
+ - [ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR](https://docs.snowflake.com/en/sql-reference/parameters#enable-unredacted-query-syntax-error)
+ - [NETWORK_POLICY](https://docs.snowflake.com/en/sql-reference/parameters#network-policy)
+ - [PREVENT_UNLOAD_TO_INTERNAL_STAGES](https://docs.snowflake.com/en/sql-reference/parameters#prevent-unload-to-internal-stages)
+
+Connected issues: [#2938](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2938)
+
+#### *(breaking change)* Changes in sensitiveness of name, login_name, and display_name
+
+According to https://docs.snowflake.com/en/sql-reference/functions/all_user_names#usage-notes, `NAME`s are not considered sensitive data and `LOGIN_NAME`s are. Previous versions of the provider had this the other way around. In this version, `name` attribute was unmarked as sensitive, whereas `login_name` was marked as sensitive. This may break your configuration if you were using `login_name`s before e.g. in a `for_each` loop.
+
+The `display_name` attribute was marked as sensitive. It defaults to `name` if not provided on Snowflake side. Because `name` is no longer sensitive, we also change the setting for the `display_name`.
+
+Connected issues: [#2662](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2662), [#2668](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2668).
+
+#### *(bugfix)* Correctly handle `default_warehouse`, `default_namespace`, and `default_role`
+
+During the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework), we generalized how we compute the differences correctly for the identifier fields (read more in [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)). Proper suppressor was applied to `default_warehouse`, `default_namespace`, and `default_role`. Also, all these three attributes were corrected (e.g. handling spaces/hyphens in names).
+
+Connected issues: [#2836](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2836), [#2942](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2942)
+
+#### *(bugfix)* Correctly handle failed update
+
+Not every attribute can be updated in the state during read (like `password` in the `snowflake_user` resource). In situations where update fails, we may end up with an incorrect state (read more in https://github.com/hashicorp/terraform-plugin-sdk/issues/476). We use a deprecated method from the plugin SDK, and now, for partially failed updates, we preserve the resource's previous state. It fixed this kind of situations for `snowflake_user` resource.
+
+Connected issues: [#2970](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2970)
+
+#### *(breaking change)* Handling default secondary roles
+
+Old field `default_secondary_roles` was removed in favour of the new, easier, `default_secondary_roles_option` because the only possible options that can be currently set are `('ALL')` and `()`.  The logic to handle set element changes was convoluted and error-prone. Additionally, [bcr 2024_07](https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_07/bcr-1692) complicated the matter even more.
+
+Now:
+- the default value is `DEFAULT` - it falls back to Snowflake default (so `()` before and `('ALL')` after the BCR)
+- to explicitly set to `('ALL')` use `ALL`
+- to explicitly set to `()` use `NONE`
+
+While migrating, the old `default_secondary_roles` will be removed from the state automatically and `default_secondary_roles_option` will be constructed based on the previous value (in some cases apply may be necessary).
+
+Connected issues: [#3038](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/3038)
+
+#### *(breaking change)* Attributes changes
+
+Attributes that are no longer computed:
+- `login_name`
+- `display_name`
+- `disabled`
+- `default_role`
+
+New fields:
+- `middle_name`
+- `days_to_expiry`
+- `mins_to_unlock`
+- `mins_to_bypass_mfa`
+- `disable_mfa`
+- `default_secondary_roles_option`
+- `show_output` - holds the response from `SHOW USERS`. Remember that the field will be only recomputed if one of the user attributes is changed.
+- `parameters` - holds the response from `SHOW PARAMETERS IN USER`.
+
+Removed fields:
+- `has_rsa_public_key`
+- `default_secondary_roles` - replaced with `default_secondary_roles_option`
+
+Default changes:
+- `must_change_password`
+- `disabled`
+
+Type changes:
+- `must_change_password`: bool -> string (To easily handle three-value logic (true, false, unknown) in provider's configs, read more in https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/751239b7d2fee4757471db6c03b952d4728ee099/v1-preparations/CHANGES_BEFORE_V1.md?plain=1#L24)
+- `disabled`: bool -> string (To easily handle three-value logic (true, false, unknown) in provider's configs, read more in https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/751239b7d2fee4757471db6c03b952d4728ee099/v1-preparations/CHANGES_BEFORE_V1.md?plain=1#L24)
+
+#### *(breaking change)* refactored snowflake_users datasource
+> **IMPORTANT NOTE:** when querying users you don't have permissions to, the querying options are limited. 
+You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command cannot be called, so you have to set `with_describe = false`. 
+Only `parameters` output is not affected by the lack of privileges.
+
+Changes:
+- account checking logic was entirely removed
+- `pattern` renamed to `like`
+- `like`, `starts_with`, and `limit` filters added
+- `SHOW USERS` output is enclosed in `show_output` field inside `users` (all the previous fields in `users` map were removed)
+- Added outputs from **DESC USER** and **SHOW PARAMETERS IN USER** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**).
+  The additional parameters call **DESC USER** (with `with_describe` turned on) and **SHOW PARAMETERS IN USER** (with `with_parameters` turned on) **per user** returned by **SHOW USERS**.
+  The outputs of both commands are held in `users` entry, where **DESC USER** is saved in the `describe_output` field, and **SHOW PARAMETERS IN USER** in the `parameters` field.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+Connected issues: [#2902](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2902)
+
+#### *(breaking change)* snowflake_user_public_keys usage with snowflake_user
+
+`snowflake_user_public_keys` is a resource allowing to set keys for the given user. Before this version, it was possible to have `snowflake_user` and `snowflake_user_public_keys` used next to each other.
+Because the logic handling the keys in `snowflake_user` was fixed, it is advised to use `snowflake_user_public_keys` only when user is not managed through terraform. Having both resources configured for the same user will result in improper behavior.
+
+To migrate, in case of having two resources:
+- copy the keys to `rsa_public_key` and `rsa_public_key2` in `snowflake_user`
+- remove `snowflake_user_public_keys` from state (following https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#resource-migration)
+- remove `snowflake_user_public_keys` from config
+
+#### *(note)* snowflake_user_password_policy_attachment and other user policies
+
+`snowflake_user_password_policy_attachment` is not addressed in the current version.
+Attaching other user policies is not addressed in the current version.
+
+Both topics will be addressed in the following versions.
+
+#### *(note)* user types
+
+`service` and `legacy_service` user types are currently not supported. They will be supported in the following versions as separate resources (namely `snowflake_service_user` and `snowflake_legacy_service_user`).
+
+## v0.94.0 ➞ v0.94.1
+### changes in snowflake_schema
+
+In order to avoid dropping `PUBLIC` schemas, we have decided to use `ALTER` instead of `OR REPLACE` during creation. In the future we are planning to use `CREATE OR ALTER` when it becomes available for schems.
+
 ## v0.93.0 ➞ v0.94.0
+### *(breaking change)* changes in snowflake_scim_integration
+
+In order to fix issues in v0.93.0, when a resource has Azure scim client, `sync_password` field is now set to `default` value in the state. State will be migrated automatically.
+
+### *(breaking change)* refactored snowflake_schema resource
+
+Renamed fields:
+- renamed `is_managed` to `with_managed_access`
+- renamed `data_retention_days` to `data_retention_time_in_days`
+
+Please rename these fields in your configuration files. State will be migrated automatically.
+
+Removed fields:
+- `tag`
+The value of this field will be removed from the state automatically. Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
+
+New fields:
+- the following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added:
+    - `max_data_extension_time_in_days`
+    - `external_volume`
+    - `catalog`
+    - `replace_invalid_characters`
+    - `default_ddl_collation`
+    - `storage_serialization_policy`
+    - `log_level`
+    - `trace_level`
+    - `suspend_task_after_num_failures`
+    - `task_auto_retry_attempts`
+    - `user_task_managed_initial_warehouse_size`
+    - `user_task_timeout_ms`
+    - `user_task_minimum_trigger_interval_in_seconds`
+    - `quoted_identifiers_ignore_case`
+    - `enable_console_output`
+    - `pipe_execution_paused`
+- added `show_output` field that holds the response from SHOW SCHEMAS.
+- added `describe_output` field that holds the response from DESCRIBE SCHEMA. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on all objects in the schema. Otherwise, this field is not filled.
+- added `parameters` field that holds the response from SHOW PARAMETERS IN SCHEMA.
+
+We allow creating and managing `PUBLIC` schemas now. When the name of the schema is `PUBLIC`, it's created with `OR_REPLACE`. Please be careful with this operation, because you may experience data loss. `OR_REPLACE` does `DROP` before `CREATE`, so all objects in the schema will be dropped and this is not visible in Terraform plan. To restore data-related objects that might have been accidentally or intentionally deleted, pleas read about [Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel). The alternative is to import `PUBLIC` schema manually and then manage it with Terraform. We've decided this based on [#2826](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2826).
+
+#### *(behavior change)* Boolean type changes
+To easily handle three-value logic (true, false, unknown) in provider's configs, type of `is_transient` and `with_managed_access` was changed from boolean to string.
+
+Terraform should recreate resources for configs lacking `is_transient` (`DROP` and then `CREATE` will be run underneath). To prevent this behavior, please set `is_transient` field.
+For more details about default values, please refer to the [changes before v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#default-values) document.
+
+Terraform should perform an action for configs lacking `with_managed_access` (`ALTER SCHEMA DISABLE MANAGED ACCESS` will be run underneath which should not affect the Snowflake object, because `MANAGED ACCESS` is not set by default)
+### *(breaking change)* refactored snowflake_schemas datasource
+Changes:
+- `database` is removed and can be specified inside `in` field.
+- `like`, `in`, `starts_with`, and `limit` fields enable filtering.
+- SHOW SCHEMAS output is enclosed in `show_output` field inside `schemas`.
+- Added outputs from **DESC SCHEMA** and **SHOW PARAMETERS IN SCHEMA** (they can be turned off by declaring `with_describe = false` and `with_parameters = false`, **they're turned on by default**).
+  The additional parameters call **DESC SCHEMA** (with `with_describe` turned on) and **SHOW PARAMETERS IN SCHEMA** (with `with_parameters` turned on) **per schema** returned by **SHOW SCHEMAS**.
+  The outputs of both commands are held in `schemas` entry, where **DESC SCHEMA** is saved in the `describe_output` field, and **SHOW PARAMETERS IN SCHEMA** in the `parameters` field.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
 
 ### *(new feature)* new snowflake_account_role resource
 
@@ -20,6 +403,58 @@ Changes:
 - New `in_class` filtering option to filter out roles by class name, e.g. `in_class = "SNOWFLAKE.CORE.BUDGET"`
 - `pattern` was renamed to `like`
 - output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
+
+### *(new feature)* new snowflake_account_role resource
+
+Already existing `snowflake_role` was deprecated in favor of the new `snowflake_account_role`. The old resource got upgraded to
+have the same features as the new one. The only difference is the deprecation message on the old resource.
+
+New fields:
+- added `show_output` field that holds the response from SHOW ROLES. Remember that the field will be only recomputed if one of the fields (`name` or `comment`) are changed.
+
+### *(breaking change)* refactored snowflake_roles data source
+
+Changes:
+- New `in_class` filtering option to filter out roles by class name, e.g. `in_class = "SNOWFLAKE.CORE.BUDGET"`
+- `pattern` was renamed to `like`
+- output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
+
+### *(new feature)* snowflake_streamlit resource
+Added a new resource for managing streamlits. See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit). In this resource, we decided to split `ROOT_LOCATION` in Snowflake to two fields: `stage` representing stage fully qualified name and `directory_location` containing a path within this stage to root location.
+
+### *(new feature)* snowflake_streamlits datasource
+Added a new datasource enabling querying and filtering stremlits. Notes:
+- all results are stored in `streamlits` field.
+- `like`, `in`, and `limit` fields enable streamlits filtering.
+- SHOW STREAMLITS output is enclosed in `show_output` field inside `streamlits`.
+- Output from **DESC STREAMLIT** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `streamlits`.
+  The additional parameters call **DESC STREAMLIT** (with `with_describe` turned on) **per streamlit** returned by **SHOW STREAMLITS**.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+### *(new feature)* refactored snowflake_network_policy resource
+
+No migration required.
+
+New behavior:
+- `name` is no longer marked as ForceNew parameter. When changed, now it will perform ALTER RENAME operation, instead of re-creating with the new name.
+- Additional validation was added to `blocked_ip_list` to inform about specifying `0.0.0.0/0` ip. More details in the [official documentation](https://docs.snowflake.com/en/sql-reference/sql/create-network-policy#usage-notes).
+
+New fields:
+- `show_output` and `describe_output` added to hold the results returned by `SHOW` and `DESCRIBE` commands. Those fields will only be recomputed when specified fields change
+
+### *(new feature)* snowflake_network_policies datasource
+
+Added a new datasource enabling querying and filtering network policies. Notes:
+- all results are stored in `network_policies` field.
+- `like` field enables filtering.
+- SHOW NETWORK POLICIES output is enclosed in `show_output` field inside `network_policies`.
+- Output from **DESC NETWORK POLICY** (which can be turned off by declaring `with_describe = false`, **it's turned on by default**) is enclosed in `describe_output` field inside `network_policies`.
+  The additional parameters call **DESC NETWORK POLICY** (with `with_describe` turned on) **per network policy** returned by **SHOW NETWORK POLICIES**.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+### *(fix)* snowflake_warehouse resource
+
+Because of the issue [#2948](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2948), we are relaxing the validations for the Snowflake parameter values. Read more in [CHANGES_BEFORE_V1.md](v1-preparations/CHANGES_BEFORE_V1.md#validations).
 
 ## v0.92.0 ➞ v0.93.0
 
@@ -47,10 +482,10 @@ See reference [doc](https://docs.snowflake.com/en/sql-reference/sql/create-secur
 
 ### *(new feature)* snowflake_oauth_integration_for_custom_clients and snowflake_oauth_integration_for_partner_applications resources
 
-To enhance clarity and functionality, the new resources `snowflake_oauth_integration_for_custom_clients` and `snowflake_oauth_integration_for_partner_applications` have been introduced 
+To enhance clarity and functionality, the new resources `snowflake_oauth_integration_for_custom_clients` and `snowflake_oauth_integration_for_partner_applications` have been introduced
 to replace the previous `snowflake_oauth_integration`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into two more specialized resources.
-The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes). 
-This segregation was based on the `oauth_client` attribute, where `CUSTOM` corresponds to `snowflake_oauth_integration_for_custom_clients`, 
+The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes).
+This segregation was based on the `oauth_client` attribute, where `CUSTOM` corresponds to `snowflake_oauth_integration_for_custom_clients`,
 while other attributes align with `snowflake_oauth_integration_for_partner_applications`.
 
 ### *(new feature)* snowflake_security_integrations datasource
@@ -105,13 +540,17 @@ The fields listed below had diff suppress which removed '-' from strings. Now, t
 ### *(new feature)* snowflake_saml2_integration resource
 
 The new `snowflake_saml2_integration` is introduced and deprecates `snowflake_saml_integration`. It contains new fields
-and follows our new conventions making it more stable. The old SAML integration wasn't changed, so no migration needed, 
+and follows our new conventions making it more stable. The old SAML integration wasn't changed, so no migration needed,
 but we recommend to eventually migrate to the newer counterpart.
 
 ### snowflake_scim_integration resource changes
 #### *(behavior change)* Changed behavior of `sync_password`
 
 Now, the `sync_password` field will set the state value to `default` whenever the value is not set in the config. This indicates that the value on the Snowflake side is set to the Snowflake default.
+
+> [!WARNING]
+> This change causes issues for Azure scim client (see [#2946](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2946)). The workaround is to remove the resource from the state with `terraform state rm`, add `sync_password = true` to the config, and import with `terraform import "snowflake_scim_integration.test" "aad_provisioning"`. After these steps, there should be no errors and no diff on this field. This behavior is fixed in v0.94 with state upgrader.
+
 
 #### *(behavior change)* Renamed fields
 
@@ -272,7 +711,9 @@ resource "snowflake_database" "test" {
 }
 ```
 
-If you had `from_database` set, it should migrate automatically.
+If you had `from_database` set, you should follow our [resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to remove
+the database from state to later import it in the newer version of the provider.
+Otherwise, it may cause issues when migrating to v0.93.0.
 For now, we're dropping the possibility to create a clone database from other databases.
 The only way will be to clone a database manually and import it as `snowflake_database`, but if
 cloned databases diverge in behavior from standard databases, it may cause issues.

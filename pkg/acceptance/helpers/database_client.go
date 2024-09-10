@@ -50,14 +50,20 @@ func (c *DatabaseClient) CreateDatabaseWithOptions(t *testing.T, id sdk.AccountO
 
 func (c *DatabaseClient) DropDatabaseFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
 	t.Helper()
+	return func() { require.NoError(t, c.DropDatabase(t, id)) }
+}
+
+func (c *DatabaseClient) DropDatabase(t *testing.T, id sdk.AccountObjectIdentifier) error {
+	t.Helper()
 	ctx := context.Background()
 
-	return func() {
-		err := c.client().Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)})
-		require.NoError(t, err)
-		err = c.context.client.Sessions.UseSchema(ctx, c.ids.SchemaId())
-		require.NoError(t, err)
+	if err := c.client().Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)}); err != nil {
+		return err
 	}
+	if err := c.context.client.Sessions.UseSchema(ctx, c.ids.SchemaId()); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *DatabaseClient) CreateSecondaryDatabaseWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, externalId sdk.ExternalObjectIdentifier, opts *sdk.CreateSecondaryDatabaseOptions) (*sdk.Database, func()) {
@@ -139,4 +145,42 @@ func (c *DatabaseClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sd
 	ctx := context.Background()
 
 	return c.client().ShowByID(ctx, id)
+}
+
+func (c *DatabaseClient) Describe(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.DatabaseDetails, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().Describe(ctx, id)
+}
+
+// TODO [SNOW-1562172]: Create a better solution for this type of situations
+// We have to create test database from share before the actual test to check if the newly created share is ready
+// after previous test (there's some kind of issue or delay between cleaning up a share and creating a new one right after).
+func (c *DatabaseClient) CreateDatabaseFromShareTemporarily(t *testing.T, externalShareId sdk.ExternalObjectIdentifier) {
+	t.Helper()
+
+	databaseId := c.ids.RandomAccountObjectIdentifier()
+	err := c.client().CreateShared(context.Background(), databaseId, externalShareId, new(sdk.CreateSharedDatabaseOptions))
+	require.NoError(t, err)
+
+	require.Eventually(t, func() bool {
+		database, err := c.Show(t, databaseId)
+		if err != nil {
+			return false
+		}
+		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
+		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
+		return database.Origin != nil
+	}, time.Minute, time.Second*6)
+
+	err = c.DropDatabase(t, databaseId)
+	require.NoError(t, err)
+}
+
+func (c *DatabaseClient) ShowAllReplicationDatabases(t *testing.T) ([]sdk.ReplicationDatabase, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.context.client.ReplicationFunctions.ShowReplicationDatabases(ctx, nil)
 }

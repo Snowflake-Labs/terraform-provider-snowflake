@@ -4,7 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"slices"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var (
@@ -25,6 +28,7 @@ type Schemas interface {
 	Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, error)
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error)
 	Use(ctx context.Context, id DatabaseObjectIdentifier) error
+	ShowParameters(ctx context.Context, id DatabaseObjectIdentifier) ([]*Parameter, error)
 }
 
 var _ Schemas = (*schemas)(nil)
@@ -35,15 +39,30 @@ type schemas struct {
 
 type Schema struct {
 	CreatedOn     time.Time
+	DroppedOn     time.Time
 	Name          string
 	IsDefault     bool
 	IsCurrent     bool
 	DatabaseName  string
 	Owner         string
-	Comment       *string
+	Comment       string
 	Options       *string
 	RetentionTime string
 	OwnerRoleType string
+}
+
+func (s *Schema) IsTransient() bool {
+	if s.Options == nil {
+		return false
+	}
+	return slices.Contains(ParseCommaSeparatedStringArray(*s.Options, false), "TRANSIENT")
+}
+
+func (s *Schema) IsManagedAccess() bool {
+	if s.Options == nil {
+		return false
+	}
+	return slices.Contains(ParseCommaSeparatedStringArray(*s.Options, false), "MANAGED ACCESS")
 }
 
 func (v *Schema) ID() DatabaseObjectIdentifier {
@@ -56,6 +75,7 @@ func (v *Schema) ObjectType() ObjectType {
 
 type schemaDBRow struct {
 	CreatedOn     time.Time      `db:"created_on"`
+	DroppedOn     sql.NullTime   `db:"dropped_on"`
 	Name          string         `db:"name"`
 	IsDefault     string         `db:"is_default"`
 	IsCurrent     string         `db:"is_current"`
@@ -68,43 +88,60 @@ type schemaDBRow struct {
 }
 
 func (row schemaDBRow) toSchema() Schema {
-	var comment *string
-	var options *string
-	if row.Comment.Valid {
-		comment = &row.Comment.String
-	}
-	if row.Options.Valid {
-		options = &row.Options.String
-	}
-	return Schema{
+	schema := Schema{
 		CreatedOn:     row.CreatedOn,
 		Name:          row.Name,
 		IsDefault:     row.IsDefault == "Y",
 		IsCurrent:     row.IsCurrent == "Y",
 		DatabaseName:  row.DatabaseName,
 		Owner:         row.Owner,
-		Comment:       comment,
-		Options:       options,
 		RetentionTime: row.RetentionTime,
 		OwnerRoleType: row.OwnerRoleType,
 	}
+	if row.Comment.Valid {
+		schema.Comment = row.Comment.String
+	}
+	if row.Options.Valid {
+		schema.Options = &row.Options.String
+	}
+	if row.DroppedOn.Valid {
+		schema.DroppedOn = row.DroppedOn.Time
+	}
+	return schema
 }
 
 // CreateSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/create-schema
 type CreateSchemaOptions struct {
-	create                     bool                     `ddl:"static" sql:"CREATE"`
-	OrReplace                  *bool                    `ddl:"keyword" sql:"OR REPLACE"`
-	Transient                  *bool                    `ddl:"keyword" sql:"TRANSIENT"`
-	schema                     bool                     `ddl:"static" sql:"SCHEMA"`
-	IfNotExists                *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                       DatabaseObjectIdentifier `ddl:"identifier"`
-	Clone                      *Clone                   `ddl:"-"`
-	WithManagedAccess          *bool                    `ddl:"keyword" sql:"WITH MANAGED ACCESS"`
-	DataRetentionTimeInDays    *int                     `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int                     `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	DefaultDDLCollation        *string                  `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	Tag                        []TagAssociation         `ddl:"keyword,parentheses" sql:"TAG"`
-	Comment                    *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create            bool                     `ddl:"static" sql:"CREATE"`
+	OrReplace         *bool                    `ddl:"keyword" sql:"OR REPLACE"`
+	Transient         *bool                    `ddl:"keyword" sql:"TRANSIENT"`
+	schema            bool                     `ddl:"static" sql:"SCHEMA"`
+	IfNotExists       *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name              DatabaseObjectIdentifier `ddl:"identifier"`
+	Clone             *Clone                   `ddl:"-"`
+	WithManagedAccess *bool                    `ddl:"keyword" sql:"WITH MANAGED ACCESS"`
+
+	// Parameters
+	DataRetentionTimeInDays                 *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays              *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume                          *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                                 *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
+	PipeExecutionPaused                     *bool                       `ddl:"parameter" sql:"PIPE_EXECUTION_PAUSED"`
+	ReplaceInvalidCharacters                *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation                     *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy              *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                                *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                              *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	SuspendTaskAfterNumFailures             *int                        `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	TaskAutoRetryAttempts                   *int                        `ddl:"parameter" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
+	UserTaskManagedInitialWarehouseSize     *WarehouseSize              `ddl:"parameter" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskTimeoutMs                       *int                        `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	UserTaskMinimumTriggerIntervalInSeconds *int                        `ddl:"parameter" sql:"USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"`
+	QuotedIdentifiersIgnoreCase             *bool                       `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	EnableConsoleOutput                     *bool                       `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+
+	Comment *string          `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Tag     []TagAssociation `ddl:"keyword,parentheses" sql:"TAG"`
 }
 
 func (opts *CreateSchemaOptions) validate() error {
@@ -122,6 +159,12 @@ func (opts *CreateSchemaOptions) validate() error {
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateSchemaOptions", "IfNotExists", "OrReplace"))
+	}
+	if opts.ExternalVolume != nil && !ValidObjectIdentifier(opts.ExternalVolume) {
+		errs = append(errs, errInvalidIdentifier("CreateSchemaOptions", "ExternalVolume"))
+	}
+	if opts.Catalog != nil && !ValidObjectIdentifier(opts.Catalog) {
+		errs = append(errs, errInvalidIdentifier("CreateSchemaOptions", "Catalog"))
 	}
 	return errors.Join(errs...)
 }
@@ -144,16 +187,16 @@ func (v *schemas) Create(ctx context.Context, id DatabaseObjectIdentifier, opts 
 
 // AlterSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/alter-schema
 type AlterSchemaOptions struct {
-	alter    bool                     `ddl:"static" sql:"ALTER"`
-	schema   bool                     `ddl:"static" sql:"SCHEMA"`
-	IfExists *bool                    `ddl:"keyword" sql:"IF EXISTS"`
-	name     DatabaseObjectIdentifier `ddl:"identifier"`
-	NewName  DatabaseObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
-	SwapWith DatabaseObjectIdentifier `ddl:"identifier" sql:"SWAP WITH"`
-	Set      *SchemaSet               `ddl:"list,no_parentheses" sql:"SET"`
-	Unset    *SchemaUnset             `ddl:"list,no_parentheses" sql:"UNSET"`
-	SetTag   []TagAssociation         `ddl:"keyword" sql:"SET TAG"`
-	UnsetTag []ObjectIdentifier       `ddl:"keyword" sql:"UNSET TAG"`
+	alter    bool                      `ddl:"static" sql:"ALTER"`
+	schema   bool                      `ddl:"static" sql:"SCHEMA"`
+	IfExists *bool                     `ddl:"keyword" sql:"IF EXISTS"`
+	name     DatabaseObjectIdentifier  `ddl:"identifier"`
+	NewName  *DatabaseObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
+	SwapWith *DatabaseObjectIdentifier `ddl:"identifier" sql:"SWAP WITH"`
+	Set      *SchemaSet                `ddl:"list,no_parentheses" sql:"SET"`
+	Unset    *SchemaUnset              `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTag   []TagAssociation          `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag []ObjectIdentifier        `ddl:"keyword" sql:"UNSET TAG"`
 	// One of
 	EnableManagedAccess  *bool `ddl:"keyword" sql:"ENABLE MANAGED ACCESS"`
 	DisableManagedAccess *bool `ddl:"keyword" sql:"DISABLE MANAGED ACCESS"`
@@ -167,8 +210,14 @@ func (opts *AlterSchemaOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if opts.NewName != nil && !ValidObjectIdentifier(opts.NewName) {
+		errs = append(errs, errInvalidIdentifier("AlterSchemaOptions", "NewName"))
+	}
+	if opts.SwapWith != nil && !ValidObjectIdentifier(opts.SwapWith) {
+		errs = append(errs, errInvalidIdentifier("AlterSchemaOptions", "SwapWith"))
+	}
 	if !exactlyOneValueSet(opts.NewName, opts.SwapWith, opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.EnableManagedAccess, opts.DisableManagedAccess) {
-		errs = append(errs, errOneOf("NewName", "SwapWith", "Set", "Unset", "SetTag", "UnsetTag", "EnableManagedAccess", "DisableManagedAccess"))
+		errs = append(errs, errExactlyOneOf("AlterSchemaOptions", "NewName", "SwapWith", "Set", "Unset", "SetTag", "UnsetTag", "EnableManagedAccess", "DisableManagedAccess"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
@@ -184,29 +233,146 @@ func (opts *AlterSchemaOptions) validate() error {
 }
 
 type SchemaSet struct {
-	DataRetentionTimeInDays    *int    `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *int    `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	DefaultDDLCollation        *string `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
-	Comment                    *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	// Parameters
+	DataRetentionTimeInDays                 *int                        `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays              *int                        `ddl:"parameter" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume                          *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"EXTERNAL_VOLUME"`
+	Catalog                                 *AccountObjectIdentifier    `ddl:"identifier,equals" sql:"CATALOG"`
+	PipeExecutionPaused                     *bool                       `ddl:"parameter" sql:"PIPE_EXECUTION_PAUSED"`
+	ReplaceInvalidCharacters                *bool                       `ddl:"parameter" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation                     *string                     `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy              *StorageSerializationPolicy `ddl:"parameter" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                                *LogLevel                   `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	TraceLevel                              *TraceLevel                 `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	SuspendTaskAfterNumFailures             *int                        `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	TaskAutoRetryAttempts                   *int                        `ddl:"parameter" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
+	UserTaskManagedInitialWarehouseSize     *WarehouseSize              `ddl:"parameter" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskTimeoutMs                       *int                        `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	UserTaskMinimumTriggerIntervalInSeconds *int                        `ddl:"parameter" sql:"USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"`
+	QuotedIdentifiersIgnoreCase             *bool                       `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	EnableConsoleOutput                     *bool                       `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+
+	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 func (v *SchemaSet) validate() error {
-	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-		return errAtLeastOneOf("SchemaSet", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDDLCollation", "Comment")
+	var errs []error
+	if v.ExternalVolume != nil && !ValidObjectIdentifier(v.ExternalVolume) {
+		errs = append(errs, errInvalidIdentifier("SchemaSet", "ExternalVolume"))
 	}
-	return nil
+	if v.Catalog != nil && !ValidObjectIdentifier(v.Catalog) {
+		errs = append(errs, errInvalidIdentifier("SchemaSet", "Catalog"))
+	}
+	if !anyValueSet(
+		v.DataRetentionTimeInDays,
+		v.MaxDataExtensionTimeInDays,
+		v.ExternalVolume,
+		v.Catalog,
+		v.ReplaceInvalidCharacters,
+		v.DefaultDDLCollation,
+		v.StorageSerializationPolicy,
+		v.LogLevel,
+		v.TraceLevel,
+		v.SuspendTaskAfterNumFailures,
+		v.TaskAutoRetryAttempts,
+		v.UserTaskManagedInitialWarehouseSize,
+		v.UserTaskTimeoutMs,
+		v.UserTaskMinimumTriggerIntervalInSeconds,
+		v.QuotedIdentifiersIgnoreCase,
+		v.EnableConsoleOutput,
+		v.PipeExecutionPaused,
+		v.Comment,
+	) {
+		errs = append(errs, errAtLeastOneOf(
+			"SchemaSet",
+			"DataRetentionTimeInDays",
+			"MaxDataExtensionTimeInDays",
+			"ExternalVolume",
+			"Catalog",
+			"ReplaceInvalidCharacters",
+			"DefaultDDLCollation",
+			"StorageSerializationPolicy",
+			"LogLevel",
+			"TraceLevel",
+			"SuspendTaskAfterNumFailures",
+			"TaskAutoRetryAttempts",
+			"UserTaskManagedInitialWarehouseSize",
+			"UserTaskTimeoutMs",
+			"UserTaskMinimumTriggerIntervalInSeconds",
+			"QuotedIdentifiersIgnoreCase",
+			"EnableConsoleOutput",
+			"PipeExecutionPaused",
+			"Comment",
+		))
+	}
+	return errors.Join(errs...)
 }
 
 type SchemaUnset struct {
-	DataRetentionTimeInDays    *bool `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
-	MaxDataExtensionTimeInDays *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
-	DefaultDDLCollation        *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
-	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
+	// Parameters
+	DataRetentionTimeInDays                 *bool `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
+	MaxDataExtensionTimeInDays              *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`
+	ExternalVolume                          *bool `ddl:"keyword" sql:"EXTERNAL_VOLUME"`
+	Catalog                                 *bool `ddl:"keyword" sql:"CATALOG"`
+	PipeExecutionPaused                     *bool `ddl:"keyword" sql:"PIPE_EXECUTION_PAUSED"`
+	ReplaceInvalidCharacters                *bool `ddl:"keyword" sql:"REPLACE_INVALID_CHARACTERS"`
+	DefaultDDLCollation                     *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
+	StorageSerializationPolicy              *bool `ddl:"keyword" sql:"STORAGE_SERIALIZATION_POLICY"`
+	LogLevel                                *bool `ddl:"keyword" sql:"LOG_LEVEL"`
+	TraceLevel                              *bool `ddl:"keyword" sql:"TRACE_LEVEL"`
+	SuspendTaskAfterNumFailures             *bool `ddl:"keyword" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	TaskAutoRetryAttempts                   *bool `ddl:"keyword" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
+	UserTaskManagedInitialWarehouseSize     *bool `ddl:"keyword" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
+	UserTaskTimeoutMs                       *bool `ddl:"keyword" sql:"USER_TASK_TIMEOUT_MS"`
+	UserTaskMinimumTriggerIntervalInSeconds *bool `ddl:"keyword" sql:"USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"`
+	QuotedIdentifiersIgnoreCase             *bool `ddl:"keyword" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
+	EnableConsoleOutput                     *bool `ddl:"keyword" sql:"ENABLE_CONSOLE_OUTPUT"`
+
+	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
 func (v *SchemaUnset) validate() error {
-	if !anyValueSet(v.DataRetentionTimeInDays, v.MaxDataExtensionTimeInDays, v.DefaultDDLCollation, v.Comment) {
-		return errAtLeastOneOf("SchemaUnset", "DataRetentionTimeInDays", "MaxDataExtensionTimeInDays", "DefaultDDLCollation", "Comment")
+	if !anyValueSet(
+		v.DataRetentionTimeInDays,
+		v.MaxDataExtensionTimeInDays,
+		v.ExternalVolume,
+		v.Catalog,
+		v.ReplaceInvalidCharacters,
+		v.DefaultDDLCollation,
+		v.StorageSerializationPolicy,
+		v.LogLevel,
+		v.TraceLevel,
+		v.SuspendTaskAfterNumFailures,
+		v.TaskAutoRetryAttempts,
+		v.UserTaskManagedInitialWarehouseSize,
+		v.UserTaskTimeoutMs,
+		v.UserTaskMinimumTriggerIntervalInSeconds,
+		v.QuotedIdentifiersIgnoreCase,
+		v.EnableConsoleOutput,
+		v.PipeExecutionPaused,
+		v.Comment,
+	) {
+		return errAtLeastOneOf(
+			"SchemaUnset",
+			"DataRetentionTimeInDays",
+			"MaxDataExtensionTimeInDays",
+			"ExternalVolume",
+			"Catalog",
+			"ReplaceInvalidCharacters",
+			"DefaultDDLCollation",
+			"StorageSerializationPolicy",
+			"LogLevel",
+			"TraceLevel",
+			"SuspendTaskAfterNumFailures",
+			"TaskAutoRetryAttempts",
+			"UserTaskManagedInitialWarehouseSize",
+			"UserTaskTimeoutMs",
+			"UserTaskMinimumTriggerIntervalInSeconds",
+			"QuotedIdentifiersIgnoreCase",
+			"EnableConsoleOutput",
+			"PipeExecutionPaused",
+			"Comment",
+		)
 	}
 	return nil
 }
@@ -343,9 +509,11 @@ func (v *schemas) Describe(ctx context.Context, id DatabaseObjectIdentifier) ([]
 }
 
 type SchemaIn struct {
-	Account  *bool                   `ddl:"keyword" sql:"ACCOUNT"`
-	Database *bool                   `ddl:"keyword" sql:"DATABASE"`
-	Name     AccountObjectIdentifier `ddl:"identifier"`
+	Account            *bool                   `ddl:"keyword" sql:"ACCOUNT"`
+	Database           *bool                   `ddl:"keyword" sql:"DATABASE"`
+	Application        *bool                   `ddl:"keyword" sql:"APPLICATION"`
+	ApplicationPackage *bool                   `ddl:"keyword" sql:"APPLICATION_PACKAGE"`
+	Name               AccountObjectIdentifier `ddl:"identifier"`
 }
 
 // ShowSchemaOptions based on https://docs.snowflake.com/en/sql-reference/sql/show-schemas
@@ -400,14 +568,17 @@ func (v *schemas) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*S
 	if err != nil {
 		return nil, err
 	}
-	for _, s := range schemas {
-		if s.ID() == id {
-			return &s, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return collections.FindFirst(schemas, func(r Schema) bool { return r.Name == id.Name() })
 }
 
 func (v *schemas) Use(ctx context.Context, id DatabaseObjectIdentifier) error {
 	return v.client.Sessions.UseSchema(ctx, id)
+}
+
+func (v *schemas) ShowParameters(ctx context.Context, id DatabaseObjectIdentifier) ([]*Parameter, error) {
+	return v.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
+		In: &ParametersIn{
+			Schema: id,
+		},
+	})
 }

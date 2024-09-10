@@ -10,46 +10,66 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO [SNOW-1501905]: add possibility to have reference to another object (e.g. WithResourceMonitorReference); new config.Variable impl?
+// TODO [SNOW-1501905]: generate With/SetDependsOn for the resources to preserve builder pattern
+// TODO [SNOW-1501905]: add a convenience method to use multiple configs from multiple models
+
 // ResourceModel is the base interface all of our config models will implement.
-// To allow easy implementation, resourceModelMeta can be embedded inside the struct (and the struct will automatically implement it).
+// To allow easy implementation, ResourceModelMeta can be embedded inside the struct (and the struct will automatically implement it).
 type ResourceModel interface {
 	Resource() resources.Resource
 	ResourceName() string
 	SetResourceName(name string)
+	ResourceReference() string
+	DependsOn() []string
+	SetDependsOn(values []string)
 }
 
-type resourceModelMeta struct {
-	name     string
-	resource resources.Resource
+type ResourceModelMeta struct {
+	name      string
+	resource  resources.Resource
+	dependsOn []string
 }
 
-func (m *resourceModelMeta) Resource() resources.Resource {
+func (m *ResourceModelMeta) Resource() resources.Resource {
 	return m.resource
 }
 
-func (m *resourceModelMeta) ResourceName() string {
+func (m *ResourceModelMeta) ResourceName() string {
 	return m.name
 }
 
-func (m *resourceModelMeta) SetResourceName(name string) {
+func (m *ResourceModelMeta) SetResourceName(name string) {
 	m.name = name
+}
+
+func (m *ResourceModelMeta) ResourceReference() string {
+	return fmt.Sprintf(`%s.%s`, m.resource, m.name)
+}
+
+func (m *ResourceModelMeta) DependsOn() []string {
+	return m.dependsOn
+}
+
+func (m *ResourceModelMeta) SetDependsOn(values []string) {
+	m.dependsOn = values
 }
 
 // DefaultResourceName is exported to allow assertions against the resources using the default name.
 const DefaultResourceName = "test"
 
-func defaultMeta(resource resources.Resource) *resourceModelMeta {
-	return &resourceModelMeta{name: DefaultResourceName, resource: resource}
+func DefaultMeta(resource resources.Resource) *ResourceModelMeta {
+	return &ResourceModelMeta{name: DefaultResourceName, resource: resource}
 }
 
-func meta(resourceName string, resource resources.Resource) *resourceModelMeta {
-	return &resourceModelMeta{name: resourceName, resource: resource}
+func Meta(resourceName string, resource resources.Resource) *ResourceModelMeta {
+	return &ResourceModelMeta{name: resourceName, resource: resource}
 }
 
 // FromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
 // Current implementation is really straightforward but it could be improved and tested. It may not handle all cases (like objects, lists, sets) correctly.
-// TODO: use reflection to build config directly from model struct (or some other different way)
-// TODO: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
+// TODO [SNOW-1501905]: use reflection to build config directly from model struct (or some other different way)
+// TODO [SNOW-1501905]: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
 func FromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
@@ -66,9 +86,24 @@ func FromModel(t *testing.T, model ResourceModel) string {
 	for k, v := range objMap {
 		sb.WriteString(fmt.Sprintf("\t%s = %s\n", k, v))
 	}
+	if len(model.DependsOn()) > 0 {
+		sb.WriteString(fmt.Sprintf("\tdepends_on = [%s]\n", strings.Join(model.DependsOn(), ", ")))
+	}
 	sb.WriteString(`}`)
 	sb.WriteRune('\n')
 	s := sb.String()
 	t.Logf("Generated config:\n%s", s)
 	return s
+}
+
+type nullVariable struct{}
+
+// MarshalJSON returns the JSON encoding of nullVariable.
+func (v nullVariable) MarshalJSON() ([]byte, error) {
+	return json.Marshal(nil)
+}
+
+// NullVariable returns nullVariable which implements Variable.
+func NullVariable() nullVariable {
+	return nullVariable{}
 }

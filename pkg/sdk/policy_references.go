@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 )
 
 var _ convertibleRow[PolicyReference] = new(policyReferenceDBRow)
@@ -32,16 +34,55 @@ const (
 	PolicyEntityDomainView        PolicyEntityDomain = "VIEW"
 )
 
+var AllPolicyEntityDomains = []PolicyEntityDomain{
+	PolicyEntityDomainAccount,
+	PolicyEntityDomainIntegration,
+	PolicyEntityDomainTable,
+	PolicyEntityDomainTag,
+	PolicyEntityDomainUser,
+	PolicyEntityDomainView,
+}
+
+func ToPolicyEntityDomain(s string) (PolicyEntityDomain, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(PolicyEntityDomainAccount):
+		return PolicyEntityDomainAccount, nil
+	case string(PolicyEntityDomainIntegration):
+		return PolicyEntityDomainIntegration, nil
+	case string(PolicyEntityDomainTable):
+		return PolicyEntityDomainTable, nil
+	case string(PolicyEntityDomainTag):
+		return PolicyEntityDomainTag, nil
+	case string(PolicyEntityDomainUser):
+		return PolicyEntityDomainUser, nil
+	case string(PolicyEntityDomainView):
+		return PolicyEntityDomainView, nil
+	default:
+		return "", fmt.Errorf("invalid PolicyEntityDomain: %s", s)
+	}
+}
+
 type policyReferenceFunctionArguments struct {
 	refEntityName   []ObjectIdentifier  `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_NAME"`
 	refEntityDomain *PolicyEntityDomain `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_DOMAIN"`
 }
 
+type PolicyKind string
+
+const (
+	PolicyKindAggregationPolicy PolicyKind = "AGGREGATION_POLICY"
+	PolicyKindRowAccessPolicy   PolicyKind = "ROW_ACCESS_POLICY"
+	PolicyKindPasswordPolicy    PolicyKind = "PASSWORD_POLICY"
+	PolicyKindMaskingPolicy     PolicyKind = "MASKING_POLICY"
+	PolicyKindProjectionPolicy  PolicyKind = "PROJECTION_POLICY"
+)
+
 type PolicyReference struct {
 	PolicyDb          *string
 	PolicySchema      *string
 	PolicyName        string
-	PolicyKind        string
+	PolicyKind        PolicyKind
 	RefDatabaseName   *string
 	RefSchemaName     *string
 	RefEntityName     string
@@ -74,7 +115,7 @@ type policyReferenceDBRow struct {
 func (row policyReferenceDBRow) convert() *PolicyReference {
 	policyReference := PolicyReference{
 		PolicyName:      row.PolicyName,
-		PolicyKind:      row.PolicyKind,
+		PolicyKind:      PolicyKind(row.PolicyKind),
 		RefEntityName:   row.RefEntityName,
 		RefEntityDomain: row.RefEntityDomain,
 	}
