@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/internal/collections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -103,6 +103,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - set authentication methods", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -117,6 +118,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - set client types", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -134,6 +136,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 		})
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -148,6 +151,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - set mfa authentication methods", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -162,6 +166,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - set mfa enrollment", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -176,6 +181,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - set comment", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -190,6 +196,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - unset authentication methods", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -204,6 +211,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - unset client types", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -218,6 +226,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - unset security integrations", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -232,6 +241,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - unset mfa authentication methods", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -246,6 +256,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - unset mfa enrollment", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -260,6 +271,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 	t.Run("Alter - unset comment", func(t *testing.T) {
 		req := defaultCreateRequest()
 		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
@@ -273,7 +285,8 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 
 	t.Run("Alter - rename", func(t *testing.T) {
 		req := defaultCreateRequest()
-		client.AuthenticationPolicies.Create(ctx, req)
+		err := client.AuthenticationPolicies.Create(ctx, req)
+		require.NoError(t, err)
 		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
 		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -319,7 +332,8 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 
 	t.Run("Describe", func(t *testing.T) {
 		request := defaultCreateRequest()
-		client.AuthenticationPolicies.Create(ctx, request)
+		err := client.AuthenticationPolicies.Create(ctx, request)
+		require.NoError(t, err)
 
 		desc, err := client.AuthenticationPolicies.Describe(ctx, request.GetName())
 		require.NoError(t, err)

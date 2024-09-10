@@ -114,12 +114,12 @@ type DescribeAuthenticationPolicyOptions struct {
 	name                 SchemaObjectIdentifier `ddl:"identifier"`
 }
 type describeAuthenticationPolicyDBRow struct {
-	Property  string `db:"property"`
-	Value string `db:"value"`
+	Property string `db:"property"`
+	Value    string `db:"value"`
 }
 type AuthenticationPolicyDescription struct {
-	Property  string
-	Value string
+	Property string
+	Value    string
 }
 
 func (v *AuthenticationPolicy) ID() SchemaObjectIdentifier {

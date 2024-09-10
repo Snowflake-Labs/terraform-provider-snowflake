@@ -79,7 +79,6 @@ func (r *AlterAuthenticationPolicyRequest) toOpts() *AlterAuthenticationPolicyOp
 	}
 
 	if r.Set != nil {
-
 		opts.Set = &AuthenticationPolicySet{
 			AuthenticationMethods:    r.Set.AuthenticationMethods,
 			MfaAuthenticationMethods: r.Set.MfaAuthenticationMethods,
@@ -88,11 +87,9 @@ func (r *AlterAuthenticationPolicyRequest) toOpts() *AlterAuthenticationPolicyOp
 			SecurityIntegrations:     r.Set.SecurityIntegrations,
 			Comment:                  r.Set.Comment,
 		}
-
 	}
 
 	if r.Unset != nil {
-
 		opts.Unset = &AuthenticationPolicyUnset{
 			ClientTypes:              r.Unset.ClientTypes,
 			AuthenticationMethods:    r.Unset.AuthenticationMethods,
@@ -101,7 +98,6 @@ func (r *AlterAuthenticationPolicyRequest) toOpts() *AlterAuthenticationPolicyOp
 			MfaEnrollment:            r.Unset.MfaEnrollment,
 			Comment:                  r.Unset.Comment,
 		}
-
 	}
 
 	return opts
@@ -147,7 +143,7 @@ func (r *DescribeAuthenticationPolicyRequest) toOpts() *DescribeAuthenticationPo
 
 func (r describeAuthenticationPolicyDBRow) convert() *AuthenticationPolicyDescription {
 	return &AuthenticationPolicyDescription{
-		Property:  r.Property,
-		Value: r.Value,
+		Property: r.Property,
+		Value:    r.Value,
 	}
 }
