@@ -42,7 +42,7 @@ func (v *authenticationPolicies) ShowByID(ctx context.Context, id SchemaObjectId
 	if err != nil {
 		return nil, err
 	}
-	return collections.FindOne(authenticationPolicies, func(r AuthenticationPolicy) bool { return r.Name == id.Name() })
+	return collections.FindFirst(authenticationPolicies, func(r AuthenticationPolicy) bool { return r.Name == id.Name() })
 }
 
 func (v *authenticationPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]AuthenticationPolicyDescription, error) {
