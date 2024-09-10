@@ -1,21 +1,17 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/stretchr/testify/require"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -23,8 +19,7 @@ func TestAcc_AccountRole_Basic(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
-	currentRole, err := acc.Client(t).ContextFunctions.CurrentRole(context.Background())
-	require.NoError(t, err)
+	currentRole := acc.TestClient().Context.CurrentRole(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -135,8 +130,7 @@ func TestAcc_AccountRole_Complete(t *testing.T) {
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	newComment := random.Comment()
 
-	currentRole, err := acc.Client(t).ContextFunctions.CurrentRole(context.Background())
-	require.NoError(t, err)
+	currentRole := acc.TestClient().Context.CurrentRole(t)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

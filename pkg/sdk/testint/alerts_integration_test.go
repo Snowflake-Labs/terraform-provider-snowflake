@@ -30,7 +30,7 @@ func TestInt_AlertsShow(t *testing.T) {
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowAlertOptions{
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
@@ -46,7 +46,7 @@ func TestInt_AlertsShow(t *testing.T) {
 				Pattern: sdk.String(alertTest.Name),
 			},
 			In: &sdk.In{
-				Database: testDb(t).ID(),
+				Database: testClientHelper().Ids.DatabaseId(),
 			},
 		}
 		alerts, err := client.Alerts.Show(ctx, showOptions)
@@ -69,7 +69,7 @@ func TestInt_AlertsShow(t *testing.T) {
 	t.Run("when limiting the number of results", func(t *testing.T) {
 		showOptions := &sdk.ShowAlertOptions{
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 			Limit: sdk.Int(1),
 		}
@@ -90,7 +90,7 @@ func TestInt_AlertCreate(t *testing.T) {
 		condition := "SELECT 1"
 		action := "SELECT 1"
 		comment := random.Comment()
-		err := client.Alerts.Create(ctx, id, testWarehouse(t).ID(), schedule, condition, action, &sdk.CreateAlertOptions{
+		err := client.Alerts.Create(ctx, id, testClientHelper().Ids.WarehouseId(), schedule, condition, action, &sdk.CreateAlertOptions{
 			OrReplace:   sdk.Bool(true),
 			IfNotExists: sdk.Bool(false),
 			Comment:     sdk.String(comment),
@@ -99,7 +99,7 @@ func TestInt_AlertCreate(t *testing.T) {
 		alertDetails, err := client.Alerts.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, name, alertDetails.Name)
-		assert.Equal(t, testWarehouse(t).Name, alertDetails.Warehouse)
+		assert.Equal(t, testClientHelper().Ids.WarehouseId().Name(), alertDetails.Warehouse)
 		assert.Equal(t, schedule, alertDetails.Schedule)
 		assert.Equal(t, comment, *alertDetails.Comment)
 		assert.Equal(t, condition, alertDetails.Condition)
@@ -110,7 +110,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -126,7 +126,7 @@ func TestInt_AlertCreate(t *testing.T) {
 		condition := "SELECT 1"
 		action := "SELECT 1"
 		comment := random.Comment()
-		err := client.Alerts.Create(ctx, id, testWarehouse(t).ID(), schedule, condition, action, &sdk.CreateAlertOptions{
+		err := client.Alerts.Create(ctx, id, testClientHelper().Ids.WarehouseId(), schedule, condition, action, &sdk.CreateAlertOptions{
 			OrReplace:   sdk.Bool(false),
 			IfNotExists: sdk.Bool(true),
 			Comment:     sdk.String(comment),
@@ -135,7 +135,7 @@ func TestInt_AlertCreate(t *testing.T) {
 		alertDetails, err := client.Alerts.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, name, alertDetails.Name)
-		assert.Equal(t, testWarehouse(t).Name, alertDetails.Warehouse)
+		assert.Equal(t, testClientHelper().Ids.WarehouseId().Name(), alertDetails.Warehouse)
 		assert.Equal(t, schedule, alertDetails.Schedule)
 		assert.Equal(t, comment, *alertDetails.Comment)
 		assert.Equal(t, condition, alertDetails.Condition)
@@ -146,7 +146,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -161,12 +161,12 @@ func TestInt_AlertCreate(t *testing.T) {
 		schedule := "USING CRON * * * * TUE,THU UTC"
 		condition := "SELECT 1"
 		action := "SELECT 1"
-		err := client.Alerts.Create(ctx, id, testWarehouse(t).ID(), schedule, condition, action, nil)
+		err := client.Alerts.Create(ctx, id, testClientHelper().Ids.WarehouseId(), schedule, condition, action, nil)
 		require.NoError(t, err)
 		alertDetails, err := client.Alerts.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, name, alertDetails.Name)
-		assert.Equal(t, testWarehouse(t).Name, alertDetails.Warehouse)
+		assert.Equal(t, testClientHelper().Ids.WarehouseId().Name(), alertDetails.Warehouse)
 		assert.Equal(t, schedule, alertDetails.Schedule)
 		assert.Equal(t, condition, alertDetails.Condition)
 		assert.Equal(t, action, alertDetails.Action)
@@ -176,7 +176,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -199,12 +199,12 @@ func TestInt_AlertCreate(t *testing.T) {
 						2
 				end
 		`
-		err := client.Alerts.Create(ctx, id, testWarehouse(t).ID(), schedule, condition, action, nil)
+		err := client.Alerts.Create(ctx, id, testClientHelper().Ids.WarehouseId(), schedule, condition, action, nil)
 		require.NoError(t, err)
 		alertDetails, err := client.Alerts.Describe(ctx, id)
 		require.NoError(t, err)
 		assert.Equal(t, name, alertDetails.Name)
-		assert.Equal(t, testWarehouse(t).Name, alertDetails.Warehouse)
+		assert.Equal(t, testClientHelper().Ids.WarehouseId().Name(), alertDetails.Warehouse)
 		assert.Equal(t, schedule, alertDetails.Schedule)
 		assert.Equal(t, condition, alertDetails.Condition)
 		assert.Equal(t, strings.TrimSpace(action), alertDetails.Action)
@@ -214,7 +214,7 @@ func TestInt_AlertCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -265,7 +265,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -289,7 +289,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -309,7 +309,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -332,7 +332,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -350,7 +350,7 @@ func TestInt_AlertAlter(t *testing.T) {
 				Pattern: sdk.String(alert.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -382,7 +382,7 @@ func TestInt_AlertsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	warehouseTest := testWarehouse(t)
+	warehouseId := testClientHelper().Ids.WarehouseId()
 	cleanupAlertHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
@@ -398,7 +398,7 @@ func TestInt_AlertsShowByID(t *testing.T) {
 		t.Helper()
 
 		schedule, condition, action := "USING CRON * * * * * UTC", "SELECT 1", "SELECT 1"
-		err := client.Alerts.Create(ctx, id, warehouseTest.ID(), schedule, condition, action, &sdk.CreateAlertOptions{})
+		err := client.Alerts.Create(ctx, id, warehouseId, schedule, condition, action, &sdk.CreateAlertOptions{})
 		require.NoError(t, err)
 		t.Cleanup(cleanupAlertHandle(t, id))
 	}

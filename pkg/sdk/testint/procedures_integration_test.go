@@ -564,7 +564,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
+	databaseId, schemaId := testClientHelper().Ids.DatabaseId(), testClientHelper().Ids.SchemaId()
 	cleanupProcedureHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
 		return func() {
 			err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id))
@@ -589,7 +589,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	}
 
 	// create a employees table
-	tid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "employees")
+	tid := sdk.NewSchemaObjectIdentifier(databaseId.Name(), schemaId.Name(), "employees")
 	createTableHandle(t, tid)
 
 	createProcedureForSQLHandle := func(t *testing.T, cleanup bool) *sdk.Procedure {
@@ -633,7 +633,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	t.Run("call procedure for Java: returns table", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#omitting-return-column-names-and-types
 		name := "filter_by_role"
-		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, name, sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseId.Name(), schemaId.Name(), name, sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
 
 		definition := `
 		import com.snowflake.snowpark_java.*;
@@ -668,7 +668,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	t.Run("call procedure for Scala: returns table", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-scala#omitting-return-column-names-and-types
 		name := "filter_by_role"
-		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, name, sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseId.Name(), schemaId.Name(), name, sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
 
 		definition := `
 		import com.snowflake.snowpark.functions._
@@ -702,7 +702,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	t.Run("call procedure for Javascript", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript#basic-examples
 		name := "stproc1"
-		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, name, sdk.DataTypeFloat)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseId.Name(), schemaId.Name(), name, sdk.DataTypeFloat)
 
 		definition := `
 		var sql_command = "INSERT INTO stproc_test_table1 (num_col1) VALUES (" + FLOAT_PARAM1 + ")";
@@ -732,7 +732,7 @@ func TestInt_CallProcedure(t *testing.T) {
 	t.Run("call procedure for Javascript: no arguments", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript#basic-examples
 		name := "sp_pi"
-		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, name)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseId.Name(), schemaId.Name(), name)
 
 		definition := `return 3.1415926;`
 		request := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), sdk.DataTypeFloat, definition).WithNotNull(true).WithOrReplace(true)
@@ -746,7 +746,7 @@ func TestInt_CallProcedure(t *testing.T) {
 
 	t.Run("call procedure for Python: returns table", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-python#omitting-return-column-names-and-types
-		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseTest.Name, schemaTest.Name, "filterByRole", sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
+		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseId.Name(), schemaId.Name(), "filterByRole", sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
 
 		definition := `
 from snowflake.snowpark.functions import col
@@ -776,7 +776,7 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	databaseTest, schemaTest := testDb(t), testSchema(t)
+	databaseId, schemaId := testClientHelper().Ids.DatabaseId(), testClientHelper().Ids.SchemaId()
 	createTableHandle := func(t *testing.T, table sdk.SchemaObjectIdentifier) {
 		t.Helper()
 
@@ -791,7 +791,7 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 	}
 
 	// create a employees table
-	tid := sdk.NewSchemaObjectIdentifier(databaseTest.Name, schemaTest.Name, "employees")
+	tid := sdk.NewSchemaObjectIdentifier(databaseId.Name(), schemaId.Name(), "employees")
 	createTableHandle(t, tid)
 
 	t.Run("create and call procedure for Java: returns table", func(t *testing.T) {

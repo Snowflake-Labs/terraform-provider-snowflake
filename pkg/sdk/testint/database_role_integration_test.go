@@ -200,7 +200,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role1 := createDatabaseRole(t)
 		role2 := createDatabaseRole(t)
 
-		showRequest := sdk.NewShowDatabaseRoleRequest(testDb(t).ID())
+		showRequest := sdk.NewShowDatabaseRoleRequest(testClientHelper().Ids.DatabaseId())
 		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 		require.NoError(t, err)
 
@@ -213,7 +213,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role1 := createDatabaseRole(t)
 		role2 := createDatabaseRole(t)
 
-		showRequest := sdk.NewShowDatabaseRoleRequest(testDb(t).ID()).WithLike(sdk.Like{Pattern: &role1.Name})
+		showRequest := sdk.NewShowDatabaseRoleRequest(testClientHelper().Ids.DatabaseId()).WithLike(sdk.Like{Pattern: &role1.Name})
 		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 
 		require.NoError(t, err)
@@ -233,7 +233,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		role2, cleanupRole2 := testClientHelper().DatabaseRole.CreateDatabaseRoleWithName(t, roleId2)
 		t.Cleanup(cleanupRole2)
 
-		showRequest := sdk.NewShowDatabaseRoleRequest(testDb(t).ID()).
+		showRequest := sdk.NewShowDatabaseRoleRequest(testClientHelper().Ids.DatabaseId()).
 			WithLike(sdk.Like{
 				Pattern: sdk.Pointer(prefix + "%"),
 			}).
@@ -250,7 +250,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 	})
 
 	t.Run("show database_role: no matches", func(t *testing.T) {
-		showRequest := sdk.NewShowDatabaseRoleRequest(testDb(t).ID()).WithLike(sdk.Like{Pattern: sdk.Pointer("non-existent")})
+		showRequest := sdk.NewShowDatabaseRoleRequest(testClientHelper().Ids.DatabaseId()).WithLike(sdk.Like{Pattern: sdk.Pointer("non-existent")})
 		returnedDatabaseRoles, err := client.DatabaseRoles.Show(ctx, showRequest)
 
 		require.NoError(t, err)
@@ -313,7 +313,7 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		share, shareCleanup := testClientHelper().Share.CreateShare(t)
 		t.Cleanup(shareCleanup)
 
-		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{Database: testDb(t).ID()}, share.ID())
+		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{Database: testClientHelper().Ids.DatabaseId()}, share.ID())
 		require.NoError(t, err)
 
 		grantRequest := sdk.NewGrantDatabaseRoleToShareRequest(roleId, share.ID())

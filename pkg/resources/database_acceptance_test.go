@@ -1097,7 +1097,7 @@ resource "snowflake_database" "test" {
 
 func TestAcc_Database_WithReplication(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	secondaryAccountLocator := acc.SecondaryClient(t).GetAccountLocator()
+	secondaryAccountLocator := acc.SecondaryTestClient().GetAccountLocator()
 	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
 
 	resource.Test(t, resource.TestCase{

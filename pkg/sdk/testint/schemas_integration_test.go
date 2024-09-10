@@ -256,7 +256,7 @@ func TestInt_Schemas(t *testing.T) {
 		// new schema created on purpose
 		schema, _ := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(func() {
-			err := client.Sessions.UseSchema(ctx, testSchema(t).ID())
+			err := client.Sessions.UseSchema(ctx, testClientHelper().Ids.SchemaId())
 			require.NoError(t, err)
 		})
 		newID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()

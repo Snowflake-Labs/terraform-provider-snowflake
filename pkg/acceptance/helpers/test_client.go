@@ -26,6 +26,7 @@ type TestClient struct {
 	DynamicTable                 *DynamicTableClient
 	ExternalAccessIntegration    *ExternalAccessIntegrationClient
 	ExternalFunction             *ExternalFunctionClient
+	ExternalTable                *ExternalTableClient
 	ExternalVolume               *ExternalVolumeClient
 	FailoverGroup                *FailoverGroupClient
 	FileFormat                   *FileFormatClient
@@ -89,6 +90,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		DynamicTable:                 NewDynamicTableClient(context, idsGenerator),
 		ExternalAccessIntegration:    NewExternalAccessIntegrationClient(context, idsGenerator),
 		ExternalFunction:             NewExternalFunctionClient(context, idsGenerator),
+		ExternalTable:                NewExternalTableClient(context, idsGenerator),
 		ExternalVolume:               NewExternalVolumeClient(context, idsGenerator),
 		FailoverGroup:                NewFailoverGroupClient(context, idsGenerator),
 		FileFormat:                   NewFileFormatClient(context, idsGenerator),
@@ -128,4 +130,8 @@ type TestClientContext struct {
 	schema           string
 	warehouse        string
 	testObjectSuffix string
+}
+
+func (c *TestClient) GetAccountLocator() string {
+	return c.context.client.GetAccountLocator()
 }
