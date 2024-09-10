@@ -47,6 +47,14 @@ func (c *RowAccessPolicyClient) CreateRowAccessPolicyWithDataType(t *testing.T, 
 	return rowAccessPolicy, c.DropRowAccessPolicyFunc(t, id)
 }
 
+func (c *RowAccessPolicyClient) Alter(t *testing.T, req sdk.AlterRowAccessPolicyRequest) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, &req)
+	require.NoError(t, err)
+}
+
 func (c *RowAccessPolicyClient) DropRowAccessPolicyFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()

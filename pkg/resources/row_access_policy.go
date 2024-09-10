@@ -11,45 +11,93 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var rowAccessPolicySchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the row access policy; must be unique for the database and schema in which the row access policy is created.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      blocklistedCharactersFieldDescription("Specifies the identifier for the row access policy; must be unique for the database and schema in which the row access policy is created."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The database in which to create the row access policy.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      blocklistedCharactersFieldDescription("The database in which to create the row access policy."),
+		ForceNew:         true,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The schema in which to create the row access policy.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      blocklistedCharactersFieldDescription("The schema in which to create the row access policy."),
+		ForceNew:         true,
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
-	// TODO [SNOW-1020074]: Implement DiffSuppressFunc and test after https://github.com/hashicorp/terraform-plugin-sdk/issues/477 is solved.
-	"signature": {
-		Type:        schema.TypeMap,
-		Elem:        &schema.Schema{Type: schema.TypeString},
+	"argument": {
+		Type: schema.TypeList,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The argument name",
+					ForceNew:    true,
+				},
+				// TODO(SNOW-1596962): Fully support VECTOR data type sdk.ParseFunctionArgumentsFromString could be a base for another function that takes argument names into consideration.
+				"type": {
+					Type:     schema.TypeString,
+					Required: true,
+					DiffSuppressFunc: func(key, oldValue, newValue string, _ *schema.ResourceData) bool {
+						res := NormalizeAndCompare(sdk.ToDataType)(key, oldValue, newValue, nil)
+						return res
+					},
+					ValidateDiagFunc: sdkValidation(sdk.ToDataType),
+					Description:      "The argument type",
+					ForceNew:         true,
+				},
+			},
+		},
 		Required:    true,
+		Description: "List of the arguments for the row access policy. A signature specifies a set of attributes that must be considered to determine whether the row is accessible. The attribute values come from the database object (e.g. table or view) to be protected by the row access policy. If any argument name or type is changed, the resource is recreated.",
 		ForceNew:    true,
-		Description: "Specifies signature (arguments) for the row access policy (uppercase and sorted to avoid recreation of resource). A signature specifies a set of attributes that must be considered to determine whether the row is accessible. The attribute values come from the database object (e.g. table or view) to be protected by the row access policy.",
+		DiffSuppressFunc: func(key, oldValue, newValue string, _ *schema.ResourceData) bool {
+			if !strings.HasSuffix(key, ".type") {
+				return false
+			}
+			return NormalizeAndCompare(sdk.ToDataType)(key, oldValue, newValue, nil)
+		},
 	},
-	"row_access_expression": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the SQL expression. The expression can be any boolean-valued SQL expression.",
+	"body": {
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the SQL expression. The expression can be any boolean-valued SQL expression.",
+		DiffSuppressFunc: DiffSuppressStatement,
 	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Specifies a comment for the row access policy.",
+	},
+	ShowOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW ROW ACCESS POLICY` for the given row access policy.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowRowAccessPolicySchema,
+		},
+	},
+	DescribeOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `DESCRIBE ROW ACCESS POLICY` for the given row access policy.",
+		Elem: &schema.Resource{
+			Schema: schemas.RowAccessPolicyDescribeSchema,
+		},
 	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
@@ -57,35 +105,54 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 // RowAccessPolicy returns a pointer to the resource representing a row access policy.
 func RowAccessPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateRowAccessPolicy,
-		Read:   ReadRowAccessPolicy,
-		Update: UpdateRowAccessPolicy,
-		Delete: DeleteRowAccessPolicy,
+		SchemaVersion: 1,
+
+		CreateContext: CreateRowAccessPolicy,
+		ReadContext:   ReadRowAccessPolicy,
+		UpdateContext: UpdateRowAccessPolicy,
+		DeleteContext: DeleteRowAccessPolicy,
 
 		Schema: rowAccessPolicySchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, ShowOutputAttributeName, "comment"),
+			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, DescribeOutputAttributeName, "body"),
+			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, FullyQualifiedNameAttributeName, "name"),
+		),
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0_95_0_RowAccessPolicyStateUpgrader,
+			},
+		},
 	}
 }
 
-// CreateRowAccessPolicy implements schema.CreateFunc.
-func CreateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
+func CreateRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	signature := d.Get("signature").(map[string]any)
-	rowAccessExpression := d.Get("row_access_expression").(string)
+	arguments := d.Get("argument").([]any)
+	rowAccessExpression := d.Get("body").(string)
 
 	args := make([]sdk.CreateRowAccessPolicyArgsRequest, 0)
-	for k, v := range signature {
-		dataType := sdk.DataType(v.(string))
-		args = append(args, *sdk.NewCreateRowAccessPolicyArgsRequest(k, dataType))
+	for _, arg := range arguments {
+		v := arg.(map[string]any)
+		dataType, err := sdk.ToDataType(v["type"].(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		args = append(args, *sdk.NewCreateRowAccessPolicyArgsRequest(v["name"].(string), dataType))
 	}
 
 	createRequest := sdk.NewCreateRowAccessPolicyRequest(id, args, rowAccessExpression)
@@ -97,19 +164,20 @@ func CreateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.RowAccessPolicies.Create(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("error creating row access policy %v err = %w", name, err)
+		return diag.FromErr(fmt.Errorf("error creating row access policy %v err = %w", name, err))
 	}
 
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	return ReadRowAccessPolicy(d, meta)
+	return ReadRowAccessPolicy(ctx, d, meta)
 }
 
-// ReadRowAccessPolicy implements schema.ReadFunc.
-func ReadRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
+func ReadRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	rowAccessPolicy, err := client.RowAccessPolicies.ShowByID(ctx, id)
 	if err != nil {
@@ -118,82 +186,109 @@ func ReadRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", rowAccessPolicy.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("database", rowAccessPolicy.DatabaseName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("schema", rowAccessPolicy.SchemaName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", rowAccessPolicy.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	rowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if err := d.Set("row_access_expression", rowAccessPolicyDescription.Body); err != nil {
-		return err
+	if err := d.Set("body", rowAccessPolicyDescription.Body); err != nil {
+		return diag.FromErr(err)
 	}
 
-	if err := d.Set("signature", parseSignature(rowAccessPolicyDescription.Signature)); err != nil {
-		return err
+	if err := d.Set("argument", parseSignature(rowAccessPolicyDescription.Signature)); err != nil {
+		return diag.FromErr(err)
 	}
-
-	return err
+	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.RowAccessPolicyToSchema(rowAccessPolicy)}); err != nil {
+		return diag.FromErr(err)
+	}
+	if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.RowAccessPolicyDescriptionToSchema(*rowAccessPolicyDescription)}); err != nil {
+		return diag.FromErr(err)
+	}
+	return diag.FromErr(err)
 }
 
 // UpdateRowAccessPolicy implements schema.UpdateFunc.
-func UpdateRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
+func UpdateRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if d.HasChange("name") {
+		newId := sdk.NewSchemaObjectIdentifierInSchema(id.SchemaId(), d.Get("name").(string))
+
+		err := client.RowAccessPolicies.Alter(ctx, sdk.NewAlterRowAccessPolicyRequest(id).WithRenameTo(&newId))
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error renaming view %v err = %w", d.Id(), err))
+		}
+
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
+		id = newId
+	}
 
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		if c := comment.(string); c == "" {
 			err := client.RowAccessPolicies.Alter(ctx, sdk.NewAlterRowAccessPolicyRequest(id).WithUnsetComment(sdk.Bool(true)))
 			if err != nil {
-				return fmt.Errorf("error unsetting comment for row access policy on %v err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error unsetting comment for row access policy on %v err = %w", d.Id(), err))
 			}
 		} else {
 			err := client.RowAccessPolicies.Alter(ctx, sdk.NewAlterRowAccessPolicyRequest(id).WithSetComment(sdk.String(c)))
 			if err != nil {
-				return fmt.Errorf("error updating comment for row access policy on %v err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error updating comment for row access policy on %v err = %w", d.Id(), err))
 			}
 		}
 	}
 
-	if d.HasChange("row_access_expression") {
-		rowAccessExpression := d.Get("row_access_expression").(string)
+	if d.HasChange("body") {
+		rowAccessExpression := d.Get("body").(string)
 		err := client.RowAccessPolicies.Alter(ctx, sdk.NewAlterRowAccessPolicyRequest(id).WithSetBody(sdk.String(rowAccessExpression)))
 		if err != nil {
-			return fmt.Errorf("error updating row access policy expression on %v err = %w", d.Id(), err)
+			return diag.FromErr(fmt.Errorf("error updating row access policy expression on %v err = %w", d.Id(), err))
 		}
 	}
 
-	return ReadRowAccessPolicy(d, meta)
+	return ReadRowAccessPolicy(ctx, d, meta)
 }
 
-// DeleteRowAccessPolicy implements schema.DeleteFunc.
-func DeleteRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-
-	err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
+func DeleteRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
+	}
+
+	client := meta.(*provider.Context).Client
+
+	err = client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id).WithIfExists(sdk.Pointer(true)))
+	if err != nil {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Error deleting row access policy",
+				Detail:   fmt.Sprintf("id %v err = %v", id.Name(), err),
+			},
+		}
 	}
 
 	d.SetId("")
@@ -202,17 +297,21 @@ func DeleteRowAccessPolicy(d *schema.ResourceData, meta interface{}) error {
 }
 
 // TODO [SNOW-1020074]: should we put signature parsing to the SDK?
-func parseSignature(signature string) map[string]interface{} {
+func parseSignature(signature string) []map[string]any {
 	// Format in database is `(column <data_type>)`
 	plainSignature := strings.ReplaceAll(signature, "(", "")
 	plainSignature = strings.ReplaceAll(plainSignature, ")", "")
 	signatureParts := strings.Split(plainSignature, ", ")
-	signatureMap := map[string]interface{}{}
+	// signatureMap := map[string]interface{}{}
+	arguments := make([]map[string]any, len(signatureParts))
 
-	for _, e := range signatureParts {
+	for i, e := range signatureParts {
 		parts := strings.Split(e, " ")
-		signatureMap[parts[0]] = parts[1]
+		// signatureMap[parts[0]] = parts[1]
+		arguments[i] = map[string]any{
+			"name": parts[0],
+			"type": parts[1],
+		}
 	}
-
-	return signatureMap
+	return arguments
 }

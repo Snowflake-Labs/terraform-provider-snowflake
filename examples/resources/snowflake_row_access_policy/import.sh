@@ -1,2 +1,1 @@
-# format is database name | schema name | policy name
-terraform import snowflake_row_access_policy.example 'dbName|schemaName|policyName'
+terraform import snowflake_row_access_policy.example '"<database_name>"."<schema_name>"."<view_name>"'

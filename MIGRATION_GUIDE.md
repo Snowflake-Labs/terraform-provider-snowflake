@@ -4,6 +4,26 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+## v0.95.x ➞ v0.96.0
+### snowflake_row_access_policy resource changes
+New fields:
+  - `show_output` field that holds the response from SHOW ROW ACCESS POLICIES.
+  - `describe_output` field that holds the response from DESCRIBE ROW ACCESS POLICIES.
+
+#### *(breaking change)* Renamed fields in snowflake_row_access_policy resource
+Renamed fields:
+  - `row_access_expression` to `body`
+  - `signature` to `arguments`. Also, the field type is changed from map to a list of arguments.
+to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
+
+#### *(breaking change)* Identifiers related changes
+During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`).
+
+Also, we added diff suppress function that prevents Terraform from showing differences, when only quoting is different.
+
+No change is required, the state will be migrated automatically.
+
 ## v0.94.x ➞ v0.95.0
 
 ### *(breaking change)* database roles data source; field rename, schema structure changes, and adding missing filtering options
@@ -37,7 +57,7 @@ New output fields
 
 Breaking changes:
 - `database` and `schema` are right now under `in` field
-- `views` field now organizes output of show under `show_output` field and the output of describe under `describe_output` field. 
+- `views` field now organizes output of show under `show_output` field and the output of describe under `describe_output` field.
 
 ### snowflake_view resource changes
 New fields:
@@ -133,7 +153,7 @@ Because of introducing a new `fully_qualified_name` field for all of the resourc
 
 Correctly handle the situation when stage was rename/deleted externally (earlier it resulted in a permanent loop). No action is required on the user's side.
 
-Connected issues: [#2972](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2972) 
+Connected issues: [#2972](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2972)
 
 ### snowflake_table resource changes
 
@@ -289,8 +309,8 @@ Type changes:
 - `disabled`: bool -> string (To easily handle three-value logic (true, false, unknown) in provider's configs, read more in https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/751239b7d2fee4757471db6c03b952d4728ee099/v1-preparations/CHANGES_BEFORE_V1.md?plain=1#L24)
 
 #### *(breaking change)* refactored snowflake_users datasource
-> **IMPORTANT NOTE:** when querying users you don't have permissions to, the querying options are limited. 
-You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command cannot be called, so you have to set `with_describe = false`. 
+> **IMPORTANT NOTE:** when querying users you don't have permissions to, the querying options are limited.
+You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command cannot be called, so you have to set `with_describe = false`.
 Only `parameters` output is not affected by the lack of privileges.
 
 Changes:
