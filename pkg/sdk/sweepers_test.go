@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TODO [SNOW-955520]: move the sweepers outside of the sdk package
+// TODO [SNOW-955520]: use test client helpers in sweepers?
 func TestSweepAll(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableSweep)
 	testenvs.AssertEnvSet(t, string(testenvs.TestObjectsSuffix))
@@ -105,6 +107,7 @@ func Test_Sweeper_NukeStaleObjects(t *testing.T) {
 }
 
 // TODO [SNOW-955520]: generalize nuke methods (sweepers too)
+// TODO [SNOW-1658402]: handle the ownership problem while handling the better role setup for tests
 func nukeWarehouses(client *Client, prefix string) func() error {
 	protectedWarehouses := []string{
 		"SNOWFLAKE",
@@ -129,6 +132,23 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 		for idx, wh := range whs {
 			log.Printf("[DEBUG] Processing warehouse [%d/%d]: %s...\n", idx+1, len(whs), wh.ID().FullyQualifiedName())
 			if !slices.Contains(protectedWarehouses, wh.Name) && wh.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
+				if wh.Owner != "ACCOUNTADMIN" {
+					log.Printf("[DEBUG] Granting ownership on warehouse %s, to ACCOUNTADMIN", wh.ID().FullyQualifiedName())
+					err := client.Grants.GrantOwnership(
+						ctx,
+						OwnershipGrantOn{Object: &Object{
+							ObjectType: ObjectTypeWarehouse,
+							Name:       wh.ID(),
+						}},
+						OwnershipGrantTo{
+							AccountRoleName: Pointer(NewAccountObjectIdentifier("ACCOUNTADMIN")),
+						},
+						nil,
+					)
+					errs = append(errs, fmt.Errorf("granting ownership on warehouse %s ended with error, err = %w", wh.ID().FullyQualifiedName(), err))
+					continue
+				}
+
 				log.Printf("[DEBUG] Dropping warehouse %s, created at: %s\n", wh.ID().FullyQualifiedName(), wh.CreatedOn.String())
 				if err := client.Warehouses.Drop(ctx, wh.ID(), &DropWarehouseOptions{IfExists: Bool(true)}); err != nil {
 					log.Printf("[DEBUG] Dropping warehouse %s, resulted in error %v\n", wh.ID().FullyQualifiedName(), err)
@@ -163,6 +183,23 @@ func nukeDatabases(client *Client, prefix string) func() error {
 		var errs []error
 		log.Printf("[DEBUG] Found %d databases matching search criteria\n", len(dbs))
 		for idx, db := range dbs {
+			if db.Owner != "ACCOUNTADMIN" {
+				log.Printf("[DEBUG] Granting ownership on database %s, to ACCOUNTADMIN", db.ID().FullyQualifiedName())
+				err := client.Grants.GrantOwnership(
+					ctx,
+					OwnershipGrantOn{Object: &Object{
+						ObjectType: ObjectTypeDatabase,
+						Name:       db.ID(),
+					}},
+					OwnershipGrantTo{
+						AccountRoleName: Pointer(NewAccountObjectIdentifier("ACCOUNTADMIN")),
+					},
+					nil,
+				)
+				errs = append(errs, fmt.Errorf("granting ownership on database %s ended with error, err = %w", db.ID().FullyQualifiedName(), err))
+				continue
+			}
+
 			log.Printf("[DEBUG] Processing database [%d/%d]: %s...\n", idx+1, len(dbs), db.ID().FullyQualifiedName())
 			if !slices.Contains(protectedDatabases, db.Name) && db.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
 				log.Printf("[DEBUG] Dropping database %s, created at: %s\n", db.ID().FullyQualifiedName(), db.CreatedOn.String())
