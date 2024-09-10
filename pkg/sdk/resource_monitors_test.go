@@ -191,8 +191,13 @@ func TestExtractTriggerInts(t *testing.T) {
 		{Input: sql.NullString{String: "51%,63%", Valid: true}, Expected: []int{51, 63}},
 		{Input: sql.NullString{String: "51%", Valid: true}, Expected: []int{51}},
 		{Input: sql.NullString{String: "", Valid: false}, Expected: []int{}},
-		{Input: sql.NullString{String: "51,63", Valid: true}, Expected: []int{5, 6}},
-		{Input: sql.NullString{String: "1", Valid: true}, Error: "failed to convert  to integer err = strconv.Atoi"},
+		{Input: sql.NullString{String: "", Valid: true}, Expected: []int{}},
+		{Input: sql.NullString{String: "51,63", Valid: true}, Expected: []int{51, 63}},
+		{Input: sql.NullString{String: "1", Valid: true}, Expected: []int{1}},
+		{Input: sql.NullString{String: "ab,cd", Valid: true}, Error: "failed to convert ab to integer err = strconv.Atoi"},
+		{Input: sql.NullString{String: "12,,34", Valid: true}, Error: "failed to convert  to integer err = strconv.Atoi"},
+		{Input: sql.NullString{String: ",", Valid: true}, Error: "failed to convert  to integer err = strconv.Atoi"},
+		{Input: sql.NullString{String: "12.34", Valid: true}, Error: "failed to convert 12.34 to integer err = strconv.Atoi"},
 	}
 
 	for _, tc := range testCases {

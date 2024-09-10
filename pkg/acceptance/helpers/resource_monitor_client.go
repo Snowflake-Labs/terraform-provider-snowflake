@@ -62,6 +62,13 @@ func (c *ResourceMonitorClient) CreateResourceMonitorWithOptions(t *testing.T, o
 	return resourceMonitor, c.DropResourceMonitorFunc(t, id)
 }
 
+func (c *ResourceMonitorClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.AlterResourceMonitorOptions) {
+	t.Helper()
+	ctx := context.Background()
+	err := c.client().Alter(ctx, id, opts)
+	require.NoError(t, err)
+}
+
 func (c *ResourceMonitorClient) DropResourceMonitorFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()

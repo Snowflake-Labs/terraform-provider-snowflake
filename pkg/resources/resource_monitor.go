@@ -75,12 +75,14 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Description:      "Represents a numeric value specified as a percentage of the credit quota. Values over 100 are supported. After reaching this value, all assigned warehouses while allowing currently running queries to complete will be suspended. No new queries can be executed by the warehouses until the credit quota for the resource monitor is increased. In addition, this action sends a notification to all users who have enabled notifications for themselves.",
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("suspend_at"),
 	},
 	"suspend_immediate_trigger": {
 		Type:             schema.TypeInt,
 		Optional:         true,
 		Description:      "Represents a numeric value specified as a percentage of the credit quota. Values over 100 are supported. After reaching this value, all assigned warehouses immediately cancel any currently running queries or statements. In addition, this action sends a notification to all users who have enabled notifications for themselves.",
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("suspend_immediately_at"),
 	},
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
@@ -306,25 +308,20 @@ func UpdateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 		return diag.FromErr(err)
 	}
 
-	var runSetStatement bool
-	var runUnsetStatement bool
 	opts := sdk.AlterResourceMonitorOptions{}
 	set := sdk.ResourceMonitorSet{}
 	unset := sdk.ResourceMonitorUnset{}
 
 	if d.HasChange("credit_quota") {
-		runSetStatement = true
 		if v, ok := d.GetOk("credit_quota"); ok {
 			set.CreditQuota = sdk.Pointer(v.(int))
 		} else {
-			runUnsetStatement = true
 			unset.CreditQuota = sdk.Bool(true)
 		}
 	}
 
 	if (d.HasChange("frequency") || d.HasChange("start_timestamp")) &&
 		(d.Get("frequency").(string) != "" && d.Get("start_timestamp").(string) != "") {
-		runSetStatement = true
 		frequency, err := sdk.ToResourceMonitorFrequency(d.Get("frequency").(string))
 		if err != nil {
 			return diag.FromErr(err)
@@ -335,10 +332,8 @@ func UpdateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 
 	if d.HasChange("end_timestamp") {
 		if v, ok := d.GetOk("end_timestamp"); ok {
-			runSetStatement = true
 			set.EndTimestamp = sdk.Pointer(v.(string))
 		} else {
-			runUnsetStatement = true
 			unset.EndTimestamp = sdk.Bool(true)
 		}
 	}
@@ -346,7 +341,6 @@ func UpdateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 	if d.HasChange("notify_users") {
 		userIds := expandStringList(d.Get("notify_users").(*schema.Set).List())
 		if len(userIds) > 0 {
-			runSetStatement = true
 			users := make([]sdk.NotifiedUser, len(userIds))
 			for i, userId := range userIds {
 				users[i] = sdk.NotifiedUser{
@@ -357,7 +351,6 @@ func UpdateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 				Users: users,
 			}
 		} else {
-			runUnsetStatement = true
 			unset.NotifyUsers = sdk.Bool(true)
 		}
 	}
@@ -403,31 +396,26 @@ func UpdateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 
 	// This is to prevent SQL compilation errors from Snowflake, because you cannot only alter triggers.
 	// It's going to set credit quota to the same value as before making it pass SQL compilation stage.
-	if len(opts.Triggers) > 0 && !runSetStatement && !runUnsetStatement {
+	if len(opts.Triggers) > 0 && (set == (sdk.ResourceMonitorSet{})) && (unset == (sdk.ResourceMonitorUnset{})) {
 		if creditQuota, ok := d.GetOk("credit_quota"); ok {
-			runSetStatement = true
 			set.CreditQuota = sdk.Pointer(creditQuota.(int))
 		} else {
-			runUnsetStatement = true
 			unset.CreditQuota = sdk.Bool(true)
 		}
 	}
 
-	if runSetStatement {
-		if set != (sdk.ResourceMonitorSet{}) {
-			opts.Set = &set
-		}
-
+	if set != (sdk.ResourceMonitorSet{}) {
+		opts.Set = &set
 		if err := client.ResourceMonitors.Alter(ctx, id, &opts); err != nil {
+			d.Partial(true)
 			return diag.FromErr(err)
 		}
 	}
 
-	if runUnsetStatement {
-		if unset != (sdk.ResourceMonitorUnset{}) {
-			opts.Unset = &unset
-		}
+	if unset != (sdk.ResourceMonitorUnset{}) {
+		opts.Unset = &unset
 		if err := client.ResourceMonitors.Alter(ctx, id, &opts); err != nil {
+			d.Partial(true)
 			return diag.FromErr(err)
 		}
 	}

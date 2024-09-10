@@ -5,6 +5,12 @@ import (
 	"testing"
 	"time"
 
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
@@ -332,6 +338,154 @@ func TestAcc_ResourceMonitor_Updates(t *testing.T) {
 						HasCreatedOnNotEmpty().
 						HasOwnerNotEmpty().
 						HasComment(""),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_ResourceMonitor_ExternalChanges(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	configModelEverythingSet := model.ResourceMonitor("test", id.Name()).
+		WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("JAN_CIESLAK"))).
+		WithCreditQuota(10).
+		WithFrequency(string(sdk.FrequencyWeekly)).
+		WithStartTimestamp(time.Now().Add(time.Hour * 24 * 30).Format("2006-01-02 15:01")).
+		WithEndTimestamp(time.Now().Add(time.Hour * 24 * 60).Format("2006-01-02 15:01")).
+		WithNotifyTriggersValue(configvariable.SetVariable(
+			configvariable.IntegerVariable(100),
+			configvariable.IntegerVariable(110),
+		)).
+		WithSuspendTrigger(120).
+		WithSuspendImmediateTrigger(150)
+
+	updatedStartTimestamp := time.Now().Add(time.Hour * 24 * 40).Format("2006-01-02 15:01")
+	updatedEndTimestamp := time.Now().Add(time.Hour * 24 * 70).Format("2006-01-02 15:01")
+	configModelUpdated := model.ResourceMonitor("test", id.Name()).
+		WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("JAN_CIESLAK"), configvariable.StringVariable("ARTUR_SAWICKI"))).
+		WithCreditQuota(20).
+		WithFrequency(string(sdk.FrequencyMonthly)).
+		WithStartTimestamp(updatedStartTimestamp).
+		WithEndTimestamp(updatedEndTimestamp).
+		WithNotifyTriggersValue(configvariable.SetVariable(
+			configvariable.IntegerVariable(110),
+			configvariable.IntegerVariable(120),
+		)).
+		WithSuspendTrigger(130).
+		WithSuspendImmediateTrigger(160)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, configModelEverythingSet),
+			},
+			// Update externally, but match the updated configuration (expected updates to the same values)
+			{
+				PreConfig: func() {
+					acc.TestClient().ResourceMonitor.Alter(t, id, &sdk.AlterResourceMonitorOptions{
+						Set: &sdk.ResourceMonitorSet{
+							NotifyUsers: &sdk.NotifyUsers{
+								Users: []sdk.NotifiedUser{
+									{Name: sdk.NewAccountObjectIdentifier("JAN_CIESLAK")},
+									{Name: sdk.NewAccountObjectIdentifier("ARTUR_SAWICKI")},
+								},
+							},
+							CreditQuota:    sdk.Int(20),
+							Frequency:      sdk.Pointer(sdk.FrequencyMonthly),
+							StartTimestamp: sdk.String(updatedStartTimestamp),
+							EndTimestamp:   sdk.String(updatedEndTimestamp),
+						},
+						Triggers: []sdk.TriggerDefinition{
+							{
+								Threshold:     110,
+								TriggerAction: sdk.TriggerActionNotify,
+							},
+							{
+								Threshold:     120,
+								TriggerAction: sdk.TriggerActionNotify,
+							},
+							{
+								Threshold:     130,
+								TriggerAction: sdk.TriggerActionSuspend,
+							},
+							{
+								Threshold:     160,
+								TriggerAction: sdk.TriggerActionSuspendImmediate,
+							},
+						},
+					})
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.PrintPlanDetails(configModelUpdated.ResourceReference(), "credit_quota", "end_timestamp", "frequency", "fully_qualified_name", "name", "notify_triggers", "notify_users", "start_timestamp", "suspend_immediate_trigger", "suspend_trigger", r.ShowOutputAttributeName),
+						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "credit_quota", tfjson.ActionUpdate, sdk.String("20"), sdk.String("20")),
+						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "notify_users.0", tfjson.ActionUpdate, sdk.String("ARTUR_SAWICKI"), sdk.String("ARTUR_SAWICKI")),
+						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "notify_users.1", tfjson.ActionUpdate, sdk.String("JAN_CIESLAK"), sdk.String("JAN_CIESLAK")),
+						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "frequency", tfjson.ActionUpdate, sdk.String(string(sdk.FrequencyMonthly)), sdk.String(string(sdk.FrequencyMonthly))),
+						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "notify_triggers.0", tfjson.ActionUpdate, sdk.String("110"), sdk.String("110")),
+						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "notify_triggers.1", tfjson.ActionUpdate, sdk.String("120"), sdk.String("120")),
+						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "suspend_trigger", tfjson.ActionUpdate, sdk.String("130"), sdk.String("130")),
+						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "suspend_immediate_trigger", tfjson.ActionUpdate, sdk.String("160"), sdk.String("160")),
+					},
+				},
+				Config: config.FromModel(t, configModelUpdated),
+			},
+		},
+	})
+}
+
+// TestAcc_ResourceMonitor_PartialUpdate covers a situation where alter fails. In the previous versions, the alter would
+// fail, but invalid values would be saved in the state anyway. In the new version, the old values in state will be preserved
+// because the old values are also stored on the Snowflake side (they weren't altered).
+func TestAcc_ResourceMonitor_PartialUpdate(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	validTimestamp := time.Now().Add(time.Hour * 24 * 60).Format("2006-01-02 15:01")
+	configModel := model.ResourceMonitor("test", id.Name()).
+		WithEndTimestamp(validTimestamp)
+
+	configModelInvalidUpdate := model.ResourceMonitor("test", id.Name()).
+		WithEndTimestamp(time.Now().Add(time.Hour*24*70).Format("2006-01-02 15:01") + "abc")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, configModel),
+			},
+			{
+				Config:      config.FromModel(t, configModelInvalidUpdate),
+				ExpectError: regexp.MustCompile("Invalid date/time format string"),
+				Check: assert.AssertThat(t,
+					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
+						HasEndTimestampString(validTimestamp),
+				),
+			},
+			// Without the partials plan check failed.
+			// The following was printed (indicating the invalid value was saved into the state):
+			// ComputedIfAnyAttributeChanged: changed key: end_timestamp old: 2024-11-19 10:11abc new: 2024-11-09 10:11
+			{
+				Config: config.FromModel(t, configModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
+						HasEndTimestampString(validTimestamp),
 				),
 			},
 		},

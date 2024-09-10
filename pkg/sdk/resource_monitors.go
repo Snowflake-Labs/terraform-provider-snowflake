@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -100,11 +101,11 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 	}
 
 	if row.Level.Valid {
-		switch row.Level.String {
-		case "ACCOUNT":
-			resourceMonitor.Level = Pointer(ResourceMonitorLevelAccount)
-		case "WAREHOUSE":
-			resourceMonitor.Level = Pointer(ResourceMonitorLevelWarehouse)
+		level, err := ToResourceMonitorLevel(row.Level.String)
+		if err != nil {
+			log.Printf("[DEBUG] unable to parse resource monitor level: %v", err)
+		} else {
+			resourceMonitor.Level = &level
 		}
 	}
 
@@ -160,13 +161,13 @@ func (row *resourceMonitorRow) convert() (*ResourceMonitor, error) {
 // extractTriggerInts converts the triggers in the DB (stored as a comma separated string with trailing `%` signs) into a slice of ints.
 func extractTriggerInts(s sql.NullString) ([]int, error) {
 	// Check if this is NULL
-	if !s.Valid {
+	if !s.Valid || s.String == "" {
 		return []int{}, nil
 	}
 	ints := strings.Split(s.String, ",")
 	out := make([]int, 0, len(ints))
 	for _, i := range ints {
-		numberToParse := i[:len(i)-1]
+		numberToParse := strings.TrimRight(i, "%")
 		myInt, err := strconv.Atoi(numberToParse)
 		if err != nil {
 			return out, fmt.Errorf("failed to convert %v to integer err = %w", numberToParse, err)
@@ -234,6 +235,16 @@ const (
 	ResourceMonitorLevelAccount   ResourceMonitorLevel = "ACCOUNT"
 	ResourceMonitorLevelWarehouse ResourceMonitorLevel = "WAREHOUSE"
 )
+
+func ToResourceMonitorLevel(s string) (ResourceMonitorLevel, error) {
+	switch level := ResourceMonitorLevel(strings.ToUpper(s)); level {
+	case ResourceMonitorLevelAccount,
+		ResourceMonitorLevelWarehouse:
+		return level, nil
+	default:
+		return "", fmt.Errorf("invalid resource monitor level: %s", s)
+	}
+}
 
 type TriggerDefinition struct {
 	Threshold     int           `ddl:"parameter,no_equals" sql:"ON"`

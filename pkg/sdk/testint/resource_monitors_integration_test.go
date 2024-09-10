@@ -240,7 +240,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 
 		resourceMonitor, err = client.ResourceMonitors.ShowByID(ctx, resourceMonitor.ID())
 		require.NoError(t, err)
-		assert.Equal(t, 0, resourceMonitor.CreditQuota)
+		assert.Equal(t, float64(0), resourceMonitor.CreditQuota)
 	})
 
 	t.Run("when changing notify users", func(t *testing.T) {
