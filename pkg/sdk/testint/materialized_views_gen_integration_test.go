@@ -139,10 +139,10 @@ func TestInt_MaterializedViews(t *testing.T) {
 		rowAccessPolicyReference, err := testClientHelper().PolicyReferences.GetPolicyReference(t, view.ID(), sdk.PolicyEntityDomainView)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy.Name, rowAccessPolicyReference.PolicyName)
-		assert.Equal(t, "ROW_ACCESS_POLICY", rowAccessPolicyReference.PolicyKind)
+		assert.Equal(t, sdk.PolicyKindRowAccessPolicy, rowAccessPolicyReference.PolicyKind)
 		assert.Equal(t, view.ID().Name(), rowAccessPolicyReference.RefEntityName)
 		assert.Equal(t, "MATERIALIZED_VIEW", rowAccessPolicyReference.RefEntityDomain)
-		assert.Equal(t, "ACTIVE", rowAccessPolicyReference.PolicyStatus)
+		assert.Equal(t, "ACTIVE", *rowAccessPolicyReference.PolicyStatus)
 	})
 
 	t.Run("drop materialized view: existing", func(t *testing.T) {
