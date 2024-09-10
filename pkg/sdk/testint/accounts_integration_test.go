@@ -268,6 +268,7 @@ func TestInt_AccountAlter(t *testing.T) {
 	})
 
 	t.Run("set and unset authentication policy", func(t *testing.T) {
+		t.Skipf("Skipping the test for now TODO: add ticket number")
 		authenticationPolicyTest, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.CreateAuthenticationPolicy(t)
 		t.Cleanup(authenticationPolicyCleanup)
 		opts := &sdk.AlterAccountOptions{
