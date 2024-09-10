@@ -45,7 +45,7 @@ type Client struct {
 	ApplicationPackages          ApplicationPackages
 	ApplicationRoles             ApplicationRoles
 	Applications                 Applications
-	AuthenticationPolicies   AuthenticationPolicies
+	AuthenticationPolicies       AuthenticationPolicies
 	Comments                     Comments
 	CortexSearchServices         CortexSearchServices
 	DatabaseRoles                DatabaseRoles

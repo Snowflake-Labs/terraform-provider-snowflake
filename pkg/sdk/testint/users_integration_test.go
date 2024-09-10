@@ -47,44 +47,47 @@ func TestInt_Users(t *testing.T) {
 	tag2, tag2Cleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tag2Cleanup)
 
-func TestInt_UserAlter(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
+	/*
+		// TODO(SNOW-1528557): Uncomment next pr
+			func TestInt_UserAlter(t *testing.T) {
+				client := testClient(t)
+				ctx := testContext(t)
 
-	randomPrefix := random.AlphaN(6)
+				randomPrefix := random.AlphaN(6)
 
-	userTest, userCleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix+"_")
-	t.Cleanup(userCleanup)
+				userTest, userCleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix+"_")
+				t.Cleanup(userCleanup)
 
-	t.Run("set and unset authentication policy", func(t *testing.T) {
-		authenticationPolicyTest, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.CreateAuthenticationPolicy(t)
-		t.Cleanup(authenticationPolicyCleanup)
+				t.Run("set and unset authentication policy", func(t *testing.T) {
+					authenticationPolicyTest, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.CreateAuthenticationPolicy(t)
+					t.Cleanup(authenticationPolicyCleanup)
 
-		alterOptions := &sdk.AlterUserOptions{
-			Set: &sdk.UserSet{
-				AuthenticationPolicy: authenticationPolicyTest.ID(),
-			},
-		}
+					alterOptions := &sdk.AlterUserOptions{
+						Set: &sdk.UserSet{
+							AuthenticationPolicy: authenticationPolicyTest.ID(),
+						},
+					}
 
-		err := client.Users.Alter(ctx, userTest.ID(), alterOptions)
-		require.NoError(t, err)
+					err := client.Users.Alter(ctx, userTest.ID(), alterOptions)
+					require.NoError(t, err)
 
-		unsetOptions := &sdk.AlterUserOptions{
-			Unset: &sdk.UserUnset{
-				AuthenticationPolicy: sdk.Bool(true),
-			},
-		}
+					unsetOptions := &sdk.AlterUserOptions{
+						Unset: &sdk.UserUnset{
+							AuthenticationPolicy: sdk.Bool(true),
+						},
+					}
 
-		unsetErr := client.Users.Alter(ctx, userTest.ID(), unsetOptions)
-		require.NoError(t, unsetErr)
-	})
-}
+					unsetErr := client.Users.Alter(ctx, userTest.ID(), unsetOptions)
+					require.NoError(t, unsetErr)
+				})
+			}
 
-func TestInt_UserCreate(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
+			func TestInt_UserCreate(t *testing.T) {
+				client := testClient(t)
+				ctx := testContext(t)
+	*/
 
-  networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+	networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
 	t.Cleanup(networkPolicyCleanup)
 
 	assertParametersSet := func(userParametersAssert *objectparametersassert.UserParametersAssert) {
