@@ -9,8 +9,8 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 )
 
-// TODO [SNOW-955520]: add generation tests
-// TODO [SNOW-955520]: use the same fallback suffix for acceptance and integration tests (now two different ones are generated if the env is missing)
+// TODO [SNOW-1356199]: add generation tests
+// TODO [SNOW-1356199]: use the same fallback suffix for acceptance and integration tests (now two different ones are generated if the env is missing)
 var (
 	AcceptanceTestsSuffix  = acceptanceTestsSuffix()
 	IntegrationTestsSuffix = integrationTestsSuffix()

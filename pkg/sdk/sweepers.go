@@ -16,8 +16,8 @@ func SweepAfterAcceptanceTests(client *Client, suffix string) error {
 	return sweep(client, suffix)
 }
 
-// TODO [SNOW-955520]: move this to test code
-// TODO [SNOW-955520]: use if exists/use method from helper for dropping
+// TODO [SNOW-867247]: move this to test code
+// TODO [SNOW-867247]: use if exists/use method from helper for dropping
 // TODO [SNOW-867247]: sweep all missing account-level objects (like users, integrations, replication groups, network policies, ...)
 // TODO [SNOW-867247]: extract sweepers to a separate dir
 // TODO [SNOW-867247]: rework the sweepers (funcs -> objects)

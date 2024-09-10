@@ -14,8 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO [SNOW-955520]: move the sweepers outside of the sdk package
-// TODO [SNOW-955520]: use test client helpers in sweepers?
+// TODO [SNOW-867247]: move the sweepers outside of the sdk package
+// TODO [SNOW-867247]: use test client helpers in sweepers?
 func TestSweepAll(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableSweep)
 	testenvs.AssertEnvSet(t, string(testenvs.TestObjectsSuffix))
@@ -85,28 +85,28 @@ func Test_Sweeper_NukeStaleObjects(t *testing.T) {
 		}
 	})
 
-	// TODO [SNOW-955520]:
+	// TODO [SNOW-867247]: unskip
 	t.Run("sweep databases", func(t *testing.T) {
-		t.Skipf("Used for manual sweeping; will be addressed during SNOW-955520")
+		t.Skipf("Used for manual sweeping; will be addressed during SNOW-867247")
 		for _, c := range allClients {
 			err := nukeDatabases(c, "")()
 			assert.NoError(t, err)
 		}
 	})
 
-	// TODO [SNOW-955520]:
+	// TODO [SNOW-867247]: unskip
 	t.Run("sweep warehouses", func(t *testing.T) {
-		t.Skipf("Used for manual sweeping; will be addressed during SNOW-955520")
+		t.Skipf("Used for manual sweeping; will be addressed during SNOW-867247")
 		for _, c := range allClients {
 			err := nukeWarehouses(c, "")()
 			assert.NoError(t, err)
 		}
 	})
 
-	// TODO [SNOW-955520]: nuke stale objects (e.g. created more than 2 weeks ago)
+	// TODO [SNOW-867247]: nuke stale objects (e.g. created more than 2 weeks ago)
 }
 
-// TODO [SNOW-955520]: generalize nuke methods (sweepers too)
+// TODO [SNOW-867247]: generalize nuke methods (sweepers too)
 // TODO [SNOW-1658402]: handle the ownership problem while handling the better role setup for tests
 func nukeWarehouses(client *Client, prefix string) func() error {
 	protectedWarehouses := []string{
