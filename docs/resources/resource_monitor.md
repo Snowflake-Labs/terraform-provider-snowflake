@@ -5,6 +5,12 @@ description: |-
   
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0950--v0960) to use it.
+
+**! Warning !** Due to Snowflake limitations, the following actions are not supported:
+- Cannot create resource monitors with only triggers set, any other attribute has to be set.
+- Once a resource monitor has at least one trigger assigned, it cannot fully unset them (has to have at least one trigger, doesn't matter of which type). It has to be re-created without triggers to fully unset them.
+
 # snowflake_resource_monitor (Resource)
 
 
@@ -35,7 +41,6 @@ resource "snowflake_resource_monitor" "complete" {
   notify_users = ["USERONE", "USERTWO"]
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 

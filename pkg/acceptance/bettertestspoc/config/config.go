@@ -99,6 +99,8 @@ func FromModel(t *testing.T, model ResourceModel) string {
 	return s
 }
 
+// ConfigVariablesFromModel constructs config.Variables needed in acceptance tests that are using ConfigVariables in
+// combination with ConfigDirectory. It's necessary for cases not supported by FromModel, like lists of objects.
 func ConfigVariablesFromModel(t *testing.T, model ResourceModel) tfconfig.Variables {
 	t.Helper()
 	variables := make(tfconfig.Variables)

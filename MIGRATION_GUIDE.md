@@ -8,8 +8,8 @@ across different versions.
 
 ### *(breaking change)* resource_monitor resource
 Removed fields:
-- `set_for_account`
-- `warehouses`
+- `set_for_account` (will be settable on account resource, right now, the preferred way is to set it through unsafe_execute resource)
+- `warehouses` (can be set on warehouse resource, optionally through unsafe_execute resource)
 - `suspend_triggers` (now, `suspend_trigger` should be used)
 - `suspend_immediate_triggers` (now, `suspend_immediate_trigger` should be used)
 
