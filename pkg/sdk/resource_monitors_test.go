@@ -1,8 +1,12 @@
 package sdk
 
 import (
+	"database/sql"
+	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestResourceMonitorCreate(t *testing.T) {
@@ -13,12 +17,21 @@ func TestResourceMonitorCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: OrReplace and IfExists specified", func(t *testing.T) {
+		opts := &CreateResourceMonitorOptions{
+			name:        id,
+			OrReplace:   Bool(true),
+			IfNotExists: Bool(true),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateResourceMonitorOptions", "OrReplace", "IfNotExists"))
+	})
+
 	t.Run("with complete options", func(t *testing.T) {
 		creditQuota := Int(100)
 		frequency := FrequencyMonthly
 		startTimeStamp := "IMMIEDIATELY"
 		endTimeStamp := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC).String()
-		notifiedUsers := []NotifiedUser{{Name: "FIRST_USER"}, {Name: "SECOND_USER"}}
+		notifiedUsers := []NotifiedUser{{Name: NewAccountObjectIdentifier("FIRST_USER")}, {Name: NewAccountObjectIdentifier("SECOND_USER")}}
 		triggers := []TriggerDefinition{
 			{
 				Threshold:     50,
@@ -62,7 +75,7 @@ func TestResourceMonitorAlter(t *testing.T) {
 		opts := &AlterResourceMonitorOptions{
 			name: id,
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterResourceMonitorOptions", "Set", "Triggers"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterResourceMonitorOptions", "Set", "Unset", "Triggers"))
 	})
 
 	t.Run("validation: no option for set provided", func(t *testing.T) {
@@ -90,8 +103,8 @@ func TestResourceMonitorAlter(t *testing.T) {
 			Set: &ResourceMonitorSet{
 				NotifyUsers: &NotifyUsers{
 					Users: []NotifiedUser{
-						{Name: "user1"},
-						{Name: "user2"},
+						{Name: NewAccountObjectIdentifier("user1")},
+						{Name: NewAccountObjectIdentifier("user2")},
 					},
 				},
 			},
@@ -112,6 +125,17 @@ func TestResourceMonitorAlter(t *testing.T) {
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = %d FREQUENCY = %s START_TIMESTAMP = '%s'", id.FullyQualifiedName(), *newCreditQuota, newFrequency, newStartTimeStamp)
+	})
+
+	t.Run("with unset", func(t *testing.T) {
+		opts := &AlterResourceMonitorOptions{
+			name: id,
+			Unset: &ResourceMonitorUnset{
+				CreditQuota:  Bool(true),
+				EndTimestamp: Bool(true),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER RESOURCE MONITOR %s SET CREDIT_QUOTA = null END_TIMESTAMP = null", id.FullyQualifiedName())
 	})
 }
 
@@ -155,4 +179,36 @@ func TestResourceMonitorShow(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW RESOURCE MONITORS LIKE '%s'", id.Name())
 	})
+}
+
+func TestExtractTriggerInts(t *testing.T) {
+	testCases := []struct {
+		Input    sql.NullString
+		Expected []int
+		Error    string
+	}{
+		{Input: sql.NullString{String: "51%,63%,123%", Valid: true}, Expected: []int{51, 63, 123}},
+		{Input: sql.NullString{String: "51%,63%", Valid: true}, Expected: []int{51, 63}},
+		{Input: sql.NullString{String: "51%", Valid: true}, Expected: []int{51}},
+		{Input: sql.NullString{String: "", Valid: false}, Expected: []int{}},
+		{Input: sql.NullString{String: "", Valid: true}, Expected: []int{}},
+		{Input: sql.NullString{String: "51,63", Valid: true}, Expected: []int{51, 63}},
+		{Input: sql.NullString{String: "1", Valid: true}, Expected: []int{1}},
+		{Input: sql.NullString{String: "ab,cd", Valid: true}, Error: "failed to convert ab to integer err = strconv.Atoi"},
+		{Input: sql.NullString{String: "12,,34", Valid: true}, Error: "failed to convert  to integer err = strconv.Atoi"},
+		{Input: sql.NullString{String: ",", Valid: true}, Error: "failed to convert  to integer err = strconv.Atoi"},
+		{Input: sql.NullString{String: "12.34", Valid: true}, Error: "failed to convert 12.34 to integer err = strconv.Atoi"},
+	}
+
+	for _, tc := range testCases {
+		t.Run("extract trigger ints: "+tc.Input.String+":"+strconv.FormatBool(tc.Input.Valid), func(t *testing.T) {
+			result, err := extractTriggerInts(tc.Input)
+			if tc.Error != "" {
+				require.ErrorContains(t, err, tc.Error)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.Expected, result)
+			}
+		})
+	}
 }

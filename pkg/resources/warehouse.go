@@ -135,7 +135,7 @@ var warehouseSchema = map[string]*schema.Schema{
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `SHOW WAREHOUSE` for the given warehouse.",
+		Description: "Outputs the result of `SHOW WAREHOUSES` for the given warehouse.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowWarehouseSchema,
 		},

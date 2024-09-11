@@ -37,4 +37,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "DatabaseRole",
 		schema: resources.DatabaseRole().Schema,
 	},
+	{
+		name:   "ResourceMonitor",
+		schema: resources.ResourceMonitor().Schema,
+	},
 }
