@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"strings"
 )
 
 type RowAccessPolicies interface {
@@ -29,7 +30,7 @@ type CreateRowAccessPolicyOptions struct {
 }
 
 type CreateRowAccessPolicyArgs struct {
-	Name string   `ddl:"keyword,no_quotes"`
+	Name string   `ddl:"keyword,double_quotes"`
 	Type DataType `ddl:"keyword,no_quotes"`
 }
 
@@ -109,4 +110,22 @@ type RowAccessPolicyDescription struct {
 	Signature  string
 	ReturnType string
 	Body       string
+}
+
+// TODO(SNOW-1596962): Fully support VECTOR data type
+func (d *RowAccessPolicyDescription) Arguments() []map[string]any {
+	// Format in database is `(column <data_type>)`
+	plainSignature := strings.ReplaceAll(d.Signature, "(", "")
+	plainSignature = strings.ReplaceAll(plainSignature, ")", "")
+	signatureParts := strings.Split(plainSignature, ", ")
+	arguments := make([]map[string]any, len(signatureParts))
+
+	for i, e := range signatureParts {
+		parts := strings.Split(e, " ")
+		arguments[i] = map[string]any{
+			"name": strings.Join(parts[:len(parts)-1], " "),
+			"type": parts[len(parts)-1],
+		}
+	}
+	return arguments
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -53,8 +52,7 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 					Type:     schema.TypeString,
 					Required: true,
 					DiffSuppressFunc: func(key, oldValue, newValue string, _ *schema.ResourceData) bool {
-						res := NormalizeAndCompare(sdk.ToDataType)(key, oldValue, newValue, nil)
-						return res
+						return NormalizeAndCompare(sdk.ToDataType)(key, oldValue, newValue, nil)
 					},
 					ValidateDiagFunc: sdkValidation(sdk.ToDataType),
 					Description:      "The argument type",
@@ -65,17 +63,11 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "List of the arguments for the row access policy. A signature specifies a set of attributes that must be considered to determine whether the row is accessible. The attribute values come from the database object (e.g. table or view) to be protected by the row access policy. If any argument name or type is changed, the resource is recreated.",
 		ForceNew:    true,
-		DiffSuppressFunc: func(key, oldValue, newValue string, _ *schema.ResourceData) bool {
-			if !strings.HasSuffix(key, ".type") {
-				return false
-			}
-			return NormalizeAndCompare(sdk.ToDataType)(key, oldValue, newValue, nil)
-		},
 	},
 	"body": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the SQL expression. The expression can be any boolean-valued SQL expression.",
+		Description:      diffSuppressStatementFieldDescription("Specifies the SQL expression. The expression can be any boolean-valued SQL expression."),
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
 	"comment": {
@@ -214,7 +206,7 @@ func ReadRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("argument", parseSignature(rowAccessPolicyDescription.Signature)); err != nil {
+	if err := d.Set("argument", rowAccessPolicyDescription.Arguments()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.RowAccessPolicyToSchema(rowAccessPolicy)}); err != nil {
@@ -223,7 +215,7 @@ func ReadRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.RowAccessPolicyDescriptionToSchema(*rowAccessPolicyDescription)}); err != nil {
 		return diag.FromErr(err)
 	}
-	return diag.FromErr(err)
+	return nil
 }
 
 // UpdateRowAccessPolicy implements schema.UpdateFunc.
@@ -294,24 +286,4 @@ func DeleteRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any
 	d.SetId("")
 
 	return nil
-}
-
-// TODO [SNOW-1020074]: should we put signature parsing to the SDK?
-func parseSignature(signature string) []map[string]any {
-	// Format in database is `(column <data_type>)`
-	plainSignature := strings.ReplaceAll(signature, "(", "")
-	plainSignature = strings.ReplaceAll(plainSignature, ")", "")
-	signatureParts := strings.Split(plainSignature, ", ")
-	// signatureMap := map[string]interface{}{}
-	arguments := make([]map[string]any, len(signatureParts))
-
-	for i, e := range signatureParts {
-		parts := strings.Split(e, " ")
-		// signatureMap[parts[0]] = parts[1]
-		arguments[i] = map[string]any{
-			"name": parts[0],
-			"type": parts[1],
-		}
-	}
-	return arguments
 }

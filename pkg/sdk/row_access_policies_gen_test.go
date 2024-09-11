@@ -1,6 +1,10 @@
 package sdk
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func TestRowAccessPolicies_Create(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
@@ -49,7 +53,7 @@ func TestRowAccessPolicies_Create(t *testing.T) {
 
 	t.Run("one parameter", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsValidAndSQLEquals(t, opts, "CREATE ROW ACCESS POLICY %s AS (n VARCHAR) RETURNS BOOLEAN -> true", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ROW ACCESS POLICY %s AS ("n" VARCHAR) RETURNS BOOLEAN -> true`, id.FullyQualifiedName())
 	})
 
 	t.Run("two parameters", func(t *testing.T) {
@@ -61,14 +65,14 @@ func TestRowAccessPolicies_Create(t *testing.T) {
 			Name: "h",
 			Type: DataTypeVARCHAR,
 		}}
-		assertOptsValidAndSQLEquals(t, opts, "CREATE ROW ACCESS POLICY %s AS (n VARCHAR, h VARCHAR) RETURNS BOOLEAN -> true", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ROW ACCESS POLICY %s AS ("n" VARCHAR, "h" VARCHAR) RETURNS BOOLEAN -> true`, id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE ROW ACCESS POLICY %s AS (n VARCHAR) RETURNS BOOLEAN -> true COMMENT = 'some comment'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE ROW ACCESS POLICY %s AS ("n" VARCHAR) RETURNS BOOLEAN -> true COMMENT = 'some comment'`, id.FullyQualifiedName())
 	})
 }
 
@@ -242,4 +246,56 @@ func TestRowAccessPolicies_Describe(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, "DESCRIBE ROW ACCESS POLICY %s", id.FullyQualifiedName())
 	})
+}
+
+func TestRowAccessPolicyDescription_Arguments(t *testing.T) {
+	tests := []struct {
+		name      string
+		signature string
+		want      []map[string]any
+	}{
+		{
+			name:      "signature with 1 arg",
+			signature: "(A VARCHAR)",
+			want: []map[string]any{
+				{
+					"name": "A",
+					"type": "VARCHAR",
+				},
+			},
+		},
+		{
+			name:      "signature with multiple args",
+			signature: "(A VARCHAR, B BOOLEAN)",
+			want: []map[string]any{
+				{
+					"name": "A",
+					"type": "VARCHAR",
+				},
+				{
+					"name": "B",
+					"type": "BOOLEAN",
+				},
+			},
+		},
+		{
+			name:      "signature with complex name",
+			signature: "(a B VARCHAR)",
+			want: []map[string]any{
+				{
+					"name": "a B",
+					"type": "VARCHAR",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &RowAccessPolicyDescription{
+				Signature: tt.signature,
+			}
+			got := d.Arguments()
+			require.Equal(t, tt.want, got)
+		})
+	}
 }

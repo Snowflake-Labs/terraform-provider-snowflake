@@ -13,3 +13,7 @@ variable "schema" {
 variable "arguments" {
   type = set(map(string))
 }
+
+variable "body" {
+  type = string
+}

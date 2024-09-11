@@ -6,6 +6,10 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -38,52 +42,68 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			{
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
-					resource.TestCheckResourceAttr(resourceName, "body", "case when current_role() in ('ANALYST') then true else false end"),
-					resource.TestCheckResourceAttr(resourceName, "argument.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.name", "N"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.type", "VARCHAR"),
-					resource.TestCheckResourceAttr(resourceName, "argument.1.name", "V"),
-					resource.TestCheckResourceAttr(resourceName, "argument.1.type", "VARCHAR"),
+				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()).
+					HasCommentString("Terraform acceptance test").
+					HasBodyString("case when current_role() in ('ANALYST') then true else false end"),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.name", "N")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.type", "VARCHAR")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.1.name", "V")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.1.type", "VARCHAR")),
+					resourceshowoutputassert.RowAccessPolicyShowOutput(t, resourceName).
+						HasCreatedOnNotEmpty().
+						HasDatabaseName(id.DatabaseName()).
+						HasKind(string(sdk.PolicyKindRowAccessPolicy)).
+						HasName(id.Name()).
+						HasOptions("").
+						HasOwner(snowflakeroles.Accountadmin.Name()).
+						HasOwnerRoleType("ROLE").
+						HasSchemaName(id.SchemaName()).
+						HasComment("Terraform acceptance test"),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.body", "case when current_role() in ('ANALYST') then true else false end")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.return_type", "BOOLEAN")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature", "(N VARCHAR, V VARCHAR)")),
 				),
 			},
 			// change comment and expression
 			{
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - changed comment"),
-					resource.TestCheckResourceAttr(resourceName, "body", "case when current_role() in ('ANALYST') then false else true end"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.name", "N"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.type", "VARCHAR"),
-					resource.TestCheckResourceAttr(resourceName, "argument.1.name", "V"),
-					resource.TestCheckResourceAttr(resourceName, "argument.1.type", "VARCHAR"),
+				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()).
+					HasCommentString("Terraform acceptance test - changed comment").
+					HasBodyString("case when current_role() in ('ANALYST') then false else true end"),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.name", "N")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.type", "VARCHAR")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.1.name", "V")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.1.type", "VARCHAR")),
 				),
 			},
 			// change signature
 			{
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - changed comment"),
-					resource.TestCheckResourceAttr(resourceName, "body", "case when current_role() in ('ANALYST') then false else true end"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.name", "V"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.type", "BOOLEAN"),
-					resource.TestCheckResourceAttr(resourceName, "argument.1.name", "X"),
-					resource.TestCheckResourceAttr(resourceName, "argument.1.type", "TIMESTAMP_NTZ"),
+				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()).
+					HasCommentString("Terraform acceptance test - changed comment").
+					HasBodyString("case when current_role() in ('ANALYST') then false else true end"),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.name", "V")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.type", "BOOLEAN")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.1.name", "X")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.1.type", "TIMESTAMP_NTZ")),
 				),
 			},
 			// external change on body
@@ -93,17 +113,18 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().RowAccessPolicy.Alter(t, *sdk.NewAlterRowAccessPolicyRequest(id).WithSetBody(sdk.Pointer("case when current_role() in ('EXTERNAL') then false else true end")))
 				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - changed comment"),
-					resource.TestCheckResourceAttr(resourceName, "body", "case when current_role() in ('ANALYST') then false else true end"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.name", "V"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.type", "BOOLEAN"),
-					resource.TestCheckResourceAttr(resourceName, "argument.1.name", "X"),
-					resource.TestCheckResourceAttr(resourceName, "argument.1.type", "TIMESTAMP_NTZ"),
+				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()).
+					HasCommentString("Terraform acceptance test - changed comment").
+					HasBodyString("case when current_role() in ('ANALYST') then false else true end"),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.name", "V")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.type", "BOOLEAN")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.1.name", "X")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.1.type", "TIMESTAMP_NTZ")),
 				),
 			},
 			// IMPORT
@@ -132,6 +153,7 @@ func TestAcc_RowAccessPolicy_Issue2053(t *testing.T) {
 					"type": config.StringVariable("VARCHAR"),
 				}),
 			),
+			"body": config.StringVariable("case when current_role() in ('ANALYST') then true else false end"),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -147,6 +169,7 @@ func TestAcc_RowAccessPolicy_Issue2053(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
+				// these configs have "weird" format on purpose - to test against handling new lines during diff correctly
 				Config: rowAccessPolicy_v0_95_0_WithHeredoc(id, `    case
       when current_role() in ('ANALYST') then true
       else false
@@ -168,9 +191,9 @@ func TestAcc_RowAccessPolicy_Issue2053(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "body", `case
+				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasBodyString(`case
   when current_role() in ('ANALYST') then true
   else false
 end`),
@@ -191,10 +214,11 @@ func TestAcc_RowAccessPolicy_Rename(t *testing.T) {
 			"schema":   config.StringVariable(identifier.SchemaName()),
 			"arguments": config.SetVariable(
 				config.MapVariable(map[string]config.Variable{
-					"name": config.StringVariable("A"),
+					"name": config.StringVariable("a"),
 					"type": config.StringVariable("VARCHAR"),
 				}),
 			),
+			"body": config.StringVariable("case when current_role() in ('ANALYST') then true else false end"),
 		}
 	}
 
@@ -209,12 +233,12 @@ func TestAcc_RowAccessPolicy_Rename(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
 				ConfigVariables: m(id),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
+				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()),
 				),
 			},
-			// rename with one param changed
+			// rename
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
 				ConfigVariables: m(newId),
@@ -223,9 +247,9 @@ func TestAcc_RowAccessPolicy_Rename(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", newId.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", newId.FullyQualifiedName()),
+				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+					HasNameString(newId.Name()).
+					HasFullyQualifiedNameString(newId.FullyQualifiedName()),
 				),
 			},
 		},
@@ -293,6 +317,7 @@ func TestAcc_RowAccessPolicy_InvalidDataType(t *testing.T) {
 					"type": config.StringVariable("invalid-int"),
 				}),
 			),
+			"body": config.StringVariable("case when current_role() in ('ANALYST') then true else false end"),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -312,19 +337,20 @@ func TestAcc_RowAccessPolicy_InvalidDataType(t *testing.T) {
 }
 
 func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_row_access_policy.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":     config.StringVariable(id.Name()),
-			"database": config.StringVariable(acc.TestDatabaseName),
-			"schema":   config.StringVariable(acc.TestSchemaName),
+			"database": config.StringVariable(id.DatabaseName()),
+			"schema":   config.StringVariable(id.SchemaName()),
 			"arguments": config.SetVariable(
 				config.MapVariable(map[string]config.Variable{
 					"name": config.StringVariable("A"),
 					"type": config.StringVariable("TEXT"),
 				}),
 			),
+			"body": config.StringVariable("case when current_role() in ('ANALYST') then true else false end"),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -337,10 +363,11 @@ func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
 				ConfigVariables: m(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "argument.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.type", "VARCHAR")),
+				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+					HasNameString(id.Name()),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.type", "VARCHAR")),
+				),
 			},
 		},
 	})
@@ -349,6 +376,7 @@ func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
 func TestAcc_view_migrateFromVersion_0_95_0(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_row_access_policy.test"
+	body := "case when current_role() in ('ANALYST') then true else false end"
 	m := config.Variables{
 		"name":     config.StringVariable(id.Name()),
 		"database": config.StringVariable(id.DatabaseName()),
@@ -359,6 +387,7 @@ func TestAcc_view_migrateFromVersion_0_95_0(t *testing.T) {
 				"type": config.StringVariable("VARCHAR"),
 			}),
 		),
+		"body": config.StringVariable("case when current_role() in ('ANALYST') then true else false end"),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -374,31 +403,30 @@ func TestAcc_view_migrateFromVersion_0_95_0(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: rowAccessPolicy_v0_95_0(id, "case when current_role() in ('ANALYST') then true else false end"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "row_access_expression", "case when current_role() in ('ANALYST') then true else false end"),
-					resource.TestCheckResourceAttr(resourceName, "signature.A", "VARCHAR"),
+				Config: rowAccessPolicy_v0_95_0(id, body),
+				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "row_access_expression", body)),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
 				ConfigVariables:          m,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "body", "case when current_role() in ('ANALYST') then true else false end"),
-					resource.TestCheckNoResourceAttr(resourceName, "row_access_expression"),
-					resource.TestCheckResourceAttr(resourceName, "argument.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.name", "A"),
-					resource.TestCheckResourceAttr(resourceName, "argument.0.type", "VARCHAR"),
-					resource.TestCheckNoResourceAttr(resourceName, "signature.A"),
+				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()).
+					HasBodyString(body),
+					assert.Check(resource.TestCheckNoResourceAttr(resourceName, "row_access_expression")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.name", "A")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "argument.0.type", "VARCHAR")),
+					assert.Check(resource.TestCheckNoResourceAttr(resourceName, "signature.A")),
 				),
 			},
 		},

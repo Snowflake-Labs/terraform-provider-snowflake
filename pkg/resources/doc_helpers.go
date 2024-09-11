@@ -36,3 +36,7 @@ func withPrivilegedRolesDescription(description, paramName string) string {
 func blocklistedCharactersFieldDescription(description string) string {
 	return fmt.Sprintf(`%s Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: %s`, description, characterList([]rune{'|', '.', '(', ')', '"'}))
 }
+
+func diffSuppressStatementFieldDescription(description string) string {
+	return fmt.Sprintf(`%s To mitigate permadiff on this field, the provider replaces blank characters with a space. This can lead to false positives in cases where a change in case or run of whitespace is semantically significant.`, description)
+}

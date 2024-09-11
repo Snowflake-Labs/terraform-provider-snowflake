@@ -9,5 +9,6 @@ resource "snowflake_row_access_policy" "test" {
       type = argument.value["type"]
     }
   }
-  body = "case when current_role() in ('ANALYST') then true else false end"
+  # body = "case when current_role() in ('ANALYST') then true else false end"
+  body = var.body
 }

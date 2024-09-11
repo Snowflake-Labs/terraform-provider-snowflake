@@ -4,17 +4,30 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
-## v0.95.x ➞ v0.96.0
+## v0.95.0 ➞ v0.96.0
 ### snowflake_row_access_policy resource changes
 New fields:
   - `show_output` field that holds the response from SHOW ROW ACCESS POLICIES.
-  - `describe_output` field that holds the response from DESCRIBE ROW ACCESS POLICIES.
+  - `describe_output` field that holds the response from DESCRIBE ROW ACCESS POLICY.
 
 #### *(breaking change)* Renamed fields in snowflake_row_access_policy resource
 Renamed fields:
   - `row_access_expression` to `body`
-  - `signature` to `arguments`. Also, the field type is changed from map to a list of arguments.
-to align with Snowflake docs. Please rename this field in your configuration files. State will be migrated automatically.
+  - `signature` to `arguments`
+Please rename these fields in your configuration files. State will be migrated automatically.
+
+#### *(breaking change)* Adjusted behavior of arguments/signature
+Now, arguments are stored as a list, instead of a map. Please adjust that in your configs. State is migrated automatically. Also, this means that order of the items matters and may be adjusted.
+
+Argument names are now case sensitive.
+
+#### *(breaking change)* Adjusted behavior on changing name
+Previously, after changing `name` field, the resource was recreated. Now, the object is renamed with `RENAME TO`.
+
+#### *(breaking change)* Adjusted behavior on changing name
+Previously, `body` of a policy was compared as a raw string. This led to permament diff because of leading newlines (see https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2053).
+
+Now, similarly to handling statements in other resources, we replace blank characters with a space. The provider can cause false positives in cases where a change in case or run of whitespace is semantically significant.
 
 #### *(breaking change)* Identifiers related changes
 During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to

@@ -64,3 +64,10 @@ func (c *RowAccessPolicyClient) DropRowAccessPolicyFunc(t *testing.T, id sdk.Sch
 		require.NoError(t, err)
 	}
 }
+
+func (c *RowAccessPolicyClient) Show(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.RowAccessPolicy, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
+}
