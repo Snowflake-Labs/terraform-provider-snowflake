@@ -30,7 +30,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowMaskingPolicyOptions{
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		}
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
@@ -46,7 +46,7 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 				Pattern: sdk.String(maskingPolicyTest.Name),
 			},
 			In: &sdk.In{
-				Database: testDb(t).ID(),
+				Database: testClientHelper().Ids.DatabaseId(),
 			},
 		}
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
@@ -121,7 +121,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -165,7 +165,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -199,7 +199,7 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 				Pattern: sdk.String(name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -278,7 +278,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 				Pattern: sdk.String(maskingPolicy.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -299,7 +299,7 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 				Pattern: sdk.String(maskingPolicy.Name),
 			},
 			In: &sdk.In{
-				Schema: testSchema(t).ID(),
+				Schema: testClientHelper().Ids.SchemaId(),
 			},
 		})
 		require.NoError(t, err)
@@ -418,8 +418,8 @@ func TestInt_MaskingPoliciesShowByID(t *testing.T) {
 		assert.Equal(t, id, mp.ID())
 		assert.NotEmpty(t, mp.CreatedOn)
 		assert.Equal(t, id.Name(), mp.Name)
-		assert.Equal(t, testDb(t).Name, mp.DatabaseName)
-		assert.Equal(t, testSchema(t).Name, mp.SchemaName)
+		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), mp.DatabaseName)
+		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), mp.SchemaName)
 		assert.Equal(t, "MASKING_POLICY", mp.Kind)
 		assert.Equal(t, "ACCOUNTADMIN", mp.Owner)
 		assert.Equal(t, "", mp.Comment)

@@ -15,6 +15,7 @@ type TestClient struct {
 	ApiIntegration               *ApiIntegrationClient
 	Application                  *ApplicationClient
 	ApplicationPackage           *ApplicationPackageClient
+	AuthenticationPolicy         *AuthenticationPolicyClient
 	BcrBundles                   *BcrBundlesClient
 	Context                      *ContextClient
 	CortexSearchService          *CortexSearchServiceClient
@@ -26,6 +27,7 @@ type TestClient struct {
 	DynamicTable                 *DynamicTableClient
 	ExternalAccessIntegration    *ExternalAccessIntegrationClient
 	ExternalFunction             *ExternalFunctionClient
+	ExternalTable                *ExternalTableClient
 	ExternalVolume               *ExternalVolumeClient
 	FailoverGroup                *FailoverGroupClient
 	FileFormat                   *FileFormatClient
@@ -78,6 +80,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		ApiIntegration:               NewApiIntegrationClient(context, idsGenerator),
 		Application:                  NewApplicationClient(context, idsGenerator),
 		ApplicationPackage:           NewApplicationPackageClient(context, idsGenerator),
+		AuthenticationPolicy:         NewAuthenticationPolicyClient(context, idsGenerator),
 		BcrBundles:                   NewBcrBundlesClient(context),
 		Context:                      NewContextClient(context),
 		CortexSearchService:          NewCortexSearchServiceClient(context, idsGenerator),
@@ -89,6 +92,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		DynamicTable:                 NewDynamicTableClient(context, idsGenerator),
 		ExternalAccessIntegration:    NewExternalAccessIntegrationClient(context, idsGenerator),
 		ExternalFunction:             NewExternalFunctionClient(context, idsGenerator),
+		ExternalTable:                NewExternalTableClient(context, idsGenerator),
 		ExternalVolume:               NewExternalVolumeClient(context, idsGenerator),
 		FailoverGroup:                NewFailoverGroupClient(context, idsGenerator),
 		FileFormat:                   NewFileFormatClient(context, idsGenerator),
@@ -128,4 +132,8 @@ type TestClientContext struct {
 	schema           string
 	warehouse        string
 	testObjectSuffix string
+}
+
+func (c *TestClient) GetAccountLocator() string {
+	return c.context.client.GetAccountLocator()
 }

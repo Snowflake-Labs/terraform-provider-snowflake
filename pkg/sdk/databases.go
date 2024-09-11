@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var (
@@ -791,12 +793,7 @@ func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*
 	if err != nil {
 		return nil, err
 	}
-	for _, database := range databases {
-		if database.ID() == id {
-			return &database, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return collections.FindFirst(databases, func(r Database) bool { return r.Name == id.Name() })
 }
 
 type DatabaseDetails struct {

@@ -146,7 +146,7 @@ func (row policyReferenceDBRow) convert() *PolicyReference {
 	if row.TagName.Valid {
 		policyReference.TagName = &row.TagName.String
 	}
-	if row.TagName.Valid {
+	if row.PolicyStatus.Valid {
 		policyReference.PolicyStatus = &row.PolicyStatus.String
 	}
 	return &policyReference

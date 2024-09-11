@@ -18,11 +18,11 @@ func TestInt_Comment(t *testing.T) {
 		comment := random.Comment()
 		err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
 			ObjectType: sdk.ObjectTypeWarehouse,
-			ObjectName: testWarehouse(t).ID(),
+			ObjectName: testClientHelper().Ids.WarehouseId(),
 			Value:      sdk.String(comment),
 		})
 		require.NoError(t, err)
-		wh, err := client.Warehouses.ShowByID(ctx, testWarehouse(t).ID())
+		wh, err := client.Warehouses.ShowByID(ctx, testClientHelper().Ids.WarehouseId())
 		require.NoError(t, err)
 		assert.Equal(t, comment, wh.Comment)
 	})

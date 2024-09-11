@@ -224,28 +224,29 @@ func TestInt_EventTables(t *testing.T) {
 		err := client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		e, err := testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.ObjectTypeTable)
+		e, err := testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.PolicyEntityDomainTable)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy.ID().Name(), e.PolicyName)
-		assert.Equal(t, "ROW_ACCESS_POLICY", e.PolicyKind)
+		assert.Equal(t, sdk.PolicyKindRowAccessPolicy, e.PolicyKind)
 		assert.Equal(t, table.ID().Name(), e.RefEntityName)
 		assert.Equal(t, "TABLE", e.RefEntityDomain)
-		assert.Equal(t, "ACTIVE", e.PolicyStatus)
+		assert.Equal(t, "ACTIVE", *e.PolicyStatus)
 
 		// remove policy
 		alterRequest = sdk.NewAlterEventTableRequest(table.ID()).WithDropRowAccessPolicy(sdk.NewEventTableDropRowAccessPolicyRequest(rowAccessPolicy.ID()))
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.ObjectTypeTable)
-		require.Error(t, err, "no rows in result set")
+		references, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, table.ID(), sdk.PolicyEntityDomainTable)
+		require.NoError(t, err)
+		require.Empty(t, references)
 
 		// add policy again
 		alterRequest = sdk.NewAlterEventTableRequest(table.ID()).WithAddRowAccessPolicy(sdk.NewEventTableAddRowAccessPolicyRequest(rowAccessPolicy.ID(), []string{"id"}))
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		e, err = testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.ObjectTypeTable)
+		e, err = testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.PolicyEntityDomainTable)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy.ID().Name(), e.PolicyName)
 
@@ -257,7 +258,7 @@ func TestInt_EventTables(t *testing.T) {
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		e, err = testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.ObjectTypeTable)
+		e, err = testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.PolicyEntityDomainTable)
 		require.NoError(t, err)
 		assert.Equal(t, rowAccessPolicy2.ID().Name(), e.PolicyName)
 
@@ -266,8 +267,9 @@ func TestInt_EventTables(t *testing.T) {
 		err = client.EventTables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		_, err = testClientHelper().PolicyReferences.GetPolicyReference(t, table.ID(), sdk.ObjectTypeView)
-		require.Error(t, err, "no rows in result set")
+		references, err = testClientHelper().PolicyReferences.GetPolicyReferences(t, table.ID(), sdk.PolicyEntityDomainView)
+		require.NoError(t, err)
+		require.Empty(t, references)
 	})
 }
 

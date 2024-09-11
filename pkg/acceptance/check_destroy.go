@@ -17,7 +17,8 @@ import (
 
 func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
+	// TODO [SNOW-1653619]: use TestClient() here
+	client := atc.client
 	t.Logf("running check destroy for resource %s", resource)
 
 	return func(s *terraform.State) error {
@@ -236,24 +237,18 @@ func asId[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.Sch
 // CheckGrantAccountRoleDestroy is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckGrantAccountRoleDestroy(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
 
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_grant_account_role" {
 				continue
 			}
-			ctx := context.Background()
 			parts := strings.Split(rs.Primary.ID, "|")
 			roleName := parts[0]
 			roleIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(roleName)
 			objectType := parts[1]
 			targetIdentifier := parts[2]
-			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-				Of: &sdk.ShowGrantsOf{
-					Role: roleIdentifier,
-				},
-			})
+			grants, err := TestClient().Grant.ShowGrantsOfAccountRole(t, roleIdentifier)
 			if err != nil {
 				return nil
 			}
@@ -278,24 +273,18 @@ func CheckGrantAccountRoleDestroy(t *testing.T) func(*terraform.State) error {
 // CheckGrantDatabaseRoleDestroy is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckGrantDatabaseRoleDestroy(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
 
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_grant_database_role" {
 				continue
 			}
-			ctx := context.Background()
 			id := rs.Primary.ID
 			ids := strings.Split(id, "|")
 			databaseRoleName := ids[0]
 			objectType := ids[1]
 			parentRoleName := ids[2]
-			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-				Of: &sdk.ShowGrantsOf{
-					DatabaseRole: sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName),
-				},
-			})
+			grants, err := TestClient().Grant.ShowGrantsOfDatabaseRole(t, sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(databaseRoleName))
 			if err != nil {
 				continue
 			}
@@ -314,21 +303,15 @@ func CheckGrantDatabaseRoleDestroy(t *testing.T) func(*terraform.State) error {
 // CheckAccountRolePrivilegesRevoked is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckAccountRolePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
 
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_grant_privileges_to_account_role" {
 				continue
 			}
-			ctx := context.Background()
 
 			id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["account_role_name"])
-			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-				To: &sdk.ShowGrantsTo{
-					Role: id,
-				},
-			})
+			grants, err := TestClient().Grant.ShowGrantsToAccountRole(t, id)
 			if err != nil {
 				if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
 					continue
@@ -350,21 +333,15 @@ func CheckAccountRolePrivilegesRevoked(t *testing.T) func(*terraform.State) erro
 // CheckDatabaseRolePrivilegesRevoked is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckDatabaseRolePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
 
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_grant_privileges_to_database_role" {
 				continue
 			}
-			ctx := context.Background()
 
 			id := sdk.NewDatabaseObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["database_role_name"])
-			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-				To: &sdk.ShowGrantsTo{
-					DatabaseRole: id,
-				},
-			})
+			grants, err := TestClient().Grant.ShowGrantsToDatabaseRole(t, id)
 			if err != nil {
 				return err
 			}
@@ -386,23 +363,15 @@ func CheckDatabaseRolePrivilegesRevoked(t *testing.T) func(*terraform.State) err
 // CheckSharePrivilegesRevoked is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckSharePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
 
 	return func(state *terraform.State) error {
 		for _, rs := range state.RootModule().Resources {
 			if rs.Type != "snowflake_grant_privileges_to_share" {
 				continue
 			}
-			ctx := context.Background()
 
 			id := sdk.NewExternalObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["to_share"])
-			grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-				To: &sdk.ShowGrantsTo{
-					Share: &sdk.ShowGrantsToShare{
-						Name: sdk.NewAccountObjectIdentifier(id.Name()),
-					},
-				},
-			})
+			grants, err := TestClient().Grant.ShowGrantsToShare(t, sdk.NewAccountObjectIdentifier(id.Name()))
 			if err != nil {
 				return err
 			}
@@ -421,18 +390,12 @@ func CheckSharePrivilegesRevoked(t *testing.T) func(*terraform.State) error {
 // CheckUserPasswordPolicyAttachmentDestroy is a custom checks that should be later incorporated into generic CheckDestroy
 func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.State) error {
 	t.Helper()
-	client := Client(t)
-
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "snowflake_user_password_policy_attachment" {
 				continue
 			}
-			ctx := context.Background()
-			policyReferences, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(
-				sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"]),
-				sdk.PolicyEntityDomainUser,
-			))
+			policyReferences, err := TestClient().PolicyReferences.GetPolicyReferences(t, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"]), sdk.PolicyEntityDomainUser)
 			if err != nil {
 				if strings.Contains(err.Error(), "does not exist or not authorized") {
 					// Note: this can happen if the Policy Reference or the User has been deleted as well; in this case, ignore the error

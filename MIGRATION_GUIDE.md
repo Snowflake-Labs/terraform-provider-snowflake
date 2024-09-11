@@ -348,6 +348,17 @@ To migrate, in case of having two resources:
 - remove `snowflake_user_public_keys` from state (following https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#resource-migration)
 - remove `snowflake_user_public_keys` from config
 
+#### *(breaking change)* snowflake_network_policy_attachment usage with snowflake_user
+
+`snowflake_network_policy_attachment` changes are similar to the changes to `snowflake_user_public_keys` above. It is advised to use `snowflake_network_policy_attachment` only when user is not managed through terraform. Having both resources configured for the same user will result in improper behavior.
+
+To migrate, in case of having two resources:
+- copy network policy to [network_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.95.0/docs/resources/user#network_policy) attribute in the `snowflake_user` resource
+- remove `snowflake_network_policy_attachment` from state (following https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#resource-migration)
+- remove `snowflake_network_policy_attachment` from config
+
+References: [#3048](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/3048), [#3058](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3058)
+
 #### *(note)* snowflake_user_password_policy_attachment and other user policies
 
 `snowflake_user_password_policy_attachment` is not addressed in the current version.

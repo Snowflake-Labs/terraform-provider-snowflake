@@ -110,7 +110,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		fileFormat, fileFormatCleanup := testClientHelper().FileFormat.CreateFileFormat(t)
 		t.Cleanup(fileFormatCleanup)
 
-		err := client.Sessions.UseWarehouse(ctx, testWarehouse(t).ID())
+		err := client.Sessions.UseWarehouse(ctx, testClientHelper().Ids.WarehouseId())
 		require.NoError(t, err)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -351,7 +351,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			sdk.NewShowExternalTableRequest().
 				WithTerse(true).
 				WithLike(name).
-				WithIn(*sdk.NewShowExternalTableInRequest().WithDatabase(testDb(t).ID())).
+				WithIn(*sdk.NewShowExternalTableInRequest().WithDatabase(testClientHelper().Ids.DatabaseId())).
 				WithStartsWith(name).
 				WithLimitFrom(*sdk.NewLimitFromRequest().WithRows(sdk.Int(1))),
 		)

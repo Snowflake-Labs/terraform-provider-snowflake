@@ -1,23 +1,22 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"strconv"
 	"testing"
-	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
@@ -147,6 +146,9 @@ func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 }
 
 func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 	externalShareId := createShareableDatabase(t)
@@ -178,23 +180,7 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 		"enable_console_output":                         config.BoolVariable(true),
 	}
 
-	// TODO(SNOW-1562172): Create a better solution for this type of situations
-	// We have to create test database from share before the actual test to check if the newly created share is ready
-	// after previous test (there's some kind of issue or delay between cleaning up a share and creating a new one right after).
-	testId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	err := acc.Client(t).Databases.CreateShared(context.Background(), testId, externalShareId, new(sdk.CreateSharedDatabaseOptions))
-	require.NoError(t, err)
-
-	require.Eventually(t, func() bool {
-		database, err := acc.TestClient().Database.Show(t, testId)
-		if err != nil {
-			return false
-		}
-		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
-		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
-		return database.Origin != nil
-	}, time.Minute, time.Second*6)
-	acc.TestClient().Database.DropDatabaseFunc(t, testId)()
+	acc.TestClient().Database.CreateDatabaseFromShareTemporarily(t, externalShareId)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -289,60 +275,28 @@ func TestAcc_CreateSharedDatabase_InvalidValues(t *testing.T) {
 func createShareableDatabase(t *testing.T) sdk.ExternalObjectIdentifier {
 	t.Helper()
 
-	ctx := context.Background()
-
 	share, shareCleanup := acc.SecondaryTestClient().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
 	sharedDatabase, sharedDatabaseCleanup := acc.SecondaryTestClient().Database.CreateDatabase(t)
 	t.Cleanup(sharedDatabaseCleanup)
 
-	err := acc.SecondaryClient(t).Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-		Database: sharedDatabase.ID(),
-	}, share.ID())
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		err := acc.SecondaryClient(t).Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: sharedDatabase.ID(),
-		}, share.ID())
-		require.NoError(t, err)
-	})
+	revoke := acc.SecondaryTestClient().Grant.GrantPrivilegeOnDatabaseToShare(t, sharedDatabase.ID(), share.ID(), []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage})
+	t.Cleanup(revoke)
 
-	err = acc.SecondaryClient(t).Shares.Alter(ctx, share.ID(), &sdk.AlterShareOptions{
-		IfExists: sdk.Bool(true),
-		Set: &sdk.ShareSet{
-			Accounts: []sdk.AccountIdentifier{
-				acc.TestClient().Account.GetAccountIdentifier(t),
-			},
-		},
-	})
-	require.NoError(t, err)
+	acc.SecondaryTestClient().Share.SetAccountOnShare(t, acc.TestClient().Account.GetAccountIdentifier(t), share.ID())
 
 	return sdk.NewExternalObjectIdentifier(acc.SecondaryTestClient().Account.GetAccountIdentifier(t), share.ID())
 }
 
 func TestAcc_SharedDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	externalShareId := createShareableDatabase(t)
 
-	// TODO(SNOW-1562172): Create a better solution for this type of situations
-	// We have to create test database from share before the actual test to check if the newly created share is ready
-	// after previous test (there's some kind of issue or delay between cleaning up a share and creating a new one right after).
-	testId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	err := acc.Client(t).Databases.CreateShared(context.Background(), testId, externalShareId, new(sdk.CreateSharedDatabaseOptions))
-	require.NoError(t, err)
-
-	require.Eventually(t, func() bool {
-		database, err := acc.TestClient().Database.Show(t, testId)
-		if err != nil {
-			return false
-		}
-		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
-		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
-		return database.Origin != nil
-	}, time.Minute, time.Second*6)
-	acc.TestClient().Database.DropDatabaseFunc(t, testId)()
+	acc.TestClient().Database.CreateDatabaseFromShareTemporarily(t, externalShareId)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -382,29 +336,16 @@ func sharedDatabaseConfigBasic(name, externalShareId string) string {
 }
 
 func TestAcc_SharedDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 
 	externalShareId := createShareableDatabase(t)
 	unquotedExternalShareId := fmt.Sprintf("%s.%s.%s", externalShareId.AccountIdentifier().OrganizationName(), externalShareId.AccountIdentifier().AccountName(), externalShareId.Name())
 
-	// TODO(SNOW-1562172): Create a better solution for this type of situations
-	// We have to create test database from share before the actual test to check if the newly created share is ready
-	// after previous test (there's some kind of issue or delay between cleaning up a share and creating a new one right after).
-	testId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	err := acc.Client(t).Databases.CreateShared(context.Background(), testId, externalShareId, new(sdk.CreateSharedDatabaseOptions))
-	require.NoError(t, err)
-
-	require.Eventually(t, func() bool {
-		database, err := acc.TestClient().Database.Show(t, testId)
-		if err != nil {
-			return false
-		}
-		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
-		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
-		return database.Origin != nil
-	}, time.Minute, time.Second*6)
-	acc.TestClient().Database.DropDatabaseFunc(t, testId)()
+	acc.TestClient().Database.CreateDatabaseFromShareTemporarily(t, externalShareId)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },

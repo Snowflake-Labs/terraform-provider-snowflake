@@ -16,7 +16,7 @@ func TestInt_CortexSearchServices(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	warehouse := testWarehouse(t)
+	warehouseId := testClientHelper().Ids.WarehouseId()
 
 	on := "some_text_column"
 	targetLag := "2 minutes"
@@ -31,7 +31,7 @@ func TestInt_CortexSearchServices(t *testing.T) {
 		table, tableCleanup := testClientHelper().Table.CreateTableWithPredefinedColumns(t)
 		t.Cleanup(tableCleanup)
 
-		err := client.CortexSearchServices.Create(ctx, sdk.NewCreateCortexSearchServiceRequest(id, on, warehouse.ID(), targetLag, buildQuery(table.ID())))
+		err := client.CortexSearchServices.Create(ctx, sdk.NewCreateCortexSearchServiceRequest(id, on, warehouseId, targetLag, buildQuery(table.ID())))
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().CortexSearchService.DropCortexSearchServiceFunc(t, id))
 
@@ -47,7 +47,7 @@ func TestInt_CortexSearchServices(t *testing.T) {
 
 		name := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		comment := random.Comment()
-		err := client.CortexSearchServices.Create(ctx, sdk.NewCreateCortexSearchServiceRequest(name, on, testWarehouse(t).ID(), targetLag, buildQuery(table.ID())).WithOrReplace(true).WithComment(comment))
+		err := client.CortexSearchServices.Create(ctx, sdk.NewCreateCortexSearchServiceRequest(name, on, testClientHelper().Ids.WarehouseId(), targetLag, buildQuery(table.ID())).WithOrReplace(true).WithComment(comment))
 		require.NoError(t, err)
 		t.Cleanup(func() {
 			err = client.CortexSearchServices.Drop(ctx, sdk.NewDropCortexSearchServiceRequest(name))

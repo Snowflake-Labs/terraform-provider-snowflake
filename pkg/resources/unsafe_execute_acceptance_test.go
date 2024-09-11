@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -10,6 +9,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -512,11 +512,20 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 }
 
 func TestAcc_UnsafeExecute_grants(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
-	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_ROLE_")
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	client := acc.TestClient()
+
+	database, databaseCleanup := client.Database.CreateDatabase(t)
+	t.Cleanup(databaseCleanup)
+
+	role, roleCleanup := client.Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+
 	privilege := sdk.AccountObjectPrivilegeCreateSchema
-	execute := fmt.Sprintf("GRANT %s ON DATABASE %s TO ROLE %s", privilege, id.Name(), roleId.Name())
-	revert := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM ROLE %s", privilege, id.Name(), roleId.Name())
+	execute := fmt.Sprintf("GRANT %s ON DATABASE %s TO ROLE %s", privilege, database.ID().FullyQualifiedName(), role.ID().FullyQualifiedName())
+	revert := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM ROLE %s", privilege, database.ID().FullyQualifiedName(), role.ID().FullyQualifiedName())
 
 	resourceName := "snowflake_unsafe_execute.test"
 	createConfigVariables := func(execute string, revert string) map[string]config.Variable {
@@ -533,13 +542,11 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: func(state *terraform.State) error {
-			err := verifyGrantExists(t, roleId, privilege, false)(state)
-			dropResourcesForUnsafeExecuteTestCaseForGrants(t, id, roleId)
+			err := verifyGrantExists(t, role.ID(), privilege, false)(state)
 			return err
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig:       func() { createResourcesForExecuteUnsafeTestCaseForGrants(t, id, roleId) },
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
 				ConfigVariables: createConfigVariables(execute, revert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -549,7 +556,7 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "execute", execute),
 					resource.TestCheckResourceAttr(resourceName, "revert", revert),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					verifyGrantExists(t, roleId, privilege, true),
+					verifyGrantExists(t, role.ID(), privilege, true),
 				),
 			},
 		},
@@ -570,10 +577,24 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 	t.Skip("Skipping TestAcc_UnsafeExecute_grantsComplex because of https://github.com/hashicorp/terraform-plugin-sdk/issues/536 issue")
 
-	dbId1 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
-	dbId2 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
-	roleId1 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_ROLE_")
-	roleId2 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_ROLE_")
+	client := acc.TestClient()
+
+	database1, database1Cleanup := client.Database.CreateDatabase(t)
+	t.Cleanup(database1Cleanup)
+
+	database2, database2Cleanup := client.Database.CreateDatabase(t)
+	t.Cleanup(database2Cleanup)
+
+	role1, role1Cleanup := client.Role.CreateRole(t)
+	t.Cleanup(role1Cleanup)
+
+	role2, role2Cleanup := client.Role.CreateRole(t)
+	t.Cleanup(role2Cleanup)
+
+	dbId1 := database1.ID()
+	dbId2 := database2.ID()
+	roleId1 := role1.ID()
+	roleId2 := role2.ID()
 	privilege1 := sdk.AccountObjectPrivilegeCreateSchema
 	privilege2 := sdk.AccountObjectPrivilegeModify
 	privilege3 := sdk.AccountObjectPrivilegeUsage
@@ -625,16 +646,10 @@ func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			dropResourcesForUnsafeExecuteTestCaseForGrants(t, dbId1, roleId1)
-			dropResourcesForUnsafeExecuteTestCaseForGrants(t, dbId2, roleId2)
 			return err
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					createResourcesForExecuteUnsafeTestCaseForGrants(t, dbId1, roleId1)
-					createResourcesForExecuteUnsafeTestCaseForGrants(t, dbId2, roleId2)
-				},
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: createConfigVariables(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -703,36 +718,13 @@ output "unsafe" {
 `, queryNumber)
 }
 
-func createResourcesForExecuteUnsafeTestCaseForGrants(t *testing.T, dbId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier) {
-	t.Helper()
-
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	err := client.Databases.Create(ctx, dbId, &sdk.CreateDatabaseOptions{})
-	require.NoError(t, err)
-
-	err = client.Roles.Create(ctx, sdk.NewCreateRoleRequest(roleId))
-	require.NoError(t, err)
-}
-
-func dropResourcesForUnsafeExecuteTestCaseForGrants(t *testing.T, dbId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier) {
-	t.Helper()
-
-	client := acc.Client(t)
-	ctx := context.Background()
-
-	err := client.Databases.Drop(ctx, dbId, &sdk.DropDatabaseOptions{})
-	assert.NoError(t, err)
-
-	err = client.Roles.Drop(ctx, sdk.NewDropRoleRequest(roleId))
-	assert.NoError(t, err)
-}
-
 func verifyGrantExists(t *testing.T, roleId sdk.AccountObjectIdentifier, privilege sdk.AccountObjectPrivilege, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {
-		grants := acc.TestClient().Role.ShowGrantsTo(t, roleId)
+		grants, err := acc.TestClient().Grant.ShowGrantsToAccountRole(t, roleId)
+		if err != nil {
+			return err
+		}
 
 		if shouldExist {
 			require.Equal(t, 1, len(grants))

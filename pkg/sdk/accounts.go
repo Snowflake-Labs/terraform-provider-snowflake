@@ -162,16 +162,17 @@ func (opts *AccountLevelParameters) validate() error {
 }
 
 type AccountSet struct {
-	Parameters      *AccountLevelParameters `ddl:"list,no_parentheses"`
-	ResourceMonitor AccountObjectIdentifier `ddl:"identifier,equals" sql:"RESOURCE_MONITOR"`
-	PasswordPolicy  SchemaObjectIdentifier  `ddl:"identifier" sql:"PASSWORD POLICY"`
-	SessionPolicy   SchemaObjectIdentifier  `ddl:"identifier" sql:"SESSION POLICY"`
+	Parameters           *AccountLevelParameters `ddl:"list,no_parentheses"`
+	ResourceMonitor      AccountObjectIdentifier `ddl:"identifier,equals" sql:"RESOURCE_MONITOR"`
+	PasswordPolicy       SchemaObjectIdentifier  `ddl:"identifier" sql:"PASSWORD POLICY"`
+	SessionPolicy        SchemaObjectIdentifier  `ddl:"identifier" sql:"SESSION POLICY"`
+	AuthenticationPolicy SchemaObjectIdentifier  `ddl:"identifier" sql:"AUTHENTICATION POLICY"`
 }
 
 func (opts *AccountSet) validate() error {
 	var errs []error
-	if !exactlyOneValueSet(opts.Parameters, opts.ResourceMonitor, opts.PasswordPolicy, opts.SessionPolicy) {
-		errs = append(errs, errExactlyOneOf("AccountSet", "Parameters", "ResourceMonitor", "PasswordPolicy", "SessionPolicy"))
+	if !exactlyOneValueSet(opts.Parameters, opts.ResourceMonitor, opts.PasswordPolicy, opts.SessionPolicy, opts.AuthenticationPolicy) {
+		errs = append(errs, errExactlyOneOf("AccountSet", "Parameters", "ResourceMonitor", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
 	}
 	if valueSet(opts.Parameters) {
 		if err := opts.Parameters.validate(); err != nil {
@@ -196,15 +197,16 @@ func (opts *AccountLevelParametersUnset) validate() error {
 }
 
 type AccountUnset struct {
-	Parameters     *AccountLevelParametersUnset `ddl:"list,no_parentheses"`
-	PasswordPolicy *bool                        `ddl:"keyword" sql:"PASSWORD POLICY"`
-	SessionPolicy  *bool                        `ddl:"keyword" sql:"SESSION POLICY"`
+	Parameters           *AccountLevelParametersUnset `ddl:"list,no_parentheses"`
+	PasswordPolicy       *bool                        `ddl:"keyword" sql:"PASSWORD POLICY"`
+	SessionPolicy        *bool                        `ddl:"keyword" sql:"SESSION POLICY"`
+	AuthenticationPolicy *bool                        `ddl:"keyword" sql:"AUTHENTICATION POLICY"`
 }
 
 func (opts *AccountUnset) validate() error {
 	var errs []error
-	if !exactlyOneValueSet(opts.Parameters, opts.PasswordPolicy, opts.SessionPolicy) {
-		errs = append(errs, errExactlyOneOf("AccountUnset", "Parameters", "PasswordPolicy", "SessionPolicy"))
+	if !exactlyOneValueSet(opts.Parameters, opts.PasswordPolicy, opts.SessionPolicy, opts.AuthenticationPolicy) {
+		errs = append(errs, errExactlyOneOf("AccountUnset", "Parameters", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
 	}
 	if valueSet(opts.Parameters) {
 		if err := opts.Parameters.validate(); err != nil {

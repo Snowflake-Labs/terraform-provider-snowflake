@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
 	"testing"
@@ -70,21 +69,4 @@ func AssertErrorContainsPartsFunc(t *testing.T, parts []string) resource.ErrorCh
 		}
 		return nil
 	}
-}
-
-type PolicyReference struct {
-	PolicyDb          string         `db:"POLICY_DB"`
-	PolicySchema      string         `db:"POLICY_SCHEMA"`
-	PolicyName        string         `db:"POLICY_NAME"`
-	PolicyKind        string         `db:"POLICY_KIND"`
-	RefDatabaseName   string         `db:"REF_DATABASE_NAME"`
-	RefSchemaName     string         `db:"REF_SCHEMA_NAME"`
-	RefEntityName     string         `db:"REF_ENTITY_NAME"`
-	RefEntityDomain   string         `db:"REF_ENTITY_DOMAIN"`
-	RefColumnName     sql.NullString `db:"REF_COLUMN_NAME"`
-	RefArgColumnNames sql.NullString `db:"REF_ARG_COLUMN_NAMES"`
-	TagDatabase       sql.NullString `db:"TAG_DATABASE"`
-	TagSchema         sql.NullString `db:"TAG_SCHEMA"`
-	TagName           sql.NullString `db:"TAG_NAME"`
-	PolicyStatus      string         `db:"POLICY_STATUS"`
 }

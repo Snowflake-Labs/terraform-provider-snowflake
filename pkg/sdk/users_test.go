@@ -160,6 +160,17 @@ func TestUserAlter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET PASSWORD POLICY %s", id.FullyQualifiedName(), passwordPolicy.FullyQualifiedName())
 	})
 
+	t.Run("with setting an authentication policy", func(t *testing.T) {
+		authenticationPolicy := randomSchemaObjectIdentifier()
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				AuthenticationPolicy: authenticationPolicy,
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET AUTHENTICATION POLICY %s", id.FullyQualifiedName(), authenticationPolicy.FullyQualifiedName())
+	})
+
 	t.Run("with setting tags", func(t *testing.T) {
 		tagId1 := randomSchemaObjectIdentifier()
 		tagId2 := randomSchemaObjectIdentifierInSchema(tagId1.SchemaId())
@@ -315,14 +326,23 @@ func TestUserAlter(t *testing.T) {
 	})
 
 	t.Run("with unsetting a policy", func(t *testing.T) {
-		sessionPolicy := "SESSION_POLICY1"
 		opts := &AlterUserOptions{
 			name: id,
-			Set: &UserSet{
-				SessionPolicy: String(sessionPolicy),
+			Unset: &UserUnset{
+				SessionPolicy: Bool(true),
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET SESSION POLICY = %s", id.FullyQualifiedName(), sessionPolicy)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s UNSET SESSION POLICY", id.FullyQualifiedName())
+	})
+
+	t.Run("with unsetting an authentication policy", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Unset: &UserUnset{
+				AuthenticationPolicy: Bool(true),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s UNSET AUTHENTICATION POLICY", id.FullyQualifiedName())
 	})
 
 	t.Run("with removing delegated authorization of role", func(t *testing.T) {
