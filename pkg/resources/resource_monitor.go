@@ -22,7 +22,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "Identifier for the resource monitor; must be unique for your account.",
+		Description:      blocklistedCharactersFieldDescription("Identifier for the resource monitor; must be unique for your account."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"notify_users": {

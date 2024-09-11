@@ -36,7 +36,7 @@ resource "snowflake_resource_monitor" "monitor" {
 
 ### Required
 
-- `name` (String) Identifier for the resource monitor; must be unique for your account.
+- `name` (String) Identifier for the resource monitor; must be unique for your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 
 ### Optional
 
