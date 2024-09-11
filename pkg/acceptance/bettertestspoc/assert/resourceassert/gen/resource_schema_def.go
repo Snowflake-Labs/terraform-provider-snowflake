@@ -41,4 +41,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "ResourceMonitor",
 		schema: resources.ResourceMonitor().Schema,
 	},
+	{
+		name:   "RowAccessPolicy",
+		schema: resources.RowAccessPolicy().Schema,
+	},
 }

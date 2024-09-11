@@ -9,5 +9,6 @@ resource "snowflake_row_access_policy" "test" {
       type = argument.value["type"]
     }
   }
-  body = var.body
+  body    = var.body
+  comment = var.comment
 }

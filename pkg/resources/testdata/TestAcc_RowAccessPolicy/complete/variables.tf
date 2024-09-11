@@ -17,3 +17,7 @@ variable "argument" {
 variable "body" {
   type = string
 }
+
+variable "comment" {
+  type = string
+}

@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"strings"
 )
 
 func v0_95_0_RowAccessPolicyStateUpgrader(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
@@ -16,7 +17,7 @@ func v0_95_0_RowAccessPolicyStateUpgrader(ctx context.Context, rawState map[stri
 	args := make([]map[string]any, 0)
 	for k, v := range signature {
 		args = append(args, map[string]any{
-			"name": k,
+			"name": strings.ToUpper(k),
 			"type": v,
 		})
 	}

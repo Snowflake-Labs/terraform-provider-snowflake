@@ -47,6 +47,19 @@ func (c *RowAccessPolicyClient) CreateRowAccessPolicyWithDataType(t *testing.T, 
 	return rowAccessPolicy, c.DropRowAccessPolicyFunc(t, id)
 }
 
+func (c *RowAccessPolicyClient) CreateOrReplaceRowAccessPolicy(t *testing.T, req sdk.CreateRowAccessPolicyRequest) (*sdk.RowAccessPolicy, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Create(ctx, req.WithOrReplace(sdk.Pointer(true)))
+	require.NoError(t, err)
+
+	rowAccessPolicy, err := c.client().ShowByID(ctx, req.GetName())
+	require.NoError(t, err)
+
+	return rowAccessPolicy, c.DropRowAccessPolicyFunc(t, req.GetName())
+}
+
 func (c *RowAccessPolicyClient) Alter(t *testing.T, req sdk.AlterRowAccessPolicyRequest) {
 	t.Helper()
 	ctx := context.Background()

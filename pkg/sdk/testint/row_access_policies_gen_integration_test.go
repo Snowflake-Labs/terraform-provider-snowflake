@@ -350,3 +350,60 @@ func TestInt_RowAccessPoliciesShowByID(t *testing.T) {
 		require.Equal(t, id2, e2.ID())
 	})
 }
+
+func TestInt_RowAccessPoliciesDescribe(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	cleanupRowAccessPolicyHandle := func(id sdk.SchemaObjectIdentifier) func() {
+		return func() {
+			err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
+			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+				return
+			}
+			require.NoError(t, err)
+		}
+	}
+
+	createRowAccessPolicyHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier, args []sdk.CreateRowAccessPolicyArgsRequest) {
+		t.Helper()
+
+		err := client.RowAccessPolicies.Create(ctx, sdk.NewCreateRowAccessPolicyRequest(id, args, "true"))
+		require.NoError(t, err)
+		t.Cleanup(cleanupRowAccessPolicyHandle(id))
+	}
+
+	t.Run("describe", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		arg1 := sdk.NewCreateRowAccessPolicyArgsRequest(random.AlphaN(5), sdk.DataTypeVARCHAR)
+		arg2 := sdk.NewCreateRowAccessPolicyArgsRequest(random.AlphaN(5)+" foo", "TEXT")
+		arg3 := sdk.NewCreateRowAccessPolicyArgsRequest(random.AlphaN(5), "NUMBER(10, 5)")
+		args := []sdk.CreateRowAccessPolicyArgsRequest{*arg1, *arg2, *arg3}
+
+		createRowAccessPolicyHandle(t, id, args)
+
+		policy, err := client.RowAccessPolicies.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, "true", policy.Body)
+		assert.Equal(t, id.Name(), policy.Name)
+		assert.Equal(t, "BOOLEAN", policy.ReturnType)
+		assert.Equal(t, fmt.Sprintf("(%s VARCHAR, %s VARCHAR, %s NUMBER)", arg1.Name, arg2.Name, arg3.Name), policy.Signature)
+		gotArgs, err := policy.Arguments()
+		require.NoError(t, err)
+		assert.Equal(t, []sdk.RowAccessPolicyArgument{
+			{
+				Name: arg1.Name,
+				Type: "VARCHAR",
+			},
+			{
+				Name: arg2.Name,
+				Type: "VARCHAR",
+			},
+			{
+				Name: arg3.Name,
+				Type: "NUMBER",
+			},
+		}, gotArgs)
+	})
+}

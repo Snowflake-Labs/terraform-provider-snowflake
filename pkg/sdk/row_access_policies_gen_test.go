@@ -294,8 +294,32 @@ func TestRowAccessPolicyDescription_Arguments(t *testing.T) {
 			d := &RowAccessPolicyDescription{
 				Signature: tt.signature,
 			}
-			got := d.Arguments()
+			got, err := d.Arguments()
+			require.NoError(t, err)
 			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestRowAccessPolicyDescription_ArgumentsInvalid(t *testing.T) {
+	tests := []struct {
+		name      string
+		signature string
+		err       string
+	}{
+		{
+			name:      "signature without data type",
+			signature: "(A)",
+			err:       "parsing policy arguments: expected argument name and type, got A",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &RowAccessPolicyDescription{
+				Signature: tt.signature,
+			}
+			_, err := d.Arguments()
+			require.ErrorContains(t, err, tt.err)
 		})
 	}
 }

@@ -49,11 +49,9 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 				},
 				// TODO(SNOW-1596962): Fully support VECTOR data type sdk.ParseFunctionArgumentsFromString could be a base for another function that takes argument names into consideration.
 				"type": {
-					Type:     schema.TypeString,
-					Required: true,
-					DiffSuppressFunc: func(key, oldValue, newValue string, _ *schema.ResourceData) bool {
-						return NormalizeAndCompare(sdk.ToDataType)(key, oldValue, newValue, nil)
-					},
+					Type:             schema.TypeString,
+					Required:         true,
+					DiffSuppressFunc: NormalizeAndCompare(sdk.ToDataType),
 					ValidateDiagFunc: sdkValidation(sdk.ToDataType),
 					Description:      "The argument type",
 					ForceNew:         true,
@@ -106,12 +104,12 @@ func RowAccessPolicy() *schema.Resource {
 
 		Schema: rowAccessPolicySchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportRowAccessPolicy,
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, ShowOutputAttributeName, "comment"),
-			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, DescribeOutputAttributeName, "body"),
+			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, ShowOutputAttributeName, "comment", "name"),
+			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, DescribeOutputAttributeName, "body", "name", "signature"),
 			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
@@ -124,6 +122,47 @@ func RowAccessPolicy() *schema.Resource {
 			},
 		},
 	}
+}
+
+func ImportRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	log.Printf("[DEBUG] Starting row access policy import")
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	policy, err := client.RowAccessPolicies.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if err := d.Set("name", id.Name()); err != nil {
+		return nil, err
+	}
+	if err := d.Set("database", id.DatabaseName()); err != nil {
+		return nil, err
+	}
+	if err := d.Set("schema", id.SchemaName()); err != nil {
+		return nil, err
+	}
+	if err := d.Set("comment", policy.Comment); err != nil {
+		return nil, err
+	}
+	policyDescription, err := client.RowAccessPolicies.Describe(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if err := d.Set("body", policyDescription.Body); err != nil {
+		return nil, err
+	}
+	args, err := policyDescription.Arguments()
+	if err != nil {
+		return nil, err
+	}
+	if err := d.Set("argument", schemas.RowAccessPolicyArgumentsToSchema(args)); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
 }
 
 func CreateRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -205,8 +244,11 @@ func ReadRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err := d.Set("body", rowAccessPolicyDescription.Body); err != nil {
 		return diag.FromErr(err)
 	}
-
-	if err := d.Set("argument", rowAccessPolicyDescription.Arguments()); err != nil {
+	args, err := rowAccessPolicyDescription.Arguments()
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("argument", schemas.RowAccessPolicyArgumentsToSchema(args)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.RowAccessPolicyToSchema(rowAccessPolicy)}); err != nil {

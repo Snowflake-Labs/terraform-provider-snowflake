@@ -19,7 +19,7 @@ Please rename these fields in your configuration files. State will be migrated a
 #### *(breaking change)* Adjusted behavior of arguments/signature
 Now, arguments are stored as a list, instead of a map. Please adjust that in your configs. State is migrated automatically. Also, this means that order of the items matters and may be adjusted.
 
-Argument names are now case sensitive.
+Argument names are now case sensitive. All policies created previously in the provider have upper case argument names. If you used lower case before, please adjust your configs.
 
 #### *(breaking change)* Adjusted behavior on changing name
 Previously, after changing `name` field, the resource was recreated. Now, the object is renamed with `RENAME TO`.
@@ -31,7 +31,7 @@ Now, similarly to handling statements in other resources, we replace blank chara
 
 #### *(breaking change)* Identifiers related changes
 During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
-migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`).
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/row_access_policy#import)).
 
 Also, we added diff suppress function that prevents Terraform from showing differences, when only quoting is different.
 
