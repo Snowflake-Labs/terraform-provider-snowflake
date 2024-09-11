@@ -5,10 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
-	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -347,12 +346,14 @@ func TestAcc_ResourceMonitor_Updates(t *testing.T) {
 func TestAcc_ResourceMonitor_ExternalChanges(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
+	startTimestamp := time.Now().Add(time.Hour * 24 * 40).Format("2006-01-02 15:01")
+	endTimestamp := time.Now().Add(time.Hour * 24 * 70).Format("2006-01-02 15:01")
 	configModelEverythingSet := model.ResourceMonitor("test", id.Name()).
 		WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("JAN_CIESLAK"))).
 		WithCreditQuota(10).
 		WithFrequency(string(sdk.FrequencyWeekly)).
-		WithStartTimestamp(time.Now().Add(time.Hour * 24 * 30).Format("2006-01-02 15:01")).
-		WithEndTimestamp(time.Now().Add(time.Hour * 24 * 60).Format("2006-01-02 15:01")).
+		WithStartTimestamp(startTimestamp).
+		WithEndTimestamp(endTimestamp).
 		WithNotifyTriggersValue(configvariable.SetVariable(
 			configvariable.IntegerVariable(100),
 			configvariable.IntegerVariable(110),
@@ -360,14 +361,12 @@ func TestAcc_ResourceMonitor_ExternalChanges(t *testing.T) {
 		WithSuspendTrigger(120).
 		WithSuspendImmediateTrigger(150)
 
-	updatedStartTimestamp := time.Now().Add(time.Hour * 24 * 40).Format("2006-01-02 15:01")
-	updatedEndTimestamp := time.Now().Add(time.Hour * 24 * 70).Format("2006-01-02 15:01")
 	configModelUpdated := model.ResourceMonitor("test", id.Name()).
 		WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("JAN_CIESLAK"), configvariable.StringVariable("ARTUR_SAWICKI"))).
 		WithCreditQuota(20).
 		WithFrequency(string(sdk.FrequencyMonthly)).
-		WithStartTimestamp(updatedStartTimestamp).
-		WithEndTimestamp(updatedEndTimestamp).
+		WithStartTimestamp(startTimestamp).
+		WithEndTimestamp(endTimestamp).
 		WithNotifyTriggersValue(configvariable.SetVariable(
 			configvariable.IntegerVariable(110),
 			configvariable.IntegerVariable(120),
@@ -399,8 +398,8 @@ func TestAcc_ResourceMonitor_ExternalChanges(t *testing.T) {
 							},
 							CreditQuota:    sdk.Int(20),
 							Frequency:      sdk.Pointer(sdk.FrequencyMonthly),
-							StartTimestamp: sdk.String(updatedStartTimestamp),
-							EndTimestamp:   sdk.String(updatedEndTimestamp),
+							StartTimestamp: sdk.String(startTimestamp),
+							EndTimestamp:   sdk.String(endTimestamp),
 						},
 						Triggers: []sdk.TriggerDefinition{
 							{
@@ -424,15 +423,8 @@ func TestAcc_ResourceMonitor_ExternalChanges(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
 						planchecks.PrintPlanDetails(configModelUpdated.ResourceReference(), "credit_quota", "end_timestamp", "frequency", "fully_qualified_name", "name", "notify_triggers", "notify_users", "start_timestamp", "suspend_immediate_trigger", "suspend_trigger", r.ShowOutputAttributeName),
-						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "credit_quota", tfjson.ActionUpdate, sdk.String("20"), sdk.String("20")),
-						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "notify_users.0", tfjson.ActionUpdate, sdk.String("ARTUR_SAWICKI"), sdk.String("ARTUR_SAWICKI")),
-						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "notify_users.1", tfjson.ActionUpdate, sdk.String("JAN_CIESLAK"), sdk.String("JAN_CIESLAK")),
-						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "frequency", tfjson.ActionUpdate, sdk.String(string(sdk.FrequencyMonthly)), sdk.String(string(sdk.FrequencyMonthly))),
-						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "notify_triggers.0", tfjson.ActionUpdate, sdk.String("110"), sdk.String("110")),
-						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "notify_triggers.1", tfjson.ActionUpdate, sdk.String("120"), sdk.String("120")),
-						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "suspend_trigger", tfjson.ActionUpdate, sdk.String("130"), sdk.String("130")),
-						planchecks.ExpectChange(configModelUpdated.ResourceReference(), "suspend_immediate_trigger", tfjson.ActionUpdate, sdk.String("160"), sdk.String("160")),
 					},
 				},
 				Config: config.FromModel(t, configModelUpdated),
