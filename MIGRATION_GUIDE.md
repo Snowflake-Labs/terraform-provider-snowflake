@@ -24,7 +24,7 @@ Argument names are now case sensitive.
 #### *(breaking change)* Adjusted behavior on changing name
 Previously, after changing `name` field, the resource was recreated. Now, the object is renamed with `RENAME TO`.
 
-#### *(breaking change)* Adjusted behavior on changing name
+#### *(breaking change)* Mitigating permadiff on `body`
 Previously, `body` of a policy was compared as a raw string. This led to permament diff because of leading newlines (see https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2053).
 
 Now, similarly to handling statements in other resources, we replace blank characters with a space. The provider can cause false positives in cases where a change in case or run of whitespace is semantically significant.
