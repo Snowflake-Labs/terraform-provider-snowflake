@@ -118,6 +118,7 @@ type RowAccessPolicyArgument struct {
 }
 
 // TODO(SNOW-1596962): Fully support VECTOR data type
+// TODO(SNOW-1660588): Use ParseFunctionArgumentsFromString
 func (d *RowAccessPolicyDescription) Arguments() ([]RowAccessPolicyArgument, error) {
 	// Format in database is `(column <data_type>)`
 	plainSignature := strings.ReplaceAll(d.Signature, "(", "")
