@@ -22,6 +22,14 @@ resource "snowflake_row_access_policy" "example_row_access_policy" {
     name = "ARG1"
     type = "VARCHAR"
   }
+  argument {
+    name = "ARG2"
+    type = "NUMBER"
+  }
+  argument {
+    name = "ARG3"
+    type = "TIMESTAMP_NTZ"
+  }
   body    = "case when current_role() in ('ANALYST') then true else false end"
   comment = "comment"
 }
@@ -91,5 +99,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_row_access_policy.example '"<database_name>"."<schema_name>"."<view_name>"'
+terraform import snowflake_row_access_policy.example '"<database_name>"."<schema_name>"."<row_access_policy_name>"'
 ```
