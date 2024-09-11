@@ -16,6 +16,7 @@ import (
 //
 // TODO [SNOW-1501905]: test type of slice fields
 func Test_ExtractStructDetails(t *testing.T) {
+	type testIntEnum int
 	type testStruct struct {
 		unexportedString     string
 		unexportedInt        int
@@ -31,8 +32,8 @@ func Test_ExtractStructDetails(t *testing.T) {
 
 		unexportedStringEnum    sdk.WarehouseType
 		unexportedStringEnumPtr *sdk.WarehouseType
-		unexportedIntEnum       sdk.ResourceMonitorLevel
-		unexportedIntEnumPtr    *sdk.ResourceMonitorLevel
+		unexportedIntEnum       testIntEnum
+		unexportedIntEnumPtr    *testIntEnum
 
 		unexportedAccountIdentifier           sdk.AccountIdentifier
 		unexportedExternalObjectIdentifier    sdk.ExternalObjectIdentifier
@@ -90,8 +91,8 @@ func Test_ExtractStructDetails(t *testing.T) {
 
 		assertFieldExtracted(structDetails.Fields[10], "unexportedStringEnum", "sdk.WarehouseType", "string")
 		assertFieldExtracted(structDetails.Fields[11], "unexportedStringEnumPtr", "*sdk.WarehouseType", "*string")
-		assertFieldExtracted(structDetails.Fields[12], "unexportedIntEnum", "sdk.ResourceMonitorLevel", "int")
-		assertFieldExtracted(structDetails.Fields[13], "unexportedIntEnumPtr", "*sdk.ResourceMonitorLevel", "*int")
+		assertFieldExtracted(structDetails.Fields[12], "unexportedIntEnum", "genhelpers.testIntEnum", "int")
+		assertFieldExtracted(structDetails.Fields[13], "unexportedIntEnumPtr", "*genhelpers.testIntEnum", "*int")
 
 		assertFieldExtracted(structDetails.Fields[14], "unexportedAccountIdentifier", "sdk.AccountIdentifier", "struct")
 		assertFieldExtracted(structDetails.Fields[15], "unexportedExternalObjectIdentifier", "sdk.ExternalObjectIdentifier", "struct")

@@ -3,8 +3,11 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
+
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/stretchr/testify/require"
@@ -94,6 +97,23 @@ func FromModel(t *testing.T, model ResourceModel) string {
 	s := sb.String()
 	t.Logf("Generated config:\n%s", s)
 	return s
+}
+
+func ConfigVariablesFromModel(t *testing.T, model ResourceModel) tfconfig.Variables {
+	t.Helper()
+	variables := make(tfconfig.Variables)
+	rType := reflect.TypeOf(model).Elem()
+	rValue := reflect.ValueOf(model).Elem()
+	for i := 0; i < rType.NumField(); i++ {
+		field := rType.Field(i)
+		if jsonTag, ok := field.Tag.Lookup("json"); ok {
+			name := strings.Split(jsonTag, ",")[0]
+			if fieldValue, ok := rValue.Field(i).Interface().(tfconfig.Variable); ok {
+				variables[name] = fieldValue
+			}
+		}
+	}
+	return variables
 }
 
 type nullVariable struct{}

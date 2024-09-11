@@ -86,7 +86,6 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 
 	if r.AddStorageLocation != nil {
 		opts.AddStorageLocation = &ExternalVolumeStorageLocation{}
-
 		if r.AddStorageLocation.S3StorageLocationParams != nil {
 			opts.AddStorageLocation.S3StorageLocationParams = &S3StorageLocationParams{
 				Name:                 r.AddStorageLocation.S3StorageLocationParams.Name,
@@ -95,7 +94,6 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 				StorageBaseUrl:       r.AddStorageLocation.S3StorageLocationParams.StorageBaseUrl,
 				StorageAwsExternalId: r.AddStorageLocation.S3StorageLocationParams.StorageAwsExternalId,
 			}
-
 			if r.AddStorageLocation.S3StorageLocationParams.Encryption != nil {
 				opts.AddStorageLocation.S3StorageLocationParams.Encryption = &ExternalVolumeS3Encryption{
 					Type:     r.AddStorageLocation.S3StorageLocationParams.Encryption.Type,
@@ -109,7 +107,6 @@ func (r *AlterExternalVolumeRequest) toOpts() *AlterExternalVolumeOptions {
 				Name:           r.AddStorageLocation.GCSStorageLocationParams.Name,
 				StorageBaseUrl: r.AddStorageLocation.GCSStorageLocationParams.StorageBaseUrl,
 			}
-
 			if r.AddStorageLocation.GCSStorageLocationParams.Encryption != nil {
 				opts.AddStorageLocation.GCSStorageLocationParams.Encryption = &ExternalVolumeGCSEncryption{
 					Type:     r.AddStorageLocation.GCSStorageLocationParams.Encryption.Type,

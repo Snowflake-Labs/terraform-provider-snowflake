@@ -12,6 +12,7 @@ import (
 type ViewModel struct {
 	AggregationPolicy  tfconfig.Variable `json:"aggregation_policy,omitempty"`
 	ChangeTracking     tfconfig.Variable `json:"change_tracking,omitempty"`
+	Column             tfconfig.Variable `json:"column,omitempty"`
 	Comment            tfconfig.Variable `json:"comment,omitempty"`
 	CopyGrants         tfconfig.Variable `json:"copy_grants,omitempty"`
 	DataMetricFunction tfconfig.Variable `json:"data_metric_function,omitempty"`
@@ -72,6 +73,8 @@ func (v *ViewModel) WithChangeTracking(changeTracking string) *ViewModel {
 	v.ChangeTracking = tfconfig.StringVariable(changeTracking)
 	return v
 }
+
+// column attribute type is not yet supported, so WithColumn can't be generated
 
 func (v *ViewModel) WithComment(comment string) *ViewModel {
 	v.Comment = tfconfig.StringVariable(comment)
@@ -140,6 +143,11 @@ func (v *ViewModel) WithAggregationPolicyValue(value tfconfig.Variable) *ViewMod
 
 func (v *ViewModel) WithChangeTrackingValue(value tfconfig.Variable) *ViewModel {
 	v.ChangeTracking = value
+	return v
+}
+
+func (v *ViewModel) WithColumnValue(value tfconfig.Variable) *ViewModel {
+	v.Column = value
 	return v
 }
 
