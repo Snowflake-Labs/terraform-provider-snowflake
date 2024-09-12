@@ -116,7 +116,7 @@ func TestUserAlter(t *testing.T) {
 			name: id,
 			Set:  &UserSet{},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
 	})
 
 	t.Run("two sets", func(t *testing.T) {
@@ -135,7 +135,7 @@ func TestUserAlter(t *testing.T) {
 			name:  id,
 			Unset: &UserUnset{},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
 	})
 
 	t.Run("validation: two incompatible unsets", func(t *testing.T) {
@@ -146,7 +146,7 @@ func TestUserAlter(t *testing.T) {
 				ObjectParameters:  &UserObjectParametersUnset{EnableUnredactedQuerySyntaxError: Bool(true)},
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
 	})
 
 	t.Run("with setting a policy", func(t *testing.T) {

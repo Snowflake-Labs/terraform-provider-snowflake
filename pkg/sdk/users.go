@@ -397,8 +397,8 @@ type UserSet struct {
 }
 
 func (opts *UserSet) validate() error {
-	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.AuthenticationPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
-		return errExactlyOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
+	if !anyValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.AuthenticationPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters) {
+		return errAtLeastOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
 	if valueSet(opts.ObjectProperties) && valueSet(opts.ObjectProperties.DefaultSecondaryRoles) {
 		if err := opts.ObjectProperties.DefaultSecondaryRoles.validate(); err != nil {
@@ -427,7 +427,7 @@ type UserUnset struct {
 func (opts *UserUnset) validate() error {
 	// TODO [SNOW-1645875]: change validations with policies
 	if !exactlyOneValueSet(opts.PasswordPolicy, opts.SessionPolicy, opts.ObjectProperties, opts.ObjectParameters, opts.SessionParameters, opts.AuthenticationPolicy) {
-		return errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters", "AuthenticationPolicy")
+		return errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters")
 	}
 	return nil
 }

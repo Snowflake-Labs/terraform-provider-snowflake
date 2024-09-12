@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
@@ -15,6 +17,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// TODO: Run int and acc tests of user (and see it's implementation after monty change)
 
 // TODO [SNOW-1645875]: test setting/unsetting policies
 // TODO [SNOW-1645348]: add type and other 8.26 additions
@@ -46,46 +50,6 @@ func TestInt_Users(t *testing.T) {
 
 	tag2, tag2Cleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tag2Cleanup)
-
-	/*
-		// TODO(SNOW-1528557): Uncomment next pr
-			func TestInt_UserAlter(t *testing.T) {
-				client := testClient(t)
-				ctx := testContext(t)
-
-				randomPrefix := random.AlphaN(6)
-
-				userTest, userCleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix+"_")
-				t.Cleanup(userCleanup)
-
-				t.Run("set and unset authentication policy", func(t *testing.T) {
-					authenticationPolicyTest, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.CreateAuthenticationPolicy(t)
-					t.Cleanup(authenticationPolicyCleanup)
-
-					alterOptions := &sdk.AlterUserOptions{
-						Set: &sdk.UserSet{
-							AuthenticationPolicy: authenticationPolicyTest.ID(),
-						},
-					}
-
-					err := client.Users.Alter(ctx, userTest.ID(), alterOptions)
-					require.NoError(t, err)
-
-					unsetOptions := &sdk.AlterUserOptions{
-						Unset: &sdk.UserUnset{
-							AuthenticationPolicy: sdk.Bool(true),
-						},
-					}
-
-					unsetErr := client.Users.Alter(ctx, userTest.ID(), unsetOptions)
-					require.NoError(t, unsetErr)
-				})
-			}
-
-			func TestInt_UserCreate(t *testing.T) {
-				client := testClient(t)
-				ctx := testContext(t)
-	*/
 
 	networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
 	t.Cleanup(networkPolicyCleanup)
@@ -762,6 +726,41 @@ func TestInt_Users(t *testing.T) {
 			HasDisplayName("").
 			HasOwner(currentRole.Name()),
 		)
+	})
+
+	t.Run("set and unset authentication policy", func(t *testing.T) {
+		authenticationPolicyTest, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.Create(t)
+		t.Cleanup(authenticationPolicyCleanup)
+
+		err := client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				AuthenticationPolicy: authenticationPolicyTest.ID(),
+			},
+		})
+		require.NoError(t, err)
+
+		policies, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, user.ID(), sdk.PolicyEntityDomainUser)
+		require.NoError(t, err)
+
+		_, err = collections.FindFirst(policies, func(reference sdk.PolicyReference) bool {
+			return reference.PolicyKind == sdk.PolicyKindAuthenticationPolicy
+		})
+		require.NoError(t, err)
+
+		err = client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				AuthenticationPolicy: sdk.Bool(true),
+			},
+		})
+		require.NoError(t, err)
+
+		policies, err = testClientHelper().PolicyReferences.GetPolicyReferences(t, user.ID(), sdk.PolicyEntityDomainUser)
+		require.NoError(t, err)
+
+		_, err = collections.FindFirst(policies, func(reference sdk.PolicyReference) bool {
+			return reference.PolicyKind == sdk.PolicyKindAuthenticationPolicy
+		})
+		require.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	})
 
 	t.Run("alter: set and unset parameters", func(t *testing.T) {

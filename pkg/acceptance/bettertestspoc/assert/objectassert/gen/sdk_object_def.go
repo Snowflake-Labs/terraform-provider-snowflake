@@ -42,6 +42,11 @@ var allStructs = []SdkObjectDef{
 		ObjectType:   sdk.ObjectTypeResourceMonitor,
 		ObjectStruct: sdk.ResourceMonitor{},
 	},
+	{
+		IdType:       "sdk.SchemaObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeAuthenticationPolicy,
+		ObjectStruct: sdk.AuthenticationPolicy{},
+	},
 }
 
 func GetSdkObjectDetails() []genhelpers.SdkObjectDetails {

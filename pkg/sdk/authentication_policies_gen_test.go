@@ -15,15 +15,25 @@ func TestAuthenticationPolicies_Create(t *testing.T) {
 		var opts *CreateAuthenticationPolicyOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
+
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: conflicting fields for [opts.IfNotExists opts.OrReplace]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(true)
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateAuthenticationPolicyOptions", "IfNotExists", "OrReplace"))
+	})
+
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.AuthenticationMethods = []AuthenticationMethods{{Method: "ALL"}}
+		opts.AuthenticationMethods = []AuthenticationMethods{
+			{Method: AuthenticationMethodsAll},
+		}
 		opts.Comment = String("some comment")
 		assertOptsValidAndSQLEquals(t, opts, "CREATE AUTHENTICATION POLICY %s AUTHENTICATION_METHODS = ('ALL') COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
@@ -31,13 +41,23 @@ func TestAuthenticationPolicies_Create(t *testing.T) {
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
-		opts.AuthenticationMethods = []AuthenticationMethods{{Method: "SAML"}, {Method: "PASSWORD"}}
-		opts.MfaAuthenticationMethods = []MfaAuthenticationMethods{{Method: "PASSWORD"}}
-		opts.MfaEnrollment = String("OPTIONAL")
-		opts.ClientTypes = []ClientTypes{{ClientType: "DRIVERS"}, {ClientType: "SNOWSQL"}}
-		opts.SecurityIntegrations = []SecurityIntegrationsOption{{Name: "security_integration"}}
+		opts.AuthenticationMethods = []AuthenticationMethods{
+			{Method: AuthenticationMethodsSaml},
+			{Method: AuthenticationMethodsPassword},
+		}
+		opts.MfaAuthenticationMethods = []MfaAuthenticationMethods{
+			{Method: MfaAuthenticationMethodsPassword},
+		}
+		opts.MfaEnrollment = Pointer(MfaEnrollmentOptional)
+		opts.ClientTypes = []ClientTypes{
+			{ClientType: ClientTypesDrivers},
+			{ClientType: ClientTypesSnowSql},
+		}
+		opts.SecurityIntegrations = []SecurityIntegrationsOption{
+			{Name: NewAccountObjectIdentifier("security_integration")},
+		}
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE AUTHENTICATION POLICY %s AUTHENTICATION_METHODS = ('SAML', 'PASSWORD') MFA_AUTHENTICATION_METHODS = ('PASSWORD') MFA_ENROLLMENT = OPTIONAL CLIENT_TYPES = ('DRIVERS', 'SNOWSQL') SECURITY_INTEGRATIONS = ('security_integration') COMMENT = 'some comment'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE AUTHENTICATION POLICY %s AUTHENTICATION_METHODS = ('SAML', 'PASSWORD') MFA_AUTHENTICATION_METHODS = ('PASSWORD') MFA_ENROLLMENT = OPTIONAL CLIENT_TYPES = ('DRIVERS', 'SNOWSQL') SECURITY_INTEGRATIONS = (\"security_integration\") COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 }
 
@@ -54,6 +74,7 @@ func TestAuthenticationPolicies_Alter(t *testing.T) {
 		var opts *AlterAuthenticationPolicyOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
+
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
@@ -86,7 +107,9 @@ func TestAuthenticationPolicies_Alter(t *testing.T) {
 	t.Run("alter: set basic", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &AuthenticationPolicySet{
-			AuthenticationMethods: []AuthenticationMethods{{Method: "SAML"}},
+			AuthenticationMethods: []AuthenticationMethods{
+				{Method: AuthenticationMethodsSaml},
+			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER AUTHENTICATION POLICY %s SET AUTHENTICATION_METHODS = ('SAML')", id.FullyQualifiedName())
 	})
@@ -95,14 +118,21 @@ func TestAuthenticationPolicies_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
 		opts.Set = &AuthenticationPolicySet{
-			AuthenticationMethods:    []AuthenticationMethods{{Method: "SAML"}},
-			MfaAuthenticationMethods: []MfaAuthenticationMethods{{Method: "PASSWORD"}},
-			MfaEnrollment:            String("OPTIONAL"),
-			ClientTypes:              []ClientTypes{{ClientType: "DRIVERS"}, {ClientType: "SNOWSQL"}},
-			SecurityIntegrations:     []SecurityIntegrationsOption{{Name: "security_integration"}},
-			Comment:                  String("some comment"),
+			AuthenticationMethods: []AuthenticationMethods{
+				{Method: AuthenticationMethodsSaml},
+			},
+			MfaAuthenticationMethods: []MfaAuthenticationMethods{
+				{Method: MfaAuthenticationMethodsPassword},
+			},
+			MfaEnrollment: Pointer(MfaEnrollmentOptional),
+			ClientTypes: []ClientTypes{
+				{ClientType: ClientTypesDrivers},
+				{ClientType: ClientTypesSnowSql},
+			},
+			SecurityIntegrations: []SecurityIntegrationsOption{{Name: NewAccountObjectIdentifier("security_integration")}},
+			Comment:              String("some comment"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER AUTHENTICATION POLICY IF EXISTS %s SET AUTHENTICATION_METHODS = ('SAML') MFA_AUTHENTICATION_METHODS = ('PASSWORD') MFA_ENROLLMENT = 'OPTIONAL' CLIENT_TYPES = ('DRIVERS', 'SNOWSQL') SECURITY_INTEGRATIONS = ('security_integration') COMMENT = 'some comment'", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER AUTHENTICATION POLICY IF EXISTS %s SET AUTHENTICATION_METHODS = ('SAML') MFA_AUTHENTICATION_METHODS = ('PASSWORD') MFA_ENROLLMENT = OPTIONAL CLIENT_TYPES = ('DRIVERS', 'SNOWSQL') SECURITY_INTEGRATIONS = (\"security_integration\") COMMENT = 'some comment'", id.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset basic", func(t *testing.T) {
@@ -162,6 +192,7 @@ func TestAuthenticationPolicies_Drop(t *testing.T) {
 }
 
 func TestAuthenticationPolicies_Show(t *testing.T) {
+	id := randomSchemaObjectIdentifier()
 	// Minimal valid ShowAuthenticationPolicyOptions
 	defaultOpts := func() *ShowAuthenticationPolicyOptions {
 		return &ShowAuthenticationPolicyOptions{}
@@ -175,6 +206,22 @@ func TestAuthenticationPolicies_Show(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, "SHOW AUTHENTICATION POLICIES")
+	})
+
+	t.Run("complete", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Like = &Like{
+			Pattern: String("like-pattern"),
+		}
+		opts.StartsWith = String("starts-with-pattern")
+		opts.In = &In{
+			Schema: id.SchemaId(),
+		}
+		opts.Limit = &LimitFrom{
+			Rows: Int(10),
+			From: String("limit-from"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW AUTHENTICATION POLICIES LIKE 'like-pattern' IN SCHEMA %s STARTS WITH 'starts-with-pattern' LIMIT 10 FROM 'limit-from'", id.SchemaId().FullyQualifiedName())
 	})
 }
 
@@ -191,6 +238,7 @@ func TestAuthenticationPolicies_Describe(t *testing.T) {
 		var opts *DescribeAuthenticationPolicyOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
+
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier

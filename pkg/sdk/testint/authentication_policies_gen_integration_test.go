@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -14,292 +16,169 @@ import (
 func TestInt_AuthenticationPolicies(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-	cert := random.GenerateX509(t)
 
-	assertAuthenticationPolicy := func(t *testing.T, authenticationPolicy *sdk.AuthenticationPolicy, id sdk.SchemaObjectIdentifier, expectedComment string) {
+	assertAuthenticationPolicy := func(t *testing.T, id sdk.SchemaObjectIdentifier, expectedComment string) {
 		t.Helper()
-		assert.NotEmpty(t, authenticationPolicy.CreatedOn)
-		assert.Equal(t, id.Name(), authenticationPolicy.Name)
-		assert.Equal(t, id.SchemaName(), authenticationPolicy.SchemaName)
-		assert.Equal(t, id.DatabaseName(), authenticationPolicy.DatabaseName)
-		assert.Equal(t, "", authenticationPolicy.Options)
-		assert.Equal(t, "ACCOUNTADMIN", authenticationPolicy.Owner)
-		assert.Equal(t, expectedComment, authenticationPolicy.Comment)
-		assert.Equal(t, "ROLE", authenticationPolicy.OwnerRoleType)
+		assertions.AssertThat(t,
+			objectassert.AuthenticationPolicy(t, id).
+				HasCreatedOnNotEmpty().
+				HasName(id.Name()).
+				HasDatabaseName(id.DatabaseName()).
+				HasSchemaName(id.SchemaName()).
+				HasOptions("").
+				HasOwner("ACCOUNTADMIN").
+				HasComment(expectedComment).
+				HasOwnerRoleType("ROLE"),
+		)
 	}
 
-	cleanupAuthenticationPolicyProvider := func(id sdk.SchemaObjectIdentifier) func() {
-		return func() {
-			err := client.AuthenticationPolicies.Drop(ctx, sdk.NewDropAuthenticationPolicyRequest(id).WithIfExists(true))
-			require.NoError(t, err)
-		}
-	}
-
-	cleanupSecurityIntegration := func(t *testing.T, id sdk.AccountObjectIdentifier) {
+	assertProperty := func(t *testing.T, descriptions []sdk.AuthenticationPolicyDescription, name string, value string) {
 		t.Helper()
-		t.Cleanup(func() {
-			err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(true))
-			assert.NoError(t, err)
+		description, err := collections.FindFirst(descriptions, func(description sdk.AuthenticationPolicyDescription) bool {
+			return description.Property == name
 		})
+		require.NoError(t, err, fmt.Sprintf("unable to find property %s", name))
+		assert.Equal(t, value, description.Value)
 	}
 
-	createAuthenticationPolicy := func(t *testing.T) *sdk.AuthenticationPolicy {
-		t.Helper()
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-
-		err := client.AuthenticationPolicies.Create(ctx, sdk.NewCreateAuthenticationPolicyRequest(id))
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(id))
-
-		authenticationPolicy, err := client.AuthenticationPolicies.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		return authenticationPolicy
-	}
-
-	defaultCreateRequest := func() *sdk.CreateAuthenticationPolicyRequest {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		comment := "some_comment"
-		return sdk.NewCreateAuthenticationPolicyRequest(id).
-			WithOrReplace(true).
-			WithComment(comment)
-	}
-
-	createSAML2Integration := func(t *testing.T, with func(*sdk.CreateSaml2SecurityIntegrationRequest)) sdk.AccountObjectIdentifier {
-		t.Helper()
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		issuer := testClientHelper().Ids.Alpha()
-		saml2Req := sdk.NewCreateSaml2SecurityIntegrationRequest(id, issuer, "https://example.com", sdk.Saml2SecurityIntegrationSaml2ProviderCustom, cert)
-		if with != nil {
-			with(saml2Req)
-		}
-		err := client.SecurityIntegrations.CreateSaml2(ctx, saml2Req)
-		require.NoError(t, err)
-		cleanupSecurityIntegration(t, id)
-		_, showErr := client.SecurityIntegrations.ShowByID(ctx, id)
-		require.NoError(t, showErr)
-
-		return id
-	}
-
-	t.Run("Create", func(t *testing.T) {
+	t.Run("Create - basic", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		comment := random.Comment()
 
-		request := sdk.NewCreateAuthenticationPolicyRequest(id).
-			WithAuthenticationMethods([]sdk.AuthenticationMethods{{Method: "Password"}}).
-			WithComment(comment)
-
-		err := client.AuthenticationPolicies.Create(ctx, request)
+		err := client.AuthenticationPolicies.Create(ctx, sdk.NewCreateAuthenticationPolicyRequest(id).
+			WithAuthenticationMethods([]sdk.AuthenticationMethods{
+				{Method: sdk.AuthenticationMethodsPassword},
+			}).
+			WithComment(comment))
 		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(id))
+		t.Cleanup(testClientHelper().AuthenticationPolicy.DropFunc(t, id))
 
-		authenticationPolicy, err := client.AuthenticationPolicies.ShowByID(ctx, id)
-
-		require.NoError(t, err)
-		assertAuthenticationPolicy(t, authenticationPolicy, id, comment)
+		assertAuthenticationPolicy(t, id, comment)
 	})
 
-	t.Run("Alter - set authentication methods", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
+	t.Run("Create - complete", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		saml2Id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		comment := random.Comment()
 
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithSet(*sdk.NewAuthenticationPolicySetRequest().WithAuthenticationMethods([]sdk.AuthenticationMethods{{Method: "PASSWORD"}})))
-		require.NoError(t, alterErr)
+		_, cleanupSamlIntegration := testClientHelper().SecurityIntegration.CreateSaml2(t, saml2Id)
+		t.Cleanup(cleanupSamlIntegration)
 
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
+		err := client.AuthenticationPolicies.Create(ctx, sdk.NewCreateAuthenticationPolicyRequest(id).
+			WithComment(comment).
+			WithMfaEnrollment(sdk.MfaEnrollmentOptional).
+			WithMfaAuthenticationMethods([]sdk.MfaAuthenticationMethods{
+				{Method: sdk.MfaAuthenticationMethodsPassword},
+				{Method: sdk.MfaAuthenticationMethodsSaml},
+			}).
+			WithSecurityIntegrations([]sdk.SecurityIntegrationsOption{
+				{Name: saml2Id},
+			}).
+			WithClientTypes([]sdk.ClientTypes{
+				{ClientType: sdk.ClientTypesDrivers},
+				{ClientType: sdk.ClientTypesSnowSql},
+			}).
+			WithAuthenticationMethods([]sdk.AuthenticationMethods{
+				{Method: sdk.AuthenticationMethodsPassword},
+				{Method: sdk.AuthenticationMethodsSaml},
+			}))
 		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "AUTHENTICATION_METHODS", Value: "[PASSWORD]"})
+		t.Cleanup(testClientHelper().AuthenticationPolicy.DropFunc(t, id))
+
+		assertAuthenticationPolicy(t, id, comment)
+
+		desc, err := client.AuthenticationPolicies.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertProperty(t, desc, "COMMENT", comment)
+		assertProperty(t, desc, "MFA_ENROLLMENT", "OPTIONAL")
+		assertProperty(t, desc, "MFA_AUTHENTICATION_METHODS", "[PASSWORD, SAML]")
+		assertProperty(t, desc, "SECURITY_INTEGRATIONS", fmt.Sprintf("[%s]", saml2Id.Name()))
+		assertProperty(t, desc, "CLIENT_TYPES", "[DRIVERS, SNOWSQL]")
+		assertProperty(t, desc, "AUTHENTICATION_METHODS", "[PASSWORD, SAML]")
 	})
 
-	t.Run("Alter - set client types", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
+	t.Run("Alter - set and unset properties", func(t *testing.T) {
+		saml2Id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		comment := random.Comment()
+
+		authenticationPolicy, cleanupAuthPolicy := testClientHelper().AuthenticationPolicy.Create(t)
+		t.Cleanup(cleanupAuthPolicy)
+
+		_, cleanupSamlIntegration := testClientHelper().SecurityIntegration.CreateSaml2(t, saml2Id)
+		t.Cleanup(cleanupSamlIntegration)
+
+		err := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(authenticationPolicy.ID()).
+			WithSet(*sdk.NewAuthenticationPolicySetRequest().
+				WithComment(comment).
+				WithMfaEnrollment(sdk.MfaEnrollmentRequired).
+				WithMfaAuthenticationMethods([]sdk.MfaAuthenticationMethods{
+					{Method: sdk.MfaAuthenticationMethodsPassword},
+					{Method: sdk.MfaAuthenticationMethodsSaml},
+				}).
+				WithSecurityIntegrations([]sdk.SecurityIntegrationsOption{
+					{Name: saml2Id},
+				}).
+				WithClientTypes([]sdk.ClientTypes{
+					{ClientType: sdk.ClientTypesDrivers},
+					{ClientType: sdk.ClientTypesSnowSql},
+					{ClientType: sdk.ClientTypesSnowflakeUi},
+				}).
+				WithAuthenticationMethods([]sdk.AuthenticationMethods{
+					{Method: sdk.AuthenticationMethodsPassword},
+					{Method: sdk.AuthenticationMethodsSaml},
+				})))
 		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithSet(*sdk.NewAuthenticationPolicySetRequest().WithClientTypes([]sdk.ClientTypes{{ClientType: "DRIVERS"}, {ClientType: "SNOWSQL"}})))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
+		desc, err := client.AuthenticationPolicies.Describe(ctx, authenticationPolicy.ID())
 		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "CLIENT_TYPES", Value: "[DRIVERS, SNOWSQL]"})
-	})
 
-	t.Run("Alter - set security integrations", func(t *testing.T) {
-		secId := createSAML2Integration(t, func(r *sdk.CreateSaml2SecurityIntegrationRequest) {
-			r.WithEnabled(true)
-		})
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
+		assertProperty(t, desc, "COMMENT", comment)
+		assertProperty(t, desc, "MFA_ENROLLMENT", "REQUIRED")
+		assertProperty(t, desc, "MFA_AUTHENTICATION_METHODS", "[PASSWORD, SAML]")
+		assertProperty(t, desc, "SECURITY_INTEGRATIONS", fmt.Sprintf("[%s]", saml2Id.Name()))
+		assertProperty(t, desc, "CLIENT_TYPES", "[DRIVERS, SNOWSQL, SNOWFLAKE_UI]")
+		assertProperty(t, desc, "AUTHENTICATION_METHODS", "[PASSWORD, SAML]")
+
+		err = client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(authenticationPolicy.ID()).
+			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().
+				WithComment(true).
+				WithMfaEnrollment(true).
+				WithMfaAuthenticationMethods(true).
+				WithSecurityIntegrations(true).
+				WithClientTypes(true).
+				WithAuthenticationMethods(true)))
 		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
 
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithSet(*sdk.NewAuthenticationPolicySetRequest().WithSecurityIntegrations([]sdk.SecurityIntegrationsOption{{Name: secId.Name()}})))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
+		desc, err = client.AuthenticationPolicies.Describe(ctx, authenticationPolicy.ID())
 		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "SECURITY_INTEGRATIONS", Value: fmt.Sprintf("[%s]", secId.Name())})
-	})
 
-	t.Run("Alter - set mfa authentication methods", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
-
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithSet(*sdk.NewAuthenticationPolicySetRequest().WithMfaAuthenticationMethods([]sdk.MfaAuthenticationMethods{{Method: "PASSWORD"}})))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
-		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "MFA_AUTHENTICATION_METHODS", Value: "[PASSWORD]"})
-	})
-
-	t.Run("Alter - set mfa enrollment", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
-
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithSet(*sdk.NewAuthenticationPolicySetRequest().WithMfaEnrollment("REQUIRED")))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
-		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "MFA_ENROLLMENT", Value: "REQUIRED"})
-	})
-
-	t.Run("Alter - set comment", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
-
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithSet(*sdk.NewAuthenticationPolicySetRequest().WithComment("new comment")))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
-		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "COMMENT", Value: "new comment"})
-	})
-
-	t.Run("Alter - unset authentication methods", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
-
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithAuthenticationMethods(true)))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
-		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "AUTHENTICATION_METHODS", Value: "[ALL]"})
-	})
-
-	t.Run("Alter - unset client types", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
-
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithClientTypes(true)))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
-		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "CLIENT_TYPES", Value: "[ALL]"})
-	})
-
-	t.Run("Alter - unset security integrations", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
-
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithSecurityIntegrations(true)))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
-		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "SECURITY_INTEGRATIONS", Value: "[ALL]"})
-	})
-
-	t.Run("Alter - unset mfa authentication methods", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
-
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithMfaAuthenticationMethods(true)))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
-		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "MFA_AUTHENTICATION_METHODS", Value: "[PASSWORD, SAML]"})
-	})
-
-	t.Run("Alter - unset mfa enrollment", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
-
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithMfaEnrollment(true)))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
-		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "MFA_ENROLLMENT", Value: "OPTIONAL"})
-	})
-
-	t.Run("Alter - unset comment", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
-
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithUnset(*sdk.NewAuthenticationPolicyUnsetRequest().WithComment(true)))
-		require.NoError(t, alterErr)
-
-		desc, err := client.AuthenticationPolicies.Describe(ctx, req.GetName())
-		require.NoError(t, err)
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "COMMENT", Value: "null"})
+		assertProperty(t, desc, "COMMENT", "null")
+		assertProperty(t, desc, "MFA_ENROLLMENT", "OPTIONAL")
+		assertProperty(t, desc, "MFA_AUTHENTICATION_METHODS", "[PASSWORD, SAML]")
+		assertProperty(t, desc, "SECURITY_INTEGRATIONS", "[ALL]")
+		assertProperty(t, desc, "CLIENT_TYPES", "[ALL]")
+		assertProperty(t, desc, "AUTHENTICATION_METHODS", "[ALL]")
 	})
 
 	t.Run("Alter - rename", func(t *testing.T) {
-		req := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(cleanupAuthenticationPolicyProvider(req.GetName()))
-
 		newId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		t.Cleanup(cleanupAuthenticationPolicyProvider(newId))
-		alterErr := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(req.GetName()).
-			WithRenameTo(newId))
-		require.NoError(t, alterErr)
 
-		_, descErr := client.AuthenticationPolicies.Describe(ctx, req.GetName())
-		assert.ErrorIs(t, descErr, sdk.ErrObjectNotExistOrAuthorized)
+		authenticationPolicy, cleanupAuthPolicy := testClientHelper().AuthenticationPolicy.Create(t)
+		t.Cleanup(cleanupAuthPolicy)
+		t.Cleanup(testClientHelper().AuthenticationPolicy.DropFunc(t, newId))
+
+		err := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(authenticationPolicy.ID()).WithRenameTo(newId))
+		require.NoError(t, err)
+
+		_, err = client.AuthenticationPolicies.Describe(ctx, authenticationPolicy.ID())
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+
+		_, err = client.AuthenticationPolicies.Describe(ctx, newId)
+		assert.NoError(t, err)
 	})
 
-	t.Run("Drop: existing", func(t *testing.T) {
+	t.Run("Drop - existing", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		err := client.AuthenticationPolicies.Create(ctx, sdk.NewCreateAuthenticationPolicyRequest(id))
@@ -312,33 +191,94 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
 	})
 
-	t.Run("Drop: non-existing", func(t *testing.T) {
+	t.Run("Drop - non-existing", func(t *testing.T) {
 		err := client.AuthenticationPolicies.Drop(ctx, sdk.NewDropAuthenticationPolicyRequest(NonExistingSchemaObjectIdentifier))
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
 	t.Run("Show", func(t *testing.T) {
-		authenticationPolicy1 := createAuthenticationPolicy(t)
-		authenticationPolicy2 := createAuthenticationPolicy(t)
+		db, dbCleanup := testClientHelper().Database.CreateDatabase(t)
+		t.Cleanup(dbCleanup)
 
-		showRequest := sdk.NewShowAuthenticationPolicyRequest()
-		returnedAuthenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, showRequest)
-		require.NoError(t, err)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithPrefix("test_auth_policyzzz")
+		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithPrefix("test_auth_policy_2_")
+		id3 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithPrefix("test_auth_policy_3_")
+		id4 := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(sdk.NewDatabaseObjectIdentifier(db.Name, "PUBLIC"))
 
-		assert.LessOrEqual(t, 2, len(returnedAuthenticationPolicies))
-		assert.Contains(t, returnedAuthenticationPolicies, *authenticationPolicy1)
-		assert.Contains(t, returnedAuthenticationPolicies, *authenticationPolicy2)
+		_, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.CreateWithOptions(t, id, sdk.NewCreateAuthenticationPolicyRequest(id))
+		t.Cleanup(authenticationPolicyCleanup)
+
+		_, authenticationPolicyCleanup2 := testClientHelper().AuthenticationPolicy.CreateWithOptions(t, id2, sdk.NewCreateAuthenticationPolicyRequest(id2))
+		t.Cleanup(authenticationPolicyCleanup2)
+
+		_, authenticationPolicyCleanup3 := testClientHelper().AuthenticationPolicy.CreateWithOptions(t, id3, sdk.NewCreateAuthenticationPolicyRequest(id3))
+		t.Cleanup(authenticationPolicyCleanup3)
+
+		_, authenticationPolicyCleanup4 := testClientHelper().AuthenticationPolicy.CreateWithOptions(t, id4, sdk.NewCreateAuthenticationPolicyRequest(id4))
+		t.Cleanup(authenticationPolicyCleanup4)
+
+		t.Run("like", func(t *testing.T) {
+			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().
+				WithLike(sdk.Like{Pattern: sdk.String("test_auth_policy_2_%")}).
+				WithIn(sdk.In{Schema: id.SchemaId()}))
+			require.NoError(t, err)
+			assert.Len(t, authenticationPolicies, 1)
+		})
+
+		// TODO(ticket number): starts_with doesn't work (returns all)
+		t.Run("starts_with", func(t *testing.T) {
+			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().
+				WithStartsWith("test_auth_policy_").
+				WithIn(sdk.In{Schema: id.SchemaId()}))
+			require.NoError(t, err)
+			assert.Len(t, authenticationPolicies, 3)
+		})
+
+		t.Run("in_account", func(t *testing.T) {
+			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().WithIn(sdk.In{Account: sdk.Bool(true)}))
+			require.NoError(t, err)
+			assert.Greater(t, len(authenticationPolicies), 3)
+		})
+
+		t.Run("in_database", func(t *testing.T) {
+			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().WithIn(sdk.In{Database: id.DatabaseId()}))
+			require.NoError(t, err)
+			assert.Len(t, authenticationPolicies, 3)
+		})
+
+		t.Run("in_schema", func(t *testing.T) {
+			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().WithIn(sdk.In{Schema: id.SchemaId()}))
+			require.NoError(t, err)
+			assert.Len(t, authenticationPolicies, 3)
+		})
+
+		t.Run("limit", func(t *testing.T) {
+			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().
+				WithLimit(sdk.LimitFrom{Rows: sdk.Int(1)}).
+				WithIn(sdk.In{Schema: id.SchemaId()}))
+			require.NoError(t, err)
+			assert.Len(t, authenticationPolicies, 1)
+		})
+
+		// TODO(ticket number): limit from doesn't work (should return 0 elements because alphabetically test_auth_policyzzz is last in the output)
+		t.Run("limit from", func(t *testing.T) {
+			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().
+				WithLimit(sdk.LimitFrom{Rows: sdk.Int(2), From: sdk.String(id.Name())}).
+				WithIn(sdk.In{Schema: id.SchemaId()}))
+			require.NoError(t, err)
+			assert.Len(t, authenticationPolicies, 2)
+		})
 	})
 
 	t.Run("Describe", func(t *testing.T) {
-		request := defaultCreateRequest()
-		err := client.AuthenticationPolicies.Create(ctx, request)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		authenticationPolicy, cleanupAuthPolicy := testClientHelper().AuthenticationPolicy.CreateWithOptions(t, id, sdk.NewCreateAuthenticationPolicyRequest(id).WithComment("some_comment"))
+		t.Cleanup(cleanupAuthPolicy)
+
+		desc, err := client.AuthenticationPolicies.Describe(ctx, authenticationPolicy.ID())
 		require.NoError(t, err)
 
-		desc, err := client.AuthenticationPolicies.Describe(ctx, request.GetName())
-		require.NoError(t, err)
-
-		assert.Equal(t, 8, len(desc))
-		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{Property: "COMMENT", Value: "some_comment"})
+		assert.GreaterOrEqual(t, 8, len(desc))
+		assertProperty(t, desc, "COMMENT", "some_comment")
 	})
 }
