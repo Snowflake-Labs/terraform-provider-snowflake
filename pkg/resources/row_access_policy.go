@@ -53,7 +53,7 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 					Required:         true,
 					DiffSuppressFunc: NormalizeAndCompare(sdk.ToDataType),
 					ValidateDiagFunc: sdkValidation(sdk.ToDataType),
-					Description:      "The argument type",
+					Description:      "The argument type. VECTOR data types are not yet supported. For more information about data types, check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).",
 					ForceNew:         true,
 				},
 			},

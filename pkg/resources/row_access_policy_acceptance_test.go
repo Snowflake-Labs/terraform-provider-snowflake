@@ -28,22 +28,22 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 	changedBody := "case when current_role() in ('CHANGED') then true else false end"
 	argument := []sdk.RowAccessPolicyArgument{
 		{
-			Name: "N",
+			Name: "A",
 			Type: string(sdk.DataTypeVARCHAR),
 		},
 		{
-			Name: "V",
+			Name: "B",
 			Type: string(sdk.DataTypeVARCHAR),
 		},
 	}
 	changedArgument := []sdk.RowAccessPolicyArgument{
 		{
-			Name: "N",
-			Type: string(sdk.DataTypeVARCHAR),
+			Name: "C",
+			Type: string(sdk.DataTypeBoolean),
 		},
 		{
-			Name: "V",
-			Type: string(sdk.DataTypeVARCHAR),
+			Name: "D",
+			Type: string(sdk.DataTypeTimestampNTZ),
 		},
 	}
 	policyModel := model.RowAccessPolicy("test", argument, body, id.DatabaseName(), id.Name(), id.SchemaName()).WithComment("Terraform acceptance test")
@@ -80,7 +80,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.body", body)),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.name", id.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.return_type", "BOOLEAN")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature", "(N VARCHAR, V VARCHAR)")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature", "(A VARCHAR, B VARCHAR)")),
 				),
 			},
 			// change comment and expression
@@ -118,7 +118,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 				PreConfig: func() {
 					arg := sdk.NewCreateRowAccessPolicyArgsRequest("A", sdk.DataTypeBoolean)
 					createRequest := sdk.NewCreateRowAccessPolicyRequest(id, []sdk.CreateRowAccessPolicyArgsRequest{*arg}, "case when current_role() in ('ANALYST') then false else true end")
-					acc.TestClient().RowAccessPolicy.CreateOrReplaceRowAccessPolicy(t, *createRequest)
+					acc.TestClient().RowAccessPolicy.CreateRowAccessPolicyWithRequest(t, *createRequest.WithOrReplace(sdk.Pointer(true)))
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

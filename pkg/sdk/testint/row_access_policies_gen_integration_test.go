@@ -1,9 +1,7 @@
 package testint
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -40,13 +38,6 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		}, *rowAccessPolicyDescription)
 	}
 
-	cleanupRowAccessPolicyProvider := func(id sdk.SchemaObjectIdentifier) func() {
-		return func() {
-			err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
-			require.NoError(t, err)
-		}
-	}
-
 	createRowAccessPolicyRequest := func(t *testing.T, args []sdk.CreateRowAccessPolicyArgsRequest, body string) *sdk.CreateRowAccessPolicyRequest {
 		t.Helper()
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -66,38 +57,20 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		return createRowAccessPolicyRequest(t, []sdk.CreateRowAccessPolicyArgsRequest{*args}, body)
 	}
 
-	createRowAccessPolicyWithRequest := func(t *testing.T, request *sdk.CreateRowAccessPolicyRequest) *sdk.RowAccessPolicy {
-		t.Helper()
-		id := request.GetName()
-
-		err := client.RowAccessPolicies.Create(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupRowAccessPolicyProvider(id))
-
-		rowAccessPolicy, err := client.RowAccessPolicies.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		return rowAccessPolicy
-	}
-
-	createRowAccessPolicy := func(t *testing.T) *sdk.RowAccessPolicy {
-		t.Helper()
-		return createRowAccessPolicyWithRequest(t, createRowAccessPolicyBasicRequest(t))
-	}
-
 	t.Run("create row access policy: no optionals", func(t *testing.T) {
 		request := createRowAccessPolicyBasicRequest(t)
 
-		rowAccessPolicy := createRowAccessPolicyWithRequest(t, request)
+		rowAccessPolicy, cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicyWithRequest(t, *request)
+		t.Cleanup(cleanup)
 
 		assertRowAccessPolicy(t, rowAccessPolicy, request.GetName(), "")
 	})
 
 	t.Run("create row access policy: full", func(t *testing.T) {
-		request := createRowAccessPolicyBasicRequest(t)
-		request.Comment = sdk.String("some comment")
+		request := createRowAccessPolicyBasicRequest(t).WithComment(sdk.Pointer("some comment"))
 
-		rowAccessPolicy := createRowAccessPolicyWithRequest(t, request)
+		rowAccessPolicy, cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicyWithRequest(t, *request)
+		t.Cleanup(cleanup)
 
 		assertRowAccessPolicy(t, rowAccessPolicy, request.GetName(), "some comment")
 	})
@@ -133,9 +106,9 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 
 		err = client.RowAccessPolicies.Alter(ctx, alterRequest)
 		if err != nil {
-			t.Cleanup(cleanupRowAccessPolicyProvider(id))
+			t.Cleanup(testClientHelper().RowAccessPolicy.DropRowAccessPolicyFunc(t, id))
 		} else {
-			t.Cleanup(cleanupRowAccessPolicyProvider(newId))
+			t.Cleanup(testClientHelper().RowAccessPolicy.DropRowAccessPolicyFunc(t, newId))
 		}
 		require.NoError(t, err)
 
@@ -149,7 +122,8 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 	})
 
 	t.Run("alter row access policy: set and unset comment", func(t *testing.T) {
-		rowAccessPolicy := createRowAccessPolicy(t)
+		rowAccessPolicy, cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
+		t.Cleanup(cleanup)
 		id := rowAccessPolicy.ID()
 
 		alterRequest := sdk.NewAlterRowAccessPolicyRequest(id).WithSetComment(sdk.String("new comment"))
@@ -172,7 +146,8 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 	})
 
 	t.Run("alter row access policy: set body", func(t *testing.T) {
-		rowAccessPolicy := createRowAccessPolicy(t)
+		rowAccessPolicy, cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
+		t.Cleanup(cleanup)
 		id := rowAccessPolicy.ID()
 
 		alterRequest := sdk.NewAlterRowAccessPolicyRequest(id).WithSetBody(sdk.String("false"))
@@ -198,7 +173,8 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
-		rowAccessPolicy := createRowAccessPolicy(t)
+		rowAccessPolicy, cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
+		t.Cleanup(cleanup)
 		id := rowAccessPolicy.ID()
 
 		tagValue := "abc"
@@ -231,8 +207,10 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 	})
 
 	t.Run("show row access policy: default", func(t *testing.T) {
-		rowAccessPolicy1 := createRowAccessPolicy(t)
-		rowAccessPolicy2 := createRowAccessPolicy(t)
+		rowAccessPolicy1, cleanup1 := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
+		t.Cleanup(cleanup1)
+		rowAccessPolicy2, cleanup2 := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
+		t.Cleanup(cleanup2)
 
 		showRequest := sdk.NewShowRowAccessPolicyRequest()
 		returnedRowAccessPolicies, err := client.RowAccessPolicies.Show(ctx, showRequest)
@@ -243,8 +221,10 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 	})
 
 	t.Run("show row access policy: with options", func(t *testing.T) {
-		rowAccessPolicy1 := createRowAccessPolicy(t)
-		rowAccessPolicy2 := createRowAccessPolicy(t)
+		rowAccessPolicy1, cleanup1 := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
+		t.Cleanup(cleanup1)
+		rowAccessPolicy2, cleanup2 := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
+		t.Cleanup(cleanup2)
 
 		showRequest := sdk.NewShowRowAccessPolicyRequest().
 			WithLike(&sdk.Like{Pattern: &rowAccessPolicy1.Name}).
@@ -264,42 +244,45 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		body := "true"
 
 		request := createRowAccessPolicyRequest(t, []sdk.CreateRowAccessPolicyArgsRequest{*args}, body)
-		rowAccessPolicy := createRowAccessPolicyWithRequest(t, request)
+		rowAccessPolicy, cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicyWithRequest(t, *request)
+		t.Cleanup(cleanup)
 
 		returnedRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, rowAccessPolicy.ID())
 		require.NoError(t, err)
 
-		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", strings.ToUpper(argName), argType), body)
+		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", argName, argType), body)
 	})
 
-	t.Run("describe row access policy: with data type normalization", func(t *testing.T) {
+	t.Run("describe row access policy: with timestamp data type normalization", func(t *testing.T) {
 		argName := random.AlphaN(5)
 		argType := sdk.DataTypeTimestamp
 		args := sdk.NewCreateRowAccessPolicyArgsRequest(argName, argType)
 		body := "true"
 
 		request := createRowAccessPolicyRequest(t, []sdk.CreateRowAccessPolicyArgsRequest{*args}, body)
-		rowAccessPolicy := createRowAccessPolicyWithRequest(t, request)
+		rowAccessPolicy, cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicyWithRequest(t, *request)
+		t.Cleanup(cleanup)
 
 		returnedRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, rowAccessPolicy.ID())
 		require.NoError(t, err)
 
-		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", strings.ToUpper(argName), sdk.DataTypeTimestampNTZ), body)
+		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", argName, sdk.DataTypeTimestampNTZ), body)
 	})
 
-	t.Run("describe row access policy: with data type normalization", func(t *testing.T) {
+	t.Run("describe row access policy: with varchar data type normalization", func(t *testing.T) {
 		argName := random.AlphaN(5)
 		argType := sdk.DataType("VARCHAR(200)")
 		args := sdk.NewCreateRowAccessPolicyArgsRequest(argName, argType)
 		body := "true"
 
 		request := createRowAccessPolicyRequest(t, []sdk.CreateRowAccessPolicyArgsRequest{*args}, body)
-		rowAccessPolicy := createRowAccessPolicyWithRequest(t, request)
+		rowAccessPolicy, cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicyWithRequest(t, *request)
+		t.Cleanup(cleanup)
 
 		returnedRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, rowAccessPolicy.ID())
 		require.NoError(t, err)
 
-		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", strings.ToUpper(argName), sdk.DataTypeVARCHAR), body)
+		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", argName, sdk.DataTypeVARCHAR), body)
 	})
 
 	t.Run("describe row access policy: non-existing", func(t *testing.T) {
@@ -312,25 +295,6 @@ func TestInt_RowAccessPoliciesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	cleanupRowAccessPolicyHandle := func(id sdk.SchemaObjectIdentifier) func() {
-		return func() {
-			err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
-			require.NoError(t, err)
-		}
-	}
-
-	createRowAccessPolicyHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
-		t.Helper()
-
-		args := sdk.NewCreateRowAccessPolicyArgsRequest(random.AlphaN(5), sdk.DataTypeVARCHAR)
-		err := client.RowAccessPolicies.Create(ctx, sdk.NewCreateRowAccessPolicyRequest(id, []sdk.CreateRowAccessPolicyArgsRequest{*args}, "true"))
-		require.NoError(t, err)
-		t.Cleanup(cleanupRowAccessPolicyHandle(id))
-	}
-
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
@@ -338,8 +302,17 @@ func TestInt_RowAccessPoliciesShowByID(t *testing.T) {
 		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
-		createRowAccessPolicyHandle(t, id1)
-		createRowAccessPolicyHandle(t, id2)
+		body := "true"
+		argName := random.AlphaN(5)
+		argType := sdk.DataTypeVARCHAR
+		arg := sdk.NewCreateRowAccessPolicyArgsRequest(argName, argType)
+
+		req1 := sdk.NewCreateRowAccessPolicyRequest(id1, []sdk.CreateRowAccessPolicyArgsRequest{*arg}, body)
+		req2 := sdk.NewCreateRowAccessPolicyRequest(id2, []sdk.CreateRowAccessPolicyArgsRequest{*arg}, body)
+		_, cleanup1 := testClientHelper().RowAccessPolicy.CreateRowAccessPolicyWithRequest(t, *req1)
+		t.Cleanup(cleanup1)
+		_, cleanup2 := testClientHelper().RowAccessPolicy.CreateRowAccessPolicyWithRequest(t, *req2)
+		t.Cleanup(cleanup2)
 
 		e1, err := client.RowAccessPolicies.ShowByID(ctx, id1)
 		require.NoError(t, err)
@@ -355,55 +328,56 @@ func TestInt_RowAccessPoliciesDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	cleanupRowAccessPolicyHandle := func(id sdk.SchemaObjectIdentifier) func() {
-		return func() {
-			err := client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
-			require.NoError(t, err)
-		}
-	}
-
-	createRowAccessPolicyHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier, args []sdk.CreateRowAccessPolicyArgsRequest) {
-		t.Helper()
-
-		err := client.RowAccessPolicies.Create(ctx, sdk.NewCreateRowAccessPolicyRequest(id, args, "true"))
-		require.NoError(t, err)
-		t.Cleanup(cleanupRowAccessPolicyHandle(id))
-	}
-
 	t.Run("describe", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		args := []sdk.CreateRowAccessPolicyArgsRequest{
+			*sdk.NewCreateRowAccessPolicyArgsRequest("A", "NUMBER(2, 0)"),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("B", "DECIMAL"),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("C", "INTEGER"),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("D", sdk.DataTypeFloat),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("E", "DOUBLE"),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("F", "VARCHAR(20)"),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("G", "CHAR"),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("H", sdk.DataTypeString),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("I", "TEXT"),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("J", sdk.DataTypeBinary),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("K", "VARBINARY"),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("L", sdk.DataTypeBoolean),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("M", sdk.DataTypeDate),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("N", "DATETIME"),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("O", sdk.DataTypeTime),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("P", sdk.DataTypeTimestamp),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("R", sdk.DataTypeTimestampLTZ),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("S", sdk.DataTypeTimestampNTZ),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("T", sdk.DataTypeTimestampTZ),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("U", sdk.DataTypeVariant),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("V", sdk.DataTypeObject),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("W", sdk.DataTypeArray),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("X", sdk.DataTypeGeography),
+			*sdk.NewCreateRowAccessPolicyArgsRequest("Y", sdk.DataTypeGeometry),
+			// TODO(SNOW-1596962): Fully support VECTOR data type sdk.ParseFunctionArgumentsFromString could be a base for another function that takes argument names into consideration.
+			// *sdk.NewCreateRowAccessPolicyArgsRequest("Z", "VECTOR(INT, 16)"),
+		}
 
-		arg1 := sdk.NewCreateRowAccessPolicyArgsRequest(random.AlphaN(5), sdk.DataTypeVARCHAR)
-		arg2 := sdk.NewCreateRowAccessPolicyArgsRequest(random.AlphaN(5)+" foo", "TEXT")
-		arg3 := sdk.NewCreateRowAccessPolicyArgsRequest(random.AlphaN(5), "NUMBER(10, 5)")
-		args := []sdk.CreateRowAccessPolicyArgsRequest{*arg1, *arg2, *arg3}
+		policy, cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicyWithArguments(t, args)
+		t.Cleanup(cleanup)
 
-		createRowAccessPolicyHandle(t, id, args)
-
-		policy, err := client.RowAccessPolicies.Describe(ctx, id)
+		id := policy.ID()
+		policyDetails, err := client.RowAccessPolicies.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.Equal(t, "true", policy.Body)
-		assert.Equal(t, id.Name(), policy.Name)
-		assert.Equal(t, "BOOLEAN", policy.ReturnType)
-		assert.Equal(t, fmt.Sprintf("(%s VARCHAR, %s VARCHAR, %s NUMBER)", arg1.Name, arg2.Name, arg3.Name), policy.Signature)
-		gotArgs, err := policy.Arguments()
+		assert.Equal(t, "true", policyDetails.Body)
+		assert.Equal(t, id.Name(), policyDetails.Name)
+		assert.Equal(t, "BOOLEAN", policyDetails.ReturnType)
+		gotArgs, err := policyDetails.Arguments()
 		require.NoError(t, err)
-		assert.Equal(t, []sdk.RowAccessPolicyArgument{
-			{
-				Name: arg1.Name,
-				Type: "VARCHAR",
-			},
-			{
-				Name: arg2.Name,
-				Type: "VARCHAR",
-			},
-			{
-				Name: arg3.Name,
-				Type: "NUMBER",
-			},
-		}, gotArgs)
+		wantArgs := make([]sdk.RowAccessPolicyArgument, len(args))
+		for i, arg := range args {
+			dataType, err := sdk.ToDataType(string(arg.Type))
+			require.NoError(t, err)
+			wantArgs[i] = sdk.RowAccessPolicyArgument{
+				Name: arg.Name,
+				Type: string(dataType),
+			}
+		}
+		assert.Equal(t, wantArgs, gotArgs)
 	})
 }

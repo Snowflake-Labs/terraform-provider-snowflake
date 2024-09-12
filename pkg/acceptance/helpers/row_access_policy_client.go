@@ -31,12 +31,18 @@ func (c *RowAccessPolicyClient) CreateRowAccessPolicy(t *testing.T) (*sdk.RowAcc
 
 func (c *RowAccessPolicyClient) CreateRowAccessPolicyWithDataType(t *testing.T, datatype sdk.DataType) (*sdk.RowAccessPolicy, func()) {
 	t.Helper()
+
+	arg := sdk.NewCreateRowAccessPolicyArgsRequest("A", datatype)
+	return c.CreateRowAccessPolicyWithArguments(t, []sdk.CreateRowAccessPolicyArgsRequest{*arg})
+}
+
+func (c *RowAccessPolicyClient) CreateRowAccessPolicyWithArguments(t *testing.T, args []sdk.CreateRowAccessPolicyArgsRequest) (*sdk.RowAccessPolicy, func()) {
+	t.Helper()
 	ctx := context.Background()
 
 	id := c.ids.RandomSchemaObjectIdentifier()
-	arg := sdk.NewCreateRowAccessPolicyArgsRequest("A", datatype)
 	body := "true"
-	createRequest := sdk.NewCreateRowAccessPolicyRequest(id, []sdk.CreateRowAccessPolicyArgsRequest{*arg}, body)
+	createRequest := sdk.NewCreateRowAccessPolicyRequest(id, args, body)
 
 	err := c.client().Create(ctx, createRequest)
 	require.NoError(t, err)
@@ -47,11 +53,11 @@ func (c *RowAccessPolicyClient) CreateRowAccessPolicyWithDataType(t *testing.T, 
 	return rowAccessPolicy, c.DropRowAccessPolicyFunc(t, id)
 }
 
-func (c *RowAccessPolicyClient) CreateOrReplaceRowAccessPolicy(t *testing.T, req sdk.CreateRowAccessPolicyRequest) (*sdk.RowAccessPolicy, func()) {
+func (c *RowAccessPolicyClient) CreateRowAccessPolicyWithRequest(t *testing.T, req sdk.CreateRowAccessPolicyRequest) (*sdk.RowAccessPolicy, func()) {
 	t.Helper()
 	ctx := context.Background()
 
-	err := c.client().Create(ctx, req.WithOrReplace(sdk.Pointer(true)))
+	err := c.client().Create(ctx, &req)
 	require.NoError(t, err)
 
 	rowAccessPolicy, err := c.client().ShowByID(ctx, req.GetName())

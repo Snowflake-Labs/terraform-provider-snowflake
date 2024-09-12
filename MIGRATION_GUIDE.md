@@ -19,7 +19,7 @@ Please rename these fields in your configuration files. State will be migrated a
 #### *(breaking change)* Adjusted behavior of arguments/signature
 Now, arguments are stored as a list, instead of a map. Please adjust that in your configs. State is migrated automatically. Also, this means that order of the items matters and may be adjusted.
 
-Argument names are now case sensitive. All policies created previously in the provider have upper case argument names. If you used lower case before, please adjust your configs.
+Argument names are now case sensitive. All policies created previously in the provider have upper case argument names. If you used lower case before, please adjust your configs. Values in the state will be migrated to uppercase automatically.
 
 #### *(breaking change)* Adjusted behavior on changing name
 Previously, after changing `name` field, the resource was recreated. Now, the object is renamed with `RENAME TO`.
