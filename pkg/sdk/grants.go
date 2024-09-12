@@ -237,6 +237,9 @@ func (row grantRow) convert() *Grant {
 	if row.GrantedOn == "VOLUME" {
 		grantedOn = ObjectTypeExternalVolume
 	}
+	if row.GrantedOn == "MODULE" {
+		grantedOn = ObjectTypeModel
+	}
 
 	var grantOn ObjectType
 	// true for future grants
@@ -245,6 +248,9 @@ func (row grantRow) convert() *Grant {
 	}
 	if row.GrantOn == "VOLUME" {
 		grantOn = ObjectTypeExternalVolume
+	}
+	if row.GrantOn == "MODULE" {
+		grantOn = ObjectTypeModel
 	}
 
 	var name ObjectIdentifier
