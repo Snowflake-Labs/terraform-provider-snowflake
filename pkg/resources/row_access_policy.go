@@ -220,18 +220,6 @@ func ReadRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("name", rowAccessPolicy.Name); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("database", rowAccessPolicy.DatabaseName); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("schema", rowAccessPolicy.SchemaName); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("comment", rowAccessPolicy.Comment); err != nil {
 		return diag.FromErr(err)
 	}
