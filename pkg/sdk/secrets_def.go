@@ -13,7 +13,7 @@ var SecretsDef = g.NewInterface(
 ).CustomOperation(
 	"CreateWithOAuthClientCredentialsFlow",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-secret",
-	g.NewQueryStruct("CreateOAuthWithClientCredentialsFlow").
+	g.NewQueryStruct("CreateWithOAuthClientCredentialsFlow").
 		Create().
 		OrReplace().
 		SQL("SECRET").
@@ -23,12 +23,13 @@ var SecretsDef = g.NewInterface(
 		Identifier("SecurityIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION").Required()).
 		ListAssignment("OAUTH_SCOPES", "SecurityIntegrationScope", g.ParameterOptions().Parentheses()).
 		OptionalComment().
+		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 	secretsSecurityIntegrationScopeDef,
 ).CustomOperation(
-	"CreateWithOAuthAuthorizationCode",
+	"CreateWithOAuthAuthorizationCodeFlow",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-secret",
-	g.NewQueryStruct("CreateWithOAuthAuthorizationCode").
+	g.NewQueryStruct("CreateWithOAuthAuthorizationCodeFlow").
 		Create().
 		OrReplace().
 		SQL("SECRET").
@@ -39,6 +40,7 @@ var SecretsDef = g.NewInterface(
 		TextAssignment("OAUTH_REFRESH_TOKEN_EXPIRY_TIME", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		Identifier("SecurityIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION")).
 		OptionalComment().
+		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 	secretsSecurityIntegrationScopeDef,
 ).CustomOperation(
@@ -54,6 +56,7 @@ var SecretsDef = g.NewInterface(
 		TextAssignment("USERNAME", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		TextAssignment("PASSWORD", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		OptionalComment().
+		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 ).CustomOperation(
 	"CreateWithGenericString",
@@ -67,5 +70,6 @@ var SecretsDef = g.NewInterface(
 		PredefinedQueryStructField("Type", "string", g.StaticOptions().SQL("TYPE = GENERIC_STRING")).
 		TextAssignment("SECRET_STRING", g.ParameterOptions().SingleQuotes().Required()).
 		OptionalComment().
+		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 )
