@@ -1,9 +1,8 @@
 resource "snowflake_resource_monitor" "minimal" {
-  name                      = "resource-monitor-name"
-  credit_quota              = 100
-  notify_triggers           = [100]
-  suspend_immediate_trigger = 150
-  notify_users              = ["USERONE", "USERTWO"]
+  name            = "resource-monitor-name"
+  credit_quota    = 100
+  suspend_trigger = 100
+  notify_users    = ["USERONE", "USERTWO"]
 }
 
 resource "snowflake_resource_monitor" "complete" {

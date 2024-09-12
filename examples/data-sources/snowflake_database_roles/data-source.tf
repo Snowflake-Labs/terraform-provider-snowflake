@@ -1,6 +1,6 @@
 # Simple usage
 data "snowflake_database_roles" "simple" {
-  database = "database-name"
+  in_database = "database-name"
 }
 
 output "simple_output" {
@@ -9,18 +9,31 @@ output "simple_output" {
 
 # Filtering (like)
 data "snowflake_database_roles" "like" {
-  database = "database-name"
-  like     = "database_role-name"
+  in_database = "database-name"
+  like        = "database_role-name"
 }
 
 output "like_output" {
   value = data.snowflake_database_roles.like.database_roles
 }
 
+# Filtering (limit)
+data "snowflake_database_roles" "limit" {
+  in_database = "database-name"
+  limit {
+    rows = 10
+    from = "prefix-"
+  }
+}
+
+output "limit_output" {
+  value = data.snowflake_database_roles.limit.database_roles
+}
+
 # Ensure the number of database roles is equal to at least one element (with the use of postcondition)
 data "snowflake_database_roles" "assert_with_postcondition" {
-  database = "database-name"
-  like     = "database_role-name-%"
+  in_database = "database-name"
+  like        = "database_role-name-%"
   lifecycle {
     postcondition {
       condition     = length(self.database_roles) > 0
@@ -32,8 +45,8 @@ data "snowflake_database_roles" "assert_with_postcondition" {
 # Ensure the number of database roles is equal to at exactly one element (with the use of check block)
 check "database_role_check" {
   data "snowflake_resource_monitors" "assert_with_check_block" {
-    database = "database-name"
-    like     = "database_role-name"
+    in_database = "database-name"
+    like        = "database_role-name"
   }
 
   assert {

@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 	"time"
@@ -775,6 +776,54 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, configModelWithoutTriggers),
 				ExpectError:              regexp.MustCompile("Due to Snowflake limitations triggers cannot be completely removed form"),
+			},
+		},
+	})
+}
+
+// proves that fields that were present in the previous versions are not kept in the state after the upgrade
+func TestAcc_ResourceMonitor_SetForWarehouse(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.90.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: fmt.Sprintf(`
+resource "snowflake_resource_monitor" "test" {
+	name = "%s"
+	credit_quota = 100
+	suspend_trigger = 100
+	warehouses = [ "SNOWFLAKE" ]
+}
+`, id.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "warehouses.#", "1"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config: fmt.Sprintf(`
+resource "snowflake_resource_monitor" "test" {
+	name = "%s"
+	credit_quota = 100
+	suspend_trigger = 100
+}
+`, id.Name()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "warehouses"),
+					resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "warehouses.#"),
+				),
 			},
 		},
 	})

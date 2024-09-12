@@ -3,9 +3,6 @@
 package model
 
 import (
-	"reflect"
-	"strings"
-
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -46,22 +43,6 @@ func ResourceMonitorWithDefaultMeta(
 	r := &ResourceMonitorModel{ResourceModelMeta: config.DefaultMeta(resources.ResourceMonitor)}
 	r.WithName(name)
 	return r
-}
-
-func (r *ResourceMonitorModel) ToConfigVariables() tfconfig.Variables {
-	variables := make(tfconfig.Variables)
-	rType := reflect.TypeOf(r).Elem()
-	rValue := reflect.ValueOf(r).Elem()
-	for i := 0; i < rType.NumField(); i++ {
-		field := rType.Field(i)
-		if jsonTag, ok := field.Tag.Lookup("json"); ok {
-			name := strings.Split(jsonTag, ",")[0]
-			if fieldValue, ok := rValue.Field(i).Interface().(tfconfig.Variable); ok {
-				variables[name] = fieldValue
-			}
-		}
-	}
-	return variables
 }
 
 /////////////////////////////////

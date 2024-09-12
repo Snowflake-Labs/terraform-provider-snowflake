@@ -26,15 +26,18 @@ func TestAcc_ResourceMonitors(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
+			// Filter by prefix pattern (expect 2 items)
 			{
 				Config: resourceMonitors(resourceMonitorName.Name(), resourceMonitorName2.Name(), prefix+"%"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_resource_monitors.test", "resource_monitors.#", "2"),
 				),
 			},
+			// Filter by exact name (expect 1 item)
 			{
 				Config: resourceMonitors(resourceMonitorName.Name(), resourceMonitorName2.Name(), resourceMonitorName.Name()),
 				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_resource_monitors.test", "resource_monitors.#", "1")),
 					resourceshowoutputassert.ResourceMonitorDatasourceShowOutput(t, "snowflake_resource_monitors.test").
 						HasName(resourceMonitorName.Name()).
 						HasCreditQuota(5).
