@@ -18,8 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: Run int and acc tests of user (and see it's implementation after monty change)
-
 // TODO [SNOW-1645875]: test setting/unsetting policies
 // TODO [SNOW-1645348]: add type and other 8.26 additions
 func TestInt_Users(t *testing.T) {
@@ -734,7 +732,7 @@ func TestInt_Users(t *testing.T) {
 
 		err := client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
 			Set: &sdk.UserSet{
-				AuthenticationPolicy: authenticationPolicyTest.ID(),
+				AuthenticationPolicy: sdk.Pointer(authenticationPolicyTest.ID()),
 			},
 		})
 		require.NoError(t, err)

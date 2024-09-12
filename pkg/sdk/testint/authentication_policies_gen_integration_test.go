@@ -279,6 +279,11 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.GreaterOrEqual(t, 8, len(desc))
-		assertProperty(t, desc, "COMMENT", "some_comment")
+		assert.Contains(t, desc, sdk.AuthenticationPolicyDescription{
+			Property:    "COMMENT",
+			Value:       "some_comment",
+			Default:     "null",
+			Description: "Comment associated with authentication policy.",
+		})
 	})
 }

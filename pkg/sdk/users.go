@@ -390,7 +390,7 @@ func (opts *RemoveDelegatedAuthorization) validate() error {
 type UserSet struct {
 	PasswordPolicy       *SchemaObjectIdentifier    `ddl:"identifier" sql:"PASSWORD POLICY"`
 	SessionPolicy        *string                    `ddl:"parameter" sql:"SESSION POLICY"`
-	AuthenticationPolicy SchemaObjectIdentifier     `ddl:"identifier" sql:"AUTHENTICATION POLICY"`
+	AuthenticationPolicy *SchemaObjectIdentifier    `ddl:"identifier" sql:"AUTHENTICATION POLICY"`
 	ObjectProperties     *UserAlterObjectProperties `ddl:"keyword"`
 	ObjectParameters     *UserObjectParameters      `ddl:"keyword"`
 	SessionParameters    *SessionParameters         `ddl:"keyword"`

@@ -73,7 +73,7 @@ var AuthenticationPoliciesDef = g.NewInterface(
 ).
 	CreateOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy",
-		g.NewQueryStruct("Create").
+		g.NewQueryStruct("CreateAuthenticationPolicy").
 			Create().
 			OrReplace().
 			SQL("AUTHENTICATION POLICY").
