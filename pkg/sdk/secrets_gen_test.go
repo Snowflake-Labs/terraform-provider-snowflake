@@ -3,12 +3,10 @@ package sdk
 import "testing"
 
 func TestSecrets_CreateWithOAuthClientCredentialsFlow(t *testing.T) {
-
 	id := randomSchemaObjectIdentifier()
-	// Minimal valid CreateWithOAuthClientCredentialsFlowSecretOptions
+
 	defaultOpts := func() *CreateWithOAuthClientCredentialsFlowSecretOptions {
 		return &CreateWithOAuthClientCredentialsFlowSecretOptions{
-
 			name: id,
 		}
 	}
@@ -17,38 +15,36 @@ func TestSecrets_CreateWithOAuthClientCredentialsFlow(t *testing.T) {
 		var opts *CreateWithOAuthClientCredentialsFlowSecretOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateWithOAuthClientCredentialsFlowSecretOptions", "OrReplace", "IfNotExists"))
 	})
 
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
-	})
-
 	t.Run("all options", func(t *testing.T) {
+		integration := randomAccountObjectIdentifier()
+
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfNotExists = Bool(true)
+		opts.SecurityIntegration = integration
+		opts.OauthScopes = []SecurityIntegrationScope{{"test"}}
+		opts.Comment = String("foo")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SECRET IF NOT EXISTS %s TYPE = OAUTH2 API_AUTHENTICATION = %s OAUTH_SCOPES = ('test') COMMENT = 'foo'", id.FullyQualifiedName(), integration.FullyQualifiedName())
 	})
 }
 
 func TestSecrets_CreateWithOAuthAuthorizationCodeFlow(t *testing.T) {
-
 	id := randomSchemaObjectIdentifier()
-	// Minimal valid CreateWithOAuthAuthorizationCodeFlowSecretOptions
+
 	defaultOpts := func() *CreateWithOAuthAuthorizationCodeFlowSecretOptions {
 		return &CreateWithOAuthAuthorizationCodeFlowSecretOptions{
-
 			name: id,
 		}
 	}
@@ -57,38 +53,37 @@ func TestSecrets_CreateWithOAuthAuthorizationCodeFlow(t *testing.T) {
 		var opts *CreateWithOAuthAuthorizationCodeFlowSecretOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateWithOAuthAuthorizationCodeFlowSecretOptions", "OrReplace", "IfNotExists"))
 	})
 
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
-	})
-
 	t.Run("all options", func(t *testing.T) {
+		integration := randomAccountObjectIdentifier()
+
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfNotExists = Bool(true)
+		opts.OauthRefreshToken = "foo"
+		opts.OauthRefreshTokenExpiryTime = "bar"
+		opts.SecurityIntegration = integration
+		opts.Comment = String("test")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SECRET IF NOT EXISTS %s TYPE = OAUTH2 OAUTH_REFRESH_TOKEN = 'foo' OAUTH_REFRESH_TOKEN_EXPIRY_TIME = 'bar' API_AUTHENTICATION = %s COMMENT = 'test'", id.FullyQualifiedName(), integration.FullyQualifiedName())
 	})
 }
 
 func TestSecrets_CreateWithBasicAuthentication(t *testing.T) {
-
 	id := randomSchemaObjectIdentifier()
-	// Minimal valid CreateWithBasicAuthenticationSecretOptions
+
 	defaultOpts := func() *CreateWithBasicAuthenticationSecretOptions {
 		return &CreateWithBasicAuthenticationSecretOptions{
-
 			name: id,
 		}
 	}
@@ -97,38 +92,34 @@ func TestSecrets_CreateWithBasicAuthentication(t *testing.T) {
 		var opts *CreateWithBasicAuthenticationSecretOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateWithBasicAuthenticationSecretOptions", "OrReplace", "IfNotExists"))
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfNotExists = Bool(true)
+		opts.Username = "foo"
+		opts.Password = "bar"
+		opts.Comment = String("test")
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SECRET IF NOT EXISTS %s TYPE = PASSWORD USERNAME = 'foo' PASSWORD = 'bar' COMMENT = 'test'", id.FullyQualifiedName())
 	})
 }
 
 func TestSecrets_CreateWithGenericString(t *testing.T) {
-
 	id := randomSchemaObjectIdentifier()
-	// Minimal valid CreateWithGenericStringSecretOptions
+
 	defaultOpts := func() *CreateWithGenericStringSecretOptions {
 		return &CreateWithGenericStringSecretOptions{
-
 			name: id,
 		}
 	}
@@ -137,28 +128,24 @@ func TestSecrets_CreateWithGenericString(t *testing.T) {
 		var opts *CreateWithGenericStringSecretOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: conflicting fields for [opts.OrReplace opts.IfNotExists]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.IfNotExists = Bool(true)
+		opts.OrReplace = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateWithGenericStringSecretOptions", "OrReplace", "IfNotExists"))
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfNotExists = Bool(true)
+		opts.SecretString = "test"
+		assertOptsValidAndSQLEquals(t, opts, "CREATE SECRET IF NOT EXISTS %s TYPE = GENERIC_STRING SECRET_STRING = 'test'", id.FullyQualifiedName())
 	})
 }
 
