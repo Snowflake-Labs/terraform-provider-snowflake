@@ -58,10 +58,11 @@ type DropRowAccessPolicyOptions struct {
 
 // ShowRowAccessPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-row-access-policies.
 type ShowRowAccessPolicyOptions struct {
-	show              bool  `ddl:"static" sql:"SHOW"`
-	rowAccessPolicies bool  `ddl:"static" sql:"ROW ACCESS POLICIES"`
-	Like              *Like `ddl:"keyword" sql:"LIKE"`
-	In                *In   `ddl:"keyword" sql:"IN"`
+	show              bool        `ddl:"static" sql:"SHOW"`
+	rowAccessPolicies bool        `ddl:"static" sql:"ROW ACCESS POLICIES"`
+	Like              *Like       `ddl:"keyword" sql:"LIKE"`
+	In                *ExtendedIn `ddl:"keyword" sql:"IN"`
+	Limit             *LimitFrom  `ddl:"keyword" sql:"LIMIT"`
 }
 
 type rowAccessPolicyDBRow struct {

@@ -5,6 +5,22 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.95.0 ➞ v0.96.0
+### snowflake_row_access_policies data source changes
+New filtering options:
+- `in`
+- `limit`
+- `with_describe`
+
+New output fields
+- `show_output`
+- `describe_output`
+
+Breaking changes:
+- `database` and `schema` are right now under `in` field
+- `row_access_policies` field now organizes output of show under `show_output` field and the output of describe under `describe_output` field.
+
+Please adjust your Terraform configuration files.
+
 ### snowflake_row_access_policy resource changes
 New fields:
   - `show_output` field that holds the response from SHOW ROW ACCESS POLICIES.
