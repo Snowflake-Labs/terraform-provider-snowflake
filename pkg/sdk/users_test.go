@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -119,6 +120,30 @@ func TestUserAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
 	})
 
+	t.Run("validation: set more than one policy", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				AuthenticationPolicy: Pointer(randomSchemaObjectIdentifier()),
+				PasswordPolicy:       Pointer(randomSchemaObjectIdentifier()),
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("UserSet", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
+	})
+
+	t.Run("validation: set policy with user parameters and properties", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				AuthenticationPolicy: Pointer(randomSchemaObjectIdentifier()),
+				SessionParameters:    &SessionParameters{AbortDetachedQuery: Bool(true)},
+				ObjectParameters:     &UserObjectParameters{EnableUnredactedQuerySyntaxError: Bool(true)},
+				ObjectProperties:     &UserAlterObjectProperties{DisableMfa: Bool(true)},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("policies cannot be set with user properties or parameters at the same time"))
+	})
+
 	t.Run("two sets", func(t *testing.T) {
 		opts := &AlterUserOptions{
 			name: id,
@@ -135,18 +160,40 @@ func TestUserAlter(t *testing.T) {
 			name:  id,
 			Unset: &UserUnset{},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
 	})
 
-	t.Run("validation: two incompatible unsets", func(t *testing.T) {
+	t.Run("validation: unset property with policy", func(t *testing.T) {
 		opts := &AlterUserOptions{
 			name: id,
 			Unset: &UserUnset{
-				SessionParameters: &SessionParametersUnset{BinaryOutputFormat: Bool(true)},
-				ObjectParameters:  &UserObjectParametersUnset{EnableUnredactedQuerySyntaxError: Bool(true)},
+				PasswordPolicy:   Bool(true),
+				ObjectParameters: &UserObjectParametersUnset{EnableUnredactedQuerySyntaxError: Bool(true)},
 			},
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ObjectProperties", "ObjectParameters", "SessionParameters"))
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("policies cannot be unset with user properties or parameters at the same time"))
+	})
+
+	t.Run("validation: unset two policies", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Unset: &UserUnset{
+				PasswordPolicy:       Bool(true),
+				AuthenticationPolicy: Bool(true),
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("UserUnset", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
+	})
+
+	t.Run("two compatible unsets", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Unset: &UserUnset{
+				ObjectParameters:  &UserObjectParametersUnset{EnableUnredactedQuerySyntaxError: Bool(true)},
+				SessionParameters: &SessionParametersUnset{BinaryOutputFormat: Bool(true)},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s UNSET ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR, BINARY_OUTPUT_FORMAT", id.FullyQualifiedName())
 	})
 
 	t.Run("with setting a policy", func(t *testing.T) {

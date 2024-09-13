@@ -225,7 +225,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 			assert.Len(t, authenticationPolicies, 1)
 		})
 
-		// TODO(ticket number): starts_with doesn't work (returns all)
+		// TODO(SNOW-1663343): starts_with doesn't work (returns all)
 		t.Run("starts_with", func(t *testing.T) {
 			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().
 				WithStartsWith("test_auth_policy_").
@@ -260,7 +260,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 			assert.Len(t, authenticationPolicies, 1)
 		})
 
-		// TODO(ticket number): limit from doesn't work (should return 0 elements because alphabetically test_auth_policyzzz is last in the output)
+		// TODO(SNOW-1663343): limit from doesn't work (should return 0 elements because alphabetically test_auth_policyzzz is last in the output)
 		t.Run("limit from", func(t *testing.T) {
 			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().
 				WithLimit(sdk.LimitFrom{Rows: sdk.Int(2), From: sdk.String(id.Name())}).

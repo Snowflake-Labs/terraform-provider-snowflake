@@ -941,6 +941,43 @@ func TestInt_Users(t *testing.T) {
 		)
 	})
 
+	t.Run("alter: set and unset properties and parameters at the same time", func(t *testing.T) {
+		user, userCleanup := testClientHelper().User.CreateUser(t)
+		t.Cleanup(userCleanup)
+
+		err := client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				SessionParameters: &sdk.SessionParameters{
+					Autocommit: sdk.Bool(false),
+				},
+				ObjectParameters: &sdk.UserObjectParameters{
+					NetworkPolicy: sdk.Pointer(networkPolicy.ID()),
+				},
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						Comment: sdk.String("some comment"),
+					},
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		err = client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				SessionParameters: &sdk.SessionParametersUnset{
+					Autocommit: sdk.Bool(true),
+				},
+				ObjectParameters: &sdk.UserObjectParametersUnset{
+					NetworkPolicy: sdk.Bool(true),
+				},
+				ObjectProperties: &sdk.UserObjectPropertiesUnset{
+					Comment: sdk.Bool(true),
+				},
+			},
+		})
+		require.NoError(t, err)
+	})
+
 	t.Run("alter: set and unset tags", func(t *testing.T) {
 		user, userCleanup := testClientHelper().User.CreateUser(t)
 		t.Cleanup(userCleanup)
