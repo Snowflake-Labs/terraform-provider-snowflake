@@ -781,6 +781,107 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 	})
 }
 
+func TestAcc_ResourceMonitor_RemovingAllTriggers(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	configModelWithNotifyTriggers := model.ResourceMonitor("test", id.Name()).
+		WithCreditQuota(100).
+		WithNotifyTriggersValue(configvariable.SetVariable(
+			configvariable.IntegerVariable(100),
+			configvariable.IntegerVariable(110),
+		))
+
+	configModelWithSuspendTrigger := model.ResourceMonitor("test", id.Name()).
+		WithCreditQuota(100).
+		WithSuspendTrigger(120)
+
+	configModelWithSuspendImmediateTrigger := model.ResourceMonitor("test", id.Name()).
+		WithCreditQuota(100).
+		WithSuspendImmediateTrigger(120)
+
+	configModelWithAllTriggers := model.ResourceMonitor("test", id.Name()).
+		WithCreditQuota(100).
+		WithNotifyTriggersValue(configvariable.SetVariable(
+			configvariable.IntegerVariable(100),
+			configvariable.IntegerVariable(110),
+		)).
+		WithSuspendTrigger(120).
+		WithSuspendImmediateTrigger(150)
+
+	configModelWithoutTriggers := model.ResourceMonitor("test", id.Name()).
+		WithCreditQuota(100)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
+		Steps: []resource.TestStep{
+			// Config with all triggers
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModelWithAllTriggers),
+			},
+			// No triggers (force new expected)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_resource_monitor.test", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModelWithoutTriggers),
+			},
+			// Config with only notify triggers
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModelWithNotifyTriggers),
+			},
+			// No triggers (force new expected)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_resource_monitor.test", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModelWithoutTriggers),
+			},
+			// Config with only suspend trigger
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModelWithSuspendTrigger),
+			},
+			// No triggers (force new expected)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_resource_monitor.test", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModelWithoutTriggers),
+			},
+			// Config with only suspend immediate trigger
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModelWithSuspendImmediateTrigger),
+			},
+			// No triggers (force new expected)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_resource_monitor.test", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModelWithoutTriggers),
+			},
+		},
+	})
+}
+
 // proves that fields that were present in the previous versions are not kept in the state after the upgrade
 func TestAcc_ResourceMonitor_SetForWarehouse(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()

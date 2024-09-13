@@ -109,6 +109,9 @@ func ResourceMonitor() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(resourceMonitorSchema, ShowOutputAttributeName, "notify_users", "credit_quota", "frequency", "start_timestamp", "end_timestamp", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
+			ForceNewIfAllKeysAreNotSet("notify_triggers", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
+			ForceNewIfAllKeysAreNotSet("suspend_trigger", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
+			ForceNewIfAllKeysAreNotSet("suspend_immediate_trigger", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
 		),
 	}
 }
@@ -383,15 +386,8 @@ func UpdateResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any
 
 		if len(triggers) > 0 {
 			opts.Triggers = triggers
-		} else {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Failed to update resource monitor.",
-					Detail:   "Due to Snowflake limitations triggers cannot be completely removed form resource monitor after having at least 1 trigger. The only way it to re-create resource monitor without any triggers specified.",
-				},
-			}
 		}
+		// Else ForceNew, because Snowflake doesn't allow fully unsetting the triggers
 	}
 
 	// This is to prevent SQL compilation errors from Snowflake, because you cannot only alter triggers.

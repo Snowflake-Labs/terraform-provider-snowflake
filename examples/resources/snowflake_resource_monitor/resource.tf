@@ -1,4 +1,11 @@
+// Note: Without credit quota and triggers specified in the configuration, the resource monitor is not performing any work.
+// More on resource monitor usage: https://docs.snowflake.com/en/user-guide/resource-monitors.
 resource "snowflake_resource_monitor" "minimal" {
+  name = "resource-monitor-name"
+}
+
+// Note: Resource monitors have to be attached to account or warehouse to be able to track credit usage.
+resource "snowflake_resource_monitor" "minimal_working" {
   name            = "resource-monitor-name"
   credit_quota    = 100
   suspend_trigger = 100
