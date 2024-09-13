@@ -7,10 +7,12 @@ import ()
 func NewCreateWithOAuthClientCredentialsFlowSecretRequest(
 	name SchemaObjectIdentifier,
 	SecurityIntegration AccountObjectIdentifier,
+	OauthScopes []SecurityIntegrationScope,
 ) *CreateWithOAuthClientCredentialsFlowSecretRequest {
 	s := CreateWithOAuthClientCredentialsFlowSecretRequest{}
 	s.name = name
 	s.SecurityIntegration = SecurityIntegration
+	s.OauthScopes = OauthScopes
 	return &s
 }
 
@@ -21,11 +23,6 @@ func (s *CreateWithOAuthClientCredentialsFlowSecretRequest) WithOrReplace(OrRepl
 
 func (s *CreateWithOAuthClientCredentialsFlowSecretRequest) WithIfNotExists(IfNotExists bool) *CreateWithOAuthClientCredentialsFlowSecretRequest {
 	s.IfNotExists = &IfNotExists
-	return s
-}
-
-func (s *CreateWithOAuthClientCredentialsFlowSecretRequest) WithOauthScopes(OauthScopes []SecurityIntegrationScope) *CreateWithOAuthClientCredentialsFlowSecretRequest {
-	s.OauthScopes = OauthScopes
 	return s
 }
 
@@ -147,42 +144,68 @@ func (s *SecretSetRequest) WithComment(Comment string) *SecretSetRequest {
 	return s
 }
 
-func (s *SecretSetRequest) WithOAuthScopes(OAuthScopes OAuthScopesRequest) *SecretSetRequest {
-	s.OAuthScopes = &OAuthScopes
+func (s *SecretSetRequest) WithSetForOAuthClientCredentialsFlow(SetForOAuthClientCredentialsFlow SetForOAuthClientCredentialsFlowRequest) *SecretSetRequest {
+	s.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow
 	return s
 }
 
-func (s *SecretSetRequest) WithOauthRefreshToken(OauthRefreshToken string) *SecretSetRequest {
+func (s *SecretSetRequest) WithSetForOAuthAuthorizationFlow(SetForOAuthAuthorizationFlow SetForOAuthAuthorizationFlowRequest) *SecretSetRequest {
+	s.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow
+	return s
+}
+
+func (s *SecretSetRequest) WithSetForBasicAuthentication(SetForBasicAuthentication SetForBasicAuthenticationRequest) *SecretSetRequest {
+	s.SetForBasicAuthentication = &SetForBasicAuthentication
+	return s
+}
+
+func (s *SecretSetRequest) WithSetForGenericString(SetForGenericString SetForGenericStringRequest) *SecretSetRequest {
+	s.SetForGenericString = &SetForGenericString
+	return s
+}
+
+func NewSetForOAuthClientCredentialsFlowRequest(
+	OauthScopes []SecurityIntegrationScope,
+) *SetForOAuthClientCredentialsFlowRequest {
+	s := SetForOAuthClientCredentialsFlowRequest{}
+	s.OauthScopes = OauthScopes
+	return &s
+}
+
+func NewSetForOAuthAuthorizationFlowRequest() *SetForOAuthAuthorizationFlowRequest {
+	return &SetForOAuthAuthorizationFlowRequest{}
+}
+
+func (s *SetForOAuthAuthorizationFlowRequest) WithOauthRefreshToken(OauthRefreshToken string) *SetForOAuthAuthorizationFlowRequest {
 	s.OauthRefreshToken = &OauthRefreshToken
 	return s
 }
 
-func (s *SecretSetRequest) WithOauthRefreshTokenExpiryTime(OauthRefreshTokenExpiryTime string) *SecretSetRequest {
+func (s *SetForOAuthAuthorizationFlowRequest) WithOauthRefreshTokenExpiryTime(OauthRefreshTokenExpiryTime string) *SetForOAuthAuthorizationFlowRequest {
 	s.OauthRefreshTokenExpiryTime = &OauthRefreshTokenExpiryTime
 	return s
 }
 
-func (s *SecretSetRequest) WithUsername(Username string) *SecretSetRequest {
+func NewSetForBasicAuthenticationRequest() *SetForBasicAuthenticationRequest {
+	return &SetForBasicAuthenticationRequest{}
+}
+
+func (s *SetForBasicAuthenticationRequest) WithUsername(Username string) *SetForBasicAuthenticationRequest {
 	s.Username = &Username
 	return s
 }
 
-func (s *SecretSetRequest) WithPassword(Password string) *SecretSetRequest {
+func (s *SetForBasicAuthenticationRequest) WithPassword(Password string) *SetForBasicAuthenticationRequest {
 	s.Password = &Password
 	return s
 }
 
-func (s *SecretSetRequest) WithSecretString(SecretString string) *SecretSetRequest {
+func NewSetForGenericStringRequest() *SetForGenericStringRequest {
+	return &SetForGenericStringRequest{}
+}
+
+func (s *SetForGenericStringRequest) WithSecretString(SecretString string) *SetForGenericStringRequest {
 	s.SecretString = &SecretString
-	return s
-}
-
-func NewOAuthScopesRequest() *OAuthScopesRequest {
-	return &OAuthScopesRequest{}
-}
-
-func (s *OAuthScopesRequest) WithOAuthScopes(OAuthScopes []SecurityIntegrationScope) *OAuthScopesRequest {
-	s.OAuthScopes = OAuthScopes
 	return s
 }
 
@@ -190,7 +213,7 @@ func NewSecretUnsetRequest() *SecretUnsetRequest {
 	return &SecretUnsetRequest{}
 }
 
-func (s *SecretUnsetRequest) WithUnsetComment(UnsetComment bool) *SecretUnsetRequest {
-	s.UnsetComment = &UnsetComment
+func (s *SecretUnsetRequest) WithComment(Comment bool) *SecretUnsetRequest {
+	s.Comment = &Comment
 	return s
 }

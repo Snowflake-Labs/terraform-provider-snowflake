@@ -72,20 +72,29 @@ type AlterSecretOptions struct {
 	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 	Set      *SecretSet             `ddl:"keyword" sql:"SET"`
-	Unset    *SecretUnset           `ddl:"keyword" sql:"UNSET"`
+	Unset    *SecretUnset           `ddl:"keyword"`
 }
 type SecretSet struct {
-	Comment                     *string      `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	OAuthScopes                 *OAuthScopes `ddl:"parameter,must_parentheses" sql:"OAUTH_SCOPES"`
-	OauthRefreshToken           *string      `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN"`
-	OauthRefreshTokenExpiryTime *string      `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN_EXPIRY_TIME"`
-	Username                    *string      `ddl:"parameter,single_quotes" sql:"USERNAME"`
-	Password                    *string      `ddl:"parameter,single_quotes" sql:"PASSWORD"`
-	SecretString                *string      `ddl:"parameter,single_quotes" sql:"SECRET_STRING"`
+	Comment                          *string                           `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	SetForOAuthClientCredentialsFlow *SetForOAuthClientCredentialsFlow `ddl:"keyword"`
+	SetForOAuthAuthorizationFlow     *SetForOAuthAuthorizationFlow     `ddl:"keyword"`
+	SetForBasicAuthentication        *SetForBasicAuthentication        `ddl:"keyword"`
+	SetForGenericString              *SetForGenericString              `ddl:"keyword"`
 }
-type OAuthScopes struct {
-	OAuthScopes []SecurityIntegrationScope `ddl:"list,must_parentheses"`
+type SetForOAuthClientCredentialsFlow struct {
+	OauthScopes []SecurityIntegrationScope `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
+}
+type SetForOAuthAuthorizationFlow struct {
+	OauthRefreshToken           *string `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN"`
+	OauthRefreshTokenExpiryTime *string `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN_EXPIRY_TIME"`
+}
+type SetForBasicAuthentication struct {
+	Username *string `ddl:"parameter,single_quotes" sql:"USERNAME"`
+	Password *string `ddl:"parameter,single_quotes" sql:"PASSWORD"`
+}
+type SetForGenericString struct {
+	SecretString *string `ddl:"parameter,single_quotes" sql:"SECRET_STRING"`
 }
 type SecretUnset struct {
-	UnsetComment *bool `ddl:"keyword" sql:"UNSET COMMENT"`
+	Comment *bool `ddl:"keyword" sql:"SET COMMENT = NULL"`
 }

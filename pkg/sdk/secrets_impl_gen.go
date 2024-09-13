@@ -90,19 +90,41 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 	}
 
 	if r.Set != nil {
+
 		opts.Set = &SecretSet{
 			Comment: r.Set.Comment,
-
-			OauthRefreshToken:           r.Set.OauthRefreshToken,
-			OauthRefreshTokenExpiryTime: r.Set.OauthRefreshTokenExpiryTime,
-			Username:                    r.Set.Username,
-			Password:                    r.Set.Password,
-			SecretString:                r.Set.SecretString,
 		}
 
-		if r.Set.OAuthScopes != nil {
-			opts.Set.OAuthScopes = &OAuthScopes{
-				OAuthScopes: r.Set.OAuthScopes.OAuthScopes,
+		if r.Set.SetForOAuthClientCredentialsFlow != nil {
+
+			opts.Set.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow{
+				OauthScopes: r.Set.SetForOAuthClientCredentialsFlow.OauthScopes,
+			}
+
+		}
+
+		if r.Set.SetForOAuthAuthorizationFlow != nil {
+
+			opts.Set.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow{
+				OauthRefreshToken:           r.Set.SetForOAuthAuthorizationFlow.OauthRefreshToken,
+				OauthRefreshTokenExpiryTime: r.Set.SetForOAuthAuthorizationFlow.OauthRefreshTokenExpiryTime,
+			}
+
+		}
+
+		if r.Set.SetForBasicAuthentication != nil {
+
+			opts.Set.SetForBasicAuthentication = &SetForBasicAuthentication{
+				Username: r.Set.SetForBasicAuthentication.Username,
+				Password: r.Set.SetForBasicAuthentication.Password,
+			}
+
+		}
+
+		if r.Set.SetForGenericString != nil {
+
+			opts.Set.SetForGenericString = &SetForGenericString{
+				SecretString: r.Set.SetForGenericString.SecretString,
 			}
 
 		}
@@ -110,8 +132,9 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 	}
 
 	if r.Unset != nil {
+
 		opts.Unset = &SecretUnset{
-			UnsetComment: r.Unset.UnsetComment,
+			Comment: r.Unset.Comment,
 		}
 
 	}

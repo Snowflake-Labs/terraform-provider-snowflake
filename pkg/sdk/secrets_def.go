@@ -7,22 +7,49 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 var secretsSecurityIntegrationScopeDef = g.NewQueryStruct("SecurityIntegrationScope").
 	Text("Scope", g.KeywordOptions().SingleQuotes().Required())
 
-var secretsOAuthScopes = g.NewQueryStruct("OAuthScopes").
+/*
+var secretsIntegrationScopes = g.NewQueryStruct("OAuthScopes").
 	List("OAuthScopes", "SecurityIntegrationScope", g.ListOptions().MustParentheses())
+*/
 
 var secretSet = g.NewQueryStruct("SecretSet").
 	OptionalComment().
-	OptionalQueryStructField("OAuthScopes", secretsOAuthScopes, g.ParameterOptions().MustParentheses().SQL("OAUTH_SCOPES")).
-	OptionalTextAssignment("OAUTH_REFRESH_TOKEN", g.ParameterOptions().SingleQuotes()).
-	OptionalTextAssignment("OAUTH_REFRESH_TOKEN_EXPIRY_TIME", g.ParameterOptions().SingleQuotes()).
-	OptionalTextAssignment("USERNAME", g.ParameterOptions().SingleQuotes()).
-	OptionalTextAssignment("PASSWORD", g.ParameterOptions().SingleQuotes()).
-	OptionalTextAssignment("SECRET_STRING", g.ParameterOptions().SingleQuotes())
+	OptionalQueryStructField(
+		"SetForOAuthClientCredentialsFlow",
+		g.NewQueryStruct("SetForOAuthClientCredentialsFlow").
+			//OptionalQueryStructField("OAuthScopes", secretsIntegrationScopes, g.ParameterOptions().MustParentheses().SQL("OAUTH_SCOPES")),
+			ListAssignment("OAUTH_SCOPES", "SecurityIntegrationScope", g.ParameterOptions().Parentheses().Required()),
+		g.KeywordOptions(),
+	).
+	OptionalQueryStructField(
+		"SetForOAuthAuthorizationFlow",
+		g.NewQueryStruct("SetForOAuthAuthorizationFlow").
+			//optional or just TextAssignment()??
+			OptionalTextAssignment("OAUTH_REFRESH_TOKEN", g.ParameterOptions().SingleQuotes()).
+			OptionalTextAssignment("OAUTH_REFRESH_TOKEN_EXPIRY_TIME", g.ParameterOptions().SingleQuotes()),
+		g.KeywordOptions(),
+	).
+	OptionalQueryStructField(
+		"SetForBasicAuthentication",
+		g.NewQueryStruct("SetForBasicAuthentication").
+			OptionalTextAssignment("USERNAME", g.ParameterOptions().SingleQuotes()).
+			OptionalTextAssignment("PASSWORD", g.ParameterOptions().SingleQuotes()),
+		g.KeywordOptions(),
+	).
+	OptionalQueryStructField(
+		"SetForGenericString",
+		g.NewQueryStruct("SetForGenericString").
+			OptionalTextAssignment("SECRET_STRING", g.ParameterOptions().SingleQuotes()),
+		g.KeywordOptions(),
+	).
+	WithValidation(g.ExactlyOneValueSet, "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString")
 
-// unset doest work, need to use "set comment = null"
-// OptionalSQL("SET COMMENT = NULL")
+// TODO: unset doest work, need to use "SET COMMENT = NULL"
 var secretUnset = g.NewQueryStruct("SecretUnset").
-	OptionalSQL("UNSET COMMENT")
+	//OptionalSQL("UNSET COMMENT")
+	PredefinedQueryStructField("Comment", "*bool", g.KeywordOptions().SQL("SET COMMENT = NULL"))
+
+//OptionalSQL("SET COMMENT = NULL")
 
 var SecretsDef = g.NewInterface(
 	"Secrets",
@@ -39,8 +66,14 @@ var SecretsDef = g.NewInterface(
 		Name().
 		PredefinedQueryStructField("Type", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
 		Identifier("SecurityIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION").Required()).
-		ListAssignment("OAUTH_SCOPES", "SecurityIntegrationScope", g.ParameterOptions().Parentheses()).
-		//QueryStructField("OAuthScopes", secretsOAuthScopes, g.ParameterOptions().MustParentheses()).
+		ListAssignment("OAUTH_SCOPES", "SecurityIntegrationScope", g.ParameterOptions().Parentheses().Required()).
+		/*
+			ListQueryStructField(
+				"OAuthScopes",
+				secretsSecurityIntegrationScopeDef,
+				g.KeywordOptions().Parentheses().SQL("OAUTH_SCOPES"),
+			).
+		*/
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
@@ -106,7 +139,7 @@ var SecretsDef = g.NewInterface(
 		OptionalQueryStructField(
 			"Unset",
 			secretUnset,
-			g.KeywordOptions().SQL("UNSET"),
+			g.KeywordOptions(),
 		).
 		WithValidation(g.ExactlyOneValueSet, "Set", "Unset"),
 )

@@ -13,9 +13,9 @@ var (
 type CreateWithOAuthClientCredentialsFlowSecretRequest struct {
 	OrReplace           *bool
 	IfNotExists         *bool
-	name                SchemaObjectIdentifier  // required
-	SecurityIntegration AccountObjectIdentifier // required
-	OauthScopes         []SecurityIntegrationScope
+	name                SchemaObjectIdentifier     // required
+	SecurityIntegration AccountObjectIdentifier    // required
+	OauthScopes         []SecurityIntegrationScope // required
 	Comment             *string
 }
 
@@ -54,19 +54,31 @@ type AlterSecretRequest struct {
 }
 
 type SecretSetRequest struct {
-	Comment                     *string
-	OAuthScopes                 *OAuthScopesRequest
-	OauthRefreshToken           *string
-	OauthRefreshTokenExpiryTime *string
-	Username                    *string
-	Password                    *string
-	SecretString                *string
+	Comment                          *string
+	SetForOAuthClientCredentialsFlow *SetForOAuthClientCredentialsFlowRequest
+	SetForOAuthAuthorizationFlow     *SetForOAuthAuthorizationFlowRequest
+	SetForBasicAuthentication        *SetForBasicAuthenticationRequest
+	SetForGenericString              *SetForGenericStringRequest
 }
 
-type OAuthScopesRequest struct {
-	OAuthScopes []SecurityIntegrationScope
+type SetForOAuthClientCredentialsFlowRequest struct {
+	OauthScopes []SecurityIntegrationScope // required
+}
+
+type SetForOAuthAuthorizationFlowRequest struct {
+	OauthRefreshToken           *string
+	OauthRefreshTokenExpiryTime *string
+}
+
+type SetForBasicAuthenticationRequest struct {
+	Username *string
+	Password *string
+}
+
+type SetForGenericStringRequest struct {
+	SecretString *string
 }
 
 type SecretUnsetRequest struct {
-	UnsetComment *bool
+	Comment *bool
 }

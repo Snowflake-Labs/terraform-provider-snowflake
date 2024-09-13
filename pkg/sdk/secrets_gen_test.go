@@ -30,14 +30,9 @@ func TestSecrets_CreateWithOAuthClientCredentialsFlow(t *testing.T) {
 	})
 
 	t.Run("basic", func(t *testing.T) {
-		securityIntegration := NewAccountObjectIdentifier("security_integration")
-		oauthScopes := []SecurityIntegrationScope{{Scope: "sample_scope"}}
-
 		opts := defaultOpts()
-		opts.SecurityIntegration = securityIntegration
-		opts.OauthScopes = oauthScopes
 		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "CREATE SECRET %s TYPE = OAUTH2 API_AUTHENTICATION = %s OAUTH_SCOPES = ('sample_scope')", id.FullyQualifiedName(), securityIntegration.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -168,13 +163,27 @@ func TestSecrets_CreateWithGenericString(t *testing.T) {
 }
 
 func TestSecrets_Alter(t *testing.T) {
-
 	id := randomSchemaObjectIdentifier()
-	// Minimal valid AlterSecretOptions
+
 	defaultOpts := func() *AlterSecretOptions {
 		return &AlterSecretOptions{
-
 			name: id,
+		}
+	}
+
+	setOpts := func() *AlterSecretOptions {
+		return &AlterSecretOptions{
+			name:     id,
+			Set:      &SecretSet{},
+			IfExists: Bool(true),
+		}
+	}
+
+	unsetOpts := func() *AlterSecretOptions {
+		return &AlterSecretOptions{
+			name:     id,
+			Unset:    &SecretUnset{},
+			IfExists: Bool(true),
 		}
 	}
 
@@ -182,34 +191,56 @@ func TestSecrets_Alter(t *testing.T) {
 		var opts *AlterSecretOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
+
 	t.Run("validation: exactly one field from [opts.Set opts.Unset] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSecretOptions", "Set", "Unset"))
 	})
 
-	t.Run("alter: set options", func(t *testing.T) {
-		oauthScopes := &OAuthScopes{[]SecurityIntegrationScope{{Scope: "different_scope_name"}}}
+	t.Run("validation: exactly one field from [opts.Set.SetForOAuthClientCredentialsFlow opts.Set.SetForOAuthAuthorizationFlow opts.Set.SetForBasicAuthentication opts.Set.SetForGenericString] should be present", func(t *testing.T) {
+		opts := setOpts()
+		opts.Set.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow{}
+		opts.Set.SetForBasicAuthentication = &SetForBasicAuthentication{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
+	})
 
-		opts := defaultOpts()
-		opts.Set = &SecretSet{
-			OAuthScopes:                 oauthScopes,
-			OauthRefreshToken:           String("refresh_token"),
-			OauthRefreshTokenExpiryTime: String("2024-10-10"),
+	t.Run("alter: set options for Oauth Client Credentials Flow", func(t *testing.T) {
+		opts := setOpts()
+		opts.Set.Comment = String("test")
+		opts.Set.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow{[]SecurityIntegrationScope{{"sample_scope"}}}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test' OAUTH_SCOPES = ('sample_scope')", id.FullyQualifiedName())
+	})
+
+	t.Run("alter: set options for Oauth Authorization Flow", func(t *testing.T) {
+		opts := setOpts()
+		opts.Set.Comment = String("test")
+		opts.Set.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow{
+			String("test_token"),
+			String("2024-11-11"),
 		}
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET %s SET OAUTH_SCOPES = ('different_scope_name')", id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test' OAUTH_REFRESH_TOKEN = 'test_token' OAUTH_REFRESH_TOKEN_EXPIRY_TIME = '2024-11-11'", id.FullyQualifiedName())
 	})
 
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	t.Run("alter: set options for Basic Authentication", func(t *testing.T) {
+		opts := setOpts()
+		opts.Set.Comment = String("test")
+		opts.Set.SetForBasicAuthentication = &SetForBasicAuthentication{
+			Username: String("foo"),
+			Password: String("bar"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test' USERNAME = 'foo' PASSWORD = 'bar'", id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	t.Run("alter: set options for Generic string", func(t *testing.T) {
+		opts := setOpts()
+		opts.Set.Comment = String("test")
+		opts.Set.SetForGenericString = &SetForGenericString{String("test")}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test' SECRET_STRING = 'test'", id.FullyQualifiedName())
+	})
+
+	t.Run("alter: unset options", func(t *testing.T) {
+		opts := unsetOpts()
+		opts.Unset.Comment = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = NULL", id.FullyQualifiedName())
 	})
 }
