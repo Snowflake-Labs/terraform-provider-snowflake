@@ -23,6 +23,11 @@ var allStructs = []SdkObjectDef{
 		ObjectStruct: sdk.DatabaseRole{},
 	},
 	{
+		IdType:       "sdk.SchemaObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeRowAccessPolicy,
+		ObjectStruct: sdk.RowAccessPolicy{},
+	},
+	{
 		IdType:       "sdk.AccountObjectIdentifier",
 		ObjectType:   sdk.ObjectTypeUser,
 		ObjectStruct: sdk.User{},

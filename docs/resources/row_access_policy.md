@@ -5,6 +5,8 @@ description: |-
   
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0950--v0960) to use it.
+
 # snowflake_row_access_policy (Resource)
 
 
@@ -16,14 +18,22 @@ resource "snowflake_row_access_policy" "example_row_access_policy" {
   name     = "EXAMPLE_ROW_ACCESS_POLICY"
   database = "EXAMPLE_DB"
   schema   = "EXAMPLE_SCHEMA"
-  signature = {
-    A = "VARCHAR",
-    B = "VARCHAR"
+  argument {
+    name = "ARG1"
+    type = "VARCHAR"
   }
-  row_access_expression = "case when current_role() in ('ANALYST') then true else false end"
+  argument {
+    name = "ARG2"
+    type = "NUMBER"
+  }
+  argument {
+    name = "ARG3"
+    type = "TIMESTAMP_NTZ"
+  }
+  body    = "case when current_role() in ('ANALYST') then true else false end"
+  comment = "comment"
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
@@ -32,11 +42,11 @@ resource "snowflake_row_access_policy" "example_row_access_policy" {
 
 ### Required
 
-- `database` (String) The database in which to create the row access policy.
-- `name` (String) Specifies the identifier for the row access policy; must be unique for the database and schema in which the row access policy is created.
-- `row_access_expression` (String) Specifies the SQL expression. The expression can be any boolean-valued SQL expression.
-- `schema` (String) The schema in which to create the row access policy.
-- `signature` (Map of String) Specifies signature (arguments) for the row access policy (uppercase and sorted to avoid recreation of resource). A signature specifies a set of attributes that must be considered to determine whether the row is accessible. The attribute values come from the database object (e.g. table or view) to be protected by the row access policy.
+- `argument` (Block List, Min: 1) List of the arguments for the row access policy. A signature specifies a set of attributes that must be considered to determine whether the row is accessible. The attribute values come from the database object (e.g. table or view) to be protected by the row access policy. If any argument name or type is changed, the resource is recreated. (see [below for nested schema](#nestedblock--argument))
+- `body` (String) Specifies the SQL expression. The expression can be any boolean-valued SQL expression. To mitigate permadiff on this field, the provider replaces blank characters with a space. This can lead to false positives in cases where a change in case or run of whitespace is semantically significant.
+- `database` (String) The database in which to create the row access policy. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `name` (String) Specifies the identifier for the row access policy; must be unique for the database and schema in which the row access policy is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `schema` (String) The schema in which to create the row access policy. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 
 ### Optional
 
@@ -44,14 +54,50 @@ resource "snowflake_row_access_policy" "example_row_access_policy" {
 
 ### Read-Only
 
+- `describe_output` (List of Object) Outputs the result of `DESCRIBE ROW ACCESS POLICY` for the given row access policy. (see [below for nested schema](#nestedatt--describe_output))
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW ROW ACCESS POLICY` for the given row access policy. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedblock--argument"></a>
+### Nested Schema for `argument`
+
+Required:
+
+- `name` (String) The argument name
+- `type` (String) The argument type. VECTOR data types are not yet supported. For more information about data types, check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).
+
+
+<a id="nestedatt--describe_output"></a>
+### Nested Schema for `describe_output`
+
+Read-Only:
+
+- `body` (String)
+- `name` (String)
+- `return_type` (String)
+- `signature` (String)
+
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `comment` (String)
+- `created_on` (String)
+- `database_name` (String)
+- `kind` (String)
+- `name` (String)
+- `options` (String)
+- `owner` (String)
+- `owner_role_type` (String)
+- `schema_name` (String)
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | policy name
-terraform import snowflake_row_access_policy.example 'dbName|schemaName|policyName'
+terraform import snowflake_row_access_policy.example '"<database_name>"."<schema_name>"."<row_access_policy_name>"'
 ```
