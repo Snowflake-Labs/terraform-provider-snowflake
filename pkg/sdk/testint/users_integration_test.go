@@ -845,10 +845,6 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
 
-		// unset is split into two because:
-		// 1. this is how it's written in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-user#syntax
-		// 2. current implementation of sdk.UserUnset makes distinction between user and session parameters,
-		// so adding a comma between them is not trivial in the current SQL builder implementation
 		alterOpts = &sdk.AlterUserOptions{
 			Unset: &sdk.UserUnset{
 				SessionParameters: &sdk.SessionParametersUnset{
@@ -908,14 +904,6 @@ func TestInt_Users(t *testing.T) {
 					WeekOfYearPolicy:                         sdk.Bool(true),
 					WeekStart:                                sdk.Bool(true),
 				},
-			},
-		}
-
-		err = client.Users.Alter(ctx, id, alterOpts)
-		require.NoError(t, err)
-
-		alterOpts = &sdk.AlterUserOptions{
-			Unset: &sdk.UserUnset{
 				ObjectParameters: &sdk.UserObjectParametersUnset{
 					EnableUnredactedQuerySyntaxError: sdk.Bool(true),
 					NetworkPolicy:                    sdk.Bool(true),
