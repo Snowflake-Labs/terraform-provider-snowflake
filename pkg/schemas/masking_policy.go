@@ -53,7 +53,6 @@ func MaskingPolicyDescriptionToSchema(details sdk.MaskingPolicyDetails) map[stri
 	}
 }
 
-// TODO(this pr) merge with row access policy arguments?
 func MaskingPolicyArgumentsToSchema(args []sdk.TableColumnSignature) []map[string]any {
 	schema := make([]map[string]any, len(args))
 	for i, v := range args {

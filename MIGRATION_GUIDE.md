@@ -14,7 +14,6 @@ New fields:
 #### *(breaking change)* Renamed fields in snowflake_masking_policy resource
 Renamed fields:
   - `masking_expression` to `body`
-  - `return_data_type` to `return_type`
   - `signature` to `arguments`
 Please rename these fields in your configuration files. State will be migrated automatically.
 
@@ -34,6 +33,11 @@ migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. 
 Also, we added diff suppress function that prevents Terraform from showing differences, when only quoting is different.
 
 No change is required, the state will be migrated automatically.
+
+#### *(behavior change)* Boolean type changes
+To easily handle three-value logic (true, false, unknown) in provider's configs, type of `exempt_other_policies` was changed from boolean to string.
+
+For more details about default values, please refer to the [changes before v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#default-values) document.
 
 ### snowflake_row_access_policy resource changes
 New fields:

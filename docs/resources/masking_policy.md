@@ -2,38 +2,76 @@
 page_title: "snowflake_masking_policy Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Resource used to manage masking policies. For more information, check masking policies documentation https://docs.snowflake.com/en/sql-reference/sql/create-masking-policy.
 ---
 
 # snowflake_masking_policy (Resource)
 
-
+Resource used to manage masking policies. For more information, check [masking policies documentation](https://docs.snowflake.com/en/sql-reference/sql/create-masking-policy).
 
 ## Example Usage
 
 ```terraform
+# basic resource
 resource "snowflake_masking_policy" "test" {
   name     = "EXAMPLE_MASKING_POLICY"
   database = "EXAMPLE_DB"
   schema   = "EXAMPLE_SCHEMA"
-  signature {
-    column {
-      name = "val"
-      type = "VARCHAR"
-    }
+  argument {
+    name = "ARG1"
+    type = "VARCHAR"
   }
-  masking_expression = <<-EOF
-    case 
-      when current_role() in ('ROLE_A') then 
-        val 
-      when is_role_in_session( 'ROLE_B' ) then 
-        'ABC123'
-      else
-        '******'
-    end
-  EOF
-
+  argument {
+    name = "ARG2"
+    type = "NUMBER"
+  }
+  argument {
+    name = "ARG3"
+    type = "TIMESTAMP_NTZ"
+  }
+  body             = <<-EOF
+  case
+    when current_role() in ('ROLE_A') then
+      ARG1
+    when is_role_in_session( 'ROLE_B' ) then
+      'ABC123'
+    else
+      '******'
+  end
+EOF
   return_data_type = "VARCHAR"
+}
+
+# resource with all fields set
+resource "snowflake_masking_policy" "test" {
+  name     = "EXAMPLE_MASKING_POLICY"
+  database = "EXAMPLE_DB"
+  schema   = "EXAMPLE_SCHEMA"
+  argument {
+    name = "ARG1"
+    type = "VARCHAR"
+  }
+  argument {
+    name = "ARG2"
+    type = "NUMBER"
+  }
+  argument {
+    name = "ARG3"
+    type = "TIMESTAMP_NTZ"
+  }
+  body                  = <<-EOF
+  case
+    when current_role() in ('ROLE_A') then
+      ARG1
+    when is_role_in_session( 'ROLE_B' ) then
+      'ABC123'
+    else
+      '******'
+  end
+EOF
+  return_data_type      = "VARCHAR"
+  exempt_other_policies = "true"
+  comment               = "example masking policy"
 }
 ```
 
@@ -45,45 +83,73 @@ resource "snowflake_masking_policy" "test" {
 
 ### Required
 
+- `argument` (Block List, Min: 1) List of the arguments for the masking policy. The first column and its data type always indicate the column data type values to mask or tokenize in the subsequent policy conditions. Note that you can not specify a virtual column as the first column argument in a conditional masking policy. (see [below for nested schema](#nestedblock--argument))
+- `body` (String) Specifies the SQL expression that transforms the data.
 - `database` (String) The database in which to create the masking policy.
-- `masking_expression` (String) Specifies the SQL expression that transforms the data.
-- `name` (String) Specifies the identifier for the masking policy; must be unique for the database and schema in which the masking policy is created.
-- `return_data_type` (String) Specifies the data type to return.
+- `name` (String) Specifies the identifier for the masking policy; must be unique for the database and schema in which the masking policy is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `return_data_type` (String) The return data type must match the input data type of the first column that is specified as an input column. For more information about data types, check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).
 - `schema` (String) The schema in which to create the masking policy.
-- `signature` (Block List, Min: 1, Max: 1) The signature for the masking policy; specifies the input columns and data types to evaluate at query runtime. (see [below for nested schema](#nestedblock--signature))
 
 ### Optional
 
 - `comment` (String) Specifies a comment for the masking policy.
-- `exempt_other_policies` (Boolean) Specifies whether the row access policy or conditional masking policy can reference a column that is already protected by a masking policy.
-- `if_not_exists` (Boolean) Prevent overwriting a previous masking policy with the same name.
-- `or_replace` (Boolean) Whether to override a previous masking policy with the same name.
+- `exempt_other_policies` (String) Specifies whether the row access policy or conditional masking policy can reference a column that is already protected by a masking policy. Due to Snowflake limitations, when value is chenged, the resource is recreated. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 
 ### Read-Only
 
+- `describe_output` (List of Object) Outputs the result of `DESCRIBE MASKING POLICY` for the given masking policy. (see [below for nested schema](#nestedatt--describe_output))
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW MASKING POLICY` for the given masking policy. (see [below for nested schema](#nestedatt--show_output))
 
-<a id="nestedblock--signature"></a>
-### Nested Schema for `signature`
-
-Required:
-
-- `column` (Block List, Min: 1) (see [below for nested schema](#nestedblock--signature--column))
-
-<a id="nestedblock--signature--column"></a>
-### Nested Schema for `signature.column`
+<a id="nestedblock--argument"></a>
+### Nested Schema for `argument`
 
 Required:
 
-- `name` (String) Specifies the column name to mask.
-- `type` (String) Specifies the column type to mask.
+- `name` (String) The argument name
+- `type` (String) The argument type. VECTOR data types are not yet supported. For more information about data types, check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).
+
+
+<a id="nestedatt--describe_output"></a>
+### Nested Schema for `describe_output`
+
+Read-Only:
+
+- `body` (String)
+- `name` (String)
+- `return_type` (String)
+- `signature` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--signature))
+
+<a id="nestedobjatt--describe_output--signature"></a>
+### Nested Schema for `describe_output.signature`
+
+Read-Only:
+
+- `name` (String)
+- `type` (String)
+
+
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `comment` (String)
+- `created_on` (String)
+- `database_name` (String)
+- `exempt_other_policies` (Boolean)
+- `kind` (String)
+- `name` (String)
+- `owner` (String)
+- `owner_role_type` (String)
+- `schema_name` (String)
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | policy name
-terraform import snowflake_masking_policy.example 'dbName|schemaName|policyName'
+terraform import snowflake_row_access_policy.example '"<database_name>"."<schema_name>"."<masking_policy_name>"'
 ```

@@ -79,6 +79,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 					HasReturnDataTypeString(string(sdk.DataTypeVARCHAR)).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasBodyString(body).
+					HasExemptOtherPoliciesString(r.BooleanDefault).
 					HasArguments(argument),
 				),
 			},

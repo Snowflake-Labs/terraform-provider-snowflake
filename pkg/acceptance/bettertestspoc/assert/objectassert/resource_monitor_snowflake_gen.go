@@ -4,9 +4,9 @@ package objectassert
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 	"time"
-	"slices"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 

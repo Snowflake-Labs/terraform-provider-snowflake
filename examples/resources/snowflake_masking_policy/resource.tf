@@ -1,6 +1,6 @@
 # basic resource
 resource "snowflake_masking_policy" "test" {
-  name     = "EXAMPLE_ROW_ACCESS_POLICY"
+  name     = "EXAMPLE_MASKING_POLICY"
   database = "EXAMPLE_DB"
   schema   = "EXAMPLE_SCHEMA"
   argument {
@@ -30,7 +30,7 @@ EOF
 
 # resource with all fields set
 resource "snowflake_masking_policy" "test" {
-  name     = "EXAMPLE_ROW_ACCESS_POLICY"
+  name     = "EXAMPLE_MASKING_POLICY"
   database = "EXAMPLE_DB"
   schema   = "EXAMPLE_SCHEMA"
   argument {
