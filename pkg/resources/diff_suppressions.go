@@ -222,9 +222,8 @@ func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceD
 	return slices.Equal(oldId, newId)
 }
 
-func ignoreEmptyList(k, oldValue, newValue string, _ *schema.ResourceData) bool {
-	if strings.HasSuffix(k, ".#") && newValue == "0" {
-		return true
+func ignoreEmptyList(key string) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		return key == k && new == "0"
 	}
-	return newValue == ""
 }
