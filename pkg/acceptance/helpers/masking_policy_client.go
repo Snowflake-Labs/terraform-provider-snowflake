@@ -74,6 +74,28 @@ func (c *MaskingPolicyClient) CreateMaskingPolicyWithOptions(t *testing.T, schem
 	return maskingPolicy, c.DropMaskingPolicyFunc(t, id)
 }
 
+// TODO: REmove
+func (c *MaskingPolicyClient) CreateMaskingPolicyWithOptions2(t *testing.T, id sdk.SchemaObjectIdentifier, signature []sdk.TableColumnSignature, returns sdk.DataType, expression string, options *sdk.CreateMaskingPolicyOptions) (*sdk.MaskingPolicy, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Create(ctx, id, signature, returns, expression, options)
+	require.NoError(t, err)
+
+	maskingPolicy, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return maskingPolicy, c.DropMaskingPolicyFunc(t, id)
+}
+
+func (c *MaskingPolicyClient) Alter(t *testing.T, id sdk.SchemaObjectIdentifier, req *sdk.AlterMaskingPolicyOptions) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, req)
+	require.NoError(t, err)
+}
+
 func (c *MaskingPolicyClient) DropMaskingPolicyFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
@@ -82,4 +104,11 @@ func (c *MaskingPolicyClient) DropMaskingPolicyFunc(t *testing.T, id sdk.SchemaO
 		err := c.client().Drop(ctx, id, &sdk.DropMaskingPolicyOptions{IfExists: sdk.Bool(true)})
 		assert.NoError(t, err)
 	}
+}
+
+func (c *MaskingPolicyClient) Show(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.MaskingPolicy, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
 }

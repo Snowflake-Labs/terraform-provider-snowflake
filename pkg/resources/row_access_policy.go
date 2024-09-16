@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -212,9 +213,17 @@ func ReadRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	rowAccessPolicy, err := client.RowAccessPolicies.ShowByID(ctx, id)
 	if err != nil {
-		log.Printf("[DEBUG] row access policy (%s) not found", d.Id())
-		d.SetId("")
-		return nil
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query row access policy. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("row access policy name: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return diag.FromErr(err)
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)

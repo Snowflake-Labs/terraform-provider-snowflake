@@ -66,20 +66,17 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 		assert.Equal(t, 0, len(maskingPolicies))
 	})
 
-	/*
-		// there appears to be a bug in the Snowflake API. LIMIT is not actually limiting the number of results
-		t.Run("when limiting the number of results", func(t *testing.T) {
-			showOptions := &MaskingPolicyShowOptions{
-				In: &In{
-					Schema: schemaTest.ID(),
-				},
-				Limit: Int(1),
-			}
-			maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
-			require.NoError(t, err)
-			assert.Equal(t, 1, len(maskingPolicies))
-		})
-	*/
+	t.Run("when limiting the number of results", func(t *testing.T) {
+		showOptions := &sdk.ShowMaskingPolicyOptions{
+			In: &sdk.In{
+				Schema: testClientHelper().Ids.SchemaId(),
+			},
+			Limit: sdk.Int(1),
+		}
+		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(maskingPolicies))
+	})
 }
 
 func TestInt_MaskingPolicyCreate(t *testing.T) {
@@ -360,6 +357,24 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeMaskingPolicy)
 		assert.Error(t, err)
+	})
+
+	t.Run("set body", func(t *testing.T) {
+		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
+		id := maskingPolicy.ID()
+		newBody := "'***'"
+		t.Cleanup(maskingPolicyCleanup)
+
+		alterOptions := &sdk.AlterMaskingPolicyOptions{
+			Set: &sdk.MaskingPolicySet{
+				Body: sdk.Pointer(newBody),
+			},
+		}
+		err := client.MaskingPolicies.Alter(ctx, id, alterOptions)
+		require.NoError(t, err)
+		maskingPolicyDetails, err := client.MaskingPolicies.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, newBody, maskingPolicyDetails.Body)
 	})
 }
 

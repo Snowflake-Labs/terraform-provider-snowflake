@@ -399,7 +399,7 @@ func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
 	})
 }
 
-func TestAcc_view_migrateFromVersion_0_95_0_LowercaseArgName(t *testing.T) {
+func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"
@@ -479,7 +479,7 @@ func TestAcc_view_migrateFromVersion_0_95_0_LowercaseArgName(t *testing.T) {
 	})
 }
 
-func TestAcc_view_migrateFromVersion_0_95_0_UppercaseArgName(t *testing.T) {
+func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"

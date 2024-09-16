@@ -5,6 +5,37 @@ describe deprecations or breaking changes and help you to change your configurat
 across different versions.
 
 ## v0.95.0 ➞ v0.96.0
+
+### snowflake_masking_policy resource changes
+New fields:
+  - `show_output` field that holds the response from SHOW MASKING POLICIES.
+  - `describe_output` field that holds the response from DESCRIBE MASKING POLICY.
+
+#### *(breaking change)* Renamed fields in snowflake_masking_policy resource
+Renamed fields:
+  - `masking_expression` to `body`
+  - `signature` to `arguments`
+Please rename these fields in your configuration files. State will be migrated automatically.
+
+#### *(breaking change)* Removed fields from snowflake_masking_policy resource
+Removed fields:
+- `or_replace`
+- `if_not_exists`
+The value of these field will be removed from the state automatically.
+
+#### *(breaking change)* Adjusted behavior of arguments/signature
+Now, arguments are stored without nested `column` field. Please adjust that in your configs. State is migrated automatically.
+
+Argument names are now case sensitive. All policies created previously in the provider have upper case argument names. If you used lower case before, please adjust your configs. Values in the state will be migrated to uppercase automatically.
+
+#### *(breaking change)* Identifiers related changes
+During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/row_access_policy#import)).
+
+Also, we added diff suppress function that prevents Terraform from showing differences, when only quoting is different.
+
+No change is required, the state will be migrated automatically.
+
 ### snowflake_row_access_policy resource changes
 New fields:
   - `show_output` field that holds the response from SHOW ROW ACCESS POLICIES.

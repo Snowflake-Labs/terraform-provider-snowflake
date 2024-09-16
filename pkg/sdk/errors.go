@@ -25,6 +25,7 @@ var (
 	// snowflake-sdk errors.
 	ErrInvalidObjectIdentifier = NewError("invalid object identifier")
 	ErrDifferentDatabase       = NewError("database must be the same")
+	ErrDifferentSchema         = NewError("schema must be the same")
 )
 
 type IntErrType string

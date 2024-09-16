@@ -2,12 +2,12 @@ package sdk
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
-
-	"github.com/buger/jsonparser"
 )
 
 var _ MaskingPolicies = (*maskingPolicies)(nil)
@@ -58,6 +58,9 @@ func (opts *CreateMaskingPolicyOptions) validate() error {
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) && *opts.OrReplace && *opts.IfNotExists {
+		errs = append(errs, errOneOf("CreateMaskingPolicyOptions", "OrReplace", "IfNotExists"))
 	}
 	if !valueSet(opts.signature) {
 		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "signature"))
@@ -111,8 +114,16 @@ func (opts *AlterMaskingPolicyOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if opts.NewName != nil && !ValidObjectIdentifier(opts.NewName) {
-		errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
+	if opts.NewName != nil {
+		if !ValidObjectIdentifier(opts.NewName) {
+			errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
+		}
+		if opts.name.DatabaseName() != opts.NewName.DatabaseName() {
+			errs = append(errs, ErrDifferentDatabase)
+		}
+		if opts.name.SchemaName() != opts.NewName.SchemaName() {
+			errs = append(errs, ErrDifferentSchema)
+		}
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.NewName) {
 		errs = append(errs, errExactlyOneOf("AlterMaskingPolicyOptions", "Set", "Unset", "SetTag", "UnsetTag", "NewName"))
@@ -233,6 +244,20 @@ type MaskingPolicy struct {
 	OwnerRoleType       string
 }
 
+type MaskingPolicyOptions struct {
+	ExemptOtherPolicies bool `json:"EXEMPT_OTHER_POLICIES"`
+}
+
+func ParseMaskingPolicyOptions(s string) (MaskingPolicyOptions, error) {
+	var options MaskingPolicyOptions
+	err := json.Unmarshal([]byte(s), &options)
+	if err != nil {
+		return MaskingPolicyOptions{}, err
+	}
+
+	return options, nil
+}
+
 func (v *MaskingPolicy) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
@@ -255,9 +280,11 @@ type maskingPolicyDBRow struct {
 }
 
 func (row maskingPolicyDBRow) convert() *MaskingPolicy {
-	exemptOtherPolicies, err := jsonparser.GetBoolean([]byte(row.Options), "EXEMPT_OTHER_POLICIES")
+	options, err := ParseMaskingPolicyOptions(row.Options)
 	if err != nil {
-		exemptOtherPolicies = false
+		log.Printf("converting masking policy row: error unmarshaling options: %v", err)
+		log.Printf("setting exempt_other_policies = false")
+		options.ExemptOtherPolicies = false
 	}
 	return &MaskingPolicy{
 		CreatedOn:           row.CreatedOn,
@@ -267,7 +294,7 @@ func (row maskingPolicyDBRow) convert() *MaskingPolicy {
 		Kind:                row.Kind,
 		Owner:               row.Owner,
 		Comment:             row.Comment,
-		ExemptOtherPolicies: exemptOtherPolicies,
+		ExemptOtherPolicies: options.ExemptOtherPolicies,
 		OwnerRoleType:       row.OwnerRoleType,
 	}
 }
@@ -346,6 +373,7 @@ func (row maskingPolicyDetailsRow) toMaskingPolicyDetails() *MaskingPolicyDetail
 		ReturnType: dataType,
 		Body:       row.Body,
 	}
+	// TODO (this pr) use/merge with parsing in row access policies
 	s := strings.Trim(row.Signature, "()")
 	parts := strings.Split(s, ",")
 	for _, part := range parts {
