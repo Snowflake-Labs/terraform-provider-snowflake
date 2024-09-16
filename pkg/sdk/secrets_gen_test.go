@@ -234,6 +234,7 @@ func TestSecrets_Alter(t *testing.T) {
 
 func TestSecrets_Drop(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
+
 	defaultOpts := func() *DropSecretOptions {
 		return &DropSecretOptions{
 			name: id,
@@ -244,7 +245,7 @@ func TestSecrets_Drop(t *testing.T) {
 		var opts *DropSecretOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
@@ -252,19 +253,17 @@ func TestSecrets_Drop(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "DROP SECRET %s", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "DROP SECRET IF EXISTS %s", id.FullyQualifiedName())
 	})
 }
 
 func TestSecrets_Show(t *testing.T) {
-	// Minimal valid ShowSecretOptions
 	defaultOpts := func() *ShowSecretOptions {
 		return &ShowSecretOptions{}
 	}
@@ -276,24 +275,31 @@ func TestSecrets_Show(t *testing.T) {
 
 	t.Run("basic", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "SHOW SECRETS")
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("show with like", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		opts.Like = &Like{
+			Pattern: String("pattern"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW SECRETS LIKE 'pattern'")
+	})
+
+	t.Run("show with in", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.In = &In{
+			Account: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW SECRETS IN ACCOUNT")
 	})
 }
 
 func TestSecrets_Describe(t *testing.T) {
-
 	id := randomSchemaObjectIdentifier()
-	// Minimal valid DescribeSecretOptions
+
 	defaultOpts := func() *DescribeSecretOptions {
 		return &DescribeSecretOptions{
-
 			name: id,
 		}
 	}
@@ -302,21 +308,14 @@ func TestSecrets_Describe(t *testing.T) {
 		var opts *DescribeSecretOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+	t.Run("validation: invalid identifier", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
 	})
 
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
-		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+		assertOptsValidAndSQLEquals(t, opts, "DESCRIBE SECRET %s", id.FullyQualifiedName())
 	})
 }
