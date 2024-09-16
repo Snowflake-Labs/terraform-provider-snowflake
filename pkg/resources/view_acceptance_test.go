@@ -888,6 +888,11 @@ func TestAcc_View_Issue3073(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: accconfig.FromModel(t, viewModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionNoop),
+					},
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 				),
@@ -897,7 +902,18 @@ func TestAcc_View_Issue3073(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, viewModelWithColumns),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
+				),
+			},
+			{
+				Config: accconfig.FromModel(t, viewModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionNoop),
 					},
 				},
