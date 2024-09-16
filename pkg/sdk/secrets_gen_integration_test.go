@@ -24,4 +24,20 @@ func TestInt_Secrets(t *testing.T) {
 	t.Run("Alter", func(t *testing.T) {
 		// TODO: fill me
 	})
+
+	t.Run("Drop", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("Show", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("ShowByID", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("Describe", func(t *testing.T) {
+		// TODO: fill me
+	})
 }

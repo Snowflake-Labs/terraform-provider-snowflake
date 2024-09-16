@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ Secrets = (*secrets)(nil)
@@ -33,6 +35,41 @@ func (v *secrets) CreateWithGenericString(ctx context.Context, request *CreateWi
 func (v *secrets) Alter(ctx context.Context, request *AlterSecretRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *secrets) Drop(ctx context.Context, request *DropSecretRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *secrets) Show(ctx context.Context, request *ShowSecretRequest) ([]Secret, error) {
+	opts := request.toOpts()
+	dbRows, err := validateAndQuery[secretDBRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	resultList := convertRows[secretDBRow, Secret](dbRows)
+	return resultList, nil
+}
+
+func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error) {
+	// TODO: adjust request if e.g. LIKE is supported for the resource
+	secrets, err := v.Show(ctx, NewShowSecretRequest())
+	if err != nil {
+		return nil, err
+	}
+	return collections.FindFirst(secrets, func(r Secret) bool { return r.Name == id.Name() })
+}
+
+func (v *secrets) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error) {
+	opts := &DescribeSecretOptions{
+		name: id,
+	}
+	result, err := validateAndQueryOne[secretDetailsDBRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return result.convert(), nil
 }
 
 func (r *CreateWithOAuthClientCredentialsFlowSecretRequest) toOpts() *CreateWithOAuthClientCredentialsFlowSecretOptions {
@@ -140,4 +177,37 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 	}
 
 	return opts
+}
+
+func (r *DropSecretRequest) toOpts() *DropSecretOptions {
+	opts := &DropSecretOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+	}
+	return opts
+}
+
+func (r *ShowSecretRequest) toOpts() *ShowSecretOptions {
+	opts := &ShowSecretOptions{
+		Like: r.Like,
+		In:   r.In,
+	}
+	return opts
+}
+
+func (r secretDBRow) convert() *Secret {
+	// TODO: Mapping
+	return &Secret{}
+}
+
+func (r *DescribeSecretRequest) toOpts() *DescribeSecretOptions {
+	opts := &DescribeSecretOptions{
+		name: r.name,
+	}
+	return opts
+}
+
+func (r secretDetailsDBRow) convert() *SecretDetails {
+	// TODO: Mapping
+	return &SecretDetails{}
 }

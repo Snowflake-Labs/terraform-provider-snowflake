@@ -231,3 +231,92 @@ func TestSecrets_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = NULL", id.FullyQualifiedName())
 	})
 }
+
+func TestSecrets_Drop(t *testing.T) {
+	id := randomSchemaObjectIdentifier()
+	defaultOpts := func() *DropSecretOptions {
+		return &DropSecretOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *DropSecretOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = emptySchemaObjectIdentifier
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+}
+
+func TestSecrets_Show(t *testing.T) {
+	// Minimal valid ShowSecretOptions
+	defaultOpts := func() *ShowSecretOptions {
+		return &ShowSecretOptions{}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *ShowSecretOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+}
+
+func TestSecrets_Describe(t *testing.T) {
+
+	id := randomSchemaObjectIdentifier()
+	// Minimal valid DescribeSecretOptions
+	defaultOpts := func() *DescribeSecretOptions {
+		return &DescribeSecretOptions{
+
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *DescribeSecretOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsValidAndSQLEquals(t, opts, "TODO: fill me")
+	})
+}

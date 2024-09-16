@@ -6,6 +6,9 @@ var (
 	_ validatable = new(CreateWithBasicAuthenticationSecretOptions)
 	_ validatable = new(CreateWithGenericStringSecretOptions)
 	_ validatable = new(AlterSecretOptions)
+	_ validatable = new(DropSecretOptions)
+	_ validatable = new(ShowSecretOptions)
+	_ validatable = new(DescribeSecretOptions)
 )
 
 func (opts *CreateWithOAuthClientCredentialsFlowSecretOptions) validate() error {
@@ -76,6 +79,36 @@ func (opts *AlterSecretOptions) validate() error {
 		if !exactlyOneValueSet(opts.Set.SetForOAuthClientCredentialsFlow, opts.Set.SetForOAuthAuthorizationFlow, opts.Set.SetForBasicAuthentication, opts.Set.SetForGenericString) {
 			errs = append(errs, errExactlyOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
 		}
+	}
+	return JoinErrors(errs...)
+}
+
+func (opts *DropSecretOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return JoinErrors(errs...)
+}
+
+func (opts *ShowSecretOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	return JoinErrors(errs...)
+}
+
+func (opts *DescribeSecretOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return JoinErrors(errs...)
 }

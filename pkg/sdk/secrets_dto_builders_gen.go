@@ -217,3 +217,38 @@ func (s *SecretUnsetRequest) WithComment(Comment bool) *SecretUnsetRequest {
 	s.Comment = &Comment
 	return s
 }
+
+func NewDropSecretRequest(
+	name SchemaObjectIdentifier,
+) *DropSecretRequest {
+	s := DropSecretRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *DropSecretRequest) WithIfExists(IfExists bool) *DropSecretRequest {
+	s.IfExists = &IfExists
+	return s
+}
+
+func NewShowSecretRequest() *ShowSecretRequest {
+	return &ShowSecretRequest{}
+}
+
+func (s *ShowSecretRequest) WithLike(Like Like) *ShowSecretRequest {
+	s.Like = &Like
+	return s
+}
+
+func (s *ShowSecretRequest) WithIn(In In) *ShowSecretRequest {
+	s.In = &In
+	return s
+}
+
+func NewDescribeSecretRequest(
+	name SchemaObjectIdentifier,
+) *DescribeSecretRequest {
+	s := DescribeSecretRequest{}
+	s.name = name
+	return &s
+}

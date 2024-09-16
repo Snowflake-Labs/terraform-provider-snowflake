@@ -1,6 +1,9 @@
 package sdk
 
-import "context"
+import (
+	"context"
+	"database/sql"
+)
 
 type Secrets interface {
 	CreateWithOAuthClientCredentialsFlow(ctx context.Context, request *CreateWithOAuthClientCredentialsFlowSecretRequest) error
@@ -8,6 +11,10 @@ type Secrets interface {
 	CreateWithBasicAuthentication(ctx context.Context, request *CreateWithBasicAuthenticationSecretRequest) error
 	CreateWithGenericString(ctx context.Context, request *CreateWithGenericStringSecretRequest) error
 	Alter(ctx context.Context, request *AlterSecretRequest) error
+	Drop(ctx context.Context, request *DropSecretRequest) error
+	Show(ctx context.Context, request *ShowSecretRequest) ([]Secret, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error)
 }
 
 // CreateWithOAuthClientCredentialsFlowSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-secret.
@@ -97,4 +104,77 @@ type SetForGenericString struct {
 }
 type SecretUnset struct {
 	Comment *bool `ddl:"keyword" sql:"SET COMMENT = NULL"`
+}
+
+// DropSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-secret.
+type DropSecretOptions struct {
+	drop     bool                   `ddl:"static" sql:"DROP"`
+	secret   bool                   `ddl:"static" sql:"SECRET"`
+	IfExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
+}
+
+// ShowSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-secret.
+type ShowSecretOptions struct {
+	show    bool  `ddl:"static" sql:"SHOW"`
+	secrets bool  `ddl:"static" sql:"SECRETS"`
+	Like    *Like `ddl:"keyword" sql:"LIKE"`
+	In      *In   `ddl:"keyword" sql:"IN"`
+}
+type secretDBRow struct {
+	CreatedOn     string         `db:"created_on"`
+	Name          string         `db:"name"`
+	SchemaName    string         `db:"schema_name"`
+	DatabaseName  string         `db:"database_name"`
+	Owner         string         `db:"owner"`
+	Comment       sql.NullString `db:"comment"`
+	SecretType    string         `db:"secret_type"`
+	OauthScopes   sql.NullString `db:"oauth_scopes"`
+	OwnerRoleType string         `db:"owner_role_type"`
+}
+type Secret struct {
+	CreatedOn     string
+	Name          string
+	SchemaName    string
+	DatabaseName  string
+	Owner         string
+	Comment       string
+	SecretType    string
+	OauthScopes   sql.NullString
+	OwnerRoleType string
+}
+
+// DescribeSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-secret.
+type DescribeSecretOptions struct {
+	describe bool                   `ddl:"static" sql:"DESCRIBE"`
+	secret   bool                   `ddl:"static" sql:"SECRET"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
+}
+type secretDetailsDBRow struct {
+	CreatedOn                   string         `db:"created_on"`
+	Name                        string         `db:"name"`
+	SchemaName                  string         `db:"schema_name"`
+	DatabaseName                string         `db:"database_name"`
+	Owner                       string         `db:"owner"`
+	Comment                     sql.NullString `db:"comment"`
+	SecretType                  string         `db:"secret_type"`
+	Username                    sql.NullString `db:"username"`
+	OauthAccessTokenExpiryTime  sql.NullString `db:"oauth_access_token_expiry_time"`
+	OauthRefreshTokenExpiryTime sql.NullString `db:"oauth_refresh_token_expiry_time"`
+	OauthScopes                 sql.NullString `db:"oauth_scopes"`
+	IntegrationName             sql.NullString `db:"integration_name"`
+}
+type SecretDetails struct {
+	CreatedOn                   string
+	Name                        string
+	SchemaName                  string
+	DatabaseName                string
+	Owner                       string
+	Comment                     sql.NullString
+	SecretType                  string
+	Username                    sql.NullString
+	OauthAccessTokenExpiryTime  sql.NullString
+	OauthRefreshTokenExpiryTime sql.NullString
+	OauthScopes                 sql.NullString
+	IntegrationName             sql.NullString
 }

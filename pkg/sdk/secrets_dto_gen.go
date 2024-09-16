@@ -8,6 +8,9 @@ var (
 	_ optionsProvider[CreateWithBasicAuthenticationSecretOptions]        = new(CreateWithBasicAuthenticationSecretRequest)
 	_ optionsProvider[CreateWithGenericStringSecretOptions]              = new(CreateWithGenericStringSecretRequest)
 	_ optionsProvider[AlterSecretOptions]                                = new(AlterSecretRequest)
+	_ optionsProvider[DropSecretOptions]                                 = new(DropSecretRequest)
+	_ optionsProvider[ShowSecretOptions]                                 = new(ShowSecretRequest)
+	_ optionsProvider[DescribeSecretOptions]                             = new(DescribeSecretRequest)
 )
 
 type CreateWithOAuthClientCredentialsFlowSecretRequest struct {
@@ -81,4 +84,18 @@ type SetForGenericStringRequest struct {
 
 type SecretUnsetRequest struct {
 	Comment *bool
+}
+
+type DropSecretRequest struct {
+	IfExists *bool
+	name     SchemaObjectIdentifier // required
+}
+
+type ShowSecretRequest struct {
+	Like *Like
+	In   *In
+}
+
+type DescribeSecretRequest struct {
+	name SchemaObjectIdentifier // required
 }

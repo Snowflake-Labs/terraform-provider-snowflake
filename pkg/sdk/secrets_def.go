@@ -7,10 +7,56 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 var secretsSecurityIntegrationScopeDef = g.NewQueryStruct("SecurityIntegrationScope").
 	Text("Scope", g.KeywordOptions().SingleQuotes().Required())
 
-/*
-var secretsIntegrationScopes = g.NewQueryStruct("OAuthScopes").
-	List("OAuthScopes", "SecurityIntegrationScope", g.ListOptions().MustParentheses())
-*/
+var secretDbRow = g.DbStruct("secretDBRow").
+	Field("created_on", "string").
+	Field("name", "string").
+	Field("schema_name", "string").
+	Field("database_name", "string").
+	Field("owner", "string").
+	Field("comment", "sql.NullString").
+	Field("secret_type", "string").
+	Field("oauth_scopes", "sql.NullString"). // its a list tho
+	Field("owner_role_type", "string")
+
+// cannot name 'secret' due to clash in common_types.go
+var secret = g.PlainStruct("Secret").
+	Field("CreatedOn", "string").
+	Field("Name", "string").
+	Field("SchemaName", "string").
+	Field("DatabaseName", "string").
+	Field("Owner", "string").
+	Field("Comment", "string").
+	Field("SecretType", "string").
+	Field("OauthScopes", "sql.NullString").
+	Field("OwnerRoleType", "string")
+
+var secretDetailsDbRow = g.DbStruct("secretDetailsDBRow").
+	Field("created_on", "string").
+	Field("name", "string").
+	Field("schema_name", "string").
+	Field("database_name", "string").
+	Field("owner", "string").
+	Field("comment", "sql.NullString").
+	Field("secret_type", "string").
+	Field("username", "sql.NullString").
+	Field("oauth_access_token_expiry_time", "sql.NullString").
+	Field("oauth_refresh_token_expiry_time", "sql.NullString").
+	Field("oauth_scopes", "sql.NullString"). // its a list tho
+	Field("integration_name", "sql.NullString")
+
+var secretDetails = g.PlainStruct("SecretDetails").
+	Field("CreatedOn", "string").
+	Field("Name", "string").
+	Field("SchemaName", "string").
+	Field("DatabaseName", "string").
+	Field("Owner", "string").
+	Field("Comment", "sql.NullString").
+	Field("SecretType", "string").
+	Field("Username", "sql.NullString").
+	Field("OauthAccessTokenExpiryTime", "sql.NullString").
+	Field("OauthRefreshTokenExpiryTime", "sql.NullString").
+	Field("OauthScopes", "sql.NullString"). // its a list tho
+	Field("IntegrationName", "sql.NullString")
 
 var secretSet = g.NewQueryStruct("SecretSet").
 	OptionalComment().
@@ -49,8 +95,6 @@ var secretUnset = g.NewQueryStruct("SecretUnset").
 	//OptionalSQL("UNSET COMMENT")
 	PredefinedQueryStructField("Comment", "*bool", g.KeywordOptions().SQL("SET COMMENT = NULL"))
 
-//OptionalSQL("SET COMMENT = NULL")
-
 var SecretsDef = g.NewInterface(
 	"Secrets",
 	"Secret",
@@ -67,13 +111,6 @@ var SecretsDef = g.NewInterface(
 		PredefinedQueryStructField("Type", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
 		Identifier("SecurityIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION").Required()).
 		ListAssignment("OAUTH_SCOPES", "SecurityIntegrationScope", g.ParameterOptions().Parentheses().Required()).
-		/*
-			ListQueryStructField(
-				"OAuthScopes",
-				secretsSecurityIntegrationScopeDef,
-				g.KeywordOptions().Parentheses().SQL("OAUTH_SCOPES"),
-			).
-		*/
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
@@ -142,4 +179,32 @@ var SecretsDef = g.NewInterface(
 			g.KeywordOptions(),
 		).
 		WithValidation(g.ExactlyOneValueSet, "Set", "Unset"),
-)
+).DropOperation(
+	"https://docs.snowflake.com/en/sql-reference/sql/drop-secret",
+	g.NewQueryStruct("DropSecret").
+		Drop().
+		SQL("SECRET").
+		IfExists().
+		Name().
+		WithValidation(g.ValidIdentifier, "name"),
+).ShowOperation(
+	"https://docs.snowflake.com/en/sql-reference/sql/show-secret",
+	secretDbRow,
+	secret,
+	g.NewQueryStruct("ShowSecret").
+		Show().
+		SQL("SECRETS").
+		OptionalLike().
+		OptionalIn(),
+).ShowByIdOperation().
+	DescribeOperation(
+		g.DescriptionMappingKindSingleValue,
+		"https://docs.snowflake.com/en/sql-reference/sql/desc-secret",
+		secretDetailsDbRow,
+		secretDetails,
+		g.NewQueryStruct("DescribeSecret").
+			Describe().
+			SQL("SECRET").
+			Name().
+			WithValidation(g.ValidIdentifier, "name"),
+	)
