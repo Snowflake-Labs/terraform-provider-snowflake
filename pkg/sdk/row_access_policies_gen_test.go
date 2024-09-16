@@ -214,10 +214,16 @@ func TestRowAccessPolicies_Show(t *testing.T) {
 		opts.Like = &Like{
 			Pattern: String("myaccount"),
 		}
-		opts.In = &In{
-			Account: Bool(true),
+		opts.In = &ExtendedIn{
+			In: In{
+				Account: Bool(true),
+			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SHOW ROW ACCESS POLICIES LIKE 'myaccount' IN ACCOUNT")
+		opts.Limit = &LimitFrom{
+			Rows: Pointer(10),
+			From: Pointer("foo"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW ROW ACCESS POLICIES LIKE 'myaccount' IN ACCOUNT LIMIT 10 FROM 'foo'")
 	})
 }
 

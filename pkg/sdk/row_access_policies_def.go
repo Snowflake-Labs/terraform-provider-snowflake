@@ -87,7 +87,8 @@ var RowAccessPoliciesDef = g.NewInterface(
 			Show().
 			SQL("ROW ACCESS POLICIES").
 			OptionalLike().
-			OptionalIn(),
+			OptionalExtendedIn().
+			OptionalLimitFrom(),
 	).
 	ShowByIdOperation().
 	DescribeOperation(

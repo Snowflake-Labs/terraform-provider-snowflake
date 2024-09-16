@@ -102,6 +102,7 @@ func RowAccessPolicy() *schema.Resource {
 		ReadContext:   ReadRowAccessPolicy,
 		UpdateContext: UpdateRowAccessPolicy,
 		DeleteContext: DeleteRowAccessPolicy,
+		Description:   "Resource used to manage row access policy objects. For more information, check [row access policy documentation](https://docs.snowflake.com/en/sql-reference/sql/create-row-access-policy).",
 
 		Schema: rowAccessPolicySchema,
 		Importer: &schema.ResourceImporter{

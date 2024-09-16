@@ -39,6 +39,22 @@ To easily handle three-value logic (true, false, unknown) in provider's configs,
 
 For more details about default values, please refer to the [changes before v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#default-values) document.
 
+### snowflake_row_access_policies data source changes
+New filtering options:
+- `in`
+- `limit`
+- `with_describe`
+
+New output fields
+- `show_output`
+- `describe_output`
+
+Breaking changes:
+- `database` and `schema` are right now under `in` field
+- `row_access_policies` field now organizes output of show under `show_output` field and the output of describe under `describe_output` field.
+
+Please adjust your Terraform configuration files.
+
 ### snowflake_row_access_policy resource changes
 New fields:
   - `show_output` field that holds the response from SHOW ROW ACCESS POLICIES.

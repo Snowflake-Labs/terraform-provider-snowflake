@@ -105,8 +105,13 @@ func (s *ShowRowAccessPolicyRequest) WithLike(Like *Like) *ShowRowAccessPolicyRe
 	return s
 }
 
-func (s *ShowRowAccessPolicyRequest) WithIn(In *In) *ShowRowAccessPolicyRequest {
+func (s *ShowRowAccessPolicyRequest) WithIn(In *ExtendedIn) *ShowRowAccessPolicyRequest {
 	s.In = In
+	return s
+}
+
+func (s *ShowRowAccessPolicyRequest) WithLimit(Limit *LimitFrom) *ShowRowAccessPolicyRequest {
+	s.Limit = Limit
 	return s
 }
 
