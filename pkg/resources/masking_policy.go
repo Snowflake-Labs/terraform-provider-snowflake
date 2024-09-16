@@ -66,13 +66,11 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		ForceNew:    true,
 	},
 	"body": {
-		Type:     schema.TypeString,
-		Required: true,
-		// TODO (this pr): add diffSuppressStatementFieldDescription
-		Description:      "Specifies the SQL expression that transforms the data.",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      diffSuppressStatementFieldDescription("Specifies the SQL expression that transforms the data."),
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
-	// TODO (this pr): chage to return_type
 	"return_data_type": {
 		Type:             schema.TypeString,
 		Required:         true,
@@ -86,9 +84,6 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		// DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("options", func(x any) any {
-		// 	return slices.Contains(sdk.ParseCommaSeparatedStringArray(x.(string), false), "TRANSIENT")
-		// }),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("exempt_other_policies"),
 		Description:      booleanStringFieldDescription("Specifies whether the row access policy or conditional masking policy can reference a column that is already protected by a masking policy. Due to Snowflake limitations, when value is chenged, the resource is recreated."),
 		ForceNew:         true,
@@ -129,7 +124,8 @@ func MaskingPolicy() *schema.Resource {
 		Description:   "Resource used to manage masking policies. For more information, check [masking policies documentation](https://docs.snowflake.com/en/sql-reference/sql/create-masking-policy).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(maskingPolicySchema, ShowOutputAttributeName, "exempt_other_policies"),
+			ComputedIfAnyAttributeChanged(maskingPolicySchema, ShowOutputAttributeName, "name", "comment"),
+			ComputedIfAnyAttributeChanged(maskingPolicySchema, DescribeOutputAttributeName, "name", "body"),
 			ComputedIfAnyAttributeChanged(maskingPolicySchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
@@ -165,9 +161,6 @@ func ImportMaskingPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		return nil, err
 	}
 	if err := d.Set("database", id.DatabaseName()); err != nil {
-		return nil, err
-	}
-	if err := d.Set("schema", id.SchemaName()); err != nil {
 		return nil, err
 	}
 	if err := d.Set("schema", id.SchemaName()); err != nil {
