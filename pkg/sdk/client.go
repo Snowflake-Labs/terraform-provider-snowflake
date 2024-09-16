@@ -75,6 +75,7 @@ type Client struct {
 	Roles                        Roles
 	RowAccessPolicies            RowAccessPolicies
 	Schemas                      Schemas
+	Secrets                      Secrets
 	SecurityIntegrations         SecurityIntegrations
 	Sequences                    Sequences
 	SessionPolicies              SessionPolicies
