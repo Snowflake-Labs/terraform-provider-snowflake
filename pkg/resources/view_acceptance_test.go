@@ -522,7 +522,6 @@ func TestAcc_View_complete(t *testing.T) {
 	t.Cleanup(projectionPolicyCleanup)
 
 	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyWithOptions(t,
-		acc.TestClient().Ids.SchemaId(),
 		[]sdk.TableColumnSignature{
 			{
 				Name: "One",
@@ -677,7 +676,6 @@ func TestAcc_View_columns(t *testing.T) {
 	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
 
 	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyWithOptions(t,
-		acc.TestClient().Ids.SchemaId(),
 		[]sdk.TableColumnSignature{
 			{
 				Name: "One",

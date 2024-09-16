@@ -39,8 +39,6 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
-	// TODO (this pr): separate 1st elem?
-	// TODO (this pr): extract with row access policy
 	"argument": {
 		Type:     schema.TypeList,
 		MinItems: 1,

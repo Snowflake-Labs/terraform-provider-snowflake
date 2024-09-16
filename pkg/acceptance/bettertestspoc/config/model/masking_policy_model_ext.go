@@ -6,7 +6,6 @@ import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 )
 
-// TODO: unify with row access policy
 func (p *MaskingPolicyModel) WithArgument(argument []sdk.TableColumnSignature) *MaskingPolicyModel {
 	maps := make([]config.Variable, len(argument))
 	for i, v := range argument {

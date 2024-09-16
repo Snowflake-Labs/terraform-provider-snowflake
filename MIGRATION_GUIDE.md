@@ -14,6 +14,7 @@ New fields:
 #### *(breaking change)* Renamed fields in snowflake_masking_policy resource
 Renamed fields:
   - `masking_expression` to `body`
+  - `return_data_type` to `return_type`
   - `signature` to `arguments`
 Please rename these fields in your configuration files. State will be migrated automatically.
 
@@ -25,8 +26,6 @@ The value of these field will be removed from the state automatically.
 
 #### *(breaking change)* Adjusted behavior of arguments/signature
 Now, arguments are stored without nested `column` field. Please adjust that in your configs. State is migrated automatically.
-
-Argument names are now case sensitive. All policies created previously in the provider have upper case argument names. If you used lower case before, please adjust your configs. Values in the state will be migrated to uppercase automatically.
 
 #### *(breaking change)* Identifiers related changes
 During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to

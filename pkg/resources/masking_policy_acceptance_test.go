@@ -27,11 +27,22 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 	resourceName := "snowflake_masking_policy.test"
 
 	body := "case when current_role() in ('ANALYST') then 'true' else 'false' end"
-	changedBody := "case when current_role() in ('CHANGED') then 'true' else 'false' end"
+	changedBody := "case when current_role() in ('CHANGED') then 'foo' else 'bar' end"
+	bodyWithBooleanReturnType := "case when current_role() in ('ANALYST') then true else false end"
 	argument := []sdk.TableColumnSignature{
 		{
 			Name: "A",
 			Type: sdk.DataTypeVARCHAR,
+		},
+		{
+			Name: "B",
+			Type: sdk.DataTypeVARCHAR,
+		},
+	}
+	argumentWithChangedFirstArgumentType := []sdk.TableColumnSignature{
+		{
+			Name: "A",
+			Type: sdk.DataTypeBoolean,
 		},
 		{
 			Name: "B",
@@ -65,6 +76,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
+					HasReturnDataTypeString(string(sdk.DataTypeVARCHAR)).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasBodyString(body).
 					HasArguments(argument),
@@ -79,6 +91,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasExemptOtherPoliciesString(r.BooleanTrue).
+					HasReturnDataTypeString(string(sdk.DataTypeVARCHAR)).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasCommentString("Terraform acceptance test").
 					HasBodyString(body).
@@ -102,31 +115,35 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.1.type", string(sdk.DataTypeVARCHAR))),
 				),
 			},
-			// change comment and expression
+			// change fields
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/complete"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithBody(changedBody).WithComment("Terraform acceptance test - changed comment")),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithBody(bodyWithBooleanReturnType).WithReturnDataType(string(sdk.DataTypeBoolean)).WithArgument(argumentWithChangedFirstArgumentType).WithComment("Terraform acceptance test - changed comment").WithExemptOtherPolicies(r.BooleanFalse)),
 				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
+					HasReturnDataTypeString(string(sdk.DataTypeBoolean)).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
+					HasExemptOtherPoliciesString(r.BooleanFalse).
 					HasCommentString("Terraform acceptance test - changed comment").
-					HasBodyString(changedBody).
-					HasArguments(argument),
+					HasBodyString(bodyWithBooleanReturnType).
+					HasArguments(argumentWithChangedFirstArgumentType),
 				),
 			},
-			// change signature and comment
+			// restore previous types - first argument type, return_type, and returned value in `body` must be the same type
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/complete"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithArgument(changedArgument)),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithBody(body).WithReturnDataType(string(sdk.DataTypeVARCHAR)).WithArgument(changedArgument).WithExemptOtherPolicies(r.BooleanTrue)),
 				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
+					HasReturnDataTypeString(string(sdk.DataTypeVARCHAR)).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
+					HasExemptOtherPoliciesString(r.BooleanTrue).
 					HasCommentString("Terraform acceptance test - changed comment").
-					HasBodyString(changedBody).
+					HasBodyString(body).
 					HasArguments(changedArgument),
 				),
 			},
@@ -135,9 +152,10 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/complete"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
 				PreConfig: func() {
-					acc.TestClient().MaskingPolicy.CreateMaskingPolicyWithOptions2(t, id, argument, sdk.DataTypeVARCHAR, body, &sdk.CreateMaskingPolicyOptions{
-						Comment:   sdk.Pointer("Terraform acceptance test - changed comment"),
-						OrReplace: sdk.Pointer(true),
+					acc.TestClient().MaskingPolicy.CreateOrReplaceMaskingPolicyWithOptions(t, id, argument, sdk.DataTypeVARCHAR, body, &sdk.CreateMaskingPolicyOptions{
+						ExemptOtherPolicies: sdk.Pointer(false),
+						Comment:             sdk.Pointer("Terraform acceptance test - changed comment"),
+						OrReplace:           sdk.Pointer(true),
 					})
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -151,11 +169,11 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasCommentString("Terraform acceptance test - changed comment").
-					HasBodyString(changedBody).
+					HasBodyString(body).
 					HasArguments(changedArgument),
 				),
 			},
-			// external change on body
+			// external change on body and exempt other policies
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/complete"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
@@ -172,7 +190,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasCommentString("Terraform acceptance test - changed comment").
-					HasBodyString(changedBody).
+					HasBodyString(body).
 					HasArguments(changedArgument),
 				),
 			},
@@ -199,7 +217,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasCommentString("").
-					HasBodyString(changedBody).
+					HasBodyString(body).
 					HasArguments(changedArgument),
 				),
 			},

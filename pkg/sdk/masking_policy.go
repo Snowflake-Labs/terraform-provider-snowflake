@@ -373,7 +373,7 @@ func (row maskingPolicyDetailsRow) toMaskingPolicyDetails() *MaskingPolicyDetail
 		ReturnType: dataType,
 		Body:       row.Body,
 	}
-	// TODO (this pr) use/merge with parsing in row access policies
+	// TODO (after merged changes in row access policies) use/merge with parsing in row access policies
 	s := strings.Trim(row.Signature, "()")
 	parts := strings.Split(s, ",")
 	for _, part := range parts {
