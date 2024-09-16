@@ -5,21 +5,20 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -71,7 +70,7 @@ func TestAcc_View_basic(t *testing.T) {
 			"database":  config.StringVariable(id.DatabaseName()),
 			"schema":    config.StringVariable(id.SchemaName()),
 			"statement": config.StringVariable(configStatement),
-			"columns": config.SetVariable(
+			"column": config.SetVariable(
 				config.MapVariable(map[string]config.Variable{
 					"column_name": config.StringVariable("ID"),
 				}),
@@ -100,7 +99,7 @@ func TestAcc_View_basic(t *testing.T) {
 			"data_metric_schedule_using_cron": config.StringVariable(cron),
 			"comment":                         config.StringVariable(comment),
 			"schedule_status":                 config.StringVariable(string(scheduleStatus)),
-			"columns": config.SetVariable(
+			"column": config.SetVariable(
 				config.MapVariable(map[string]config.Variable{
 					"column_name": config.StringVariable("ID"),
 				}),
@@ -427,7 +426,7 @@ func TestAcc_View_recursive(t *testing.T) {
 		"schema":       config.StringVariable(id.SchemaName()),
 		"statement":    config.StringVariable(statement),
 		"is_recursive": config.BoolVariable(true),
-		"columns": config.SetVariable(
+		"column": config.SetVariable(
 			config.MapVariable(map[string]config.Variable{
 				"column_name": config.StringVariable("ROLE_NAME"),
 			}),
@@ -705,7 +704,7 @@ end;;
 			"database":  config.StringVariable(id.DatabaseName()),
 			"schema":    config.StringVariable(id.SchemaName()),
 			"statement": config.StringVariable(statement),
-			"columns": config.SetVariable(
+			"column": config.SetVariable(
 				collections.Map(columns, func(columnName string) config.Variable {
 					return config.MapVariable(map[string]config.Variable{
 						"column_name": config.StringVariable(columnName),
@@ -717,7 +716,7 @@ end;;
 
 	basicViewWithPolicies := func() config.Variables {
 		conf := basicView("ID", "FOO")
-		delete(conf, "columns")
+		delete(conf, "column")
 		conf["projection_name"] = config.StringVariable(projectionPolicy.FullyQualifiedName())
 		conf["masking_name"] = config.StringVariable(maskingPolicy.ID().FullyQualifiedName())
 		conf["masking_using"] = config.ListVariable(config.StringVariable("ID"))
@@ -820,7 +819,7 @@ func TestAcc_View_Rename(t *testing.T) {
 			"database":  config.StringVariable(identifier.DatabaseName()),
 			"schema":    config.StringVariable(identifier.SchemaName()),
 			"statement": config.StringVariable(statement),
-			"columns": config.SetVariable(
+			"column": config.SetVariable(
 				config.MapVariable(map[string]config.Variable{
 					"column_name": config.StringVariable("ROLE_NAME"),
 				}),
@@ -865,6 +864,51 @@ func TestAcc_View_Rename(t *testing.T) {
 	})
 }
 
+func TestAcc_View_Issue3073(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+	viewModelWithColumns := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithColumnValue(config.SetVariable(
+		config.MapVariable(map[string]config.Variable{
+			"column_name": config.StringVariable("ROLE_NAME"),
+		}),
+		config.MapVariable(map[string]config.Variable{
+			"column_name": config.StringVariable("ROLE_OWNER"),
+		}),
+	))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
+		Steps: []resource.TestStep{
+			{
+				Config: accconfig.FromModel(t, viewModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
+				),
+			},
+			// specify the columns
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, viewModelWithColumns),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -878,7 +922,7 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 			"statement":   config.StringVariable(statement),
 			"copy_grants": config.BoolVariable(copyGrants),
 			"is_secure":   config.BoolVariable(true),
-			"columns": config.SetVariable(
+			"column": config.SetVariable(
 				config.MapVariable(map[string]config.Variable{
 					"column_name": config.StringVariable("ID"),
 				}),
@@ -946,7 +990,7 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 			"statement":   config.StringVariable(statement),
 			"copy_grants": config.BoolVariable(copyGrants),
 			"is_secure":   config.BoolVariable(true),
-			"columns": config.SetVariable(
+			"column": config.SetVariable(
 				config.MapVariable(map[string]config.Variable{
 					"column_name": config.StringVariable("ID"),
 				}),
@@ -1098,7 +1142,7 @@ func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
 		"database":  config.StringVariable(id.DatabaseName()),
 		"schema":    config.StringVariable(id.SchemaName()),
 		"statement": config.StringVariable(statement),
-		"columns": config.SetVariable(
+		"column": config.SetVariable(
 			config.MapVariable(map[string]config.Variable{
 				"column_name": config.StringVariable("ROLE_NAME"),
 			}),

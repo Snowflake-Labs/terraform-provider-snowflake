@@ -3,8 +3,6 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"strings"
 )
 
 type RowAccessPolicies interface {
@@ -109,33 +107,11 @@ type describeRowAccessPolicyDBRow struct {
 
 type RowAccessPolicyDescription struct {
 	Name       string
-	Signature  string
+	Signature  []RowAccessPolicyArgument
 	ReturnType string
 	Body       string
 }
 type RowAccessPolicyArgument struct {
 	Name string
-	Type string
-}
-
-// TODO(SNOW-1596962): Fully support VECTOR data type
-// TODO(SNOW-1660588): Use ParseFunctionArgumentsFromString
-func (d *RowAccessPolicyDescription) Arguments() ([]RowAccessPolicyArgument, error) {
-	// Format in database is `(column <data_type>)`
-	plainSignature := strings.ReplaceAll(d.Signature, "(", "")
-	plainSignature = strings.ReplaceAll(plainSignature, ")", "")
-	signatureParts := strings.Split(plainSignature, ", ")
-	arguments := make([]RowAccessPolicyArgument, len(signatureParts))
-
-	for i, e := range signatureParts {
-		parts := strings.Split(e, " ")
-		if len(parts) < 2 {
-			return nil, fmt.Errorf("parsing policy arguments: expected argument name and type, got %s", e)
-		}
-		arguments[i] = RowAccessPolicyArgument{
-			Name: strings.Join(parts[:len(parts)-1], " "),
-			Type: parts[len(parts)-1],
-		}
-	}
-	return arguments, nil
+	Type DataType
 }

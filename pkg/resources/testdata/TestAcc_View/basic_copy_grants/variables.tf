@@ -22,6 +22,6 @@ variable "is_secure" {
   type = bool
 }
 
-variable "columns" {
+variable "column" {
   type = set(map(string))
 }
