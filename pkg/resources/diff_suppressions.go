@@ -222,8 +222,19 @@ func suppressIdentifierQuoting(_, oldValue, newValue string, _ *schema.ResourceD
 	return slices.Equal(oldId, newId)
 }
 
-func ignoreEmptyList(key string) schema.SchemaDiffSuppressFunc {
-	return func(k, old, new string, d *schema.ResourceData) bool {
-		return key == k && new == "0"
+// IgnoreNewEmptyList suppresses the diff if `new` list is empty or compared subfield is ignored
+func IgnoreNewEmptyList(subfields []string) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, _ *schema.ResourceData) bool {
+		parts := strings.SplitN(k, ".", 3)
+		if len(parts) < 2 {
+			log.Printf("[DEBUG] invalid resource key: %s", parts)
+			return false
+		}
+		// key is element count
+		if parts[1] == "#" && new == "0" {
+			return true
+		}
+		// key is one of the ignored subfields
+		return len(parts) > 2 && slices.Contains(subfields, parts[2]) && new == ""
 	}
 }
