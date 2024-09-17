@@ -15,10 +15,9 @@ var secretDbRow = g.DbStruct("secretDBRow").
 	Field("owner", "string").
 	Field("comment", "sql.NullString").
 	Field("secret_type", "string").
-	Field("oauth_scopes", "sql.NullString"). // its a list tho
+	Field("oauth_scopes", "[]string"). // its a list tho
 	Field("owner_role_type", "string")
 
-// cannot name 'secret' due to clash in common_types.go
 var secret = g.PlainStruct("Secret").
 	Field("CreatedOn", "string").
 	Field("Name", "string").
@@ -27,7 +26,7 @@ var secret = g.PlainStruct("Secret").
 	Field("Owner", "string").
 	Field("Comment", "string").
 	Field("SecretType", "string").
-	Field("OauthScopes", "sql.NullString").
+	Field("OauthScopes", "[]string").
 	Field("OwnerRoleType", "string")
 
 var secretDetailsDbRow = g.DbStruct("secretDetailsDBRow").
@@ -63,14 +62,12 @@ var secretSet = g.NewQueryStruct("SecretSet").
 	OptionalQueryStructField(
 		"SetForOAuthClientCredentialsFlow",
 		g.NewQueryStruct("SetForOAuthClientCredentialsFlow").
-			//OptionalQueryStructField("OAuthScopes", secretsIntegrationScopes, g.ParameterOptions().MustParentheses().SQL("OAUTH_SCOPES")),
 			ListAssignment("OAUTH_SCOPES", "SecurityIntegrationScope", g.ParameterOptions().Parentheses().Required()),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
 		"SetForOAuthAuthorizationFlow",
 		g.NewQueryStruct("SetForOAuthAuthorizationFlow").
-			//optional or just TextAssignment()??
 			OptionalTextAssignment("OAUTH_REFRESH_TOKEN", g.ParameterOptions().SingleQuotes()).
 			OptionalTextAssignment("OAUTH_REFRESH_TOKEN_EXPIRY_TIME", g.ParameterOptions().SingleQuotes()),
 		g.KeywordOptions(),
