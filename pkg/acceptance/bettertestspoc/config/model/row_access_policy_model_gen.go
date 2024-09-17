@@ -28,7 +28,7 @@ type RowAccessPolicyModel struct {
 
 func RowAccessPolicy(
 	resourceName string,
-	argument []sdk.RowAccessPolicyArgument,
+	argument []sdk.TableColumnSignature,
 	body string,
 	database string,
 	name string,
@@ -44,7 +44,7 @@ func RowAccessPolicy(
 }
 
 func RowAccessPolicyWithDefaultMeta(
-	argument []sdk.RowAccessPolicyArgument,
+	argument []sdk.TableColumnSignature,
 	body string,
 	database string,
 	name string,

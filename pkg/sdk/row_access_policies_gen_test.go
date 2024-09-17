@@ -254,16 +254,16 @@ func TestRowAccessPolicies_Describe(t *testing.T) {
 	})
 }
 
-func TestRowAccessPolicyDescription_Arguments(t *testing.T) {
+func TestRowAccessPolicyDescription_Signature(t *testing.T) {
 	tests := []struct {
 		name      string
 		signature string
-		want      []RowAccessPolicyArgument
+		want      []TableColumnSignature
 	}{
 		{
 			name:      "signature with 1 arg",
 			signature: "(A VARCHAR)",
-			want: []RowAccessPolicyArgument{
+			want: []TableColumnSignature{
 				{
 					Name: "A",
 					Type: "VARCHAR",
@@ -273,7 +273,7 @@ func TestRowAccessPolicyDescription_Arguments(t *testing.T) {
 		{
 			name:      "signature with multiple args",
 			signature: "(A VARCHAR, B BOOLEAN)",
-			want: []RowAccessPolicyArgument{
+			want: []TableColumnSignature{
 				{
 					Name: "A",
 					Type: "VARCHAR",
@@ -287,7 +287,7 @@ func TestRowAccessPolicyDescription_Arguments(t *testing.T) {
 		{
 			name:      "signature with complex name",
 			signature: "(a B VARCHAR)",
-			want: []RowAccessPolicyArgument{
+			want: []TableColumnSignature{
 				{
 					Name: "a B",
 					Type: "VARCHAR",

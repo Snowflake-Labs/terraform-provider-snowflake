@@ -3,7 +3,6 @@ package sdk
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
@@ -138,31 +137,11 @@ func (r describeRowAccessPolicyDBRow) convert() *RowAccessPolicyDescription {
 		ReturnType: r.ReturnType,
 		Body:       r.Body,
 	}
-	// Format in database is `(column <data_type>)`
-	// TODO(SNOW-1596962): Fully support VECTOR data type
-	// TODO(SNOW-1660588): Use ParseFunctionArgumentsFromString
-	plainSignature := strings.ReplaceAll(r.Signature, "(", "")
-	plainSignature = strings.ReplaceAll(plainSignature, ")", "")
-	signatureParts := strings.Split(plainSignature, ", ")
-	arguments := make([]RowAccessPolicyArgument, len(signatureParts))
-
-	for i, e := range signatureParts {
-		parts := strings.Split(e, " ")
-		if len(parts) < 2 {
-			log.Printf("[DEBUG] parsing policy arguments: expected argument name and type, got %s", e)
-			continue
-		}
-		dataType, err := ToDataType(parts[len(parts)-1])
-		if err != nil {
-			log.Printf("[DEBUG] converting row access policy db row: invalid data type %s", dataType)
-			continue
-		}
-		arguments[i] = RowAccessPolicyArgument{
-			Name: strings.Join(parts[:len(parts)-1], " "),
-			Type: dataType,
-		}
+	signature, err := ParseTableColumnSignature(r.Signature)
+	if err != nil {
+		log.Printf("[DEBUG] parsing table column signature: %v", err)
+	} else {
+		rowAccessPolicyDescription.Signature = signature
 	}
-	rowAccessPolicyDescription.Signature = arguments
-
 	return rowAccessPolicyDescription
 }

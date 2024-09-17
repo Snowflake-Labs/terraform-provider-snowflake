@@ -52,7 +52,7 @@ func RowAccessPolicyDescriptionToSchema(description sdk.RowAccessPolicyDescripti
 	}
 }
 
-func RowAccessPolicyArgumentsToSchema(args []sdk.RowAccessPolicyArgument) []map[string]any {
+func RowAccessPolicyArgumentsToSchema(args []sdk.TableColumnSignature) []map[string]any {
 	schema := make([]map[string]any, len(args))
 	for i, v := range args {
 		schema[i] = map[string]any{

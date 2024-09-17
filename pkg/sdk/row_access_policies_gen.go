@@ -107,11 +107,7 @@ type describeRowAccessPolicyDBRow struct {
 
 type RowAccessPolicyDescription struct {
 	Name       string
-	Signature  []RowAccessPolicyArgument
+	Signature  []TableColumnSignature
 	ReturnType string
 	Body       string
-}
-type RowAccessPolicyArgument struct {
-	Name string
-	Type DataType
 }

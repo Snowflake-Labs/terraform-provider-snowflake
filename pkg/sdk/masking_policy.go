@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -369,24 +368,13 @@ func (row maskingPolicyDetailsRow) toMaskingPolicyDetails() *MaskingPolicyDetail
 		ReturnType: dataType,
 		Body:       row.Body,
 	}
-	// TODO (after merged changes in row access policies) use/merge with parsing in row access policies
-	s := strings.Trim(row.Signature, "()")
-	parts := strings.Split(s, ",")
-	for _, part := range parts {
-		p := strings.Split(strings.TrimSpace(part), " ")
-		if len(p) != 2 {
-			continue
-		}
-		dType, err := ToDataType(p[1])
-		if err != nil {
-			continue
-		}
-		v.Signature = append(v.Signature, TableColumnSignature{
-			Name: p[0],
-			Type: dType,
-		})
-	}
 
+	signature, err := ParseTableColumnSignature(row.Signature)
+	if err != nil {
+		log.Printf("[DEBUG] parsing table column signature: %v", err)
+	} else {
+		v.Signature = signature
+	}
 	return v
 }
 
