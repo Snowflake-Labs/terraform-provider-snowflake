@@ -18,7 +18,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	sql := "SELECT CURRENT_TIMESTAMP"
 
-	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier) {
+	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, warehouseName string) {
 		t.Helper()
 		assert.Equal(t, id, task.ID())
 		assert.NotEmpty(t, task.CreatedOn)
@@ -28,7 +28,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
 		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
 		assert.Equal(t, "", task.Comment)
-		assert.Equal(t, testClientHelper().Ids.WarehouseId(), task.Warehouse)
+		assert.Equal(t, warehouseName, task.Warehouse)
 		assert.Equal(t, "", task.Schedule)
 		assert.Empty(t, task.Predecessors)
 		assert.Equal(t, sdk.TaskStateSuspended, task.State)
@@ -100,39 +100,6 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Empty(t, task.Budget)
 	}
 
-	//cleanupTaskProvider := func(id sdk.SchemaObjectIdentifier) func() {
-	//	return func() {
-	//		err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
-	//		require.NoError(t, err)
-	//	}
-	//}
-	//
-	//createTaskBasicRequest := func(t *testing.T) *sdk.CreateTaskRequest {
-	//	t.Helper()
-	//	id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-	//
-	//	return sdk.NewCreateTaskRequest(id, sql)
-	//}
-	//
-	//createTaskWithRequest := func(t *testing.T, request *sdk.CreateTaskRequest) *sdk.Task {
-	//	t.Helper()
-	//	id := request.GetName()
-	//
-	//	err := client.Tasks.Create(ctx, request)
-	//	require.NoError(t, err)
-	//	t.Cleanup(cleanupTaskProvider(id))
-	//
-	//	task, err := client.Tasks.ShowByID(ctx, id)
-	//	require.NoError(t, err)
-	//
-	//	return task
-	//}
-	//
-	//createTask := func(t *testing.T) *sdk.Task {
-	//	t.Helper()
-	//	return createTaskWithRequest(t, createTaskBasicRequest(t))
-	//}
-
 	t.Run("create task: no optionals", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
@@ -143,7 +110,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
 
-		assertTask(t, task, id)
+		assertTask(t, task, id, "")
 	})
 
 	t.Run("create task: with initial warehouse", func(t *testing.T) {
@@ -156,7 +123,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
 
-		assertTask(t, task, id)
+		assertTask(t, task, id, "")
 	})
 
 	t.Run("create task: almost complete case", func(t *testing.T) {
@@ -336,7 +303,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertTask(t, task, id)
+		assertTask(t, task, id, testClientHelper().Ids.WarehouseId().Name())
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
@@ -537,7 +504,7 @@ func TestInt_Tasks(t *testing.T) {
 		returnedTask, err := client.Tasks.Describe(ctx, task.ID())
 		require.NoError(t, err)
 
-		assertTask(t, returnedTask, task.ID())
+		assertTask(t, returnedTask, task.ID(), testClientHelper().Ids.WarehouseId().Name())
 	})
 
 	t.Run("execute task: default", func(t *testing.T) {

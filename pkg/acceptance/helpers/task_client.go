@@ -33,7 +33,7 @@ func (c *TaskClient) defaultCreateTaskRequest(t *testing.T) *sdk.CreateTaskReque
 
 func (c *TaskClient) Create(t *testing.T) (*sdk.Task, func()) {
 	t.Helper()
-	return c.CreateWithRequest(t, c.defaultCreateTaskRequest(t).WithSchedule("60 minutes"))
+	return c.CreateWithRequest(t, c.defaultCreateTaskRequest(t))
 }
 
 func (c *TaskClient) CreateWithAfter(t *testing.T, after ...sdk.SchemaObjectIdentifier) (*sdk.Task, func()) {
