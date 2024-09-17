@@ -1657,7 +1657,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(taskCleanup)
 
-		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(sdk.Bool(true)))
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(true))
 		require.NoError(t, err)
 
 		role, roleCleanup := testClientHelper().Role.CreateRole(t)
@@ -1706,7 +1706,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 			taskCleanup()
 		})
 
-		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(sdk.Bool(true)))
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(true))
 		require.NoError(t, err)
 
 		usePreviousRole()
@@ -1766,7 +1766,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(sdk.Bool(true)))
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(true))
 		require.NoError(t, err)
 
 		usePreviousRole()
@@ -1804,13 +1804,13 @@ func TestInt_GrantOwnership(t *testing.T) {
 		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(taskCleanup)
 
-		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(sdk.Bool(true)))
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(true))
 		require.NoError(t, err)
 
 		secondTask, secondTaskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(secondTaskCleanup)
 
-		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(secondTask.ID()).WithResume(sdk.Bool(true)))
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(secondTask.ID()).WithResume(true))
 		require.NoError(t, err)
 
 		role, roleCleanup := testClientHelper().Role.CreateRole(t)
@@ -1917,10 +1917,10 @@ func TestInt_GrantOwnership(t *testing.T) {
 
 		usePreviousRole()
 
-		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(secondTask.ID()).WithResume(sdk.Bool(true)))
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(secondTask.ID()).WithResume(true))
 		require.NoError(t, err)
 
-		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(sdk.Bool(true)))
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(true))
 		require.NoError(t, err)
 
 		t.Cleanup(func() {

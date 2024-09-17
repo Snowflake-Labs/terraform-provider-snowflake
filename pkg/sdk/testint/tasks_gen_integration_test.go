@@ -10,6 +10,7 @@ import (
 )
 
 // TODO: Generate assertions
+// TODO: Add newly added fields to all options tests
 
 func TestInt_Tasks(t *testing.T) {
 	client := testClient(t)
@@ -27,7 +28,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
 		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
 		assert.Equal(t, "", task.Comment)
-		assert.Equal(t, "", task.Warehouse)
+		assert.Equal(t, testClientHelper().Ids.WarehouseId(), task.Warehouse)
 		assert.Equal(t, "", task.Schedule)
 		assert.Empty(t, task.Predecessors)
 		assert.Equal(t, sdk.TaskStateSuspended, task.State)
@@ -184,21 +185,21 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		otherId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
-		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql))
+		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(rootTaskId, sql))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
+		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, rootTaskId))
 
-		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(otherId, sql).WithAfter([]sdk.SchemaObjectIdentifier{id}))
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTaskId}))
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
 
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
 
-		assertTaskWithOptions(t, task, id, "", "", "", "", false, "", &otherId)
+		assertTaskWithOptions(t, task, id, "", "", "", "", false, "", &rootTaskId)
 	})
 
 	t.Run("create dag of tasks", func(t *testing.T) {
@@ -217,8 +218,6 @@ func TestInt_Tasks(t *testing.T) {
 		require.Contains(t, t2.Predecessors, rootId)
 		require.Contains(t, t2.Predecessors, t1.ID())
 		require.Len(t, t2.Predecessors, 2)
-
-		t3Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
 		t3, t3Cleanup := testClientHelper().Task.CreateWithAfter(t, t2.ID(), t1.ID())
 		t.Cleanup(t3Cleanup)
@@ -242,7 +241,7 @@ func TestInt_Tasks(t *testing.T) {
 		require.Len(t, rootTasks, 1)
 		require.Equal(t, rootId, rootTasks[0].ID())
 
-		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3Id)
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3.ID())
 		require.NoError(t, err)
 		require.Len(t, rootTasks, 1)
 		require.Equal(t, rootId, rootTasks[0].ID())
@@ -258,12 +257,12 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		// can create cycle, because DAG is suspended
-		alterRequest = sdk.NewAlterTaskRequest(t1.ID()).WithAddAfter([]sdk.SchemaObjectIdentifier{t3Id})
+		alterRequest = sdk.NewAlterTaskRequest(t1.ID()).WithAddAfter([]sdk.SchemaObjectIdentifier{t3.ID()})
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		// can get the root task even with cycle
-		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3Id)
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3.ID())
 		require.NoError(t, err)
 		require.Len(t, rootTasks, 1)
 		require.Equal(t, rootId, rootTasks[0].ID())
@@ -348,7 +347,7 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = client.Tasks.ShowByID(ctx, task.ID())
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	})
 
 	t.Run("drop task: non-existing", func(t *testing.T) {
@@ -434,30 +433,30 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: remove after and add after", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		otherTask, otherTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithSchedule("10 MINUTE"))
-		t.Cleanup(otherTaskCleanup)
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		rootTask, rootTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule("10 MINUTE"))
+		t.Cleanup(rootTaskCleanup)
 
-		task, taskCleanup := testClientHelper().Task.CreateWithAfter(t, id)
+		task, taskCleanup := testClientHelper().Task.CreateWithAfter(t, rootTask.ID())
 		t.Cleanup(taskCleanup)
 
-		assert.Contains(t, task.Predecessors, otherTask.ID())
+		assert.Contains(t, task.Predecessors, rootTask.ID())
 
-		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithRemoveAfter([]sdk.SchemaObjectIdentifier{otherTask.ID()}))
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithRemoveAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
 		require.NoError(t, err)
 
-		task, err = client.Tasks.ShowByID(ctx, id)
+		task, err = client.Tasks.ShowByID(ctx, task.ID())
 
 		require.NoError(t, err)
 		assert.Empty(t, task.Predecessors)
 
-		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithAddAfter([]sdk.SchemaObjectIdentifier{otherTask.ID()}))
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithAddAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
 		require.NoError(t, err)
 
-		task, err = client.Tasks.ShowByID(ctx, id)
+		task, err = client.Tasks.ShowByID(ctx, task.ID())
 
 		require.NoError(t, err)
-		assert.Contains(t, task.Predecessors, otherTask.ID())
+		assert.Contains(t, task.Predecessors, rootTask.ID())
 	})
 
 	t.Run("alter task: modify when and as", func(t *testing.T) {

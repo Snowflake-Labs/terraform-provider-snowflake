@@ -3,9 +3,8 @@ package datasources
 import (
 	"context"
 	"fmt"
-	"log"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -69,7 +68,7 @@ func ReadTasks(d *schema.ResourceData, meta interface{}) error {
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	extractedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().WithIn(&sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}))
+	extractedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().WithIn(sdk.In{Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)}))
 	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Printf("[DEBUG] tasks in schema (%s) not found", d.Id())
