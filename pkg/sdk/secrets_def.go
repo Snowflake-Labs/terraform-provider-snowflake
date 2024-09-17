@@ -15,7 +15,7 @@ var secretDbRow = g.DbStruct("secretDBRow").
 	Field("owner", "string").
 	Field("comment", "sql.NullString").
 	Field("secret_type", "string").
-	Field("oauth_scopes", "[]string"). // its a list tho
+	Field("oauth_scopes", "sql.NullString"). // its a list tho
 	Field("owner_role_type", "string")
 
 var secret = g.PlainStruct("Secret").
@@ -26,7 +26,7 @@ var secret = g.PlainStruct("Secret").
 	Field("Owner", "string").
 	Field("Comment", "string").
 	Field("SecretType", "string").
-	Field("OauthScopes", "[]string").
+	Field("OauthScopes", "sql.NullString").
 	Field("OwnerRoleType", "string")
 
 var secretDetailsDbRow = g.DbStruct("secretDetailsDBRow").
@@ -87,7 +87,7 @@ var secretSet = g.NewQueryStruct("SecretSet").
 	).
 	WithValidation(g.ExactlyOneValueSet, "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString")
 
-// TODO: unset doest work, need to use "SET COMMENT = NULL"
+// TODO: UNSET doest work, need to use "SET COMMENT = NULL"
 var secretUnset = g.NewQueryStruct("SecretUnset").
 	//OptionalSQL("UNSET COMMENT")
 	PredefinedQueryStructField("Comment", "*bool", g.KeywordOptions().SQL("SET COMMENT = NULL"))
@@ -199,6 +199,18 @@ var SecretsDef = g.NewInterface(
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-secret",
 		secretDetailsDbRow,
 		secretDetails,
+
+		/*
+			g.DescriptionMappingKindSlice,
+			"https://docs.snowflake.com/en/sql-reference/sql/desc-secret",
+				g.DbStruct("secretDetailsRow").
+					Field("property", "string").
+					Field("value", "sql.NullString"),
+				g.PlainStruct("SecretDetails").
+					Field("Property", "string").
+					Field("Value", "string"),
+		*/
+
 		g.NewQueryStruct("DescribeSecret").
 			Describe().
 			SQL("SECRET").

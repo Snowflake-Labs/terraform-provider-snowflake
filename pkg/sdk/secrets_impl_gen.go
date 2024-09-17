@@ -196,8 +196,22 @@ func (r *ShowSecretRequest) toOpts() *ShowSecretOptions {
 }
 
 func (r secretDBRow) convert() *Secret {
-	// TODO: Mapping
-	return &Secret{}
+	s := &Secret{
+		CreatedOn:     r.CreatedOn,
+		Name:          r.Name,
+		SchemaName:    r.SchemaName,
+		DatabaseName:  r.DatabaseName,
+		Owner:         r.Owner,
+		SecretType:    r.SecretType,
+		OwnerRoleType: r.OwnerRoleType,
+	}
+	if r.Comment.Valid {
+		s.Comment = r.Comment.String
+	}
+	if r.OauthScopes.Valid {
+		s.OauthScopes = r.OauthScopes
+	}
+	return s
 }
 
 func (r *DescribeSecretRequest) toOpts() *DescribeSecretOptions {
@@ -208,6 +222,18 @@ func (r *DescribeSecretRequest) toOpts() *DescribeSecretOptions {
 }
 
 func (r secretDetailsDBRow) convert() *SecretDetails {
-	// TODO: Mapping
-	return &SecretDetails{}
+	return &SecretDetails{
+		CreatedOn:                   r.CreatedOn,
+		Name:                        r.Name,
+		SchemaName:                  r.SchemaName,
+		DatabaseName:                r.DatabaseName,
+		Owner:                       r.Owner,
+		Comment:                     r.Comment,
+		SecretType:                  r.SecretType,
+		Username:                    r.Username,
+		OauthAccessTokenExpiryTime:  r.OauthAccessTokenExpiryTime,
+		OauthRefreshTokenExpiryTime: r.OauthRefreshTokenExpiryTime,
+		OauthScopes:                 r.OauthScopes,
+		IntegrationName:             r.IntegrationName,
+	}
 }
