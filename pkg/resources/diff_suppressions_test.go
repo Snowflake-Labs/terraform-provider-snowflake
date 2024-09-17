@@ -200,7 +200,7 @@ func Test_ignoreNewEmptyList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.suppress, resources.IgnoreNewEmptyList(tt.subfields)(tt.key, tt.old, tt.new, nil))
+			require.Equal(t, tt.suppress, resources.IgnoreNewEmptyListOrSubfields(tt.subfields...)(tt.key, tt.old, tt.new, nil))
 		})
 	}
 }
