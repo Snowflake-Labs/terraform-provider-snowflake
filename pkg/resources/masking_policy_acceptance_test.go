@@ -233,21 +233,83 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 	})
 }
 
-func maskingPolicyConfig(name string, comment string, databaseName string, schemaName string) string {
+func TestAcc_MaskingPolicy_complete(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	resourceName := "snowflake_masking_policy.test"
+
+	body := "case when current_role() in ('ANALYST') then 'true' else 'false' end"
+	argument := []sdk.TableColumnSignature{
+		{
+			Name: "A",
+			Type: sdk.DataTypeVARCHAR,
+		},
+		{
+			Name: "B",
+			Type: sdk.DataTypeVARCHAR,
+		},
+	}
+	policyModel := model.MaskingPolicy("test", argument, body, id.DatabaseName(), id.Name(), string(sdk.DataTypeVARCHAR), id.SchemaName()).WithComment("foo").WithExemptOtherPolicies(r.BooleanTrue)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.MaskingPolicy),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/complete"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
+				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasExemptOtherPoliciesString(r.BooleanTrue).
+					HasReturnDataTypeString(string(sdk.DataTypeVARCHAR)).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()).
+					HasCommentString("foo").
+					HasBodyString(body).
+					HasArguments(argument),
+					resourceshowoutputassert.MaskingPolicyShowOutput(t, resourceName).
+						HasCreatedOnNotEmpty().
+						HasDatabaseName(id.DatabaseName()).
+						HasKind(string(sdk.PolicyKindMaskingPolicy)).
+						HasName(id.Name()).
+						HasExemptOtherPolicies(true).
+						HasOwner(snowflakeroles.Accountadmin.Name()).
+						HasOwnerRoleType("ROLE").
+						HasSchemaName(id.SchemaName()),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.body", body)),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.return_type", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.0.name", "A")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.0.type", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.1.name", "B")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.1.type", string(sdk.DataTypeVARCHAR))),
+				),
+			},
+		},
+	})
+}
+
+func maskingPolicyConfig(name string, databaseName string, schemaName string) string {
 	return fmt.Sprintf(`
 resource "snowflake_masking_policy" "test" {
 	name = "%s"
 	database = "%s"
 	schema = "%s"
-	argument {
-		name = "val"
-		type = "VARCHAR"
+	signature {
+		column {
+			name = "val"
+			type = "VARCHAR"
+		}
 	}
-	body = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
 	return_data_type = "VARCHAR"
-	comment = "%s"
 }
-`, name, databaseName, schemaName, comment)
+`, name, databaseName, schemaName)
 }
 
 func maskingPolicyConfigMultiline(name string, databaseName string, schemaName string) string {
@@ -297,14 +359,13 @@ func TestAcc_MaskingPolicyMultiColumns(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", accName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "masking_expression", "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "return_data_type", "VARCHAR"),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.0.name", "val"),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.0.type", "VARCHAR"),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.1.name", "val2"),
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "signature.0.column.1.type", "VARCHAR"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "body", "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "return_data_type", string(sdk.DataTypeVARCHAR)),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "argument.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "argument.0.name", "val"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "argument.0.type", string(sdk.DataTypeVARCHAR)),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "argument.1.name", "val2"),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "argument.1.type", string(sdk.DataTypeVARCHAR)),
 				),
 			},
 		},
@@ -335,7 +396,13 @@ resource "snowflake_masking_policy" "test" {
 func TestAcc_MaskingPolicy_migrateFromVersion_0_94_1(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_masking_policy.test"
-	comment := "foo"
+	body := "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+	policyModel := model.MaskingPolicy("test", []sdk.TableColumnSignature{
+		{
+			Name: "val",
+			Type: sdk.DataTypeVARCHAR,
+		},
+	}, body, id.DatabaseName(), id.Name(), string(sdk.DataTypeVARCHAR), id.SchemaName())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -351,7 +418,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_94_1(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: maskingPolicyConfig(id.Name(), comment, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: maskingPolicyConfig(id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "qualified_name", id.FullyQualifiedName()),
@@ -359,7 +426,8 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_94_1(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   maskingPolicyConfig(id.Name(), comment, acc.TestDatabaseName, acc.TestSchemaName),
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_MaskingPolicy/basic"),
+				ConfigVariables:          tfconfig.ConfigVariablesFromModel(t, policyModel),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
