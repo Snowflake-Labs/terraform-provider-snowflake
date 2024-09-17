@@ -307,7 +307,12 @@ func (r taskDBRow) convert() *Task {
 		Definition:                r.Definition,
 		AllowOverlappingExecution: r.AllowOverlappingExecution == "true",
 		OwnerRoleType:             r.OwnerRoleType,
-		TaskRelations:             r.TaskRelations,
+	}
+	taskRelations, err := ToTaskRelations(r.TaskRelations)
+	if err != nil {
+		log.Printf("[DEBUG] failed to convert task relations: %v", err)
+	} else {
+		task.TaskRelations = taskRelations
 	}
 	if r.Comment.Valid {
 		task.Comment = r.Comment.String

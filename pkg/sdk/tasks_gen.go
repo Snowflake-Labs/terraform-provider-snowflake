@@ -199,7 +199,7 @@ type Task struct {
 	OwnerRoleType             string
 	Config                    string
 	Budget                    string
-	TaskRelations             string
+	TaskRelations             TaskRelations
 	LastSuspendedReason       string
 }
 

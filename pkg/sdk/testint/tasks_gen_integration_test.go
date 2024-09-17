@@ -2,6 +2,8 @@ package testint
 
 import (
 	"errors"
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -15,89 +17,103 @@ import (
 func TestInt_Tasks(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-
 	sql := "SELECT CURRENT_TIMESTAMP"
+
+	// TODO: Add new fields in asserts
 
 	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, warehouseName string) {
 		t.Helper()
-		assert.Equal(t, id, task.ID())
-		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.Name(), task.Name)
-		assert.NotEmpty(t, task.Id)
-		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), task.DatabaseName)
-		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
-		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
-		assert.Equal(t, "", task.Comment)
-		assert.Equal(t, warehouseName, task.Warehouse)
-		assert.Equal(t, "", task.Schedule)
-		assert.Empty(t, task.Predecessors)
-		assert.Equal(t, sdk.TaskStateSuspended, task.State)
-		assert.Equal(t, sql, task.Definition)
-		assert.Equal(t, "", task.Condition)
-		assert.Equal(t, false, task.AllowOverlappingExecution)
-		assert.Empty(t, task.ErrorIntegration)
-		assert.Empty(t, task.LastCommittedOn)
-		assert.Empty(t, task.LastSuspendedOn)
-		assert.Equal(t, "ROLE", task.OwnerRoleType)
-		assert.Empty(t, task.Config)
-		assert.Empty(t, task.Budget)
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasNotEmptyCreatedOn().
+			HasName(id.Name()).
+			HasNotEmptyId().
+			HasDatabaseName(testClientHelper().Ids.DatabaseId().Name()).
+			HasSchemaName(testClientHelper().Ids.SchemaId().Name()).
+			HasOwner("ACCOUNTADMIN").
+			HasComment("").
+			HasWarehouse(warehouseName).
+			HasSchedule("").
+			HasPredecessors().
+			HasState(sdk.TaskStateStarted).
+			HasDefinition(sql).
+			HasCondition("").
+			HasAllowOverlappingExecution(false).
+			HasErrorIntegration("").
+			HasLastCommittedOn("").
+			HasLastSuspendedOn("").
+			HasOwnerRoleType("ROLE").
+			HasConfig("").
+			HasBudget("").
+			HasLastSuspendedOn("").
+			HasTaskRelations(sdk.TaskRelations{}),
+		)
 	}
 
 	assertTaskWithOptions := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *sdk.SchemaObjectIdentifier) {
 		t.Helper()
-		assert.Equal(t, id, task.ID())
-		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.Name(), task.Name)
-		assert.NotEmpty(t, task.Id)
-		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), task.DatabaseName)
-		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
-		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
-		assert.Equal(t, comment, task.Comment)
-		assert.Equal(t, warehouse, task.Warehouse)
-		assert.Equal(t, schedule, task.Schedule)
-		assert.Equal(t, sdk.TaskStateSuspended, task.State)
-		assert.Equal(t, sql, task.Definition)
-		assert.Equal(t, condition, task.Condition)
-		assert.Equal(t, allowOverlappingExecution, task.AllowOverlappingExecution)
-		assert.Empty(t, task.ErrorIntegration)
-		assert.Empty(t, task.LastCommittedOn)
-		assert.Empty(t, task.LastSuspendedOn)
-		assert.Equal(t, "ROLE", task.OwnerRoleType)
-		assert.Equal(t, config, task.Config)
-		assert.Empty(t, task.Budget)
+
+		asserts := objectassert.TaskFromObject(t, task).
+			HasNotEmptyCreatedOn().
+			HasName(id.Name()).
+			HasNotEmptyId().
+			HasDatabaseName(testClientHelper().Ids.DatabaseId().Name()).
+			HasSchemaName(testClientHelper().Ids.SchemaId().Name()).
+			HasOwner("ACCOUNTADMIN").
+			HasComment(comment).
+			HasWarehouse(warehouse).
+			HasSchedule(schedule).
+			HasState(sdk.TaskStateSuspended).
+			HasDefinition(sql).
+			HasCondition(condition).
+			HasAllowOverlappingExecution(allowOverlappingExecution).
+			HasErrorIntegration("").
+			HasLastCommittedOn("").
+			HasLastSuspendedOn("").
+			HasOwnerRoleType("ROLE").
+			HasConfig(config).
+			HasBudget("").
+			HasLastSuspendedOn("")
+
 		if predecessor != nil {
-			assert.Len(t, task.Predecessors, 1)
-			assert.Contains(t, task.Predecessors, *predecessor)
+			asserts.HasPredecessors(*predecessor)
+			asserts.HasTaskRelations(sdk.TaskRelations{
+				Predecessors: []sdk.SchemaObjectIdentifier{*predecessor},
+			})
 		} else {
-			assert.Empty(t, task.Predecessors)
+			asserts.HasPredecessors()
+			asserts.HasTaskRelations(sdk.TaskRelations{})
 		}
+
+		assertions.AssertThat(t, asserts)
 	}
 
 	assertTaskTerse := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, schedule string) {
 		t.Helper()
-		assert.Equal(t, id, task.ID())
-		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.Name(), task.Name)
-		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), task.DatabaseName)
-		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
-		assert.Equal(t, schedule, task.Schedule)
-
-		// all below are not contained in the terse response, that's why all of them we expect to be empty
-		assert.Empty(t, task.Id)
-		assert.Empty(t, task.Owner)
-		assert.Empty(t, task.Comment)
-		assert.Empty(t, task.Warehouse)
-		assert.Empty(t, task.Predecessors)
-		assert.Empty(t, task.State)
-		assert.Empty(t, task.Definition)
-		assert.Empty(t, task.Condition)
-		assert.Empty(t, task.AllowOverlappingExecution)
-		assert.Empty(t, task.ErrorIntegration)
-		assert.Empty(t, task.LastCommittedOn)
-		assert.Empty(t, task.LastSuspendedOn)
-		assert.Empty(t, task.OwnerRoleType)
-		assert.Empty(t, task.Config)
-		assert.Empty(t, task.Budget)
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasNotEmptyCreatedOn().
+			HasName(id.Name()).
+			HasDatabaseName(testClientHelper().Ids.DatabaseId().Name()).
+			HasSchemaName(testClientHelper().Ids.SchemaId().Name()).
+			HasSchedule(schedule).
+			// all below are not contained in the terse response, that's why all of them we expect to be empty
+			HasId("").
+			HasOwner("").
+			HasComment("").
+			HasWarehouse("").
+			HasPredecessors().
+			HasState("").
+			HasDefinition("").
+			HasCondition("").
+			HasAllowOverlappingExecution(false).
+			HasErrorIntegration("").
+			HasLastCommittedOn("").
+			HasLastSuspendedOn("").
+			HasOwnerRoleType("").
+			HasConfig("").
+			HasBudget("").
+			HasLastSuspendedOn("").
+			HasTaskRelations(sdk.TaskRelations{}),
+		)
 	}
 
 	t.Run("create task: no optionals", func(t *testing.T) {
@@ -167,6 +183,31 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		assertTaskWithOptions(t, task, id, "", "", "", "", false, "", &rootTaskId)
+	})
+
+	t.Run("create task: with after and finalizer", func(t *testing.T) {
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		finalizerId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(rootTaskId, sql))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, rootTaskId))
+
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTaskId}))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
+
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(finalizerId, sql).WithFinalize(rootTaskId))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, finalizerId))
+
+		assertions.AssertThat(t, objectassert.Task(t, rootTaskId).
+			HasTaskRelations(sdk.TaskRelations{
+				Predecessors:  []sdk.SchemaObjectIdentifier{},
+				FinalizerTask: &finalizerId,
+			}),
+		)
 	})
 
 	t.Run("create dag of tasks", func(t *testing.T) {
@@ -306,6 +347,35 @@ func TestInt_Tasks(t *testing.T) {
 		assertTask(t, task, id, testClientHelper().Ids.WarehouseId().Name())
 	})
 
+	t.Run("create or alter: complete", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		err := client.Tasks.CreateOrAlter(ctx, sdk.NewCreateOrAlterTaskRequest(id, sql).
+			WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(testClientHelper().Ids.WarehouseId())).
+			WithSchedule("10 MINUTES").
+			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
+			WithAllowOverlappingExecution(true).
+			WithUserTaskTimeoutMs(10).
+			WithSessionParameters(sdk.SessionParameters{
+				Autocommit: sdk.Bool(true),
+			}).
+			WithSuspendTaskAfterNumFailures(15).
+			WithComment("some_comment").
+			WithTaskAutoRetryAttempts(15).
+			WithWhen(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`),
+		)
+		require.NoError(t, err)
+
+		assertions.AssertThat(t, objectassert.Task(t, id).
+			HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
+			HasSchedule("10 MINUTES").
+			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
+			HasAllowOverlappingExecution(true).
+			HasCondition(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`).
+			HasComment("some_comment").
+			HasTaskRelations(sdk.TaskRelations{}),
+		)
+	})
+
 	t.Run("drop task: existing", func(t *testing.T) {
 		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(taskCleanup)
@@ -326,23 +396,47 @@ func TestInt_Tasks(t *testing.T) {
 		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(taskCleanup)
 
-		alterRequest := sdk.NewAlterTaskRequest(task.ID()).WithSet(*sdk.NewTaskSetRequest().WithComment("new comment").WithUserTaskTimeoutMs(1000))
-		err := client.Tasks.Alter(ctx, alterRequest)
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSet(*sdk.NewTaskSetRequest().
+			// TODO: Cannot set warehouse due to Snowflake error
+			//WithWarehouse(testClientHelper().Ids.WarehouseId()).
+			WithSchedule("10 MINUTE").
+			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
+			WithAllowOverlappingExecution(true).
+			WithUserTaskTimeoutMs(1000).
+			WithSuspendTaskAfterNumFailures(100).
+			WithComment("new comment").
+			WithTaskAutoRetryAttempts(10).
+			WithUserTaskMinimumTriggerIntervalInSeconds(15),
+		))
 		require.NoError(t, err)
 
-		alteredTask, err := client.Tasks.ShowByID(ctx, task.ID())
+		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
+			//HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
+			HasSchedule("10 MINUTE").
+			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
+			HasAllowOverlappingExecution(true).
+			HasComment("new comment"),
+		)
+
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnset(*sdk.NewTaskUnsetRequest().
+			WithWarehouse(true).
+			WithSchedule(true).
+			WithConfig(true).
+			WithAllowOverlappingExecution(true).
+			WithUserTaskTimeoutMs(true).
+			WithSuspendTaskAfterNumFailures(true).
+			WithComment(true).
+			WithTaskAutoRetryAttempts(true).
+			WithUserTaskMinimumTriggerIntervalInSeconds(true),
+		))
 		require.NoError(t, err)
 
-		assert.Equal(t, "new comment", alteredTask.Comment)
-
-		alterRequest = sdk.NewAlterTaskRequest(task.ID()).WithUnset(*sdk.NewTaskUnsetRequest().WithComment(true).WithUserTaskTimeoutMs(true))
-		err = client.Tasks.Alter(ctx, alterRequest)
-		require.NoError(t, err)
-
-		alteredTask, err = client.Tasks.ShowByID(ctx, task.ID())
-		require.NoError(t, err)
-
-		assert.Equal(t, "", alteredTask.Comment)
+		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
+			HasSchedule("").
+			HasConfig("").
+			HasAllowOverlappingExecution(false).
+			HasComment(""),
+		)
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
@@ -426,6 +520,38 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Contains(t, task.Predecessors, rootTask.ID())
 	})
 
+	t.Run("alter task: set and unset final task", func(t *testing.T) {
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
+
+		finalTask, finalTaskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(finalTaskCleanup)
+
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasTaskRelations(sdk.TaskRelations{
+				FinalizerTask: nil,
+			}),
+		)
+
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSetFinalize(finalTask.ID()))
+		require.NoError(t, err)
+
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasTaskRelations(sdk.TaskRelations{
+				FinalizerTask: sdk.Pointer(finalTask.ID()),
+			}),
+		)
+
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnsetFinalize(true))
+		require.NoError(t, err)
+
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasTaskRelations(sdk.TaskRelations{
+				FinalizerTask: nil,
+			}),
+		)
+	})
+
 	t.Run("alter task: modify when and as", func(t *testing.T) {
 		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(taskCleanup)
@@ -434,19 +560,18 @@ func TestInt_Tasks(t *testing.T) {
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithModifyAs(newSql))
 		require.NoError(t, err)
 
-		alteredTask, err := client.Tasks.ShowByID(ctx, task.ID())
-		require.NoError(t, err)
-
-		assert.Equal(t, newSql, alteredTask.Definition)
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).HasDefinition(newSql))
 
 		newWhen := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithModifyWhen(newWhen))
 		require.NoError(t, err)
 
-		alteredTask, err = client.Tasks.ShowByID(ctx, task.ID())
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).HasCondition(newWhen))
+
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithRemoveWhen(true))
 		require.NoError(t, err)
 
-		assert.Equal(t, newWhen, alteredTask.Condition)
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).HasCondition(""))
 	})
 
 	// TODO: Change this test (the search is too broad)

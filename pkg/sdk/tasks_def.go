@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"encoding/json"
 	"fmt"
 	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 	"strings"
@@ -22,6 +23,53 @@ func ToTaskState(s string) (TaskState, error) {
 	default:
 		return "", fmt.Errorf("unknown task state: %s", s)
 	}
+}
+
+type TaskRelationsRepresentation struct {
+	Predecessors  []string `json:"Predecessors"`
+	FinalizerTask string   `json:"FinalizerTask"`
+}
+
+func (r *TaskRelationsRepresentation) ToTaskRelations() (TaskRelations, error) {
+	var predecessors []SchemaObjectIdentifier
+	for _, predecessor := range r.Predecessors {
+		id, err := ParseSchemaObjectIdentifier(predecessor)
+		if err != nil {
+			return TaskRelations{}, err
+		}
+		predecessors = append(predecessors, id)
+	}
+
+	taskRelations := TaskRelations{
+		Predecessors: predecessors,
+	}
+
+	if len(r.FinalizerTask) > 0 {
+		finalizerTask, err := ParseSchemaObjectIdentifier(r.FinalizerTask)
+		if err != nil {
+			return TaskRelations{}, err
+		}
+		taskRelations.FinalizerTask = &finalizerTask
+	}
+
+	return taskRelations, nil
+}
+
+type TaskRelations struct {
+	Predecessors  []SchemaObjectIdentifier
+	FinalizerTask *SchemaObjectIdentifier
+}
+
+func ToTaskRelations(s string) (TaskRelations, error) {
+	var taskRelationsRepresentation TaskRelationsRepresentation
+	if err := json.Unmarshal([]byte(s), &taskRelationsRepresentation); err != nil {
+		return TaskRelations{}, err
+	}
+	taskRelations, err := taskRelationsRepresentation.ToTaskRelations()
+	if err != nil {
+		return TaskRelations{}, err
+	}
+	return taskRelations, nil
 }
 
 var taskDbRow = g.DbStruct("taskDBRow").
