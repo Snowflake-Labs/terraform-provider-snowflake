@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -28,14 +27,14 @@ var maskingPolicySchema = map[string]*schema.Schema{
 	"database": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The database in which to create the masking policy.",
+		Description:      blocklistedCharactersFieldDescription("The database in which to create the masking policy."),
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The schema in which to create the masking policy.",
+		Description:      blocklistedCharactersFieldDescription("The schema in which to create the masking policy."),
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
@@ -218,7 +217,7 @@ func CreateMaskingPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		opts.Comment = sdk.String(comment)
 	}
 	if v := d.Get("exempt_other_policies").(string); v != BooleanDefault {
-		parsed, err := strconv.ParseBool(v)
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}

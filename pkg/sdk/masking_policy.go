@@ -8,6 +8,8 @@ import (
 	"log"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ MaskingPolicies = (*maskingPolicies)(nil)
@@ -282,8 +284,8 @@ type maskingPolicyDBRow struct {
 func (row maskingPolicyDBRow) convert() *MaskingPolicy {
 	options, err := ParseMaskingPolicyOptions(row.Options)
 	if err != nil {
-		log.Printf("converting masking policy row: error unmarshaling options: %v", err)
-		log.Printf("setting exempt_other_policies = false")
+		log.Printf("[DEBUG] converting masking policy row: error unmarshaling options: %v", err)
+		log.Printf("[DEBUG] setting exempt_other_policies = false")
 		options.ExemptOtherPolicies = false
 	}
 	return &MaskingPolicy{
@@ -322,13 +324,7 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 	if err != nil {
 		return nil, err
 	}
-
-	for _, maskingPolicy := range maskingPolicies {
-		if maskingPolicy.ID().name == id.Name() {
-			return &maskingPolicy, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return collections.FindFirst(maskingPolicies, func(r MaskingPolicy) bool { return r.Name == id.Name() })
 }
 
 // describeMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-masking-policy.

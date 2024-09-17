@@ -38,16 +38,9 @@ var DescribeMaskingPolicySchema = map[string]*schema.Schema{
 }
 
 func MaskingPolicyDescriptionToSchema(details sdk.MaskingPolicyDetails) map[string]any {
-	signatureElem := make([]map[string]any, len(details.Signature))
-	for i, v := range details.Signature {
-		signatureElem[i] = map[string]any{
-			"name": v.Name,
-			"type": string(v.Type),
-		}
-	}
 	return map[string]any{
 		"name":        details.Name,
-		"signature":   signatureElem,
+		"signature":   MaskingPolicyArgumentsToSchema(details.Signature),
 		"return_type": details.ReturnType,
 		"body":        details.Body,
 	}

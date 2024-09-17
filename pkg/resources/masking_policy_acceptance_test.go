@@ -13,6 +13,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -582,6 +583,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_95_0(t *testing.T) {
 					HasSchemaString(id.SchemaName()).
 					HasCommentString(comment).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "id", helpers.EncodeSnowflakeID(id))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "masking_expression", body)),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.0.column.#", "2")),
@@ -617,6 +619,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_95_0(t *testing.T) {
 							Type: sdk.DataTypeVARCHAR,
 						},
 					}),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "id", id.FullyQualifiedName())),
 					assert.Check(resource.TestCheckNoResourceAttr(resourceName, "masking_expression")),
 				),
 			},
