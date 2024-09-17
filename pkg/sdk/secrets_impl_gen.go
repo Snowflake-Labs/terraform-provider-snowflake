@@ -53,8 +53,8 @@ func (v *secrets) Show(ctx context.Context, request *ShowSecretRequest) ([]Secre
 }
 
 func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	secrets, err := v.Show(ctx, NewShowSecretRequest())
+	request := NewShowSecretRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())})
+	secrets, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
