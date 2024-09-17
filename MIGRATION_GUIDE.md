@@ -14,7 +14,6 @@ New fields:
 #### *(breaking change)* Renamed fields in snowflake_masking_policy resource
 Renamed fields:
   - `masking_expression` to `body`
-  - `signature` to `arguments`
 Please rename these fields in your configuration files. State will be migrated automatically.
 
 #### *(breaking change)* Removed fields from snowflake_masking_policy resource
@@ -23,8 +22,27 @@ Removed fields:
 - `if_not_exists`
 The value of these field will be removed from the state automatically.
 
-#### *(breaking change)* Adjusted behavior of arguments/signature
-Now, arguments are stored without nested `column` field. Please adjust that in your configs. State is migrated automatically.
+#### *(breaking change)* Adjusted schema of arguments/signature
+The field `signature` is renamed to `arguments` to be consistent with other resources.
+Now, arguments are stored without nested `column` field. Please adjust that in your configs, like in the example below. State is migrated automatically.
+
+The old configuration looks like this:
+```
+  signature {
+    column {
+      name = "val"
+      type = "VARCHAR"
+    }
+  }
+```
+
+The new configuration looks like this:
+```
+  argument {
+    name = "val"
+    type = "VARCHAR"
+  }
+```
 
 #### *(breaking change)* Identifiers related changes
 During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
@@ -63,11 +81,32 @@ New fields:
 #### *(breaking change)* Renamed fields in snowflake_row_access_policy resource
 Renamed fields:
   - `row_access_expression` to `body`
-  - `signature` to `arguments`
 Please rename these fields in your configuration files. State will be migrated automatically.
 
-#### *(breaking change)* Adjusted behavior of arguments/signature
+#### *(breaking change)* Adjusted schema of arguments/signature
+The field `signature` is renamed to `arguments` to be consistent with other resources.
 Now, arguments are stored as a list, instead of a map. Please adjust that in your configs. State is migrated automatically. Also, this means that order of the items matters and may be adjusted.
+
+
+The old configuration looks like this:
+```
+  signature = {
+    A = "VARCHAR",
+    B = "VARCHAR"
+  }
+```
+
+The new configuration looks like this:
+```
+  argument {
+    name = "A"
+    type = "VARCHAR"
+  }
+  argument {
+    name = "B"
+    type = "VARCHAR"
+  }
+```
 
 Argument names are now case sensitive. All policies created previously in the provider have upper case argument names. If you used lower case before, please adjust your configs. Values in the state will be migrated to uppercase automatically.
 
