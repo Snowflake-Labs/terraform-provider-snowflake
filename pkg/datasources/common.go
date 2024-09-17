@@ -5,7 +5,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-
 func handleLike(d *schema.ResourceData, setField **sdk.Like) {
 	if likePattern, ok := d.GetOk("like"); ok {
 		*setField = &sdk.Like{
