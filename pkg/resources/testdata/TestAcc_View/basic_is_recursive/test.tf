@@ -6,7 +6,7 @@ resource "snowflake_view" "test" {
   is_recursive = var.is_recursive
 
   dynamic "column" {
-    for_each = var.columns
+    for_each = var.column
     content {
       column_name = column.value["column_name"]
     }

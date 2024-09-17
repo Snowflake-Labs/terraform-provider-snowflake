@@ -27,11 +27,11 @@ func TestAcc_RowAccessPolicies(t *testing.T) {
 	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
 		{
 			Name: "a",
-			Type: string(sdk.DataTypeVARCHAR),
+			Type: sdk.DataTypeVARCHAR,
 		},
 		{
 			Name: "b",
-			Type: string(sdk.DataTypeVARCHAR),
+			Type: sdk.DataTypeVARCHAR,
 		},
 	}, body, id.DatabaseName(), id.Name(), id.SchemaName()).WithComment("foo")
 
@@ -64,7 +64,11 @@ func TestAcc_RowAccessPolicies(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.0.describe_output.0.body", "case when current_role() in ('ANALYST') then true else false end")),
 					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.0.describe_output.0.name", id.Name())),
 					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.0.describe_output.0.return_type", "BOOLEAN")),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.0.describe_output.0.signature", "(a VARCHAR, b VARCHAR)")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.0.describe_output.0.signature.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.0.describe_output.0.signature.0.name", "a")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.0.describe_output.0.signature.0.type", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.0.describe_output.0.signature.1.name", "b")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.0.describe_output.0.signature.1.type", string(sdk.DataTypeVARCHAR))),
 				),
 			},
 			{
@@ -107,7 +111,7 @@ func TestAcc_RowAccessPolicies_Filtering(t *testing.T) {
 		"arguments": config.SetVariable(
 			config.MapVariable(map[string]config.Variable{
 				"name": config.StringVariable("a"),
-				"type": config.StringVariable("VARCHAR"),
+				"type": config.StringVariable(string(sdk.DataTypeVARCHAR)),
 			}),
 		),
 		"body": config.StringVariable("case when current_role() in ('ANALYST') then true else false end"),

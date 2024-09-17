@@ -5,7 +5,7 @@ resource "snowflake_view" "test" {
   statement = var.statement
 
   dynamic "column" {
-    for_each = var.columns
+    for_each = var.column
     content {
       column_name = column.value["column_name"]
     }

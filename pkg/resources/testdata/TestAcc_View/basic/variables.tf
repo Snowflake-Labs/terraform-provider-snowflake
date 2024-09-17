@@ -14,6 +14,6 @@ variable "statement" {
   type = string
 }
 
-variable "columns" {
+variable "column" {
   type = set(map(string))
 }

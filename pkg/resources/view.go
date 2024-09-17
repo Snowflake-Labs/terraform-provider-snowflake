@@ -194,7 +194,8 @@ var viewSchema = map[string]*schema.Schema{
 				},
 			},
 		},
-		Description: "If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. (You do not need to specify the data types of the columns.)",
+		Description:      "If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. You do not need to specify the data types of the columns. If this field is not specified, columns are inferred from the `statement` field by Snowflake.",
+		DiffSuppressFunc: IgnoreNewEmptyListOrSubfields("column_name"),
 	},
 	"comment": {
 		Type:        schema.TypeString,
