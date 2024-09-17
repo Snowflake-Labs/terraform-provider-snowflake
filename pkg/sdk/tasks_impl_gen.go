@@ -22,6 +22,11 @@ func (v *tasks) Create(ctx context.Context, request *CreateTaskRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *tasks) CreateOrAlter(ctx context.Context, request *CreateOrAlterTaskRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *tasks) Clone(ctx context.Context, request *CloneTaskRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
@@ -48,7 +53,15 @@ func (v *tasks) Show(ctx context.Context, request *ShowTaskRequest) ([]Task, err
 }
 
 func (v *tasks) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
-	return v.Describe(ctx, id)
+	tasks, err := v.Show(ctx, NewShowTaskRequest().WithIn(In{
+		Schema: id.SchemaId(),
+	}).WithLike(Like{
+		Pattern: String(id.Name()),
+	}))
+	if err != nil {
+		return nil, err
+	}
+	return collections.FindFirst(tasks, func(r Task) bool { return r.Name == id.Name() })
 }
 
 func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
@@ -79,8 +92,8 @@ func (v *tasks) SuspendRootTasks(ctx context.Context, taskId SchemaObjectIdentif
 
 	for _, rootTask := range rootTasks {
 		// If a root task is started, then it needs to be suspended before the child tasks can be created
-		if rootTask.IsStarted() {
-			err := v.client.Tasks.Alter(ctx, NewAlterTaskRequest(rootTask.ID()).WithSuspend(Bool(true)))
+		if rootTask.State == TaskStateStarted {
+			err := v.client.Tasks.Alter(ctx, NewAlterTaskRequest(rootTask.ID()).WithSuspend(true))
 			if err != nil {
 				log.Printf("[WARN] failed to suspend task %s", rootTask.ID().FullyQualifiedName())
 				suspendErrs = append(suspendErrs, err)
@@ -100,7 +113,7 @@ func (v *tasks) SuspendRootTasks(ctx context.Context, taskId SchemaObjectIdentif
 func (v *tasks) ResumeTasks(ctx context.Context, ids []SchemaObjectIdentifier) error {
 	resumeErrs := make([]error, 0)
 	for _, id := range ids {
-		err := v.client.Tasks.Alter(ctx, NewAlterTaskRequest(id).WithResume(Bool(true)))
+		err := v.client.Tasks.Alter(ctx, NewAlterTaskRequest(id).WithResume(true))
 		if err != nil {
 			log.Printf("[WARN] failed to resume task %s", id.FullyQualifiedName())
 			resumeErrs = append(resumeErrs, err)
@@ -148,21 +161,48 @@ func GetRootTasks(v Tasks, ctx context.Context, id SchemaObjectIdentifier) ([]Ta
 
 func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
 	opts := &CreateTaskOptions{
-		OrReplace:   r.OrReplace,
-		IfNotExists: r.IfNotExists,
-		name:        r.name,
+		OrReplace:                               r.OrReplace,
+		IfNotExists:                             r.IfNotExists,
+		name:                                    r.name,
+		Schedule:                                r.Schedule,
+		Config:                                  r.Config,
+		AllowOverlappingExecution:               r.AllowOverlappingExecution,
+		SessionParameters:                       r.SessionParameters,
+		UserTaskTimeoutMs:                       r.UserTaskTimeoutMs,
+		SuspendTaskAfterNumFailures:             r.SuspendTaskAfterNumFailures,
+		ErrorIntegration:                        r.ErrorIntegration,
+		Comment:                                 r.Comment,
+		Finalize:                                r.Finalize,
+		TaskAutoRetryAttempts:                   r.TaskAutoRetryAttempts,
+		Tag:                                     r.Tag,
+		UserTaskMinimumTriggerIntervalInSeconds: r.UserTaskMinimumTriggerIntervalInSeconds,
+		After:                                   r.After,
+		When:                                    r.When,
+		sql:                                     r.sql,
+	}
+	if r.Warehouse != nil {
+		opts.Warehouse = &CreateTaskWarehouse{
+			Warehouse:                           r.Warehouse.Warehouse,
+			UserTaskManagedInitialWarehouseSize: r.Warehouse.UserTaskManagedInitialWarehouseSize,
+		}
+	}
+	return opts
+}
 
+func (r *CreateOrAlterTaskRequest) toOpts() *CreateOrAlterTaskOptions {
+	opts := &CreateOrAlterTaskOptions{
+		name:                        r.name,
 		Schedule:                    r.Schedule,
 		Config:                      r.Config,
 		AllowOverlappingExecution:   r.AllowOverlappingExecution,
-		SessionParameters:           r.SessionParameters,
 		UserTaskTimeoutMs:           r.UserTaskTimeoutMs,
+		SessionParameters:           r.SessionParameters,
 		SuspendTaskAfterNumFailures: r.SuspendTaskAfterNumFailures,
 		ErrorIntegration:            r.ErrorIntegration,
-		CopyGrants:                  r.CopyGrants,
 		Comment:                     r.Comment,
+		Finalize:                    r.Finalize,
+		TaskAutoRetryAttempts:       r.TaskAutoRetryAttempts,
 		After:                       r.After,
-		Tag:                         r.Tag,
 		When:                        r.When,
 		sql:                         r.sql,
 	}
@@ -194,36 +234,43 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 		RemoveAfter: r.RemoveAfter,
 		AddAfter:    r.AddAfter,
 
-		SetTags:    r.SetTags,
-		UnsetTags:  r.UnsetTags,
-		ModifyAs:   r.ModifyAs,
-		ModifyWhen: r.ModifyWhen,
+		SetTags:       r.SetTags,
+		UnsetTags:     r.UnsetTags,
+		SetFinalize:   r.SetFinalize,
+		UnsetFinalize: r.UnsetFinalize,
+		ModifyAs:      r.ModifyAs,
+		ModifyWhen:    r.ModifyWhen,
+		RemoveWhen:    r.RemoveWhen,
 	}
 	if r.Set != nil {
 		opts.Set = &TaskSet{
-			Warehouse:                           r.Set.Warehouse,
-			UserTaskManagedInitialWarehouseSize: r.Set.UserTaskManagedInitialWarehouseSize,
-			Schedule:                            r.Set.Schedule,
-			Config:                              r.Set.Config,
-			AllowOverlappingExecution:           r.Set.AllowOverlappingExecution,
-			UserTaskTimeoutMs:                   r.Set.UserTaskTimeoutMs,
-			SuspendTaskAfterNumFailures:         r.Set.SuspendTaskAfterNumFailures,
-			ErrorIntegration:                    r.Set.ErrorIntegration,
-			Comment:                             r.Set.Comment,
-			SessionParameters:                   r.Set.SessionParameters,
+			Warehouse:                               r.Set.Warehouse,
+			UserTaskManagedInitialWarehouseSize:     r.Set.UserTaskManagedInitialWarehouseSize,
+			Schedule:                                r.Set.Schedule,
+			Config:                                  r.Set.Config,
+			AllowOverlappingExecution:               r.Set.AllowOverlappingExecution,
+			UserTaskTimeoutMs:                       r.Set.UserTaskTimeoutMs,
+			SuspendTaskAfterNumFailures:             r.Set.SuspendTaskAfterNumFailures,
+			ErrorIntegration:                        r.Set.ErrorIntegration,
+			Comment:                                 r.Set.Comment,
+			SessionParameters:                       r.Set.SessionParameters,
+			TaskAutoRetryAttempts:                   r.Set.TaskAutoRetryAttempts,
+			UserTaskMinimumTriggerIntervalInSeconds: r.Set.UserTaskMinimumTriggerIntervalInSeconds,
 		}
 	}
 	if r.Unset != nil {
 		opts.Unset = &TaskUnset{
-			Warehouse:                   r.Unset.Warehouse,
-			Schedule:                    r.Unset.Schedule,
-			Config:                      r.Unset.Config,
-			AllowOverlappingExecution:   r.Unset.AllowOverlappingExecution,
-			UserTaskTimeoutMs:           r.Unset.UserTaskTimeoutMs,
-			SuspendTaskAfterNumFailures: r.Unset.SuspendTaskAfterNumFailures,
-			ErrorIntegration:            r.Unset.ErrorIntegration,
-			Comment:                     r.Unset.Comment,
-			SessionParametersUnset:      r.Unset.SessionParametersUnset,
+			Warehouse:                               r.Unset.Warehouse,
+			Schedule:                                r.Unset.Schedule,
+			Config:                                  r.Unset.Config,
+			AllowOverlappingExecution:               r.Unset.AllowOverlappingExecution,
+			UserTaskTimeoutMs:                       r.Unset.UserTaskTimeoutMs,
+			SuspendTaskAfterNumFailures:             r.Unset.SuspendTaskAfterNumFailures,
+			ErrorIntegration:                        r.Unset.ErrorIntegration,
+			Comment:                                 r.Unset.Comment,
+			TaskAutoRetryAttempts:                   r.Unset.TaskAutoRetryAttempts,
+			UserTaskMinimumTriggerIntervalInSeconds: r.Unset.UserTaskMinimumTriggerIntervalInSeconds,
+			SessionParametersUnset:                  r.Unset.SessionParametersUnset,
 		}
 	}
 	return opts
@@ -251,16 +298,16 @@ func (r *ShowTaskRequest) toOpts() *ShowTaskOptions {
 
 func (r taskDBRow) convert() *Task {
 	task := Task{
-		CreatedOn:    r.CreatedOn,
-		Name:         r.Name,
-		DatabaseName: r.DatabaseName,
-		SchemaName:   r.SchemaName,
-	}
-	if r.Id.Valid {
-		task.Id = r.Id.String
-	}
-	if r.Owner.Valid {
-		task.Owner = r.Owner.String
+		CreatedOn:                 r.CreatedOn,
+		Id:                        r.Id,
+		Name:                      r.Name,
+		DatabaseName:              r.DatabaseName,
+		SchemaName:                r.SchemaName,
+		Owner:                     r.Owner,
+		Definition:                r.Definition,
+		AllowOverlappingExecution: r.AllowOverlappingExecution == "true",
+		OwnerRoleType:             r.OwnerRoleType,
+		TaskRelations:             r.TaskRelations,
 	}
 	if r.Comment.Valid {
 		task.Comment = r.Comment.String
@@ -271,8 +318,8 @@ func (r taskDBRow) convert() *Task {
 	if r.Schedule.Valid {
 		task.Schedule = r.Schedule.String
 	}
-	if r.Predecessors.Valid {
-		names, err := getPredecessors(r.Predecessors.String)
+	if len(r.Predecessors) > 0 {
+		names, err := getPredecessors(r.Predecessors)
 		ids := make([]SchemaObjectIdentifier, len(names))
 		if err == nil {
 			for i, name := range names {
@@ -281,21 +328,16 @@ func (r taskDBRow) convert() *Task {
 		}
 		task.Predecessors = ids
 	}
-	if r.State.Valid {
-		if strings.ToLower(r.State.String) == string(TaskStateStarted) {
-			task.State = TaskStateStarted
+	if len(r.State) > 0 {
+		taskState, err := ToTaskState(r.State)
+		if err != nil {
+			log.Printf("[DEBUG] failed to convert to task state: %v", err)
 		} else {
-			task.State = TaskStateSuspended
+			task.State = taskState
 		}
-	}
-	if r.Definition.Valid {
-		task.Definition = r.Definition.String
 	}
 	if r.Condition.Valid {
 		task.Condition = r.Condition.String
-	}
-	if r.AllowOverlappingExecution.Valid {
-		task.AllowOverlappingExecution = r.AllowOverlappingExecution.String == "true"
 	}
 	if r.ErrorIntegration.Valid && r.ErrorIntegration.String != "null" {
 		task.ErrorIntegration = r.ErrorIntegration.String
@@ -306,18 +348,19 @@ func (r taskDBRow) convert() *Task {
 	if r.LastSuspendedOn.Valid {
 		task.LastSuspendedOn = r.LastSuspendedOn.String
 	}
-	if r.OwnerRoleType.Valid {
-		task.OwnerRoleType = r.OwnerRoleType.String
-	}
 	if r.Config.Valid {
 		task.Config = r.Config.String
 	}
 	if r.Budget.Valid {
 		task.Budget = r.Budget.String
 	}
+	if r.LastSuspendedReason.Valid {
+		task.LastSuspendedReason = r.LastSuspendedReason.String
+	}
 	return &task
 }
 
+// TODO: Remove and use Task.TaskRelations instead
 func getPredecessors(predecessors string) ([]string, error) {
 	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
 	// The list is formatted, e.g.:

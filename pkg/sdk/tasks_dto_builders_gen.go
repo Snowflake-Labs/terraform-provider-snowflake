@@ -14,68 +14,68 @@ func NewCreateTaskRequest(
 	return &s
 }
 
-func (s *CreateTaskRequest) WithOrReplace(OrReplace *bool) *CreateTaskRequest {
-	s.OrReplace = OrReplace
+func (s *CreateTaskRequest) WithOrReplace(OrReplace bool) *CreateTaskRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateTaskRequest) WithIfNotExists(IfNotExists *bool) *CreateTaskRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateTaskRequest) WithIfNotExists(IfNotExists bool) *CreateTaskRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateTaskRequest) WithWarehouse(Warehouse *CreateTaskWarehouseRequest) *CreateTaskRequest {
-	s.Warehouse = Warehouse
+func (s *CreateTaskRequest) WithWarehouse(Warehouse CreateTaskWarehouseRequest) *CreateTaskRequest {
+	s.Warehouse = &Warehouse
 	return s
 }
 
-func (s *CreateTaskRequest) WithSchedule(Schedule *string) *CreateTaskRequest {
-	s.Schedule = Schedule
+func (s *CreateTaskRequest) WithSchedule(Schedule string) *CreateTaskRequest {
+	s.Schedule = &Schedule
 	return s
 }
 
-func (s *CreateTaskRequest) WithConfig(Config *string) *CreateTaskRequest {
-	s.Config = Config
+func (s *CreateTaskRequest) WithConfig(Config string) *CreateTaskRequest {
+	s.Config = &Config
 	return s
 }
 
-func (s *CreateTaskRequest) WithAllowOverlappingExecution(AllowOverlappingExecution *bool) *CreateTaskRequest {
-	s.AllowOverlappingExecution = AllowOverlappingExecution
+func (s *CreateTaskRequest) WithAllowOverlappingExecution(AllowOverlappingExecution bool) *CreateTaskRequest {
+	s.AllowOverlappingExecution = &AllowOverlappingExecution
 	return s
 }
 
-func (s *CreateTaskRequest) WithSessionParameters(SessionParameters *SessionParameters) *CreateTaskRequest {
-	s.SessionParameters = SessionParameters
+func (s *CreateTaskRequest) WithSessionParameters(SessionParameters SessionParameters) *CreateTaskRequest {
+	s.SessionParameters = &SessionParameters
 	return s
 }
 
-func (s *CreateTaskRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs *int) *CreateTaskRequest {
-	s.UserTaskTimeoutMs = UserTaskTimeoutMs
+func (s *CreateTaskRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs int) *CreateTaskRequest {
+	s.UserTaskTimeoutMs = &UserTaskTimeoutMs
 	return s
 }
 
-func (s *CreateTaskRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures *int) *CreateTaskRequest {
-	s.SuspendTaskAfterNumFailures = SuspendTaskAfterNumFailures
+func (s *CreateTaskRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures int) *CreateTaskRequest {
+	s.SuspendTaskAfterNumFailures = &SuspendTaskAfterNumFailures
 	return s
 }
 
-func (s *CreateTaskRequest) WithErrorIntegration(ErrorIntegration *string) *CreateTaskRequest {
-	s.ErrorIntegration = ErrorIntegration
+func (s *CreateTaskRequest) WithErrorIntegration(ErrorIntegration string) *CreateTaskRequest {
+	s.ErrorIntegration = &ErrorIntegration
 	return s
 }
 
-func (s *CreateTaskRequest) WithCopyGrants(CopyGrants *bool) *CreateTaskRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateTaskRequest) WithComment(Comment string) *CreateTaskRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func (s *CreateTaskRequest) WithComment(Comment *string) *CreateTaskRequest {
-	s.Comment = Comment
+func (s *CreateTaskRequest) WithFinalize(Finalize SchemaObjectIdentifier) *CreateTaskRequest {
+	s.Finalize = &Finalize
 	return s
 }
 
-func (s *CreateTaskRequest) WithAfter(After []SchemaObjectIdentifier) *CreateTaskRequest {
-	s.After = After
+func (s *CreateTaskRequest) WithTaskAutoRetryAttempts(TaskAutoRetryAttempts int) *CreateTaskRequest {
+	s.TaskAutoRetryAttempts = &TaskAutoRetryAttempts
 	return s
 }
 
@@ -84,8 +84,18 @@ func (s *CreateTaskRequest) WithTag(Tag []TagAssociation) *CreateTaskRequest {
 	return s
 }
 
-func (s *CreateTaskRequest) WithWhen(When *string) *CreateTaskRequest {
-	s.When = When
+func (s *CreateTaskRequest) WithUserTaskMinimumTriggerIntervalInSeconds(UserTaskMinimumTriggerIntervalInSeconds int) *CreateTaskRequest {
+	s.UserTaskMinimumTriggerIntervalInSeconds = &UserTaskMinimumTriggerIntervalInSeconds
+	return s
+}
+
+func (s *CreateTaskRequest) WithAfter(After []SchemaObjectIdentifier) *CreateTaskRequest {
+	s.After = After
+	return s
+}
+
+func (s *CreateTaskRequest) WithWhen(When string) *CreateTaskRequest {
+	s.When = &When
 	return s
 }
 
@@ -93,13 +103,88 @@ func NewCreateTaskWarehouseRequest() *CreateTaskWarehouseRequest {
 	return &CreateTaskWarehouseRequest{}
 }
 
-func (s *CreateTaskWarehouseRequest) WithWarehouse(Warehouse *AccountObjectIdentifier) *CreateTaskWarehouseRequest {
-	s.Warehouse = Warehouse
+func (s *CreateTaskWarehouseRequest) WithWarehouse(Warehouse AccountObjectIdentifier) *CreateTaskWarehouseRequest {
+	s.Warehouse = &Warehouse
 	return s
 }
 
-func (s *CreateTaskWarehouseRequest) WithUserTaskManagedInitialWarehouseSize(UserTaskManagedInitialWarehouseSize *WarehouseSize) *CreateTaskWarehouseRequest {
-	s.UserTaskManagedInitialWarehouseSize = UserTaskManagedInitialWarehouseSize
+func (s *CreateTaskWarehouseRequest) WithUserTaskManagedInitialWarehouseSize(UserTaskManagedInitialWarehouseSize WarehouseSize) *CreateTaskWarehouseRequest {
+	s.UserTaskManagedInitialWarehouseSize = &UserTaskManagedInitialWarehouseSize
+	return s
+}
+
+func NewCreateOrAlterTaskRequest(
+	name SchemaObjectIdentifier,
+	sql string,
+) *CreateOrAlterTaskRequest {
+	s := CreateOrAlterTaskRequest{}
+	s.name = name
+	s.sql = sql
+	return &s
+}
+
+func (s *CreateOrAlterTaskRequest) WithWarehouse(Warehouse CreateTaskWarehouseRequest) *CreateOrAlterTaskRequest {
+	s.Warehouse = &Warehouse
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithSchedule(Schedule string) *CreateOrAlterTaskRequest {
+	s.Schedule = &Schedule
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithConfig(Config string) *CreateOrAlterTaskRequest {
+	s.Config = &Config
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithAllowOverlappingExecution(AllowOverlappingExecution bool) *CreateOrAlterTaskRequest {
+	s.AllowOverlappingExecution = &AllowOverlappingExecution
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs int) *CreateOrAlterTaskRequest {
+	s.UserTaskTimeoutMs = &UserTaskTimeoutMs
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithSessionParameters(SessionParameters SessionParameters) *CreateOrAlterTaskRequest {
+	s.SessionParameters = &SessionParameters
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures int) *CreateOrAlterTaskRequest {
+	s.SuspendTaskAfterNumFailures = &SuspendTaskAfterNumFailures
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithErrorIntegration(ErrorIntegration string) *CreateOrAlterTaskRequest {
+	s.ErrorIntegration = &ErrorIntegration
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithComment(Comment string) *CreateOrAlterTaskRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithFinalize(Finalize SchemaObjectIdentifier) *CreateOrAlterTaskRequest {
+	s.Finalize = &Finalize
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithTaskAutoRetryAttempts(TaskAutoRetryAttempts int) *CreateOrAlterTaskRequest {
+	s.TaskAutoRetryAttempts = &TaskAutoRetryAttempts
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithAfter(After []SchemaObjectIdentifier) *CreateOrAlterTaskRequest {
+	s.After = After
+	return s
+}
+
+func (s *CreateOrAlterTaskRequest) WithWhen(When string) *CreateOrAlterTaskRequest {
+	s.When = &When
 	return s
 }
 
@@ -113,13 +198,13 @@ func NewCloneTaskRequest(
 	return &s
 }
 
-func (s *CloneTaskRequest) WithOrReplace(OrReplace *bool) *CloneTaskRequest {
-	s.OrReplace = OrReplace
+func (s *CloneTaskRequest) WithOrReplace(OrReplace bool) *CloneTaskRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CloneTaskRequest) WithCopyGrants(CopyGrants *bool) *CloneTaskRequest {
-	s.CopyGrants = CopyGrants
+func (s *CloneTaskRequest) WithCopyGrants(CopyGrants bool) *CloneTaskRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
@@ -131,18 +216,18 @@ func NewAlterTaskRequest(
 	return &s
 }
 
-func (s *AlterTaskRequest) WithIfExists(IfExists *bool) *AlterTaskRequest {
-	s.IfExists = IfExists
+func (s *AlterTaskRequest) WithIfExists(IfExists bool) *AlterTaskRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
-func (s *AlterTaskRequest) WithResume(Resume *bool) *AlterTaskRequest {
-	s.Resume = Resume
+func (s *AlterTaskRequest) WithResume(Resume bool) *AlterTaskRequest {
+	s.Resume = &Resume
 	return s
 }
 
-func (s *AlterTaskRequest) WithSuspend(Suspend *bool) *AlterTaskRequest {
-	s.Suspend = Suspend
+func (s *AlterTaskRequest) WithSuspend(Suspend bool) *AlterTaskRequest {
+	s.Suspend = &Suspend
 	return s
 }
 
@@ -156,13 +241,13 @@ func (s *AlterTaskRequest) WithAddAfter(AddAfter []SchemaObjectIdentifier) *Alte
 	return s
 }
 
-func (s *AlterTaskRequest) WithSet(Set *TaskSetRequest) *AlterTaskRequest {
-	s.Set = Set
+func (s *AlterTaskRequest) WithSet(Set TaskSetRequest) *AlterTaskRequest {
+	s.Set = &Set
 	return s
 }
 
-func (s *AlterTaskRequest) WithUnset(Unset *TaskUnsetRequest) *AlterTaskRequest {
-	s.Unset = Unset
+func (s *AlterTaskRequest) WithUnset(Unset TaskUnsetRequest) *AlterTaskRequest {
+	s.Unset = &Unset
 	return s
 }
 
@@ -176,13 +261,28 @@ func (s *AlterTaskRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterTas
 	return s
 }
 
-func (s *AlterTaskRequest) WithModifyAs(ModifyAs *string) *AlterTaskRequest {
-	s.ModifyAs = ModifyAs
+func (s *AlterTaskRequest) WithSetFinalize(SetFinalize SchemaObjectIdentifier) *AlterTaskRequest {
+	s.SetFinalize = &SetFinalize
 	return s
 }
 
-func (s *AlterTaskRequest) WithModifyWhen(ModifyWhen *string) *AlterTaskRequest {
-	s.ModifyWhen = ModifyWhen
+func (s *AlterTaskRequest) WithUnsetFinalize(UnsetFinalize bool) *AlterTaskRequest {
+	s.UnsetFinalize = &UnsetFinalize
+	return s
+}
+
+func (s *AlterTaskRequest) WithModifyAs(ModifyAs string) *AlterTaskRequest {
+	s.ModifyAs = &ModifyAs
+	return s
+}
+
+func (s *AlterTaskRequest) WithModifyWhen(ModifyWhen string) *AlterTaskRequest {
+	s.ModifyWhen = &ModifyWhen
+	return s
+}
+
+func (s *AlterTaskRequest) WithRemoveWhen(RemoveWhen bool) *AlterTaskRequest {
+	s.RemoveWhen = &RemoveWhen
 	return s
 }
 
@@ -190,53 +290,63 @@ func NewTaskSetRequest() *TaskSetRequest {
 	return &TaskSetRequest{}
 }
 
-func (s *TaskSetRequest) WithWarehouse(Warehouse *AccountObjectIdentifier) *TaskSetRequest {
-	s.Warehouse = Warehouse
+func (s *TaskSetRequest) WithWarehouse(Warehouse AccountObjectIdentifier) *TaskSetRequest {
+	s.Warehouse = &Warehouse
 	return s
 }
 
-func (s *TaskSetRequest) WithUserTaskManagedInitialWarehouseSize(UserTaskManagedInitialWarehouseSize *WarehouseSize) *TaskSetRequest {
-	s.UserTaskManagedInitialWarehouseSize = UserTaskManagedInitialWarehouseSize
+func (s *TaskSetRequest) WithUserTaskManagedInitialWarehouseSize(UserTaskManagedInitialWarehouseSize WarehouseSize) *TaskSetRequest {
+	s.UserTaskManagedInitialWarehouseSize = &UserTaskManagedInitialWarehouseSize
 	return s
 }
 
-func (s *TaskSetRequest) WithSchedule(Schedule *string) *TaskSetRequest {
-	s.Schedule = Schedule
+func (s *TaskSetRequest) WithSchedule(Schedule string) *TaskSetRequest {
+	s.Schedule = &Schedule
 	return s
 }
 
-func (s *TaskSetRequest) WithConfig(Config *string) *TaskSetRequest {
-	s.Config = Config
+func (s *TaskSetRequest) WithConfig(Config string) *TaskSetRequest {
+	s.Config = &Config
 	return s
 }
 
-func (s *TaskSetRequest) WithAllowOverlappingExecution(AllowOverlappingExecution *bool) *TaskSetRequest {
-	s.AllowOverlappingExecution = AllowOverlappingExecution
+func (s *TaskSetRequest) WithAllowOverlappingExecution(AllowOverlappingExecution bool) *TaskSetRequest {
+	s.AllowOverlappingExecution = &AllowOverlappingExecution
 	return s
 }
 
-func (s *TaskSetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs *int) *TaskSetRequest {
-	s.UserTaskTimeoutMs = UserTaskTimeoutMs
+func (s *TaskSetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs int) *TaskSetRequest {
+	s.UserTaskTimeoutMs = &UserTaskTimeoutMs
 	return s
 }
 
-func (s *TaskSetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures *int) *TaskSetRequest {
-	s.SuspendTaskAfterNumFailures = SuspendTaskAfterNumFailures
+func (s *TaskSetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures int) *TaskSetRequest {
+	s.SuspendTaskAfterNumFailures = &SuspendTaskAfterNumFailures
 	return s
 }
 
-func (s *TaskSetRequest) WithErrorIntegration(ErrorIntegration *string) *TaskSetRequest {
-	s.ErrorIntegration = ErrorIntegration
+func (s *TaskSetRequest) WithErrorIntegration(ErrorIntegration string) *TaskSetRequest {
+	s.ErrorIntegration = &ErrorIntegration
 	return s
 }
 
-func (s *TaskSetRequest) WithComment(Comment *string) *TaskSetRequest {
-	s.Comment = Comment
+func (s *TaskSetRequest) WithComment(Comment string) *TaskSetRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func (s *TaskSetRequest) WithSessionParameters(SessionParameters *SessionParameters) *TaskSetRequest {
-	s.SessionParameters = SessionParameters
+func (s *TaskSetRequest) WithSessionParameters(SessionParameters SessionParameters) *TaskSetRequest {
+	s.SessionParameters = &SessionParameters
+	return s
+}
+
+func (s *TaskSetRequest) WithTaskAutoRetryAttempts(TaskAutoRetryAttempts int) *TaskSetRequest {
+	s.TaskAutoRetryAttempts = &TaskAutoRetryAttempts
+	return s
+}
+
+func (s *TaskSetRequest) WithUserTaskMinimumTriggerIntervalInSeconds(UserTaskMinimumTriggerIntervalInSeconds int) *TaskSetRequest {
+	s.UserTaskMinimumTriggerIntervalInSeconds = &UserTaskMinimumTriggerIntervalInSeconds
 	return s
 }
 
@@ -244,48 +354,58 @@ func NewTaskUnsetRequest() *TaskUnsetRequest {
 	return &TaskUnsetRequest{}
 }
 
-func (s *TaskUnsetRequest) WithWarehouse(Warehouse *bool) *TaskUnsetRequest {
-	s.Warehouse = Warehouse
+func (s *TaskUnsetRequest) WithWarehouse(Warehouse bool) *TaskUnsetRequest {
+	s.Warehouse = &Warehouse
 	return s
 }
 
-func (s *TaskUnsetRequest) WithSchedule(Schedule *bool) *TaskUnsetRequest {
-	s.Schedule = Schedule
+func (s *TaskUnsetRequest) WithSchedule(Schedule bool) *TaskUnsetRequest {
+	s.Schedule = &Schedule
 	return s
 }
 
-func (s *TaskUnsetRequest) WithConfig(Config *bool) *TaskUnsetRequest {
-	s.Config = Config
+func (s *TaskUnsetRequest) WithConfig(Config bool) *TaskUnsetRequest {
+	s.Config = &Config
 	return s
 }
 
-func (s *TaskUnsetRequest) WithAllowOverlappingExecution(AllowOverlappingExecution *bool) *TaskUnsetRequest {
-	s.AllowOverlappingExecution = AllowOverlappingExecution
+func (s *TaskUnsetRequest) WithAllowOverlappingExecution(AllowOverlappingExecution bool) *TaskUnsetRequest {
+	s.AllowOverlappingExecution = &AllowOverlappingExecution
 	return s
 }
 
-func (s *TaskUnsetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs *bool) *TaskUnsetRequest {
-	s.UserTaskTimeoutMs = UserTaskTimeoutMs
+func (s *TaskUnsetRequest) WithUserTaskTimeoutMs(UserTaskTimeoutMs bool) *TaskUnsetRequest {
+	s.UserTaskTimeoutMs = &UserTaskTimeoutMs
 	return s
 }
 
-func (s *TaskUnsetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures *bool) *TaskUnsetRequest {
-	s.SuspendTaskAfterNumFailures = SuspendTaskAfterNumFailures
+func (s *TaskUnsetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFailures bool) *TaskUnsetRequest {
+	s.SuspendTaskAfterNumFailures = &SuspendTaskAfterNumFailures
 	return s
 }
 
-func (s *TaskUnsetRequest) WithErrorIntegration(ErrorIntegration *bool) *TaskUnsetRequest {
-	s.ErrorIntegration = ErrorIntegration
+func (s *TaskUnsetRequest) WithErrorIntegration(ErrorIntegration bool) *TaskUnsetRequest {
+	s.ErrorIntegration = &ErrorIntegration
 	return s
 }
 
-func (s *TaskUnsetRequest) WithComment(Comment *bool) *TaskUnsetRequest {
-	s.Comment = Comment
+func (s *TaskUnsetRequest) WithComment(Comment bool) *TaskUnsetRequest {
+	s.Comment = &Comment
 	return s
 }
 
-func (s *TaskUnsetRequest) WithSessionParametersUnset(SessionParametersUnset *SessionParametersUnset) *TaskUnsetRequest {
-	s.SessionParametersUnset = SessionParametersUnset
+func (s *TaskUnsetRequest) WithTaskAutoRetryAttempts(TaskAutoRetryAttempts bool) *TaskUnsetRequest {
+	s.TaskAutoRetryAttempts = &TaskAutoRetryAttempts
+	return s
+}
+
+func (s *TaskUnsetRequest) WithUserTaskMinimumTriggerIntervalInSeconds(UserTaskMinimumTriggerIntervalInSeconds bool) *TaskUnsetRequest {
+	s.UserTaskMinimumTriggerIntervalInSeconds = &UserTaskMinimumTriggerIntervalInSeconds
+	return s
+}
+
+func (s *TaskUnsetRequest) WithSessionParametersUnset(SessionParametersUnset SessionParametersUnset) *TaskUnsetRequest {
+	s.SessionParametersUnset = &SessionParametersUnset
 	return s
 }
 
@@ -297,8 +417,8 @@ func NewDropTaskRequest(
 	return &s
 }
 
-func (s *DropTaskRequest) WithIfExists(IfExists *bool) *DropTaskRequest {
-	s.IfExists = IfExists
+func (s *DropTaskRequest) WithIfExists(IfExists bool) *DropTaskRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
@@ -306,33 +426,33 @@ func NewShowTaskRequest() *ShowTaskRequest {
 	return &ShowTaskRequest{}
 }
 
-func (s *ShowTaskRequest) WithTerse(Terse *bool) *ShowTaskRequest {
-	s.Terse = Terse
+func (s *ShowTaskRequest) WithTerse(Terse bool) *ShowTaskRequest {
+	s.Terse = &Terse
 	return s
 }
 
-func (s *ShowTaskRequest) WithLike(Like *Like) *ShowTaskRequest {
-	s.Like = Like
+func (s *ShowTaskRequest) WithLike(Like Like) *ShowTaskRequest {
+	s.Like = &Like
 	return s
 }
 
-func (s *ShowTaskRequest) WithIn(In *In) *ShowTaskRequest {
-	s.In = In
+func (s *ShowTaskRequest) WithIn(In In) *ShowTaskRequest {
+	s.In = &In
 	return s
 }
 
-func (s *ShowTaskRequest) WithStartsWith(StartsWith *string) *ShowTaskRequest {
-	s.StartsWith = StartsWith
+func (s *ShowTaskRequest) WithStartsWith(StartsWith string) *ShowTaskRequest {
+	s.StartsWith = &StartsWith
 	return s
 }
 
-func (s *ShowTaskRequest) WithRootOnly(RootOnly *bool) *ShowTaskRequest {
-	s.RootOnly = RootOnly
+func (s *ShowTaskRequest) WithRootOnly(RootOnly bool) *ShowTaskRequest {
+	s.RootOnly = &RootOnly
 	return s
 }
 
-func (s *ShowTaskRequest) WithLimit(Limit *LimitFrom) *ShowTaskRequest {
-	s.Limit = Limit
+func (s *ShowTaskRequest) WithLimit(Limit LimitFrom) *ShowTaskRequest {
+	s.Limit = &Limit
 	return s
 }
 
@@ -352,7 +472,7 @@ func NewExecuteTaskRequest(
 	return &s
 }
 
-func (s *ExecuteTaskRequest) WithRetryLast(RetryLast *bool) *ExecuteTaskRequest {
-	s.RetryLast = RetryLast
+func (s *ExecuteTaskRequest) WithRetryLast(RetryLast bool) *ExecuteTaskRequest {
+	s.RetryLast = &RetryLast
 	return s
 }

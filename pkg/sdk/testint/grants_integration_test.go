@@ -1654,7 +1654,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 	})
 
 	t.Run("on task - with ownership", func(t *testing.T) {
-		task, taskCleanup := testClientHelper().Task.CreateTask(t)
+		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(taskCleanup)
 
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(sdk.Bool(true)))
@@ -1699,7 +1699,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Use a previously prepared role to create a task
 		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.ID())
 
-		task, taskCleanup := testClientHelper().Task.CreateTask(t)
+		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(func() {
 			usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.ID())
 			defer usePreviousRole()
@@ -1745,7 +1745,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Use a previously prepared role to create a task
 		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.ID())
 
-		task, taskCleanup := testClientHelper().Task.CreateTask(t)
+		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(taskCleanup)
 
 		err := client.Grants.GrantPrivilegesToAccountRole(
@@ -1801,13 +1801,13 @@ func TestInt_GrantOwnership(t *testing.T) {
 	})
 
 	t.Run("on all tasks - with ownership", func(t *testing.T) {
-		task, taskCleanup := testClientHelper().Task.CreateTask(t)
+		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(taskCleanup)
 
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithResume(sdk.Bool(true)))
 		require.NoError(t, err)
 
-		secondTask, secondTaskCleanup := testClientHelper().Task.CreateTask(t)
+		secondTask, secondTaskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(secondTaskCleanup)
 
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(secondTask.ID()).WithResume(sdk.Bool(true)))
@@ -1873,10 +1873,10 @@ func TestInt_GrantOwnership(t *testing.T) {
 		// Use a previously prepared role to create a task
 		usePreviousRole := testClientHelper().Role.UseRole(t, taskRole.ID())
 
-		task, taskCleanup := testClientHelper().Task.CreateTask(t)
+		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(taskCleanup)
 
-		secondTask, secondTaskCleanup := testClientHelper().Task.CreateTaskWithAfter(t, task.ID())
+		secondTask, secondTaskCleanup := testClientHelper().Task.CreateWithAfter(t, task.ID())
 		t.Cleanup(secondTaskCleanup)
 
 		err := client.Grants.GrantPrivilegesToAccountRole(

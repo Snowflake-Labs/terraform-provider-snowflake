@@ -1,52 +1,81 @@
 package sdk
 
-import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+import (
+	"fmt"
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+	"strings"
+)
 
 //go:generate go run ./poc/main.go
 
+type TaskState string
+
+const (
+	TaskStateStarted   TaskState = "started"
+	TaskStateSuspended TaskState = "suspended"
+)
+
+func ToTaskState(s string) (TaskState, error) {
+	switch taskState := TaskState(strings.ToLower(s)); taskState {
+	case TaskStateStarted, TaskStateSuspended:
+		return taskState, nil
+	default:
+		return "", fmt.Errorf("unknown task state: %s", s)
+	}
+}
+
 var taskDbRow = g.DbStruct("taskDBRow").
-	Field("created_on", "string").
-	Field("name", "string").
-	Field("id", "string").
-	Field("database_name", "string").
-	Field("schema_name", "string").
-	Field("owner", "string").
-	Field("comment", "string").
-	Field("warehouse", "string").
-	Field("schedule", "string").
-	Field("predecessors", "string").
-	Field("state", "string").
-	Field("definition", "string").
-	Field("condition", "string").
-	Field("allow_overlapping_execution", "string").
-	Field("error_integration", "string").
-	Field("last_committed_on", "string").
-	Field("last_suspended_on", "string").
-	Field("owner_role_type", "string").
-	Field("config", "string").
-	Field("budget", "string")
+	Text("created_on").
+	Text("name").
+	Text("id").
+	Text("database_name").
+	Text("schema_name").
+	Text("owner").
+	OptionalText("comment").
+	OptionalText("warehouse").
+	OptionalText("schedule").
+	Text("predecessors").
+	Text("state").
+	Text("definition").
+	OptionalText("condition").
+	Text("allow_overlapping_execution").
+	OptionalText("error_integration").
+	OptionalText("last_committed_on").
+	OptionalText("last_suspended_on").
+	Text("owner_role_type").
+	OptionalText("config").
+	OptionalText("budget").
+	Text("task_relations").
+	OptionalText("last_suspended_reason")
 
 var task = g.PlainStruct("Task").
-	Field("CreatedOn", "string").
-	Field("Name", "string").
-	Field("Id", "string").
-	Field("DatabaseName", "string").
-	Field("SchemaName", "string").
-	Field("Owner", "string").
-	Field("Comment", "string").
-	Field("Warehouse", "string").
-	Field("Schedule", "string").
-	Field("Predecessors", "string").
-	Field("State", "string").
-	Field("Definition", "string").
-	Field("Condition", "string").
-	Field("AllowOverlappingExecution", "string").
-	Field("ErrorIntegration", "string").
-	Field("LastCommittedOn", "string").
-	Field("LastSuspendedOn", "string").
-	Field("OwnerRoleType", "string").
-	Field("Config", "string").
-	Field("Budget", "string")
+	Text("CreatedOn").
+	Text("Name").
+	Text("Id").
+	Text("DatabaseName").
+	Text("SchemaName").
+	Text("Owner").
+	OptionalText("Comment").
+	OptionalText("Warehouse").
+	OptionalText("Schedule").
+	Field("Predecessors", g.KindOfTSlice[SchemaObjectIdentifier]()).
+	Field("State", g.KindOfT[TaskState]()).
+	Text("Definition").
+	OptionalText("Condition").
+	Bool("AllowOverlappingExecution").
+	OptionalText("ErrorIntegration").
+	OptionalText("LastCommittedOn").
+	OptionalText("LastSuspendedOn").
+	Text("OwnerRoleType").
+	OptionalText("Config").
+	OptionalText("Budget").
+	Text("TaskRelations").
+	OptionalText("LastSuspendedReason")
+
+var taskCreateWarehouse = g.NewQueryStruct("CreateTaskWarehouse").
+	OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("WAREHOUSE")).
+	OptionalAssignment("USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE", "WarehouseSize", g.ParameterOptions().SingleQuotes()).
+	WithValidation(g.ExactlyOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize")
 
 var TasksDef = g.NewInterface(
 	"Tasks",
@@ -61,14 +90,7 @@ var TasksDef = g.NewInterface(
 			SQL("TASK").
 			IfNotExists().
 			Name().
-			OptionalQueryStructField(
-				"Warehouse",
-				g.NewQueryStruct("CreateTaskWarehouse").
-					OptionalIdentifier("Warehouse", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("WAREHOUSE")).
-					OptionalAssignment("USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE", "WarehouseSize", g.ParameterOptions().SingleQuotes()).
-					WithValidation(g.ExactlyOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize"),
-				g.KeywordOptions(),
-			).
+			PredefinedQueryStructField("Warehouse", "*CreateTaskWarehouse", g.KeywordOptions()).
 			OptionalTextAssignment("SCHEDULE", g.ParameterOptions().SingleQuotes()).
 			OptionalTextAssignment("CONFIG", g.ParameterOptions().NoQuotes()).
 			OptionalBooleanAssignment("ALLOW_OVERLAPPING_EXECUTION", nil).
@@ -76,19 +98,46 @@ var TasksDef = g.NewInterface(
 			OptionalNumberAssignment("USER_TASK_TIMEOUT_MS", nil).
 			OptionalNumberAssignment("SUSPEND_TASK_AFTER_NUM_FAILURES", nil).
 			OptionalTextAssignment("ERROR_INTEGRATION", g.ParameterOptions().NoQuotes()).
-			OptionalSQL("COPY GRANTS").
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-			ListAssignment("AFTER", "SchemaObjectIdentifier", g.ParameterOptions().NoEquals()).
+			OptionalIdentifier("Finalize", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Equals().SQL("FINALIZE")).
+			OptionalNumberAssignment("TASK_AUTO_RETRY_ATTEMPTS", g.ParameterOptions()).
 			OptionalTags().
+			OptionalNumberAssignment("USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS", g.ParameterOptions()).
+			List("AFTER", g.KindOfT[SchemaObjectIdentifier](), g.ListOptions()).
 			OptionalTextAssignment("WHEN", g.ParameterOptions().NoQuotes().NoEquals()).
 			SQL("AS").
 			Text("sql", g.KeywordOptions().NoQuotes().Required()).
 			WithValidation(g.ValidIdentifier, "name").
 			WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
+		taskCreateWarehouse,
+	).
+	CustomOperation(
+		"CreateOrAlter",
+		"https://docs.snowflake.com/en/sql-reference/sql/create-task#create-or-alter-task",
+		g.NewQueryStruct("CloneTask").
+			CreateOrAlter().
+			SQL("TASK").
+			Name().
+			PredefinedQueryStructField("Warehouse", "*CreateTaskWarehouse", g.KeywordOptions()).
+			OptionalTextAssignment("SCHEDULE", g.ParameterOptions().SingleQuotes()).
+			OptionalTextAssignment("CONFIG", g.ParameterOptions().NoQuotes()).
+			OptionalBooleanAssignment("ALLOW_OVERLAPPING_EXECUTION", nil).
+			OptionalNumberAssignment("USER_TASK_TIMEOUT_MS", nil).
+			OptionalSessionParameters().
+			OptionalNumberAssignment("SUSPEND_TASK_AFTER_NUM_FAILURES", nil).
+			OptionalTextAssignment("ERROR_INTEGRATION", g.ParameterOptions().NoQuotes()).
+			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
+			OptionalIdentifier("Finalize", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Equals().SQL("FINALIZE")).
+			OptionalNumberAssignment("TASK_AUTO_RETRY_ATTEMPTS", g.ParameterOptions()).
+			List("AFTER", g.KindOfT[SchemaObjectIdentifier](), g.ListOptions()).
+			OptionalTextAssignment("WHEN", g.ParameterOptions().NoQuotes().NoEquals()).
+			SQL("AS").
+			Text("sql", g.KeywordOptions().NoQuotes().Required()).
+			WithValidation(g.ValidIdentifier, "name"),
 	).
 	CustomOperation(
 		"Clone",
-		"https://docs.snowflake.com/en/sql-reference/sql/create-task#variant-syntax",
+		"https://docs.snowflake.com/en/sql-reference/sql/create-task#create-task-clone",
 		g.NewQueryStruct("CloneTask").
 			Create().
 			OrReplace().
@@ -124,9 +173,11 @@ var TasksDef = g.NewInterface(
 					OptionalTextAssignment("ERROR_INTEGRATION", g.ParameterOptions().NoQuotes()).
 					OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 					OptionalSessionParameters().
-					WithValidation(g.AtLeastOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters").
+					OptionalNumberAssignment("TASK_AUTO_RETRY_ATTEMPTS", nil).
+					OptionalNumberAssignment("USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS", nil).
+					WithValidation(g.AtLeastOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds").
 					WithValidation(g.ConflictingFields, "Warehouse", "UserTaskManagedInitialWarehouseSize"),
-				g.KeywordOptions().SQL("SET"),
+				g.ListOptions().SQL("SET"),
 			).
 			OptionalQueryStructField(
 				"Unset",
@@ -139,16 +190,21 @@ var TasksDef = g.NewInterface(
 					OptionalSQL("SUSPEND_TASK_AFTER_NUM_FAILURES").
 					OptionalSQL("ERROR_INTEGRATION").
 					OptionalSQL("COMMENT").
+					OptionalSQL("TASK_AUTO_RETRY_ATTEMPTS").
+					OptionalSQL("USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS").
 					OptionalSessionParametersUnset().
-					WithValidation(g.AtLeastOneValueSet, "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset"),
-				g.KeywordOptions().SQL("UNSET"),
+					WithValidation(g.AtLeastOneValueSet, "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"),
+				g.ListOptions().SQL("UNSET"),
 			).
 			OptionalSetTags().
 			OptionalUnsetTags().
+			OptionalIdentifier("SetFinalize", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Equals().SQL("SET FINALIZE")).
+			OptionalSQL("UNSET FINALIZE").
 			OptionalTextAssignment("MODIFY AS", g.ParameterOptions().NoQuotes().NoEquals()).
 			OptionalTextAssignment("MODIFY WHEN", g.ParameterOptions().NoQuotes().NoEquals()).
+			OptionalSQL("REMOVE WHEN").
 			WithValidation(g.ValidIdentifier, "name").
-			WithValidation(g.ExactlyOneValueSet, "Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "ModifyAs", "ModifyWhen"),
+			WithValidation(g.ExactlyOneValueSet, "Resume", "Suspend", "RemoveAfter", "AddAfter", "Set", "Unset", "SetTags", "UnsetTags", "SetFinalize", "UnsetFinalize", "ModifyAs", "ModifyWhen", "RemoveWhen"),
 	).
 	DropOperation(
 		"https://docs.snowflake.com/en/sql-reference/sql/drop-task",
