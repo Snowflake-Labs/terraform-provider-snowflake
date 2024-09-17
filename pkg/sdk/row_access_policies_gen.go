@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 )
 
 type RowAccessPolicies interface {
@@ -29,7 +31,7 @@ type CreateRowAccessPolicyOptions struct {
 }
 
 type CreateRowAccessPolicyArgs struct {
-	Name string   `ddl:"keyword,no_quotes"`
+	Name string   `ddl:"keyword,double_quotes"`
 	Type DataType `ddl:"keyword,no_quotes"`
 }
 
@@ -56,10 +58,11 @@ type DropRowAccessPolicyOptions struct {
 
 // ShowRowAccessPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-row-access-policies.
 type ShowRowAccessPolicyOptions struct {
-	show              bool  `ddl:"static" sql:"SHOW"`
-	rowAccessPolicies bool  `ddl:"static" sql:"ROW ACCESS POLICIES"`
-	Like              *Like `ddl:"keyword" sql:"LIKE"`
-	In                *In   `ddl:"keyword" sql:"IN"`
+	show              bool        `ddl:"static" sql:"SHOW"`
+	rowAccessPolicies bool        `ddl:"static" sql:"ROW ACCESS POLICIES"`
+	Like              *Like       `ddl:"keyword" sql:"LIKE"`
+	In                *ExtendedIn `ddl:"keyword" sql:"IN"`
+	Limit             *LimitFrom  `ddl:"keyword" sql:"LIMIT"`
 }
 
 type rowAccessPolicyDBRow struct {
@@ -109,4 +112,30 @@ type RowAccessPolicyDescription struct {
 	Signature  string
 	ReturnType string
 	Body       string
+}
+type RowAccessPolicyArgument struct {
+	Name string
+	Type string
+}
+
+// TODO(SNOW-1596962): Fully support VECTOR data type
+// TODO(SNOW-1660588): Use ParseFunctionArgumentsFromString
+func (d *RowAccessPolicyDescription) Arguments() ([]RowAccessPolicyArgument, error) {
+	// Format in database is `(column <data_type>)`
+	plainSignature := strings.ReplaceAll(d.Signature, "(", "")
+	plainSignature = strings.ReplaceAll(plainSignature, ")", "")
+	signatureParts := strings.Split(plainSignature, ", ")
+	arguments := make([]RowAccessPolicyArgument, len(signatureParts))
+
+	for i, e := range signatureParts {
+		parts := strings.Split(e, " ")
+		if len(parts) < 2 {
+			return nil, fmt.Errorf("parsing policy arguments: expected argument name and type, got %s", e)
+		}
+		arguments[i] = RowAccessPolicyArgument{
+			Name: strings.Join(parts[:len(parts)-1], " "),
+			Type: parts[len(parts)-1],
+		}
+	}
+	return arguments, nil
 }

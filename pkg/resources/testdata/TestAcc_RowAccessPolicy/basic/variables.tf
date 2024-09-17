@@ -9,3 +9,11 @@ variable "database" {
 variable "schema" {
   type = string
 }
+
+variable "argument" {
+  type = set(map(string))
+}
+
+variable "body" {
+  type = string
+}

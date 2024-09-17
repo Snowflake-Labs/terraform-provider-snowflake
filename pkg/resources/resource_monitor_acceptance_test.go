@@ -759,7 +759,7 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 				},
 				Config: config.FromModel(t, configModelWithoutTriggers),
 				// For some reason, not returning the correct error (SQL compilation error should be returned in this case; most likely update was processed incorrectly)
-				ExpectError: regexp.MustCompile(`at least one of AlterResourceMonitorOptions fields [Set Triggers] must be set`),
+				ExpectError: regexp.MustCompile(`at least one of AlterResourceMonitorOptions fields \[Set Triggers] must be set`),
 			},
 			// Upgrade to the latest version
 			{

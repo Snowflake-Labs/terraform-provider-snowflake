@@ -17,6 +17,11 @@ func (s *CreateAuthenticationPolicyRequest) WithOrReplace(OrReplace bool) *Creat
 	return s
 }
 
+func (s *CreateAuthenticationPolicyRequest) WithIfNotExists(IfNotExists bool) *CreateAuthenticationPolicyRequest {
+	s.IfNotExists = &IfNotExists
+	return s
+}
+
 func (s *CreateAuthenticationPolicyRequest) WithAuthenticationMethods(AuthenticationMethods []AuthenticationMethods) *CreateAuthenticationPolicyRequest {
 	s.AuthenticationMethods = AuthenticationMethods
 	return s
@@ -27,7 +32,7 @@ func (s *CreateAuthenticationPolicyRequest) WithMfaAuthenticationMethods(MfaAuth
 	return s
 }
 
-func (s *CreateAuthenticationPolicyRequest) WithMfaEnrollment(MfaEnrollment string) *CreateAuthenticationPolicyRequest {
+func (s *CreateAuthenticationPolicyRequest) WithMfaEnrollment(MfaEnrollment MfaEnrollmentOption) *CreateAuthenticationPolicyRequest {
 	s.MfaEnrollment = &MfaEnrollment
 	return s
 }
@@ -89,7 +94,7 @@ func (s *AuthenticationPolicySetRequest) WithMfaAuthenticationMethods(MfaAuthent
 	return s
 }
 
-func (s *AuthenticationPolicySetRequest) WithMfaEnrollment(MfaEnrollment string) *AuthenticationPolicySetRequest {
+func (s *AuthenticationPolicySetRequest) WithMfaEnrollment(MfaEnrollment MfaEnrollmentOption) *AuthenticationPolicySetRequest {
 	s.MfaEnrollment = &MfaEnrollment
 	return s
 }

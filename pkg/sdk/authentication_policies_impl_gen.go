@@ -38,7 +38,11 @@ func (v *authenticationPolicies) Show(ctx context.Context, request *ShowAuthenti
 }
 
 func (v *authenticationPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*AuthenticationPolicy, error) {
-	authenticationPolicies, err := v.Show(ctx, NewShowAuthenticationPolicyRequest())
+	authenticationPolicies, err := v.Show(ctx, NewShowAuthenticationPolicyRequest().WithIn(In{
+		Schema: id.SchemaId(),
+	}).WithLike(Like{
+		Pattern: String(id.Name()),
+	}))
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +63,7 @@ func (v *authenticationPolicies) Describe(ctx context.Context, id SchemaObjectId
 func (r *CreateAuthenticationPolicyRequest) toOpts() *CreateAuthenticationPolicyOptions {
 	opts := &CreateAuthenticationPolicyOptions{
 		OrReplace:                r.OrReplace,
+		IfNotExists:              r.IfNotExists,
 		name:                     r.name,
 		AuthenticationMethods:    r.AuthenticationMethods,
 		MfaAuthenticationMethods: r.MfaAuthenticationMethods,
@@ -143,7 +148,9 @@ func (r *DescribeAuthenticationPolicyRequest) toOpts() *DescribeAuthenticationPo
 
 func (r describeAuthenticationPolicyDBRow) convert() *AuthenticationPolicyDescription {
 	return &AuthenticationPolicyDescription{
-		Property: r.Property,
-		Value:    r.Value,
+		Property:    r.Property,
+		Value:       r.Value,
+		Default:     r.Default,
+		Description: r.Description,
 	}
 }

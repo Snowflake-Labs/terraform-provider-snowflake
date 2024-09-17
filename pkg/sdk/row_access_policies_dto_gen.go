@@ -40,8 +40,9 @@ type DropRowAccessPolicyRequest struct {
 }
 
 type ShowRowAccessPolicyRequest struct {
-	Like *Like
-	In   *In
+	Like  *Like
+	In    *ExtendedIn
+	Limit *LimitFrom
 }
 
 type DescribeRowAccessPolicyRequest struct {
