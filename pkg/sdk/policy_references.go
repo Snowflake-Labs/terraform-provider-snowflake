@@ -71,11 +71,12 @@ type policyReferenceFunctionArguments struct {
 type PolicyKind string
 
 const (
-	PolicyKindAggregationPolicy PolicyKind = "AGGREGATION_POLICY"
-	PolicyKindRowAccessPolicy   PolicyKind = "ROW_ACCESS_POLICY"
-	PolicyKindPasswordPolicy    PolicyKind = "PASSWORD_POLICY"
-	PolicyKindMaskingPolicy     PolicyKind = "MASKING_POLICY"
-	PolicyKindProjectionPolicy  PolicyKind = "PROJECTION_POLICY"
+	PolicyKindAggregationPolicy    PolicyKind = "AGGREGATION_POLICY"
+	PolicyKindRowAccessPolicy      PolicyKind = "ROW_ACCESS_POLICY"
+	PolicyKindPasswordPolicy       PolicyKind = "PASSWORD_POLICY"
+	PolicyKindMaskingPolicy        PolicyKind = "MASKING_POLICY"
+	PolicyKindProjectionPolicy     PolicyKind = "PROJECTION_POLICY"
+	PolicyKindAuthenticationPolicy PolicyKind = "AUTHENTICATION_POLICY"
 )
 
 type PolicyReference struct {
