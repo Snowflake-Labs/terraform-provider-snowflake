@@ -157,11 +157,7 @@ func ImportRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any
 	if err := d.Set("body", policyDescription.Body); err != nil {
 		return nil, err
 	}
-	args, err := policyDescription.Arguments()
-	if err != nil {
-		return nil, err
-	}
-	if err := d.Set("argument", schemas.RowAccessPolicyArgumentsToSchema(args)); err != nil {
+	if err := d.Set("argument", schemas.RowAccessPolicyArgumentsToSchema(policyDescription.Signature)); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
@@ -242,11 +238,7 @@ func ReadRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err := d.Set("body", rowAccessPolicyDescription.Body); err != nil {
 		return diag.FromErr(err)
 	}
-	args, err := rowAccessPolicyDescription.Arguments()
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("argument", schemas.RowAccessPolicyArgumentsToSchema(args)); err != nil {
+	if err := d.Set("argument", schemas.RowAccessPolicyArgumentsToSchema(rowAccessPolicyDescription.Signature)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.RowAccessPolicyToSchema(rowAccessPolicy)}); err != nil {

@@ -11,7 +11,7 @@ func (r *RowAccessPolicyModel) WithArgument(argument []sdk.RowAccessPolicyArgume
 	for i, v := range argument {
 		maps[i] = config.MapVariable(map[string]config.Variable{
 			"name": config.StringVariable(v.Name),
-			"type": config.StringVariable(v.Type),
+			"type": config.StringVariable(string(v.Type)),
 		})
 	}
 	r.Argument = tfconfig.SetVariable(maps...)

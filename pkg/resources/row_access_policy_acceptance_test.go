@@ -29,21 +29,21 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 	argument := []sdk.RowAccessPolicyArgument{
 		{
 			Name: "A",
-			Type: string(sdk.DataTypeVARCHAR),
+			Type: sdk.DataTypeVARCHAR,
 		},
 		{
 			Name: "B",
-			Type: string(sdk.DataTypeVARCHAR),
+			Type: sdk.DataTypeVARCHAR,
 		},
 	}
 	changedArgument := []sdk.RowAccessPolicyArgument{
 		{
 			Name: "C",
-			Type: string(sdk.DataTypeBoolean),
+			Type: sdk.DataTypeBoolean,
 		},
 		{
 			Name: "D",
-			Type: string(sdk.DataTypeTimestampNTZ),
+			Type: sdk.DataTypeTimestampNTZ,
 		},
 	}
 	policyModel := model.RowAccessPolicy("test", argument, body, id.DatabaseName(), id.Name(), id.SchemaName()).WithComment("Terraform acceptance test")
@@ -80,7 +80,11 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.body", body)),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.name", id.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.return_type", "BOOLEAN")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature", "(A VARCHAR, B VARCHAR)")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.0.name", "A")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.0.type", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.1.name", "B")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.1.type", string(sdk.DataTypeVARCHAR))),
 				),
 			},
 			// change comment and expression
@@ -194,7 +198,7 @@ func TestAcc_RowAccessPolicy_Issue2053(t *testing.T) {
 	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
 		{
 			Name: "A",
-			Type: string(sdk.DataTypeVARCHAR),
+			Type: sdk.DataTypeVARCHAR,
 		},
 	}, body, id.DatabaseName(), id.Name(), id.SchemaName())
 	resource.Test(t, resource.TestCase{
@@ -252,7 +256,7 @@ func TestAcc_RowAccessPolicy_Rename(t *testing.T) {
 	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
 		{
 			Name: "a",
-			Type: string(sdk.DataTypeVARCHAR),
+			Type: sdk.DataTypeVARCHAR,
 		},
 	}, body, id.DatabaseName(), id.Name(), id.SchemaName())
 
@@ -390,7 +394,7 @@ func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
 					HasArguments([]sdk.RowAccessPolicyArgument{
 						{
 							Name: "A",
-							Type: string(sdk.DataTypeVARCHAR),
+							Type: sdk.DataTypeVARCHAR,
 						},
 					}),
 				),
@@ -406,11 +410,11 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testi
 	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
 		{
 			Name: "A",
-			Type: string(sdk.DataTypeVARCHAR),
+			Type: sdk.DataTypeVARCHAR,
 		},
 		{
 			Name: "b",
-			Type: string(sdk.DataTypeVARCHAR),
+			Type: sdk.DataTypeVARCHAR,
 		},
 	}, body, id.DatabaseName(), id.Name(), id.SchemaName())
 
@@ -441,8 +445,8 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testi
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "row_access_expression", body)),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.A", "VARCHAR")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.B", "VARCHAR")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.A", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.B", string(sdk.DataTypeVARCHAR))),
 				),
 			},
 			{
@@ -466,11 +470,11 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testi
 					HasArguments([]sdk.RowAccessPolicyArgument{
 						{
 							Name: "A",
-							Type: string(sdk.DataTypeVARCHAR),
+							Type: sdk.DataTypeVARCHAR,
 						},
 						{
 							Name: "b",
-							Type: string(sdk.DataTypeVARCHAR),
+							Type: sdk.DataTypeVARCHAR,
 						},
 					}),
 				),
@@ -486,11 +490,11 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testi
 	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
 		{
 			Name: "A",
-			Type: string(sdk.DataTypeVARCHAR),
+			Type: sdk.DataTypeVARCHAR,
 		},
 		{
 			Name: "B",
-			Type: string(sdk.DataTypeVARCHAR),
+			Type: sdk.DataTypeVARCHAR,
 		},
 	}, body, id.DatabaseName(), id.Name(), id.SchemaName())
 
@@ -521,8 +525,8 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testi
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "row_access_expression", body)),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.A", "VARCHAR")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.B", "VARCHAR")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.A", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.B", string(sdk.DataTypeVARCHAR))),
 				),
 			},
 			{
@@ -530,9 +534,6 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testi
 				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
 				ConfigVariables:          tfconfig.ConfigVariablesFromModel(t, policyModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
@@ -546,11 +547,11 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testi
 					HasArguments([]sdk.RowAccessPolicyArgument{
 						{
 							Name: "A",
-							Type: string(sdk.DataTypeVARCHAR),
+							Type: sdk.DataTypeVARCHAR,
 						},
 						{
 							Name: "B",
-							Type: string(sdk.DataTypeVARCHAR),
+							Type: sdk.DataTypeVARCHAR,
 						},
 					}),
 				),

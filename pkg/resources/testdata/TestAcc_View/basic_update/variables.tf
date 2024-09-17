@@ -50,6 +50,6 @@ variable "schedule_status" {
   type = string
 }
 
-variable "columns" {
+variable "column" {
   type = set(map(string))
 }

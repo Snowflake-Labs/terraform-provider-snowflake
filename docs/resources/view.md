@@ -98,7 +98,7 @@ SQL
 
 - `aggregation_policy` (Block List, Max: 1) Specifies the aggregation policy to set on a view. (see [below for nested schema](#nestedblock--aggregation_policy))
 - `change_tracking` (String) Specifies to enable or disable change tracking on the table. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
-- `column` (Block List) If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. (You do not need to specify the data types of the columns.) (see [below for nested schema](#nestedblock--column))
+- `column` (Block List) If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. You do not need to specify the data types of the columns. If this field is not specified, columns are inferred from the `statement` field by Snowflake. (see [below for nested schema](#nestedblock--column))
 - `comment` (String) Specifies a comment for the view.
 - `copy_grants` (Boolean) Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.
 - `data_metric_function` (Block Set) Data metric functions used for the view. (see [below for nested schema](#nestedblock--data_metric_function))

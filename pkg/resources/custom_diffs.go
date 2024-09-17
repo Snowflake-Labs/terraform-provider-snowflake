@@ -165,3 +165,15 @@ func ParametersCustomDiff[T ~string](parametersProvider func(context.Context, Re
 		return customdiff.All(diffFunctions...)(ctx, d, meta)
 	}
 }
+
+func ForceNewIfAllKeysAreNotSet(key string, keys ...string) schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIf(key, func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
+		allUnset := true
+		for _, k := range keys {
+			if _, ok := d.GetOk(k); ok {
+				allUnset = false
+			}
+		}
+		return allUnset
+	})
+}

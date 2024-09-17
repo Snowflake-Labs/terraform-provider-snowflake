@@ -57,6 +57,32 @@ To easily handle three-value logic (true, false, unknown) in provider's configs,
 
 For more details about default values, please refer to the [changes before v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#default-values) document.
 
+
+### *(breaking change)* resource_monitor resource
+Removed fields:
+- `set_for_account` (will be settable on account resource, right now, the preferred way is to set it through unsafe_execute resource)
+- `warehouses` (can be set on warehouse resource, optionally through unsafe_execute resource only if the warehouse is not managed by Terraform)
+- `suspend_triggers` (now, `suspend_trigger` should be used)
+- `suspend_immediate_triggers` (now, `suspend_immediate_trigger` should be used)
+
+### *(breaking change)* resource_monitor data source
+Changes:
+- New filtering option `like`
+- Now, the output of `SHOW RESOURCE MONITORS` is now inside `resource_monitors.*.show_output`. Here's the list of currently available fields:
+    - `name`
+    - `credit_quota`
+    - `used_credits`
+    - `remaining_credits`
+    - `level`
+    - `frequency`
+    - `start_time`
+    - `end_time`
+    - `suspend_at`
+    - `suspend_immediate_at`
+    - `created_on`
+    - `owner`
+    - `comment`
+
 ### snowflake_row_access_policies data source changes
 New filtering options:
 - `in`

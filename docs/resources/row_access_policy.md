@@ -76,7 +76,16 @@ Read-Only:
 - `body` (String)
 - `name` (String)
 - `return_type` (String)
-- `signature` (String)
+- `signature` (List of Object) (see [below for nested schema](#nestedobjatt--describe_output--signature))
+
+<a id="nestedobjatt--describe_output--signature"></a>
+### Nested Schema for `describe_output.signature`
+
+Read-Only:
+
+- `name` (String)
+- `type` (String)
+
 
 
 <a id="nestedatt--show_output"></a>

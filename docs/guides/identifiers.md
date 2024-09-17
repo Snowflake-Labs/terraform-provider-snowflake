@@ -12,13 +12,19 @@ With the combination of quotes, old parsing methods, and other factors, it was a
 
 For example, instead of writing
 
-```object_name = “\”${snowflake_table.database}\”.\”${snowflake_table.schema}\”.\”${snowflake_table.name}\””```
+```
+object_name = “\”${snowflake_table.database}\”.\”${snowflake_table.schema}\”.\”${snowflake_table.name}\””
+# for procedures
+object_name = “\”${snowflake_procedure.database}\”.\”${snowflake_procedure.schema}\”.\”${snowflake_procedure.name}(NUMBER, VARCHAR)\””
+```
 
 now we can write
 
-```object_name = snowflake_table.fully_qualified_name```
+```
+object_name = snowflake_table.fully_qualified_name
+```
 
-This is our recommended way of referencing other objects. However, if you don't manage table in Terraform, you can construct the proper id yourself like before: `"\"database_name\".\"schema_name\".\"table_name\""` Note that quotes are necessary for correct parsing of an identifier.
+This is our recommended way of referencing other objects. However, if you don't manage the referenced object in Terraform, you can construct the proper id yourself like before: `"\"database_name\".\"schema_name\".\"object_name\""` for schema-level objects, or `"\"database_name\".\"schema_name\".\"procedure_name(NUMBER, VARCHAR)\""` for procedures. Note that quotes are necessary for correct parsing of an identifier.
 
 This change was announced in v0.95.0 [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#new-fully_qualified_name-field-in-the-resources).
 
