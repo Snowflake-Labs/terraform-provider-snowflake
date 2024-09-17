@@ -548,24 +548,12 @@ func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			return diag.FromErr(err)
 		}
 	}
-	// unset is split into two because:
-	// 1. this is how it's written in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-user#syntax
-	// 2. current implementation of sdk.UserUnset makes distinction between user and session parameters,
-	// so adding a comma between them is not trivial in the current SQL builder implementation
-	if (*unset.SessionParameters != sdk.SessionParametersUnset{}) {
+
+	if (*unset.SessionParameters != sdk.SessionParametersUnset{}) || (*unset.ObjectParameters != sdk.UserObjectParametersUnset{}) {
 		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
 			Unset: &sdk.UserUnset{
 				SessionParameters: unset.SessionParameters,
-			},
-		})
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	if (*unset.ObjectParameters != sdk.UserObjectParametersUnset{}) {
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
-			Unset: &sdk.UserUnset{
-				ObjectParameters: unset.ObjectParameters,
+				ObjectParameters:  unset.ObjectParameters,
 			},
 		})
 		if err != nil {

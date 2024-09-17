@@ -52,6 +52,42 @@ func TestAccountCreate(t *testing.T) {
 }
 
 func TestAccountAlter(t *testing.T) {
+	t.Run("validation: exactly one value set in AccountSet - nothing set", func(t *testing.T) {
+		opts := &AlterAccountOptions{
+			Set: &AccountSet{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AccountSet", "Parameters", "ResourceMonitor", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
+	})
+
+	t.Run("validation: exactly one value set in AccountSet - multiple set", func(t *testing.T) {
+		opts := &AlterAccountOptions{
+			Set: &AccountSet{
+				PasswordPolicy:       randomSchemaObjectIdentifier(),
+				SessionPolicy:        randomSchemaObjectIdentifier(),
+				AuthenticationPolicy: randomSchemaObjectIdentifier(),
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AccountSet", "Parameters", "ResourceMonitor", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
+	})
+
+	t.Run("validation: exactly one value set in AccountUnset - nothing set", func(t *testing.T) {
+		opts := &AlterAccountOptions{
+			Unset: &AccountUnset{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AccountUnset", "Parameters", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
+	})
+
+	t.Run("validation: exactly one value set in AccountUnset - multiple set", func(t *testing.T) {
+		opts := &AlterAccountOptions{
+			Unset: &AccountUnset{
+				PasswordPolicy:       Bool(true),
+				SessionPolicy:        Bool(true),
+				AuthenticationPolicy: Bool(true),
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AccountUnset", "Parameters", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
+	})
+
 	t.Run("with set params", func(t *testing.T) {
 		opts := &AlterAccountOptions{
 			Set: &AccountSet{

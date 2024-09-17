@@ -4,11 +4,66 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
+type AuthenticationMethodsOption string
+
+const (
+	AuthenticationMethodsAll      AuthenticationMethodsOption = "ALL"
+	AuthenticationMethodsSaml     AuthenticationMethodsOption = "SAML"
+	AuthenticationMethodsPassword AuthenticationMethodsOption = "PASSWORD"
+	AuthenticationMethodsOauth    AuthenticationMethodsOption = "OAUTH"
+	AuthenticationMethodsKeyPair  AuthenticationMethodsOption = "KEYPAIR"
+)
+
+var AllAuthenticationMethods = []AuthenticationMethodsOption{
+	AuthenticationMethodsAll,
+	AuthenticationMethodsSaml,
+	AuthenticationMethodsPassword,
+	AuthenticationMethodsOauth,
+	AuthenticationMethodsKeyPair,
+}
+
+type MfaAuthenticationMethodsOption string
+
+const (
+	MfaAuthenticationMethodsAll      MfaAuthenticationMethodsOption = "ALL"
+	MfaAuthenticationMethodsSaml     MfaAuthenticationMethodsOption = "SAML"
+	MfaAuthenticationMethodsPassword MfaAuthenticationMethodsOption = "PASSWORD"
+)
+
+var AllMfaAuthenticationMethods = []MfaAuthenticationMethodsOption{
+	MfaAuthenticationMethodsAll,
+	MfaAuthenticationMethodsSaml,
+	MfaAuthenticationMethodsPassword,
+}
+
+type MfaEnrollmentOption string
+
+const (
+	MfaEnrollmentRequired MfaEnrollmentOption = "REQUIRED"
+	MfaEnrollmentOptional MfaEnrollmentOption = "OPTIONAL"
+)
+
+type ClientTypesOption string
+
+const (
+	ClientTypesAll         ClientTypesOption = "ALL"
+	ClientTypesSnowflakeUi ClientTypesOption = "SNOWFLAKE_UI"
+	ClientTypesDrivers     ClientTypesOption = "DRIVERS"
+	ClientTypesSnowSql     ClientTypesOption = "SNOWSQL"
+)
+
+var AllClientTypes = []ClientTypesOption{
+	ClientTypesAll,
+	ClientTypesSnowflakeUi,
+	ClientTypesDrivers,
+	ClientTypesSnowSql,
+}
+
 var (
-	AuthenticationMethodsOptionDef    = g.NewQueryStruct("AuthenticationMethods").Text("Method", g.KeywordOptions().SingleQuotes())
-	MfaAuthenticationMethodsOptionDef = g.NewQueryStruct("MfaAuthenticationMethods").Text("Method", g.KeywordOptions().SingleQuotes())
-	ClientTypesOptionDef              = g.NewQueryStruct("ClientTypes").Text("ClientType", g.KeywordOptions().SingleQuotes())
-	SecurityIntegrationsOptionDef     = g.NewQueryStruct("SecurityIntegrationsOption").Text("Name", g.KeywordOptions().SingleQuotes())
+	AuthenticationMethodsOptionDef    = g.NewQueryStruct("AuthenticationMethods").PredefinedQueryStructField("Method", g.KindOfT[AuthenticationMethodsOption](), g.KeywordOptions().SingleQuotes().Required())
+	MfaAuthenticationMethodsOptionDef = g.NewQueryStruct("MfaAuthenticationMethods").PredefinedQueryStructField("Method", g.KindOfT[MfaAuthenticationMethods](), g.KeywordOptions().SingleQuotes().Required())
+	ClientTypesOptionDef              = g.NewQueryStruct("ClientTypes").PredefinedQueryStructField("ClientType", g.KindOfT[ClientTypesOption](), g.KeywordOptions().SingleQuotes().Required())
+	SecurityIntegrationsOptionDef     = g.NewQueryStruct("SecurityIntegrationsOption").Identifier("Name", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required())
 )
 
 var AuthenticationPoliciesDef = g.NewInterface(
@@ -22,14 +77,16 @@ var AuthenticationPoliciesDef = g.NewInterface(
 			Create().
 			OrReplace().
 			SQL("AUTHENTICATION POLICY").
+			IfNotExists().
 			Name().
 			ListAssignment("AUTHENTICATION_METHODS", "AuthenticationMethods", g.ParameterOptions().Parentheses()).
 			ListAssignment("MFA_AUTHENTICATION_METHODS", "MfaAuthenticationMethods", g.ParameterOptions().Parentheses()).
-			OptionalTextAssignment("MFA_ENROLLMENT", g.ParameterOptions()).
+			PredefinedQueryStructField("MfaEnrollment", g.KindOfTPointer[MfaEnrollmentOption](), g.ParameterOptions().SQL("MFA_ENROLLMENT")).
 			ListAssignment("CLIENT_TYPES", "ClientTypes", g.ParameterOptions().Parentheses()).
 			ListAssignment("SECURITY_INTEGRATIONS", "SecurityIntegrationsOption", g.ParameterOptions().Parentheses()).
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-			WithValidation(g.ValidIdentifier, "name"),
+			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ConflictingFields, "IfNotExists", "OrReplace"),
 		AuthenticationMethodsOptionDef,
 		MfaAuthenticationMethodsOptionDef,
 		ClientTypesOptionDef,
@@ -47,7 +104,7 @@ var AuthenticationPoliciesDef = g.NewInterface(
 				g.NewQueryStruct("AuthenticationPolicySet").
 					ListAssignment("AUTHENTICATION_METHODS", "AuthenticationMethods", g.ParameterOptions().Parentheses()).
 					ListAssignment("MFA_AUTHENTICATION_METHODS", "MfaAuthenticationMethods", g.ParameterOptions().Parentheses()).
-					OptionalTextAssignment("MFA_ENROLLMENT", g.ParameterOptions().SingleQuotes()).
+					PredefinedQueryStructField("MfaEnrollment", g.KindOfTPointer[MfaEnrollmentOption](), g.ParameterOptions().SQL("MFA_ENROLLMENT")).
 					ListAssignment("CLIENT_TYPES", "ClientTypes", g.ParameterOptions().Parentheses()).
 					ListAssignment("SECURITY_INTEGRATIONS", "SecurityIntegrationsOption", g.ParameterOptions().Parentheses()).
 					OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
@@ -113,11 +170,15 @@ var AuthenticationPoliciesDef = g.NewInterface(
 		g.DescriptionMappingKindSlice,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-authentication-policy",
 		g.DbStruct("describeAuthenticationPolicyDBRow").
-			Field("property", "string").
-			Field("value", "string"),
+			Text("property").
+			Text("value").
+			Text("default").
+			Text("description"),
 		g.PlainStruct("AuthenticationPolicyDescription").
-			Field("Property", "string").
-			Field("Value", "string"),
+			Text("Property").
+			Text("Value").
+			Text("Default").
+			Text("Description"),
 		g.NewQueryStruct("DescribeAuthenticationPolicy").
 			Describe().
 			SQL("AUTHENTICATION POLICY").

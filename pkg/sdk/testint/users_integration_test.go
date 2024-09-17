@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
@@ -46,46 +48,6 @@ func TestInt_Users(t *testing.T) {
 
 	tag2, tag2Cleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tag2Cleanup)
-
-	/*
-		// TODO(SNOW-1528557): Uncomment next pr
-			func TestInt_UserAlter(t *testing.T) {
-				client := testClient(t)
-				ctx := testContext(t)
-
-				randomPrefix := random.AlphaN(6)
-
-				userTest, userCleanup := testClientHelper().User.CreateUserWithPrefix(t, randomPrefix+"_")
-				t.Cleanup(userCleanup)
-
-				t.Run("set and unset authentication policy", func(t *testing.T) {
-					authenticationPolicyTest, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.CreateAuthenticationPolicy(t)
-					t.Cleanup(authenticationPolicyCleanup)
-
-					alterOptions := &sdk.AlterUserOptions{
-						Set: &sdk.UserSet{
-							AuthenticationPolicy: authenticationPolicyTest.ID(),
-						},
-					}
-
-					err := client.Users.Alter(ctx, userTest.ID(), alterOptions)
-					require.NoError(t, err)
-
-					unsetOptions := &sdk.AlterUserOptions{
-						Unset: &sdk.UserUnset{
-							AuthenticationPolicy: sdk.Bool(true),
-						},
-					}
-
-					unsetErr := client.Users.Alter(ctx, userTest.ID(), unsetOptions)
-					require.NoError(t, unsetErr)
-				})
-			}
-
-			func TestInt_UserCreate(t *testing.T) {
-				client := testClient(t)
-				ctx := testContext(t)
-	*/
 
 	networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
 	t.Cleanup(networkPolicyCleanup)
@@ -764,6 +726,41 @@ func TestInt_Users(t *testing.T) {
 		)
 	})
 
+	t.Run("set and unset authentication policy", func(t *testing.T) {
+		authenticationPolicyTest, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.Create(t)
+		t.Cleanup(authenticationPolicyCleanup)
+
+		err := client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				AuthenticationPolicy: sdk.Pointer(authenticationPolicyTest.ID()),
+			},
+		})
+		require.NoError(t, err)
+
+		policies, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, user.ID(), sdk.PolicyEntityDomainUser)
+		require.NoError(t, err)
+
+		_, err = collections.FindFirst(policies, func(reference sdk.PolicyReference) bool {
+			return reference.PolicyKind == sdk.PolicyKindAuthenticationPolicy
+		})
+		require.NoError(t, err)
+
+		err = client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				AuthenticationPolicy: sdk.Bool(true),
+			},
+		})
+		require.NoError(t, err)
+
+		policies, err = testClientHelper().PolicyReferences.GetPolicyReferences(t, user.ID(), sdk.PolicyEntityDomainUser)
+		require.NoError(t, err)
+
+		_, err = collections.FindFirst(policies, func(reference sdk.PolicyReference) bool {
+			return reference.PolicyKind == sdk.PolicyKindAuthenticationPolicy
+		})
+		require.ErrorIs(t, err, sdk.ErrObjectNotFound)
+	})
+
 	t.Run("alter: set and unset parameters", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
@@ -848,10 +845,6 @@ func TestInt_Users(t *testing.T) {
 		require.NoError(t, err)
 		assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
 
-		// unset is split into two because:
-		// 1. this is how it's written in the docs https://docs.snowflake.com/en/sql-reference/sql/alter-user#syntax
-		// 2. current implementation of sdk.UserUnset makes distinction between user and session parameters,
-		// so adding a comma between them is not trivial in the current SQL builder implementation
 		alterOpts = &sdk.AlterUserOptions{
 			Unset: &sdk.UserUnset{
 				SessionParameters: &sdk.SessionParametersUnset{
@@ -911,14 +904,6 @@ func TestInt_Users(t *testing.T) {
 					WeekOfYearPolicy:                         sdk.Bool(true),
 					WeekStart:                                sdk.Bool(true),
 				},
-			},
-		}
-
-		err = client.Users.Alter(ctx, id, alterOpts)
-		require.NoError(t, err)
-
-		alterOpts = &sdk.AlterUserOptions{
-			Unset: &sdk.UserUnset{
 				ObjectParameters: &sdk.UserObjectParametersUnset{
 					EnableUnredactedQuerySyntaxError: sdk.Bool(true),
 					NetworkPolicy:                    sdk.Bool(true),
@@ -942,6 +927,43 @@ func TestInt_Users(t *testing.T) {
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
+	})
+
+	t.Run("alter: set and unset properties and parameters at the same time", func(t *testing.T) {
+		user, userCleanup := testClientHelper().User.CreateUser(t)
+		t.Cleanup(userCleanup)
+
+		err := client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
+			Set: &sdk.UserSet{
+				SessionParameters: &sdk.SessionParameters{
+					Autocommit: sdk.Bool(false),
+				},
+				ObjectParameters: &sdk.UserObjectParameters{
+					NetworkPolicy: sdk.Pointer(networkPolicy.ID()),
+				},
+				ObjectProperties: &sdk.UserAlterObjectProperties{
+					UserObjectProperties: sdk.UserObjectProperties{
+						Comment: sdk.String("some comment"),
+					},
+				},
+			},
+		})
+		require.NoError(t, err)
+
+		err = client.Users.Alter(ctx, user.ID(), &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				SessionParameters: &sdk.SessionParametersUnset{
+					Autocommit: sdk.Bool(true),
+				},
+				ObjectParameters: &sdk.UserObjectParametersUnset{
+					NetworkPolicy: sdk.Bool(true),
+				},
+				ObjectProperties: &sdk.UserObjectPropertiesUnset{
+					Comment: sdk.Bool(true),
+				},
+			},
+		})
+		require.NoError(t, err)
 	})
 
 	t.Run("alter: set and unset tags", func(t *testing.T) {
