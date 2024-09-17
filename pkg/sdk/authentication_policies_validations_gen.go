@@ -16,6 +16,9 @@ func (opts *CreateAuthenticationPolicyOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if everyValueSet(opts.IfNotExists, opts.OrReplace) {
+		errs = append(errs, errOneOf("CreateAuthenticationPolicyOptions", "IfNotExists", "OrReplace"))
+	}
 	return JoinErrors(errs...)
 }
 

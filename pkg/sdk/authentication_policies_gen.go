@@ -16,30 +16,30 @@ type CreateAuthenticationPolicyOptions struct {
 	create                   bool                         `ddl:"static" sql:"CREATE"`
 	OrReplace                *bool                        `ddl:"keyword" sql:"OR REPLACE"`
 	authenticationPolicy     bool                         `ddl:"static" sql:"AUTHENTICATION POLICY"`
+	IfNotExists              *bool                        `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                     SchemaObjectIdentifier       `ddl:"identifier"`
 	AuthenticationMethods    []AuthenticationMethods      `ddl:"parameter,parentheses" sql:"AUTHENTICATION_METHODS"`
 	MfaAuthenticationMethods []MfaAuthenticationMethods   `ddl:"parameter,parentheses" sql:"MFA_AUTHENTICATION_METHODS"`
-	MfaEnrollment            *string                      `ddl:"parameter" sql:"MFA_ENROLLMENT"`
+	MfaEnrollment            *MfaEnrollmentOption         `ddl:"parameter" sql:"MFA_ENROLLMENT"`
 	ClientTypes              []ClientTypes                `ddl:"parameter,parentheses" sql:"CLIENT_TYPES"`
 	SecurityIntegrations     []SecurityIntegrationsOption `ddl:"parameter,parentheses" sql:"SECURITY_INTEGRATIONS"`
 	Comment                  *string                      `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-func (r *CreateAuthenticationPolicyRequest) GetName() SchemaObjectIdentifier {
-	return r.name
+type AuthenticationMethods struct {
+	Method AuthenticationMethodsOption `ddl:"keyword,single_quotes"`
 }
 
-type AuthenticationMethods struct {
-	Method string `ddl:"keyword,single_quotes"`
-}
 type MfaAuthenticationMethods struct {
-	Method string `ddl:"keyword,single_quotes"`
+	Method MfaAuthenticationMethodsOption `ddl:"keyword,single_quotes"`
 }
+
 type ClientTypes struct {
-	ClientType string `ddl:"keyword,single_quotes"`
+	ClientType ClientTypesOption `ddl:"keyword,single_quotes"`
 }
+
 type SecurityIntegrationsOption struct {
-	Name string `ddl:"keyword,single_quotes"`
+	Name AccountObjectIdentifier `ddl:"identifier"`
 }
 
 // AlterAuthenticationPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-authentication-policy.
@@ -52,14 +52,16 @@ type AlterAuthenticationPolicyOptions struct {
 	Unset                *AuthenticationPolicyUnset `ddl:"list,no_parentheses" sql:"UNSET"`
 	RenameTo             *SchemaObjectIdentifier    `ddl:"identifier" sql:"RENAME TO"`
 }
+
 type AuthenticationPolicySet struct {
 	AuthenticationMethods    []AuthenticationMethods      `ddl:"parameter,parentheses" sql:"AUTHENTICATION_METHODS"`
 	MfaAuthenticationMethods []MfaAuthenticationMethods   `ddl:"parameter,parentheses" sql:"MFA_AUTHENTICATION_METHODS"`
-	MfaEnrollment            *string                      `ddl:"parameter,single_quotes" sql:"MFA_ENROLLMENT"`
+	MfaEnrollment            *MfaEnrollmentOption         `ddl:"parameter" sql:"MFA_ENROLLMENT"`
 	ClientTypes              []ClientTypes                `ddl:"parameter,parentheses" sql:"CLIENT_TYPES"`
 	SecurityIntegrations     []SecurityIntegrationsOption `ddl:"parameter,parentheses" sql:"SECURITY_INTEGRATIONS"`
 	Comment                  *string                      `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
+
 type AuthenticationPolicyUnset struct {
 	ClientTypes              *bool `ddl:"keyword" sql:"CLIENT_TYPES"`
 	AuthenticationMethods    *bool `ddl:"keyword" sql:"AUTHENTICATION_METHODS"`
@@ -86,6 +88,7 @@ type ShowAuthenticationPolicyOptions struct {
 	StartsWith             *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
 	Limit                  *LimitFrom `ddl:"keyword" sql:"LIMIT"`
 }
+
 type showAuthenticationPolicyDBRow struct {
 	CreatedOn     string `db:"created_on"`
 	Name          string `db:"name"`
@@ -96,6 +99,7 @@ type showAuthenticationPolicyDBRow struct {
 	OwnerRoleType string `db:"owner_role_type"`
 	Options       string `db:"options"`
 }
+
 type AuthenticationPolicy struct {
 	CreatedOn     string
 	Name          string
@@ -107,21 +111,27 @@ type AuthenticationPolicy struct {
 	Options       string
 }
 
+func (v *AuthenticationPolicy) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
 // DescribeAuthenticationPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-authentication-policy.
 type DescribeAuthenticationPolicyOptions struct {
 	describe             bool                   `ddl:"static" sql:"DESCRIBE"`
 	authenticationPolicy bool                   `ddl:"static" sql:"AUTHENTICATION POLICY"`
 	name                 SchemaObjectIdentifier `ddl:"identifier"`
 }
+
 type describeAuthenticationPolicyDBRow struct {
-	Property string `db:"property"`
-	Value    string `db:"value"`
-}
-type AuthenticationPolicyDescription struct {
-	Property string
-	Value    string
+	Property    string `db:"property"`
+	Value       string `db:"value"`
+	Default     string `db:"default"`
+	Description string `db:"description"`
 }
 
-func (v *AuthenticationPolicy) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+type AuthenticationPolicyDescription struct {
+	Property    string
+	Value       string
+	Default     string
+	Description string
 }
