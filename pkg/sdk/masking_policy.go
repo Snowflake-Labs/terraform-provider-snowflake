@@ -219,11 +219,11 @@ func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, o
 
 // ShowMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-masking-policies.
 type ShowMaskingPolicyOptions struct {
-	show            bool  `ddl:"static" sql:"SHOW"`
-	maskingPolicies bool  `ddl:"static" sql:"MASKING POLICIES"`
-	Like            *Like `ddl:"keyword" sql:"LIKE"`
-	In              *In   `ddl:"keyword" sql:"IN"`
-	Limit           *int  `ddl:"parameter,no_equals" sql:"LIMIT"`
+	show            bool        `ddl:"static" sql:"SHOW"`
+	maskingPolicies bool        `ddl:"static" sql:"MASKING POLICIES"`
+	Like            *Like       `ddl:"keyword" sql:"LIKE"`
+	In              *ExtendedIn `ddl:"keyword" sql:"IN"`
+	Limit           *LimitFrom  `ddl:"keyword" sql:"LIMIT"`
 }
 
 func (opts *ShowMaskingPolicyOptions) validate() error {
@@ -317,8 +317,10 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 		Like: &Like{
 			Pattern: String(id.Name()),
 		},
-		In: &In{
-			Schema: id.SchemaId(),
+		In: &ExtendedIn{
+			In: In{
+				Schema: id.SchemaId(),
+			},
 		},
 	})
 	if err != nil {

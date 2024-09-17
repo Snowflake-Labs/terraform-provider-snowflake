@@ -254,8 +254,10 @@ func TestMaskingPolicyShow(t *testing.T) {
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
-			In: &In{
-				Account: Bool(true),
+			In: &ExtendedIn{
+				In: In{
+					Schema: id.SchemaId(),
+				},
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES LIKE '%s' IN ACCOUNT", id.Name())
@@ -267,8 +269,10 @@ func TestMaskingPolicyShow(t *testing.T) {
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
-			In: &In{
-				Database: databaseIdentifier,
+			In: &ExtendedIn{
+				In: In{
+					Schema: id.SchemaId(),
+				},
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES LIKE '%s' IN DATABASE %s", id.Name(), databaseIdentifier.FullyQualifiedName())
@@ -279,8 +283,10 @@ func TestMaskingPolicyShow(t *testing.T) {
 			Like: &Like{
 				Pattern: String(id.Name()),
 			},
-			In: &In{
-				Schema: id.SchemaId(),
+			In: &ExtendedIn{
+				In: In{
+					Schema: id.SchemaId(),
+				},
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES LIKE '%s' IN SCHEMA %s", id.Name(), id.SchemaId().FullyQualifiedName())
@@ -288,9 +294,12 @@ func TestMaskingPolicyShow(t *testing.T) {
 
 	t.Run("with limit", func(t *testing.T) {
 		opts := &ShowMaskingPolicyOptions{
-			Limit: Int(10),
+			Limit: &LimitFrom{
+				Rows: Int(10),
+				From: Pointer("foo"),
+			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES LIMIT 10")
+		assertOptsValidAndSQLEquals(t, opts, "SHOW MASKING POLICIES LIMIT 10 FROM 'foo'")
 	})
 }
 
