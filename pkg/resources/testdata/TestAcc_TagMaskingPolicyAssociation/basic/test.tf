@@ -10,15 +10,13 @@ resource "snowflake_masking_policy" "test" {
   name     = var.name
   database = var.database
   schema   = var.schema
-  signature {
-    column {
-      name = "val"
-      type = "VARCHAR"
-    }
+  argument {
+    name = "val"
+    type = "VARCHAR"
   }
-  masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
-  return_data_type   = "VARCHAR(16777216)"
-  comment            = "Terraform acceptance test"
+  body             = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
+  return_data_type = "VARCHAR(16777216)"
+  comment          = "Terraform acceptance test"
 }
 
 resource "snowflake_tag_masking_policy_association" "test" {
