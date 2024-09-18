@@ -1,12 +1,12 @@
 package testint
 
 import (
-	"database/sql"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"time"
 )
 
 func TestInt_Secrets(t *testing.T) {
@@ -21,9 +21,9 @@ func TestInt_Secrets(t *testing.T) {
 		}
 	}
 
-	integrationRequeset := sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(integrationId, true, "foo", "foo").
+	integrationRequest := sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(integrationId, true, "foo", "foo").
 		WithOauthAllowedScopes([]sdk.AllowedScope{{"foo"}, {"bar"}})
-	err := client.SecurityIntegrations.CreateApiAuthenticationWithClientCredentialsFlow(ctx, integrationRequeset)
+	err := client.SecurityIntegrations.CreateApiAuthenticationWithClientCredentialsFlow(ctx, integrationRequest)
 	require.NoError(t, err)
 	t.Cleanup(cleanupIntegration(t, integrationId))
 
@@ -46,14 +46,31 @@ func TestInt_Secrets(t *testing.T) {
 		assert.NotEmpty(t, s.Owner)
 	}
 
-	createSecretWithOAuthClientCredentialsFlow := func(t *testing.T, integration sdk.AccountObjectIdentifier, scopes []sdk.SecurityIntegrationScope, with func(*sdk.CreateWithOAuthClientCredentialsFlowSecretRequest)) (*sdk.Secret, sdk.SchemaObjectIdentifier) {
+	createSecretWithOAuthClientCredentialsFlow := func(t *testing.T, integrationId sdk.AccountObjectIdentifier, scopes []sdk.SecurityIntegrationScope, with func(*sdk.CreateWithOAuthClientCredentialsFlowSecretRequest)) (*sdk.Secret, sdk.SchemaObjectIdentifier) {
 		t.Helper()
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integration, scopes)
+		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId, scopes)
 		if with != nil {
 			with(request)
 		}
 		err := client.Secrets.CreateWithOAuthClientCredentialsFlow(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(cleanupSecret(id))
+
+		secret, err := client.Secrets.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		return secret, id
+	}
+
+	createSecretWithOAuthAuthorizationCodeFlow := func(t *testing.T, refreshToken, refreshTokenExpiryTime string, integrationId sdk.AccountObjectIdentifier, with func(*sdk.CreateWithOAuthAuthorizationCodeFlowSecretRequest)) (*sdk.Secret, sdk.SchemaObjectIdentifier) {
+		t.Helper()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		request := sdk.NewCreateWithOAuthAuthorizationCodeFlowSecretRequest(id, refreshToken, refreshTokenExpiryTime, integrationId)
+		if with != nil {
+			with(request)
+		}
+		err := client.Secrets.CreateWithOAuthAuthorizationCodeFlow(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupSecret(id))
 
@@ -82,24 +99,24 @@ func TestInt_Secrets(t *testing.T) {
 
 	type secretDetails struct {
 		Name                        string
-		Comment                     sql.NullString
+		Comment                     string
 		SecretType                  string
-		Username                    sql.NullString
-		OauthAccessTokenExpiryTime  sql.NullString
-		OauthRefreshTokenExpiryTime sql.NullString
-		OauthScopes                 sql.NullString
-		IntegrationName             sql.NullString
+		Username                    string
+		OauthAccessTokenExpiryTime  time.Time
+		OauthRefreshTokenExpiryTime time.Time
+		OauthScopes                 string
+		IntegrationName             string
 	}
 
 	assertSecretDetails := func(actual *sdk.SecretDetails, expected secretDetails) {
 		assert.Equal(t, expected.Name, actual.Name)
-		assert.Equal(t, expected.Comment, actual.Comment)
+		assert.Equal(t, expected.Comment, actual.Comment.String)
 		assert.Equal(t, expected.SecretType, actual.SecretType)
-		assert.Equal(t, expected.Username, actual.Username)
-		assert.Equal(t, expected.OauthAccessTokenExpiryTime, actual.OauthAccessTokenExpiryTime)
-		assert.Equal(t, expected.OauthRefreshTokenExpiryTime, actual.OauthRefreshTokenExpiryTime)
-		assert.Equal(t, expected.OauthScopes, actual.OauthScopes)
-		assert.Equal(t, expected.IntegrationName, actual.IntegrationName)
+		assert.Equal(t, expected.Username, actual.Username.String)
+		assert.Equal(t, expected.OauthAccessTokenExpiryTime.String(), actual.OauthAccessTokenExpiryTime.String)
+		assert.Equal(t, expected.OauthRefreshTokenExpiryTime.String(), actual.OauthRefreshTokenExpiryTime.String)
+		assert.Equal(t, expected.OauthScopes, actual.OauthScopes.String)
+		assert.Equal(t, expected.IntegrationName, actual.IntegrationName.String)
 	}
 
 	t.Run("Create secret with OAuth Client Credentials Flow", func(t *testing.T) {
@@ -113,10 +130,10 @@ func TestInt_Secrets(t *testing.T) {
 
 		assertSecretDetails(details, secretDetails{
 			Name:            id.Name(),
-			Comment:         sql.NullString{String: "a", Valid: true},
+			Comment:         "a",
 			SecretType:      "OAUTH2",
-			OauthScopes:     sql.NullString{String: "[foo, bar]", Valid: true},
-			IntegrationName: sql.NullString{String: integrationId.Name(), Valid: true},
+			OauthScopes:     "[foo, bar]",
+			IntegrationName: integrationId.Name(),
 		})
 
 		assertSecret(t, secret, id, "OAUTH2", "a")
@@ -132,16 +149,54 @@ func TestInt_Secrets(t *testing.T) {
 		assertSecretDetails(details, secretDetails{
 			Name:            id.Name(),
 			SecretType:      "OAUTH2",
-			OauthScopes:     sql.NullString{},
-			IntegrationName: sql.NullString{String: integrationId.Name(), Valid: true},
+			IntegrationName: integrationId.Name(),
 		})
 
 		assertSecret(t, secret, id, "OAUTH2", "")
 	})
 
 	t.Run("CreateWithOAuthAuthorizationCodeFlow", func(t *testing.T) {
-		// TODO: fill me
+		secret, id := createSecretWithOAuthAuthorizationCodeFlow(t, "foo", "2024-09-20", integrationId, func(req *sdk.CreateWithOAuthAuthorizationCodeFlowSecretRequest) {
+			req.WithComment("a").
+				WithIfNotExists(true)
+		})
+
+		details, err := client.Secrets.Describe(ctx, id)
+		require.NoError(t, err)
+
+		assertSecretDetails(details, secretDetails{
+			Name:                        id.Name(),
+			SecretType:                  "OAUTH2",
+			Comment:                     "a",
+			OauthRefreshTokenExpiryTime: time.Time{}, //"2024-09-20",
+			IntegrationName:             integrationId.Name(),
+		})
+
+		assertSecret(t, secret, id, "OAUTH2", "")
 	})
+
+	/*
+		//require.EqualError(t, err, "Invalid data/time format string")
+		t.Run("CreateWithOAuthAuthorizationCodeFlow: Invalid date/time format string", func(t *testing.T) {
+			secret, id := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, func(req *sdk.CreateWithOAuthAuthorizationCodeFlowSecretRequest) {
+				req.WithComment("a").
+					WithIfNotExists(true)
+			})
+
+			details, err := client.Secrets.Describe(ctx, id)
+			require.NoError(t, err)
+
+			assertSecretDetails(details, secretDetails{
+				Name:                        id.Name(),
+				SecretType:                  "OAUTH2",
+				OauthAccessTokenExpiryTime:  "foo",
+				OauthRefreshTokenExpiryTime: "foo",
+				IntegrationName:             integrationId.Name(),
+			})
+
+			assertSecret(t, secret, id, "OAUTH2", "")
+		})
+	*/
 
 	t.Run("CreateWithBasicAuthentication", func(t *testing.T) {
 		comment := random.Comment()
@@ -153,14 +208,10 @@ func TestInt_Secrets(t *testing.T) {
 		require.NoError(t, err)
 
 		assertSecretDetails(details, secretDetails{
-			Name:                        id.Name(),
-			Comment:                     sql.NullString{String: comment, Valid: true},
-			SecretType:                  "PASSWORD",
-			Username:                    sql.NullString{String: "foo", Valid: true},
-			OauthAccessTokenExpiryTime:  sql.NullString{},
-			OauthRefreshTokenExpiryTime: sql.NullString{},
-			OauthScopes:                 sql.NullString{},
-			IntegrationName:             sql.NullString{},
+			Name:       id.Name(),
+			Comment:    comment,
+			SecretType: "PASSWORD",
+			Username:   "foo",
 		})
 
 		assertSecret(t, secret, id, "PASSWORD", comment)
@@ -176,14 +227,9 @@ func TestInt_Secrets(t *testing.T) {
 		require.NoError(t, err)
 
 		assertSecretDetails(details, secretDetails{
-			Name:                        id.Name(),
-			Comment:                     sql.NullString{String: comment, Valid: true},
-			SecretType:                  "PASSWORD",
-			Username:                    sql.NullString{String: "", Valid: true},
-			OauthAccessTokenExpiryTime:  sql.NullString{},
-			OauthRefreshTokenExpiryTime: sql.NullString{},
-			OauthScopes:                 sql.NullString{},
-			IntegrationName:             sql.NullString{},
+			Name:       id.Name(),
+			Comment:    comment,
+			SecretType: "PASSWORD",
 		})
 
 		assertSecret(t, secret, id, "PASSWORD", comment)

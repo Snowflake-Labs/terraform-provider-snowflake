@@ -38,8 +38,8 @@ var secretDetailsDbRow = g.DbStruct("secretDetailsDBRow").
 	Field("comment", "sql.NullString").
 	Field("secret_type", "string").
 	Field("username", "sql.NullString").
-	Field("oauth_access_token_expiry_time", "sql.NullString").
-	Field("oauth_refresh_token_expiry_time", "sql.NullString").
+	Time("oauth_access_token_expiry_time").
+	Time("oauth_refresh_token_expiry_time").
 	Field("oauth_scopes", "sql.NullString"). // its a list tho
 	Field("integration_name", "sql.NullString")
 
@@ -52,8 +52,8 @@ var secretDetails = g.PlainStruct("SecretDetails").
 	Field("Comment", "sql.NullString").
 	Field("SecretType", "string").
 	Field("Username", "sql.NullString").
-	Field("OauthAccessTokenExpiryTime", "sql.NullString").
-	Field("OauthRefreshTokenExpiryTime", "sql.NullString").
+	Time("OauthAccessTokenExpiryTime").
+	Time("OauthRefreshTokenExpiryTime").
 	Field("OauthScopes", "sql.NullString"). // its a list tho
 	Field("IntegrationName", "sql.NullString")
 
