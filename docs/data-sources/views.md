@@ -5,6 +5,8 @@ description: |-
   Datasource used to get details of filtered views. Filtering is aligned with the current possibilities for SHOW VIEWS https://docs.snowflake.com/en/sql-reference/sql/show-views query (only like is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection views.
 ---
 
+!> **V1 release candidate** This data source was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the data source if needed. Any errors reported will be resolved with a higher priority. We encourage checking this data source out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v094x--v0950) to use it.
+
 # snowflake_views (Data Source)
 
 Datasource used to get details of filtered views. Filtering is aligned with the current possibilities for [SHOW VIEWS](https://docs.snowflake.com/en/sql-reference/sql/show-views) query (only `like` is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection `views`.

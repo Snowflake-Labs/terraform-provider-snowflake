@@ -29,8 +29,10 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 
 	t.Run("with show options", func(t *testing.T) {
 		showOptions := &sdk.ShowMaskingPolicyOptions{
-			In: &sdk.In{
-				Schema: testClientHelper().Ids.SchemaId(),
+			In: &sdk.ExtendedIn{
+				In: sdk.In{
+					Schema: testClientHelper().Ids.SchemaId(),
+				},
 			},
 		}
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
@@ -45,8 +47,10 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 			Like: &sdk.Like{
 				Pattern: sdk.String(maskingPolicyTest.Name),
 			},
-			In: &sdk.In{
-				Database: testClientHelper().Ids.DatabaseId(),
+			In: &sdk.ExtendedIn{
+				In: sdk.In{
+					Schema: testClientHelper().Ids.SchemaId(),
+				},
 			},
 		}
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
@@ -68,10 +72,14 @@ func TestInt_MaskingPoliciesShow(t *testing.T) {
 
 	t.Run("when limiting the number of results", func(t *testing.T) {
 		showOptions := &sdk.ShowMaskingPolicyOptions{
-			In: &sdk.In{
-				Schema: testClientHelper().Ids.SchemaId(),
+			In: &sdk.ExtendedIn{
+				In: sdk.In{
+					Schema: testClientHelper().Ids.SchemaId(),
+				},
 			},
-			Limit: sdk.Int(1),
+			Limit: &sdk.LimitFrom{
+				Rows: sdk.Pointer(1),
+			},
 		}
 		maskingPolicies, err := client.MaskingPolicies.Show(ctx, showOptions)
 		require.NoError(t, err)
@@ -117,8 +125,10 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 			Like: &sdk.Like{
 				Pattern: sdk.String(name),
 			},
-			In: &sdk.In{
-				Schema: testClientHelper().Ids.SchemaId(),
+			In: &sdk.ExtendedIn{
+				In: sdk.In{
+					Schema: testClientHelper().Ids.SchemaId(),
+				},
 			},
 		})
 		require.NoError(t, err)
@@ -161,8 +171,10 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 			Like: &sdk.Like{
 				Pattern: sdk.String(name),
 			},
-			In: &sdk.In{
-				Schema: testClientHelper().Ids.SchemaId(),
+			In: &sdk.ExtendedIn{
+				In: sdk.In{
+					Schema: testClientHelper().Ids.SchemaId(),
+				},
 			},
 		})
 		require.NoError(t, err)
@@ -195,8 +207,10 @@ func TestInt_MaskingPolicyCreate(t *testing.T) {
 			Like: &sdk.Like{
 				Pattern: sdk.String(name),
 			},
-			In: &sdk.In{
-				Schema: testClientHelper().Ids.SchemaId(),
+			In: &sdk.ExtendedIn{
+				In: sdk.In{
+					Schema: testClientHelper().Ids.SchemaId(),
+				},
 			},
 		})
 		require.NoError(t, err)
@@ -274,8 +288,10 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 			Like: &sdk.Like{
 				Pattern: sdk.String(maskingPolicy.Name),
 			},
-			In: &sdk.In{
-				Schema: testClientHelper().Ids.SchemaId(),
+			In: &sdk.ExtendedIn{
+				In: sdk.In{
+					Schema: testClientHelper().Ids.SchemaId(),
+				},
 			},
 		})
 		require.NoError(t, err)
@@ -295,8 +311,10 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 			Like: &sdk.Like{
 				Pattern: sdk.String(maskingPolicy.Name),
 			},
-			In: &sdk.In{
-				Schema: testClientHelper().Ids.SchemaId(),
+			In: &sdk.ExtendedIn{
+				In: sdk.In{
+					Schema: testClientHelper().Ids.SchemaId(),
+				},
 			},
 		})
 		require.NoError(t, err)
