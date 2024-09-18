@@ -8,7 +8,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-func (r *RowAccessPolicyResourceAssert) HasArguments(args []sdk.TableColumnSignature) *RowAccessPolicyResourceAssert {
+func (r *MaskingPolicyResourceAssert) HasArguments(args []sdk.TableColumnSignature) *MaskingPolicyResourceAssert {
 	r.AddAssertion(assert.ValueSet("argument.#", strconv.FormatInt(int64(len(args)), 10)))
 	for i, v := range args {
 		r.AddAssertion(assert.ValueSet(fmt.Sprintf("argument.%d.name", i), v.Name))

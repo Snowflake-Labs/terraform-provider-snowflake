@@ -40,3 +40,7 @@ func blocklistedCharactersFieldDescription(description string) string {
 func diffSuppressStatementFieldDescription(description string) string {
 	return fmt.Sprintf(`%s To mitigate permadiff on this field, the provider replaces blank characters with a space. This can lead to false positives in cases where a change in case or run of whitespace is semantically significant.`, description)
 }
+
+func dataTypeFieldDescription(description string) string {
+	return fmt.Sprintf(`%s For more information about data types, check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).`, description)
+}

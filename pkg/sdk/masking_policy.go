@@ -2,12 +2,13 @@ package sdk
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
+	"log"
 	"time"
 
-	"github.com/buger/jsonparser"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var _ MaskingPolicies = (*maskingPolicies)(nil)
@@ -58,6 +59,9 @@ func (opts *CreateMaskingPolicyOptions) validate() error {
 	var errs []error
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) && *opts.OrReplace && *opts.IfNotExists {
+		errs = append(errs, errOneOf("CreateMaskingPolicyOptions", "OrReplace", "IfNotExists"))
 	}
 	if !valueSet(opts.signature) {
 		errs = append(errs, errNotSet("CreateMaskingPolicyOptions", "signature"))
@@ -111,8 +115,16 @@ func (opts *AlterMaskingPolicyOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if opts.NewName != nil && !ValidObjectIdentifier(opts.NewName) {
-		errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
+	if opts.NewName != nil {
+		if !ValidObjectIdentifier(opts.NewName) {
+			errs = append(errs, errInvalidIdentifier("AlterMaskingPolicyOptions", "NewName"))
+		}
+		if opts.name.DatabaseName() != opts.NewName.DatabaseName() {
+			errs = append(errs, ErrDifferentDatabase)
+		}
+		if opts.name.SchemaName() != opts.NewName.SchemaName() {
+			errs = append(errs, ErrDifferentSchema)
+		}
 	}
 	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.NewName) {
 		errs = append(errs, errExactlyOneOf("AlterMaskingPolicyOptions", "Set", "Unset", "SetTag", "UnsetTag", "NewName"))
@@ -233,6 +245,20 @@ type MaskingPolicy struct {
 	OwnerRoleType       string
 }
 
+type MaskingPolicyOptions struct {
+	ExemptOtherPolicies bool `json:"EXEMPT_OTHER_POLICIES"`
+}
+
+func ParseMaskingPolicyOptions(s string) (MaskingPolicyOptions, error) {
+	var options MaskingPolicyOptions
+	err := json.Unmarshal([]byte(s), &options)
+	if err != nil {
+		return MaskingPolicyOptions{}, err
+	}
+
+	return options, nil
+}
+
 func (v *MaskingPolicy) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
@@ -255,9 +281,11 @@ type maskingPolicyDBRow struct {
 }
 
 func (row maskingPolicyDBRow) convert() *MaskingPolicy {
-	exemptOtherPolicies, err := jsonparser.GetBoolean([]byte(row.Options), "EXEMPT_OTHER_POLICIES")
+	options, err := ParseMaskingPolicyOptions(row.Options)
 	if err != nil {
-		exemptOtherPolicies = false
+		log.Printf("[DEBUG] converting masking policy row: error unmarshaling options: %v", err)
+		log.Printf("[DEBUG] setting exempt_other_policies = false")
+		options.ExemptOtherPolicies = false
 	}
 	return &MaskingPolicy{
 		CreatedOn:           row.CreatedOn,
@@ -267,7 +295,7 @@ func (row maskingPolicyDBRow) convert() *MaskingPolicy {
 		Kind:                row.Kind,
 		Owner:               row.Owner,
 		Comment:             row.Comment,
-		ExemptOtherPolicies: exemptOtherPolicies,
+		ExemptOtherPolicies: options.ExemptOtherPolicies,
 		OwnerRoleType:       row.OwnerRoleType,
 	}
 }
@@ -295,13 +323,7 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 	if err != nil {
 		return nil, err
 	}
-
-	for _, maskingPolicy := range maskingPolicies {
-		if maskingPolicy.ID().name == id.Name() {
-			return &maskingPolicy, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return collections.FindFirst(maskingPolicies, func(r MaskingPolicy) bool { return r.Name == id.Name() })
 }
 
 // describeMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-masking-policy.
@@ -346,23 +368,13 @@ func (row maskingPolicyDetailsRow) toMaskingPolicyDetails() *MaskingPolicyDetail
 		ReturnType: dataType,
 		Body:       row.Body,
 	}
-	s := strings.Trim(row.Signature, "()")
-	parts := strings.Split(s, ",")
-	for _, part := range parts {
-		p := strings.Split(strings.TrimSpace(part), " ")
-		if len(p) != 2 {
-			continue
-		}
-		dType, err := ToDataType(p[1])
-		if err != nil {
-			continue
-		}
-		v.Signature = append(v.Signature, TableColumnSignature{
-			Name: p[0],
-			Type: dType,
-		})
-	}
 
+	signature, err := ParseTableColumnSignature(row.Signature)
+	if err != nil {
+		log.Printf("[DEBUG] parsing table column signature: %v", err)
+	} else {
+		v.Signature = signature
+	}
 	return v
 }
 

@@ -27,11 +27,6 @@ func (c *MaskingPolicyClient) client() sdk.MaskingPolicies {
 
 func (c *MaskingPolicyClient) CreateMaskingPolicy(t *testing.T) (*sdk.MaskingPolicy, func()) {
 	t.Helper()
-	return c.CreateMaskingPolicyInSchema(t, c.ids.SchemaId())
-}
-
-func (c *MaskingPolicyClient) CreateMaskingPolicyInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.MaskingPolicy, func()) {
-	t.Helper()
 	signature := []sdk.TableColumnSignature{
 		{
 			Name: c.ids.Alpha(),
@@ -43,7 +38,7 @@ func (c *MaskingPolicyClient) CreateMaskingPolicyInSchema(t *testing.T, schemaId
 		},
 	}
 	expression := "REPLACE('X', 1, 2)"
-	return c.CreateMaskingPolicyWithOptions(t, schemaId, signature, sdk.DataTypeVARCHAR, expression, &sdk.CreateMaskingPolicyOptions{})
+	return c.CreateMaskingPolicyWithOptions(t, signature, sdk.DataTypeVARCHAR, expression, &sdk.CreateMaskingPolicyOptions{})
 }
 
 func (c *MaskingPolicyClient) CreateMaskingPolicyIdentity(t *testing.T, columnType sdk.DataType) (*sdk.MaskingPolicy, func()) {
@@ -56,14 +51,13 @@ func (c *MaskingPolicyClient) CreateMaskingPolicyIdentity(t *testing.T, columnTy
 		},
 	}
 	expression := "a"
-	return c.CreateMaskingPolicyWithOptions(t, c.ids.SchemaId(), signature, columnType, expression, &sdk.CreateMaskingPolicyOptions{})
+	return c.CreateMaskingPolicyWithOptions(t, signature, columnType, expression, &sdk.CreateMaskingPolicyOptions{})
 }
 
-func (c *MaskingPolicyClient) CreateMaskingPolicyWithOptions(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, signature []sdk.TableColumnSignature, returns sdk.DataType, expression string, options *sdk.CreateMaskingPolicyOptions) (*sdk.MaskingPolicy, func()) {
+func (c *MaskingPolicyClient) CreateMaskingPolicyWithOptions(t *testing.T, signature []sdk.TableColumnSignature, returns sdk.DataType, expression string, options *sdk.CreateMaskingPolicyOptions) (*sdk.MaskingPolicy, func()) {
 	t.Helper()
 	ctx := context.Background()
-
-	id := c.ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	id := c.ids.RandomSchemaObjectIdentifier()
 
 	err := c.client().Create(ctx, id, signature, returns, expression, options)
 	require.NoError(t, err)
@@ -74,6 +68,29 @@ func (c *MaskingPolicyClient) CreateMaskingPolicyWithOptions(t *testing.T, schem
 	return maskingPolicy, c.DropMaskingPolicyFunc(t, id)
 }
 
+func (c *MaskingPolicyClient) CreateOrReplaceMaskingPolicyWithOptions(t *testing.T, id sdk.SchemaObjectIdentifier, signature []sdk.TableColumnSignature, returns sdk.DataType, expression string, options *sdk.CreateMaskingPolicyOptions) (*sdk.MaskingPolicy, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	options.OrReplace = sdk.Pointer(true)
+
+	err := c.client().Create(ctx, id, signature, returns, expression, options)
+	require.NoError(t, err)
+
+	maskingPolicy, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return maskingPolicy, c.DropMaskingPolicyFunc(t, id)
+}
+
+func (c *MaskingPolicyClient) Alter(t *testing.T, id sdk.SchemaObjectIdentifier, req *sdk.AlterMaskingPolicyOptions) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, req)
+	require.NoError(t, err)
+}
+
 func (c *MaskingPolicyClient) DropMaskingPolicyFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
@@ -82,4 +99,11 @@ func (c *MaskingPolicyClient) DropMaskingPolicyFunc(t *testing.T, id sdk.SchemaO
 		err := c.client().Drop(ctx, id, &sdk.DropMaskingPolicyOptions{IfExists: sdk.Bool(true)})
 		assert.NoError(t, err)
 	}
+}
+
+func (c *MaskingPolicyClient) Show(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.MaskingPolicy, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
 }

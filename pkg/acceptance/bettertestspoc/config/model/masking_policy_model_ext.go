@@ -6,7 +6,7 @@ import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 )
 
-func (r *RowAccessPolicyModel) WithArgument(argument []sdk.TableColumnSignature) *RowAccessPolicyModel {
+func (p *MaskingPolicyModel) WithArgument(argument []sdk.TableColumnSignature) *MaskingPolicyModel {
 	maps := make([]config.Variable, len(argument))
 	for i, v := range argument {
 		maps[i] = config.MapVariable(map[string]config.Variable{
@@ -14,6 +14,6 @@ func (r *RowAccessPolicyModel) WithArgument(argument []sdk.TableColumnSignature)
 			"type": config.StringVariable(string(v.Type)),
 		})
 	}
-	r.Argument = tfconfig.SetVariable(maps...)
-	return r
+	p.Argument = tfconfig.SetVariable(maps...)
+	return p
 }

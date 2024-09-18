@@ -6,6 +6,58 @@ across different versions.
 
 ## v0.95.0 ➞ v0.96.0
 
+### snowflake_masking_policy resource changes
+New fields:
+  - `show_output` field that holds the response from SHOW MASKING POLICIES.
+  - `describe_output` field that holds the response from DESCRIBE MASKING POLICY.
+
+#### *(breaking change)* Renamed fields in snowflake_masking_policy resource
+Renamed fields:
+  - `masking_expression` to `body`
+Please rename these fields in your configuration files. State will be migrated automatically.
+
+#### *(breaking change)* Removed fields from snowflake_masking_policy resource
+Removed fields:
+- `or_replace`
+- `if_not_exists`
+The value of these field will be removed from the state automatically.
+
+#### *(breaking change)* Adjusted schema of arguments/signature
+The field `signature` is renamed to `arguments` to be consistent with other resources.
+Now, arguments are stored without nested `column` field. Please adjust that in your configs, like in the example below. State is migrated automatically.
+
+The old configuration looks like this:
+```
+  signature {
+    column {
+      name = "val"
+      type = "VARCHAR"
+    }
+  }
+```
+
+The new configuration looks like this:
+```
+  argument {
+    name = "val"
+    type = "VARCHAR"
+  }
+```
+
+#### *(breaking change)* Identifiers related changes
+During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/row_access_policy#import)).
+
+Also, we added diff suppress function that prevents Terraform from showing differences, when only quoting is different.
+
+No change is required, the state will be migrated automatically.
+
+#### *(behavior change)* Boolean type changes
+To easily handle three-value logic (true, false, unknown) in provider's configs, type of `exempt_other_policies` was changed from boolean to string.
+
+For more details about default values, please refer to the [changes before v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#default-values) document.
+
+
 ### *(breaking change)* resource_monitor resource
 Removed fields:
 - `set_for_account` (will be settable on account resource, right now, the preferred way is to set it through unsafe_execute resource)
@@ -55,11 +107,32 @@ New fields:
 #### *(breaking change)* Renamed fields in snowflake_row_access_policy resource
 Renamed fields:
   - `row_access_expression` to `body`
-  - `signature` to `arguments`
 Please rename these fields in your configuration files. State will be migrated automatically.
 
-#### *(breaking change)* Adjusted behavior of arguments/signature
+#### *(breaking change)* Adjusted schema of arguments/signature
+The field `signature` is renamed to `arguments` to be consistent with other resources.
 Now, arguments are stored as a list, instead of a map. Please adjust that in your configs. State is migrated automatically. Also, this means that order of the items matters and may be adjusted.
+
+
+The old configuration looks like this:
+```
+  signature = {
+    A = "VARCHAR",
+    B = "VARCHAR"
+  }
+```
+
+The new configuration looks like this:
+```
+  argument {
+    name = "A"
+    type = "VARCHAR"
+  }
+  argument {
+    name = "B"
+    type = "VARCHAR"
+  }
+```
 
 Argument names are now case sensitive. All policies created previously in the provider have upper case argument names. If you used lower case before, please adjust your configs. Values in the state will be migrated to uppercase automatically.
 

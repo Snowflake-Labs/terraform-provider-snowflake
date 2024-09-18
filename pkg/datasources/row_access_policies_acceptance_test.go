@@ -24,7 +24,7 @@ func TestAcc_RowAccessPolicies(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	body := "case when current_role() in ('ANALYST') then true else false end"
-	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
+	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
 			Name: "a",
 			Type: sdk.DataTypeVARCHAR,

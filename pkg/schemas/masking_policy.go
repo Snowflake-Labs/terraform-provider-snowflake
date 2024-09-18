@@ -5,7 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var RowAccessPolicyDescribeSchema = map[string]*schema.Schema{
+// DescribeMaskingPolicySchema represents output of DESCRIBE query for the single masking policy.
+var DescribeMaskingPolicySchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
 		Computed: true,
@@ -36,23 +37,16 @@ var RowAccessPolicyDescribeSchema = map[string]*schema.Schema{
 	},
 }
 
-func RowAccessPolicyDescriptionToSchema(description sdk.RowAccessPolicyDescription) map[string]any {
-	signatureElem := make([]map[string]any, len(description.Signature))
-	for i, v := range description.Signature {
-		signatureElem[i] = map[string]any{
-			"name": v.Name,
-			"type": string(v.Type),
-		}
-	}
+func MaskingPolicyDescriptionToSchema(details sdk.MaskingPolicyDetails) map[string]any {
 	return map[string]any{
-		"name":        description.Name,
-		"signature":   signatureElem,
-		"return_type": description.ReturnType,
-		"body":        description.Body,
+		"name":        details.Name,
+		"signature":   MaskingPolicyArgumentsToSchema(details.Signature),
+		"return_type": details.ReturnType,
+		"body":        details.Body,
 	}
 }
 
-func RowAccessPolicyArgumentsToSchema(args []sdk.TableColumnSignature) []map[string]any {
+func MaskingPolicyArgumentsToSchema(args []sdk.TableColumnSignature) []map[string]any {
 	schema := make([]map[string]any, len(args))
 	for i, v := range args {
 		schema[i] = map[string]any{

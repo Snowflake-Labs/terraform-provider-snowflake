@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -53,7 +54,7 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 					Required:         true,
 					DiffSuppressFunc: NormalizeAndCompare(sdk.ToDataType),
 					ValidateDiagFunc: sdkValidation(sdk.ToDataType),
-					Description:      "The argument type. VECTOR data types are not yet supported. For more information about data types, check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).",
+					Description:      dataTypeFieldDescription("The argument type. VECTOR data types are not yet supported."),
 					ForceNew:         true,
 				},
 			},
@@ -209,9 +210,17 @@ func ReadRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	rowAccessPolicy, err := client.RowAccessPolicies.ShowByID(ctx, id)
 	if err != nil {
-		log.Printf("[DEBUG] row access policy (%s) not found", d.Id())
-		d.SetId("")
-		return nil
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query row access policy. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("row access policy name: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return diag.FromErr(err)
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return diag.FromErr(err)

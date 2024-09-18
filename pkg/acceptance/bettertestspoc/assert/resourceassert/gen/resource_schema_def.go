@@ -45,4 +45,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "RowAccessPolicy",
 		schema: resources.RowAccessPolicy().Schema,
 	},
+	{
+		name:   "MaskingPolicy",
+		schema: resources.MaskingPolicy().Schema,
+	},
 }

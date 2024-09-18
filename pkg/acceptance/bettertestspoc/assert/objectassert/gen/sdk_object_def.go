@@ -49,6 +49,11 @@ var allStructs = []SdkObjectDef{
 	},
 	{
 		IdType:       "sdk.SchemaObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeMaskingPolicy,
+		ObjectStruct: sdk.MaskingPolicy{},
+	},
+	{
+		IdType:       "sdk.SchemaObjectIdentifier",
 		ObjectType:   sdk.ObjectTypeAuthenticationPolicy,
 		ObjectStruct: sdk.AuthenticationPolicy{},
 	},

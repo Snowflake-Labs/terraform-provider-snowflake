@@ -47,6 +47,18 @@ func TestMaskingPolicyCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateMaskingPolicyOptions", "returns"))
 	})
 
+	t.Run("validation: both ifNotExists and orReplace present", func(t *testing.T) {
+		opts := &CreateMaskingPolicyOptions{
+			name:        id,
+			signature:   signature,
+			body:        expression,
+			returns:     DataTypeVARCHAR,
+			IfNotExists: Bool(true),
+			OrReplace:   Bool(true),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("CreateMaskingPolicyOptions", "OrReplace", "IfNotExists"))
+	})
+
 	t.Run("only required options", func(t *testing.T) {
 		opts := &CreateMaskingPolicyOptions{
 			name:      id,
@@ -63,7 +75,6 @@ func TestMaskingPolicyCreate(t *testing.T) {
 		opts := &CreateMaskingPolicyOptions{
 			OrReplace:           Bool(true),
 			name:                id,
-			IfNotExists:         Bool(true),
 			signature:           signature,
 			body:                expression,
 			returns:             DataTypeVARCHAR,
@@ -71,11 +82,10 @@ func TestMaskingPolicyCreate(t *testing.T) {
 			ExemptOtherPolicies: Bool(true),
 		}
 
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE MASKING POLICY IF NOT EXISTS %s AS ("col1" VARCHAR, "col2" VARCHAR) RETURNS %s -> %s COMMENT = '%s' EXEMPT_OTHER_POLICIES = %t`, id.FullyQualifiedName(), DataTypeVARCHAR, expression, comment, true)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE MASKING POLICY %s AS ("col1" VARCHAR, "col2" VARCHAR) RETURNS %s -> %s COMMENT = '%s' EXEMPT_OTHER_POLICIES = %t`, id.FullyQualifiedName(), DataTypeVARCHAR, expression, comment, true)
 	})
 }
 
-// TODO: add tests for body and tags
 func TestMaskingPolicyAlter(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
 
@@ -87,6 +97,35 @@ func TestMaskingPolicyAlter(t *testing.T) {
 	t.Run("validation: no option", func(t *testing.T) {
 		opts := &AlterMaskingPolicyOptions{
 			name: id,
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaskingPolicyOptions", "Set", "Unset", "SetTag", "UnsetTag", "NewName"))
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := &AlterMaskingPolicyOptions{
+			name: emptySchemaObjectIdentifier,
+		}
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: new name from different db", func(t *testing.T) {
+		newId := randomSchemaObjectIdentifier()
+
+		opts := &AlterMaskingPolicyOptions{
+			NewName: &newId,
+		}
+		assertOptsInvalidJoinedErrors(t, opts, ErrDifferentDatabase)
+		assertOptsInvalidJoinedErrors(t, opts, ErrDifferentSchema)
+	})
+
+	t.Run("validation: only 1 option allowed at the same time", func(t *testing.T) {
+		newID := randomSchemaObjectIdentifierInSchema(id.SchemaId())
+		opts := &AlterMaskingPolicyOptions{
+			name:    id,
+			NewName: &newID,
+			Set: &MaskingPolicySet{
+				Comment: String("foo"),
+			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterMaskingPolicyOptions", "Set", "Unset", "SetTag", "UnsetTag", "NewName"))
 	})
@@ -120,6 +159,46 @@ func TestMaskingPolicyAlter(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER MASKING POLICY %s RENAME TO %s", id.FullyQualifiedName(), newID.FullyQualifiedName())
 	})
+
+	t.Run("set body", func(t *testing.T) {
+		opts := &AlterMaskingPolicyOptions{
+			name: id,
+			Set: &MaskingPolicySet{
+				Body: Pointer("body"),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER MASKING POLICY %s SET BODY -> body", id.FullyQualifiedName())
+	})
+
+	t.Run("set tags", func(t *testing.T) {
+		opts := &AlterMaskingPolicyOptions{
+			name:     id,
+			IfExists: Pointer(true),
+			SetTag: []TagAssociation{
+				{
+					Name:  NewAccountObjectIdentifier("123"),
+					Value: "value-123",
+				},
+				{
+					Name:  NewAccountObjectIdentifier("456"),
+					Value: "value-123",
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER MASKING POLICY IF EXISTS %s SET TAG "123" = 'value-123', "456" = 'value-123'`, id.FullyQualifiedName())
+	})
+
+	t.Run("unset tags", func(t *testing.T) {
+		opts := &AlterMaskingPolicyOptions{
+			name:     id,
+			IfExists: Pointer(true),
+			UnsetTag: []ObjectIdentifier{
+				NewAccountObjectIdentifier("123"),
+				NewAccountObjectIdentifier("456"),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER MASKING POLICY IF EXISTS %s UNSET TAG "123", "456"`, id.FullyQualifiedName())
+	})
 }
 
 func TestMaskingPolicyDrop(t *testing.T) {
@@ -127,6 +206,13 @@ func TestMaskingPolicyDrop(t *testing.T) {
 
 	t.Run("validation: empty options", func(t *testing.T) {
 		opts := &DropMaskingPolicyOptions{}
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: incorrect identifier", func(t *testing.T) {
+		opts := &DropMaskingPolicyOptions{
+			name: emptySchemaObjectIdentifier,
+		}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

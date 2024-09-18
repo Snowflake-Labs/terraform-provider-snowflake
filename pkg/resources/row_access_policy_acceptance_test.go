@@ -26,7 +26,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 
 	body := "case when current_role() in ('ANALYST') then true else false end"
 	changedBody := "case when current_role() in ('CHANGED') then true else false end"
-	argument := []sdk.RowAccessPolicyArgument{
+	argument := []sdk.TableColumnSignature{
 		{
 			Name: "A",
 			Type: sdk.DataTypeVARCHAR,
@@ -36,7 +36,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			Type: sdk.DataTypeVARCHAR,
 		},
 	}
-	changedArgument := []sdk.RowAccessPolicyArgument{
+	changedArgument := []sdk.TableColumnSignature{
 		{
 			Name: "C",
 			Type: sdk.DataTypeBoolean,
@@ -195,7 +195,7 @@ func TestAcc_RowAccessPolicy_Issue2053(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"
-	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
+	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
 			Name: "A",
 			Type: sdk.DataTypeVARCHAR,
@@ -253,7 +253,7 @@ func TestAcc_RowAccessPolicy_Rename(t *testing.T) {
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"
-	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
+	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
 			Name: "a",
 			Type: sdk.DataTypeVARCHAR,
@@ -346,7 +346,7 @@ func TestAcc_RowAccessPolicy_InvalidDataType(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	body := "case when current_role() in ('ANALYST') then true else false end"
-	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
+	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
 			Name: "a",
 			Type: "invalid-type",
@@ -372,7 +372,7 @@ func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"
-	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
+	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
 			Name: "A",
 			Type: "TEXT",
@@ -391,7 +391,7 @@ func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
 				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
-					HasArguments([]sdk.RowAccessPolicyArgument{
+					HasArguments([]sdk.TableColumnSignature{
 						{
 							Name: "A",
 							Type: sdk.DataTypeVARCHAR,
@@ -403,11 +403,11 @@ func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
 	})
 }
 
-func TestAcc_view_migrateFromVersion_0_95_0_LowercaseArgName(t *testing.T) {
+func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"
-	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
+	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
 			Name: "A",
 			Type: sdk.DataTypeVARCHAR,
@@ -467,7 +467,7 @@ func TestAcc_view_migrateFromVersion_0_95_0_LowercaseArgName(t *testing.T) {
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasBodyString(body).
-					HasArguments([]sdk.RowAccessPolicyArgument{
+					HasArguments([]sdk.TableColumnSignature{
 						{
 							Name: "A",
 							Type: sdk.DataTypeVARCHAR,
@@ -483,11 +483,11 @@ func TestAcc_view_migrateFromVersion_0_95_0_LowercaseArgName(t *testing.T) {
 	})
 }
 
-func TestAcc_view_migrateFromVersion_0_95_0_UppercaseArgName(t *testing.T) {
+func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"
-	policyModel := model.RowAccessPolicy("test", []sdk.RowAccessPolicyArgument{
+	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
 			Name: "A",
 			Type: sdk.DataTypeVARCHAR,
@@ -544,7 +544,7 @@ func TestAcc_view_migrateFromVersion_0_95_0_UppercaseArgName(t *testing.T) {
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasBodyString(body).
-					HasArguments([]sdk.RowAccessPolicyArgument{
+					HasArguments([]sdk.TableColumnSignature{
 						{
 							Name: "A",
 							Type: sdk.DataTypeVARCHAR,

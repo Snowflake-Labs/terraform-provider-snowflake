@@ -27,7 +27,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		assert.Equal(t, "ROLE", rowAccessPolicy.OwnerRoleType)
 	}
 
-	assertRowAccessPolicyDescription := func(t *testing.T, rowAccessPolicyDescription *sdk.RowAccessPolicyDescription, id sdk.SchemaObjectIdentifier, signature []sdk.RowAccessPolicyArgument, expectedBody string) {
+	assertRowAccessPolicyDescription := func(t *testing.T, rowAccessPolicyDescription *sdk.RowAccessPolicyDescription, id sdk.SchemaObjectIdentifier, signature []sdk.TableColumnSignature, expectedBody string) {
 		t.Helper()
 		assert.Equal(t, sdk.RowAccessPolicyDescription{
 			Name:       id.Name(),
@@ -250,7 +250,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		returnedRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, rowAccessPolicy.ID())
 		require.NoError(t, err)
 
-		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.RowAccessPolicyArgument{{
+		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.TableColumnSignature{{
 			Name: argName,
 			Type: argType,
 		}}, body)
@@ -269,7 +269,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		returnedRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, rowAccessPolicy.ID())
 		require.NoError(t, err)
 
-		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.RowAccessPolicyArgument{{
+		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.TableColumnSignature{{
 			Name: argName,
 			Type: sdk.DataTypeTimestampNTZ,
 		}}, body)
@@ -288,7 +288,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		returnedRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, rowAccessPolicy.ID())
 		require.NoError(t, err)
 
-		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.RowAccessPolicyArgument{{
+		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.TableColumnSignature{{
 			Name: argName,
 			Type: sdk.DataTypeVARCHAR,
 		}}, body)
@@ -377,11 +377,11 @@ func TestInt_RowAccessPoliciesDescribe(t *testing.T) {
 		assert.Equal(t, id.Name(), policyDetails.Name)
 		assert.Equal(t, "BOOLEAN", policyDetails.ReturnType)
 		require.NoError(t, err)
-		wantArgs := make([]sdk.RowAccessPolicyArgument, len(args))
+		wantArgs := make([]sdk.TableColumnSignature, len(args))
 		for i, arg := range args {
 			dataType, err := sdk.ToDataType(string(arg.Type))
 			require.NoError(t, err)
-			wantArgs[i] = sdk.RowAccessPolicyArgument{
+			wantArgs[i] = sdk.TableColumnSignature{
 				Name: arg.Name,
 				Type: dataType,
 			}
