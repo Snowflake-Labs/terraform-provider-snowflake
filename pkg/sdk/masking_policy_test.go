@@ -256,7 +256,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 			},
 			In: &ExtendedIn{
 				In: In{
-					Schema: id.SchemaId(),
+					Account: Pointer(true),
 				},
 			},
 		}
@@ -271,7 +271,7 @@ func TestMaskingPolicyShow(t *testing.T) {
 			},
 			In: &ExtendedIn{
 				In: In{
-					Schema: id.SchemaId(),
+					Database: id.DatabaseId(),
 				},
 			},
 		}
