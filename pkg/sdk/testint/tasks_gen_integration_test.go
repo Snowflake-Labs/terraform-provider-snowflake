@@ -1,7 +1,6 @@
 package testint
 
 import (
-	"errors"
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"testing"
@@ -11,15 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: Generate assertions
-// TODO: Add newly added fields to all options tests
-
 func TestInt_Tasks(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 	sql := "SELECT CURRENT_TIMESTAMP"
-
-	// TODO: Add new fields in asserts
 
 	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, warehouseName string) {
 		t.Helper()
@@ -306,9 +300,25 @@ func TestInt_Tasks(t *testing.T) {
 		require.Contains(t, []sdk.SchemaObjectIdentifier{root1Id, root2Id}, rootTasks[1].ID())
 
 		// we get an error when trying to start
-		alterRequest := sdk.NewAlterTaskRequest(root1Id).WithResume(true)
-		err = client.Tasks.Alter(ctx, alterRequest)
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(root1Id).WithResume(true))
 		require.ErrorContains(t, err, "The graph has more than one root task (one without predecessors)")
+	})
+
+	t.Run("validate: finalizer set on non-root task", func(t *testing.T) {
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		finalizerId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(rootTaskId, sql))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, rootTaskId))
+
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTaskId}))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
+
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(finalizerId, sql).WithFinalize(id))
+		require.ErrorContains(t, err, "cannot finalize a non-root task")
 	})
 
 	t.Run("create task: with tags", func(t *testing.T) {
@@ -365,7 +375,11 @@ func TestInt_Tasks(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		assertions.AssertThat(t, objectassert.Task(t, id).
+		task, err := client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+		createdOn := task.CreatedOn
+
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
 			HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
 			HasSchedule("10 MINUTES").
 			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
@@ -374,6 +388,24 @@ func TestInt_Tasks(t *testing.T) {
 			HasComment("some_comment").
 			HasTaskRelations(sdk.TaskRelations{}),
 		)
+
+		err = client.Tasks.CreateOrAlter(ctx, sdk.NewCreateOrAlterTaskRequest(id, sql))
+		require.NoError(t, err)
+
+		alteredTask, err := client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, alteredTask).
+			HasWarehouse("").
+			HasSchedule("").
+			HasConfig("").
+			HasAllowOverlappingExecution(false).
+			HasCondition("").
+			HasComment("").
+			HasTaskRelations(sdk.TaskRelations{}),
+		)
+
+		require.Equal(t, createdOn, alteredTask.CreatedOn)
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
@@ -574,7 +606,6 @@ func TestInt_Tasks(t *testing.T) {
 		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).HasCondition(""))
 	})
 
-	// TODO: Change this test (the search is too broad)
 	t.Run("show task: default", func(t *testing.T) {
 		task1, task1Cleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(task1Cleanup)
@@ -582,24 +613,23 @@ func TestInt_Tasks(t *testing.T) {
 		task2, task2Cleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(task2Cleanup)
 
-		returnedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest())
+		returnedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().WithIn(sdk.In{Schema: testClientHelper().Ids.SchemaId()}))
 		require.NoError(t, err)
 
-		assert.LessOrEqual(t, 2, len(returnedTasks))
+		require.Len(t, returnedTasks, 2)
 		assert.Contains(t, returnedTasks, *task1)
 		assert.Contains(t, returnedTasks, *task2)
 	})
 
-	// TODO: Change this test (the search is too broad)
 	t.Run("show task: terse", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		task, taskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithSchedule("10 MINUTE"))
 		t.Cleanup(taskCleanup)
 
-		returnedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().WithTerse(true))
+		returnedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().WithIn(sdk.In{Schema: testClientHelper().Ids.SchemaId()}).WithTerse(true))
 		require.NoError(t, err)
 
-		assert.LessOrEqual(t, 1, len(returnedTasks))
+		require.Len(t, returnedTasks, 1)
 		assertTaskTerse(t, &returnedTasks[0], task.ID(), "10 MINUTE")
 	})
 
@@ -610,11 +640,10 @@ func TestInt_Tasks(t *testing.T) {
 		task2, task2Cleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(task2Cleanup)
 
-		showRequest := sdk.NewShowTaskRequest().
+		returnedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().
 			WithLike(sdk.Like{Pattern: &task1.Name}).
 			WithIn(sdk.In{Schema: testClientHelper().Ids.SchemaId()}).
-			WithLimit(sdk.LimitFrom{Rows: sdk.Int(5)})
-		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
+			WithLimit(sdk.LimitFrom{Rows: sdk.Int(5)}))
 
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(returnedTasks))
@@ -782,24 +811,6 @@ func TestInt_TasksShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	cleanupTaskHandle := func(id sdk.SchemaObjectIdentifier) func() {
-		return func() {
-			err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
-			require.NoError(t, err)
-		}
-	}
-
-	createTaskHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
-		t.Helper()
-
-		err := client.Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP"))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskHandle(id))
-	}
-
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
@@ -807,8 +818,10 @@ func TestInt_TasksShowByID(t *testing.T) {
 		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
-		createTaskHandle(t, id1)
-		createTaskHandle(t, id2)
+		_, t1Cleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id1, "SELECT CURRENT_TIMESTAMP"))
+		_, t2Cleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id2, "SELECT CURRENT_TIMESTAMP"))
+		t.Cleanup(t1Cleanup)
+		t.Cleanup(t2Cleanup)
 
 		e1, err := client.Tasks.ShowByID(ctx, id1)
 		require.NoError(t, err)
