@@ -254,16 +254,16 @@ func TestRowAccessPolicies_Describe(t *testing.T) {
 	})
 }
 
-func TestRowAccessPolicyDescription_Arguments(t *testing.T) {
+func TestRowAccessPolicyDescription_Signature(t *testing.T) {
 	tests := []struct {
 		name      string
 		signature string
-		want      []RowAccessPolicyArgument
+		want      []TableColumnSignature
 	}{
 		{
 			name:      "signature with 1 arg",
 			signature: "(A VARCHAR)",
-			want: []RowAccessPolicyArgument{
+			want: []TableColumnSignature{
 				{
 					Name: "A",
 					Type: "VARCHAR",
@@ -273,7 +273,7 @@ func TestRowAccessPolicyDescription_Arguments(t *testing.T) {
 		{
 			name:      "signature with multiple args",
 			signature: "(A VARCHAR, B BOOLEAN)",
-			want: []RowAccessPolicyArgument{
+			want: []TableColumnSignature{
 				{
 					Name: "A",
 					Type: "VARCHAR",
@@ -287,7 +287,7 @@ func TestRowAccessPolicyDescription_Arguments(t *testing.T) {
 		{
 			name:      "signature with complex name",
 			signature: "(a B VARCHAR)",
-			want: []RowAccessPolicyArgument{
+			want: []TableColumnSignature{
 				{
 					Name: "a B",
 					Type: "VARCHAR",
@@ -297,35 +297,11 @@ func TestRowAccessPolicyDescription_Arguments(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &RowAccessPolicyDescription{
+			d := &describeRowAccessPolicyDBRow{
 				Signature: tt.signature,
 			}
-			got, err := d.Arguments()
-			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
-		})
-	}
-}
-
-func TestRowAccessPolicyDescription_ArgumentsInvalid(t *testing.T) {
-	tests := []struct {
-		name      string
-		signature string
-		err       string
-	}{
-		{
-			name:      "signature without data type",
-			signature: "(A)",
-			err:       "parsing policy arguments: expected argument name and type, got A",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &RowAccessPolicyDescription{
-				Signature: tt.signature,
-			}
-			_, err := d.Arguments()
-			require.ErrorContains(t, err, tt.err)
+			got := d.convert()
+			require.Equal(t, tt.want, got.Signature)
 		})
 	}
 }

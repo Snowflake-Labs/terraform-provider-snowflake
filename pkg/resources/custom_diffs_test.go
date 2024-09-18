@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -552,4 +554,86 @@ func Test_ComputedIfAnyAttributeChanged(t *testing.T) {
 		require.NotNil(t, diff)
 		assert.Nil(t, diff.Attributes["computed_value"])
 	})
+}
+
+func TestForceNewIfAllKeysAreNotSet(t *testing.T) {
+	tests := []struct {
+		name           string
+		stateValue     map[string]string
+		rawConfigValue map[string]any
+		wantForceNew   bool
+	}{
+		{
+			name: "all values set to unset",
+			stateValue: map[string]string{
+				"value":  "123",
+				"value2": "string value",
+				"value3": "[one two]",
+			},
+			rawConfigValue: map[string]any{},
+			wantForceNew:   true,
+		},
+		{
+			name: "only value set to unset",
+			stateValue: map[string]string{
+				"value": "123",
+			},
+			rawConfigValue: map[string]any{},
+			wantForceNew:   true,
+		},
+		{
+			name: "only value2 set to unset",
+			stateValue: map[string]string{
+				"value2": "string value",
+			},
+			rawConfigValue: map[string]any{},
+			wantForceNew:   true,
+		},
+		{
+			name: "only value3 set to unset",
+			stateValue: map[string]string{
+				"value3": "[one two]",
+			},
+			rawConfigValue: map[string]any{},
+			// We expect here to not re-create because value3 doesn't have a custom diff on it
+			// and the rest custom diffs don't work when the values are not set.
+			wantForceNew: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &schema.Provider{
+				ResourcesMap: map[string]*schema.Resource{
+					"test": {
+						Schema: map[string]*schema.Schema{
+							"value": {
+								Type: schema.TypeInt,
+							},
+							"value2": {
+								Type: schema.TypeString,
+							},
+							"value3": {
+								Type: schema.TypeList,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+						CustomizeDiff: customdiff.All(
+							resources.ForceNewIfAllKeysAreNotSet("value", "value", "value2", "value3"),
+							resources.ForceNewIfAllKeysAreNotSet("value2", "value", "value2", "value3"),
+						),
+					},
+				},
+			}
+			diff := calculateDiffFromAttributes(
+				t,
+				p,
+				tt.stateValue,
+				tt.rawConfigValue,
+			)
+			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
+		})
+	}
 }

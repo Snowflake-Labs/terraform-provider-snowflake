@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -1809,4 +1813,54 @@ func TestAcc_GrantPrivilegesToAccountRole_OnDataset_issue2807(t *testing.T) {
 			},
 		},
 	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3050
+func TestAcc_GrantPrivilegesToAccountRole_OnFutureModels_issue3050(t *testing.T) {
+	accountRoleName := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	databaseName := acc.TestClient().Ids.DatabaseId().Name()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.95.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config:             grantPrivilegesToAccountRoleOnFutureInDatabaseConfig(accountRoleName, []string{"USAGE"}, sdk.PluralObjectTypeModels, databaseName),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   grantPrivilegesToAccountRoleOnFutureInDatabaseConfig(accountRoleName, []string{"USAGE"}, sdk.PluralObjectTypeModels, databaseName),
+			},
+		},
+	})
+}
+
+func grantPrivilegesToAccountRoleOnFutureInDatabaseConfig(accountRoleName string, privileges []string, objectTypePlural sdk.PluralObjectType, databaseName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_account_role" "test" {
+	name = "%[1]s"
+}
+
+resource "snowflake_grant_privileges_to_account_role" "test" {
+  account_role_name = snowflake_account_role.test.name
+  privileges        = [ %[2]s ]
+
+  on_schema_object {
+    future {
+      object_type_plural = "%[3]s"
+      in_database        = "%[4]s"
+    }
+  }
+}
+`, accountRoleName, strings.Join(collections.Map(privileges, strconv.Quote), ","), objectTypePlural, databaseName)
 }

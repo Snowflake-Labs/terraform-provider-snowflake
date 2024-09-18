@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
@@ -1479,4 +1483,55 @@ func TestAcc_GrantPrivilegesToDatabaseRole_IdentifierQuotingDiffSuppression(t *t
 			},
 		},
 	})
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3050
+func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureModels_issue3050(t *testing.T) {
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseName := acc.TestClient().Ids.DatabaseId().Name()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.95.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config:             grantPrivilegesToDatabaseRoleOnFutureInDatabaseConfig(databaseRoleId, []string{"USAGE"}, sdk.PluralObjectTypeModels, databaseName),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   grantPrivilegesToDatabaseRoleOnFutureInDatabaseConfig(databaseRoleId, []string{"USAGE"}, sdk.PluralObjectTypeModels, databaseName),
+			},
+		},
+	})
+}
+
+func grantPrivilegesToDatabaseRoleOnFutureInDatabaseConfig(databaseRoleId sdk.DatabaseObjectIdentifier, privileges []string, objectTypePlural sdk.PluralObjectType, databaseName string) string {
+	return fmt.Sprintf(`
+resource "snowflake_database_role" "test" {
+	name = "%[1]s"
+	database = "%[2]s"
+}
+
+resource "snowflake_grant_privileges_to_database_role" "test" {
+  database_role_name = snowflake_database_role.test.fully_qualified_name
+  privileges        = [ %[3]s ]
+
+  on_schema_object {
+    future {
+      object_type_plural = "%[4]s"
+      in_database        = "%[5]s"
+    }
+  }
+}
+`, databaseRoleId.Name(), databaseRoleId.DatabaseName(), strings.Join(collections.Map(privileges, strconv.Quote), ","), objectTypePlural, databaseName)
 }

@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
@@ -133,9 +134,14 @@ func (r *DescribeRowAccessPolicyRequest) toOpts() *DescribeRowAccessPolicyOption
 func (r describeRowAccessPolicyDBRow) convert() *RowAccessPolicyDescription {
 	rowAccessPolicyDescription := &RowAccessPolicyDescription{
 		Name:       r.Name,
-		Signature:  r.Signature,
 		ReturnType: r.ReturnType,
 		Body:       r.Body,
+	}
+	signature, err := ParseTableColumnSignature(r.Signature)
+	if err != nil {
+		log.Printf("[DEBUG] parsing table column signature: %v", err)
+	} else {
+		rowAccessPolicyDescription.Signature = signature
 	}
 	return rowAccessPolicyDescription
 }

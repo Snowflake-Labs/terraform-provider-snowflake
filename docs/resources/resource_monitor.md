@@ -5,6 +5,14 @@ description: |-
   
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0950--v0960) to use it.
+
+~> **Note** For more details about resource monitor usage, please visit [this guide on Snowflake documentation page](https://docs.snowflake.com/en/user-guide/resource-monitors).
+
+**! Warning !** Due to Snowflake limitations, the following actions are not supported:
+- Cannot create resource monitors with only triggers set, any other attribute has to be set.
+- Once a resource monitor has at least one trigger assigned, it cannot fully unset them (has to have at least one trigger, doesn't matter of which type). That's why when you unset all the triggers on a resource monitor, it will be automatically recreated.
+
 # snowflake_resource_monitor (Resource)
 
 
@@ -12,22 +20,35 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "snowflake_resource_monitor" "monitor" {
-  name         = "monitor"
+// Note: Without credit quota and triggers specified in the configuration, the resource monitor is not performing any work.
+// More on resource monitor usage: https://docs.snowflake.com/en/user-guide/resource-monitors.
+resource "snowflake_resource_monitor" "minimal" {
+  name = "resource-monitor-name"
+}
+
+// Note: Resource monitors have to be attached to account or warehouse to be able to track credit usage.
+resource "snowflake_resource_monitor" "minimal_working" {
+  name            = "resource-monitor-name"
+  credit_quota    = 100
+  suspend_trigger = 100
+  notify_users    = ["USERONE", "USERTWO"]
+}
+
+resource "snowflake_resource_monitor" "complete" {
+  name         = "resource-monitor-name"
   credit_quota = 100
 
   frequency       = "DAILY"
-  start_timestamp = "2020-12-07 00:00"
-  end_timestamp   = "2021-12-07 00:00"
+  start_timestamp = "2030-12-07 00:00"
+  end_timestamp   = "2035-12-07 00:00"
 
-  notify_triggers            = [40, 50]
-  suspend_triggers           = 50
-  suspend_immediate_triggers = 90
+  notify_triggers           = [40, 50]
+  suspend_trigger           = 50
+  suspend_immediate_trigger = 90
 
   notify_users = ["USERONE", "USERTWO"]
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 

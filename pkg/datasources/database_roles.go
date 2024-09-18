@@ -66,6 +66,7 @@ func DatabaseRoles() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: ReadDatabaseRoles,
 		Schema:      databaseRolesSchema,
+		Description: "Datasource used to get details of filtered database roles. Filtering is aligned with the current possibilities for [SHOW DATABASE ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-database-roles) query (`like` and `limit` are supported). The results of SHOW is encapsulated in show_output collection.",
 	}
 }
 

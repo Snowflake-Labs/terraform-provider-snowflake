@@ -8,6 +8,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_NormalizeAndCompare(t *testing.T) {
@@ -149,4 +150,57 @@ func Test_NormalizeAndCompareIdentifiersSet(t *testing.T) {
 		// TODO(SNOW-1511594): Cannot be tested with schema.TestResourceDataRaw because it doesn't populate raw state which is used in the cases below
 		// assert.True(t, resources.NormalizeAndCompareIdentifiersInSet("value")("value.doesnt_matter", "", "SCHEMA.OBJECT.IDENTIFIER", resourceData))
 	})
+}
+
+func Test_ignoreNewEmptyList(t *testing.T) {
+	tests := []struct {
+		name      string
+		subfields []string
+		key       string
+		old       string
+		new       string
+		suppress  bool
+	}{
+		{
+			name:     "suppress on zero count",
+			key:      "a.#",
+			old:      "5",
+			new:      "0",
+			suppress: true,
+		},
+		{
+			name:      "suppress on ignored field",
+			key:       "a.0.b",
+			subfields: []string{"b"},
+			suppress:  true,
+		},
+		{
+			name:      "suppress on nested ignored field",
+			key:       "a.0.b.c.d",
+			subfields: []string{"b.c.d"},
+			suppress:  true,
+		},
+		{
+			name:     "do not suppress on non-zero count",
+			key:      "a.#",
+			new:      "5",
+			suppress: false,
+		},
+		{
+			name:      "do not suppress on non-ignored field",
+			key:       "a.0.b",
+			subfields: []string{"c"},
+			suppress:  false,
+		},
+		{
+			name:     "do not suppress on invalid key",
+			key:      "a",
+			suppress: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.suppress, resources.IgnoreNewEmptyListOrSubfields(tt.subfields...)(tt.key, tt.old, tt.new, nil))
+		})
+	}
 }

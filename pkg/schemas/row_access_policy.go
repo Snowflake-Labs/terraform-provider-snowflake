@@ -11,7 +11,19 @@ var RowAccessPolicyDescribeSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"signature": {
-		Type:     schema.TypeString,
+		Type: schema.TypeList,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
 		Computed: true,
 	},
 	"return_type": {
@@ -25,15 +37,22 @@ var RowAccessPolicyDescribeSchema = map[string]*schema.Schema{
 }
 
 func RowAccessPolicyDescriptionToSchema(description sdk.RowAccessPolicyDescription) map[string]any {
+	signatureElem := make([]map[string]any, len(description.Signature))
+	for i, v := range description.Signature {
+		signatureElem[i] = map[string]any{
+			"name": v.Name,
+			"type": string(v.Type),
+		}
+	}
 	return map[string]any{
 		"name":        description.Name,
-		"signature":   description.Signature,
+		"signature":   signatureElem,
 		"return_type": description.ReturnType,
 		"body":        description.Body,
 	}
 }
 
-func RowAccessPolicyArgumentsToSchema(args []sdk.RowAccessPolicyArgument) []map[string]any {
+func RowAccessPolicyArgumentsToSchema(args []sdk.TableColumnSignature) []map[string]any {
 	schema := make([]map[string]any, len(args))
 	for i, v := range args {
 		schema[i] = map[string]any{

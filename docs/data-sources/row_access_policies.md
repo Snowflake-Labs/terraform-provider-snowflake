@@ -152,7 +152,16 @@ Read-Only:
 - `body` (String)
 - `name` (String)
 - `return_type` (String)
-- `signature` (String)
+- `signature` (List of Object) (see [below for nested schema](#nestedobjatt--row_access_policies--describe_output--signature))
+
+<a id="nestedobjatt--row_access_policies--describe_output--signature"></a>
+### Nested Schema for `row_access_policies.describe_output.signature`
+
+Read-Only:
+
+- `name` (String)
+- `type` (String)
+
 
 
 <a id="nestedobjatt--row_access_policies--show_output"></a>

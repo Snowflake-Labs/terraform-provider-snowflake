@@ -1,7 +1,6 @@
 package testint
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -28,11 +27,11 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		assert.Equal(t, "ROLE", rowAccessPolicy.OwnerRoleType)
 	}
 
-	assertRowAccessPolicyDescription := func(t *testing.T, rowAccessPolicyDescription *sdk.RowAccessPolicyDescription, id sdk.SchemaObjectIdentifier, expectedSignature string, expectedBody string) {
+	assertRowAccessPolicyDescription := func(t *testing.T, rowAccessPolicyDescription *sdk.RowAccessPolicyDescription, id sdk.SchemaObjectIdentifier, signature []sdk.TableColumnSignature, expectedBody string) {
 		t.Helper()
 		assert.Equal(t, sdk.RowAccessPolicyDescription{
 			Name:       id.Name(),
-			Signature:  expectedSignature,
+			Signature:  signature,
 			ReturnType: "BOOLEAN",
 			Body:       expectedBody,
 		}, *rowAccessPolicyDescription)
@@ -251,7 +250,10 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		returnedRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, rowAccessPolicy.ID())
 		require.NoError(t, err)
 
-		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", argName, argType), body)
+		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.TableColumnSignature{{
+			Name: argName,
+			Type: argType,
+		}}, body)
 	})
 
 	t.Run("describe row access policy: with timestamp data type normalization", func(t *testing.T) {
@@ -267,7 +269,10 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		returnedRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, rowAccessPolicy.ID())
 		require.NoError(t, err)
 
-		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", argName, sdk.DataTypeTimestampNTZ), body)
+		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.TableColumnSignature{{
+			Name: argName,
+			Type: sdk.DataTypeTimestampNTZ,
+		}}, body)
 	})
 
 	t.Run("describe row access policy: with varchar data type normalization", func(t *testing.T) {
@@ -283,7 +288,10 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		returnedRowAccessPolicyDescription, err := client.RowAccessPolicies.Describe(ctx, rowAccessPolicy.ID())
 		require.NoError(t, err)
 
-		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), fmt.Sprintf("(%s %s)", argName, sdk.DataTypeVARCHAR), body)
+		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.TableColumnSignature{{
+			Name: argName,
+			Type: sdk.DataTypeVARCHAR,
+		}}, body)
 	})
 
 	t.Run("describe row access policy: non-existing", func(t *testing.T) {
@@ -368,17 +376,16 @@ func TestInt_RowAccessPoliciesDescribe(t *testing.T) {
 		assert.Equal(t, "true", policyDetails.Body)
 		assert.Equal(t, id.Name(), policyDetails.Name)
 		assert.Equal(t, "BOOLEAN", policyDetails.ReturnType)
-		gotArgs, err := policyDetails.Arguments()
 		require.NoError(t, err)
-		wantArgs := make([]sdk.RowAccessPolicyArgument, len(args))
+		wantArgs := make([]sdk.TableColumnSignature, len(args))
 		for i, arg := range args {
 			dataType, err := sdk.ToDataType(string(arg.Type))
 			require.NoError(t, err)
-			wantArgs[i] = sdk.RowAccessPolicyArgument{
+			wantArgs[i] = sdk.TableColumnSignature{
 				Name: arg.Name,
-				Type: string(dataType),
+				Type: dataType,
 			}
 		}
-		assert.Equal(t, wantArgs, gotArgs)
+		assert.Equal(t, wantArgs, policyDetails.Signature)
 	})
 }
