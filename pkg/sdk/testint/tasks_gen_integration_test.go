@@ -1,9 +1,10 @@
 package testint
 
 import (
+	"testing"
+
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
-	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
@@ -430,7 +431,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSet(*sdk.NewTaskSetRequest().
 			// TODO: Cannot set warehouse due to Snowflake error
-			//WithWarehouse(testClientHelper().Ids.WarehouseId()).
+			// WithWarehouse(testClientHelper().Ids.WarehouseId()).
 			WithSchedule("10 MINUTE").
 			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
 			WithAllowOverlappingExecution(true).
@@ -443,7 +444,7 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
-			//HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
+			// HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
 			HasSchedule("10 MINUTE").
 			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
 			HasAllowOverlappingExecution(true).

@@ -365,7 +365,7 @@ func (r taskDBRow) convert() *Task {
 	return &task
 }
 
-// TODO: Remove and use Task.TaskRelations instead
+// TODO(SNOW-1348116 - next prs): Remove and use Task.TaskRelations instead
 func getPredecessors(predecessors string) ([]string, error) {
 	// Since 2022_03, Snowflake returns this as a JSON array (even empty)
 	// The list is formatted, e.g.:

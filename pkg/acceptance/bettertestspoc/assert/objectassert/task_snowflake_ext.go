@@ -3,10 +3,11 @@ package objectassert
 import (
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"reflect"
 	"slices"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 func (w *TaskAssert) HasNotEmptyCreatedOn() *TaskAssert {

@@ -2,7 +2,17 @@ package resources
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"slices"
+	"strconv"
+	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -139,10 +149,10 @@ func differentValue(a, b map[string]any) map[string]any {
 // Task returns a pointer to the resource representing a task.
 func Task() *schema.Resource {
 	return &schema.Resource{
-		//Create: CreateTask,
-		//Read:   ReadTask,
-		//Update: UpdateTask,
-		//Delete: DeleteTask,
+		Create: CreateTask,
+		Read:   ReadTask,
+		Update: UpdateTask,
+		Delete: DeleteTask,
 		CustomizeDiff: customdiff.ForceNewIfChange("when", func(ctx context.Context, old, new, meta any) bool {
 			return old.(string) != "" && new.(string) == ""
 		}),
@@ -154,539 +164,539 @@ func Task() *schema.Resource {
 	}
 }
 
-//// ReadTask implements schema.ReadFunc.
-//func ReadTask(d *schema.ResourceData, meta interface{}) error {
-//	client := meta.(*provider.Context).Client
-//	ctx := context.Background()
-//
-//	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-//
-//	task, err := client.Tasks.ShowByID(ctx, taskId)
-//	if err != nil {
-//		// If not found, mark resource to be removed from state file during apply or refresh
-//		log.Printf("[DEBUG] task (%s) not found", d.Id())
-//		d.SetId("")
-//		return nil
-//	}
-//	if err := d.Set(FullyQualifiedNameAttributeName, taskId.FullyQualifiedName()); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("enabled", task.IsStarted()); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("name", task.Name); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("database", task.DatabaseName); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("schema", task.SchemaName); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("warehouse", task.Warehouse); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("schedule", task.Schedule); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("comment", task.Comment); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("allow_overlapping_execution", task.AllowOverlappingExecution); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("error_integration", task.ErrorIntegration); err != nil {
-//		return err
-//	}
-//
-//	predecessors := make([]string, len(task.Predecessors))
-//	for i, p := range task.Predecessors {
-//		predecessors[i] = p.Name()
-//	}
-//	if err := d.Set("after", predecessors); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("when", task.Condition); err != nil {
-//		return err
-//	}
-//
-//	if err := d.Set("sql_statement", task.Definition); err != nil {
-//		return err
-//	}
-//
-//	opts := &sdk.ShowParametersOptions{In: &sdk.ParametersIn{Task: taskId}}
-//	params, err := client.Parameters.ShowParameters(ctx, opts)
-//	if err != nil {
-//		return err
-//	}
-//
-//	if len(params) > 0 {
-//		sessionParameters := make(map[string]any)
-//		fieldParameters := map[string]interface{}{
-//			"user_task_managed_initial_warehouse_size": "",
-//		}
-//
-//		for _, param := range params {
-//			if param.Level != "TASK" {
-//				continue
-//			}
-//			switch param.Key {
-//			case "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE":
-//				fieldParameters["user_task_managed_initial_warehouse_size"] = param.Value
-//			case "USER_TASK_TIMEOUT_MS":
-//				timeout, err := strconv.ParseInt(param.Value, 10, 64)
-//				if err != nil {
-//					return err
-//				}
-//
-//				fieldParameters["user_task_timeout_ms"] = timeout
-//			case "SUSPEND_TASK_AFTER_NUM_FAILURES":
-//				num, err := strconv.ParseInt(param.Value, 10, 64)
-//				if err != nil {
-//					return err
-//				}
-//
-//				fieldParameters["suspend_task_after_num_failures"] = num
-//			default:
-//				sessionParameters[param.Key] = param.Value
-//			}
-//		}
-//
-//		if err := d.Set("session_parameters", sessionParameters); err != nil {
-//			return err
-//		}
-//
-//		for key, value := range fieldParameters {
-//			// lintignore:R001
-//			err = d.Set(key, value)
-//			if err != nil {
-//				return err
-//			}
-//		}
-//	}
-//
-//	return nil
-//}
-//
-//// CreateTask implements schema.CreateFunc.
-//func CreateTask(d *schema.ResourceData, meta interface{}) error {
-//	client := meta.(*provider.Context).Client
-//	ctx := context.Background()
-//
-//	databaseName := d.Get("database").(string)
-//	schemaName := d.Get("schema").(string)
-//	name := d.Get("name").(string)
-//
-//	sqlStatement := d.Get("sql_statement").(string)
-//
-//	taskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
-//	createRequest := sdk.NewCreateTaskRequest(taskId, sqlStatement)
-//
-//	// Set optionals
-//	if v, ok := d.GetOk("warehouse"); ok {
-//		warehouseId := sdk.NewAccountObjectIdentifier(v.(string))
-//		createRequest.WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithWarehouse(&warehouseId))
-//	}
-//
-//	if v, ok := d.GetOk("user_task_managed_initial_warehouse_size"); ok {
-//		size, err := sdk.ToWarehouseSize(v.(string))
-//		if err != nil {
-//			return err
-//		}
-//		createRequest.WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(&size))
-//	}
-//
-//	if v, ok := d.GetOk("schedule"); ok {
-//		createRequest.WithSchedule(sdk.String(v.(string)))
-//	}
-//
-//	if v, ok := d.GetOk("session_parameters"); ok {
-//		sessionParameters, err := sdk.GetSessionParametersFrom(v.(map[string]any))
-//		if err != nil {
-//			return err
-//		}
-//		createRequest.WithSessionParameters(sessionParameters)
-//	}
-//
-//	if v, ok := d.GetOk("user_task_timeout_ms"); ok {
-//		createRequest.WithUserTaskTimeoutMs(sdk.Int(v.(int)))
-//	}
-//
-//	if v, ok := d.GetOk("suspend_task_after_num_failures"); ok {
-//		createRequest.WithSuspendTaskAfterNumFailures(sdk.Int(v.(int)))
-//	}
-//
-//	if v, ok := d.GetOk("comment"); ok {
-//		createRequest.WithComment(sdk.String(v.(string)))
-//	}
-//
-//	if v, ok := d.GetOk("allow_overlapping_execution"); ok {
-//		createRequest.WithAllowOverlappingExecution(sdk.Bool(v.(bool)))
-//	}
-//
-//	if v, ok := d.GetOk("error_integration"); ok {
-//		createRequest.WithErrorIntegration(sdk.String(v.(string)))
-//	}
-//
-//	if v, ok := d.GetOk("after"); ok {
-//		after := expandStringList(v.([]interface{}))
-//		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0)
-//		for _, dep := range after {
-//			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
-//			tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, precedingTaskId, taskId)
-//			defer func() {
-//				if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-//					log.Printf("[WARN] failed to resume tasks: %s", err)
-//				}
-//			}()
-//			if err != nil {
-//				return err
-//			}
-//
-//			precedingTasks = append(precedingTasks, precedingTaskId)
-//		}
-//		createRequest.WithAfter(precedingTasks)
-//	}
-//
-//	if v, ok := d.GetOk("when"); ok {
-//		createRequest.WithWhen(sdk.String(v.(string)))
-//	}
-//
-//	if err := client.Tasks.Create(ctx, createRequest); err != nil {
-//		return fmt.Errorf("error creating task %s err = %w", taskId.FullyQualifiedName(), err)
-//	}
-//
-//	d.SetId(helpers.EncodeSnowflakeID(taskId))
-//
-//	enabled := d.Get("enabled").(bool)
-//	if enabled {
-//		if err := waitForTaskStart(ctx, client, taskId); err != nil {
-//			log.Printf("[WARN] failed to resume task %s", name)
-//		}
-//	}
-//
-//	return ReadTask(d, meta)
-//}
-//
-//func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-//	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithResume(sdk.Bool(true)))
-//	if err != nil {
-//		return fmt.Errorf("error starting task %s err = %w", id.FullyQualifiedName(), err)
-//	}
-//	return util.Retry(5, 5*time.Second, func() (error, bool) {
-//		task, err := client.Tasks.ShowByID(ctx, id)
-//		if err != nil {
-//			return fmt.Errorf("error starting task %s err = %w", id.FullyQualifiedName(), err), false
-//		}
-//		if !task.IsStarted() {
-//			return nil, false
-//		}
-//		return nil, true
-//	})
-//}
-//
-//// UpdateTask implements schema.UpdateFunc.
-//func UpdateTask(d *schema.ResourceData, meta interface{}) error {
-//	client := meta.(*provider.Context).Client
-//	ctx := context.Background()
-//
-//	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-//
-//	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
-//	defer func() {
-//		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-//			log.Printf("[WARN] failed to resume tasks: %s", err)
-//		}
-//	}()
-//	if err != nil {
-//		return err
-//	}
-//
-//	if d.HasChange("warehouse") {
-//		newWarehouse := d.Get("warehouse")
-//		alterRequest := sdk.NewAlterTaskRequest(taskId)
-//		if newWarehouse == "" {
-//			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithWarehouse(sdk.Bool(true)))
-//		} else {
-//			alterRequest.WithSet(sdk.NewTaskSetRequest().WithWarehouse(sdk.Pointer(sdk.NewAccountObjectIdentifier(newWarehouse.(string)))))
-//		}
-//		err := client.Tasks.Alter(ctx, alterRequest)
-//		if err != nil {
-//			return fmt.Errorf("error updating warehouse on task %s err = %w", taskId.FullyQualifiedName(), err)
-//		}
-//	}
-//
-//	if d.HasChange("user_task_managed_initial_warehouse_size") {
-//		newSize := d.Get("user_task_managed_initial_warehouse_size")
-//		warehouse := d.Get("warehouse")
-//
-//		if warehouse == "" && newSize != "" {
-//			size, err := sdk.ToWarehouseSize(newSize.(string))
-//			if err != nil {
-//				return err
-//			}
-//			alterRequest := sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithUserTaskManagedInitialWarehouseSize(&size))
-//			err = client.Tasks.Alter(ctx, alterRequest)
-//			if err != nil {
-//				return fmt.Errorf("error updating user_task_managed_initial_warehouse_size on task %s", taskId.FullyQualifiedName())
-//			}
-//		}
-//	}
-//
-//	if d.HasChange("error_integration") {
-//		newErrorIntegration := d.Get("error_integration")
-//		alterRequest := sdk.NewAlterTaskRequest(taskId)
-//		if newErrorIntegration == "" {
-//			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithErrorIntegration(sdk.Bool(true)))
-//		} else {
-//			alterRequest.WithSet(sdk.NewTaskSetRequest().WithErrorIntegration(sdk.String(newErrorIntegration.(string))))
-//		}
-//		err := client.Tasks.Alter(ctx, alterRequest)
-//		if err != nil {
-//			return fmt.Errorf("error updating error integration on task %s", taskId.FullyQualifiedName())
-//		}
-//	}
-//
-//	if d.HasChange("after") {
-//		// making changes to after require suspending the current task
-//		// (the task will be brought up to the correct running state in the "enabled" check at the bottom of Update function).
-//		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSuspend(sdk.Bool(true)))
-//		if err != nil {
-//			return fmt.Errorf("error suspending task %s, err: %w", taskId.FullyQualifiedName(), err)
-//		}
-//
-//		o, n := d.GetChange("after")
-//		oldAfter := expandStringList(o.([]interface{}))
-//		newAfter := expandStringList(n.([]interface{}))
-//
-//		if len(newAfter) > 0 {
-//			// preemptively removing schedule because a task cannot have both after and schedule
-//			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(sdk.NewTaskUnsetRequest().WithSchedule(sdk.Bool(true)))); err != nil {
-//				return fmt.Errorf("error updating schedule on task %s", taskId.FullyQualifiedName())
-//			}
-//		}
-//
-//		// Remove old dependencies that are not in new dependencies
-//		toRemove := make([]sdk.SchemaObjectIdentifier, 0)
-//		for _, dep := range oldAfter {
-//			if !slices.Contains(newAfter, dep) {
-//				toRemove = append(toRemove, sdk.NewSchemaObjectIdentifierInSchema(taskId.SchemaId(), dep))
-//			}
-//		}
-//		if len(toRemove) > 0 {
-//			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithRemoveAfter(toRemove)); err != nil {
-//				return fmt.Errorf("error removing after dependencies from task %s", taskId.FullyQualifiedName())
-//			}
-//		}
-//
-//		// Add new dependencies that are not in old dependencies
-//		toAdd := make([]sdk.SchemaObjectIdentifier, 0)
-//		for _, dep := range newAfter {
-//			if !slices.Contains(oldAfter, dep) {
-//				toAdd = append(toAdd, sdk.NewSchemaObjectIdentifierInSchema(taskId.SchemaId(), dep))
-//			}
-//		}
-//		if len(toAdd) > 0 {
-//			for _, depId := range toAdd {
-//				tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, depId, taskId)
-//				defer func() {
-//					if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-//						log.Printf("[WARN] failed to resume tasks: %s", err)
-//					}
-//				}()
-//				if err != nil {
-//					return err
-//				}
-//			}
-//
-//			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithAddAfter(toAdd)); err != nil {
-//				return fmt.Errorf("error adding after dependencies from task %s", taskId.FullyQualifiedName())
-//			}
-//		}
-//	}
-//
-//	if d.HasChange("schedule") {
-//		newSchedule := d.Get("schedule")
-//		alterRequest := sdk.NewAlterTaskRequest(taskId)
-//		if newSchedule == "" {
-//			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithSchedule(sdk.Bool(true)))
-//		} else {
-//			alterRequest.WithSet(sdk.NewTaskSetRequest().WithSchedule(sdk.String(newSchedule.(string))))
-//		}
-//		err := client.Tasks.Alter(ctx, alterRequest)
-//		if err != nil {
-//			return fmt.Errorf("error updating schedule on task %s", taskId.FullyQualifiedName())
-//		}
-//	}
-//
-//	if d.HasChange("user_task_timeout_ms") {
-//		o, n := d.GetChange("user_task_timeout_ms")
-//		alterRequest := sdk.NewAlterTaskRequest(taskId)
-//		if o.(int) > 0 && n.(int) == 0 {
-//			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithUserTaskTimeoutMs(sdk.Bool(true)))
-//		} else {
-//			alterRequest.WithSet(sdk.NewTaskSetRequest().WithUserTaskTimeoutMs(sdk.Int(n.(int))))
-//		}
-//		err := client.Tasks.Alter(ctx, alterRequest)
-//		if err != nil {
-//			return fmt.Errorf("error updating user task timeout on task %s", taskId.FullyQualifiedName())
-//		}
-//	}
-//
-//	if d.HasChange("suspend_task_after_num_failures") {
-//		o, n := d.GetChange("suspend_task_after_num_failures")
-//		alterRequest := sdk.NewAlterTaskRequest(taskId)
-//		if o.(int) > 0 && n.(int) == 0 {
-//			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithSuspendTaskAfterNumFailures(sdk.Bool(true)))
-//		} else {
-//			alterRequest.WithSet(sdk.NewTaskSetRequest().WithSuspendTaskAfterNumFailures(sdk.Int(n.(int))))
-//		}
-//		err := client.Tasks.Alter(ctx, alterRequest)
-//		if err != nil {
-//			return fmt.Errorf("error updating suspend task after num failures on task %s", taskId.FullyQualifiedName())
-//		}
-//	}
-//
-//	if d.HasChange("comment") {
-//		newComment := d.Get("comment")
-//		alterRequest := sdk.NewAlterTaskRequest(taskId)
-//		if newComment == "" {
-//			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithComment(sdk.Bool(true)))
-//		} else {
-//			alterRequest.WithSet(sdk.NewTaskSetRequest().WithComment(sdk.String(newComment.(string))))
-//		}
-//		err := client.Tasks.Alter(ctx, alterRequest)
-//		if err != nil {
-//			return fmt.Errorf("error updating comment on task %s", taskId.FullyQualifiedName())
-//		}
-//	}
-//
-//	if d.HasChange("allow_overlapping_execution") {
-//		n := d.Get("allow_overlapping_execution")
-//		alterRequest := sdk.NewAlterTaskRequest(taskId)
-//		if n == "" {
-//			alterRequest.WithUnset(sdk.NewTaskUnsetRequest().WithAllowOverlappingExecution(sdk.Bool(true)))
-//		} else {
-//			alterRequest.WithSet(sdk.NewTaskSetRequest().WithAllowOverlappingExecution(sdk.Bool(n.(bool))))
-//		}
-//		err := client.Tasks.Alter(ctx, alterRequest)
-//		if err != nil {
-//			return fmt.Errorf("error updating allow overlapping execution on task %s", taskId.FullyQualifiedName())
-//		}
-//	}
-//
-//	if d.HasChange("session_parameters") {
-//		o, n := d.GetChange("session_parameters")
-//
-//		if o == nil {
-//			o = make(map[string]interface{})
-//		}
-//		if n == nil {
-//			n = make(map[string]interface{})
-//		}
-//		os := o.(map[string]any)
-//		ns := n.(map[string]any)
-//
-//		remove := difference(os, ns)
-//		add := difference(ns, os)
-//		change := differentValue(os, ns)
-//
-//		if len(remove) > 0 {
-//			sessionParametersUnset, err := sdk.GetSessionParametersUnsetFrom(remove)
-//			if err != nil {
-//				return err
-//			}
-//			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(sdk.NewTaskUnsetRequest().WithSessionParametersUnset(sessionParametersUnset))); err != nil {
-//				return fmt.Errorf("error removing session_parameters on task %v err = %w", d.Id(), err)
-//			}
-//		}
-//
-//		if len(add) > 0 {
-//			sessionParameters, err := sdk.GetSessionParametersFrom(add)
-//			if err != nil {
-//				return err
-//			}
-//			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithSessionParameters(sessionParameters))); err != nil {
-//				return fmt.Errorf("error adding session_parameters to task %v err = %w", d.Id(), err)
-//			}
-//		}
-//
-//		if len(change) > 0 {
-//			sessionParameters, err := sdk.GetSessionParametersFrom(change)
-//			if err != nil {
-//				return err
-//			}
-//			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(sdk.NewTaskSetRequest().WithSessionParameters(sessionParameters))); err != nil {
-//				return fmt.Errorf("error updating session_parameters in task %v err = %w", d.Id(), err)
-//			}
-//		}
-//	}
-//
-//	if d.HasChange("when") {
-//		n := d.Get("when")
-//		alterRequest := sdk.NewAlterTaskRequest(taskId).WithModifyWhen(sdk.String(n.(string)))
-//		err := client.Tasks.Alter(ctx, alterRequest)
-//		if err != nil {
-//			return fmt.Errorf("error updating when condition on task %s", taskId.FullyQualifiedName())
-//		}
-//	}
-//
-//	if d.HasChange("sql_statement") {
-//		n := d.Get("sql_statement")
-//		alterRequest := sdk.NewAlterTaskRequest(taskId).WithModifyAs(sdk.String(n.(string)))
-//		err := client.Tasks.Alter(ctx, alterRequest)
-//		if err != nil {
-//			return fmt.Errorf("error updating sql statement on task %s", taskId.FullyQualifiedName())
-//		}
-//	}
-//
-//	enabled := d.Get("enabled").(bool)
-//	if enabled {
-//		if waitForTaskStart(ctx, client, taskId) != nil {
-//			log.Printf("[WARN] failed to resume task %s", taskId.FullyQualifiedName())
-//		}
-//	} else {
-//		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSuspend(sdk.Bool(true))); err != nil {
-//			return fmt.Errorf("failed to suspend task %s", taskId.FullyQualifiedName())
-//		}
-//	}
-//
-//	return ReadTask(d, meta)
-//}
-//
-//// DeleteTask implements schema.DeleteFunc.
-//func DeleteTask(d *schema.ResourceData, meta interface{}) error {
-//	client := meta.(*provider.Context).Client
-//	ctx := context.Background()
-//
-//	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-//
-//	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
-//	defer func() {
-//		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-//			log.Printf("[WARN] failed to resume tasks: %s", err)
-//		}
-//	}()
-//	if err != nil {
-//		return err
-//	}
-//
-//	dropRequest := sdk.NewDropTaskRequest(taskId)
-//	err = client.Tasks.Drop(ctx, dropRequest)
-//	if err != nil {
-//		return fmt.Errorf("error deleting task %s err = %w", taskId.FullyQualifiedName(), err)
-//	}
-//
-//	d.SetId("")
-//	return nil
-//}
+// ReadTask implements schema.ReadFunc.
+func ReadTask(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*provider.Context).Client
+	ctx := context.Background()
+
+	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	task, err := client.Tasks.ShowByID(ctx, taskId)
+	if err != nil {
+		// If not found, mark resource to be removed from state file during apply or refresh
+		log.Printf("[DEBUG] task (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err := d.Set(FullyQualifiedNameAttributeName, taskId.FullyQualifiedName()); err != nil {
+		return err
+	}
+
+	if err := d.Set("enabled", task.State == sdk.TaskStateStarted); err != nil {
+		return err
+	}
+
+	if err := d.Set("name", task.Name); err != nil {
+		return err
+	}
+
+	if err := d.Set("database", task.DatabaseName); err != nil {
+		return err
+	}
+
+	if err := d.Set("schema", task.SchemaName); err != nil {
+		return err
+	}
+
+	if err := d.Set("warehouse", task.Warehouse); err != nil {
+		return err
+	}
+
+	if err := d.Set("schedule", task.Schedule); err != nil {
+		return err
+	}
+
+	if err := d.Set("comment", task.Comment); err != nil {
+		return err
+	}
+
+	if err := d.Set("allow_overlapping_execution", task.AllowOverlappingExecution); err != nil {
+		return err
+	}
+
+	if err := d.Set("error_integration", task.ErrorIntegration); err != nil {
+		return err
+	}
+
+	predecessors := make([]string, len(task.Predecessors))
+	for i, p := range task.Predecessors {
+		predecessors[i] = p.Name()
+	}
+	if err := d.Set("after", predecessors); err != nil {
+		return err
+	}
+
+	if err := d.Set("when", task.Condition); err != nil {
+		return err
+	}
+
+	if err := d.Set("sql_statement", task.Definition); err != nil {
+		return err
+	}
+
+	opts := &sdk.ShowParametersOptions{In: &sdk.ParametersIn{Task: taskId}}
+	params, err := client.Parameters.ShowParameters(ctx, opts)
+	if err != nil {
+		return err
+	}
+
+	if len(params) > 0 {
+		sessionParameters := make(map[string]any)
+		fieldParameters := map[string]interface{}{
+			"user_task_managed_initial_warehouse_size": "",
+		}
+
+		for _, param := range params {
+			if param.Level != "TASK" {
+				continue
+			}
+			switch param.Key {
+			case "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE":
+				fieldParameters["user_task_managed_initial_warehouse_size"] = param.Value
+			case "USER_TASK_TIMEOUT_MS":
+				timeout, err := strconv.ParseInt(param.Value, 10, 64)
+				if err != nil {
+					return err
+				}
+
+				fieldParameters["user_task_timeout_ms"] = timeout
+			case "SUSPEND_TASK_AFTER_NUM_FAILURES":
+				num, err := strconv.ParseInt(param.Value, 10, 64)
+				if err != nil {
+					return err
+				}
+
+				fieldParameters["suspend_task_after_num_failures"] = num
+			default:
+				sessionParameters[param.Key] = param.Value
+			}
+		}
+
+		if err := d.Set("session_parameters", sessionParameters); err != nil {
+			return err
+		}
+
+		for key, value := range fieldParameters {
+			// lintignore:R001
+			err = d.Set(key, value)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// CreateTask implements schema.CreateFunc.
+func CreateTask(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*provider.Context).Client
+	ctx := context.Background()
+
+	databaseName := d.Get("database").(string)
+	schemaName := d.Get("schema").(string)
+	name := d.Get("name").(string)
+
+	sqlStatement := d.Get("sql_statement").(string)
+
+	taskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+	createRequest := sdk.NewCreateTaskRequest(taskId, sqlStatement)
+
+	// Set optionals
+	if v, ok := d.GetOk("warehouse"); ok {
+		warehouseId := sdk.NewAccountObjectIdentifier(v.(string))
+		createRequest.WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(warehouseId))
+	}
+
+	if v, ok := d.GetOk("user_task_managed_initial_warehouse_size"); ok {
+		size, err := sdk.ToWarehouseSize(v.(string))
+		if err != nil {
+			return err
+		}
+		createRequest.WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(size))
+	}
+
+	if v, ok := d.GetOk("schedule"); ok {
+		createRequest.WithSchedule(v.(string))
+	}
+
+	if v, ok := d.GetOk("session_parameters"); ok {
+		sessionParameters, err := sdk.GetSessionParametersFrom(v.(map[string]any))
+		if err != nil {
+			return err
+		}
+		createRequest.WithSessionParameters(*sessionParameters)
+	}
+
+	if v, ok := d.GetOk("user_task_timeout_ms"); ok {
+		createRequest.WithUserTaskTimeoutMs(v.(int))
+	}
+
+	if v, ok := d.GetOk("suspend_task_after_num_failures"); ok {
+		createRequest.WithSuspendTaskAfterNumFailures(v.(int))
+	}
+
+	if v, ok := d.GetOk("comment"); ok {
+		createRequest.WithComment(v.(string))
+	}
+
+	if v, ok := d.GetOk("allow_overlapping_execution"); ok {
+		createRequest.WithAllowOverlappingExecution(v.(bool))
+	}
+
+	if v, ok := d.GetOk("error_integration"); ok {
+		createRequest.WithErrorIntegration(v.(string))
+	}
+
+	if v, ok := d.GetOk("after"); ok {
+		after := expandStringList(v.([]interface{}))
+		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0)
+		for _, dep := range after {
+			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
+			tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, precedingTaskId, taskId)
+			defer func() {
+				if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+					log.Printf("[WARN] failed to resume tasks: %s", err)
+				}
+			}()
+			if err != nil {
+				return err
+			}
+
+			precedingTasks = append(precedingTasks, precedingTaskId)
+		}
+		createRequest.WithAfter(precedingTasks)
+	}
+
+	if v, ok := d.GetOk("when"); ok {
+		createRequest.WithWhen(v.(string))
+	}
+
+	if err := client.Tasks.Create(ctx, createRequest); err != nil {
+		return fmt.Errorf("error creating task %s err = %w", taskId.FullyQualifiedName(), err)
+	}
+
+	d.SetId(helpers.EncodeSnowflakeID(taskId))
+
+	enabled := d.Get("enabled").(bool)
+	if enabled {
+		if err := waitForTaskStart(ctx, client, taskId); err != nil {
+			log.Printf("[WARN] failed to resume task %s", name)
+		}
+	}
+
+	return ReadTask(d, meta)
+}
+
+func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithResume(true))
+	if err != nil {
+		return fmt.Errorf("error starting task %s err = %w", id.FullyQualifiedName(), err)
+	}
+	return util.Retry(5, 5*time.Second, func() (error, bool) {
+		task, err := client.Tasks.ShowByID(ctx, id)
+		if err != nil {
+			return fmt.Errorf("error starting task %s err = %w", id.FullyQualifiedName(), err), false
+		}
+		if task.State != sdk.TaskStateStarted {
+			return nil, false
+		}
+		return nil, true
+	})
+}
+
+// UpdateTask implements schema.UpdateFunc.
+func UpdateTask(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*provider.Context).Client
+	ctx := context.Background()
+
+	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
+	defer func() {
+		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+			log.Printf("[WARN] failed to resume tasks: %s", err)
+		}
+	}()
+	if err != nil {
+		return err
+	}
+
+	if d.HasChange("warehouse") {
+		newWarehouse := d.Get("warehouse")
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
+		if newWarehouse == "" {
+			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithWarehouse(true))
+		} else {
+			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithWarehouse(sdk.NewAccountObjectIdentifier(newWarehouse.(string))))
+		}
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating warehouse on task %s err = %w", taskId.FullyQualifiedName(), err)
+		}
+	}
+
+	if d.HasChange("user_task_managed_initial_warehouse_size") {
+		newSize := d.Get("user_task_managed_initial_warehouse_size")
+		warehouse := d.Get("warehouse")
+
+		if warehouse == "" && newSize != "" {
+			size, err := sdk.ToWarehouseSize(newSize.(string))
+			if err != nil {
+				return err
+			}
+			alterRequest := sdk.NewAlterTaskRequest(taskId).WithSet(*sdk.NewTaskSetRequest().WithUserTaskManagedInitialWarehouseSize(size))
+			err = client.Tasks.Alter(ctx, alterRequest)
+			if err != nil {
+				return fmt.Errorf("error updating user_task_managed_initial_warehouse_size on task %s", taskId.FullyQualifiedName())
+			}
+		}
+	}
+
+	if d.HasChange("error_integration") {
+		newErrorIntegration := d.Get("error_integration")
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
+		if newErrorIntegration == "" {
+			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithErrorIntegration(true))
+		} else {
+			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithErrorIntegration(newErrorIntegration.(string)))
+		}
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating error integration on task %s", taskId.FullyQualifiedName())
+		}
+	}
+
+	if d.HasChange("after") {
+		// making changes to after require suspending the current task
+		// (the task will be brought up to the correct running state in the "enabled" check at the bottom of Update function).
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSuspend(true))
+		if err != nil {
+			return fmt.Errorf("error suspending task %s, err: %w", taskId.FullyQualifiedName(), err)
+		}
+
+		o, n := d.GetChange("after")
+		oldAfter := expandStringList(o.([]interface{}))
+		newAfter := expandStringList(n.([]interface{}))
+
+		if len(newAfter) > 0 {
+			// preemptively removing schedule because a task cannot have both after and schedule
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(*sdk.NewTaskUnsetRequest().WithSchedule(true))); err != nil {
+				return fmt.Errorf("error updating schedule on task %s", taskId.FullyQualifiedName())
+			}
+		}
+
+		// Remove old dependencies that are not in new dependencies
+		toRemove := make([]sdk.SchemaObjectIdentifier, 0)
+		for _, dep := range oldAfter {
+			if !slices.Contains(newAfter, dep) {
+				toRemove = append(toRemove, sdk.NewSchemaObjectIdentifierInSchema(taskId.SchemaId(), dep))
+			}
+		}
+		if len(toRemove) > 0 {
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithRemoveAfter(toRemove)); err != nil {
+				return fmt.Errorf("error removing after dependencies from task %s", taskId.FullyQualifiedName())
+			}
+		}
+
+		// Add new dependencies that are not in old dependencies
+		toAdd := make([]sdk.SchemaObjectIdentifier, 0)
+		for _, dep := range newAfter {
+			if !slices.Contains(oldAfter, dep) {
+				toAdd = append(toAdd, sdk.NewSchemaObjectIdentifierInSchema(taskId.SchemaId(), dep))
+			}
+		}
+		if len(toAdd) > 0 {
+			for _, depId := range toAdd {
+				tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, depId, taskId)
+				defer func() {
+					if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+						log.Printf("[WARN] failed to resume tasks: %s", err)
+					}
+				}()
+				if err != nil {
+					return err
+				}
+			}
+
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithAddAfter(toAdd)); err != nil {
+				return fmt.Errorf("error adding after dependencies from task %s", taskId.FullyQualifiedName())
+			}
+		}
+	}
+
+	if d.HasChange("schedule") {
+		newSchedule := d.Get("schedule")
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
+		if newSchedule == "" {
+			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithSchedule(true))
+		} else {
+			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithSchedule(newSchedule.(string)))
+		}
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating schedule on task %s", taskId.FullyQualifiedName())
+		}
+	}
+
+	if d.HasChange("user_task_timeout_ms") {
+		o, n := d.GetChange("user_task_timeout_ms")
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
+		if o.(int) > 0 && n.(int) == 0 {
+			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithUserTaskTimeoutMs(true))
+		} else {
+			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithUserTaskTimeoutMs(n.(int)))
+		}
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating user task timeout on task %s", taskId.FullyQualifiedName())
+		}
+	}
+
+	if d.HasChange("suspend_task_after_num_failures") {
+		o, n := d.GetChange("suspend_task_after_num_failures")
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
+		if o.(int) > 0 && n.(int) == 0 {
+			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithSuspendTaskAfterNumFailures(true))
+		} else {
+			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithSuspendTaskAfterNumFailures(n.(int)))
+		}
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating suspend task after num failures on task %s", taskId.FullyQualifiedName())
+		}
+	}
+
+	if d.HasChange("comment") {
+		newComment := d.Get("comment")
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
+		if newComment == "" {
+			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithComment(true))
+		} else {
+			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithComment(newComment.(string)))
+		}
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating comment on task %s", taskId.FullyQualifiedName())
+		}
+	}
+
+	if d.HasChange("allow_overlapping_execution") {
+		n := d.Get("allow_overlapping_execution")
+		alterRequest := sdk.NewAlterTaskRequest(taskId)
+		if n == "" {
+			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithAllowOverlappingExecution(true))
+		} else {
+			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithAllowOverlappingExecution(n.(bool)))
+		}
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating allow overlapping execution on task %s", taskId.FullyQualifiedName())
+		}
+	}
+
+	if d.HasChange("session_parameters") {
+		o, n := d.GetChange("session_parameters")
+
+		if o == nil {
+			o = make(map[string]interface{})
+		}
+		if n == nil {
+			n = make(map[string]interface{})
+		}
+		os := o.(map[string]any)
+		ns := n.(map[string]any)
+
+		remove := difference(os, ns)
+		add := difference(ns, os)
+		change := differentValue(os, ns)
+
+		if len(remove) > 0 {
+			sessionParametersUnset, err := sdk.GetSessionParametersUnsetFrom(remove)
+			if err != nil {
+				return err
+			}
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(*sdk.NewTaskUnsetRequest().WithSessionParametersUnset(*sessionParametersUnset))); err != nil {
+				return fmt.Errorf("error removing session_parameters on task %v err = %w", d.Id(), err)
+			}
+		}
+
+		if len(add) > 0 {
+			sessionParameters, err := sdk.GetSessionParametersFrom(add)
+			if err != nil {
+				return err
+			}
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(*sdk.NewTaskSetRequest().WithSessionParameters(*sessionParameters))); err != nil {
+				return fmt.Errorf("error adding session_parameters to task %v err = %w", d.Id(), err)
+			}
+		}
+
+		if len(change) > 0 {
+			sessionParameters, err := sdk.GetSessionParametersFrom(change)
+			if err != nil {
+				return err
+			}
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(*sdk.NewTaskSetRequest().WithSessionParameters(*sessionParameters))); err != nil {
+				return fmt.Errorf("error updating session_parameters in task %v err = %w", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("when") {
+		n := d.Get("when")
+		alterRequest := sdk.NewAlterTaskRequest(taskId).WithModifyWhen(n.(string))
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating when condition on task %s", taskId.FullyQualifiedName())
+		}
+	}
+
+	if d.HasChange("sql_statement") {
+		n := d.Get("sql_statement")
+		alterRequest := sdk.NewAlterTaskRequest(taskId).WithModifyAs(n.(string))
+		err := client.Tasks.Alter(ctx, alterRequest)
+		if err != nil {
+			return fmt.Errorf("error updating sql statement on task %s", taskId.FullyQualifiedName())
+		}
+	}
+
+	enabled := d.Get("enabled").(bool)
+	if enabled {
+		if waitForTaskStart(ctx, client, taskId) != nil {
+			log.Printf("[WARN] failed to resume task %s", taskId.FullyQualifiedName())
+		}
+	} else {
+		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSuspend(true)); err != nil {
+			return fmt.Errorf("failed to suspend task %s", taskId.FullyQualifiedName())
+		}
+	}
+
+	return ReadTask(d, meta)
+}
+
+// DeleteTask implements schema.DeleteFunc.
+func DeleteTask(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*provider.Context).Client
+	ctx := context.Background()
+
+	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
+	defer func() {
+		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+			log.Printf("[WARN] failed to resume tasks: %s", err)
+		}
+	}()
+	if err != nil {
+		return err
+	}
+
+	dropRequest := sdk.NewDropTaskRequest(taskId)
+	err = client.Tasks.Drop(ctx, dropRequest)
+	if err != nil {
+		return fmt.Errorf("error deleting task %s err = %w", taskId.FullyQualifiedName(), err)
+	}
+
+	d.SetId("")
+	return nil
+}

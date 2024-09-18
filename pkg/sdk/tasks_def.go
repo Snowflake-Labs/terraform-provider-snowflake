@@ -3,8 +3,9 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
-	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 	"strings"
+
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 )
 
 //go:generate go run ./poc/main.go
@@ -31,13 +32,13 @@ type TaskRelationsRepresentation struct {
 }
 
 func (r *TaskRelationsRepresentation) ToTaskRelations() (TaskRelations, error) {
-	var predecessors []SchemaObjectIdentifier
-	for _, predecessor := range r.Predecessors {
+	predecessors := make([]SchemaObjectIdentifier, len(r.Predecessors))
+	for i, predecessor := range r.Predecessors {
 		id, err := ParseSchemaObjectIdentifier(predecessor)
 		if err != nil {
 			return TaskRelations{}, err
 		}
-		predecessors = append(predecessors, id)
+		predecessors[i] = id
 	}
 
 	taskRelations := TaskRelations{
