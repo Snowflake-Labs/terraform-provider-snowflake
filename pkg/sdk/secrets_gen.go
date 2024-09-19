@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 type Secrets interface {
@@ -159,8 +160,8 @@ type secretDetailsDBRow struct {
 	Comment                     sql.NullString `db:"comment"`
 	SecretType                  string         `db:"secret_type"`
 	Username                    sql.NullString `db:"username"`
-	OauthAccessTokenExpiryTime  sql.NullString `db:"oauth_access_token_expiry_time"`
-	OauthRefreshTokenExpiryTime sql.NullString `db:"oauth_refresh_token_expiry_time"`
+	OauthAccessTokenExpiryTime  *time.Time     `db:"oauth_access_token_expiry_time"`
+	OauthRefreshTokenExpiryTime *time.Time     `db:"oauth_refresh_token_expiry_time"`
 	OauthScopes                 sql.NullString `db:"oauth_scopes"`
 	IntegrationName             sql.NullString `db:"integration_name"`
 }
@@ -173,8 +174,8 @@ type SecretDetails struct {
 	Comment                     sql.NullString
 	SecretType                  string
 	Username                    sql.NullString
-	OauthAccessTokenExpiryTime  sql.NullString
-	OauthRefreshTokenExpiryTime sql.NullString
+	OauthAccessTokenExpiryTime  *time.Time
+	OauthRefreshTokenExpiryTime *time.Time
 	OauthScopes                 sql.NullString
 	IntegrationName             sql.NullString
 }

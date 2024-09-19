@@ -15,7 +15,7 @@ var secretDbRow = g.DbStruct("secretDBRow").
 	Field("owner", "string").
 	Field("comment", "sql.NullString").
 	Field("secret_type", "string").
-	Field("oauth_scopes", "sql.NullString"). // its a list tho
+	Field("oauth_scopes", "sql.NullString").
 	Field("owner_role_type", "string")
 
 var secret = g.PlainStruct("Secret").
@@ -40,7 +40,7 @@ var secretDetailsDbRow = g.DbStruct("secretDetailsDBRow").
 	Field("username", "sql.NullString").
 	Time("oauth_access_token_expiry_time").
 	Time("oauth_refresh_token_expiry_time").
-	Field("oauth_scopes", "sql.NullString"). // its a list tho
+	Field("oauth_scopes", "sql.NullString").
 	Field("integration_name", "sql.NullString")
 
 var secretDetails = g.PlainStruct("SecretDetails").
@@ -52,9 +52,9 @@ var secretDetails = g.PlainStruct("SecretDetails").
 	Field("Comment", "sql.NullString").
 	Field("SecretType", "string").
 	Field("Username", "sql.NullString").
-	Time("OauthAccessTokenExpiryTime").
-	Time("OauthRefreshTokenExpiryTime").
-	Field("OauthScopes", "sql.NullString"). // its a list tho
+	Field("OauthAccessTokenExpiryTime", "*time.Time").
+	Field("OauthRefreshTokenExpiryTime", "*time.Time").
+	Field("OauthScopes", "sql.NullString").
 	Field("IntegrationName", "sql.NullString")
 
 var secretSet = g.NewQueryStruct("SecretSet").
@@ -87,9 +87,8 @@ var secretSet = g.NewQueryStruct("SecretSet").
 	).
 	WithValidation(g.ExactlyOneValueSet, "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString")
 
-// TODO: UNSET doest work, need to use "SET COMMENT = NULL"
+// UNSET doest work, need to use "SET COMMENT = NULL"
 var secretUnset = g.NewQueryStruct("SecretUnset").
-	//OptionalSQL("UNSET COMMENT")
 	PredefinedQueryStructField("Comment", "*bool", g.KeywordOptions().SQL("SET COMMENT = NULL"))
 
 var SecretsDef = g.NewInterface(
@@ -199,18 +198,6 @@ var SecretsDef = g.NewInterface(
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-secret",
 		secretDetailsDbRow,
 		secretDetails,
-
-		/*
-			g.DescriptionMappingKindSlice,
-			"https://docs.snowflake.com/en/sql-reference/sql/desc-secret",
-				g.DbStruct("secretDetailsRow").
-					Field("property", "string").
-					Field("value", "sql.NullString"),
-				g.PlainStruct("SecretDetails").
-					Field("Property", "string").
-					Field("Value", "string"),
-		*/
-
 		g.NewQueryStruct("DescribeSecret").
 			Describe().
 			SQL("SECRET").
