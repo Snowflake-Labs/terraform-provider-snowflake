@@ -34,6 +34,10 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.View().Schema,
 	},
 	{
+		name:   "Database",
+		schema: resources.Database().Schema,
+	},
+	{
 		name:   "DatabaseRole",
 		schema: resources.DatabaseRole().Schema,
 	},
@@ -44,6 +48,10 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 	{
 		name:   "RowAccessPolicy",
 		schema: resources.RowAccessPolicy().Schema,
+	},
+	{
+		name:   "Schema",
+		schema: resources.Schema().Schema,
 	},
 	{
 		name:   "MaskingPolicy",

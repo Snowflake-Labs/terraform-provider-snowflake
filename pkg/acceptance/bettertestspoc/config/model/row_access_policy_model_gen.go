@@ -7,7 +7,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 type RowAccessPolicyModel struct {
@@ -28,7 +27,7 @@ type RowAccessPolicyModel struct {
 
 func RowAccessPolicy(
 	resourceName string,
-	argument []sdk.TableColumnSignature,
+	argument,
 	body string,
 	database string,
 	name string,
@@ -44,7 +43,7 @@ func RowAccessPolicy(
 }
 
 func RowAccessPolicyWithDefaultMeta(
-	argument []sdk.TableColumnSignature,
+	argument,
 	body string,
 	database string,
 	name string,
