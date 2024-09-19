@@ -390,7 +390,7 @@ func TestInt_Secrets(t *testing.T) {
 		details, err := client.Secrets.Describe(ctx, id)
 		require.NoError(t, err)
 
-		// Cannot check password since show and describe on secret do not have access to password property
+		// Cannot check password property since show and describe on secret do not have access to it
 		assertSecretDetails(details, secretDetails{
 			Name:       id.Name(),
 			SecretType: "PASSWORD",
@@ -426,15 +426,6 @@ func TestInt_Secrets(t *testing.T) {
 			)
 		err := client.Secrets.Alter(ctx, setRequest)
 		require.NoError(t, err)
-
-		// Cannot check secret_string since show and describe on secret do not have access to secret_string property
-		/*
-			assertSecretDetails(details, secretDetails{
-				Name:       id.Name(),
-				SecretType: "PASSWORD",
-				Comment:    comment,
-			})
-		*/
 
 		unsetRequest := sdk.NewAlterSecretRequest(id).
 			WithUnset(
