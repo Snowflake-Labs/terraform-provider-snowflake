@@ -133,47 +133,37 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 		}
 
 		if r.Set.SetForOAuthClientCredentialsFlow != nil {
-
 			opts.Set.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow{
 				OauthScopes: r.Set.SetForOAuthClientCredentialsFlow.OauthScopes,
 			}
-
 		}
 
 		if r.Set.SetForOAuthAuthorizationFlow != nil {
-
 			opts.Set.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow{
 				OauthRefreshToken:           r.Set.SetForOAuthAuthorizationFlow.OauthRefreshToken,
 				OauthRefreshTokenExpiryTime: r.Set.SetForOAuthAuthorizationFlow.OauthRefreshTokenExpiryTime,
 			}
-
 		}
 
 		if r.Set.SetForBasicAuthentication != nil {
-
 			opts.Set.SetForBasicAuthentication = &SetForBasicAuthentication{
 				Username: r.Set.SetForBasicAuthentication.Username,
 				Password: r.Set.SetForBasicAuthentication.Password,
 			}
-
 		}
 
 		if r.Set.SetForGenericString != nil {
-
 			opts.Set.SetForGenericString = &SetForGenericString{
 				SecretString: r.Set.SetForGenericString.SecretString,
 			}
-
 		}
 
 	}
 
 	if r.Unset != nil {
-
 		opts.Unset = &SecretUnset{
 			Comment: r.Unset.Comment,
 		}
-
 	}
 
 	return opts
