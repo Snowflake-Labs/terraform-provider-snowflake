@@ -80,6 +80,17 @@ func (c *ParameterClient) ShowUserParameters(t *testing.T, id sdk.AccountObjectI
 	return params
 }
 
+func (c *ParameterClient) ShowTaskParameters(t *testing.T, id sdk.SchemaObjectIdentifier) []*sdk.Parameter {
+	t.Helper()
+	params, err := c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Task: id,
+		},
+	})
+	require.NoError(t, err)
+	return params
+}
+
 func (c *ParameterClient) UpdateAccountParameterTemporarily(t *testing.T, parameter sdk.AccountParameter, newValue string) func() {
 	t.Helper()
 	ctx := context.Background()

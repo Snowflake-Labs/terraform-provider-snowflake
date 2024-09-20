@@ -173,7 +173,7 @@ func (t *TaskAssert) HasAllowOverlappingExecution(expected bool) *TaskAssert {
 	return t
 }
 
-func (t *TaskAssert) HasErrorIntegration(expected string) *TaskAssert {
+func (t *TaskAssert) HasErrorIntegration(expected *sdk.AccountObjectIdentifier) *TaskAssert {
 	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
 		t.Helper()
 		if o.ErrorIntegration != expected {

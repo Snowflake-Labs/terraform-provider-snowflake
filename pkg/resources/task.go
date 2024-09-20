@@ -345,7 +345,11 @@ func CreateTask(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("error_integration"); ok {
-		createRequest.WithErrorIntegration(v.(string))
+		errorIntegrationId, err := sdk.ParseAccountObjectIdentifier(v.(string))
+		if err != nil {
+			return err
+		}
+		createRequest.WithErrorNotificationIntegration(errorIntegrationId)
 	}
 
 	if v, ok := d.GetOk("after"); ok {
@@ -459,7 +463,11 @@ func UpdateTask(d *schema.ResourceData, meta interface{}) error {
 		if newErrorIntegration == "" {
 			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithErrorIntegration(true))
 		} else {
-			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithErrorIntegration(newErrorIntegration.(string)))
+			newErrorIntegrationId, err := sdk.ParseAccountObjectIdentifier(newErrorIntegration.(string))
+			if err != nil {
+				return err
+			}
+			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithErrorNotificationIntegration(newErrorIntegrationId))
 		}
 		err := client.Tasks.Alter(ctx, alterRequest)
 		if err != nil {

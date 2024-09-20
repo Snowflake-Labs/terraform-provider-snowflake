@@ -1,8 +1,11 @@
 package testint
 
 import (
+	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"testing"
+	"time"
 
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
@@ -27,6 +30,9 @@ func TestInt_Tasks(t *testing.T) {
 			),
 	)
 	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(errorIntegrationId).WithIfExists(sdk.Bool(true))))
+	})
 
 	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, warehouseName string) {
 		t.Helper()
@@ -45,7 +51,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasDefinition(sql).
 			HasCondition("").
 			HasAllowOverlappingExecution(false).
-			HasErrorIntegration("").
+			HasErrorIntegration(nil).
 			HasLastCommittedOn("").
 			HasLastSuspendedOn("").
 			HasOwnerRoleType("ROLE").
@@ -56,7 +62,7 @@ func TestInt_Tasks(t *testing.T) {
 		)
 	}
 
-	assertTaskWithOptions := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *sdk.SchemaObjectIdentifier, errorIntegrationName string) {
+	assertTaskWithOptions := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *sdk.SchemaObjectIdentifier, errorIntegrationName *sdk.AccountObjectIdentifier) {
 		t.Helper()
 
 		asserts := objectassert.TaskFromObject(t, task).
@@ -112,7 +118,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasDefinition("").
 			HasCondition("").
 			HasAllowOverlappingExecution(false).
-			HasErrorIntegration("").
+			HasErrorIntegration(nil).
 			HasLastCommittedOn("").
 			HasLastSuspendedOn("").
 			HasOwnerRoleType("").
@@ -146,6 +152,10 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
 
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+			HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeXSmall),
+		)
+
 		assertTask(t, task, id, "")
 	})
 
@@ -172,7 +182,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
 
-		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil, errorIntegrationId.Name())
+		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil, &errorIntegrationId)
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
@@ -190,7 +200,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
 
-		assertTaskWithOptions(t, task, id, "", "", "", "", false, "", &rootTaskId, "")
+		assertTaskWithOptions(t, task, id, "", "", "", "", false, "", &rootTaskId, nil)
 	})
 
 	t.Run("create task: with after and finalizer", func(t *testing.T) {
@@ -411,6 +421,7 @@ func TestInt_Tasks(t *testing.T) {
 			WithAllowOverlappingExecution(true).
 			WithUserTaskTimeoutMs(10).
 			WithSessionParameters(sdk.SessionParameters{
+				// TODO(SNOW-1348116 - next prs): fill and assert parameters
 				Autocommit: sdk.Bool(true),
 			}).
 			WithSuspendTaskAfterNumFailures(15).
@@ -474,9 +485,14 @@ func TestInt_Tasks(t *testing.T) {
 		t.Cleanup(taskCleanup)
 
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSet(*sdk.NewTaskSetRequest().
-			// TODO: Cannot set warehouse due to Snowflake error
+			// TODO(SNOW-1348116): Cannot set warehouse due to Snowflake error
 			// WithWarehouse(testClientHelper().Ids.WarehouseId()).
 			WithErrorNotificationIntegration(errorIntegrationId).
+			WithSessionParameters(sdk.SessionParameters{
+				Autocommit:             sdk.Bool(true),
+				ClientSessionKeepAlive: sdk.Bool(true),
+				// TODO(SNOW-1348116 - next prs): fill and assert parameters
+			}).
 			WithSchedule("10 MINUTE").
 			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
 			WithAllowOverlappingExecution(true).
@@ -488,9 +504,14 @@ func TestInt_Tasks(t *testing.T) {
 		))
 		require.NoError(t, err)
 
+		// TODO(SNOW-1348116 - next prs): Assert parameters
+		//assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+		//	HasUserTaskManagedInitialWarehouseSize()
+		//)
+
 		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
 			// HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
-			HasErrorIntegration(errorIntegrationId.Name()).
+			HasErrorIntegration(sdk.Pointer(errorIntegrationId)).
 			HasSchedule("10 MINUTE").
 			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
 			HasAllowOverlappingExecution(true).
@@ -499,6 +520,10 @@ func TestInt_Tasks(t *testing.T) {
 
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnset(*sdk.NewTaskUnsetRequest().
 			WithErrorIntegration(true).
+			WithSessionParametersUnset(sdk.SessionParametersUnset{
+				Autocommit:             sdk.Bool(true),
+				ClientSessionKeepAlive: sdk.Bool(true),
+			}).
 			WithWarehouse(true).
 			WithSchedule(true).
 			WithConfig(true).
@@ -512,12 +537,17 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
-			HasErrorIntegration("").
+			HasErrorIntegration(nil).
 			HasSchedule("").
 			HasConfig("").
 			HasAllowOverlappingExecution(false).
 			HasComment(""),
 		)
+
+		// TODO(SNOW-1348116 - next prs): Assert parameters
+		//assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+		//	HasUserTaskManagedInitialWarehouseSize()
+		//)
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
@@ -714,9 +744,39 @@ func TestInt_Tasks(t *testing.T) {
 		task, taskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(taskCleanup)
 
-		executeRequest := sdk.NewExecuteTaskRequest(task.ID())
-		err := client.Tasks.Execute(ctx, executeRequest)
+		err := client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()))
 		require.NoError(t, err)
+	})
+
+	t.Run("execute task: retry last after successful last task", func(t *testing.T) {
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
+
+		_, subTaskCleanup := testClientHelper().Task.CreateWithAfter(t, task.ID())
+		t.Cleanup(subTaskCleanup)
+
+		err := client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()))
+		require.NoError(t, err)
+
+		err = client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()).WithRetryLast(true))
+		require.ErrorContains(t, err, fmt.Sprintf("Cannot perform retry: no suitable run of graph with root task %s to retry.", task.ID().Name()))
+	})
+
+	t.Run("execute task: retry last after failed last task", func(t *testing.T) {
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		_, subTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id, "select * from not_existing_table"))
+		t.Cleanup(subTaskCleanup)
+
+		err := client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()))
+		require.NoError(t, err)
+
+		require.Eventually(t, func() bool {
+			err := client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()).WithRetryLast(true))
+			return err != nil
+		}, time.Second, time.Millisecond*500)
 	})
 
 	t.Run("temporarily suspend root tasks", func(t *testing.T) {
@@ -747,6 +807,14 @@ func TestInt_Tasks(t *testing.T) {
 		require.Equal(t, sdk.TaskStateStarted, rootTaskStatus.State)
 	})
 
+	// Tested graph
+	// root1
+	//      \
+	//       t1
+	//      /
+	// root2
+	// Because graph validation occurs only after resuming the root task, we assume that Snowflake will throw
+	// validation error with given graph configuration.
 	t.Run("resume root tasks within a graph containing more than one root task", func(t *testing.T) {
 		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		rootTask, rootTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule("60 MINUTES"))
