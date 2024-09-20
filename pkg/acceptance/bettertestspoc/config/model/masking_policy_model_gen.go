@@ -7,6 +7,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 type MaskingPolicyModel struct {
@@ -29,7 +30,7 @@ type MaskingPolicyModel struct {
 
 func MaskingPolicy(
 	resourceName string,
-	argument,
+	argument []sdk.TableColumnSignature,
 	body string,
 	database string,
 	name string,
@@ -47,7 +48,7 @@ func MaskingPolicy(
 }
 
 func MaskingPolicyWithDefaultMeta(
-	argument,
+	argument []sdk.TableColumnSignature,
 	body string,
 	database string,
 	name string,
