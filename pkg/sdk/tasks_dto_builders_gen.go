@@ -59,8 +59,8 @@ func (s *CreateTaskRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumF
 	return s
 }
 
-func (s *CreateTaskRequest) WithErrorIntegration(ErrorIntegration string) *CreateTaskRequest {
-	s.ErrorIntegration = &ErrorIntegration
+func (s *CreateTaskRequest) WithErrorNotificationIntegration(ErrorNotificationIntegration AccountObjectIdentifier) *CreateTaskRequest {
+	s.ErrorNotificationIntegration = &ErrorNotificationIntegration
 	return s
 }
 
@@ -158,8 +158,8 @@ func (s *CreateOrAlterTaskRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAf
 	return s
 }
 
-func (s *CreateOrAlterTaskRequest) WithErrorIntegration(ErrorIntegration string) *CreateOrAlterTaskRequest {
-	s.ErrorIntegration = &ErrorIntegration
+func (s *CreateOrAlterTaskRequest) WithErrorNotificationIntegration(ErrorNotificationIntegration AccountObjectIdentifier) *CreateOrAlterTaskRequest {
+	s.ErrorNotificationIntegration = &ErrorNotificationIntegration
 	return s
 }
 
@@ -325,8 +325,8 @@ func (s *TaskSetRequest) WithSuspendTaskAfterNumFailures(SuspendTaskAfterNumFail
 	return s
 }
 
-func (s *TaskSetRequest) WithErrorIntegration(ErrorIntegration string) *TaskSetRequest {
-	s.ErrorIntegration = &ErrorIntegration
+func (s *TaskSetRequest) WithErrorNotificationIntegration(ErrorNotificationIntegration AccountObjectIdentifier) *TaskSetRequest {
+	s.ErrorNotificationIntegration = &ErrorNotificationIntegration
 	return s
 }
 

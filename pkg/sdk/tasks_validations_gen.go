@@ -22,7 +22,7 @@ func (opts *CreateTaskOptions) validate() error {
 		}
 	}
 	if valueSet(opts.Warehouse) {
-		if !anyValueSet(opts.Warehouse.Warehouse, opts.Warehouse.UserTaskManagedInitialWarehouseSize) {
+		if !exactlyOneValueSet(opts.Warehouse.Warehouse, opts.Warehouse.UserTaskManagedInitialWarehouseSize) {
 			errs = append(errs, errExactlyOneOf("CreateTaskOptions.Warehouse", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
 		}
 	}
@@ -31,6 +31,9 @@ func (opts *CreateTaskOptions) validate() error {
 	}
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateTaskOptions", "OrReplace", "IfNotExists"))
+	}
+	if opts.ErrorNotificationIntegration != nil && !ValidObjectIdentifier(opts.ErrorNotificationIntegration) {
+		errs = append(errs, errInvalidIdentifier("CreateTaskOptions", "ErrorNotificationIntegration"))
 	}
 	return JoinErrors(errs...)
 }
@@ -46,12 +49,15 @@ func (opts *CreateOrAlterTaskOptions) validate() error {
 		}
 	}
 	if valueSet(opts.Warehouse) {
-		if !anyValueSet(opts.Warehouse.Warehouse, opts.Warehouse.UserTaskManagedInitialWarehouseSize) {
+		if !exactlyOneValueSet(opts.Warehouse.Warehouse, opts.Warehouse.UserTaskManagedInitialWarehouseSize) {
 			errs = append(errs, errExactlyOneOf("CreateOrAlterTaskOptions.CreateTaskWarehouse", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
 		}
 	}
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	if opts.ErrorNotificationIntegration != nil && !ValidObjectIdentifier(opts.ErrorNotificationIntegration) {
+		errs = append(errs, errInvalidIdentifier("CreateOrAlterTaskOptions", "ErrorNotificationIntegration"))
 	}
 	return JoinErrors(errs...)
 }
@@ -87,11 +93,14 @@ func (opts *AlterTaskOptions) validate() error {
 				errs = append(errs, err)
 			}
 		}
-		if !anyValueSet(opts.Set.Warehouse, opts.Set.UserTaskManagedInitialWarehouseSize, opts.Set.Schedule, opts.Set.Config, opts.Set.AllowOverlappingExecution, opts.Set.UserTaskTimeoutMs, opts.Set.SuspendTaskAfterNumFailures, opts.Set.ErrorIntegration, opts.Set.Comment, opts.Set.SessionParameters, opts.Set.TaskAutoRetryAttempts, opts.Set.UserTaskMinimumTriggerIntervalInSeconds) {
+		if !anyValueSet(opts.Set.Warehouse, opts.Set.UserTaskManagedInitialWarehouseSize, opts.Set.Schedule, opts.Set.Config, opts.Set.AllowOverlappingExecution, opts.Set.UserTaskTimeoutMs, opts.Set.SuspendTaskAfterNumFailures, opts.Set.ErrorNotificationIntegration, opts.Set.Comment, opts.Set.SessionParameters, opts.Set.TaskAutoRetryAttempts, opts.Set.UserTaskMinimumTriggerIntervalInSeconds) {
 			errs = append(errs, errAtLeastOneOf("AlterTaskOptions.Set", "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"))
 		}
 		if everyValueSet(opts.Set.Warehouse, opts.Set.UserTaskManagedInitialWarehouseSize) {
 			errs = append(errs, errOneOf("AlterTaskOptions.Set", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
+		}
+		if opts.Set.ErrorNotificationIntegration != nil && !ValidObjectIdentifier(opts.Set.ErrorNotificationIntegration) {
+			errs = append(errs, errInvalidIdentifier("AlterTaskOptions.Set", "ErrorNotificationIntegration"))
 		}
 	}
 	if valueSet(opts.Unset) {

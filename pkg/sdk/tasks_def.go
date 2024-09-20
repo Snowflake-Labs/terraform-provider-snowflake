@@ -112,7 +112,7 @@ var task = g.PlainStruct("Task").
 	Text("Definition").
 	OptionalText("Condition").
 	Bool("AllowOverlappingExecution").
-	OptionalText("ErrorIntegration").
+	Field("ErrorIntegration", g.KindOfTSlice[AccountObjectIdentifier]()).
 	OptionalText("LastCommittedOn").
 	OptionalText("LastSuspendedOn").
 	Text("OwnerRoleType").
@@ -146,7 +146,7 @@ var TasksDef = g.NewInterface(
 			OptionalSessionParameters().
 			OptionalNumberAssignment("USER_TASK_TIMEOUT_MS", nil).
 			OptionalNumberAssignment("SUSPEND_TASK_AFTER_NUM_FAILURES", nil).
-			OptionalTextAssignment("ERROR_INTEGRATION", g.ParameterOptions().NoQuotes()).
+			OptionalIdentifier("ErrorNotificationIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("ERROR_INTEGRATION")).
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 			OptionalIdentifier("Finalize", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Equals().SQL("FINALIZE")).
 			OptionalNumberAssignment("TASK_AUTO_RETRY_ATTEMPTS", g.ParameterOptions()).
@@ -157,6 +157,7 @@ var TasksDef = g.NewInterface(
 			SQL("AS").
 			Text("sql", g.KeywordOptions().NoQuotes().Required()).
 			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ValidIdentifierIfSet, "ErrorNotificationIntegration").
 			WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 		taskCreateWarehouse,
 	).
@@ -174,7 +175,7 @@ var TasksDef = g.NewInterface(
 			OptionalNumberAssignment("USER_TASK_TIMEOUT_MS", nil).
 			OptionalSessionParameters().
 			OptionalNumberAssignment("SUSPEND_TASK_AFTER_NUM_FAILURES", nil).
-			OptionalTextAssignment("ERROR_INTEGRATION", g.ParameterOptions().NoQuotes()).
+			OptionalIdentifier("ErrorNotificationIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("ERROR_INTEGRATION")).
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 			OptionalIdentifier("Finalize", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Equals().SQL("FINALIZE")).
 			OptionalNumberAssignment("TASK_AUTO_RETRY_ATTEMPTS", g.ParameterOptions()).
@@ -182,7 +183,8 @@ var TasksDef = g.NewInterface(
 			OptionalTextAssignment("WHEN", g.ParameterOptions().NoQuotes().NoEquals()).
 			SQL("AS").
 			Text("sql", g.KeywordOptions().NoQuotes().Required()).
-			WithValidation(g.ValidIdentifier, "name"),
+			WithValidation(g.ValidIdentifier, "name").
+			WithValidation(g.ValidIdentifierIfSet, "ErrorNotificationIntegration"),
 	).
 	CustomOperation(
 		"Clone",
@@ -219,13 +221,14 @@ var TasksDef = g.NewInterface(
 					OptionalBooleanAssignment("ALLOW_OVERLAPPING_EXECUTION", nil).
 					OptionalNumberAssignment("USER_TASK_TIMEOUT_MS", nil).
 					OptionalNumberAssignment("SUSPEND_TASK_AFTER_NUM_FAILURES", nil).
-					OptionalTextAssignment("ERROR_INTEGRATION", g.ParameterOptions().NoQuotes()).
+					OptionalIdentifier("ErrorNotificationIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("ERROR_INTEGRATION")).
 					OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 					OptionalSessionParameters().
 					OptionalNumberAssignment("TASK_AUTO_RETRY_ATTEMPTS", nil).
 					OptionalNumberAssignment("USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS", nil).
 					WithValidation(g.AtLeastOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds").
-					WithValidation(g.ConflictingFields, "Warehouse", "UserTaskManagedInitialWarehouseSize"),
+					WithValidation(g.ConflictingFields, "Warehouse", "UserTaskManagedInitialWarehouseSize").
+					WithValidation(g.ValidIdentifierIfSet, "ErrorNotificationIntegration"),
 				g.ListOptions().SQL("SET"),
 			).
 			OptionalQueryStructField(

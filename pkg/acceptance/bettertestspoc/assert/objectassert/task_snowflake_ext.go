@@ -10,30 +10,30 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-func (w *TaskAssert) HasNotEmptyCreatedOn() *TaskAssert {
-	w.AddAssertion(func(t *testing.T, o *sdk.Task) error {
+func (t *TaskAssert) HasNotEmptyCreatedOn() *TaskAssert {
+	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
 		t.Helper()
 		if o.CreatedOn == "" {
 			return fmt.Errorf("expected created on not empty; got: %v", o.CreatedOn)
 		}
 		return nil
 	})
-	return w
+	return t
 }
 
-func (w *TaskAssert) HasNotEmptyId() *TaskAssert {
-	w.AddAssertion(func(t *testing.T, o *sdk.Task) error {
+func (t *TaskAssert) HasNotEmptyId() *TaskAssert {
+	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
 		t.Helper()
 		if o.Id == "" {
 			return fmt.Errorf("expected id not empty; got: %v", o.CreatedOn)
 		}
 		return nil
 	})
-	return w
+	return t
 }
 
-func (w *TaskAssert) HasPredecessors(ids ...sdk.SchemaObjectIdentifier) *TaskAssert {
-	w.AddAssertion(func(t *testing.T, o *sdk.Task) error {
+func (t *TaskAssert) HasPredecessors(ids ...sdk.SchemaObjectIdentifier) *TaskAssert {
+	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
 		t.Helper()
 		if len(o.Predecessors) != len(ids) {
 			return fmt.Errorf("expected %d (%v) predecessors, got %d (%v)", len(ids), ids, len(o.Predecessors), o.Predecessors)
@@ -48,7 +48,7 @@ func (w *TaskAssert) HasPredecessors(ids ...sdk.SchemaObjectIdentifier) *TaskAss
 		}
 		return errors.Join(errs...)
 	})
-	return w
+	return t
 }
 
 func (t *TaskAssert) HasTaskRelations(expected sdk.TaskRelations) *TaskAssert {

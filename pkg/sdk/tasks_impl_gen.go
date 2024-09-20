@@ -170,7 +170,7 @@ func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
 		SessionParameters:                       r.SessionParameters,
 		UserTaskTimeoutMs:                       r.UserTaskTimeoutMs,
 		SuspendTaskAfterNumFailures:             r.SuspendTaskAfterNumFailures,
-		ErrorIntegration:                        r.ErrorIntegration,
+		ErrorNotificationIntegration:            r.ErrorNotificationIntegration,
 		Comment:                                 r.Comment,
 		Finalize:                                r.Finalize,
 		TaskAutoRetryAttempts:                   r.TaskAutoRetryAttempts,
@@ -191,20 +191,20 @@ func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
 
 func (r *CreateOrAlterTaskRequest) toOpts() *CreateOrAlterTaskOptions {
 	opts := &CreateOrAlterTaskOptions{
-		name:                        r.name,
-		Schedule:                    r.Schedule,
-		Config:                      r.Config,
-		AllowOverlappingExecution:   r.AllowOverlappingExecution,
-		UserTaskTimeoutMs:           r.UserTaskTimeoutMs,
-		SessionParameters:           r.SessionParameters,
-		SuspendTaskAfterNumFailures: r.SuspendTaskAfterNumFailures,
-		ErrorIntegration:            r.ErrorIntegration,
-		Comment:                     r.Comment,
-		Finalize:                    r.Finalize,
-		TaskAutoRetryAttempts:       r.TaskAutoRetryAttempts,
-		After:                       r.After,
-		When:                        r.When,
-		sql:                         r.sql,
+		name:                         r.name,
+		Schedule:                     r.Schedule,
+		Config:                       r.Config,
+		AllowOverlappingExecution:    r.AllowOverlappingExecution,
+		UserTaskTimeoutMs:            r.UserTaskTimeoutMs,
+		SessionParameters:            r.SessionParameters,
+		SuspendTaskAfterNumFailures:  r.SuspendTaskAfterNumFailures,
+		ErrorNotificationIntegration: r.ErrorNotificationIntegration,
+		Comment:                      r.Comment,
+		Finalize:                     r.Finalize,
+		TaskAutoRetryAttempts:        r.TaskAutoRetryAttempts,
+		After:                        r.After,
+		When:                         r.When,
+		sql:                          r.sql,
 	}
 	if r.Warehouse != nil {
 		opts.Warehouse = &CreateTaskWarehouse{
@@ -251,7 +251,7 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 			AllowOverlappingExecution:               r.Set.AllowOverlappingExecution,
 			UserTaskTimeoutMs:                       r.Set.UserTaskTimeoutMs,
 			SuspendTaskAfterNumFailures:             r.Set.SuspendTaskAfterNumFailures,
-			ErrorIntegration:                        r.Set.ErrorIntegration,
+			ErrorNotificationIntegration:            r.Set.ErrorNotificationIntegration,
 			Comment:                                 r.Set.Comment,
 			SessionParameters:                       r.Set.SessionParameters,
 			TaskAutoRetryAttempts:                   r.Set.TaskAutoRetryAttempts,
@@ -345,7 +345,12 @@ func (r taskDBRow) convert() *Task {
 		task.Condition = r.Condition.String
 	}
 	if r.ErrorIntegration.Valid && r.ErrorIntegration.String != "null" {
-		task.ErrorIntegration = r.ErrorIntegration.String
+		id, err := ParseAccountObjectIdentifier(r.ErrorIntegration.String)
+		if err != nil {
+			log.Printf("[DEBUG] failed to parse error_integration: %v", err)
+		} else {
+			task.ErrorIntegration = &id
+		}
 	}
 	if r.LastCommittedOn.Valid {
 		task.LastCommittedOn = r.LastCommittedOn.String

@@ -81,7 +81,7 @@ func TestTasks_Create(t *testing.T) {
 		}
 		opts.UserTaskTimeoutMs = Int(5)
 		opts.SuspendTaskAfterNumFailures = Int(6)
-		opts.ErrorIntegration = String("some_error_integration")
+		opts.ErrorNotificationIntegration = Pointer(NewAccountObjectIdentifier("some_error_integration"))
 		opts.Comment = String("some comment")
 		opts.Finalize = &finalizerId
 		opts.TaskAutoRetryAttempts = Int(10)
@@ -93,7 +93,7 @@ func TestTasks_Create(t *testing.T) {
 		opts.After = []SchemaObjectIdentifier{otherTaskId}
 		opts.When = String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`)
 
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE TASK %s WAREHOUSE = %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true JSON_INDENT = 10, LOCK_TIMEOUT = 5 USER_TASK_TIMEOUT_MS = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = some_error_integration COMMENT = 'some comment' FINALIZE = %s TASK_AUTO_RETRY_ATTEMPTS = 10 TAG (%s = 'v1') USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS = 10 AFTER %s WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), finalizerId.FullyQualifiedName(), tagId.FullyQualifiedName(), otherTaskId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR REPLACE TASK %s WAREHOUSE = %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true JSON_INDENT = 10, LOCK_TIMEOUT = 5 USER_TASK_TIMEOUT_MS = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = \"some_error_integration\" COMMENT = 'some comment' FINALIZE = %s TASK_AUTO_RETRY_ATTEMPTS = 10 TAG (%s = 'v1') USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS = 10 AFTER %s WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), finalizerId.FullyQualifiedName(), tagId.FullyQualifiedName(), otherTaskId.FullyQualifiedName())
 	})
 }
 
@@ -157,14 +157,14 @@ func TestTasks_CreateOrAlter(t *testing.T) {
 			LockTimeout: Int(5),
 		}
 		opts.SuspendTaskAfterNumFailures = Int(6)
-		opts.ErrorIntegration = String("some_error_integration")
+		opts.ErrorNotificationIntegration = Pointer(NewAccountObjectIdentifier("some_error_integration"))
 		opts.Comment = String("some comment")
 		opts.Finalize = &finalizerId
 		opts.TaskAutoRetryAttempts = Int(10)
 		opts.After = []SchemaObjectIdentifier{otherTaskId}
 		opts.When = String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`)
 
-		assertOptsValidAndSQLEquals(t, opts, "CREATE OR ALTER TASK %s WAREHOUSE = %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true USER_TASK_TIMEOUT_MS = 5 JSON_INDENT = 10, LOCK_TIMEOUT = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = some_error_integration COMMENT = 'some comment' FINALIZE = %s TASK_AUTO_RETRY_ATTEMPTS = 10 AFTER %s WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), finalizerId.FullyQualifiedName(), otherTaskId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "CREATE OR ALTER TASK %s WAREHOUSE = %s SCHEDULE = '10 MINUTE' CONFIG = $${\"output_dir\": \"/temp/test_directory/\", \"learning_rate\": 0.1}$$ ALLOW_OVERLAPPING_EXECUTION = true USER_TASK_TIMEOUT_MS = 5 JSON_INDENT = 10, LOCK_TIMEOUT = 5 SUSPEND_TASK_AFTER_NUM_FAILURES = 6 ERROR_INTEGRATION = \"some_error_integration\" COMMENT = 'some comment' FINALIZE = %s TASK_AUTO_RETRY_ATTEMPTS = 10 AFTER %s WHEN SYSTEM$STREAM_HAS_DATA('MYSTREAM') AS SELECT CURRENT_TIMESTAMP", id.FullyQualifiedName(), warehouseId.FullyQualifiedName(), finalizerId.FullyQualifiedName(), otherTaskId.FullyQualifiedName())
 	})
 }
 

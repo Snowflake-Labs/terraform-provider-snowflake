@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"testing"
 
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
@@ -15,6 +16,17 @@ func TestInt_Tasks(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 	sql := "SELECT CURRENT_TIMESTAMP"
+
+	// TODO [SNOW-1017580]: replace with real value
+	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
+	errorIntegrationId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+	err := client.NotificationIntegrations.Create(ctx,
+		sdk.NewCreateNotificationIntegrationRequest(errorIntegrationId, true).
+			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().
+				WithGoogleAutoParams(sdk.NewGoogleAutoParamsRequest(gcpPubsubSubscriptionName)),
+			),
+	)
+	require.NoError(t, err)
 
 	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, warehouseName string) {
 		t.Helper()
@@ -44,7 +56,7 @@ func TestInt_Tasks(t *testing.T) {
 		)
 	}
 
-	assertTaskWithOptions := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *sdk.SchemaObjectIdentifier) {
+	assertTaskWithOptions := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *sdk.SchemaObjectIdentifier, errorIntegrationName string) {
 		t.Helper()
 
 		asserts := objectassert.TaskFromObject(t, task).
@@ -61,7 +73,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasDefinition(sql).
 			HasCondition(condition).
 			HasAllowOverlappingExecution(allowOverlappingExecution).
-			HasErrorIntegration("").
+			HasErrorIntegration(errorIntegrationName).
 			HasLastCommittedOn("").
 			HasLastSuspendedOn("").
 			HasOwnerRoleType("ROLE").
@@ -137,12 +149,13 @@ func TestInt_Tasks(t *testing.T) {
 		assertTask(t, task, id, "")
 	})
 
-	t.Run("create task: almost complete case", func(t *testing.T) {
+	t.Run("create task: complete case", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
-		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).
 			WithOrReplace(true).
 			WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(testClientHelper().Ids.WarehouseId())).
+			WithErrorNotificationIntegration(errorIntegrationId).
 			WithSchedule("10 MINUTE").
 			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
 			WithAllowOverlappingExecution(true).
@@ -159,7 +172,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
 
-		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
+		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil, errorIntegrationId.Name())
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
@@ -177,7 +190,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
 
-		assertTaskWithOptions(t, task, id, "", "", "", "", false, "", &rootTaskId)
+		assertTaskWithOptions(t, task, id, "", "", "", "", false, "", &rootTaskId, "")
 	})
 
 	t.Run("create task: with after and finalizer", func(t *testing.T) {
@@ -205,6 +218,12 @@ func TestInt_Tasks(t *testing.T) {
 		)
 	})
 
+	// Tested graph
+	//		 t1
+	// 	   /    \
+	// root	     t3
+	//	   \    /
+	//		 t2
 	t.Run("create dag of tasks", func(t *testing.T) {
 		rootId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		root, rootCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(rootId, sql).WithSchedule("10 MINUTE"))
@@ -276,6 +295,12 @@ func TestInt_Tasks(t *testing.T) {
 		require.ErrorContains(t, err, "Graph has at least one cycle containing task")
 	})
 
+	// Tested graph
+	// root1
+	//      \
+	//       t1
+	//      /
+	// root2
 	t.Run("create dag of tasks - multiple roots", func(t *testing.T) {
 		root1Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		root1, root1Cleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(root1Id, sql).WithSchedule("10 MINUTE"))
@@ -344,7 +369,17 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("clone task: default", func(t *testing.T) {
-		sourceTask, taskCleanup := testClientHelper().Task.Create(t)
+		rootTask, rootTaskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(rootTaskCleanup)
+
+		sourceTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		sourceTask, taskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(sourceTaskId, sql).
+			WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}).
+			WithAllowOverlappingExecution(false).
+			WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(testClientHelper().Ids.WarehouseId())).
+			WithComment(random.Comment()).
+			WithWhen(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`),
+		)
 		t.Cleanup(taskCleanup)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -355,7 +390,16 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertTask(t, task, id, testClientHelper().Ids.WarehouseId().Name())
+		assert.Equal(t, sourceTask.Definition, task.Definition)
+		assert.Equal(t, sourceTask.Config, task.Config)
+		assert.Equal(t, sourceTask.Condition, task.Condition)
+		assert.Equal(t, sourceTask.Warehouse, task.Warehouse)
+		assert.Equal(t, sourceTask.Predecessors, task.Predecessors)
+		assert.Equal(t, sourceTask.AllowOverlappingExecution, task.AllowOverlappingExecution)
+		assert.Equal(t, sourceTask.Comment, task.Comment)
+		assert.Equal(t, sourceTask.ErrorIntegration, task.ErrorIntegration)
+		assert.Equal(t, sourceTask.Schedule, task.Schedule)
+		assert.Equal(t, sourceTask.TaskRelations, task.TaskRelations)
 	})
 
 	t.Run("create or alter: complete", func(t *testing.T) {
@@ -432,6 +476,7 @@ func TestInt_Tasks(t *testing.T) {
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSet(*sdk.NewTaskSetRequest().
 			// TODO: Cannot set warehouse due to Snowflake error
 			// WithWarehouse(testClientHelper().Ids.WarehouseId()).
+			WithErrorNotificationIntegration(errorIntegrationId).
 			WithSchedule("10 MINUTE").
 			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
 			WithAllowOverlappingExecution(true).
@@ -445,6 +490,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
 			// HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
+			HasErrorIntegration(errorIntegrationId.Name()).
 			HasSchedule("10 MINUTE").
 			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
 			HasAllowOverlappingExecution(true).
@@ -452,6 +498,7 @@ func TestInt_Tasks(t *testing.T) {
 		)
 
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnset(*sdk.NewTaskUnsetRequest().
+			WithErrorIntegration(true).
 			WithWarehouse(true).
 			WithSchedule(true).
 			WithConfig(true).
@@ -465,6 +512,7 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
+			HasErrorIntegration("").
 			HasSchedule("").
 			HasConfig("").
 			HasAllowOverlappingExecution(false).
