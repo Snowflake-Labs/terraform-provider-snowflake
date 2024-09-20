@@ -4,7 +4,7 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
-var secretsSecurityIntegrationScopeDef = g.NewQueryStruct("SecurityIntegrationScope").
+var secretsApiIntegrationScopeDef = g.NewQueryStruct("ApiIntegrationScope").
 	Text("Scope", g.KeywordOptions().SingleQuotes().Required())
 
 var secretDbRow = g.DbStruct("secretDBRow").
@@ -62,7 +62,7 @@ var secretSet = g.NewQueryStruct("SecretSet").
 	OptionalQueryStructField(
 		"SetForOAuthClientCredentialsFlow",
 		g.NewQueryStruct("SetForOAuthClientCredentialsFlow").
-			ListAssignment("OAUTH_SCOPES", "SecurityIntegrationScope", g.ParameterOptions().Parentheses().Required()),
+			ListAssignment("OAUTH_SCOPES", "ApiIntegrationScope", g.ParameterOptions().Parentheses().Required()),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
@@ -85,7 +85,7 @@ var secretSet = g.NewQueryStruct("SecretSet").
 			OptionalTextAssignment("SECRET_STRING", g.ParameterOptions().SingleQuotes()),
 		g.KeywordOptions(),
 	).
-	WithValidation(g.ExactlyOneValueSet, "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString")
+	WithValidation(g.ConflictingFields, "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString")
 
 // UNSET doest work, need to use "SET COMMENT = NULL"
 var secretUnset = g.NewQueryStruct("SecretUnset").
@@ -105,12 +105,12 @@ var SecretsDef = g.NewInterface(
 		IfNotExists().
 		Name().
 		PredefinedQueryStructField("Type", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
-		Identifier("SecurityIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION").Required()).
-		ListAssignment("OAUTH_SCOPES", "SecurityIntegrationScope", g.ParameterOptions().Parentheses().Required()).
+		Identifier("ApiIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION")).
+		ListAssignment("OAUTH_SCOPES", "ApiIntegrationScope", g.ParameterOptions().Parentheses().Required()).
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
-	secretsSecurityIntegrationScopeDef,
+	secretsApiIntegrationScopeDef,
 ).CustomOperation(
 	"CreateWithOAuthAuthorizationCodeFlow",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-secret",
@@ -123,11 +123,11 @@ var SecretsDef = g.NewInterface(
 		PredefinedQueryStructField("Type", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
 		TextAssignment("OAUTH_REFRESH_TOKEN", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		TextAssignment("OAUTH_REFRESH_TOKEN_EXPIRY_TIME", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
-		Identifier("SecurityIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION")).
+		Identifier("ApiIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION")).
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
-	secretsSecurityIntegrationScopeDef,
+	secretsApiIntegrationScopeDef,
 ).CustomOperation(
 	"CreateWithBasicAuthentication",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-secret",
@@ -184,14 +184,14 @@ var SecretsDef = g.NewInterface(
 		Name().
 		WithValidation(g.ValidIdentifier, "name"),
 ).ShowOperation(
-	"https://docs.snowflake.com/en/sql-reference/sql/show-secret",
+	"https://docs.snowflake.com/en/sql-reference/sql/show-secrets",
 	secretDbRow,
 	secret,
 	g.NewQueryStruct("ShowSecret").
 		Show().
 		SQL("SECRETS").
 		OptionalLike().
-		OptionalIn(),
+		OptionalExtendedIn(),
 ).ShowByIdOperation().
 	DescribeOperation(
 		g.DescriptionMappingKindSingleValue,

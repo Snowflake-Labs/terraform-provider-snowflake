@@ -11,26 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const Day = 24 * time.Hour
-
 func TestInt_Secrets(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
 	integrationId := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-	refreshTokenExpiryTime := time.Now().Add(Day).Format(time.DateOnly)
-
-	stringDateToSnowflakeTimeFormat := func(inputLayout, date string) *time.Time {
-		parsedTime, err := time.Parse(inputLayout, date)
-		require.NoError(t, err)
-
-		loc, err := time.LoadLocation("America/Los_Angeles")
-		require.NoError(t, err)
-
-		adjustedTime := parsedTime.In(loc)
-		return &adjustedTime
-	}
+	refreshTokenExpiryTime := time.Now().Add(24 * time.Hour).Format(time.DateOnly)
 
 	cleanupIntegration := func(t *testing.T, integrationId sdk.AccountObjectIdentifier) func() {
 		t.Helper()
@@ -48,13 +35,33 @@ func TestInt_Secrets(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(cleanupIntegration(t, integrationId))
 
-	cleanupSecret := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
-		t.Helper()
-		return func() {
-			err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(true))
-			require.NoError(t, err)
-		}
+	/*
+		apiIntegration, dropApiIntegration := testClientHelper().ApiIntegration.CreateApiIntegration(t)
+		sdk.NewAlterApiIntegrationRequest(apiIntegration.ID()).
+			WithSet(sdk.NewApiIntegrationSetRequest())
+		t.Cleanup(dropApiIntegration)
+	*/
+
+	stringDateToSnowflakeTimeFormat := func(inputLayout, date string) *time.Time {
+		parsedTime, err := time.Parse(inputLayout, date)
+		require.NoError(t, err)
+
+		loc, err := time.LoadLocation("America/Los_Angeles")
+		require.NoError(t, err)
+
+		adjustedTime := parsedTime.In(loc)
+		return &adjustedTime
 	}
+
+	/*
+		cleanupSecret := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+			t.Helper()
+			return func() {
+				err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(true))
+				require.NoError(t, err)
+			}
+		}
+	*/
 
 	createSecretWithOAuthClientCredentialsFlow := func(t *testing.T, integrationId sdk.AccountObjectIdentifier, scopes []sdk.SecurityIntegrationScope, with func(*sdk.CreateWithOAuthClientCredentialsFlowSecretRequest)) (*sdk.Secret, sdk.SchemaObjectIdentifier) {
 		t.Helper()
@@ -65,7 +72,7 @@ func TestInt_Secrets(t *testing.T) {
 		}
 		err := client.Secrets.CreateWithOAuthClientCredentialsFlow(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupSecret(t, id))
+		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
 
 		secret, err := client.Secrets.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -82,7 +89,7 @@ func TestInt_Secrets(t *testing.T) {
 		}
 		err := client.Secrets.CreateWithOAuthAuthorizationCodeFlow(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupSecret(t, id))
+		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
 
 		secret, err := client.Secrets.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -99,7 +106,7 @@ func TestInt_Secrets(t *testing.T) {
 		}
 		err := client.Secrets.CreateWithBasicAuthentication(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupSecret(t, id))
+		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
 
 		secret, err := client.Secrets.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -116,7 +123,7 @@ func TestInt_Secrets(t *testing.T) {
 		}
 		err := client.Secrets.CreateWithGenericString(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupSecret(t, id))
+		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
 
 		secret, err := client.Secrets.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -149,13 +156,13 @@ func TestInt_Secrets(t *testing.T) {
 
 	assertSecretDetails := func(actual *sdk.SecretDetails, expected secretDetails) {
 		assert.Equal(t, expected.Name, actual.Name)
-		assert.Equal(t, expected.Comment, actual.Comment.String)
+		assert.Equal(t, expected.Comment, actual.Comment)
 		assert.Equal(t, expected.SecretType, actual.SecretType)
-		assert.Equal(t, expected.Username, actual.Username.String)
+		assert.Equal(t, expected.Username, actual.Username)
 		assert.Equal(t, expected.OauthAccessTokenExpiryTime, actual.OauthAccessTokenExpiryTime)
 		assert.Equal(t, expected.OauthRefreshTokenExpiryTime, actual.OauthRefreshTokenExpiryTime)
-		assert.Equal(t, expected.OauthScopes, actual.OauthScopes.String)
-		assert.Equal(t, expected.IntegrationName, actual.IntegrationName.String)
+		assert.Equal(t, expected.OauthScopes, actual.OauthScopes)
+		assert.Equal(t, expected.IntegrationName, actual.IntegrationName)
 	}
 
 	t.Run("Create: secretWithOAuthClientCredentialsFlow", func(t *testing.T) {
@@ -329,7 +336,7 @@ func TestInt_Secrets(t *testing.T) {
 
 	t.Run("Alter: SecretWithOAuthAuthorizationCode", func(t *testing.T) {
 		comment := random.Comment()
-		alteredRefreshTokenExpiryTime := time.Now().Add(4 * Day).Format(time.DateOnly)
+		alteredRefreshTokenExpiryTime := time.Now().Add(4 * 24 * time.Hour).Format(time.DateOnly)
 
 		_, id := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
 		setRequest := sdk.NewAlterSecretRequest(id).

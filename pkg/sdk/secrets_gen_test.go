@@ -218,6 +218,12 @@ func TestSecrets_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test' USERNAME = 'foo' PASSWORD = 'bar'", id.FullyQualifiedName())
 	})
 
+	t.Run("alter: set comment only", func(t *testing.T) {
+		opts := setOpts()
+		opts.Set.Comment = String("test")
+		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test'", id.FullyQualifiedName())
+	})
+
 	t.Run("alter: set options for Generic string", func(t *testing.T) {
 		opts := setOpts()
 		opts.Set.Comment = String("test")
