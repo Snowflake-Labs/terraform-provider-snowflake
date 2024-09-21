@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
+func TestAcc_AccountAuthenticationPolicyAttachment(t *testing.T) {
 	policyName := acc.TestClient().Ids.Alpha()
 
 	resource.Test(t, resource.TestCase{
@@ -22,13 +22,13 @@ func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: accountPasswordPolicyAttachmentConfig(acc.TestDatabaseName, acc.TestSchemaName, policyName),
+				Config: accountAuthenticationPolicyAttachmentConfig(acc.TestDatabaseName, acc.TestSchemaName, policyName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("snowflake_account_password_policy_attachment.att", "id"),
+					resource.TestCheckResourceAttrSet("snowflake_account_authentication_policy_attachment.att", "id"),
 				),
 			},
 			{
-				ResourceName:      "snowflake_account_password_policy_attachment.att",
+				ResourceName:      "snowflake_account_authentication_policy_attachment.att",
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -44,16 +44,16 @@ func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
 	})
 }
 
-func accountPasswordPolicyAttachmentConfig(databaseName, schemaName, policyName string) string {
+func accountAuthenticationPolicyAttachmentConfig(databaseName, schemaName, policyName string) string {
 	s := `
-resource "snowflake_password_policy" "pa" {
+resource "snowflake_authentication_policy" "pa" {
 	database   = "%s"
 	schema     = "%s"
 	name       = "%v"
 }
 
-resource "snowflake_account_password_policy_attachment" "att" {
-	password_policy = snowflake_password_policy.pa.fully_qualified_name
+resource "snowflake_account_authentication_policy_attachment" "att" {
+	authentication_policy = snowflake_authentication_policy.pa.fully_qualified_name
 }
 `
 	return fmt.Sprintf(s, databaseName, schemaName, policyName)
