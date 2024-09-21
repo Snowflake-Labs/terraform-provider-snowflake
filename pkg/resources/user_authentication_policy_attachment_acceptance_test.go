@@ -60,14 +60,14 @@ resource "snowflake_user" "user" {
 	name = "%s"
 }
 
-resource "snowflake_authentication_policy" "pp" {
+resource "snowflake_authentication_policy" "ap" {
 	database   = "%s"
 	schema     = "%s"
 	name       = "%s"
 }
 
-resource "snowflake_user_authentication_policy_attachment" "ppa" {
-	authentication_policy_name = snowflake_authentication_policy.pp.fully_qualified_name
+resource "snowflake_user_authentication_policy_attachment" "apa" {
+	authentication_policy_name = snowflake_authentication_policy.ap.fully_qualified_name
 	user_name = snowflake_user.user.name
 }
 `, userName, databaseName, schemaName, authenticationPolicyName)
