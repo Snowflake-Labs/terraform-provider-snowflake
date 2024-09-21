@@ -42,7 +42,6 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		Description: "A list of authentication methods that are allowed during login. This parameter accepts one or more of the following values: ALL, SAML, PASSWORD, OAUTH, KEYPAIR.",
-		Default:     []string{"ALL"},
 	},
 	"mfa_authentication_methods": {
 		Type: schema.TypeSet,
@@ -52,7 +51,6 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		Description: "A list of authentication methods that enforce multi-factor authentication (MFA) during login. Authentication methods not listed in this parameter do not prompt for multi-factor authentication. Allowed values are SAML and PASSWORD.",
-		Default:     []string{"SAML", "PASSWORD"},
 	},
 	"mfa_enrollment": {
 		Type:         schema.TypeString,
@@ -69,7 +67,6 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		Description: "A list of clients that can authenticate with Snowflake. If a client tries to connect, and the client is not one of the valid CLIENT_TYPES, then the login attempt fails. Allowed values are ALL, SNOWFLAKE_UI, DRIVERS, SNOWSQL. The CLIENT_TYPES property of an authentication policy is a best effort method to block user logins based on specific clients. It should not be used as the sole control to establish a security boundary.",
-		Default:     []string{"ALL"},
 	},
 	"security_integrations": {
 		Type: schema.TypeSet,
@@ -78,7 +75,6 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 		},
 		Optional:    true,
 		Description: "A list of security integrations the authentication policy is associated with. This parameter has no effect when SAML or OAUTH are not in the AUTHENTICATION_METHODS list. All values in the SECURITY_INTEGRATIONS list must be compatible with the values in the AUTHENTICATION_METHODS list. For example, if SECURITY_INTEGRATIONS contains a SAML security integration, and AUTHENTICATION_METHODS contains OAUTH, then you cannot create the authentication policy. To allow all security integrations use ALL as parameter.",
-		Default:     []string{"ALL"},
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -121,7 +117,7 @@ func CreateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 
 	mfaAuthenticationMethodsRawList := expandStringList(d.Get("mfa_authentication_methods").(*schema.Set).List())
 	mfaAuthenticationMethods := make([]sdk.MfaAuthenticationMethods, len(mfaAuthenticationMethodsRawList))
-	for i, v := range authenticationMethodsRawList {
+	for i, v := range mfaAuthenticationMethodsRawList {
 		mfaAuthenticationMethods[i] = sdk.MfaAuthenticationMethods{Method: sdk.MfaAuthenticationMethodsOption(v)}
 	}
 	req.WithMfaAuthenticationMethods(mfaAuthenticationMethods)
@@ -132,14 +128,14 @@ func CreateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 
 	clientTypesRawList := expandStringList(d.Get("client_types").(*schema.Set).List())
 	clientTypes := make([]sdk.ClientTypes, len(clientTypesRawList))
-	for i, v := range authenticationMethodsRawList {
+	for i, v := range clientTypesRawList {
 		clientTypes[i] = sdk.ClientTypes{ClientType: sdk.ClientTypesOption(v)}
 	}
 	req.WithClientTypes(clientTypes)
 
 	securityIntegrationsRawList := expandStringList(d.Get("security_integrations").(*schema.Set).List())
 	securityIntegrations := make([]sdk.SecurityIntegrationsOption, len(securityIntegrationsRawList))
-	for i, v := range authenticationMethodsRawList {
+	for i, v := range securityIntegrationsRawList {
 		securityIntegrations[i] = sdk.SecurityIntegrationsOption{Name: sdk.NewAccountObjectIdentifier(v)}
 	}
 	req.WithSecurityIntegrations(securityIntegrations)
@@ -211,7 +207,7 @@ func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData
 	}); err == nil {
 		mfaAuthenticationMethods = append(mfaAuthenticationMethods, sdk.ParseCommaSeparatedStringArray(mfaAuthenticationMethodsProperty.Value, false)...)
 	}
-	if err = d.Set("authentication_methods", mfaAuthenticationMethods); err != nil {
+	if err = d.Set("mfa_authentication_methods", mfaAuthenticationMethods); err != nil {
 		return diag.FromErr(err)
 	}
 
