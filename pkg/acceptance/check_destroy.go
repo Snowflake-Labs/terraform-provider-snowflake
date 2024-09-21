@@ -435,6 +435,30 @@ func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.Stat
 	}
 }
 
+// CheckUserAuthenticationPolicyAttachmentDestroy is a custom checks that should be later incorporated into generic CheckDestroy
+func CheckUserAuthenticationPolicyAttachmentDestroy(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_user_authentication_policy_attachment" {
+				continue
+			}
+			policyReferences, err := TestClient().PolicyReferences.GetPolicyReferences(t, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"]), sdk.PolicyEntityDomainUser)
+			if err != nil {
+				if strings.Contains(err.Error(), "does not exist or not authorized") {
+					// Note: this can happen if the Policy Reference or the User has been deleted as well; in this case, ignore the error
+					continue
+				}
+				return err
+			}
+			if len(policyReferences) > 0 {
+				return fmt.Errorf("user authentication policy attachment %v still exists", policyReferences[0].PolicyName)
+			}
+		}
+		return nil
+	}
+}
+
 func TestAccCheckGrantApplicationRoleDestroy(s *terraform.State) error {
 	client := TestAccProvider.Meta().(*provider.Context).Client
 	for _, rs := range s.RootModule().Resources {

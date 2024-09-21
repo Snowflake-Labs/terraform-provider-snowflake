@@ -83,7 +83,7 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Specifies a comment for the network rule.",
+		Description: "Specifies a comment for the authentication policy.",
 	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
