@@ -54,7 +54,7 @@ var secretDetails = g.PlainStruct("SecretDetails").
 	Field("Username", "*string").
 	Field("OauthAccessTokenExpiryTime", "*time.Time").
 	Field("OauthRefreshTokenExpiryTime", "*time.Time").
-	Field("OauthScopes", "*string").
+	Field("OauthScopes", "[]string").
 	Field("IntegrationName", "*string")
 
 var secretSet = g.NewQueryStruct("SecretSet").

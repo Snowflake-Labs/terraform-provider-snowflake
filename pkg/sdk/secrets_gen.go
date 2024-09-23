@@ -25,7 +25,7 @@ type CreateWithOAuthClientCredentialsFlowSecretOptions struct {
 	secret         bool                    `ddl:"static" sql:"SECRET"`
 	IfNotExists    *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name           SchemaObjectIdentifier  `ddl:"identifier"`
-	secretType     string                  `ddl:"static" sql:"TYPE = OAUTH2"`
+	Type           string                  `ddl:"static" sql:"TYPE = OAUTH2"`
 	ApiIntegration AccountObjectIdentifier `ddl:"identifier,equals" sql:"API_AUTHENTICATION"`
 	OauthScopes    []ApiIntegrationScope   `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
 	Comment        *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -55,7 +55,7 @@ type CreateWithBasicAuthenticationSecretOptions struct {
 	secret      bool                   `ddl:"static" sql:"SECRET"`
 	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        SchemaObjectIdentifier `ddl:"identifier"`
-	Type        string                 `ddl:"static" sql:"TYPE = PASSWORD"`
+	secretType  string                 `ddl:"static" sql:"TYPE = PASSWORD"`
 	Username    string                 `ddl:"parameter,single_quotes" sql:"USERNAME"`
 	Password    string                 `ddl:"parameter,single_quotes" sql:"PASSWORD"`
 	Comment     *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -160,7 +160,7 @@ type DescribeSecretOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 type secretDetailsDBRow struct {
-	CreatedOn                   string         `db:"created_on"`
+	CreatedOn                   time.Time      `db:"created_on"`
 	Name                        string         `db:"name"`
 	SchemaName                  string         `db:"schema_name"`
 	DatabaseName                string         `db:"database_name"`
@@ -174,7 +174,7 @@ type secretDetailsDBRow struct {
 	IntegrationName             sql.NullString `db:"integration_name"`
 }
 type SecretDetails struct {
-	CreatedOn                   string
+	CreatedOn                   time.Time
 	Name                        string
 	SchemaName                  string
 	DatabaseName                string

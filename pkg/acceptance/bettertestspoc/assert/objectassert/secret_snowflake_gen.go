@@ -4,7 +4,9 @@ package objectassert
 
 import (
 	"fmt"
+	"slices"
 	"testing"
+	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -30,7 +32,7 @@ func SecretFromObject(t *testing.T, secret *sdk.Secret) *SecretAssert {
 	}
 }
 
-func (s *SecretAssert) HasCreatedOn(expected string) *SecretAssert {
+func (s *SecretAssert) HasCreatedOn(expected time.Time) *SecretAssert {
 	s.AddAssertion(func(t *testing.T, o *sdk.Secret) error {
 		t.Helper()
 		if o.CreatedOn != expected {
@@ -110,14 +112,11 @@ func (s *SecretAssert) HasSecretType(expected string) *SecretAssert {
 	return s
 }
 
-func (s *SecretAssert) HasOauthScopes(expected string) *SecretAssert {
+func (s *SecretAssert) HasOauthScopes(expected []string) *SecretAssert {
 	s.AddAssertion(func(t *testing.T, o *sdk.Secret) error {
 		t.Helper()
-		if o.OauthScopes == nil {
-			return fmt.Errorf("expected oauth scopes to have value; got: nil")
-		}
-		if *o.OauthScopes != expected {
-			return fmt.Errorf("expected oauth scopes: %v; got: %v", expected, *o.OauthScopes)
+		if !slices.Equal(o.OauthScopes, expected) {
+			return fmt.Errorf("expected oauth scopes: %v; got: %v", expected, o.OauthScopes)
 		}
 		return nil
 	})

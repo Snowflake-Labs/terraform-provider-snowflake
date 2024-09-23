@@ -1,7 +1,6 @@
 package testint
 
 import (
-	"database/sql"
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"testing"
@@ -166,7 +165,7 @@ func TestInt_Secrets(t *testing.T) {
 				HasName(id.Name()).
 				HasComment("a").
 				HasSecretType("OAUTH2").
-				HasOauthScopes("[foo, bar]").
+				HasOauthScopes([]string{"foo", "bar"}).
 				HasDatabaseName(id.DatabaseName()).
 				HasSchemaName(id.SchemaName()),
 		)
@@ -222,7 +221,7 @@ func TestInt_Secrets(t *testing.T) {
 		assertions.AssertThat(t,
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
-				HasOauthScopes("[]").
+				HasOauthScopes([]string{}).
 				HasDatabaseName(id.DatabaseName()).
 				HasSchemaName(id.SchemaName()),
 		)
@@ -408,7 +407,7 @@ func TestInt_Secrets(t *testing.T) {
 			Name:            id.Name(),
 			SecretType:      "OAUTH2",
 			Comment:         sdk.String(comment),
-			OauthScopes:     sdk.String("[foo, bar]"),
+			OauthScopes:     []string{"foo", "bar"},
 			IntegrationName: sdk.String(integrationId.Name()),
 		})
 
@@ -423,7 +422,7 @@ func TestInt_Secrets(t *testing.T) {
 		details, err = client.Secrets.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, details.Comment, sql.NullString{String: "", Valid: false})
+		assert.Empty(t, details.Comment)
 	})
 
 	t.Run("Alter: SecretWithOAuthAuthorizationCode", func(t *testing.T) {
@@ -466,7 +465,7 @@ func TestInt_Secrets(t *testing.T) {
 		details, err = client.Secrets.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, details.Comment, sql.NullString{String: "", Valid: false})
+		assert.Empty(t, details.Comment)
 	})
 
 	t.Run("Alter: SecretWithBasicAuthorization", func(t *testing.T) {
@@ -508,7 +507,7 @@ func TestInt_Secrets(t *testing.T) {
 		details, err = client.Secrets.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, details.Comment, sql.NullString{String: "", Valid: false})
+		assert.Empty(t, details.Comment)
 	})
 
 	t.Run("Alter: SecretWithGenericString", func(t *testing.T) {
@@ -537,7 +536,7 @@ func TestInt_Secrets(t *testing.T) {
 		details, err := client.Secrets.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assert.Equal(t, details.Comment, sql.NullString{String: "", Valid: false})
+		assert.Empty(t, details.Comment)
 	})
 
 	t.Run("Drop", func(t *testing.T) {
