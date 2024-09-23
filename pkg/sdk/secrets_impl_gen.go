@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
@@ -53,7 +54,7 @@ func (v *secrets) Show(ctx context.Context, request *ShowSecretRequest) ([]Secre
 }
 
 func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error) {
-	request := NewShowSecretRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())})
+	request := NewShowSecretRequest().WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).WithLike(Like{String(id.Name())})
 	secrets, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
@@ -74,12 +75,12 @@ func (v *secrets) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Sec
 
 func (r *CreateWithOAuthClientCredentialsFlowSecretRequest) toOpts() *CreateWithOAuthClientCredentialsFlowSecretOptions {
 	opts := &CreateWithOAuthClientCredentialsFlowSecretOptions{
-		OrReplace:           r.OrReplace,
-		IfNotExists:         r.IfNotExists,
-		name:                r.name,
-		SecurityIntegration: r.SecurityIntegration,
-		OauthScopes:         r.OauthScopes,
-		Comment:             r.Comment,
+		OrReplace:      r.OrReplace,
+		IfNotExists:    r.IfNotExists,
+		name:           r.name,
+		ApiIntegration: r.ApiIntegration,
+		OauthScopes:    r.OauthScopes,
+		Comment:        r.Comment,
 	}
 	return opts
 }
@@ -91,7 +92,7 @@ func (r *CreateWithOAuthAuthorizationCodeFlowSecretRequest) toOpts() *CreateWith
 		name:                        r.name,
 		OauthRefreshToken:           r.OauthRefreshToken,
 		OauthRefreshTokenExpiryTime: r.OauthRefreshTokenExpiryTime,
-		SecurityIntegration:         r.SecurityIntegration,
+		ApiIntegration:              r.ApiIntegration,
 		Comment:                     r.Comment,
 	}
 	return opts
@@ -127,41 +128,53 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 	}
 
 	if r.Set != nil {
+
 		opts.Set = &SecretSet{
 			Comment: r.Set.Comment,
 		}
 
 		if r.Set.SetForOAuthClientCredentialsFlow != nil {
+
 			opts.Set.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow{
 				OauthScopes: r.Set.SetForOAuthClientCredentialsFlow.OauthScopes,
 			}
+
 		}
 
 		if r.Set.SetForOAuthAuthorizationFlow != nil {
+
 			opts.Set.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow{
 				OauthRefreshToken:           r.Set.SetForOAuthAuthorizationFlow.OauthRefreshToken,
 				OauthRefreshTokenExpiryTime: r.Set.SetForOAuthAuthorizationFlow.OauthRefreshTokenExpiryTime,
 			}
+
 		}
 
 		if r.Set.SetForBasicAuthentication != nil {
+
 			opts.Set.SetForBasicAuthentication = &SetForBasicAuthentication{
 				Username: r.Set.SetForBasicAuthentication.Username,
 				Password: r.Set.SetForBasicAuthentication.Password,
 			}
+
 		}
 
 		if r.Set.SetForGenericString != nil {
+
 			opts.Set.SetForGenericString = &SetForGenericString{
 				SecretString: r.Set.SetForGenericString.SecretString,
 			}
+
 		}
+
 	}
 
 	if r.Unset != nil {
+
 		opts.Unset = &SecretUnset{
 			Comment: r.Unset.Comment,
 		}
+
 	}
 
 	return opts
@@ -183,6 +196,16 @@ func (r *ShowSecretRequest) toOpts() *ShowSecretOptions {
 	return opts
 }
 
+func getOauthScopes(scopesString string) []string {
+	formatedScopes := make([]string, 0)
+	scopesString = strings.TrimPrefix(scopesString, "[")
+	scopesString = strings.TrimSuffix(scopesString, "]")
+	for _, scope := range strings.Split(scopesString, ",") {
+		formatedScopes = append(formatedScopes, strings.TrimSpace(scope))
+	}
+	return formatedScopes
+}
+
 func (r secretDBRow) convert() *Secret {
 	s := &Secret{
 		CreatedOn:     r.CreatedOn,
@@ -194,10 +217,10 @@ func (r secretDBRow) convert() *Secret {
 		OwnerRoleType: r.OwnerRoleType,
 	}
 	if r.Comment.Valid {
-		s.Comment = r.Comment.String
+		s.Comment = String(r.Comment.String)
 	}
 	if r.OauthScopes.Valid {
-		s.OauthScopes = r.OauthScopes
+		s.OauthScopes = getOauthScopes(r.OauthScopes.String)
 	}
 	return s
 }
@@ -210,18 +233,27 @@ func (r *DescribeSecretRequest) toOpts() *DescribeSecretOptions {
 }
 
 func (r secretDetailsDBRow) convert() *SecretDetails {
-	return &SecretDetails{
+	s := &SecretDetails{
 		CreatedOn:                   r.CreatedOn,
 		Name:                        r.Name,
 		SchemaName:                  r.SchemaName,
 		DatabaseName:                r.DatabaseName,
 		Owner:                       r.Owner,
-		Comment:                     r.Comment,
 		SecretType:                  r.SecretType,
-		Username:                    r.Username,
 		OauthAccessTokenExpiryTime:  r.OauthAccessTokenExpiryTime,
 		OauthRefreshTokenExpiryTime: r.OauthRefreshTokenExpiryTime,
-		OauthScopes:                 r.OauthScopes,
-		IntegrationName:             r.IntegrationName,
 	}
+	if r.Username.Valid {
+		s.Username = String(r.Username.String)
+	}
+	if r.Comment.Valid {
+		s.Comment = String(r.Comment.String)
+	}
+	if r.OauthScopes.Valid {
+		s.OauthScopes = getOauthScopes(r.OauthScopes.String)
+	}
+	if r.IntegrationName.Valid {
+		s.IntegrationName = String(r.IntegrationName.String)
+	}
+	return s
 }

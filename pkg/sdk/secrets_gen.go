@@ -20,17 +20,17 @@ type Secrets interface {
 
 // CreateWithOAuthClientCredentialsFlowSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-secret.
 type CreateWithOAuthClientCredentialsFlowSecretOptions struct {
-	create              bool                       `ddl:"static" sql:"CREATE"`
-	OrReplace           *bool                      `ddl:"keyword" sql:"OR REPLACE"`
-	secret              bool                       `ddl:"static" sql:"SECRET"`
-	IfNotExists         *bool                      `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                SchemaObjectIdentifier     `ddl:"identifier"`
-	Type                string                     `ddl:"static" sql:"TYPE = OAUTH2"`
-	SecurityIntegration AccountObjectIdentifier    `ddl:"identifier,equals" sql:"API_AUTHENTICATION"`
-	OauthScopes         []SecurityIntegrationScope `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
-	Comment             *string                    `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	create         bool                    `ddl:"static" sql:"CREATE"`
+	OrReplace      *bool                   `ddl:"keyword" sql:"OR REPLACE"`
+	secret         bool                    `ddl:"static" sql:"SECRET"`
+	IfNotExists    *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name           SchemaObjectIdentifier  `ddl:"identifier"`
+	secretType     string                  `ddl:"static" sql:"TYPE = OAUTH2"`
+	ApiIntegration AccountObjectIdentifier `ddl:"identifier,equals" sql:"API_AUTHENTICATION"`
+	OauthScopes    []ApiIntegrationScope   `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
+	Comment        *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-type SecurityIntegrationScope struct {
+type ApiIntegrationScope struct {
 	Scope string `ddl:"keyword,single_quotes"`
 }
 
@@ -44,7 +44,7 @@ type CreateWithOAuthAuthorizationCodeFlowSecretOptions struct {
 	Type                        string                  `ddl:"static" sql:"TYPE = OAUTH2"`
 	OauthRefreshToken           string                  `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN"`
 	OauthRefreshTokenExpiryTime string                  `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN_EXPIRY_TIME"`
-	SecurityIntegration         AccountObjectIdentifier `ddl:"identifier,equals" sql:"API_AUTHENTICATION"`
+	ApiIntegration              AccountObjectIdentifier `ddl:"identifier,equals" sql:"API_AUTHENTICATION"`
 	Comment                     *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
@@ -90,7 +90,7 @@ type SecretSet struct {
 	SetForGenericString              *SetForGenericString              `ddl:"keyword"`
 }
 type SetForOAuthClientCredentialsFlow struct {
-	OauthScopes []SecurityIntegrationScope `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
+	OauthScopes []ApiIntegrationScope `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
 }
 type SetForOAuthAuthorizationFlow struct {
 	OauthRefreshToken           *string `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN"`
@@ -115,15 +115,15 @@ type DropSecretOptions struct {
 	name     SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-// ShowSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-secret.
+// ShowSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-secrets.
 type ShowSecretOptions struct {
-	show    bool  `ddl:"static" sql:"SHOW"`
-	secrets bool  `ddl:"static" sql:"SECRETS"`
-	Like    *Like `ddl:"keyword" sql:"LIKE"`
-	In      *In   `ddl:"keyword" sql:"IN"`
+	show    bool        `ddl:"static" sql:"SHOW"`
+	secrets bool        `ddl:"static" sql:"SECRETS"`
+	Like    *Like       `ddl:"keyword" sql:"LIKE"`
+	In      *ExtendedIn `ddl:"keyword" sql:"IN"`
 }
 type secretDBRow struct {
-	CreatedOn     string         `db:"created_on"`
+	CreatedOn     time.Time      `db:"created_on"`
 	Name          string         `db:"name"`
 	SchemaName    string         `db:"schema_name"`
 	DatabaseName  string         `db:"database_name"`
@@ -134,19 +134,23 @@ type secretDBRow struct {
 	OwnerRoleType string         `db:"owner_role_type"`
 }
 type Secret struct {
-	CreatedOn     string
+	CreatedOn     time.Time
 	Name          string
 	SchemaName    string
 	DatabaseName  string
 	Owner         string
-	Comment       string
+	Comment       *string
 	SecretType    string
-	OauthScopes   sql.NullString
+	OauthScopes   []string
 	OwnerRoleType string
 }
 
 func (s *Secret) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(s.DatabaseName, s.SchemaName, s.Name)
+}
+
+func (s *Secret) ObjectType() ObjectType {
+	return ObjectTypeSecret
 }
 
 // DescribeSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-secret.
@@ -180,6 +184,6 @@ type SecretDetails struct {
 	Username                    *string
 	OauthAccessTokenExpiryTime  *time.Time
 	OauthRefreshTokenExpiryTime *time.Time
-	OauthScopes                 *string
+	OauthScopes                 []string
 	IntegrationName             *string
 }

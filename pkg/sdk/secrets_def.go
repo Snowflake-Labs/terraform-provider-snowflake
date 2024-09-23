@@ -8,7 +8,7 @@ var secretsApiIntegrationScopeDef = g.NewQueryStruct("ApiIntegrationScope").
 	Text("Scope", g.KeywordOptions().SingleQuotes().Required())
 
 var secretDbRow = g.DbStruct("secretDBRow").
-	Field("created_on", "string").
+	Field("created_on", "time.Time").
 	Field("name", "string").
 	Field("schema_name", "string").
 	Field("database_name", "string").
@@ -19,18 +19,18 @@ var secretDbRow = g.DbStruct("secretDBRow").
 	Field("owner_role_type", "string")
 
 var secret = g.PlainStruct("Secret").
-	Field("CreatedOn", "string").
+	Field("CreatedOn", "time.Time").
 	Field("Name", "string").
 	Field("SchemaName", "string").
 	Field("DatabaseName", "string").
 	Field("Owner", "string").
-	Field("Comment", "string").
+	Field("Comment", "*string").
 	Field("SecretType", "string").
-	Field("OauthScopes", "sql.NullString").
+	Field("OauthScopes", "[]string").
 	Field("OwnerRoleType", "string")
 
 var secretDetailsDbRow = g.DbStruct("secretDetailsDBRow").
-	Field("created_on", "string").
+	Field("created_on", "time.Time").
 	Field("name", "string").
 	Field("schema_name", "string").
 	Field("database_name", "string").
@@ -38,24 +38,24 @@ var secretDetailsDbRow = g.DbStruct("secretDetailsDBRow").
 	Field("comment", "sql.NullString").
 	Field("secret_type", "string").
 	Field("username", "sql.NullString").
-	Time("oauth_access_token_expiry_time").
-	Time("oauth_refresh_token_expiry_time").
+	Field("oauth_access_token_expiry_time", "*time.Time").
+	Field("oauth_refresh_token_expiry_time", "*time.Time").
 	Field("oauth_scopes", "sql.NullString").
 	Field("integration_name", "sql.NullString")
 
 var secretDetails = g.PlainStruct("SecretDetails").
-	Field("CreatedOn", "string").
+	Field("CreatedOn", "time.Time").
 	Field("Name", "string").
 	Field("SchemaName", "string").
 	Field("DatabaseName", "string").
 	Field("Owner", "string").
-	Field("Comment", "sql.NullString").
+	Field("Comment", "*string").
 	Field("SecretType", "string").
-	Field("Username", "sql.NullString").
+	Field("Username", "*string").
 	Field("OauthAccessTokenExpiryTime", "*time.Time").
 	Field("OauthRefreshTokenExpiryTime", "*time.Time").
-	Field("OauthScopes", "sql.NullString").
-	Field("IntegrationName", "sql.NullString")
+	Field("OauthScopes", "*string").
+	Field("IntegrationName", "*string")
 
 var secretSet = g.NewQueryStruct("SecretSet").
 	OptionalComment().
@@ -137,7 +137,7 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		IfNotExists().
 		Name().
-		PredefinedQueryStructField("Type", "string", g.StaticOptions().SQL("TYPE = PASSWORD")).
+		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL("TYPE = PASSWORD")).
 		TextAssignment("USERNAME", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		TextAssignment("PASSWORD", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		OptionalComment().

@@ -14,12 +14,12 @@ var (
 )
 
 type CreateWithOAuthClientCredentialsFlowSecretRequest struct {
-	OrReplace           *bool
-	IfNotExists         *bool
-	name                SchemaObjectIdentifier     // required
-	SecurityIntegration AccountObjectIdentifier    // required
-	OauthScopes         []SecurityIntegrationScope // required
-	Comment             *string
+	OrReplace      *bool
+	IfNotExists    *bool
+	name           SchemaObjectIdentifier  // required
+	ApiIntegration AccountObjectIdentifier // required
+	OauthScopes    []ApiIntegrationScope   // required
+	Comment        *string
 }
 
 type CreateWithOAuthAuthorizationCodeFlowSecretRequest struct {
@@ -28,7 +28,7 @@ type CreateWithOAuthAuthorizationCodeFlowSecretRequest struct {
 	name                        SchemaObjectIdentifier  // required
 	OauthRefreshToken           string                  // required
 	OauthRefreshTokenExpiryTime string                  // required
-	SecurityIntegration         AccountObjectIdentifier // required
+	ApiIntegration              AccountObjectIdentifier // required
 	Comment                     *string
 }
 
@@ -65,7 +65,7 @@ type SecretSetRequest struct {
 }
 
 type SetForOAuthClientCredentialsFlowRequest struct {
-	OauthScopes []SecurityIntegrationScope // required
+	OauthScopes []ApiIntegrationScope // required
 }
 
 type SetForOAuthAuthorizationFlowRequest struct {
@@ -93,7 +93,7 @@ type DropSecretRequest struct {
 
 type ShowSecretRequest struct {
 	Like *Like
-	In   *In
+	In   *ExtendedIn
 }
 
 type DescribeSecretRequest struct {

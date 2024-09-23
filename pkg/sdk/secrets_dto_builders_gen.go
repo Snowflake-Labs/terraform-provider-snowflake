@@ -6,12 +6,12 @@ import ()
 
 func NewCreateWithOAuthClientCredentialsFlowSecretRequest(
 	name SchemaObjectIdentifier,
-	SecurityIntegration AccountObjectIdentifier,
-	OauthScopes []SecurityIntegrationScope,
+	ApiIntegration AccountObjectIdentifier,
+	OauthScopes []ApiIntegrationScope,
 ) *CreateWithOAuthClientCredentialsFlowSecretRequest {
 	s := CreateWithOAuthClientCredentialsFlowSecretRequest{}
 	s.name = name
-	s.SecurityIntegration = SecurityIntegration
+	s.ApiIntegration = ApiIntegration
 	s.OauthScopes = OauthScopes
 	return &s
 }
@@ -35,13 +35,13 @@ func NewCreateWithOAuthAuthorizationCodeFlowSecretRequest(
 	name SchemaObjectIdentifier,
 	OauthRefreshToken string,
 	OauthRefreshTokenExpiryTime string,
-	SecurityIntegration AccountObjectIdentifier,
+	ApiIntegration AccountObjectIdentifier,
 ) *CreateWithOAuthAuthorizationCodeFlowSecretRequest {
 	s := CreateWithOAuthAuthorizationCodeFlowSecretRequest{}
 	s.name = name
 	s.OauthRefreshToken = OauthRefreshToken
 	s.OauthRefreshTokenExpiryTime = OauthRefreshTokenExpiryTime
-	s.SecurityIntegration = SecurityIntegration
+	s.ApiIntegration = ApiIntegration
 	return &s
 }
 
@@ -165,7 +165,7 @@ func (s *SecretSetRequest) WithSetForGenericString(SetForGenericString SetForGen
 }
 
 func NewSetForOAuthClientCredentialsFlowRequest(
-	OauthScopes []SecurityIntegrationScope,
+	OauthScopes []ApiIntegrationScope,
 ) *SetForOAuthClientCredentialsFlowRequest {
 	s := SetForOAuthClientCredentialsFlowRequest{}
 	s.OauthScopes = OauthScopes
@@ -240,7 +240,7 @@ func (s *ShowSecretRequest) WithLike(Like Like) *ShowSecretRequest {
 	return s
 }
 
-func (s *ShowSecretRequest) WithIn(In In) *ShowSecretRequest {
+func (s *ShowSecretRequest) WithIn(In ExtendedIn) *ShowSecretRequest {
 	s.In = &In
 	return s
 }
