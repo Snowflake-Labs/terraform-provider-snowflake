@@ -27,21 +27,21 @@ func (c *TaskClient) client() sdk.Tasks {
 func (c *TaskClient) defaultCreateTaskRequest(t *testing.T) *sdk.CreateTaskRequest {
 	t.Helper()
 	id := c.ids.RandomSchemaObjectIdentifier()
-	warehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(c.ids.WarehouseId()))
-	return sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP").WithWarehouse(warehouseReq)
+	warehouseReq := sdk.NewCreateTaskWarehouseRequest().WithWarehouse(c.ids.WarehouseId())
+	return sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP").WithWarehouse(*warehouseReq)
 }
 
-func (c *TaskClient) CreateTask(t *testing.T) (*sdk.Task, func()) {
+func (c *TaskClient) Create(t *testing.T) (*sdk.Task, func()) {
 	t.Helper()
-	return c.CreateTaskWithRequest(t, c.defaultCreateTaskRequest(t).WithSchedule(sdk.String("60 minutes")))
+	return c.CreateWithRequest(t, c.defaultCreateTaskRequest(t))
 }
 
-func (c *TaskClient) CreateTaskWithAfter(t *testing.T, taskId sdk.SchemaObjectIdentifier) (*sdk.Task, func()) {
+func (c *TaskClient) CreateWithAfter(t *testing.T, after ...sdk.SchemaObjectIdentifier) (*sdk.Task, func()) {
 	t.Helper()
-	return c.CreateTaskWithRequest(t, c.defaultCreateTaskRequest(t).WithAfter([]sdk.SchemaObjectIdentifier{taskId}))
+	return c.CreateWithRequest(t, c.defaultCreateTaskRequest(t).WithAfter(after))
 }
 
-func (c *TaskClient) CreateTaskWithRequest(t *testing.T, request *sdk.CreateTaskRequest) (*sdk.Task, func()) {
+func (c *TaskClient) CreateWithRequest(t *testing.T, request *sdk.CreateTaskRequest) (*sdk.Task, func()) {
 	t.Helper()
 	ctx := context.Background()
 
@@ -53,15 +53,22 @@ func (c *TaskClient) CreateTaskWithRequest(t *testing.T, request *sdk.CreateTask
 	task, err := c.client().ShowByID(ctx, id)
 	require.NoError(t, err)
 
-	return task, c.DropTaskFunc(t, id)
+	return task, c.DropFunc(t, id)
 }
 
-func (c *TaskClient) DropTaskFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+func (c *TaskClient) DropFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 
 	return func() {
-		err := c.client().Drop(ctx, sdk.NewDropTaskRequest(id).WithIfExists(sdk.Bool(true)))
+		err := c.client().Drop(ctx, sdk.NewDropTaskRequest(id).WithIfExists(true))
 		require.NoError(t, err)
 	}
+}
+
+func (c *TaskClient) Show(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.Task, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
 }
