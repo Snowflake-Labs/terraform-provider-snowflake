@@ -54,16 +54,21 @@ func (t *TaskAssert) HasPredecessors(ids ...sdk.SchemaObjectIdentifier) *TaskAss
 func (t *TaskAssert) HasTaskRelations(expected sdk.TaskRelations) *TaskAssert {
 	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
 		t.Helper()
-		if slices.EqualFunc(o.TaskRelations.Predecessors, expected.Predecessors, func(id sdk.SchemaObjectIdentifier, id2 sdk.SchemaObjectIdentifier) bool {
-			return id.FullyQualifiedName() == id2.FullyQualifiedName()
-		}) {
-			return fmt.Errorf("expected task predecessors: %v; got: %v", expected.Predecessors, o.TaskRelations.Predecessors)
+		if len(o.TaskRelations.Predecessors) != len(expected.Predecessors) {
+			return fmt.Errorf("expected %d (%v) predecessors in task relations, got %d (%v)", len(expected.Predecessors), expected.Predecessors, len(o.TaskRelations.Predecessors), o.TaskRelations.Predecessors)
 		}
-
+		var errs []error
+		for _, id := range expected.Predecessors {
+			if !slices.ContainsFunc(o.TaskRelations.Predecessors, func(predecessorId sdk.SchemaObjectIdentifier) bool {
+				return predecessorId.FullyQualifiedName() == id.FullyQualifiedName()
+			}) {
+				errs = append(errs, fmt.Errorf("expected id: %s, to be in the list of predecessors in task relations: %v", id.FullyQualifiedName(), o.TaskRelations.Predecessors))
+			}
+		}
 		if !reflect.DeepEqual(expected.FinalizerTask, o.TaskRelations.FinalizerTask) {
-			return fmt.Errorf("expected finalizer task: %v; got: %v", expected.FinalizerTask, o.TaskRelations.FinalizerTask)
+			errs = append(errs, fmt.Errorf("expected finalizer task: %v; got: %v", expected.FinalizerTask, o.TaskRelations.FinalizerTask))
 		}
-		return nil
+		return errors.Join(errs...)
 	})
 	return t
 }
