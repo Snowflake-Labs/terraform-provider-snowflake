@@ -135,7 +135,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
@@ -148,7 +148,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeXSmall)))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
@@ -178,7 +178,7 @@ func TestInt_Tasks(t *testing.T) {
 			WithComment("some comment").
 			WithWhen(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
@@ -192,11 +192,11 @@ func TestInt_Tasks(t *testing.T) {
 
 		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(rootTaskId, sql))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, rootTaskId))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, rootTaskId))
 
 		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTaskId}))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
@@ -211,15 +211,15 @@ func TestInt_Tasks(t *testing.T) {
 
 		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(rootTaskId, sql))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, rootTaskId))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, rootTaskId))
 
 		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTaskId}))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
 		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(finalizerId, sql).WithFinalize(rootTaskId))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, finalizerId))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, finalizerId))
 
 		assertions.AssertThat(t, objectassert.Task(t, rootTaskId).
 			HasTaskRelations(sdk.TaskRelations{
@@ -348,11 +348,11 @@ func TestInt_Tasks(t *testing.T) {
 
 		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(rootTaskId, sql))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, rootTaskId))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, rootTaskId))
 
 		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTaskId}))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
 		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(finalizerId, sql).WithFinalize(id))
 		require.ErrorContains(t, err, "cannot finalize a non-root task")
@@ -396,7 +396,7 @@ func TestInt_Tasks(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err := client.Tasks.Clone(ctx, sdk.NewCloneTaskRequest(id, sourceTask.ID()))
 		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Task.DropTaskFunc(t, id))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
 		task, err := client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -431,6 +431,7 @@ func TestInt_Tasks(t *testing.T) {
 			WithWhen(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`),
 		)
 		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
 		task, err := client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -696,7 +697,7 @@ func TestInt_Tasks(t *testing.T) {
 		returnedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().WithIn(sdk.In{Schema: testClientHelper().Ids.SchemaId()}))
 		require.NoError(t, err)
 
-		require.GreaterOrEqual(t, returnedTasks, 2)
+		require.Len(t, returnedTasks, 2)
 		assert.Contains(t, returnedTasks, *task1)
 		assert.Contains(t, returnedTasks, *task2)
 	})
@@ -709,7 +710,7 @@ func TestInt_Tasks(t *testing.T) {
 		returnedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().WithIn(sdk.In{Schema: testClientHelper().Ids.SchemaId()}).WithTerse(true))
 		require.NoError(t, err)
 
-		require.GreaterOrEqual(t, returnedTasks, 1)
+		require.Len(t, returnedTasks, 1)
 		assertTaskTerse(t, &returnedTasks[0], task.ID(), "10 MINUTE")
 	})
 

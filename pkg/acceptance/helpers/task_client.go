@@ -53,10 +53,10 @@ func (c *TaskClient) CreateWithRequest(t *testing.T, request *sdk.CreateTaskRequ
 	task, err := c.client().ShowByID(ctx, id)
 	require.NoError(t, err)
 
-	return task, c.DropTaskFunc(t, id)
+	return task, c.DropFunc(t, id)
 }
 
-func (c *TaskClient) DropTaskFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+func (c *TaskClient) DropFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 
