@@ -51,8 +51,6 @@ resource "snowflake_shared_database" "test" {
   from_share   = "<primary_account_organization_name>.<primary_account_name>.${snowflake_share.test.name}"
   comment      = "A shared database"
 
-  data_retention_time_in_days                   = 10
-  max_data_extension_time_in_days               = 20
   external_volume                               = "<external_volume_name>"
   catalog                                       = "<catalog_name>"
   replace_invalid_characters                    = false

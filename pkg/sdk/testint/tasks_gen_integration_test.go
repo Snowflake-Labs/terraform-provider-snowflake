@@ -2,10 +2,11 @@ package testint
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"testing"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
@@ -505,9 +506,9 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		// TODO(SNOW-1348116 - next prs): Assert parameters
-		//assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+		// assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
 		//	HasUserTaskManagedInitialWarehouseSize()
-		//)
+		// )
 
 		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
 			// HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
@@ -545,9 +546,9 @@ func TestInt_Tasks(t *testing.T) {
 		)
 
 		// TODO(SNOW-1348116 - next prs): Assert parameters
-		//assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+		// assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
 		//	HasUserTaskManagedInitialWarehouseSize()
-		//)
+		// )
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
