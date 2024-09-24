@@ -25,12 +25,54 @@ func (c *SecretClient) client() sdk.Secrets {
 	return c.context.client.Secrets
 }
 
-func (c *SecretClient) CreateWithBasicFlow(t *testing.T, id sdk.SchemaObjectIdentifier, username, password string) (*sdk.Secret, func()) {
+func (c *SecretClient) CreateWithOAuthClientCredentialsFlow(t *testing.T, id sdk.SchemaObjectIdentifier, apiIntegration sdk.AccountObjectIdentifier, oauthScopes []sdk.ApiIntegrationScope) (*sdk.Secret, func()) {
+	t.Helper()
+	ctx := context.Background()
+	request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, apiIntegration, oauthScopes)
+
+	err := c.client().CreateWithOAuthClientCredentialsFlow(ctx, request)
+	require.NoError(t, err)
+
+	secret, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return secret, c.DropFunc(t, id)
+}
+
+func (c *SecretClient) CreateWithOAuthAuthorizationCodeFlow(t *testing.T, id sdk.SchemaObjectIdentifier, apiIntegration sdk.AccountObjectIdentifier, refreshToken, refreshTokenExpiryTime string) (*sdk.Secret, func()) {
+	t.Helper()
+	ctx := context.Background()
+	request := sdk.NewCreateWithOAuthAuthorizationCodeFlowSecretRequest(id, refreshToken, refreshTokenExpiryTime, apiIntegration)
+
+	err := c.client().CreateWithOAuthAuthorizationCodeFlow(ctx, request)
+	require.NoError(t, err)
+
+	secret, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return secret, c.DropFunc(t, id)
+}
+
+func (c *SecretClient) CreateWithBasicAuthenticationFlow(t *testing.T, id sdk.SchemaObjectIdentifier, username, password string) (*sdk.Secret, func()) {
 	t.Helper()
 	ctx := context.Background()
 	request := sdk.NewCreateWithBasicAuthenticationSecretRequest(id, username, password)
 
 	err := c.client().CreateWithBasicAuthentication(ctx, request)
+	require.NoError(t, err)
+
+	secret, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return secret, c.DropFunc(t, id)
+}
+
+func (c *SecretClient) CreateWithGenericString(t *testing.T, id sdk.SchemaObjectIdentifier, secretString string) (*sdk.Secret, func()) {
+	t.Helper()
+	ctx := context.Background()
+	request := sdk.NewCreateWithGenericStringSecretRequest(id, secretString)
+
+	err := c.client().CreateWithGenericString(ctx, request)
 	require.NoError(t, err)
 
 	secret, err := c.client().ShowByID(ctx, id)

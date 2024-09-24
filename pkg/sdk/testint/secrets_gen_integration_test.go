@@ -17,24 +17,13 @@ func TestInt_Secrets(t *testing.T) {
 	ctx := testContext(t)
 
 	integrationId := testClientHelper().Ids.RandomAccountObjectIdentifier()
-
 	refreshTokenExpiryTime := time.Now().Add(24 * time.Hour).Format(time.DateOnly)
 
-	cleanupIntegration := func(t *testing.T, integrationId sdk.AccountObjectIdentifier) func() {
-		t.Helper()
-		return func() {
-			err := client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(integrationId).WithIfExists(true))
-			require.NoError(t, err)
-		}
-	}
-
-	err := client.SecurityIntegrations.CreateApiAuthenticationWithClientCredentialsFlow(
-		ctx,
+	_, apiIntegrationCleanup := testClientHelper().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
 		sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(integrationId, true, "foo", "foo").
 			WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "foo"}, {Scope: "bar"}}),
 	)
-	require.NoError(t, err)
-	t.Cleanup(cleanupIntegration(t, integrationId))
+	t.Cleanup(apiIntegrationCleanup)
 
 	stringDateToSnowflakeTimeFormat := func(inputLayout, date string) *time.Time {
 		parsedTime, err := time.Parse(inputLayout, date)
@@ -45,87 +34,6 @@ func TestInt_Secrets(t *testing.T) {
 
 		adjustedTime := parsedTime.In(loc)
 		return &adjustedTime
-	}
-
-	createSecretWithOAuthClientCredentialsFlow := func(t *testing.T, integrationId sdk.AccountObjectIdentifier, scopes []sdk.ApiIntegrationScope, with func(*sdk.CreateWithOAuthClientCredentialsFlowSecretRequest)) (*sdk.Secret, sdk.SchemaObjectIdentifier) {
-		t.Helper()
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId, scopes)
-		if with != nil {
-			with(request)
-		}
-		err := client.Secrets.CreateWithOAuthClientCredentialsFlow(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
-
-		secret, err := client.Secrets.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		return secret, id
-	}
-
-	createSecretWithOAuthAuthorizationCodeFlow := func(t *testing.T, integrationId sdk.AccountObjectIdentifier, refreshToken, refreshTokenExpiryTime string, with func(*sdk.CreateWithOAuthAuthorizationCodeFlowSecretRequest)) (*sdk.Secret, sdk.SchemaObjectIdentifier) {
-		t.Helper()
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		request := sdk.NewCreateWithOAuthAuthorizationCodeFlowSecretRequest(id, refreshToken, refreshTokenExpiryTime, integrationId)
-		if with != nil {
-			with(request)
-		}
-		err := client.Secrets.CreateWithOAuthAuthorizationCodeFlow(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
-
-		secret, err := client.Secrets.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		return secret, id
-	}
-
-	createSecretWithBasicAuthentication := func(t *testing.T, username, password string, with func(*sdk.CreateWithBasicAuthenticationSecretRequest)) (*sdk.Secret, sdk.SchemaObjectIdentifier) {
-		t.Helper()
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		request := sdk.NewCreateWithBasicAuthenticationSecretRequest(id, username, password)
-		if with != nil {
-			with(request)
-		}
-		err := client.Secrets.CreateWithBasicAuthentication(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
-
-		secret, err := client.Secrets.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		return secret, id
-	}
-
-	createSecretWithGenericString := func(t *testing.T, secretString string, with func(options *sdk.CreateWithGenericStringSecretRequest)) (*sdk.Secret, sdk.SchemaObjectIdentifier) {
-		t.Helper()
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		request := sdk.NewCreateWithGenericStringSecretRequest(id, secretString)
-		if with != nil {
-			with(request)
-		}
-		err := client.Secrets.CreateWithGenericString(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
-
-		secret, err := client.Secrets.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		return secret, id
-	}
-
-	createSecretWithId := func(t *testing.T, id sdk.SchemaObjectIdentifier) *sdk.Secret {
-		t.Helper()
-		request := sdk.NewCreateWithGenericStringSecretRequest(id, "foo")
-		err := client.Secrets.CreateWithGenericString(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
-
-		secret, err := client.Secrets.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		return secret
 	}
 
 	type secretDetails struct {
@@ -209,8 +117,8 @@ func TestInt_Secrets(t *testing.T) {
 		})
 	})
 
-	// regarding the https://docs.snowflake.com/en/sql-reference/sql/create-secret secret should inherit security_integration scopes, but it does not do so
-	t.Run("Create: SecretWithOAuthClientCredentialsFlow - No Scopes Specified", func(t *testing.T) {
+	// regarding the https://docs.snowflake.com/en/sql-reference/sql/create-secret secret with empty oauth_scopes list should inherit scopes from security_integration, but it does not
+	t.Run("Create: SecretWithOAuthClientCredentialsFlow - Empty Scopes List", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId, []sdk.ApiIntegrationScope{})
 
@@ -231,7 +139,10 @@ func TestInt_Secrets(t *testing.T) {
 
 		details, err := client.Secrets.Describe(ctx, id)
 		require.NoError(t, err)
-		assert.NotEqual(t, details.OauthScopes, "[foo, bar]")
+
+		assert.NotContains(t, details.OauthScopes, "foo")
+		assert.NotContains(t, details.OauthScopes, "bar")
+		assert.Empty(t, details.OauthScopes)
 	})
 
 	t.Run("Create: SecretWithOAuthAuthorizationCodeFlow - refreshTokenExpiry date format", func(t *testing.T) {
@@ -386,7 +297,10 @@ func TestInt_Secrets(t *testing.T) {
 
 	t.Run("Alter: SecretWithOAuthClientCredentials", func(t *testing.T) {
 		comment := random.Comment()
-		_, id := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		_, secretDropFunc := testClientHelper().Secret.CreateWithOAuthClientCredentialsFlow(t, id, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}})
+		t.Cleanup(secretDropFunc)
+
 		setRequest := sdk.NewAlterSecretRequest(id).
 			WithSet(
 				*sdk.NewSecretSetRequest().
@@ -429,7 +343,11 @@ func TestInt_Secrets(t *testing.T) {
 		comment := random.Comment()
 		alteredRefreshTokenExpiryTime := time.Now().Add(4 * 24 * time.Hour).Format(time.DateOnly)
 
-		_, id := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		_, secretCleanup := testClientHelper().Secret.CreateWithOAuthAuthorizationCodeFlow(t, id, integrationId, "foo", refreshTokenExpiryTime)
+		t.Cleanup(secretCleanup)
+
+		//_, id := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
 		setRequest := sdk.NewAlterSecretRequest(id).
 			WithSet(
 				*sdk.NewSecretSetRequest().
@@ -470,8 +388,11 @@ func TestInt_Secrets(t *testing.T) {
 
 	t.Run("Alter: SecretWithBasicAuthorization", func(t *testing.T) {
 		comment := random.Comment()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
-		_, id := createSecretWithBasicAuthentication(t, "foo", "foo", nil)
+		_, secretCleanup := testClientHelper().Secret.CreateWithBasicAuthenticationFlow(t, id, "foo", "foo")
+		t.Cleanup(secretCleanup)
+
 		setRequest := sdk.NewAlterSecretRequest(id).
 			WithSet(
 				*sdk.NewSecretSetRequest().
@@ -512,7 +433,10 @@ func TestInt_Secrets(t *testing.T) {
 
 	t.Run("Alter: SecretWithGenericString", func(t *testing.T) {
 		comment := random.Comment()
-		_, id := createSecretWithGenericString(t, "foo", nil)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		_, secretCleanup := testClientHelper().Secret.CreateWithGenericString(t, id, "foo")
+		t.Cleanup(secretCleanup)
 		setRequest := sdk.NewAlterSecretRequest(id).
 			WithSet(
 				*sdk.NewSecretSetRequest().
@@ -540,7 +464,10 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		_, id := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
+		//_, id := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		_, secretCleanup := testClientHelper().Secret.CreateWithOAuthClientCredentialsFlow(t, id, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}})
+		t.Cleanup(secretCleanup)
 
 		secret, err := client.Secrets.ShowByID(ctx, id)
 		require.NotNil(t, secret)
@@ -562,10 +489,17 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show", func(t *testing.T) {
-		secretOAuthClientCredentials, _ := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
-		secretOAuthAuthorizationCode, _ := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
-		secretBasicAuthentication, _ := createSecretWithBasicAuthentication(t, "foo", "bar", nil)
-		secretGenericString, _ := createSecretWithGenericString(t, "foo", nil)
+		secretOAuthClientCredentials, secretCleanupClientCredentialsFlow := testClientHelper().Secret.CreateWithOAuthClientCredentialsFlow(t, testClientHelper().Ids.RandomSchemaObjectIdentifier(), integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}})
+		t.Cleanup(secretCleanupClientCredentialsFlow)
+
+		secretOAuthAuthorizationCode, secretCleanupAuthorizationCodeFlow := testClientHelper().Secret.CreateWithOAuthAuthorizationCodeFlow(t, testClientHelper().Ids.RandomSchemaObjectIdentifier(), integrationId, "foo", refreshTokenExpiryTime)
+		t.Cleanup(secretCleanupAuthorizationCodeFlow)
+
+		secretBasicAuthentication, secretCleanupBasicAuthentication := testClientHelper().Secret.CreateWithBasicAuthenticationFlow(t, testClientHelper().Ids.RandomSchemaObjectIdentifier(), "foo", "bar")
+		t.Cleanup(secretCleanupBasicAuthentication)
+
+		secretGenericString, secretCleanupGenericString := testClientHelper().Secret.CreateWithGenericString(t, testClientHelper().Ids.RandomSchemaObjectIdentifier(), "foo")
+		t.Cleanup(secretCleanupGenericString)
 
 		returnedSecrets, err := client.Secrets.Show(ctx, sdk.NewShowSecretRequest())
 		require.NoError(t, err)
@@ -576,8 +510,16 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithOAuthClientCredentialsFlow with Like", func(t *testing.T) {
-		secret1, id1 := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
-		secret2, _ := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "bar"}}, nil)
+		//secret1, id1 := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
+		//secret2, _ := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "bar"}}, nil)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		secret1, secretCleanup1 := testClientHelper().Secret.CreateWithOAuthClientCredentialsFlow(t, id1, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}})
+		t.Cleanup(secretCleanup1)
+
+		secret2, secretCleanup2 := testClientHelper().Secret.CreateWithOAuthClientCredentialsFlow(t, id2, integrationId, []sdk.ApiIntegrationScope{{Scope: "bar"}})
+		t.Cleanup(secretCleanup2)
 
 		returnedSecrets, err := client.Secrets.Show(ctx, sdk.NewShowSecretRequest().WithLike(sdk.Like{
 			Pattern: sdk.String(id1.Name()),
@@ -588,8 +530,17 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithOAuthAuthorization with Like", func(t *testing.T) {
-		secret1, id1 := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo_1", refreshTokenExpiryTime, nil)
-		secret2, _ := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo_2", refreshTokenExpiryTime, nil)
+		//secret2, id1 := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo_1", refreshTokenExpiryTime, nil)
+		//secret2, _ := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo_2", refreshTokenExpiryTime, nil)
+
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		secret1, secretCleanup1 := testClientHelper().Secret.CreateWithOAuthAuthorizationCodeFlow(t, id1, integrationId, "foo", refreshTokenExpiryTime)
+		t.Cleanup(secretCleanup1)
+
+		secret2, secretCleanup2 := testClientHelper().Secret.CreateWithOAuthAuthorizationCodeFlow(t, id2, integrationId, "bar", refreshTokenExpiryTime)
+		t.Cleanup(secretCleanup2)
 
 		returnedSecrets, err := client.Secrets.Show(ctx, sdk.NewShowSecretRequest().WithLike(sdk.Like{
 			Pattern: sdk.String(id1.Name()),
@@ -600,8 +551,14 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithBasicAuthentication with Like", func(t *testing.T) {
-		secret1, id1 := createSecretWithBasicAuthentication(t, "foo_1", "bar_1", nil)
-		secret2, _ := createSecretWithBasicAuthentication(t, "foo_2", "bar_2", nil)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		secret1, secretCleanup1 := testClientHelper().Secret.CreateWithBasicAuthenticationFlow(t, id1, "foo", "foo")
+		t.Cleanup(secretCleanup1)
+
+		secret2, secretCleanup2 := testClientHelper().Secret.CreateWithBasicAuthenticationFlow(t, id2, "bar", "bar")
+		t.Cleanup(secretCleanup2)
 
 		returnedSecrets, err := client.Secrets.Show(ctx, sdk.NewShowSecretRequest().WithLike(sdk.Like{
 			Pattern: sdk.String(id1.Name()),
@@ -612,8 +569,14 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithGenericString with Like", func(t *testing.T) {
-		secret1, id1 := createSecretWithGenericString(t, "foo_1", nil)
-		secret2, _ := createSecretWithGenericString(t, "foo_2", nil)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		secret1, secretCleanup1 := testClientHelper().Secret.CreateWithGenericString(t, id1, "foo")
+		t.Cleanup(secretCleanup1)
+
+		secret2, secretCleanup2 := testClientHelper().Secret.CreateWithGenericString(t, id2, "bar")
+		t.Cleanup(secretCleanup2)
 
 		returnedSecrets, err := client.Secrets.Show(ctx, sdk.NewShowSecretRequest().WithLike(sdk.Like{
 			Pattern: sdk.String(id1.Name()),
@@ -624,7 +587,9 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithOAuthClientCredentialsFlow with In", func(t *testing.T) {
-		secret, id := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		secret, secretCleanup := testClientHelper().Secret.CreateWithOAuthClientCredentialsFlow(t, id, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}})
+		t.Cleanup(secretCleanup)
 
 		returnedSecrets, err := client.Secrets.Show(ctx, sdk.NewShowSecretRequest().WithIn(sdk.ExtendedIn{In: sdk.In{Account: sdk.Pointer(true)}}))
 		require.NoError(t, err)
@@ -640,7 +605,11 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithOAuthAuthorizationCodeFlow with In", func(t *testing.T) {
-		secret, id := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
+		//secret, id := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		secret, secretCleanup := testClientHelper().Secret.CreateWithOAuthAuthorizationCodeFlow(t, id, integrationId, "foo", refreshTokenExpiryTime)
+		t.Cleanup(secretCleanup)
 
 		returnedSecrets, err := client.Secrets.Show(ctx, sdk.NewShowSecretRequest().WithIn(sdk.ExtendedIn{In: sdk.In{Account: sdk.Pointer(true)}}))
 		require.NoError(t, err)
@@ -656,10 +625,19 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: with In", func(t *testing.T) {
-		secretOAuthClientCredentials, id := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
-		secretOAuthAuthorizationCode, _ := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
-		secretBasicAuthentication, _ := createSecretWithBasicAuthentication(t, "foo", "bar", nil)
-		secretGenericString, _ := createSecretWithGenericString(t, "foo", nil)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		secretOAuthClientCredentials, secretCleanupClientCredentialsFlow := testClientHelper().Secret.CreateWithOAuthClientCredentialsFlow(t, testClientHelper().Ids.RandomSchemaObjectIdentifier(), integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}})
+		t.Cleanup(secretCleanupClientCredentialsFlow)
+
+		secretOAuthAuthorizationCode, secretCleanupAuthorizationFlow := testClientHelper().Secret.CreateWithOAuthAuthorizationCodeFlow(t, testClientHelper().Ids.RandomSchemaObjectIdentifier(), integrationId, "foo", refreshTokenExpiryTime)
+		t.Cleanup(secretCleanupAuthorizationFlow)
+
+		secretBasicAuthentication, secretCleanupBasicAuthentication := testClientHelper().Secret.CreateWithBasicAuthenticationFlow(t, testClientHelper().Ids.RandomSchemaObjectIdentifier(), "foo", "foo")
+		t.Cleanup(secretCleanupBasicAuthentication)
+
+		secretGenericString, secretCleanupWithGenericString := testClientHelper().Secret.CreateWithGenericString(t, testClientHelper().Ids.RandomSchemaObjectIdentifier(), "foo")
+		t.Cleanup(secretCleanupWithGenericString)
 
 		returnedSecrets, err := client.Secrets.Show(ctx, sdk.NewShowSecretRequest().WithIn(sdk.ExtendedIn{In: sdk.In{Account: sdk.Pointer(true)}}))
 		require.NoError(t, err)
@@ -684,7 +662,9 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithGenericString with In", func(t *testing.T) {
-		secret, id := createSecretWithGenericString(t, "foo", nil)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		secret, secretCleanup := testClientHelper().Secret.CreateWithGenericString(t, id, "foo")
+		t.Cleanup(secretCleanup)
 
 		returnedSecrets, err := client.Secrets.Show(ctx, sdk.NewShowSecretRequest().WithIn(sdk.ExtendedIn{In: sdk.In{Account: sdk.Pointer(true)}}))
 		require.NoError(t, err)
@@ -706,8 +686,11 @@ func TestInt_Secrets(t *testing.T) {
 		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
-		createSecretWithId(t, id1)
-		createSecretWithId(t, id2)
+		_, cleanup1 := testClientHelper().Secret.CreateWithGenericString(t, id1, "foo")
+		t.Cleanup(cleanup1)
+
+		_, cleanup2 := testClientHelper().Secret.CreateWithGenericString(t, id2, "bar")
+		t.Cleanup(cleanup2)
 
 		secretShowResult1, err := client.Secrets.ShowByID(ctx, id1)
 		require.NoError(t, err)
@@ -719,16 +702,15 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Describe", func(t *testing.T) {
-		_, id := createSecretWithGenericString(t, "foo", func(req *sdk.CreateWithGenericStringSecretRequest) {
-			req.WithComment("Lorem ipsum")
-		})
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		_, secretCleanup := testClientHelper().Secret.CreateWithGenericString(t, id, "foo")
+		t.Cleanup(secretCleanup)
 
 		details, err := client.Secrets.Describe(ctx, id)
 		require.NoError(t, err)
 
 		assertSecretDetails(details, secretDetails{
 			Name:       id.Name(),
-			Comment:    sdk.String("Lorem ipsum"),
 			SecretType: "GENERIC_STRING",
 		})
 	})

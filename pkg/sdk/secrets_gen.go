@@ -25,7 +25,7 @@ type CreateWithOAuthClientCredentialsFlowSecretOptions struct {
 	secret         bool                    `ddl:"static" sql:"SECRET"`
 	IfNotExists    *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name           SchemaObjectIdentifier  `ddl:"identifier"`
-	Type           string                  `ddl:"static" sql:"TYPE = OAUTH2"`
+	secretType     string                  `ddl:"static" sql:"TYPE = OAUTH2"`
 	ApiIntegration AccountObjectIdentifier `ddl:"identifier,equals" sql:"API_AUTHENTICATION"`
 	OauthScopes    []ApiIntegrationScope   `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
 	Comment        *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -41,7 +41,7 @@ type CreateWithOAuthAuthorizationCodeFlowSecretOptions struct {
 	secret                      bool                    `ddl:"static" sql:"SECRET"`
 	IfNotExists                 *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                        SchemaObjectIdentifier  `ddl:"identifier"`
-	Type                        string                  `ddl:"static" sql:"TYPE = OAUTH2"`
+	secretType                  string                  `ddl:"static" sql:"TYPE = OAUTH2"`
 	OauthRefreshToken           string                  `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN"`
 	OauthRefreshTokenExpiryTime string                  `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN_EXPIRY_TIME"`
 	ApiIntegration              AccountObjectIdentifier `ddl:"identifier,equals" sql:"API_AUTHENTICATION"`
@@ -68,7 +68,7 @@ type CreateWithGenericStringSecretOptions struct {
 	secret       bool                   `ddl:"static" sql:"SECRET"`
 	IfNotExists  *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name         SchemaObjectIdentifier `ddl:"identifier"`
-	Type         string                 `ddl:"static" sql:"TYPE = GENERIC_STRING"`
+	secretType   string                 `ddl:"static" sql:"TYPE = GENERIC_STRING"`
 	SecretString string                 `ddl:"parameter,single_quotes" sql:"SECRET_STRING"`
 	Comment      *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }

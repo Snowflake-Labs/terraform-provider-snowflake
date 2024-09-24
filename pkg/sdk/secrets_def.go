@@ -104,7 +104,7 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		IfNotExists().
 		Name().
-		PredefinedQueryStructField("Type", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
+		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
 		Identifier("ApiIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION")).
 		ListAssignment("OAUTH_SCOPES", "ApiIntegrationScope", g.ParameterOptions().Parentheses().Required()).
 		OptionalComment().
@@ -120,7 +120,7 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		IfNotExists().
 		Name().
-		PredefinedQueryStructField("Type", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
+		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
 		TextAssignment("OAUTH_REFRESH_TOKEN", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		TextAssignment("OAUTH_REFRESH_TOKEN_EXPIRY_TIME", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		Identifier("ApiIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION")).
@@ -152,7 +152,7 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		IfNotExists().
 		Name().
-		PredefinedQueryStructField("Type", "string", g.StaticOptions().SQL("TYPE = GENERIC_STRING")).
+		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL("TYPE = GENERIC_STRING")).
 		TextAssignment("SECRET_STRING", g.ParameterOptions().SingleQuotes().Required()).
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name").
