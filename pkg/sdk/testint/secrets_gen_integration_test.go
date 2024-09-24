@@ -454,11 +454,18 @@ func TestInt_Secrets(t *testing.T) {
 				*sdk.NewSecretUnsetRequest().
 					WithComment(true),
 			)
+
 		err = client.Secrets.Alter(ctx, unsetRequest)
 		require.NoError(t, err)
 
 		details, err := client.Secrets.Describe(ctx, id)
 		require.NoError(t, err)
+
+		assertSecretDetails(details, secretDetails{
+			Name:       id.Name(),
+			SecretType: "GENERIC_STRING",
+			Comment:    nil,
+		})
 
 		assert.Empty(t, details.Comment)
 	})
