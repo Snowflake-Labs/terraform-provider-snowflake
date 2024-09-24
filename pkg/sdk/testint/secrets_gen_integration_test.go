@@ -18,6 +18,8 @@ func TestInt_Secrets(t *testing.T) {
 	ctx := testContext(t)
 
 	integrationId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+	// "YYYY-MM-DD" or "YYYY-MM-DD HH-MI-SS" format has to be used, otherwise Snowflake returns error: "Invalid date/time format"
 	refreshTokenExpiryTime := time.Now().Add(24 * time.Hour).Format(time.DateOnly)
 
 	_, apiIntegrationCleanup := testClientHelper().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
@@ -212,11 +214,11 @@ func TestInt_Secrets(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
 
-		_, err = client.Secrets.ShowByID(ctx, id)
+		secret, err := client.Secrets.ShowByID(ctx, id)
 		require.NoError(t, err)
 
 		assertions.AssertThat(t,
-			objectassert.Secret(t, id).
+			objectassert.SecretFromObject(t, secret).
 				HasName(id.Name()).
 				HasComment(comment).
 				HasSecretType("PASSWORD").
@@ -535,9 +537,6 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithOAuthAuthorization with Like", func(t *testing.T) {
-		// secret2, id1 := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo_1", refreshTokenExpiryTime, nil)
-		// secret2, _ := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo_2", refreshTokenExpiryTime, nil)
-
 		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 

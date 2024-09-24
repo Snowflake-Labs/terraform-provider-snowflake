@@ -76,8 +76,8 @@ func (opts *AlterSecretOptions) validate() error {
 		errs = append(errs, errExactlyOneOf("AlterSecretOptions", "Set", "Unset"))
 	}
 	if valueSet(opts.Set) {
-		if everyValueSet(opts.Set.SetForOAuthClientCredentialsFlow, opts.Set.SetForOAuthAuthorizationFlow, opts.Set.SetForBasicAuthentication, opts.Set.SetForGenericString) {
-			errs = append(errs, errOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
+		if moreThanOneValueSet(opts.Set.SetForOAuthClientCredentialsFlow, opts.Set.SetForOAuthAuthorizationFlow, opts.Set.SetForBasicAuthentication, opts.Set.SetForGenericString) {
+			errs = append(errs, errMoreThanOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
 		}
 	}
 	return JoinErrors(errs...)
