@@ -37,11 +37,13 @@ from bar;`
 	issue2640 := `CREATE OR REPLACE SECURE VIEW "CLASSIFICATION" comment = 'Classification View of the union of classification tables' AS select * from AB1_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION    union   select * from AB2_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION`
 	withRowAccessAndAggregationPolicy := `CREATE SECURE VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap   AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
 	withRowAccessAndAggregationPolicyWithEntityKey := `CREATE SECURE VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
-	allFieldsListEndingWithMaskingPolicyWithoutUsing := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" (id PROJECTION POLICY pp MASKING POLICY mp COMMENT 'a (s) df', foo MASKING POLICY pp) COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
-	allFieldsListEndingWithMaskingPolicyWithUsing := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" (id PROJECTION POLICY pp MASKING POLICY mp COMMENT 'a (s) df', foo MASKING POLICY pp USING ("col1")) COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
-	allFieldsListEndingWithProjectionPolicy := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" (id PROJECTION POLICY pp MASKING POLICY mp COMMENT 'a (s) df' , foo PROJECTION POLICY pp) COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
-	allFieldsListEndingWithComment := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" (id PROJECTION POLICY pp MASKING POLICY mp COMMENT 'asdf', foo PROJECTION POLICY pp COMMENT 'foo (bar) hoge') COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	columnsListEndingWithMaskingPolicyWithoutUsing := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" (id PROJECTION POLICY pp MASKING POLICY mp COMMENT 'a (s) df', foo MASKING POLICY pp) COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	columnsListEndingWithMaskingPolicyWithUsing := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" (id PROJECTION POLICY pp MASKING POLICY mp COMMENT 'a (s) df', foo MASKING POLICY pp USING ("col1")) COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	columnsListEndingWithProjectionPolicy := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" (id PROJECTION POLICY pp MASKING POLICY mp COMMENT 'a (s) df' , foo PROJECTION POLICY pp) COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	columnsListEndingWithComment := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" (id PROJECTION POLICY pp MASKING POLICY mp COMMENT 'asdf', foo PROJECTION POLICY pp COMMENT 'foo (bar) hoge') COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	columnsListEndingWithID := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" ("ID", "FOO") COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
 	allFields := `CREATE OR REPLACE SECURE TEMPORARY VIEW "rgdxfmnfhh"."PUBLIC"."rgdxfmnfhh" (id PROJECTION POLICY pp MASKING POLICY mp USING ("col1", "cond1") COMMENT 'asdf', foo MASKING POLICY mp USING ("col1", "cond1")) COMMENT = 'Terraform test resource' ROW ACCESS policy rap on (title, title2) AGGREGATION POLICY rap ENTITY KEY (foo, bar)  AS SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	testStatement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	type args struct {
 		input string
 	}
@@ -65,15 +67,16 @@ from bar;`
 		{"comment", args{comment}, "select * from bar;", false},
 		{"commentEscape", args{commentEscape}, "select * from bar;", false},
 		{"identifier", args{identifier}, "select * from bar;", false},
-		{"full", args{full}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
+		{"full", args{full}, testStatement, false},
 		{"issue2640", args{issue2640}, "select * from AB1_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION    union   select * from AB2_SUBSCRIPTION.CLASSIFICATION.CLASSIFICATION", false},
-		{"with row access policy and aggregation policy", args{withRowAccessAndAggregationPolicy}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
-		{"with row access policy and aggregation policy with entity key", args{withRowAccessAndAggregationPolicyWithEntityKey}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
-		{"all fields ending with masking policy without using", args{allFieldsListEndingWithMaskingPolicyWithoutUsing}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
-		{"all fields ending with masking policy with using", args{allFieldsListEndingWithMaskingPolicyWithUsing}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
-		{"all fields ending with projection using", args{allFieldsListEndingWithProjectionPolicy}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
-		{"all fields ending with comment", args{allFieldsListEndingWithComment}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
-		{"all fields", args{allFields}, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES", false},
+		{"with row access policy and aggregation policy", args{withRowAccessAndAggregationPolicy}, testStatement, false},
+		{"with row access policy and aggregation policy with entity key", args{withRowAccessAndAggregationPolicyWithEntityKey}, testStatement, false},
+		{"with column list ending with masking policy without using", args{columnsListEndingWithMaskingPolicyWithoutUsing}, testStatement, false},
+		{"with column list ending with masking policy with using", args{columnsListEndingWithMaskingPolicyWithUsing}, testStatement, false},
+		{"with column list ending with projection using", args{columnsListEndingWithProjectionPolicy}, testStatement, false},
+		{"with column list ending with comment", args{columnsListEndingWithComment}, testStatement, false},
+		{"with column list ending with column name", args{columnsListEndingWithID}, testStatement, false},
+		{"all fields", args{allFields}, testStatement, false},
 	}
 	for _, tt := range tests {
 		tt := tt

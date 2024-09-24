@@ -79,6 +79,7 @@ func (e *ViewSelectStatementExtractor) consumeColumn() (isLast bool) {
 	e.consumeID()
 	if e.input[e.pos-1] == ')' {
 		isLast = true
+		return
 	}
 	e.consumeSpace()
 
