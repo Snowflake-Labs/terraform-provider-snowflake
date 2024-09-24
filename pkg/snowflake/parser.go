@@ -81,12 +81,15 @@ func (e *ViewSelectStatementExtractor) consumeColumn() (isLast bool) {
 		isLast = true
 	}
 	e.consumeSpace()
+
 	ok := e.consumeToken("projection policy")
 	if ok {
 		e.consumeSpace()
 		e.consumeID()
 		if e.input[e.pos-1] == ')' {
 			isLast = true
+			e.consumeSpace()
+			return
 		}
 		e.consumeSpace()
 	}
@@ -95,13 +98,24 @@ func (e *ViewSelectStatementExtractor) consumeColumn() (isLast bool) {
 		e.consumeSpace()
 		e.consumeID()
 		e.consumeSpace()
-		e.consumeToken("using")
-		e.consumeSpace()
-		e.consumeIdentifierList()
-		if string(e.input[e.pos-2:e.pos]) == "))" {
-			isLast = true
+		if ok := e.consumeToken("using"); ok {
+			e.consumeSpace()
+			e.consumeIdentifierList()
+			if string(e.input[e.pos-3:e.pos-1]) == "))" {
+				isLast = true
+				e.consumeSpace()
+				return
+			}
+			e.consumeSpace()
 		}
-		e.consumeSpace()
+	}
+
+	e.consumeQuotedParameter("comment", false)
+	e.consumeSpace()
+	e.consumeToken(",")
+	if e.input[e.pos] == ')' {
+		e.consumeToken(")")
+		isLast = true
 	}
 	return
 }
@@ -201,7 +215,7 @@ func (e *ViewSelectStatementExtractor) ExtractDynamicTable() (string, error) {
 	e.consumeSpace()
 	e.consumeComment()
 	e.consumeSpace()
-	e.consumeQuotedParameter("lag")
+	e.consumeQuotedParameter("lag", true)
 	e.consumeSpace()
 	e.consumeTokenParameter("warehouse")
 	e.consumeSpace()
@@ -266,21 +280,22 @@ func (e *ViewSelectStatementExtractor) consumeNonSpace() {
 }
 
 func (e *ViewSelectStatementExtractor) consumeComment() {
-	e.consumeQuotedParameter("comment")
+	e.consumeQuotedParameter("comment", true)
 }
 
-func (e *ViewSelectStatementExtractor) consumeQuotedParameter(param string) {
+func (e *ViewSelectStatementExtractor) consumeQuotedParameter(param string, withEquals bool) {
 	if c := e.consumeToken(param); !c {
 		return
 	}
 
 	e.consumeSpace()
 
-	if c := e.consumeToken("="); !c {
-		return
+	if withEquals {
+		if c := e.consumeToken("="); !c {
+			return
+		}
+		e.consumeSpace()
 	}
-
-	e.consumeSpace()
 
 	if c := e.consumeToken("'"); !c {
 		return
