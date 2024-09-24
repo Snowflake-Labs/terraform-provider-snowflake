@@ -132,6 +132,18 @@ type SomeReq struct {
 }
 ```
 
+- ConflictingFields validation results in: 
+```go
+if everyValueSet(...) {
+    errs = append(errs, errOneOf(...))
+}
+
+// for now need to be changed manually to example bellow but should result in:
+if moreThanOneValueSet(...) {
+	errs = append(errs, errMoreThanOneOf(...))
+}
+```
+
 ##### Known limitations
 - automatic array conversion is not recursive, so we're only supporting one level mapping
   - []Request1{ foo Request2, bar int } won't be converted, but []Request1{ foo string, bar int } will
