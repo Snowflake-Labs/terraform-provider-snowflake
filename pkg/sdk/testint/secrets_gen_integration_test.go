@@ -1,10 +1,11 @@
 package testint
 
 import (
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"testing"
 	"time"
+
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -278,7 +279,6 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Create: WithGenericString - empty secret_string", func(t *testing.T) {
-
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		request := sdk.NewCreateWithGenericStringSecretRequest(id, "")
 
@@ -347,7 +347,6 @@ func TestInt_Secrets(t *testing.T) {
 		_, secretCleanup := testClientHelper().Secret.CreateWithOAuthAuthorizationCodeFlow(t, id, integrationId, "foo", refreshTokenExpiryTime)
 		t.Cleanup(secretCleanup)
 
-		//_, id := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
 		setRequest := sdk.NewAlterSecretRequest(id).
 			WithSet(
 				*sdk.NewSecretSetRequest().
@@ -471,7 +470,6 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		//_, id := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		_, secretCleanup := testClientHelper().Secret.CreateWithOAuthClientCredentialsFlow(t, id, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}})
 		t.Cleanup(secretCleanup)
@@ -517,8 +515,8 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithOAuthClientCredentialsFlow with Like", func(t *testing.T) {
-		//secret1, id1 := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
-		//secret2, _ := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "bar"}}, nil)
+		// secret1, id1 := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
+		// secret2, _ := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "bar"}}, nil)
 		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
@@ -537,8 +535,8 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithOAuthAuthorization with Like", func(t *testing.T) {
-		//secret2, id1 := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo_1", refreshTokenExpiryTime, nil)
-		//secret2, _ := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo_2", refreshTokenExpiryTime, nil)
+		// secret2, id1 := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo_1", refreshTokenExpiryTime, nil)
+		// secret2, _ := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo_2", refreshTokenExpiryTime, nil)
 
 		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -612,7 +610,7 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithOAuthAuthorizationCodeFlow with In", func(t *testing.T) {
-		//secret, id := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
+		// secret, id := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		secret, secretCleanup := testClientHelper().Secret.CreateWithOAuthAuthorizationCodeFlow(t, id, integrationId, "foo", refreshTokenExpiryTime)
