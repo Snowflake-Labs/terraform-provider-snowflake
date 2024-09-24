@@ -141,6 +141,8 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		assertTask(t, task, id, "")
+
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, id).HasAllDefaults())
 	})
 
 	t.Run("create task: with initial warehouse", func(t *testing.T) {
@@ -184,6 +186,11 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil, &errorIntegrationId)
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, id).
+			HasJsonIndent(4).
+			HasUserTaskTimeoutMs(500).
+			HasSuspendTaskAfterNumFailures(3),
+		)
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
@@ -422,8 +429,8 @@ func TestInt_Tasks(t *testing.T) {
 			WithAllowOverlappingExecution(true).
 			WithUserTaskTimeoutMs(10).
 			WithSessionParameters(sdk.SessionParameters{
-				// TODO(SNOW-1348116 - next prs): fill and assert parameters
-				Autocommit: sdk.Bool(true),
+				Autocommit:         sdk.Bool(false),
+				AbortDetachedQuery: sdk.Bool(true),
 			}).
 			WithSuspendTaskAfterNumFailures(15).
 			WithComment("some_comment").
@@ -446,6 +453,13 @@ func TestInt_Tasks(t *testing.T) {
 			HasComment("some_comment").
 			HasTaskRelations(sdk.TaskRelations{}),
 		)
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+			HasAutocommit(false).
+			HasAbortDetachedQuery(true).
+			HasUserTaskTimeoutMs(10).
+			HasSuspendTaskAfterNumFailures(15).
+			HasTaskAutoRetryAttempts(15),
+		)
 
 		err = client.Tasks.CreateOrAlter(ctx, sdk.NewCreateOrAlterTaskRequest(id, sql))
 		require.NoError(t, err)
@@ -461,6 +475,13 @@ func TestInt_Tasks(t *testing.T) {
 			HasCondition("").
 			HasComment("").
 			HasTaskRelations(sdk.TaskRelations{}),
+		)
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+			HasDefaultAutocommitValue().
+			HasDefaultAbortDetachedQueryValue().
+			HasDefaultUserTaskTimeoutMsValue().
+			HasDefaultSuspendTaskAfterNumFailuresValue().
+			HasDefaultTaskAutoRetryAttemptsValue(),
 		)
 
 		require.Equal(t, createdOn, alteredTask.CreatedOn)
@@ -491,9 +512,8 @@ func TestInt_Tasks(t *testing.T) {
 			// WithWarehouse(testClientHelper().Ids.WarehouseId()).
 			WithErrorNotificationIntegration(errorIntegrationId).
 			WithSessionParameters(sdk.SessionParameters{
-				Autocommit:             sdk.Bool(true),
-				ClientSessionKeepAlive: sdk.Bool(true),
-				// TODO(SNOW-1348116 - next prs): fill and assert parameters
+				Autocommit:         sdk.Bool(false),
+				AbortDetachedQuery: sdk.Bool(true),
 			}).
 			WithSchedule("10 MINUTE").
 			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
@@ -506,11 +526,6 @@ func TestInt_Tasks(t *testing.T) {
 		))
 		require.NoError(t, err)
 
-		// TODO(SNOW-1348116 - next prs): Assert parameters
-		// assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
-		//	HasUserTaskManagedInitialWarehouseSize()
-		// )
-
 		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
 			// HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
 			HasErrorIntegration(sdk.Pointer(errorIntegrationId)).
@@ -518,6 +533,14 @@ func TestInt_Tasks(t *testing.T) {
 			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
 			HasAllowOverlappingExecution(true).
 			HasComment("new comment"),
+		)
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+			HasAutocommit(false).
+			HasAbortDetachedQuery(true).
+			HasUserTaskTimeoutMs(1000).
+			HasSuspendTaskAfterNumFailures(100).
+			HasTaskAutoRetryAttempts(10).
+			HasUserTaskMinimumTriggerIntervalInSeconds(15),
 		)
 
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnset(*sdk.NewTaskUnsetRequest().
@@ -545,11 +568,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasAllowOverlappingExecution(false).
 			HasComment(""),
 		)
-
-		// TODO(SNOW-1348116 - next prs): Assert parameters
-		// assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
-		//	HasUserTaskManagedInitialWarehouseSize()
-		// )
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).HasAllDefaults())
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
