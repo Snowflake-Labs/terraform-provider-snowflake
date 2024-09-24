@@ -403,3 +403,1769 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 		})
 	}
 }
+
+// External volume helper tests
+
+var s3StorageLocationA = sdk.S3StorageLocationParams{
+	Name:                 s3StorageLocationName,
+	StorageProvider:      sdk.S3StorageProviderS3,
+	StorageBaseUrl:       s3StorageBaseUrl,
+	StorageAwsRoleArn:    s3StorageAwsRoleArn,
+	StorageAwsExternalId: &s3StorageAwsExternalId,
+	Encryption: &sdk.ExternalVolumeS3Encryption{
+		Type:     sdk.S3EncryptionTypeSseKms,
+		KmsKeyId: &s3EncryptionKmsKeyId,
+	},
+}
+
+var s3StorageLocationB = sdk.S3StorageLocationParams{
+	Name:                 s3StorageLocationName2,
+	StorageProvider:      sdk.S3StorageProviderS3,
+	StorageBaseUrl:       s3StorageBaseUrl,
+	StorageAwsRoleArn:    s3StorageAwsRoleArn,
+	StorageAwsExternalId: &s3StorageAwsExternalId,
+	Encryption: &sdk.ExternalVolumeS3Encryption{
+		Type:     sdk.S3EncryptionTypeSseKms,
+		KmsKeyId: &s3EncryptionKmsKeyId,
+	},
+}
+
+var azureStorageLocationA = sdk.AzureStorageLocationParams{
+	Name:           azureStorageLocationName,
+	StorageBaseUrl: azureStorageBaseUrl,
+	AzureTenantId:  azureTenantId,
+}
+
+var azureStorageLocationB = sdk.AzureStorageLocationParams{
+	Name:           azureStorageLocationName2,
+	StorageBaseUrl: azureStorageBaseUrl,
+	AzureTenantId:  azureTenantId,
+}
+
+var gcsStorageLocationA = sdk.GCSStorageLocationParams{
+	Name:           gcsStorageLocationName,
+	StorageBaseUrl: gcsStorageBaseUrl,
+	Encryption: &sdk.ExternalVolumeGCSEncryption{
+		Type:     sdk.GCSEncryptionTypeSseKms,
+		KmsKeyId: &gcsEncryptionKmsKeyId,
+	},
+}
+
+var gcsStorageLocationB = sdk.GCSStorageLocationParams{
+	Name:           gcsStorageLocationName2,
+	StorageBaseUrl: gcsStorageBaseUrl,
+	Encryption: &sdk.ExternalVolumeGCSEncryption{
+		Type:     sdk.GCSEncryptionTypeSseKms,
+		KmsKeyId: &gcsEncryptionKmsKeyId,
+	},
+}
+
+var gcsStorageLocationC = sdk.GCSStorageLocationParams{
+	Name:           "test",
+	StorageBaseUrl: gcsStorageBaseUrl,
+	Encryption: &sdk.ExternalVolumeGCSEncryption{
+		Type:     sdk.GCSEncryptionTypeSseKms,
+		KmsKeyId: &gcsEncryptionKmsKeyId,
+	},
+}
+
+var s3GovStorageLocationA = sdk.S3StorageLocationParams{
+	Name:              s3StorageLocationName,
+	StorageProvider:   sdk.S3StorageProviderS3GOV,
+	StorageBaseUrl:    s3StorageBaseUrl,
+	StorageAwsRoleArn: s3StorageAwsRoleArn,
+}
+
+func Test_GetStorageLocationName(t *testing.T) {
+	testCases := []struct {
+		Name            string
+		StorageLocation sdk.ExternalVolumeStorageLocation
+		ExpectedName    string
+	}{
+		{
+			Name:            "S3 storage location name succesfully read",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &s3StorageLocationA},
+			ExpectedName:    s3StorageLocationA.Name,
+		},
+		{
+			Name:            "S3GOV storage location name succesfully read",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &s3GovStorageLocationA},
+			ExpectedName:    s3GovStorageLocationA.Name,
+		},
+		{
+			Name:            "GCS storage location name succesfully read",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{GCSStorageLocationParams: &gcsStorageLocationA},
+			ExpectedName:    gcsStorageLocationA.Name,
+		},
+		{
+			Name:            "Azure storage location name succesfully read",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{AzureStorageLocationParams: &azureStorageLocationA},
+			ExpectedName:    azureStorageLocationA.Name,
+		},
+	}
+
+	invalidTestCases := []struct {
+		Name            string
+		StorageLocation sdk.ExternalVolumeStorageLocation
+	}{
+		{
+			Name:            "Empty S3 storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &sdk.S3StorageLocationParams{}},
+		},
+		{
+			Name:            "Empty GCS storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{GCSStorageLocationParams: &sdk.GCSStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty Azure storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{AzureStorageLocationParams: &sdk.AzureStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			name, err := resources.GetStorageLocationName(tc.StorageLocation)
+			require.NoError(t, err)
+			assert.Equal(t, tc.ExpectedName, name)
+		})
+	}
+	for _, tc := range invalidTestCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			_, err := resources.GetStorageLocationName(tc.StorageLocation)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_GetStorageLocationStorageProvider(t *testing.T) {
+	testCases := []struct {
+		Name                    string
+		StorageLocation         sdk.ExternalVolumeStorageLocation
+		ExpectedStorageProvider sdk.StorageProvider
+	}{
+		{
+			Name:                    "S3 storage provider",
+			StorageLocation:         sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &s3StorageLocationA},
+			ExpectedStorageProvider: sdk.StorageProviderS3,
+		},
+		{
+			Name:                    "S3GOV storage provider",
+			StorageLocation:         sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &s3GovStorageLocationA},
+			ExpectedStorageProvider: sdk.StorageProviderS3GOV,
+		},
+		{
+			Name:                    "GCS storage provider",
+			StorageLocation:         sdk.ExternalVolumeStorageLocation{GCSStorageLocationParams: &gcsStorageLocationA},
+			ExpectedStorageProvider: sdk.StorageProviderGCS,
+		},
+		{
+			Name:                    "Azure storage provider",
+			StorageLocation:         sdk.ExternalVolumeStorageLocation{AzureStorageLocationParams: &azureStorageLocationA},
+			ExpectedStorageProvider: sdk.StorageProviderAzure,
+		},
+	}
+
+	invalidTestCases := []struct {
+		Name            string
+		StorageLocation sdk.ExternalVolumeStorageLocation
+	}{
+		{
+			Name:            "Empty S3 storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &sdk.S3StorageLocationParams{}},
+		},
+		{
+			Name:            "Empty GCS storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{GCSStorageLocationParams: &sdk.GCSStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty Azure storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{AzureStorageLocationParams: &sdk.AzureStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			storageProvider, err := resources.GetStorageLocationStorageProvider(tc.StorageLocation)
+			require.NoError(t, err)
+			assert.Equal(t, tc.ExpectedStorageProvider, storageProvider)
+		})
+	}
+	for _, tc := range invalidTestCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			_, err := resources.GetStorageLocationName(tc.StorageLocation)
+			require.Error(t, err)
+		})
+	}
+}
+
+var s3StorageAwsExternalId = "1234567890"
+
+func Test_CopyStorageLocationWithTempName(t *testing.T) {
+	t.Run("S3 storage location", func(t *testing.T) {
+		storageLocationInput := sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &s3StorageLocationA}
+		copiedStorageLocation, err := resources.CopyStorageLocationWithTempName(storageLocationInput)
+		require.NoError(t, err)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.Name, fmt.Sprintf("temp_%s", s3StorageLocationA.Name))
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageProvider, s3StorageLocationA.StorageProvider)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageBaseUrl, s3StorageLocationA.StorageBaseUrl)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageAwsRoleArn, s3StorageLocationA.StorageAwsRoleArn)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageAwsExternalId, s3StorageLocationA.StorageAwsExternalId)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.Encryption.Type, s3StorageLocationA.Encryption.Type)
+		assert.Equal(t, *copiedStorageLocation.S3StorageLocationParams.Encryption.KmsKeyId, *s3StorageLocationA.Encryption.KmsKeyId)
+	})
+
+	t.Run("GCS storage location", func(t *testing.T) {
+		storageLocationInput := sdk.ExternalVolumeStorageLocation{GCSStorageLocationParams: &gcsStorageLocationA}
+		copiedStorageLocation, err := resources.CopyStorageLocationWithTempName(storageLocationInput)
+		require.NoError(t, err)
+		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.Name, fmt.Sprintf("temp_%s", gcsStorageLocationA.Name))
+		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.StorageBaseUrl, gcsStorageLocationA.StorageBaseUrl)
+		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.Encryption.Type, gcsStorageLocationA.Encryption.Type)
+		assert.Equal(t, *copiedStorageLocation.GCSStorageLocationParams.Encryption.KmsKeyId, *gcsStorageLocationA.Encryption.KmsKeyId)
+	})
+
+	t.Run("Azure storage location", func(t *testing.T) {
+		storageLocationInput := sdk.ExternalVolumeStorageLocation{AzureStorageLocationParams: &azureStorageLocationA}
+		copiedStorageLocation, err := resources.CopyStorageLocationWithTempName(storageLocationInput)
+		require.NoError(t, err)
+		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.Name, fmt.Sprintf("temp_%s", azureStorageLocationA.Name))
+		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.StorageBaseUrl, azureStorageLocationA.StorageBaseUrl)
+		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.AzureTenantId, azureStorageLocationA.AzureTenantId)
+	})
+
+	invalidTestCases := []struct {
+		Name            string
+		StorageLocation sdk.ExternalVolumeStorageLocation
+	}{
+		{
+			Name:            "Empty S3 storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &sdk.S3StorageLocationParams{}},
+		},
+		{
+			Name:            "Empty GCS storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{GCSStorageLocationParams: &sdk.GCSStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty Azure storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{AzureStorageLocationParams: &sdk.AzureStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty storage location",
+			StorageLocation: sdk.ExternalVolumeStorageLocation{},
+		},
+	}
+
+	for _, tc := range invalidTestCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			_, err := resources.CopyStorageLocationWithTempName(tc.StorageLocation)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_LongestCommonPrefix(t *testing.T) {
+	testCases := []struct {
+		Name           string
+		ListA          []sdk.ExternalVolumeStorageLocation
+		ListB          []sdk.ExternalVolumeStorageLocation
+		ExpectedOutput int
+	}{
+		{
+			Name:           "Two empty lists",
+			ListA:          []sdk.ExternalVolumeStorageLocation{},
+			ListB:          []sdk.ExternalVolumeStorageLocation{},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "First list empty",
+			ListA:          []sdk.ExternalVolumeStorageLocation{},
+			ListB:          []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Second list empty",
+			ListA:          []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB:          []sdk.ExternalVolumeStorageLocation{},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Lists with no common prefix - length 1",
+			ListA:          []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB:          []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationB}},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Lists with no common prefix - length 2",
+			ListA:          []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}, {AzureStorageLocationParams: &azureStorageLocationA}},
+			ListB:          []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationB}, {AzureStorageLocationParams: &azureStorageLocationB}},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Identical lists - length 1",
+			ListA:          []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB:          []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ExpectedOutput: 0,
+		},
+		{
+			Name:           "Identical lists - length 2",
+			ListA:          []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}, {AzureStorageLocationParams: &azureStorageLocationA}},
+			ListB:          []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}, {AzureStorageLocationParams: &azureStorageLocationA}},
+			ExpectedOutput: 1,
+		},
+		{
+			Name: "Identical lists - length 3",
+			ListA: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{S3StorageLocationParams: &s3GovStorageLocationA},
+			},
+			ListB: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{S3StorageLocationParams: &s3GovStorageLocationA},
+			},
+			ExpectedOutput: 2,
+		},
+		{
+			Name: "Lists with a common prefix - length 3, matching up to and including index 1",
+			ListA: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+			},
+			ListB: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationB},
+			},
+			ExpectedOutput: 1,
+		},
+		{
+			Name: "Lists with a common prefix - length 4, matching up to and including index 2",
+			ListA: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationB},
+			},
+			ListB: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationC},
+			},
+			ExpectedOutput: 2,
+		},
+		{
+			Name: "Lists with a common prefix - length 4, matching up to and including index 1",
+			ListA: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationC},
+			},
+			ListB: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationB},
+				{GCSStorageLocationParams: &gcsStorageLocationC},
+			},
+			ExpectedOutput: 1,
+		},
+		{
+			Name: "Lists with a common prefix - different lengths, matching up to and including index 1 (last index of shorter list)",
+			ListA: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+			},
+			ListB: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+			},
+			ExpectedOutput: 1,
+		},
+		{
+			Name: "Lists with a common prefix - different lengths, matching up to and including index 2",
+			ListA: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{S3StorageLocationParams: &s3StorageLocationB},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationB},
+				{AzureStorageLocationParams: &azureStorageLocationB},
+			},
+			ListB: []sdk.ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{S3StorageLocationParams: &s3StorageLocationB},
+				{GCSStorageLocationParams: &gcsStorageLocationB},
+				{AzureStorageLocationParams: &azureStorageLocationB},
+			},
+			ExpectedOutput: 2,
+		},
+	}
+
+	invalidTestCases := []struct {
+		Name  string
+		ListA []sdk.ExternalVolumeStorageLocation
+		ListB []sdk.ExternalVolumeStorageLocation
+	}{
+		{
+			Name:  "Empty S3 storage location",
+			ListA: []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB: []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &sdk.S3StorageLocationParams{}}},
+		},
+		{
+			Name:  "Empty GCS storage location",
+			ListA: []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB: []sdk.ExternalVolumeStorageLocation{{GCSStorageLocationParams: &sdk.GCSStorageLocationParams{}}},
+		},
+		{
+			Name:  "Empty Azure storage location",
+			ListA: []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB: []sdk.ExternalVolumeStorageLocation{{AzureStorageLocationParams: &sdk.AzureStorageLocationParams{}}},
+		},
+		{
+			Name:  "Empty storage location",
+			ListA: []sdk.ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB: []sdk.ExternalVolumeStorageLocation{{}},
+		},
+	}
+
+	for _, tc := range invalidTestCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			_, err := resources.LongestCommonPrefix(tc.ListA, tc.ListB)
+			require.Error(t, err)
+		})
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			longestCommonPrefix, err := resources.LongestCommonPrefix(tc.ListA, tc.ListB)
+			require.NoError(t, err)
+			assert.Equal(t, tc.ExpectedOutput, longestCommonPrefix)
+		})
+	}
+}
+
+func Test_StorageLocationsEqual(t *testing.T) {
+	equalCases := []struct {
+		Name             string
+		StorageLocationA sdk.ExternalVolumeStorageLocation
+		StorageLocationB sdk.ExternalVolumeStorageLocation
+	}{
+		{
+			Name: "S3 storage location",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - sse s3 encryption",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionTypeSseS3,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionTypeSseS3,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - none encryption",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionNone,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionNone,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - no encryption",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - no StorageAwsExternalId",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:              s3StorageLocationName,
+					StorageProvider:   sdk.S3StorageProviderS3,
+					StorageBaseUrl:    s3StorageBaseUrl,
+					StorageAwsRoleArn: s3StorageAwsRoleArn,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:              s3StorageLocationName,
+					StorageProvider:   sdk.S3StorageProviderS3,
+					StorageBaseUrl:    s3StorageBaseUrl,
+					StorageAwsRoleArn: s3StorageAwsRoleArn,
+				},
+			},
+		},
+		{
+			Name: "S3Gov storage location",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3Gov storage location - sse s3 encryption",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionTypeSseS3,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionTypeSseS3,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3Gov storage location - none encryption",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionNone,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionNone,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3Gov storage location - no encryption",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+				},
+			},
+		},
+		{
+			Name: "S3Gov storage location - no StorageAwsExternalId",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:              s3StorageLocationName,
+					StorageProvider:   sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:    s3StorageBaseUrl,
+					StorageAwsRoleArn: s3StorageAwsRoleArn,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:              s3StorageLocationName,
+					StorageProvider:   sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:    s3StorageBaseUrl,
+					StorageAwsRoleArn: s3StorageAwsRoleArn,
+				},
+			},
+		},
+		{
+			Name: "GCS storage location",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "GCS storage location - no kms key id",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type: sdk.GCSEncryptionTypeNone,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type: sdk.GCSEncryptionTypeNone,
+					},
+				},
+			},
+		},
+		{
+			Name: "GCS storage location - no encryption",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+				},
+			},
+		},
+		{
+			Name: "Azure storage location",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+		},
+	}
+
+	notEqualCases := []struct {
+		Name             string
+		StorageLocationA sdk.ExternalVolumeStorageLocation
+		StorageLocationB sdk.ExternalVolumeStorageLocation
+	}{
+		// Types that don't match
+		{
+			Name: "S3/S3Gov storage locations",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3/GCS storage locations",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3/Azure storage locations",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+		},
+		{
+			Name: "S3Gov/GCS storage locations",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3Gov/Azure storage locations",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+		},
+		{
+			Name: "GCS/Azure storage locations",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+		},
+		// Types that match, but some have optional fields and others don't
+		{
+			Name: "S3 storage location - missing kms key id",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseS3,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionTypeSseS3,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - missing encryption",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionTypeSseS3,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - missing StorageAwsExternalId",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:              s3StorageLocationName,
+					StorageProvider:   sdk.S3StorageProviderS3,
+					StorageBaseUrl:    s3StorageBaseUrl,
+					StorageAwsRoleArn: s3StorageAwsRoleArn,
+				},
+			},
+		},
+		{
+			Name: "S3GOV storage location - missing kms key id",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseS3,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionTypeSseS3,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3GOV storage location - missing encryption",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type: sdk.S3EncryptionTypeSseS3,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+				},
+			},
+		},
+		{
+			Name: "S3GOV storage location - missing StorageAwsExternalId",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:              s3StorageLocationName,
+					StorageProvider:   sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:    s3StorageBaseUrl,
+					StorageAwsRoleArn: s3StorageAwsRoleArn,
+				},
+			},
+		},
+		{
+			Name: "GCS storage location - missing kms key id",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeNone,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type: sdk.GCSEncryptionTypeNone,
+					},
+				},
+			},
+		},
+		{
+			Name: "GCS storage location - missing encryption",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type: sdk.GCSEncryptionTypeNone,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+				},
+			},
+		},
+		// Types and fields match, but values not equal
+		{
+			Name: "S3 storage location - names don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 "a",
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - base urls don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       "a",
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - role arns",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    "a",
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - external ids don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageLocationName,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - encryption types don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionNone,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3 storage location - kms key ids don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3StorageLocationName,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3GOV storage location - names don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 "a",
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3GOV storage location - base urls don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       "a",
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3GOV storage location - role arns",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    "a",
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3GOV storage location - external ids don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageLocationName,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3GOV storage location - encryption types don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionNone,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "S3GOV storage location - kms key ids don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3StorageLocationName,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3GOV,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "GCS storage location - names don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           "a",
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "GCS storage location - base urls don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: "a",
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "GCS storage location - encryption types don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeNone,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "GCS storage location - encryption kms ids don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsStorageLocationName,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "Azure storage location - names don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           "a",
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+		},
+		{
+			Name: "Azure storage location - base urls don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: "a",
+					AzureTenantId:  azureTenantId,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+		},
+		{
+			Name: "Azure storage location - tenant ids don't match",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  "a",
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+		},
+	}
+
+	invalidTestCases := []struct {
+		Name             string
+		StorageLocationA sdk.ExternalVolumeStorageLocation
+		StorageLocationB sdk.ExternalVolumeStorageLocation
+	}{
+		{
+			Name: "Empty S3 storage location as argument 1",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "Empty S3 storage location as argument 2",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:                 s3StorageLocationName,
+					StorageProvider:      sdk.S3StorageProviderS3,
+					StorageBaseUrl:       s3StorageBaseUrl,
+					StorageAwsRoleArn:    s3StorageAwsRoleArn,
+					StorageAwsExternalId: &s3StorageAwsExternalId,
+					Encryption: &sdk.ExternalVolumeS3Encryption{
+						Type:     sdk.S3EncryptionTypeSseKms,
+						KmsKeyId: &s3EncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{},
+			},
+		},
+		{
+			Name: "Empty GCS storage location as argument 1",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+		},
+		{
+			Name: "Empty GCS storage location as argument 2",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+					Name:           gcsStorageLocationName,
+					StorageBaseUrl: gcsStorageBaseUrl,
+					Encryption: &sdk.ExternalVolumeGCSEncryption{
+						Type:     sdk.GCSEncryptionTypeSseKms,
+						KmsKeyId: &gcsEncryptionKmsKeyId,
+					},
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				GCSStorageLocationParams: &sdk.GCSStorageLocationParams{},
+			},
+		},
+		{
+			Name: "Empty Azure storage location as argument 1",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+		},
+		{
+			Name: "Empty Azure storage location as argument 2",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+					Name:           azureStorageLocationName,
+					StorageBaseUrl: azureStorageBaseUrl,
+					AzureTenantId:  azureTenantId,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				AzureStorageLocationParams: &sdk.AzureStorageLocationParams{},
+			},
+		},
+		{
+			Name:             "Empty storage location as argument 1",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:              s3StorageLocationName,
+					StorageProvider:   sdk.S3StorageProviderS3,
+					StorageBaseUrl:    s3StorageBaseUrl,
+					StorageAwsRoleArn: s3StorageAwsRoleArn,
+				},
+			},
+		},
+		{
+			Name: "Empty storage location as argument 2",
+			StorageLocationA: sdk.ExternalVolumeStorageLocation{
+				S3StorageLocationParams: &sdk.S3StorageLocationParams{
+					Name:              s3StorageLocationName,
+					StorageProvider:   sdk.S3StorageProviderS3,
+					StorageBaseUrl:    s3StorageBaseUrl,
+					StorageAwsRoleArn: s3StorageAwsRoleArn,
+				},
+			},
+			StorageLocationB: sdk.ExternalVolumeStorageLocation{},
+		},
+	}
+
+	for _, tc := range equalCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			storageLocationsEqual, err := resources.StorageLocationsEqual(tc.StorageLocationA, tc.StorageLocationB)
+			require.NoError(t, err)
+			assert.True(t, storageLocationsEqual)
+		})
+	}
+
+	for _, tc := range notEqualCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			storageLocationsEqual, err := resources.StorageLocationsEqual(tc.StorageLocationA, tc.StorageLocationB)
+			require.NoError(t, err)
+			assert.False(t, storageLocationsEqual)
+		})
+	}
+
+	for _, tc := range invalidTestCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			_, err := resources.StorageLocationsEqual(tc.StorageLocationA, tc.StorageLocationB)
+			require.Error(t, err)
+		})
+	}
+}

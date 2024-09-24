@@ -1,6 +1,9 @@
 package sdk
 
-import "context"
+import (
+	"context"
+	"database/sql"
+)
 
 type ExternalVolumes interface {
 	Create(ctx context.Context, request *CreateExternalVolumeRequest) error
@@ -107,12 +110,12 @@ type ShowExternalVolumeOptions struct {
 	Like            *Like `ddl:"keyword" sql:"LIKE"`
 }
 type externalVolumeShowRow struct {
-	Name        string `db:"name"`
-	AllowWrites string `db:"allow_writes"`
-	Comment     string `db:"comment"`
+	Name        string         `db:"name"`
+	AllowWrites bool           `db:"allow_writes"`
+	Comment     sql.NullString `db:"comment"`
 }
 type ExternalVolume struct {
 	Name        string
-	AllowWrites string
+	AllowWrites bool
 	Comment     string
 }

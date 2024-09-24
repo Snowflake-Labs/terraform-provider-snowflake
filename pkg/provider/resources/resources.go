@@ -19,6 +19,7 @@ const (
 	ExternalFunction                                       resource = "snowflake_external_function"
 	ExternalTable                                          resource = "snowflake_external_table"
 	ExternalOauthSecurityIntegration                       resource = "snowflake_external_oauth_security_integration"
+	ExternalVolume                                         resource = "snowflake_external_volume"
 	FailoverGroup                                          resource = "snowflake_failover_group"
 	FileFormat                                             resource = "snowflake_file_format"
 	Function                                               resource = "snowflake_function"
