@@ -27,36 +27,36 @@ func (c *TableClient) client() sdk.Tables {
 	return c.context.client.Tables
 }
 
-func (c *TableClient) CreateTable(t *testing.T) (*sdk.Table, func()) {
+func (c *TableClient) Create(t *testing.T) (*sdk.Table, func()) {
 	t.Helper()
-	return c.CreateTableInSchema(t, c.ids.SchemaId())
+	return c.CreateInSchema(t, c.ids.SchemaId())
 }
 
-func (c *TableClient) CreateTableWithName(t *testing.T, name string) (*sdk.Table, func()) {
-	t.Helper()
-
-	columns := []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
-	}
-	return c.CreateTableWithIdAndColumns(t, c.ids.NewSchemaObjectIdentifier(name), columns)
-}
-
-func (c *TableClient) CreateTableInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Table, func()) {
+func (c *TableClient) CreateWithName(t *testing.T, name string) (*sdk.Table, func()) {
 	t.Helper()
 
 	columns := []sdk.TableColumnRequest{
 		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
 	}
-	return c.CreateTableWithIdAndColumns(t, c.ids.RandomSchemaObjectIdentifierInSchema(schemaId), columns)
+	return c.CreateWithRequest(t, sdk.NewCreateTableRequest(c.ids.NewSchemaObjectIdentifier(name), columns))
 }
 
-func (c *TableClient) CreateTableWithColumns(t *testing.T, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
+func (c *TableClient) CreateInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Table, func()) {
 	t.Helper()
 
-	return c.CreateTableWithIdAndColumns(t, c.ids.RandomSchemaObjectIdentifier(), columns)
+	columns := []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+	}
+	return c.CreateWithRequest(t, sdk.NewCreateTableRequest(c.ids.RandomSchemaObjectIdentifierInSchema(schemaId), columns))
 }
 
-func (c *TableClient) CreateTableWithPredefinedColumns(t *testing.T) (*sdk.Table, func()) {
+func (c *TableClient) CreateWithColumns(t *testing.T, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
+	t.Helper()
+
+	return c.CreateWithRequest(t, sdk.NewCreateTableRequest(c.ids.RandomSchemaObjectIdentifier(), columns))
+}
+
+func (c *TableClient) CreateWithPredefinedColumns(t *testing.T) (*sdk.Table, func()) {
 	t.Helper()
 
 	columns := []sdk.TableColumnRequest{
@@ -65,24 +65,33 @@ func (c *TableClient) CreateTableWithPredefinedColumns(t *testing.T) (*sdk.Table
 		*sdk.NewTableColumnRequest("some_other_text_column", "VARCHAR"),
 	}
 
-	return c.CreateTableWithIdAndColumns(t, c.ids.RandomSchemaObjectIdentifier(), columns)
+	return c.CreateWithRequest(t, sdk.NewCreateTableRequest(c.ids.RandomSchemaObjectIdentifier(), columns))
 }
 
-func (c *TableClient) CreateTableWithIdAndColumns(t *testing.T, id sdk.SchemaObjectIdentifier, columns []sdk.TableColumnRequest) (*sdk.Table, func()) {
+func (c *TableClient) CreateWithChangeTracking(t *testing.T) (*sdk.Table, func()) {
+	t.Helper()
+
+	columns := []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", "NUMBER"),
+	}
+
+	return c.CreateWithRequest(t, sdk.NewCreateTableRequest(c.ids.RandomSchemaObjectIdentifier(), columns).WithChangeTracking(sdk.Pointer(true)))
+}
+
+func (c *TableClient) CreateWithRequest(t *testing.T, req *sdk.CreateTableRequest) (*sdk.Table, func()) {
 	t.Helper()
 	ctx := context.Background()
 
-	dbCreateRequest := sdk.NewCreateTableRequest(id, columns)
-	err := c.client().Create(ctx, dbCreateRequest)
+	err := c.client().Create(ctx, req)
 	require.NoError(t, err)
 
-	table, err := c.client().ShowByID(ctx, id)
+	table, err := c.client().ShowByID(ctx, req.GetName())
 	require.NoError(t, err)
 
-	return table, c.DropTableFunc(t, id)
+	return table, c.DropFunc(t, req.GetName())
 }
 
-func (c *TableClient) DropTableFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+func (c *TableClient) DropFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
 

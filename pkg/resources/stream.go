@@ -142,27 +142,27 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if table.IsExternal {
-			req := sdk.NewCreateStreamOnExternalTableRequest(id, tableId)
+			req := sdk.NewCreateOnExternalTableStreamRequest(id, tableId)
 			if insertOnly {
-				req.WithInsertOnly(sdk.Bool(true))
+				req.WithInsertOnly(true)
 			}
 			if v, ok := d.GetOk("comment"); ok {
-				req.WithComment(sdk.String(v.(string)))
+				req.WithComment(v.(string))
 			}
 			err := client.Streams.CreateOnExternalTable(ctx, req)
 			if err != nil {
 				return fmt.Errorf("error creating stream %v err = %w", name, err)
 			}
 		} else {
-			req := sdk.NewCreateStreamOnTableRequest(id, tableId)
+			req := sdk.NewCreateOnTableStreamRequest(id, tableId)
 			if appendOnly {
-				req.WithAppendOnly(sdk.Bool(true))
+				req.WithAppendOnly(true)
 			}
 			if showInitialRows {
-				req.WithShowInitialRows(sdk.Bool(true))
+				req.WithShowInitialRows(true)
 			}
 			if v, ok := d.GetOk("comment"); ok {
-				req.WithComment(sdk.String(v.(string)))
+				req.WithComment(v.(string))
 			}
 			err := client.Streams.CreateOnTable(ctx, req)
 			if err != nil {
@@ -181,15 +181,15 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		req := sdk.NewCreateStreamOnViewRequest(id, viewId)
+		req := sdk.NewCreateOnViewStreamRequest(id, viewId)
 		if appendOnly {
-			req.WithAppendOnly(sdk.Bool(true))
+			req.WithAppendOnly(true)
 		}
 		if showInitialRows {
-			req.WithShowInitialRows(sdk.Bool(true))
+			req.WithShowInitialRows(true)
 		}
 		if v, ok := d.GetOk("comment"); ok {
-			req.WithComment(sdk.String(v.(string)))
+			req.WithComment(v.(string))
 		}
 		err = client.Streams.CreateOnView(ctx, req)
 		if err != nil {
@@ -208,9 +208,9 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		if findStagePropertyValueByName(stageProperties, "ENABLE") != "true" {
 			return fmt.Errorf("directory must be enabled on stage")
 		}
-		req := sdk.NewCreateStreamOnDirectoryTableRequest(id, stageId)
+		req := sdk.NewCreateOnDirectoryTableStreamRequest(id, stageId)
 		if v, ok := d.GetOk("comment"); ok {
-			req.WithComment(sdk.String(v.(string)))
+			req.WithComment(v.(string))
 		}
 		err = client.Streams.CreateOnDirectoryTable(ctx, req)
 		if err != nil {
@@ -290,12 +290,12 @@ func UpdateStream(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("comment") {
 		comment := d.Get("comment").(string)
 		if comment == "" {
-			err := client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithUnsetComment(sdk.Bool(true)))
+			err := client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithUnsetComment(true))
 			if err != nil {
 				return fmt.Errorf("error unsetting stream comment on %v", d.Id())
 			}
 		} else {
-			err := client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithSetComment(sdk.String(comment)))
+			err := client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithSetComment(comment))
 			if err != nil {
 				return fmt.Errorf("error setting stream comment on %v", d.Id())
 			}

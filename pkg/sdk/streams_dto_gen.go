@@ -18,12 +18,17 @@ type CreateOnTableStreamRequest struct {
 	OrReplace       *bool
 	IfNotExists     *bool
 	name            SchemaObjectIdentifier // required
+	Tag             []TagAssociation
 	CopyGrants      *bool
 	TableId         SchemaObjectIdentifier // required
 	On              *OnStreamRequest
 	AppendOnly      *bool
 	ShowInitialRows *bool
 	Comment         *string
+}
+
+func (r *CreateOnTableStreamRequest) GetName() SchemaObjectIdentifier {
+	return r.name
 }
 
 type OnStreamRequest struct {
@@ -43,6 +48,7 @@ type CreateOnExternalTableStreamRequest struct {
 	OrReplace       *bool
 	IfNotExists     *bool
 	name            SchemaObjectIdentifier // required
+	Tag             []TagAssociation
 	CopyGrants      *bool
 	ExternalTableId SchemaObjectIdentifier // required
 	On              *OnStreamRequest
@@ -54,6 +60,7 @@ type CreateOnDirectoryTableStreamRequest struct {
 	OrReplace   *bool
 	IfNotExists *bool
 	name        SchemaObjectIdentifier // required
+	Tag         []TagAssociation
 	CopyGrants  *bool
 	StageId     SchemaObjectIdentifier // required
 	Comment     *string
@@ -63,6 +70,7 @@ type CreateOnViewStreamRequest struct {
 	OrReplace       *bool
 	IfNotExists     *bool
 	name            SchemaObjectIdentifier // required
+	Tag             []TagAssociation
 	CopyGrants      *bool
 	ViewId          SchemaObjectIdentifier // required
 	On              *OnStreamRequest
@@ -95,7 +103,7 @@ type DropStreamRequest struct {
 type ShowStreamRequest struct {
 	Terse      *bool
 	Like       *Like
-	In         *In
+	In         *ExtendedIn
 	StartsWith *string
 	Limit      *LimitFrom
 }

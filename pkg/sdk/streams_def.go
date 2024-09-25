@@ -11,9 +11,9 @@ var (
 			QueryStructField(
 			"Statement",
 			g.NewQueryStruct("OnStreamStatement").
-				OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals()).
+				OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals().SingleQuotes()).
 				OptionalTextAssignment("OFFSET", g.ParameterOptions().ArrowEquals()).
-				OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals()).
+				OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals().SingleQuotes()).
 				OptionalTextAssignment("STREAM", g.ParameterOptions().ArrowEquals().SingleQuotes()).
 				WithValidation(g.ExactlyOneValueSet, "Timestamp", "Offset", "Statement", "Stream"),
 			g.ListOptions().Parentheses(),
@@ -25,7 +25,6 @@ var (
 				Field("name", "string").
 				Field("database_name", "string").
 				Field("schema_name", "string").
-				Field("tableOn", "sql.NullString").
 				Field("owner", "sql.NullString").
 				Field("comment", "sql.NullString").
 				Field("table_name", "sql.NullString").
@@ -43,7 +42,6 @@ var (
 				Field("Name", "string").
 				Field("DatabaseName", "string").
 				Field("SchemaName", "string").
-				Field("TableOn", "*string").
 				Field("Owner", "*string").
 				Field("Comment", "*string").
 				Field("TableName", "*string").
@@ -70,6 +68,7 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
+				OptionalTags().
 				OptionalCopyGrants().
 				SQL("ON TABLE").
 				Identifier("TableId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -90,6 +89,7 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
+				OptionalTags().
 				OptionalCopyGrants().
 				SQL("ON EXTERNAL TABLE").
 				Identifier("ExternalTableId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -109,6 +109,7 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
+				OptionalTags().
 				OptionalCopyGrants().
 				SQL("ON STAGE").
 				Identifier("StageId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -126,6 +127,7 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
+				OptionalTags().
 				OptionalCopyGrants().
 				SQL("ON VIEW").
 				Identifier("ViewId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -182,7 +184,7 @@ var (
 				Terse().
 				SQL("STREAMS").
 				OptionalLike().
-				OptionalIn().
+				OptionalExtendedIn().
 				OptionalStartsWith().
 				OptionalLimit(),
 		).
