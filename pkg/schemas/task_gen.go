@@ -3,6 +3,7 @@
 package schemas
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -46,7 +47,8 @@ var ShowTaskSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"predecessors": {
-		Type:     schema.TypeInvalid,
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
 		Computed: true,
 	},
 	"state": {
@@ -89,6 +91,27 @@ var ShowTaskSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	},
+	"task_relations": {
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"predecessors": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"finalizer": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	},
+	"last_suspended_reason": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
 }
 
 var _ = ShowTaskSchema
@@ -104,17 +127,26 @@ func TaskToSchema(task *sdk.Task) map[string]any {
 	taskSchema["comment"] = task.Comment
 	taskSchema["warehouse"] = task.Warehouse
 	taskSchema["schedule"] = task.Schedule
-	taskSchema["predecessors"] = task.Predecessors
+	taskSchema["predecessors"] = collections.Map(task.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName)
 	taskSchema["state"] = string(task.State)
 	taskSchema["definition"] = task.Definition
 	taskSchema["condition"] = task.Condition
 	taskSchema["allow_overlapping_execution"] = task.AllowOverlappingExecution
-	taskSchema["error_integration"] = task.ErrorIntegration
+	if task.ErrorIntegration != nil {
+		taskSchema["error_integration"] = task.ErrorIntegration.Name()
+	}
 	taskSchema["last_committed_on"] = task.LastCommittedOn
 	taskSchema["last_suspended_on"] = task.LastSuspendedOn
 	taskSchema["owner_role_type"] = task.OwnerRoleType
 	taskSchema["config"] = task.Config
 	taskSchema["budget"] = task.Budget
+	taskSchema["last_suspended_reason"] = task.LastSuspendedReason
+	taskSchema["task_relations"] = []any{
+		map[string]any{
+			"predecessors": collections.Map(task.TaskRelations.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName),
+			"finalizer":    task.TaskRelations.FinalizerTask,
+		},
+	}
 	return taskSchema
 }
 

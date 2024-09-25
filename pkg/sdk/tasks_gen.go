@@ -13,6 +13,7 @@ type Tasks interface {
 	Drop(ctx context.Context, request *DropTaskRequest) error
 	Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
+	ShowParameters(ctx context.Context, id SchemaObjectIdentifier) ([]*Parameter, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Execute(ctx context.Context, request *ExecuteTaskRequest) error
 	SuspendRootTasks(ctx context.Context, taskId SchemaObjectIdentifier, id SchemaObjectIdentifier) ([]SchemaObjectIdentifier, error)

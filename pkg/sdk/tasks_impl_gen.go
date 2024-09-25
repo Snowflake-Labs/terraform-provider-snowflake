@@ -64,6 +64,14 @@ func (v *tasks) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task,
 	return collections.FindFirst(tasks, func(r Task) bool { return r.Name == id.Name() })
 }
 
+func (v *tasks) ShowParameters(ctx context.Context, id SchemaObjectIdentifier) ([]*Parameter, error) {
+	return v.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
+		In: &ParametersIn{
+			Task: id,
+		},
+	})
+}
+
 func (v *tasks) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
 	opts := &DescribeTaskOptions{
 		name: id,
