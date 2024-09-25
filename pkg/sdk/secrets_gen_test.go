@@ -202,7 +202,7 @@ func TestSecrets_Alter(t *testing.T) {
 		opts.Set.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow{OauthRefreshToken: String("foo"), OauthRefreshTokenExpiryTime: String("bar")}
 		opts.Set.SetForBasicAuthentication = &SetForBasicAuthentication{Username: String("foo"), Password: String("bar")}
 		opts.Set.SetForGenericString = &SetForGenericString{SecretString: String("secret")}
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
+		assertOptsInvalidJoinedErrors(t, opts, errMoreThanOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
 	})
 
 	t.Run("alter: set options for Oauth Client Credentials Flow", func(t *testing.T) {
