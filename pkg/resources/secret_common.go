@@ -79,27 +79,23 @@ func handleSecretRead(d *schema.ResourceData, id sdk.SchemaObjectIdentifier, sec
 	if err := d.Set("comment", secret.Comment); err != nil {
 		return err
 	}
+	if err := d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecretToSchema(secret)}); err != nil {
+		return err
+	}
 	return nil
 }
 
-type commonSecretSet struct {
-	comment *string
-}
-
-type commonSecretUnset struct {
-	comment *bool
-}
-
-func handleSecretUpdate(d *schema.ResourceData) (commonSecretSet, commonSecretUnset) {
-	set, unset := commonSecretSet{}, commonSecretUnset{}
-
+func handleSecretUpdate(id sdk.SchemaObjectIdentifier, d *schema.ResourceData) *sdk.AlterSecretRequest {
 	if d.HasChange("comment") {
-		if v, ok := d.GetOk("comment"); ok {
-			set.comment = sdk.Pointer(v.(string))
+		comment := d.Get("comment").(string)
+		request := sdk.NewAlterSecretRequest(id)
+		if len(comment) == 0 {
+			unsetRequest := sdk.NewSecretUnsetRequest().WithComment(*sdk.Bool(true))
+			return request.WithUnset(*unsetRequest)
 		} else {
-			unset.comment = sdk.Pointer(true)
+			setRequest := sdk.NewSecretSetRequest().WithComment(comment)
+			return request.WithSet(*setRequest)
 		}
 	}
-
-	return set, unset
+	return nil
 }

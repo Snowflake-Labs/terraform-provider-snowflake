@@ -4,6 +4,7 @@ package objectassert
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -114,7 +115,7 @@ func (s *SecretAssert) HasSecretType(expected string) *SecretAssert {
 func (s *SecretAssert) HasOauthScopes(expected []string) *SecretAssert {
 	s.AddAssertion(func(t *testing.T, o *sdk.Secret) error {
 		t.Helper()
-		if o.OauthScopes != expected {
+		if !slices.Equal(o.OauthScopes, expected) {
 			return fmt.Errorf("expected oauth scopes: %v; got: %v", expected, o.OauthScopes)
 		}
 		return nil
