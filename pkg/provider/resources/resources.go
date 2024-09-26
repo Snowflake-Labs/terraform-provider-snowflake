@@ -39,6 +39,7 @@ const (
 	Saml2SecurityIntegration                               resource = "snowflake_saml2_integration"
 	Schema                                                 resource = "snowflake_schema"
 	ScimSecurityIntegration                                resource = "snowflake_scim_integration"
+	SecretWithClientCredentials                            resource = "snowflake_secret_with_client_credentials"
 	SecondaryDatabase                                      resource = "snowflake_secondary_database"
 	Sequence                                               resource = "snowflake_sequence"
 	Share                                                  resource = "snowflake_share"
