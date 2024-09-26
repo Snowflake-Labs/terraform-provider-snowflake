@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var secretClientCredentialsSchema = map[string]*schema.Schema{
+var secretAuthorizationCodeSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
@@ -33,17 +33,21 @@ var secretClientCredentialsSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
+	"oauth_refresh_token": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the token as a string that is used to obtain a new access token from the OAuth authorization server when the access token expires.",
+	},
+	"oauth_refresh_token_expiry_time": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the timestamp as a string when the OAuth refresh token expires. Accepted formats: YYYY-MM-DD, YYYY-MM-DD HH:MI:SS",
+	},
 	"api_authentication": {
 		Type:             schema.TypeString,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Required:         true,
 		Description:      "Specifies the name value of the Snowflake security integration that connects Snowflake to an external service when setting Type to OAUTH2.",
-	},
-	"oauth_scopes": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Required:    true,
-		Description: "Specifies a list of scopes to use when making a request from the OAuth server by a role with USAGE on the integration during the OAuth client credentials flow.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -61,56 +65,53 @@ var secretClientCredentialsSchema = map[string]*schema.Schema{
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
-func SecretWithClientCredentials() *schema.Resource {
+func SecretWithAuthorizationCode() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSecretWithClientCredentials,
-		ReadContext:   ReadContextSecretWithClientCredentials,
-		UpdateContext: UpdateContextSecretWithClientCredentials,
-		DeleteContext: DeleteContextSecretWithClientCredentials,
+		CreateContext: CreateContextSecretWithAuthorizationCode,
+		ReadContext:   ReadContextSecretWithAuthorizationCode,
+		UpdateContext: UpdateContextSecretWithAuthorizationCode,
+		DeleteContext: DeleteContextSecretWithAuthorizationCode,
 
-		Schema: secretClientCredentialsSchema,
+		Schema: secretAuthorizationCodeSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func CreateContextSecretWithAuthorizationCode(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
+
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+
 	apiIntegrationString := d.Get("api_authentication").(string)
 	apiIntegration, err := sdk.ParseAccountObjectIdentifier(apiIntegrationString)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+	refreshToken := d.Get("oauth_refresh_token").(string)
+	refreshTokenExpiryTime := d.Get("oauth_refresh_token_expiry_time").(string)
 
-	stringScopes := expandStringList(d.Get("oauth_scopes").(*schema.Set).List())
-	oauthScopes := make([]sdk.ApiIntegrationScope, len(stringScopes))
-	for i, scope := range stringScopes {
-		oauthScopes[i] = sdk.ApiIntegrationScope{Scope: scope}
-	}
-
-	request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, apiIntegration, oauthScopes)
-
+	request := sdk.NewCreateWithOAuthAuthorizationCodeFlowSecretRequest(id, refreshToken, refreshTokenExpiryTime, apiIntegration)
 	if v, ok := d.GetOk("comment"); ok {
 		request.WithComment(v.(string))
 	}
 
-	err = client.Secrets.CreateWithOAuthClientCredentialsFlow(ctx, request)
+	err = client.Secrets.CreateWithOAuthAuthorizationCodeFlow(ctx, request)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	return ReadContextSecretWithClientCredentials(ctx, d, meta)
+	return ReadContextSecretWithAuthorizationCode(ctx, d, meta)
 }
 
-func ReadContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadContextSecretWithAuthorizationCode(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -150,10 +151,10 @@ func ReadContextSecretWithClientCredentials(ctx context.Context, d *schema.Resou
 	if err = d.Set("schema", secretDescription.SchemaName); err != nil {
 		return diag.FromErr(err)
 	}
-	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
+	if err = d.Set("oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime); err != nil {
 		return diag.FromErr(err)
 	}
-	if err = d.Set("oauth_scopes", secretDescription.OauthScopes); err != nil {
+	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set("comment", secretDescription.Comment); err != nil {
@@ -162,23 +163,31 @@ func ReadContextSecretWithClientCredentials(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextSecretWithAuthorizationCode(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if d.HasChange("oauth_scopes") {
-		stringScopes := expandStringList(d.Get("oauth_scopes").(*schema.Set).List())
-		oauthScopes := make([]sdk.ApiIntegrationScope, len(stringScopes))
-		for i, scope := range stringScopes {
-			oauthScopes[i] = sdk.ApiIntegrationScope{Scope: scope}
-		}
+	if d.HasChange("oauth_refresh_token") {
+		refreshToken := d.Get("oauth_refresh_token").(string)
 
 		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForOAuthClientCredentialsFlowRequest(oauthScopes)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForOAuthClientCredentialsFlow(*setRequest))
+		setRequest := sdk.NewSetForOAuthAuthorizationFlowRequest().WithOauthRefreshToken(refreshToken)
+		request.WithSet(*sdk.NewSecretSetRequest().WithSetForOAuthAuthorizationFlow(*setRequest))
+
+		if err := client.Secrets.Alter(ctx, request); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("oauth_refresh_token_expiry_time") {
+		refreshTokenExpiryTime := d.Get("oauth_refresh_token_expiry_time").(string)
+
+		request := sdk.NewAlterSecretRequest(id)
+		setRequest := sdk.NewSetForOAuthAuthorizationFlowRequest().WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime)
+		request.WithSet(*sdk.NewSecretSetRequest().WithSetForOAuthAuthorizationFlow(*setRequest))
 
 		if err := client.Secrets.Alter(ctx, request); err != nil {
 			return diag.FromErr(err)
@@ -200,10 +209,10 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		}
 	}
 
-	return ReadContextSecretWithClientCredentials(ctx, d, meta)
+	return ReadContextSecretWithAuthorizationCode(ctx, d, meta)
 }
 
-func DeleteContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextSecretWithAuthorizationCode(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {

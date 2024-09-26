@@ -151,7 +151,7 @@ func TestAcc_SecretWithClientCredentials_NoScopesProvided(t *testing.T) {
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithClientCredentials),
 		Steps: []resource.TestStep{
-			// Create secret without providing oauth_scopes value
+			// create secret without providing oauth_scopes value
 			{
 				Config: config.FromModel(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
