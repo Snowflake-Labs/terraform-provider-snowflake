@@ -6,60 +6,28 @@ import (
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var secretClientCredentialsSchema = map[string]*schema.Schema{
-	"name": {
-		Type:             schema.TypeString,
-		Required:         true,
-		Description:      blocklistedCharactersFieldDescription("String that specifies the identifier (i.e. name) for the secret, must be unique in your schema."),
-		DiffSuppressFunc: suppressIdentifierQuoting,
-	},
-	"database": {
-		Type:             schema.TypeString,
-		Required:         true,
-		Description:      blocklistedCharactersFieldDescription("The database in which to create the secret"),
-		ForceNew:         true,
-		DiffSuppressFunc: suppressIdentifierQuoting,
-	},
-	"schema": {
-		Type:             schema.TypeString,
-		Required:         true,
-		Description:      blocklistedCharactersFieldDescription("The schema in which to create the secret."),
-		ForceNew:         true,
-		DiffSuppressFunc: suppressIdentifierQuoting,
-	},
-	"api_authentication": {
-		Type:             schema.TypeString,
-		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
-		Required:         true,
-		Description:      "Specifies the name value of the Snowflake security integration that connects Snowflake to an external service when setting Type to OAUTH2.",
-	},
-	"oauth_scopes": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Required:    true,
-		Description: "Specifies a list of scopes to use when making a request from the OAuth server by a role with USAGE on the integration during the OAuth client credentials flow.",
-	},
-	"comment": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Specifies a comment for the secret.",
-	},
-	ShowOutputAttributeName: {
-		Type:        schema.TypeList,
-		Computed:    true,
-		Description: "Outputs the result of `SHOW SECRET` for the given secret.",
-		Elem: &schema.Resource{
-			Schema: schemas.ShowSecretSchema,
+var secretClientCredentialsSchema = func() map[string]*schema.Schema {
+	secretClientCredentials := map[string]*schema.Schema{
+		"api_authentication": {
+			Type:             schema.TypeString,
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			Required:         true,
+			Description:      "Specifies the name value of the Snowflake security integration that connects Snowflake to an external service when setting Type to OAUTH2.",
 		},
-	},
-	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
-}
+		"oauth_scopes": {
+			Type:        schema.TypeSet,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Required:    true,
+			Description: "Specifies a list of scopes to use when making a request from the OAuth server by a role with USAGE on the integration during the OAuth client credentials flow.",
+		},
+	}
+	return helpers.MergeMaps(secretCommonSchema, secretClientCredentials)
+}()
 
 func SecretWithClientCredentials() *schema.Resource {
 	return &schema.Resource{
@@ -77,16 +45,15 @@ func SecretWithClientCredentials() *schema.Resource {
 
 func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	databaseName := d.Get("database").(string)
-	schemaName := d.Get("schema").(string)
-	name := d.Get("name").(string)
+	commonCreate := handleSecretCreate(d)
+
 	apiIntegrationString := d.Get("api_authentication").(string)
 	apiIntegration, err := sdk.ParseAccountObjectIdentifier(apiIntegrationString)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+	id := sdk.NewSchemaObjectIdentifier(commonCreate.database, commonCreate.schema, commonCreate.name)
 
 	stringScopes := expandStringList(d.Get("oauth_scopes").(*schema.Set).List())
 	oauthScopes := make([]sdk.ApiIntegrationScope, len(stringScopes))
@@ -96,8 +63,8 @@ func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 
 	request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, apiIntegration, oauthScopes)
 
-	if v, ok := d.GetOk("comment"); ok {
-		request.WithComment(v.(string))
+	if commonCreate.comment != nil {
+		request.WithComment(*commonCreate.comment)
 	}
 
 	err = client.Secrets.CreateWithOAuthClientCredentialsFlow(ctx, request)
@@ -137,26 +104,18 @@ func ReadContextSecretWithClientCredentials(ctx context.Context, d *schema.Resou
 		}
 	}
 
+	if err := handleSecretRead(d, id, secret); err != nil {
+		return diag.FromErr(err)
+	}
+
 	secretDescription, err := client.Secrets.Describe(ctx, id)
 	if err != nil {
-		return diag.FromErr(err)
-	}
-	if err = d.Set("name", secretDescription.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err = d.Set("database", secretDescription.DatabaseName); err != nil {
-		return diag.FromErr(err)
-	}
-	if err = d.Set("schema", secretDescription.SchemaName); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set("oauth_scopes", secretDescription.OauthScopes); err != nil {
-		return diag.FromErr(err)
-	}
-	if err = d.Set("comment", secretDescription.Comment); err != nil {
 		return diag.FromErr(err)
 	}
 	return nil
@@ -185,16 +144,7 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		}
 	}
 
-	if d.HasChange("comment") {
-		comment := d.Get("comment").(string)
-		request := sdk.NewAlterSecretRequest(id)
-		if len(comment) == 0 {
-			unsetRequest := sdk.NewSecretUnsetRequest().WithComment(*sdk.Bool(true))
-			request.WithUnset(*unsetRequest)
-		} else {
-			setRequest := sdk.NewSecretSetRequest().WithComment(comment)
-			request.WithSet(*setRequest)
-		}
+	if request := handleSecretUpdate(id, d); request != nil {
 		if err := client.Secrets.Alter(ctx, request); err != nil {
 			return diag.FromErr(err)
 		}

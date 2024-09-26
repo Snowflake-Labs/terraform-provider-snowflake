@@ -77,7 +77,9 @@ func (s *SecretShowOutputAssert) HasSecretType(expected string) *SecretShowOutpu
 }
 
 func (s *SecretShowOutputAssert) HasOauthScopes(expected []string) *SecretShowOutputAssert {
-	s.AddAssertion(assert.ResourceShowOutputValueSet("oauth_scopes", expected))
+	for _, v := range expected {
+		s.AddAssertion(assert.ValueSet("oauth_scopes.*", v))
+	}
 	return s
 }
 

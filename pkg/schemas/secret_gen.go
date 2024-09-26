@@ -38,7 +38,8 @@ var ShowSecretSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"oauth_scopes": {
-		Type:     schema.TypeInvalid,
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
 		Computed: true,
 	},
 	"owner_role_type": {
