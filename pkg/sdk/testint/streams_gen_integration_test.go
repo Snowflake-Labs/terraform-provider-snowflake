@@ -19,16 +19,8 @@ func TestInt_Streams(t *testing.T) {
 	databaseId := testClientHelper().Ids.DatabaseId()
 	schemaId := testClientHelper().Ids.SchemaId()
 
-	createStreamOnTableHandle := func(t *testing.T, id, tableId sdk.SchemaObjectIdentifier) {
-		t.Helper()
-
-		err := client.Streams.CreateOnTable(ctx, sdk.NewCreateOnTableStreamRequest(id, tableId))
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
-	}
-
 	// There is no way to check at/before fields in show and describe. That's why in Create tests we try creating with these values, but do not assert them.
-	t.Run("CreateOnTable - with at", func(t *testing.T) {
+	t.Run("CreateOnTable", func(t *testing.T) {
 		table, cleanupTable := testClientHelper().Table.CreateWithChangeTracking(t)
 		t.Cleanup(cleanupTable)
 		tableId := table.ID()
@@ -388,6 +380,16 @@ func TestInt_Streams(t *testing.T) {
 
 		_, err = collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.Stream(t, id).
+			HasName(id.Name()).
+			HasDatabaseName(id.DatabaseName()).
+			HasSchemaName(id.SchemaName()).
+			HasComment("some comment").
+			HasSourceType("Table").
+			HasMode("DEFAULT").
+			HasTableId(table.ID().FullyQualifiedName()),
+		)
 	})
 
 	t.Run("Show multiple", func(t *testing.T) {
@@ -506,8 +508,10 @@ func TestInt_Streams(t *testing.T) {
 		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
-		createStreamOnTableHandle(t, id1, table.ID())
-		createStreamOnTableHandle(t, id2, table.ID())
+		_, stream1Cleanup := testClientHelper().Stream.CreateOnTableWithRequest(t, sdk.NewCreateOnTableStreamRequest(id1, table.ID()))
+		t.Cleanup(stream1Cleanup)
+		_, stream2Cleanup := testClientHelper().Stream.CreateOnTableWithRequest(t, sdk.NewCreateOnTableStreamRequest(id1, table.ID()))
+		t.Cleanup(stream2Cleanup)
 
 		e1, err := client.Streams.ShowByID(ctx, id1)
 		require.NoError(t, err)
