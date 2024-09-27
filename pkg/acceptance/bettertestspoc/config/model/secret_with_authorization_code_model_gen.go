@@ -30,10 +30,10 @@ func SecretWithAuthorizationCode(
 	resourceName string,
 	apiAuthentication string,
 	database string,
+	schema string,
 	name string,
 	oauthRefreshToken string,
 	oauthRefreshTokenExpiryTime string,
-	schema string,
 ) *SecretWithAuthorizationCodeModel {
 	s := &SecretWithAuthorizationCodeModel{ResourceModelMeta: config.Meta(resourceName, resources.SecretWithAuthorizationCode)}
 	s.WithApiAuthentication(apiAuthentication)
