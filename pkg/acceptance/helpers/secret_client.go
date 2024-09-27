@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
@@ -19,6 +20,18 @@ func NewSecretClient(context *TestClientContext, idsGenerator *IdsGenerator) *Se
 		context: context,
 		ids:     idsGenerator,
 	}
+}
+
+func StringDateToSnowflakeTimeFormat(t *testing.T, inputLayout, date string) *time.Time {
+	t.Helper()
+	parsedTime, err := time.Parse(inputLayout, date)
+	require.NoError(t, err)
+
+	loc, err := time.LoadLocation("America/Los_Angeles")
+	require.NoError(t, err)
+
+	adjustedTime := parsedTime.In(loc)
+	return &adjustedTime
 }
 
 func (c *SecretClient) client() sdk.Secrets {
