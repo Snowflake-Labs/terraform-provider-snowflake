@@ -1913,11 +1913,13 @@ func TestAcc_External_Volume_Invalid_Cases(t *testing.T) {
 				ConfigVariables: externalVolume(config.ListVariable(azureStorageLocationAllParams), externalVolumeName, "", ""),
 				ExpectError:     regexp.MustCompile("unable to extract storage location, storage_aws_role_arn provided for azure storage location"),
 			},
+			// encryption_type specified for azure storage location
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalVolume/azure/with-encryption-type"),
 				ConfigVariables: externalVolume(config.ListVariable(azureStorageLocationAllParams), externalVolumeName, "", ""),
 				ExpectError:     regexp.MustCompile("unable to extract storage location, encryption_type provided for azure storage location"),
 			},
+			// encryption_kms_key_id specified for azure storage location
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalVolume/azure/with-encryption-kms-key-id"),
 				ConfigVariables: externalVolume(config.ListVariable(azureStorageLocationAllParams), externalVolumeName, "", ""),
