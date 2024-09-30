@@ -49,4 +49,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "MaskingPolicy",
 		schema: resources.MaskingPolicy().Schema,
 	},
+	{
+		name:   "Task",
+		schema: resources.Task().Schema,
+	},
 }
