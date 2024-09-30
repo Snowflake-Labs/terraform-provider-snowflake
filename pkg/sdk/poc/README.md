@@ -135,12 +135,12 @@ type SomeReq struct {
 - ConflictingFields validation results in: 
 ```go
 if everyValueSet(...) {
-    errs = append(errs, errOneOf(...))
+	...
 }
 
 // for now need to be changed manually to example bellow but should result in:
 if moreThanOneValueSet(...) {
-	errs = append(errs, errMoreThanOneOf(...))
+	...
 }
 ```
 
