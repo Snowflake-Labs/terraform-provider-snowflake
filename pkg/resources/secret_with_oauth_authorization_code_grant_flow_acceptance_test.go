@@ -6,9 +6,10 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	tfjson "github.com/hashicorp/terraform-json"
@@ -26,6 +27,8 @@ func TestAcc_SecretWithAuthorizationCode_BasicFlow(t *testing.T) {
 	newComment := random.Comment()
 	refreshTokenExpiryTime := time.Now().Add(24 * time.Hour).Format(time.DateOnly)
 	newRefreshTokenExpiryTime := time.Now().Add(4 * 24 * time.Hour).Format(time.DateOnly)
+	refreshToken := "test_token"
+	newRefreshToken := "new_test_token"
 
 	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	_, apiIntegrationCleanup := acc.TestClient().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
@@ -33,9 +36,7 @@ func TestAcc_SecretWithAuthorizationCode_BasicFlow(t *testing.T) {
 	)
 	t.Cleanup(apiIntegrationCleanup)
 
-	secretModel := model.SecretWithAuthorizationCode("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, "test_token", refreshTokenExpiryTime).WithComment(comment)
-
-	//expectedTime := helpers.StringDateToSnowflakeTimeFormat(t, time.DateOnly, newRefreshTokenExpiryTime).String()
+	secretModel := model.SecretWithAuthorizationCode("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, refreshToken, refreshTokenExpiryTime).WithComment(comment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -43,7 +44,7 @@ func TestAcc_SecretWithAuthorizationCode_BasicFlow(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithClientCredentials),
+		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithAuthorizationCode),
 		Steps: []resource.TestStep{
 			// create
 			{
@@ -55,8 +56,8 @@ func TestAcc_SecretWithAuthorizationCode_BasicFlow(t *testing.T) {
 							HasDatabaseString(id.DatabaseName()).
 							HasSchemaString(id.SchemaName()).
 							HasApiAuthenticationString(integrationId.Name()).
-							HasOauthRefreshTokenString("test_token").
-							HasOauthRefreshTokenExpiryTimeString(helpers.StringDateToSnowflakeTimeFormat(t, time.DateOnly, refreshTokenExpiryTime).String()).
+							HasOauthRefreshTokenString(refreshToken).
+							HasOauthRefreshTokenExpiryTimeString(refreshTokenExpiryTime).
 							HasCommentString(comment),
 					),
 				),
@@ -65,15 +66,14 @@ func TestAcc_SecretWithAuthorizationCode_BasicFlow(t *testing.T) {
 			{
 				Config: config.FromModel(t, secretModel.
 					WithOauthRefreshTokenExpiryTime(newRefreshTokenExpiryTime).
-					WithOauthRefreshToken("new_test_token").
+					WithOauthRefreshToken(newRefreshToken).
 					WithComment(newComment),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(comment), sdk.String(newComment)),
-						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_refresh_token", tfjson.ActionUpdate, sdk.String("test_token"), sdk.String("new_test_token")),
-						//diff suppressed
-						//planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_refresh_token_expiry_time", tfjson.ActionUpdate, sdk.String(helpers.StringDateToSnowflakeTimeFormat(t, time.DateOnly, refreshTokenExpiryTime).String()), sdk.String(expectedTime)),
+						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_refresh_token", tfjson.ActionUpdate, sdk.String(refreshToken), sdk.String(newRefreshToken)),
+						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_refresh_token_expiry_time", tfjson.ActionUpdate, sdk.String(refreshTokenExpiryTime), sdk.String(newRefreshTokenExpiryTime)),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
@@ -83,11 +83,24 @@ func TestAcc_SecretWithAuthorizationCode_BasicFlow(t *testing.T) {
 							HasDatabaseString(id.DatabaseName()).
 							HasSchemaString(id.SchemaName()).
 							HasApiAuthenticationString(integrationId.Name()).
-							HasOauthRefreshTokenString("new_test_token").
-							//diff suppressed
-							//HasOauthRefreshTokenExpiryTimeString(expectedTime).
+							HasOauthRefreshTokenString(newRefreshToken).
+							HasOauthRefreshTokenExpiryTimeString(newRefreshTokenExpiryTime).
 							HasCommentString(newComment),
 					),
+				),
+			},
+			// import
+			{
+				ResourceName:            secretModel.ResourceReference(),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"oauth_refresh_token"},
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "database", id.DatabaseId().Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "schema", id.SchemaId().Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "oauth_refresh_token_expiry_time", newRefreshTokenExpiryTime),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", newComment),
 				),
 			},
 		},

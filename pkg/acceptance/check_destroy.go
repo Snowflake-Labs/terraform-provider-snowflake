@@ -179,6 +179,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.SecretWithClientCredentials: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Secrets.ShowByID)
 	},
+	resources.SecretWithBasicAuthentication: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Secrets.ShowByID)
+	},
 	resources.SecondaryDatabase: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Databases.ShowByID)
 	},

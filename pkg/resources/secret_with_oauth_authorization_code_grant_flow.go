@@ -23,8 +23,6 @@ var secretAuthorizationCodeSchema = func() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Specifies the timestamp as a string when the OAuth refresh token expires. Accepted formats: YYYY-MM-DD, YYYY-MM-DD HH:MI:SS",
-			// has to be ignored since snowflake changes the date format to different one than is required in the input
-			//DiffSuppressFunc: IgnoreAfterCreation,
 		},
 		"api_authentication": {
 			Type:             schema.TypeString,
@@ -106,15 +104,14 @@ func ReadContextSecretWithAuthorizationCode(ctx context.Context, d *schema.Resou
 			},
 		}
 	}
-
-	if err := handleSecretRead(d, id, secret); err != nil {
-		return diag.FromErr(err)
-	}
 	secretDescription, err := client.Secrets.Describe(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if err = d.Set("oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.String()); err != nil {
+	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
+		return diag.FromErr(err)
+	}
+	if err = d.Set("oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.In(time.UTC).Format(time.DateOnly)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
@@ -149,10 +146,10 @@ func UpdateContextSecretWithAuthorizationCode(ctx context.Context, d *schema.Res
 	}
 
 	if d.HasChange("oauth_refresh_token_expiry_time") {
-		refreshTokenExpiryTime := d.Get("oauth_refresh_token_expiry_time").(time.Time)
+		refreshTokenExpiryTime := d.Get("oauth_refresh_token_expiry_time").(string)
 
 		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForOAuthAuthorizationFlowRequest().WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime.Format(time.DateOnly))
+		setRequest := sdk.NewSetForOAuthAuthorizationFlowRequest().WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime)
 		request.WithSet(*sdk.NewSecretSetRequest().WithSetForOAuthAuthorizationFlow(*setRequest))
 
 		if err := client.Secrets.Alter(ctx, request); err != nil {

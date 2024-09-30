@@ -472,6 +472,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_scim_integration":                                             resources.SCIMIntegration(),
 		"snowflake_secret_with_client_credentials":                               resources.SecretWithClientCredentials(),
 		"snowflake_secret_with_authorization_code":                               resources.SecretWithAuthorizationCode(),
+		"snowflake_secret_with_basic_authentication":                             resources.SecretWithBasicAuthentication(),
 		"snowflake_secondary_database":                                           resources.SecondaryDatabase(),
 		"snowflake_sequence":                                                     resources.Sequence(),
 		"snowflake_session_parameter":                                            resources.SessionParameter(),

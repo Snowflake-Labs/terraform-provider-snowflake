@@ -41,6 +41,7 @@ const (
 	ScimSecurityIntegration                                resource = "snowflake_scim_integration"
 	SecretWithClientCredentials                            resource = "snowflake_secret_with_client_credentials"
 	SecretWithAuthorizationCode                            resource = "snowflake_secret_with_authorization_code"
+	SecretWithBasicAuthentication                          resource = "snowflake_secret_with_basic_authentication"
 	SecondaryDatabase                                      resource = "snowflake_secondary_database"
 	Sequence                                               resource = "snowflake_sequence"
 	Share                                                  resource = "snowflake_share"

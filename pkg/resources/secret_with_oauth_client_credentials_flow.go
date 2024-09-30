@@ -103,13 +103,11 @@ func ReadContextSecretWithClientCredentials(ctx context.Context, d *schema.Resou
 			},
 		}
 	}
-
-	if err := handleSecretRead(d, id, secret); err != nil {
-		return diag.FromErr(err)
-	}
-
 	secretDescription, err := client.Secrets.Describe(ctx, id)
 	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {

@@ -40,6 +40,14 @@ var secretCommonSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowSecretSchema,
 		},
 	},
+	DescribeOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `DESCRIBE SECRET` for the given secret.",
+		Elem: &schema.Resource{
+			Schema: schemas.DescribeSecretSchema,
+		},
+	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
@@ -63,7 +71,7 @@ func handleSecretCreate(d *schema.ResourceData) commonSecretCreate {
 	return create
 }
 
-func handleSecretRead(d *schema.ResourceData, id sdk.SchemaObjectIdentifier, secret *sdk.Secret) error {
+func handleSecretRead(d *schema.ResourceData, id sdk.SchemaObjectIdentifier, secret *sdk.Secret, secretDescription *sdk.SecretDetails) error {
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 		return err
 	}
@@ -80,6 +88,9 @@ func handleSecretRead(d *schema.ResourceData, id sdk.SchemaObjectIdentifier, sec
 		return err
 	}
 	if err := d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecretToSchema(secret)}); err != nil {
+		return err
+	}
+	if err := d.Set(DescribeOutputAttributeName, []map[string]any{schemas.SecretDescriptionToSchema(*secretDescription)}); err != nil {
 		return err
 	}
 	return nil
