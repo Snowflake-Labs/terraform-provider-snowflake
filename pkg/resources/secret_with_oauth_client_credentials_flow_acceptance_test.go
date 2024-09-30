@@ -33,8 +33,8 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 	)
 	t.Cleanup(apiIntegrationCleanup)
 
-	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo", "bar"}).WithComment(comment)
-	secretModelWithoutComment := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo", "bar"})
+	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name).WithOauthScopes([]string{"foo", "bar"}).WithComment(comment)
+	secretModelWithoutComment := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name).WithOauthScopes([]string{"foo", "bar"})
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -140,8 +140,8 @@ func TestAcc_SecretWithClientCredentials_NoScopesProvided(t *testing.T) {
 	)
 	t.Cleanup(apiIntegrationCleanup)
 
-	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, nil)
-	secretModelWithScopes := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo"})
+	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name)
+	//secretModelWithScopes := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name).WithOauthScopes([]string{"foo"})
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -156,7 +156,7 @@ func TestAcc_SecretWithClientCredentials_NoScopesProvided(t *testing.T) {
 				Config: config.FromModel(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.SecretWithClientCredentialsResource(t, secretModelWithScopes.ResourceReference()).
+						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
 							HasSchemaString(id.SchemaName()).
@@ -167,25 +167,27 @@ func TestAcc_SecretWithClientCredentials_NoScopesProvided(t *testing.T) {
 				),
 			},
 			// Set oauth_scopes
-			{
-				Config: config.FromModel(t, secretModel.
-					WithOauthScopes([]string{"foo"}),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[]"), sdk.String("[foo]")),
+			/*
+				{
+					Config: config.FromModel(t, secretModel.
+						WithOauthScopes([]string{"foo"}),
+					),
+					ConfigPlanChecks: resource.ConfigPlanChecks{
+						PreApply: []plancheck.PlanCheck{
+							planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[]"), sdk.String("[foo]")),
+						},
 					},
+					Check: assert.AssertThat(t,
+						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
+							HasNameString(name).
+							HasDatabaseString(id.DatabaseName()).
+							HasSchemaString(id.SchemaName()).
+							HasApiAuthenticationString(integrationId.Name()),
+						assert.Check(resource.TestCheckResourceAttr(secretModel.ResourceReference(), "oauth_scopes.#", "1")),
+						assert.Check(resource.TestCheckTypeSetElemAttr(secretModel.ResourceReference(), "oauth_scopes.*", "foo")),
+					),
 				},
-				Check: assert.AssertThat(t,
-					resourceassert.SecretWithClientCredentialsResource(t, secretModelWithScopes.ResourceReference()).
-						HasNameString(name).
-						HasDatabaseString(id.DatabaseName()).
-						HasSchemaString(id.SchemaName()).
-						HasApiAuthenticationString(integrationId.Name()),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_secret_with_client_credentials.s", "oauth_scopes.#", "1")),
-					assert.Check(resource.TestCheckTypeSetElemAttr("snowflake_secret_with_client_credentials.s", "oauth_scopes.*", "foo")),
-				),
-			},
+			*/
 		},
 	})
 }

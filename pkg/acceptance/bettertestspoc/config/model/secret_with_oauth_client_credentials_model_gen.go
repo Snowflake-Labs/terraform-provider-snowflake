@@ -31,13 +31,11 @@ func SecretWithClientCredentials(
 	database string,
 	schema string,
 	name string,
-	oauthScopes []string,
 ) *SecretWithClientCredentialsModel {
 	s := &SecretWithClientCredentialsModel{ResourceModelMeta: config.Meta(resourceName, resources.SecretWithClientCredentials)}
 	s.WithApiAuthentication(apiAuthentication)
 	s.WithDatabase(database)
 	s.WithName(name)
-	s.WithOauthScopes(oauthScopes)
 	s.WithSchema(schema)
 	return s
 }

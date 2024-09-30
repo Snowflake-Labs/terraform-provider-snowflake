@@ -22,7 +22,7 @@ var secretClientCredentialsSchema = func() map[string]*schema.Schema {
 		"oauth_scopes": {
 			Type:        schema.TypeSet,
 			Elem:        &schema.Schema{Type: schema.TypeString},
-			Required:    true,
+			Optional:    true,
 			Description: "Specifies a list of scopes to use when making a request from the OAuth server by a role with USAGE on the integration during the OAuth client credentials flow.",
 		},
 	}
@@ -61,7 +61,7 @@ func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		oauthScopes[i] = sdk.ApiIntegrationScope{Scope: scope}
 	}
 
-	request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, apiIntegration, oauthScopes)
+	request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, apiIntegration).WithOauthScopes(sdk.OauthScopesListRequest{oauthScopes})
 
 	if commonCreate.comment != nil {
 		request.WithComment(*commonCreate.comment)
@@ -134,7 +134,7 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		}
 
 		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForOAuthClientCredentialsFlowRequest(oauthScopes)
+		setRequest := sdk.NewSetForOAuthClientCredentialsFlowRequest().WithOauthScopes(sdk.OauthScopesListRequest{oauthScopes})
 		request.WithSet(*sdk.NewSecretSetRequest().WithSetForOAuthClientCredentialsFlow(*setRequest))
 
 		if err := client.Secrets.Alter(ctx, request); err != nil {
