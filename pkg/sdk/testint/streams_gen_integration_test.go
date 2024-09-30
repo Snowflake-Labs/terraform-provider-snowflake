@@ -115,16 +115,13 @@ func TestInt_Streams(t *testing.T) {
 		t.Cleanup(stageCleanup)
 
 		externalTableId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(externalTableId, stageLocation).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON)))
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.ExternalTables.Drop(ctx, sdk.NewDropExternalTableRequest(externalTableId))
-			require.NoError(t, err)
-		})
+		externalTableReq := sdk.NewCreateExternalTableRequest(externalTableId, stageLocation).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON))
+		_, externalTableCleanup := testClientHelper().ExternalTable.CreateOnTableWithRequest(t, externalTableReq)
+		t.Cleanup(externalTableCleanup)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		req := sdk.NewCreateOnExternalTableStreamRequest(id, externalTableId).WithInsertOnly(true).WithComment("some comment")
-		err = client.Streams.CreateOnExternalTable(ctx, req)
+		err := client.Streams.CreateOnExternalTable(ctx, req)
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
@@ -147,10 +144,7 @@ func TestInt_Streams(t *testing.T) {
 		req := sdk.NewCreateOnDirectoryTableStreamRequest(id, stage.ID()).WithComment("some comment")
 		err := client.Streams.CreateOnDirectoryTable(ctx, req)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
 		assertions.AssertThatObject(t, objectassert.Stream(t, id).
 			HasName(id.Name()).
@@ -177,10 +171,7 @@ func TestInt_Streams(t *testing.T) {
 			WithComment("some comment")
 		err := client.Streams.CreateOnView(ctx, req)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
 		assertions.AssertThatObject(t, objectassert.Stream(t, id).
 			HasName(id.Name()).
@@ -201,18 +192,12 @@ func TestInt_Streams(t *testing.T) {
 		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment("some comment")
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
 		cloneId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		err = client.Streams.Clone(ctx, sdk.NewCloneStreamRequest(cloneId, id).WithCopyGrants(true))
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(cloneId))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, cloneId))
 
 		assertions.AssertThatObject(t, objectassert.Stream(t, id).
 			HasName(id.Name()).
@@ -233,10 +218,7 @@ func TestInt_Streams(t *testing.T) {
 		req := sdk.NewCreateOnTableStreamRequest(id, table.ID())
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
 		tag, cleanupTag := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(cleanupTag)
@@ -274,10 +256,7 @@ func TestInt_Streams(t *testing.T) {
 		req := sdk.NewCreateOnTableStreamRequest(id, table.ID())
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
 		s, err := client.Streams.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -328,10 +307,7 @@ func TestInt_Streams(t *testing.T) {
 		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment("some comment")
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
 		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().WithTerse(true))
 		require.NoError(t, err)
@@ -356,10 +332,7 @@ func TestInt_Streams(t *testing.T) {
 		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment("some comment")
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
 		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
 			WithTerse(false).
@@ -400,19 +373,13 @@ func TestInt_Streams(t *testing.T) {
 		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment("some comment")
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
 		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		req2 := sdk.NewCreateOnTableStreamRequest(id2, table.ID()).WithComment("some comment")
 		err = client.Streams.CreateOnTable(ctx, req2)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id2))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id2))
 
 		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest())
 		require.NoError(t, err)
@@ -435,19 +402,13 @@ func TestInt_Streams(t *testing.T) {
 		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment("some comment")
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
 		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithPrefix(idPrefix)
 		req2 := sdk.NewCreateOnTableStreamRequest(id2, table.ID()).WithComment("some comment")
 		err = client.Streams.CreateOnTable(ctx, req2)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id2))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id2))
 
 		s, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
 			WithTerse(false).
@@ -478,10 +439,7 @@ func TestInt_Streams(t *testing.T) {
 		req := sdk.NewCreateOnTableStreamRequest(id, table.ID()).WithComment("some comment")
 		err := client.Streams.CreateOnTable(ctx, req)
 		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(id))
-			require.NoError(t, err)
-		})
+		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
 		s, err := client.Streams.Describe(ctx, id)
 		require.NoError(t, err)
@@ -510,7 +468,7 @@ func TestInt_Streams(t *testing.T) {
 
 		_, stream1Cleanup := testClientHelper().Stream.CreateOnTableWithRequest(t, sdk.NewCreateOnTableStreamRequest(id1, table.ID()))
 		t.Cleanup(stream1Cleanup)
-		_, stream2Cleanup := testClientHelper().Stream.CreateOnTableWithRequest(t, sdk.NewCreateOnTableStreamRequest(id1, table.ID()))
+		_, stream2Cleanup := testClientHelper().Stream.CreateOnTableWithRequest(t, sdk.NewCreateOnTableStreamRequest(id2, table.ID()))
 		t.Cleanup(stream2Cleanup)
 
 		e1, err := client.Streams.ShowByID(ctx, id1)
