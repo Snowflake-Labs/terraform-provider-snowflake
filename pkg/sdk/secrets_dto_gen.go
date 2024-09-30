@@ -18,8 +18,12 @@ type CreateWithOAuthClientCredentialsFlowSecretRequest struct {
 	IfNotExists    *bool
 	name           SchemaObjectIdentifier  // required
 	ApiIntegration AccountObjectIdentifier // required
-	OauthScopes    []ApiIntegrationScope   // required
+	OauthScopes    *OauthScopesListRequest
 	Comment        *string
+}
+
+type OauthScopesListRequest struct {
+	OauthScopesList []ApiIntegrationScope // required
 }
 
 type CreateWithOAuthAuthorizationCodeFlowSecretRequest struct {
@@ -65,7 +69,7 @@ type SecretSetRequest struct {
 }
 
 type SetForOAuthClientCredentialsFlowRequest struct {
-	OauthScopes []ApiIntegrationScope // required
+	OauthScopes *OauthScopesListRequest
 }
 
 type SetForOAuthAuthorizationFlowRequest struct {

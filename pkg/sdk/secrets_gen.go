@@ -27,11 +27,14 @@ type CreateWithOAuthClientCredentialsFlowSecretOptions struct {
 	name           SchemaObjectIdentifier  `ddl:"identifier"`
 	secretType     string                  `ddl:"static" sql:"TYPE = OAUTH2"`
 	ApiIntegration AccountObjectIdentifier `ddl:"identifier,equals" sql:"API_AUTHENTICATION"`
-	OauthScopes    []ApiIntegrationScope   `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
+	OauthScopes    *OauthScopesList        `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
 	Comment        *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 type ApiIntegrationScope struct {
 	Scope string `ddl:"keyword,single_quotes"`
+}
+type OauthScopesList struct {
+	OauthScopesList []ApiIntegrationScope `ddl:"list,must_parentheses"`
 }
 
 // CreateWithOAuthAuthorizationCodeFlowSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-secret.
@@ -90,7 +93,7 @@ type SecretSet struct {
 	SetForGenericString              *SetForGenericString              `ddl:"keyword"`
 }
 type SetForOAuthClientCredentialsFlow struct {
-	OauthScopes []ApiIntegrationScope `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
+	OauthScopes *OauthScopesList `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
 }
 type SetForOAuthAuthorizationFlow struct {
 	OauthRefreshToken           *string `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN"`

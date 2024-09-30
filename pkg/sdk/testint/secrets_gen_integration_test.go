@@ -63,7 +63,8 @@ func TestInt_Secrets(t *testing.T) {
 
 	t.Run("Create: secretWithOAuthClientCredentialsFlow", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}, {Scope: "bar"}}).
+		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId).
+			WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: []sdk.ApiIntegrationScope{{Scope: "foo"}, {Scope: "bar"}}}).
 			WithComment("a").
 			WithIfNotExists(true)
 
@@ -93,11 +94,11 @@ func TestInt_Secrets(t *testing.T) {
 		})
 	})
 
-	// It is possible to create secret without specifying both refresh token properties and scopes
-	// Scopes are not being inherited from the security_integration what is tested further
+	// It is possible to create secret without specifying both refresh token properties and OAuth scopes
+	// Regarding the https://docs.snowflake.com/en/sql-reference/sql/create-secret secret with empty oauth_scopes list should inherit scopes from security_integration, but it does not
 	t.Run("Create: secretWithOAuth - minimal, without token and scopes", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId, nil)
+		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId)
 
 		err := client.Secrets.CreateWithOAuthClientCredentialsFlow(ctx, request)
 		require.NoError(t, err)
@@ -123,7 +124,7 @@ func TestInt_Secrets(t *testing.T) {
 	// regarding the https://docs.snowflake.com/en/sql-reference/sql/create-secret secret with empty oauth_scopes list should inherit scopes from security_integration, but it does not
 	t.Run("Create: SecretWithOAuthClientCredentialsFlow - Empty Scopes List", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId, []sdk.ApiIntegrationScope{})
+		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId).WithOauthScopes(sdk.OauthScopesListRequest{})
 
 		err := client.Secrets.CreateWithOAuthClientCredentialsFlow(ctx, request)
 		require.NoError(t, err)
@@ -145,7 +146,7 @@ func TestInt_Secrets(t *testing.T) {
 
 		assert.NotContains(t, details.OauthScopes, "foo")
 		assert.NotContains(t, details.OauthScopes, "bar")
-		assert.Empty(t, details.OauthScopes)
+		assert.Equal(t, []string{""}, details.OauthScopes)
 	})
 
 	t.Run("Create: SecretWithOAuthAuthorizationCodeFlow - refreshTokenExpiry date format", func(t *testing.T) {
@@ -308,9 +309,8 @@ func TestInt_Secrets(t *testing.T) {
 				*sdk.NewSecretSetRequest().
 					WithComment(comment).
 					WithSetForOAuthClientCredentialsFlow(
-						*sdk.NewSetForOAuthClientCredentialsFlowRequest(
-							[]sdk.ApiIntegrationScope{{Scope: "foo"}, {Scope: "bar"}},
-						),
+						*sdk.NewSetForOAuthClientCredentialsFlowRequest().
+							WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: []sdk.ApiIntegrationScope{{Scope: "foo"}, {Scope: "bar"}}}),
 					),
 			)
 		err := client.Secrets.Alter(ctx, setRequest)
@@ -450,23 +450,22 @@ func TestInt_Secrets(t *testing.T) {
 		err := client.Secrets.Alter(ctx, setRequest)
 		require.NoError(t, err)
 
+		details, err := client.Secrets.Describe(ctx, id)
+		require.NoError(t, err)
+
+		// Cannot assert secret string because snowflake does not output its value neither with SHOW nor DESCRIBE
+		assert.Equal(t, comment, *details.Comment)
+
 		unsetRequest := sdk.NewAlterSecretRequest(id).
 			WithUnset(
 				*sdk.NewSecretUnsetRequest().
 					WithComment(true),
 			)
-
 		err = client.Secrets.Alter(ctx, unsetRequest)
 		require.NoError(t, err)
 
-		details, err := client.Secrets.Describe(ctx, id)
+		details, err = client.Secrets.Describe(ctx, id)
 		require.NoError(t, err)
-
-		assertSecretDetails(details, secretDetails{
-			Name:       id.Name(),
-			SecretType: "GENERIC_STRING",
-			Comment:    nil,
-		})
 
 		assert.Empty(t, details.Comment)
 	})
@@ -517,8 +516,6 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithOAuthClientCredentialsFlow with Like", func(t *testing.T) {
-		// secret1, id1 := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "foo"}}, nil)
-		// secret2, _ := createSecretWithOAuthClientCredentialsFlow(t, integrationId, []sdk.ApiIntegrationScope{{Scope: "bar"}}, nil)
 		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
@@ -609,8 +606,6 @@ func TestInt_Secrets(t *testing.T) {
 	})
 
 	t.Run("Show: SecretWithOAuthAuthorizationCodeFlow with In", func(t *testing.T) {
-		// secret, id := createSecretWithOAuthAuthorizationCodeFlow(t, integrationId, "foo", refreshTokenExpiryTime, nil)
-
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		secret, secretCleanup := testClientHelper().Secret.CreateWithOAuthAuthorizationCodeFlow(t, id, integrationId, "foo", refreshTokenExpiryTime)
 		t.Cleanup(secretCleanup)

@@ -79,9 +79,18 @@ func (r *CreateWithOAuthClientCredentialsFlowSecretRequest) toOpts() *CreateWith
 		IfNotExists:    r.IfNotExists,
 		name:           r.name,
 		ApiIntegration: r.ApiIntegration,
-		OauthScopes:    r.OauthScopes,
-		Comment:        r.Comment,
+
+		Comment: r.Comment,
 	}
+
+	if r.OauthScopes != nil {
+
+		opts.OauthScopes = &OauthScopesList{
+			OauthScopesList: r.OauthScopes.OauthScopesList,
+		}
+
+	}
+
 	return opts
 }
 
@@ -133,8 +142,13 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 		}
 
 		if r.Set.SetForOAuthClientCredentialsFlow != nil {
-			opts.Set.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow{
-				OauthScopes: r.Set.SetForOAuthClientCredentialsFlow.OauthScopes,
+			opts.Set.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow{}
+
+			if r.Set.SetForOAuthClientCredentialsFlow.OauthScopes != nil {
+				opts.Set.SetForOAuthClientCredentialsFlow.OauthScopes = &OauthScopesList{
+					OauthScopesList: r.Set.SetForOAuthClientCredentialsFlow.OauthScopes.OauthScopesList,
+				}
+
 			}
 		}
 

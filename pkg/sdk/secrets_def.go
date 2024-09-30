@@ -4,9 +4,6 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 //go:generate go run ./poc/main.go
 
-var secretsApiIntegrationScopeDef = g.NewQueryStruct("ApiIntegrationScope").
-	Text("Scope", g.KeywordOptions().SingleQuotes().Required())
-
 var secretDbRow = g.DbStruct("secretDBRow").
 	Field("created_on", "time.Time").
 	Field("name", "string").
@@ -57,12 +54,17 @@ var secretDetails = g.PlainStruct("SecretDetails").
 	Field("OauthScopes", "[]string").
 	Field("IntegrationName", "*string")
 
+var secretsApiIntegrationScopeDef = g.NewQueryStruct("ApiIntegrationScope").
+	Text("Scope", g.KeywordOptions().SingleQuotes().Required())
+
+var oauthScopesListDef = g.NewQueryStruct("OauthScopesList").List("OauthScopesList", "ApiIntegrationScope", g.ListOptions().Required().MustParentheses())
+
 var secretSet = g.NewQueryStruct("SecretSet").
 	OptionalComment().
 	OptionalQueryStructField(
 		"SetForOAuthClientCredentialsFlow",
 		g.NewQueryStruct("SetForOAuthClientCredentialsFlow").
-			ListAssignment("OAUTH_SCOPES", "ApiIntegrationScope", g.ParameterOptions().Parentheses().Required()),
+			OptionalQueryStructField("OauthScopes", oauthScopesListDef, g.ParameterOptions().SQL("OAUTH_SCOPES").Parentheses()),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
@@ -106,7 +108,7 @@ var SecretsDef = g.NewInterface(
 		Name().
 		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
 		Identifier("ApiIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION")).
-		ListAssignment("OAUTH_SCOPES", "ApiIntegrationScope", g.ParameterOptions().Parentheses().Required()).
+		OptionalQueryStructField("OauthScopes", oauthScopesListDef, g.ParameterOptions().SQL("OAUTH_SCOPES").Parentheses()).
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
@@ -127,7 +129,6 @@ var SecretsDef = g.NewInterface(
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
-	secretsApiIntegrationScopeDef,
 ).CustomOperation(
 	"CreateWithBasicAuthentication",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-secret",
