@@ -25,10 +25,6 @@ var ShowStreamSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	},
-	"table_on": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
 	"owner": {
 		Type:     schema.TypeString,
 		Computed: true,
@@ -83,9 +79,6 @@ func StreamToSchema(stream *sdk.Stream) map[string]any {
 	streamSchema["name"] = stream.Name
 	streamSchema["database_name"] = stream.DatabaseName
 	streamSchema["schema_name"] = stream.SchemaName
-	if stream.TableOn != nil {
-		streamSchema["table_on"] = stream.TableOn
-	}
 	if stream.Owner != nil {
 		streamSchema["owner"] = stream.Owner
 	}

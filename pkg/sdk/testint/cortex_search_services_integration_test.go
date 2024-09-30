@@ -28,7 +28,7 @@ func TestInt_CortexSearchServices(t *testing.T) {
 	createCortexSearchService := func(t *testing.T, id sdk.SchemaObjectIdentifier) *sdk.CortexSearchService {
 		t.Helper()
 
-		table, tableCleanup := testClientHelper().Table.CreateTableWithPredefinedColumns(t)
+		table, tableCleanup := testClientHelper().Table.CreateWithPredefinedColumns(t)
 		t.Cleanup(tableCleanup)
 
 		err := client.CortexSearchServices.Create(ctx, sdk.NewCreateCortexSearchServiceRequest(id, on, warehouseId, targetLag, buildQuery(table.ID())))
@@ -42,7 +42,7 @@ func TestInt_CortexSearchServices(t *testing.T) {
 	}
 
 	t.Run("create: test complete", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTableWithPredefinedColumns(t)
+		table, tableCleanup := testClientHelper().Table.CreateWithPredefinedColumns(t)
 		t.Cleanup(tableCleanup)
 
 		name := testClientHelper().Ids.RandomSchemaObjectIdentifier()
