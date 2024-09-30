@@ -84,11 +84,9 @@ func (r *CreateWithOAuthClientCredentialsFlowSecretRequest) toOpts() *CreateWith
 	}
 
 	if r.OauthScopes != nil {
-
 		opts.OauthScopes = &OauthScopesList{
 			OauthScopesList: r.OauthScopes.OauthScopesList,
 		}
-
 	}
 
 	return opts
@@ -148,7 +146,6 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 				opts.Set.SetForOAuthClientCredentialsFlow.OauthScopes = &OauthScopesList{
 					OauthScopesList: r.Set.SetForOAuthClientCredentialsFlow.OauthScopes.OauthScopesList,
 				}
-
 			}
 		}
 

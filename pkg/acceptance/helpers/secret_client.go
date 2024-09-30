@@ -29,7 +29,7 @@ func (c *SecretClient) CreateWithOAuthClientCredentialsFlow(t *testing.T, id sdk
 	t.Helper()
 	ctx := context.Background()
 	request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, apiIntegration).
-		WithOauthScopes(sdk.OauthScopesListRequest{oauthScopes})
+		WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: oauthScopes})
 
 	err := c.client().CreateWithOAuthClientCredentialsFlow(ctx, request)
 	require.NoError(t, err)
