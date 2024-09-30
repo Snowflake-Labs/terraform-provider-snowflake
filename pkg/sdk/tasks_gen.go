@@ -187,7 +187,7 @@ type Task struct {
 	SchemaName                string
 	Owner                     string
 	Comment                   string
-	Warehouse                 string
+	Warehouse                 string // TODO: *AccountObjectIdentifier
 	Schedule                  string
 	Predecessors              []SchemaObjectIdentifier
 	State                     TaskState

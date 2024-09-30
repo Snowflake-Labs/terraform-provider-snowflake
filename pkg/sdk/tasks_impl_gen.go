@@ -340,6 +340,8 @@ func (r taskDBRow) convert() *Task {
 			}
 		}
 		task.Predecessors = ids
+	} else {
+		task.Predecessors = make([]SchemaObjectIdentifier, 0)
 	}
 	if len(r.State) > 0 {
 		taskState, err := ToTaskState(r.State)

@@ -101,7 +101,7 @@ var ShowTaskSchema = map[string]*schema.Schema{
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				"finalizer": {
+				"finalize": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -144,7 +144,7 @@ func TaskToSchema(task *sdk.Task) map[string]any {
 	taskSchema["task_relations"] = []any{
 		map[string]any{
 			"predecessors": collections.Map(task.TaskRelations.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName),
-			"finalizer":    task.TaskRelations.FinalizerTask,
+			"finalize":     task.TaskRelations.FinalizerTask,
 		},
 	}
 	return taskSchema

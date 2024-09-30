@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
-	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -140,7 +139,7 @@ var taskSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		DiffSuppressFunc: SuppressIfAny(
 			suppressIdentifierQuoting,
-			IgnoreChangeToCurrentSnowflakeValueInShow("task_relations.0.finalizer"),
+			IgnoreChangeToCurrentSnowflakeValueInShow("task_relations.0.finalize"),
 		),
 		ConflictsWith: []string{"schedule", "after"},
 	},
@@ -348,9 +347,12 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 
 func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	taskId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, taskId, taskId)
+	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, id, id)
 	defer func() {
 		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
 			log.Printf("[WARN] failed to resume tasks: %s", err)
@@ -360,181 +362,21 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		return diag.FromErr(err)
 	}
 
-	if d.HasChange("warehouse") {
-		newWarehouse := d.Get("warehouse")
-		alterRequest := sdk.NewAlterTaskRequest(taskId)
-		if newWarehouse == "" {
-			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithWarehouse(true))
-		} else {
-			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithWarehouse(sdk.NewAccountObjectIdentifier(newWarehouse.(string))))
-		}
-		err := client.Tasks.Alter(ctx, alterRequest)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating warehouse on task %s err = %w", taskId.FullyQualifiedName(), err))
-		}
-	}
+	set := sdk.NewTaskSetRequest()
+	unset := sdk.NewTaskUnsetRequest()
 
-	if d.HasChange("user_task_managed_initial_warehouse_size") {
-		newSize := d.Get("user_task_managed_initial_warehouse_size")
-		warehouse := d.Get("warehouse")
-
-		if warehouse == "" && newSize != "" {
-			size, err := sdk.ToWarehouseSize(newSize.(string))
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			alterRequest := sdk.NewAlterTaskRequest(taskId).WithSet(*sdk.NewTaskSetRequest().WithUserTaskManagedInitialWarehouseSize(size))
-			err = client.Tasks.Alter(ctx, alterRequest)
-			if err != nil {
-				return diag.FromErr(fmt.Errorf("error updating user_task_managed_initial_warehouse_size on task %s", taskId.FullyQualifiedName()))
-			}
-		}
-	}
-
-	if d.HasChange("error_integration") {
-		newErrorIntegration := d.Get("error_integration")
-		alterRequest := sdk.NewAlterTaskRequest(taskId)
-		if newErrorIntegration == "" {
-			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithErrorIntegration(true))
-		} else {
-			newErrorIntegrationId, err := sdk.ParseAccountObjectIdentifier(newErrorIntegration.(string))
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithErrorNotificationIntegration(newErrorIntegrationId))
-		}
-		err := client.Tasks.Alter(ctx, alterRequest)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating error integration on task %s", taskId.FullyQualifiedName()))
-		}
-	}
-
-	if d.HasChange("after") {
-		// making changes to after require suspending the current task
-		// (the task will be brought up to the correct running state in the "enabled" check at the bottom of Update function).
-		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSuspend(true))
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error suspending task %s, err: %w", taskId.FullyQualifiedName(), err))
-		}
-
-		o, n := d.GetChange("after")
-		oldAfter := expandStringList(o.([]interface{}))
-		newAfter := expandStringList(n.([]interface{}))
-
-		if len(newAfter) > 0 {
-			// preemptively removing schedule because a task cannot have both after and schedule
-			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(*sdk.NewTaskUnsetRequest().WithSchedule(true))); err != nil {
-				return diag.FromErr(fmt.Errorf("error updating schedule on task %s", taskId.FullyQualifiedName()))
-			}
-		}
-
-		// Remove old dependencies that are not in new dependencies
-		toRemove := make([]sdk.SchemaObjectIdentifier, 0)
-		for _, dep := range oldAfter {
-			if !slices.Contains(newAfter, dep) {
-				toRemove = append(toRemove, sdk.NewSchemaObjectIdentifierInSchema(taskId.SchemaId(), dep))
-			}
-		}
-		if len(toRemove) > 0 {
-			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithRemoveAfter(toRemove)); err != nil {
-				return diag.FromErr(fmt.Errorf("error removing after dependencies from task %s", taskId.FullyQualifiedName()))
-			}
-		}
-
-		// Add new dependencies that are not in old dependencies
-		toAdd := make([]sdk.SchemaObjectIdentifier, 0)
-		for _, dep := range newAfter {
-			if !slices.Contains(oldAfter, dep) {
-				toAdd = append(toAdd, sdk.NewSchemaObjectIdentifierInSchema(taskId.SchemaId(), dep))
-			}
-		}
-		if len(toAdd) > 0 {
-			for _, depId := range toAdd {
-				tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, depId, taskId)
-				defer func() {
-					if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-						log.Printf("[WARN] failed to resume tasks: %s", err)
-					}
-				}()
-				if err != nil {
-					return diag.FromErr(err)
-				}
-			}
-
-			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithAddAfter(toAdd)); err != nil {
-				return diag.FromErr(fmt.Errorf("error adding after dependencies from task %s", taskId.FullyQualifiedName()))
-			}
-		}
-	}
-
-	if d.HasChange("schedule") {
-		newSchedule := d.Get("schedule")
-		alterRequest := sdk.NewAlterTaskRequest(taskId)
-		if newSchedule == "" {
-			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithSchedule(true))
-		} else {
-			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithSchedule(newSchedule.(string)))
-		}
-		err := client.Tasks.Alter(ctx, alterRequest)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating schedule on task %s", taskId.FullyQualifiedName()))
-		}
-	}
-
-	if d.HasChange("user_task_timeout_ms") {
-		o, n := d.GetChange("user_task_timeout_ms")
-		alterRequest := sdk.NewAlterTaskRequest(taskId)
-		if o.(int) > 0 && n.(int) == 0 {
-			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithUserTaskTimeoutMs(true))
-		} else {
-			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithUserTaskTimeoutMs(n.(int)))
-		}
-		err := client.Tasks.Alter(ctx, alterRequest)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating user task timeout on task %s", taskId.FullyQualifiedName()))
-		}
-	}
-
-	if d.HasChange("suspend_task_after_num_failures") {
-		o, n := d.GetChange("suspend_task_after_num_failures")
-		alterRequest := sdk.NewAlterTaskRequest(taskId)
-		if o.(int) > 0 && n.(int) == 0 {
-			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithSuspendTaskAfterNumFailures(true))
-		} else {
-			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithSuspendTaskAfterNumFailures(n.(int)))
-		}
-		err := client.Tasks.Alter(ctx, alterRequest)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating suspend task after num failures on task %s", taskId.FullyQualifiedName()))
-		}
-	}
-
-	if d.HasChange("comment") {
-		newComment := d.Get("comment")
-		alterRequest := sdk.NewAlterTaskRequest(taskId)
-		if newComment == "" {
-			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithComment(true))
-		} else {
-			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithComment(newComment.(string)))
-		}
-		err := client.Tasks.Alter(ctx, alterRequest)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating comment on task %s", taskId.FullyQualifiedName()))
-		}
-	}
-
-	if d.HasChange("allow_overlapping_execution") {
-		n := d.Get("allow_overlapping_execution")
-		alterRequest := sdk.NewAlterTaskRequest(taskId)
-		if n == "" {
-			alterRequest.WithUnset(*sdk.NewTaskUnsetRequest().WithAllowOverlappingExecution(true))
-		} else {
-			alterRequest.WithSet(*sdk.NewTaskSetRequest().WithAllowOverlappingExecution(n.(bool)))
-		}
-		err := client.Tasks.Alter(ctx, alterRequest)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating allow overlapping execution on task %s", taskId.FullyQualifiedName()))
-		}
+	err = errors.Join(
+		accountObjectIdentifierAttributeUpdate(d, "warehouse", &set.Warehouse, &unset.Warehouse),
+		accountObjectIdentifierAttributeUpdate(d, "error_integration", &set.ErrorNotificationIntegration, &unset.ErrorIntegration), // TODO: name inconsistency
+		stringAttributeUpdate(d, "schedule", &set.Schedule, &unset.Schedule),
+		//stringAttributeUpdate(d, "user_task_managed_initial_warehouse_size", &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManage)// TODO: Not in unsetUSER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE
+		intAttributeUpdate(d, "user_task_timeout_ms", &set.UserTaskTimeoutMs, &unset.UserTaskTimeoutMs),
+		intAttributeUpdate(d, "suspend_task_after_num_failures", &set.SuspendTaskAfterNumFailures, &unset.SuspendTaskAfterNumFailures),
+		stringAttributeUpdate(d, "comment", &set.Comment, &unset.Comment),
+		booleanStringAttributeUpdate(d, "allow_overlapping_execution", &set.AllowOverlappingExecution, &unset.AllowOverlappingExecution),
+	)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	if d.HasChange("session_parameters") {
@@ -558,7 +400,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithUnset(*sdk.NewTaskUnsetRequest().WithSessionParametersUnset(*sessionParametersUnset))); err != nil {
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithUnset(*sdk.NewTaskUnsetRequest().WithSessionParametersUnset(*sessionParametersUnset))); err != nil {
 				return diag.FromErr(fmt.Errorf("error removing session_parameters on task %v err = %w", d.Id(), err))
 			}
 		}
@@ -568,7 +410,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(*sdk.NewTaskSetRequest().WithSessionParameters(*sessionParameters))); err != nil {
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSet(*sdk.NewTaskSetRequest().WithSessionParameters(*sessionParameters))); err != nil {
 				return diag.FromErr(fmt.Errorf("error adding session_parameters to task %v err = %w", d.Id(), err))
 			}
 		}
@@ -578,38 +420,86 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSet(*sdk.NewTaskSetRequest().WithSessionParameters(*sessionParameters))); err != nil {
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSet(*sdk.NewTaskSetRequest().WithSessionParameters(*sessionParameters))); err != nil {
 				return diag.FromErr(fmt.Errorf("error updating session_parameters in task %v err = %w", d.Id(), err))
 			}
 		}
 	}
 
 	if d.HasChange("when") {
-		n := d.Get("when")
-		alterRequest := sdk.NewAlterTaskRequest(taskId).WithModifyWhen(n.(string))
-		err := client.Tasks.Alter(ctx, alterRequest)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating when condition on task %s", taskId.FullyQualifiedName()))
+		if v := d.Get("when"); v != "" {
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithModifyWhen(v.(string))); err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithRemoveWhen(true)); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
 	if d.HasChange("sql_statement") {
-		n := d.Get("sql_statement")
-		alterRequest := sdk.NewAlterTaskRequest(taskId).WithModifyAs(n.(string))
-		err := client.Tasks.Alter(ctx, alterRequest)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating sql statement on task %s", taskId.FullyQualifiedName()))
+		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithModifyAs(d.Get("sql_statement").(string))); err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
-	enabled := d.Get("enabled").(bool)
-	if enabled {
-		if waitForTaskStart(ctx, client, taskId) != nil {
-			log.Printf("[WARN] failed to resume task %s", taskId.FullyQualifiedName())
+	if d.HasChange("after") {
+		// TOOD: after
+		// Making changes to after require suspending the current task
+		// (the task will be brought up to the correct running state in the "enabled" check at the bottom of Update function).
+		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true)); err != nil {
+			return diag.FromErr(err)
 		}
-	} else {
-		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(taskId).WithSuspend(true)); err != nil {
-			return diag.FromErr(fmt.Errorf("failed to suspend task %s", taskId.FullyQualifiedName()))
+
+		oldAfter, newAfter := d.GetChange("after")
+		addedTasks, removedTasks := ListDiff(
+			expandStringList(oldAfter.(*schema.Set).List()),
+			expandStringList(newAfter.(*schema.Set).List()),
+		)
+
+		// Order of commands matters:
+		// The "after"s can only be added when the task doesn't have a "schedule".
+		// That's why this ALTER has to be below regular ALTER SET/UNSET commands.
+		if len(addedTasks) > 0 {
+			addedTaskIds, err := collections.MapErr(addedTasks, sdk.ParseSchemaObjectIdentifier)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithAddAfter(addedTaskIds)); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if len(removedTasks) > 0 {
+			removedTaskIds, err := collections.MapErr(removedTasks, sdk.ParseSchemaObjectIdentifier)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithRemoveAfter(removedTaskIds)); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
+	if d.HasChange("enabled") {
+		if v := d.Get("enabled").(string); v != BooleanDefault {
+			enabled, err := booleanStringToBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			if enabled {
+				if waitForTaskStart(ctx, client, id) != nil {
+					log.Printf("[WARN] failed to resume task %s", id.FullyQualifiedName())
+				}
+			} else {
+				if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true)); err != nil {
+					return diag.FromErr(err)
+				}
+			}
 		}
 	}
 
@@ -645,14 +535,35 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 
 		if withExternalChangesMarking {
+			finalizedTaskId := ""
+			if task.TaskRelations.FinalizerTask != nil {
+				finalizedTaskId = task.TaskRelations.FinalizerTask.FullyQualifiedName()
+			}
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"", "", task.Config, task.Config, nil},
+				showMapping{"state", "enabled", task.State, task.State == sdk.TaskStateStarted, nil},
+				showMapping{"warehouse", "warehouse", task.Warehouse, task.Warehouse, nil},
+				showMapping{"schedule", "schedule", task.Schedule, task.Schedule, nil},
+				showMapping{"config", "config", task.Config, task.Config, nil},
+				showMapping{"allow_overlapping_execution", "allow_overlapping_execution", task.AllowOverlappingExecution, task.AllowOverlappingExecution, nil},
+				showMapping{"error_integration", "error_integration", task.ErrorIntegration, task.ErrorIntegration, nil},
+				showMapping{"comment", "comment", task.Comment, task.Comment, nil},
+				showMapping{"task_relations.0.finalize", "finalize", finalizedTaskId, finalizedTaskId, nil},
+				showMapping{"condition", "when", task.Condition, task.Condition, nil},
+				showMapping{"definition", "sql_statement", task.Definition, task.Definition, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
 			if err = setStateToValuesFromConfig(d, taskSchema, []string{
-				"abc",
+				"warehouse",
+				"schedule",
+				"config",
+				"allow_overlapping_execution",
+				"error_integration",
+				"comment",
+				"finalize",
+				"condition",
+				"sql_statement",
 			}); err != nil {
 				return diag.FromErr(err)
 			}
@@ -660,102 +571,13 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		if errs := errors.Join(
 			// TODO: handleTaskParametersRead(d, taskParameters)
+			d.Set("enabled", task.State == sdk.TaskStateStarted),
+			d.Set("after", collections.Map(task.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName)),
 			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 			d.Set(ShowOutputAttributeName, []map[string]any{schemas.TaskToSchema(task)}),
 			d.Set(ParametersAttributeName, []map[string]any{schemas.TaskParametersToSchema(taskParameters)}),
 		); errs != nil {
 			return diag.FromErr(errs)
-		}
-
-		if err := d.Set("enabled", task.State == sdk.TaskStateStarted); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("warehouse", task.Warehouse); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("schedule", task.Schedule); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("comment", task.Comment); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("allow_overlapping_execution", task.AllowOverlappingExecution); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("error_integration", task.ErrorIntegration); err != nil {
-			return diag.FromErr(err)
-		}
-
-		predecessors := make([]string, len(task.Predecessors))
-		for i, p := range task.Predecessors {
-			predecessors[i] = p.Name()
-		}
-		if err := d.Set("after", predecessors); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("when", task.Condition); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("sql_statement", task.Definition); err != nil {
-			return diag.FromErr(err)
-		}
-
-		opts := &sdk.ShowParametersOptions{In: &sdk.ParametersIn{Task: id}}
-		params, err := client.Parameters.ShowParameters(ctx, opts)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if len(params) > 0 {
-			sessionParameters := make(map[string]any)
-			fieldParameters := map[string]interface{}{
-				"user_task_managed_initial_warehouse_size": "",
-			}
-
-			for _, param := range params {
-				if param.Level != "TASK" {
-					continue
-				}
-				switch param.Key {
-				case "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE":
-					fieldParameters["user_task_managed_initial_warehouse_size"] = param.Value
-				case "USER_TASK_TIMEOUT_MS":
-					timeout, err := strconv.ParseInt(param.Value, 10, 64)
-					if err != nil {
-						return diag.FromErr(err)
-					}
-
-					fieldParameters["user_task_timeout_ms"] = timeout
-				case "SUSPEND_TASK_AFTER_NUM_FAILURES":
-					num, err := strconv.ParseInt(param.Value, 10, 64)
-					if err != nil {
-						return diag.FromErr(err)
-					}
-
-					fieldParameters["suspend_task_after_num_failures"] = num
-				default:
-					sessionParameters[param.Key] = param.Value
-				}
-			}
-
-			if err := d.Set("session_parameters", sessionParameters); err != nil {
-				return diag.FromErr(err)
-			}
-
-			for key, value := range fieldParameters {
-				// lintignore:R001
-				err = d.Set(key, value)
-				if err != nil {
-					return diag.FromErr(err)
-				}
-			}
 		}
 
 		return nil
