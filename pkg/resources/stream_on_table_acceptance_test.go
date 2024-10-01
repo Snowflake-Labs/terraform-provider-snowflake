@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -513,6 +514,51 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 				),
 			},
 			// TODO(SNOW-1689111): test timestamps
+		},
+	})
+}
+
+func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").
+		WithComment("foo").WithAppendOnly(r.BooleanTrue).WithShowInitialRows(r.BooleanTrue).WithCopyGrants(true)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
+		Steps: []resource.TestStep{
+			// multiple excluding options - before
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+					"offset":    pluginconfig.StringVariable("0"),
+					"timestamp": pluginconfig.StringVariable("0"),
+					"statement": pluginconfig.StringVariable("0"),
+					"stream":    pluginconfig.StringVariable("0"),
+				}))),
+				ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
+			},
+			// multiple excluding options - at
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+					"offset":    pluginconfig.StringVariable("0"),
+					"timestamp": pluginconfig.StringVariable("0"),
+					"statement": pluginconfig.StringVariable("0"),
+					"stream":    pluginconfig.StringVariable("0"),
+				}))),
+				ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
+			},
+			// invalid table id
+			{
+				Config:      config.FromModel(t, model.WithBeforeValue(nil).WithAtValue(nil).WithTable("invalid")),
+				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
+			},
 		},
 	})
 }

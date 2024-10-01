@@ -10,21 +10,20 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-
 func (s *StreamShowOutputAssert) HasCreatedOnNotEmpty() *StreamShowOutputAssert {
 	s.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
 	return s
 }
 
 func (s *StreamShowOutputAssert) HasStaleAfterNotEmpty() *StreamShowOutputAssert {
-	s.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("stale_after"))
 	return s
 }
 
 func (s *StreamShowOutputAssert) HasBaseTables(ids []sdk.SchemaObjectIdentifier) *StreamShowOutputAssert {
 	s.AddAssertion(assert.ResourceShowOutputValueSet("base_tables.#", strconv.FormatInt(int64(len(ids)), 10)))
 	for i := range ids {
-		s.AddAssertion(assert.ResourceShowOutputValueSet(fmt.Sprintf("base_tables.%d", i),ids[i].FullyQualifiedName()))
+		s.AddAssertion(assert.ResourceShowOutputValueSet(fmt.Sprintf("base_tables.%d", i), ids[i].FullyQualifiedName()))
 	}
 	return s
 }

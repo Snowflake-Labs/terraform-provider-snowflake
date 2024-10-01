@@ -8,7 +8,7 @@ resource "snowflake_stream_on_table" "test" {
   append_only       = "true"
   show_initial_rows = "true"
 
-  at {
+  before {
     timestamp = try(var.before["timestamp"], null)
     offset    = try(var.before["offset"], null)
     stream    = try(var.before["stream"], null)

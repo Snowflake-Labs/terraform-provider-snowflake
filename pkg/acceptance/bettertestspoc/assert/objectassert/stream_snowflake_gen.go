@@ -117,7 +117,6 @@ func (s *StreamAssert) HasTableName(expected string) *StreamAssert {
 	return s
 }
 
-
 func (s *StreamAssert) HasType(expected string) *StreamAssert {
 	s.AddAssertion(func(t *testing.T, o *sdk.Stream) error {
 		t.Helper()
@@ -145,7 +144,6 @@ func (s *StreamAssert) HasStale(expected string) *StreamAssert {
 	})
 	return s
 }
-
 
 func (s *StreamAssert) HasStaleAfter(expected time.Time) *StreamAssert {
 	s.AddAssertion(func(t *testing.T, o *sdk.Stream) error {

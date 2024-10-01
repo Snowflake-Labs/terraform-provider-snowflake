@@ -10,7 +10,7 @@ resource "snowflake_table" "table" {
 }
 
 
-# resource with all fields set (excluding time travel with BEFORE)
+# resource with more fields set
 resource "snowflake_stream_on_table" "stream" {
   name     = "stream"
   schema   = "schema"

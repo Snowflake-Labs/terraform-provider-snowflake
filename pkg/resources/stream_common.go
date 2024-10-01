@@ -10,13 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func handleStreamTimeTravel(d *schema.ResourceData, req *sdk.CreateOnTableStreamRequest) {
+func handleStreamTimeTravel(d *schema.ResourceData) *sdk.OnStreamRequest {
 	if v := d.Get(AtAttributeName).([]any); len(v) > 0 {
-		req.WithOn(*sdk.NewOnStreamRequest().WithAt(true).WithStatement(handleStreamTimeTravelStatement(v[0].(map[string]any))))
+		return sdk.NewOnStreamRequest().WithAt(true).WithStatement(handleStreamTimeTravelStatement(v[0].(map[string]any)))
 	}
 	if v := d.Get(BeforeAttributeName).([]any); len(v) > 0 {
-		req.WithOn(*sdk.NewOnStreamRequest().WithBefore(true).WithStatement(handleStreamTimeTravelStatement(v[0].(map[string]any))))
+		return sdk.NewOnStreamRequest().WithBefore(true).WithStatement(handleStreamTimeTravelStatement(v[0].(map[string]any)))
 	}
+	return nil
 }
 
 func handleStreamTimeTravelStatement(timeTravelConfig map[string]any) sdk.OnStreamStatementRequest {

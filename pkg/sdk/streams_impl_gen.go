@@ -125,7 +125,6 @@ func (r *CreateOnExternalTableStreamRequest) toOpts() *CreateOnExternalTableStre
 		Comment:    r.Comment,
 	}
 	if r.On != nil {
-
 		opts.On = &OnStream{
 			At:     r.On.At,
 			Before: r.On.Before,

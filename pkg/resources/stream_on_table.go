@@ -18,22 +18,25 @@ import (
 
 var streamOnTableSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: blocklistedCharactersFieldDescription("Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created."),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: blocklistedCharactersFieldDescription("The schema in which to create the stream."),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("The schema in which to create the stream."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: blocklistedCharactersFieldDescription("The database in which to create the stream."),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("The database in which to create the stream."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"copy_grants": {
 		Type:        schema.TypeBool,
@@ -47,8 +50,8 @@ var streamOnTableSchema = map[string]*schema.Schema{
 	"table": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies an identifier for the table the stream will monitor.",
-		DiffSuppressFunc: suppressIdentifierQuoting,
+		Description:      blocklistedCharactersFieldDescription("Specifies an identifier for the table the stream will monitor."),
+		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("table_name")),
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 	"append_only": {
@@ -56,15 +59,17 @@ var streamOnTableSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		Description:      booleanStringFieldDescription("Type of the stream that will be created."),
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("mode", func(x any) any {
+			return x.(string) == string(sdk.StreamModeAppendOnly)
+		}),
+		Description: booleanStringFieldDescription("Specifies whether this is an append-only stream."),
 	},
 	"show_initial_rows": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreAfterCreation,
-		Description:      booleanStringFieldDescription("Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed. This field is used only during stream creation."),
+		Description:      booleanStringFieldDescription("Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed."),
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -103,7 +108,6 @@ func StreamOnTable() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(streamOnTableSchema, ShowOutputAttributeName, "table", "append_only", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnTableSchema, DescribeOutputAttributeName, "table", "append_only", "comment"),
-			ComputedIfAnyAttributeChanged(streamOnTableSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: streamOnTableSchema,
@@ -180,7 +184,10 @@ func CreateStreamOnTable(orReplace bool) schema.CreateContextFunc {
 			req.WithShowInitialRows(parsed)
 		}
 
-		handleStreamTimeTravel(d, req)
+		streamTimeTravelReq := handleStreamTimeTravel(d)
+		if streamTimeTravelReq != nil {
+			req.WithOn(*streamTimeTravelReq)
+		}
 
 		if v, ok := d.GetOk("comment"); ok {
 			req.WithComment(v.(string))
@@ -241,8 +248,12 @@ func ReadStreamOnTable(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 		if withExternalChangesMarking {
+			var mode sdk.StreamMode
+			if stream.Mode != nil {
+				mode = *stream.Mode
+			}
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"mode", "append_only", string(*stream.Mode), booleanStringFromBool(*stream.Mode == sdk.StreamModeAppendOnly), nil},
+				showMapping{"mode", "append_only", string(mode), booleanStringFromBool(mode == sdk.StreamModeAppendOnly), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
@@ -272,7 +283,7 @@ func UpdateStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	// change on these fields can not be ForceNew because then the object is dropped explicitly and copying grants does not have effect
-	if keys := changedKeys(d, "table", "append_only", "at", "before"); len(keys) > 0 {
+	if keys := changedKeys(d, "table", "append_only", "at", "before", "show_initial_rows"); len(keys) > 0 {
 		log.Printf("[DEBUG] Detected change on %q, recreating...", keys)
 		return CreateStreamOnTable(true)(ctx, d, meta)
 	}

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseCommaSeparatedStringArray(t *testing.T) {
@@ -101,6 +102,99 @@ func TestParseCommaSeparatedStringArray(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			assert.Equal(t, tc.Result, ParseCommaSeparatedStringArray(tc.Value, tc.TrimQuotes))
+		})
+	}
+}
+
+func TestParseCommaSeparatedSchemaObjectIdentifierArray(t *testing.T) {
+	testCases := []struct {
+		Name   string
+		Value  string
+		Result []SchemaObjectIdentifier
+	}{
+		{
+			Name:   "empty list",
+			Value:  "[]",
+			Result: []SchemaObjectIdentifier{},
+		},
+		{
+			Name:   "empty string",
+			Value:  "",
+			Result: []SchemaObjectIdentifier{},
+		},
+		{
+			Name:   "one element in list",
+			Value:  "[A.B.C]",
+			Result: []SchemaObjectIdentifier{NewSchemaObjectIdentifier("A", "B", "C")},
+		},
+		{
+			Name:   "one element in list - with mixed cases",
+			Value:  `[A."b".C]`,
+			Result: []SchemaObjectIdentifier{NewSchemaObjectIdentifier("A", "b", "C")},
+		},
+		{
+			Name:   "multiple elements in list",
+			Value:  "[A.B.C, D.E.F]",
+			Result: []SchemaObjectIdentifier{NewSchemaObjectIdentifier("A", "B", "C"), NewSchemaObjectIdentifier("D", "E", "F")},
+		},
+		{
+			Name:   "multiple elements in list - with mixed cases",
+			Value:  `[A."b".C, "d"."e"."f"]`,
+			Result: []SchemaObjectIdentifier{NewSchemaObjectIdentifier("A", "b", "C"), NewSchemaObjectIdentifier("d", "e", "f")},
+		},
+		{
+			Name:   "multiple elements in list - packed",
+			Value:  "[A.B.C,D.E.F]",
+			Result: []SchemaObjectIdentifier{NewSchemaObjectIdentifier("A", "B", "C"), NewSchemaObjectIdentifier("D", "E", "F")},
+		},
+		{
+			Name:   "multiple elements in list - additional spaces",
+			Value:  "[A.B.C,     	 D.E.F]",
+			Result: []SchemaObjectIdentifier{NewSchemaObjectIdentifier("A", "B", "C"), NewSchemaObjectIdentifier("D", "E", "F")},
+		},
+		{
+			Name:   "list without brackets",
+			Value:  "A.B.C, D.E.F",
+			Result: []SchemaObjectIdentifier{NewSchemaObjectIdentifier("A", "B", "C"), NewSchemaObjectIdentifier("D", "E", "F")},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			ids, err := ParseCommaSeparatedSchemaObjectIdentifierArray(tc.Value)
+			require.NoError(t, err)
+			require.Equal(t, tc.Result, ids)
+		})
+	}
+}
+
+func TestParseCommaSeparatedSchemaObjectIdentifierArray_Invalid(t *testing.T) {
+	testCases := []struct {
+		Name  string
+		Value string
+		Error string
+	}{
+		{
+			Name:  "bad quotes",
+			Value: `["a]`,
+			Error: "unable to read identifier: \"a, err = parse error on line 1, column 3: extraneous or missing \" in quoted-field",
+		},
+		{
+			Name:  "missing parts",
+			Value: "[a.b.c, a.b]",
+			Error: "unexpected number of parts 2 in identifier a.b, expected 3 in a form of \"<database_name>.<schema_name>.<schema_object_name>\"",
+		},
+		{
+			Name:  "missing parts - empty id",
+			Value: "[a.b.c, ]",
+			Error: "incompatible identifier",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			_, err := ParseCommaSeparatedSchemaObjectIdentifierArray(tc.Value)
+			require.ErrorContains(t, err, tc.Error)
 		})
 	}
 }
