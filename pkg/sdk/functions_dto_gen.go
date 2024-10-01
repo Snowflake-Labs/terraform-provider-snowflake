@@ -32,7 +32,7 @@ type CreateForJavaFunctionRequest struct {
 	Packages                   []FunctionPackageRequest
 	Handler                    string // required
 	ExternalAccessIntegrations []AccountObjectIdentifier
-	Secrets                    []Secret
+	Secrets                    []SecretReference
 	TargetPath                 *string
 	FunctionDefinition         *string
 }
@@ -102,7 +102,7 @@ type CreateForPythonFunctionRequest struct {
 	Packages                   []FunctionPackageRequest
 	Handler                    string // required
 	ExternalAccessIntegrations []AccountObjectIdentifier
-	Secrets                    []Secret
+	Secrets                    []SecretReference
 	FunctionDefinition         *string
 }
 
