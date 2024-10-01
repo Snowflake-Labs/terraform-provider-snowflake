@@ -7,7 +7,9 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	tfjson "github.com/hashicorp/terraform-json"
@@ -23,6 +25,8 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 	comment := random.Comment()
 
 	secretModel := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "foo", id.SchemaName(), "foo")
+	secretModelWithoutComment := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "bar", id.SchemaName(), "bar")
+	secretModelEmpty := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "", id.SchemaName(), "")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -43,8 +47,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 							HasSchemaString(id.SchemaName()).
 							HasUsernameString("foo").
 							HasPasswordString("foo").
-							HasNoComment(),
-						//HasCommentString(""),
+							HasCommentString(""),
 					),
 				),
 			},
@@ -65,16 +68,30 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 						HasCommentString(comment),
 				),
 			},
+			// import
+			{
+				ResourceName:            secretModel.ResourceReference(),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "database", id.DatabaseId().Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "schema", id.SchemaId().Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "username", "bar"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", comment),
+				),
+			},
 			// unset comment
 			{
-				Config: config.FromModel(t, secretModel.WithComment("")),
+				Config: config.FromModel(t, secretModelWithoutComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(comment), nil),
 					},
 				},
 				Check: assert.AssertThat(t,
-					resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
+					resourceassert.SecretWithClientCredentialsResource(t, secretModelWithoutComment.ResourceReference()).
 						HasCommentString(""),
 				),
 			},
@@ -83,22 +100,21 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 				Config:  config.FromModel(t, secretModel),
 				Destroy: true,
 			},
-			/*
-				// import
-				{
-					ResourceName:      secretModelWithoutComment.ResourceReference(),
-					ImportState:       true,
-					ImportStateVerify: true,
-					ImportStateCheck: importchecks.ComposeImportStateCheck(
-						importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
-						importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "database", id.DatabaseId().Name()),
-						importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "schema", id.SchemaId().Name()),
-						importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "api_authentication", integrationId.Name()),
-						importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "oauth_scopes.#", "2"),
-						importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", ""),
+			// create with empty username and password
+			{
+				Config: config.FromModel(t, secretModelEmpty),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithBasicAuthenticationResource(t, secretModelEmpty.ResourceReference()).
+							HasNameString(name).
+							HasDatabaseString(id.DatabaseName()).
+							HasSchemaString(id.SchemaName()).
+							HasUsernameString("").
+							HasPasswordString("").
+							HasCommentString(""),
 					),
-				},
-			*/
+				),
+			},
 		},
 	})
 }

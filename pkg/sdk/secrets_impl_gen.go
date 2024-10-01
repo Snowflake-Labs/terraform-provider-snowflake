@@ -2,8 +2,6 @@ package sdk
 
 import (
 	"context"
-	"strings"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
@@ -195,16 +193,6 @@ func (r *ShowSecretRequest) toOpts() *ShowSecretOptions {
 	return opts
 }
 
-func getOauthScopes(scopesString string) []string {
-	formatedScopes := make([]string, 0)
-	scopesString = strings.TrimPrefix(scopesString, "[")
-	scopesString = strings.TrimSuffix(scopesString, "]")
-	for _, scope := range strings.Split(scopesString, ",") {
-		formatedScopes = append(formatedScopes, strings.TrimSpace(scope))
-	}
-	return formatedScopes
-}
-
 func (r secretDBRow) convert() *Secret {
 	s := &Secret{
 		CreatedOn:     r.CreatedOn,
@@ -219,7 +207,7 @@ func (r secretDBRow) convert() *Secret {
 		s.Comment = String(r.Comment.String)
 	}
 	if r.OauthScopes.Valid {
-		s.OauthScopes = getOauthScopes(r.OauthScopes.String)
+		s.OauthScopes = ParseCommaSeparatedStringArray(r.OauthScopes.String, false)
 	}
 	return s
 }
@@ -249,7 +237,7 @@ func (r secretDetailsDBRow) convert() *SecretDetails {
 		s.Comment = String(r.Comment.String)
 	}
 	if r.OauthScopes.Valid {
-		s.OauthScopes = getOauthScopes(r.OauthScopes.String)
+		s.OauthScopes = ParseCommaSeparatedStringArray(r.OauthScopes.String, false)
 	}
 	if r.IntegrationName.Valid {
 		s.IntegrationName = String(r.IntegrationName.String)

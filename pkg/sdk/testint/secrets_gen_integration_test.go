@@ -146,7 +146,7 @@ func TestInt_Secrets(t *testing.T) {
 
 		assert.NotContains(t, details.OauthScopes, "foo")
 		assert.NotContains(t, details.OauthScopes, "bar")
-		assert.Equal(t, []string{""}, details.OauthScopes)
+		assert.Equal(t, []string{}, details.OauthScopes)
 	})
 
 	t.Run("Create: SecretWithOAuthAuthorizationCodeFlow - refreshTokenExpiry date format", func(t *testing.T) {

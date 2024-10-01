@@ -33,8 +33,8 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 	)
 	t.Cleanup(apiIntegrationCleanup)
 
-	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name).WithOauthScopes([]string{"foo", "bar"}).WithComment(comment)
-	secretModelWithoutComment := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name).WithOauthScopes([]string{"foo", "bar"})
+	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), []string{"foo", "bar"}, name).WithComment(comment)
+	secretModelWithoutComment := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), []string{"foo", "bar"}, name)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -125,11 +125,16 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", ""),
 				),
 			},
+			// destroy
+			{
+				Config:  config.FromModel(t, secretModel),
+				Destroy: true,
+			},
 		},
 	})
 }
 
-func TestAcc_SecretWithClientCredentials_NoScopesProvided(t *testing.T) {
+func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
 
@@ -140,8 +145,7 @@ func TestAcc_SecretWithClientCredentials_NoScopesProvided(t *testing.T) {
 	)
 	t.Cleanup(apiIntegrationCleanup)
 
-	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name)
-	//secretModelWithScopes := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name).WithOauthScopes([]string{"foo"})
+	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), []string{}, name)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -167,27 +171,25 @@ func TestAcc_SecretWithClientCredentials_NoScopesProvided(t *testing.T) {
 				),
 			},
 			// Set oauth_scopes
-			/*
-				{
-					Config: config.FromModel(t, secretModel.
-						WithOauthScopes([]string{"foo"}),
-					),
-					ConfigPlanChecks: resource.ConfigPlanChecks{
-						PreApply: []plancheck.PlanCheck{
-							planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[]"), sdk.String("[foo]")),
-						},
+			{
+				Config: config.FromModel(t, secretModel.
+					WithOauthScopes([]string{"foo"}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[]"), sdk.String("[foo]")),
 					},
-					Check: assert.AssertThat(t,
-						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
-							HasNameString(name).
-							HasDatabaseString(id.DatabaseName()).
-							HasSchemaString(id.SchemaName()).
-							HasApiAuthenticationString(integrationId.Name()),
-						assert.Check(resource.TestCheckResourceAttr(secretModel.ResourceReference(), "oauth_scopes.#", "1")),
-						assert.Check(resource.TestCheckTypeSetElemAttr(secretModel.ResourceReference(), "oauth_scopes.*", "foo")),
-					),
 				},
-			*/
+				Check: assert.AssertThat(t,
+					resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
+						HasNameString(name).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasApiAuthenticationString(integrationId.Name()),
+					assert.Check(resource.TestCheckResourceAttr(secretModel.ResourceReference(), "oauth_scopes.#", "1")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(secretModel.ResourceReference(), "oauth_scopes.*", "foo")),
+				),
+			},
 		},
 	})
 }

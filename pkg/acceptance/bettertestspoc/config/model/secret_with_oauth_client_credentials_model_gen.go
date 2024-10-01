@@ -30,12 +30,14 @@ func SecretWithClientCredentials(
 	apiAuthentication string,
 	database string,
 	schema string,
+	oauthScopes []string,
 	name string,
 ) *SecretWithClientCredentialsModel {
 	s := &SecretWithClientCredentialsModel{ResourceModelMeta: config.Meta(resourceName, resources.SecretWithClientCredentials)}
 	s.WithApiAuthentication(apiAuthentication)
 	s.WithDatabase(database)
 	s.WithName(name)
+	s.WithOauthScopes(oauthScopes)
 	s.WithSchema(schema)
 	return s
 }
@@ -130,7 +132,7 @@ func (s *SecretWithClientCredentialsModel) WithSchemaValue(value tfconfig.Variab
 	s.Schema = value
 	return s
 }
-func (s*SecretWithClientCredentialsModel) WithOauthScopes(oauthScopes []string) *SecretWithClientCredentialsModel {
+func (s *SecretWithClientCredentialsModel) WithOauthScopes(oauthScopes []string) *SecretWithClientCredentialsModel {
 	oauthScopesStringVariables := make([]tfconfig.Variable, len(oauthScopes))
 	for i, v := range oauthScopes {
 		oauthScopesStringVariables[i] = tfconfig.StringVariable(v)
