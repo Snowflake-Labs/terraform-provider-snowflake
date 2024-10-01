@@ -83,17 +83,28 @@ func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
 	ctx := context.Background()
+
+	// Identify the parameter
 	parameter := sdk.AccountParameter(key)
-	defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
+
+	// Retrieve the current default value for the parameter
+	defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, parameter)
 	if err != nil {
-		return err
-	}
-	defaultValue := defaultParameter.Default
-	err = client.Parameters.SetAccountParameter(ctx, parameter, defaultValue)
-	if err != nil {
-		return fmt.Errorf("error resetting account parameter err = %w", err)
+		return fmt.Errorf("error retrieving default value for account parameter %s: %w", key, err)
 	}
 
+	defaultValue := defaultParameter.Default
+	if defaultValue == "" {
+		return fmt.Errorf("no default value found for account parameter %s", key)
+	}
+
+	// Reset the account parameter to its default value
+	err = client.Parameters.SetAccountParameter(ctx, parameter, defaultValue)
+	if err != nil {
+		return fmt.Errorf("error resetting account parameter %s: %w", key, err)
+	}
+
+	// Successfully reset the parameter, clear the ID
 	d.SetId("")
 	return nil
 }
