@@ -53,8 +53,8 @@ func TestInt_Streams(t *testing.T) {
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
 			HasComment("some comment").
-			HasSourceType("Table").
-			HasMode("APPEND_ONLY").
+			HasSourceType(sdk.StreamSourceTypeTable).
+			HasMode(sdk.StreamModeAppendOnly).
 			HasTableId(tableId.FullyQualifiedName()),
 		)
 
@@ -130,8 +130,8 @@ func TestInt_Streams(t *testing.T) {
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
 			HasComment("some comment").
-			HasSourceType("External Table").
-			HasMode("INSERT_ONLY").
+			HasSourceType(sdk.StreamSourceTypeExternalTable).
+			HasMode(sdk.StreamModeInsertOnly).
 			HasTableId(externalTableId.FullyQualifiedName()),
 		)
 	})
@@ -151,8 +151,8 @@ func TestInt_Streams(t *testing.T) {
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
 			HasComment("some comment").
-			HasSourceType("Stage").
-			HasMode("DEFAULT").
+			HasSourceType(sdk.StreamSourceTypeStage).
+			HasMode(sdk.StreamModeDefault).
 			HasStageName(stage.ID().Name()),
 		)
 	})
@@ -178,8 +178,8 @@ func TestInt_Streams(t *testing.T) {
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
 			HasComment("some comment").
-			HasSourceType("View").
-			HasMode("APPEND_ONLY").
+			HasSourceType(sdk.StreamSourceTypeView).
+			HasMode(sdk.StreamModeAppendOnly).
 			HasTableId(view.ID().FullyQualifiedName()),
 		)
 	})
@@ -204,8 +204,8 @@ func TestInt_Streams(t *testing.T) {
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
 			HasComment("some comment").
-			HasSourceType("Table").
-			HasMode("DEFAULT").
+			HasSourceType(sdk.StreamSourceTypeTable).
+			HasMode(sdk.StreamModeDefault).
 			HasTableId(table.ID().FullyQualifiedName()),
 		)
 	})
@@ -359,8 +359,8 @@ func TestInt_Streams(t *testing.T) {
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
 			HasComment("some comment").
-			HasSourceType("Table").
-			HasMode("DEFAULT").
+			HasSourceType(sdk.StreamSourceTypeTable).
+			HasMode(sdk.StreamModeDefault).
 			HasTableId(table.ID().FullyQualifiedName()),
 		)
 	})
@@ -450,8 +450,8 @@ func TestInt_Streams(t *testing.T) {
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
 			HasComment("some comment").
-			HasSourceType("Table").
-			HasMode("DEFAULT").
+			HasSourceType(sdk.StreamSourceTypeTable).
+			HasMode(sdk.StreamModeDefault).
 			HasTableId(table.ID().FullyQualifiedName()),
 		)
 	})

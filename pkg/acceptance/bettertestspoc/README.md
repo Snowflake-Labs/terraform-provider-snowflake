@@ -177,7 +177,7 @@ it will result in:
         object WAREHOUSE["XHZJCKAT_35D0BCC1_7797_974E_ACAF_C622C56FA2D2"] assertion [7/13]: failed with error: expected scaling policy: ECONOMY; got: STANDARD
         object WAREHOUSE["XHZJCKAT_35D0BCC1_7797_974E_ACAF_C622C56FA2D2"] assertion [8/13]: failed with error: expected auto suspend: 123; got: 600
         object WAREHOUSE["XHZJCKAT_35D0BCC1_7797_974E_ACAF_C622C56FA2D2"] assertion [9/13]: failed with error: expected auto resume: false; got: true
-        object WAREHOUSE["XHZJCKAT_35D0BCC1_7797_974E_ACAF_C622C56FA2D2"] assertion [10/13]: failed with error: expected resource monitor: some-id; got: 
+        object WAREHOUSE["XHZJCKAT_35D0BCC1_7797_974E_ACAF_C622C56FA2D2"] assertion [10/13]: failed with error: expected resource monitor: some-id; got:
         object WAREHOUSE["XHZJCKAT_35D0BCC1_7797_974E_ACAF_C622C56FA2D2"] assertion [11/13]: failed with error: expected comment: bad comment; got: Who does encouraging eagerly annoying dream several their scold straightaway.
         object WAREHOUSE["XHZJCKAT_35D0BCC1_7797_974E_ACAF_C622C56FA2D2"] assertion [12/13]: failed with error: expected enable query acceleration: true; got: false
         object WAREHOUSE["XHZJCKAT_35D0BCC1_7797_974E_ACAF_C622C56FA2D2"] assertion [13/13]: failed with error: expected query acceleration max scale factor: 12; got: 8
@@ -241,17 +241,17 @@ it will result in:
         WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported resource assertion [6/12]: failed with error: expected: ECONOMY, got: STANDARD
         WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported resource assertion [7/12]: failed with error: expected: 123, got: 600
         WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported resource assertion [8/12]: failed with error: expected: false, got: true
-        WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported resource assertion [9/12]: failed with error: expected: abc, got: 
+        WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported resource assertion [9/12]: failed with error: expected: abc, got:
         WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported resource assertion [10/12]: failed with error: expected: bad comment, got: Promise my huh off certain you bravery dynasty with Roman.
         WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported resource assertion [11/12]: failed with error: expected: true, got: false
         WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported resource assertion [12/12]: failed with error: expected: 16, got: 8
         check 9/11 error:
         WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported parameters assertion [2/7]: failed with error: expected: 1, got: 8
-        WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported parameters assertion [3/7]: failed with error: expected: WAREHOUSE, got: 
+        WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported parameters assertion [3/7]: failed with error: expected: WAREHOUSE, got:
         WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported parameters assertion [4/7]: failed with error: expected: 23, got: 0
-        WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported parameters assertion [5/7]: failed with error: expected: WAREHOUSE, got: 
+        WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported parameters assertion [5/7]: failed with error: expected: WAREHOUSE, got:
         WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported parameters assertion [6/7]: failed with error: expected: 1232, got: 172800
-        WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported parameters assertion [7/7]: failed with error: expected: WAREHOUSE, got: 
+        WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65 imported parameters assertion [7/7]: failed with error: expected: WAREHOUSE, got:
         check 10/11 error:
         object WAREHOUSE["WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65"] assertion [1/13]: failed with error: expected name: bad name; got: WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65
         object WAREHOUSE["WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65"] assertion [2/13]: failed with error: expected state: SUSPENDED; got: STARTED
@@ -262,7 +262,7 @@ it will result in:
         object WAREHOUSE["WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65"] assertion [7/13]: failed with error: expected scaling policy: ECONOMY; got: STANDARD
         object WAREHOUSE["WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65"] assertion [8/13]: failed with error: expected auto suspend: 123; got: 600
         object WAREHOUSE["WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65"] assertion [9/13]: failed with error: expected auto resume: false; got: true
-        object WAREHOUSE["WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65"] assertion [10/13]: failed with error: expected resource monitor: some-id; got: 
+        object WAREHOUSE["WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65"] assertion [10/13]: failed with error: expected resource monitor: some-id; got:
         object WAREHOUSE["WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65"] assertion [11/13]: failed with error: expected comment: bad comment; got: Promise my huh off certain you bravery dynasty with Roman.
         object WAREHOUSE["WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65"] assertion [12/13]: failed with error: expected enable query acceleration: true; got: false
         object WAREHOUSE["WBJKHLAT_2E52D1E6_D23D_33A0_F568_4EBDBE083B65"] assertion [13/13]: failed with error: expected query acceleration max scale factor: 12; got: 8
@@ -291,7 +291,7 @@ it will result in:
 ```
 it will result in:
 ```
-    commons.go:101: 
+    commons.go:101:
         	Error Trace:	/Users/asawicki/Projects/terraform-provider-snowflake/pkg/sdk/testint/warehouses_integration_test.go:149
         	Error:      	Received unexpected error:
         	            	object WAREHOUSE["VKSENEIT_535F314F_6549_348F_370E_AB430EE4BC7B"] assertion [1/13]: failed with error: expected name: bad name; got: VKSENEIT_535F314F_6549_348F_370E_AB430EE4BC7B
@@ -344,8 +344,9 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - Omit computed fields in the model (like FullyQualifiedName), because it doesn't make sense to set them
 - There's an error when generating models, steps to reproduce:
   - Go to view resource code and change `data_metric_function` field to `testing` and make it required
-  - During the generation, the following error appears: mixed named and unnamed parameters. 
+  - During the generation, the following error appears: mixed named and unnamed parameters.
     It's a golang error indicating that the parameter has both unnamed and named parameters in function (e.g. `func(abc string, int)`).
     The error is a result of both things:
     1. Lists of objects are partially generated, and only parameter name is generated in some functions (the type has to be added manually).
     2. `testing` is a package name that makes Go think that we want to have unnamed parameter there, but we just didn't generate the type for that field in the function argument.
+- generate assertions checking that time is not empty - we often do not compare time fields by value, but check if they are set

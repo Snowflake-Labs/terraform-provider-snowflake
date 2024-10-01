@@ -163,11 +163,11 @@ type Stream struct {
 	Owner         *string
 	Comment       *string
 	TableName     *string
-	SourceType    *string
-	BaseTables    *string
+	SourceType    *StreamSourceType
+	BaseTables    []SchemaObjectIdentifier
 	Type          *string
 	Stale         *string
-	Mode          *string
+	Mode          *StreamMode
 	StaleAfter    *time.Time
 	InvalidReason *string
 	OwnerRoleType *string

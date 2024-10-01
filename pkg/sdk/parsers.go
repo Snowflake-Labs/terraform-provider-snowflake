@@ -37,3 +37,17 @@ func ParseCommaSeparatedStringArray(value string, trimQuotes bool) []string {
 	}
 	return trimmedListItems
 }
+
+// TODO: add description and unit tests
+func ParseCommaSeparatedSchemaObjectIdentifierArray(value string) ([]SchemaObjectIdentifier, error) {
+	idsRaw := ParseCommaSeparatedStringArray(value, false)
+	ids := make([]SchemaObjectIdentifier, len(idsRaw))
+	for i := range idsRaw {
+		id, err := ParseSchemaObjectIdentifier(idsRaw[i])
+		if err != nil {
+			return nil, err
+		}
+		ids[i] = id
+	}
+	return ids, nil
+}

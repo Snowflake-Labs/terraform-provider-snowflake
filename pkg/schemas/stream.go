@@ -9,9 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ShowStreamSchema represents output of SHOW query for the single Stream.
-// TODO: merge with desc schema
-var ShowStreamSchema = map[string]*schema.Schema{
+// DescribeStreamSchema represents output of SHOW query for the single Stream.
+var DescribeStreamSchema = map[string]*schema.Schema{
 	"created_on": {
 		Type:     schema.TypeString,
 		Computed: true,
@@ -79,7 +78,7 @@ var ShowStreamSchema = map[string]*schema.Schema{
 
 var _ = ShowStreamSchema
 
-func StreamToSchema(stream *sdk.Stream) map[string]any {
+func StreamDescriptionToSchema(stream sdk.Stream) map[string]any {
 	streamSchema := make(map[string]any)
 	streamSchema["created_on"] = stream.CreatedOn.String()
 	streamSchema["name"] = stream.Name
