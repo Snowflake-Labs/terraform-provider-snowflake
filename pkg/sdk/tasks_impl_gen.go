@@ -269,6 +269,7 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 	if r.Unset != nil {
 		opts.Unset = &TaskUnset{
 			Warehouse:                               r.Unset.Warehouse,
+			UserTaskManagedInitialWarehouseSize:     r.Unset.UserTaskManagedInitialWarehouseSize,
 			Schedule:                                r.Unset.Schedule,
 			Config:                                  r.Unset.Config,
 			AllowOverlappingExecution:               r.Unset.AllowOverlappingExecution,
@@ -325,8 +326,13 @@ func (r taskDBRow) convert() *Task {
 	if r.Comment.Valid {
 		task.Comment = r.Comment.String
 	}
-	if r.Warehouse.Valid {
-		task.Warehouse = r.Warehouse.String
+	if r.Warehouse.Valid && r.Warehouse.String != "null" {
+		id, err := ParseAccountObjectIdentifier(r.Warehouse.String)
+		if err != nil {
+			log.Printf("[DEBUG] failed to parse warehouse: %v", err)
+		} else {
+			task.Warehouse = &id
+		}
 	}
 	if r.Schedule.Valid {
 		task.Schedule = r.Schedule.String

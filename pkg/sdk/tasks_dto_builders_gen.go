@@ -359,6 +359,11 @@ func (s *TaskUnsetRequest) WithWarehouse(Warehouse bool) *TaskUnsetRequest {
 	return s
 }
 
+func (s *TaskUnsetRequest) WithUserTaskManagedInitialWarehouseSize(UserTaskManagedInitialWarehouseSize bool) *TaskUnsetRequest {
+	s.UserTaskManagedInitialWarehouseSize = &UserTaskManagedInitialWarehouseSize
+	return s
+}
+
 func (s *TaskUnsetRequest) WithSchedule(Schedule bool) *TaskUnsetRequest {
 	s.Schedule = &Schedule
 	return s

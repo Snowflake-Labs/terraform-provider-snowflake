@@ -21,19 +21,8 @@ func TestInt_Tasks(t *testing.T) {
 	ctx := testContext(t)
 	sql := "SELECT CURRENT_TIMESTAMP"
 
-	// TODO [SNOW-1017580]: replace with real value
-	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
-	errorIntegrationId := testClientHelper().Ids.RandomAccountObjectIdentifier()
-	err := client.NotificationIntegrations.Create(ctx,
-		sdk.NewCreateNotificationIntegrationRequest(errorIntegrationId, true).
-			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().
-				WithGoogleAutoParams(sdk.NewGoogleAutoParamsRequest(gcpPubsubSubscriptionName)),
-			),
-	)
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(errorIntegrationId).WithIfExists(sdk.Bool(true))))
-	})
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := testClientHelper().NotificationIntegration.Create(t)
+	t.Cleanup(errorNotificationIntegrationCleanup)
 
 	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, warehouseName string) {
 		t.Helper()
@@ -278,10 +267,10 @@ func TestInt_Tasks(t *testing.T) {
 	t.Run("create task: complete case", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
-		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).
+		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).
 			WithOrReplace(true).
 			WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(testClientHelper().Ids.WarehouseId())).
-			WithErrorNotificationIntegration(errorIntegrationId).
+			WithErrorNotificationIntegration(errorNotificationIntegration.ID()).
 			WithSchedule("10 MINUTE").
 			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
 			WithAllowOverlappingExecution(true).
@@ -298,7 +287,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
 
-		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil, &errorIntegrationId)
+		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil, sdk.Pointer(errorNotificationIntegration.ID()))
 		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, id).
 			HasJsonIndent(4).
 			HasUserTaskTimeoutMs(500).
@@ -618,7 +607,7 @@ func TestInt_Tasks(t *testing.T) {
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSet(*sdk.NewTaskSetRequest().
 			// TODO(SNOW-1348116): Cannot set warehouse due to Snowflake error
 			// WithWarehouse(testClientHelper().Ids.WarehouseId()).
-			WithErrorNotificationIntegration(errorIntegrationId).
+			WithErrorNotificationIntegration(errorNotificationIntegration.ID()).
 			WithSessionParameters(sessionParametersSet).
 			WithSchedule("10 MINUTE").
 			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
@@ -633,7 +622,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
 			// HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
-			HasErrorIntegration(sdk.Pointer(errorIntegrationId)).
+			HasErrorIntegration(sdk.Pointer(errorNotificationIntegration.ID())).
 			HasSchedule("10 MINUTE").
 			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
 			HasAllowOverlappingExecution(true).

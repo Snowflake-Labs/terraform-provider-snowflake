@@ -5,11 +5,17 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -18,9 +24,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+// TODO: More tests for complicated DAGs
+
 func TestAcc_Task_Basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	configModel := model.TaskWithId("test", id, "SELECT 1")
+	statement := "SELECT 1"
+	configModel := model.TaskWithId("test", id, statement)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -28,58 +40,364 @@ func TestAcc_Task_Basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, configModel),
 				Check: assert.AssertThat(t,
-					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
-						HasNameString(id.Name()).
+					resourceassert.TaskResource(t, "snowflake_task.test").
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
-						HasNoCreditQuota().
-						HasNotifyUsersLen(0).
-						HasNoFrequency().
-						HasNoStartTimestamp().
-						HasNoEndTimestamp().
-						HasNoNotifyTriggers().
-						HasNoSuspendTrigger().
-						HasNoSuspendImmediateTrigger(),
-					resourceshowoutputassert.ResourceMonitorShowOutput(t, "snowflake_resource_monitor.test").
-						HasName(id.Name()).
-						HasCreditQuota(0).
-						HasUsedCredits(0).
-						HasRemainingCredits(0).
-						HasLevel("").
-						HasFrequency(sdk.FrequencyMonthly).
-						HasStartTimeNotEmpty().
-						HasEndTime("").
-						HasSuspendAt(0).
-						HasSuspendImmediateAt(0).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasEnabledString(r.BooleanDefault).
+						HasWarehouseString("").
+						HasScheduleString("").
+						HasConfigString("").
+						HasAllowOverlappingExecutionString(r.BooleanDefault).
+						HasErrorIntegrationString("").
+						HasCommentString("").
+						HasFinalizeString("").
+						HasAfterLen(0).
+						HasWhenString("").
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.test").
 						HasCreatedOnNotEmpty().
-						HasOwnerNotEmpty().
-						HasComment(""),
+						HasName(id.Name()).
+						HasIdNotEmpty().
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner("ACCOUNTADMIN"). // TODO: Current role
+						HasComment("").
+						HasWarehouse("").
+						HasSchedule("").
+						HasPredecessors().
+						HasState(sdk.TaskStateSuspended).
+						HasDefinition(statement).
+						HasCondition("").
+						HasAllowOverlappingExecution(false).
+						HasErrorIntegration(sdk.NewAccountObjectIdentifier("")). // TODO: *sdk.AOI
+						HasLastCommittedOn("").
+						HasLastSuspendedOn("").
+						HasOwnerRoleType("ROLE").
+						HasConfig("").
+						HasBudget(""),
+					//HasTaskRelations(sdk.TaskRelations{}). // TODO:
+					resourceparametersassert.TaskResourceParameters(t, "snowflake_task.test").
+						HasAllDefaults(),
 				),
 			},
 			{
-				ResourceName: "snowflake_resource_monitor.test",
+				ResourceName: "snowflake_task.test",
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					resourceassert.ImportedResourceMonitorResource(t, helpers.EncodeResourceIdentifier(id)).
-						HasNameString(id.Name()).
+					resourceassert.ImportedTaskResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
-						HasCreditQuotaString("0").
-						HasNotifyUsersLen(0).
-						HasFrequencyString(string(sdk.FrequencyMonthly)).
-						HasStartTimestampNotEmpty().
-						HasEndTimestampString("").
-						HasNoNotifyTriggers().
-						HasSuspendTriggerString("0").
-						HasSuspendImmediateTriggerString("0"),
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasEnabledString(r.BooleanFalse).
+						HasWarehouseString("").
+						HasScheduleString("").
+						HasConfigString("").
+						HasAllowOverlappingExecutionString(r.BooleanFalse).
+						HasErrorIntegrationString("").
+						HasCommentString("").
+						HasFinalizeString("").
+						HasNoAfter().
+						HasWhenString("").
+						HasSqlStatementString(statement),
 				),
 			},
 		},
 	})
 }
+
+func TestAcc_Task_Complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
+	t.Cleanup(errorNotificationIntegrationCleanup)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	taskConfig := `$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`
+	// We have to do three $ at the beginning because Terraform will remove one $.
+	// It's because `${` is a special pattern, and it's escaped by `$${`.
+	expectedTaskConfig := strings.ReplaceAll(taskConfig, "$", "")
+	taskConfigVariableValue := "$" + taskConfig
+	comment := random.Comment()
+	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
+	configModel := model.TaskWithId("test", id, statement).
+		WithEnabled(r.BooleanTrue).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithSchedule("10 MINUTES").
+		WithConfigValue(configvariable.StringVariable(taskConfigVariableValue)).
+		WithAllowOverlappingExecution(true).
+		WithErrorIntegration(errorNotificationIntegration.ID().Name()).
+		WithComment(comment).
+		WithWhen(condition)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, "snowflake_task.test").
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasEnabledString(r.BooleanTrue).
+						HasWarehouseString(acc.TestClient().Ids.WarehouseId().Name()).
+						HasScheduleString("10 MINUTES").
+						HasConfigString(expectedTaskConfig).
+						HasAllowOverlappingExecutionString(r.BooleanTrue).
+						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
+						HasCommentString(comment).
+						HasFinalizeString("").
+						HasNoAfter().
+						HasWhenString(condition).
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.test").
+						HasCreatedOnNotEmpty().
+						HasName(id.Name()).
+						//HasId(id.FullyQualifiedName()). // TODO: not empty
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner("ACCOUNTADMIN"). // TODO: Current role
+						HasComment(comment).
+						HasWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+						HasSchedule("10 MINUTES").
+						//HasPredecessors(nil). // TODO:
+						HasState(sdk.TaskStateStarted).
+						HasDefinition(statement).
+						HasCondition(condition).
+						HasAllowOverlappingExecution(true).
+						HasErrorIntegration(errorNotificationIntegration.ID()).
+						HasLastCommittedOnNotEmpty().
+						HasLastSuspendedOn("").
+						HasOwnerRoleType("ROLE").
+						HasConfig(expectedTaskConfig).
+						HasBudget(""),
+					//HasTaskRelations(sdk.TaskRelations{}). // TODO:
+					resourceparametersassert.TaskResourceParameters(t, "snowflake_task.test").
+						HasAllDefaults(),
+				),
+			},
+			{
+				ResourceName: "snowflake_task.test",
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedTaskResource(t, helpers.EncodeResourceIdentifier(id)).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasEnabledString(r.BooleanTrue).
+						HasWarehouseString(acc.TestClient().Ids.WarehouseId().Name()).
+						HasScheduleString("10 MINUTES").
+						HasConfigString(expectedTaskConfig).
+						HasAllowOverlappingExecutionString(r.BooleanTrue).
+						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
+						HasCommentString(comment).
+						HasFinalizeString("").
+						HasNoAfter().
+						HasWhenString(condition).
+						HasSqlStatementString(statement),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_Updates(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	basicConfigModel := model.TaskWithId("test", id, statement)
+
+	// TODO: Assert the rest of fields (e.g. parameters)
+
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
+	t.Cleanup(errorNotificationIntegrationCleanup)
+
+	taskConfig := `$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`
+	// We have to do three $ at the beginning because Terraform will remove one $.
+	// It's because `${` is a special pattern, and it's escaped by `$${`.
+	expectedTaskConfig := strings.ReplaceAll(taskConfig, "$", "")
+	taskConfigVariableValue := "$" + taskConfig
+	comment := random.Comment()
+	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
+	completeConfigModel := model.TaskWithId("test", id, statement).
+		WithEnabled(r.BooleanTrue).
+		// TODO: Warehouse cannot be set (error)
+		//WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithSchedule("10 MINUTES").
+		WithConfigValue(configvariable.StringVariable(taskConfigVariableValue)).
+		WithAllowOverlappingExecution(true).
+		WithErrorIntegration(errorNotificationIntegration.ID().Name()).
+		WithComment(comment).
+		WithWhen(condition)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, basicConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, "snowflake_task.test").
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasEnabledString(r.BooleanDefault).
+						HasWarehouseString("").
+						HasScheduleString("").
+						HasConfigString("").
+						HasAllowOverlappingExecutionString(r.BooleanDefault).
+						HasErrorIntegrationString("").
+						HasCommentString("").
+						HasFinalizeString("").
+						HasAfterLen(0).
+						HasWhenString("").
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.test").
+						//HasCreatedOnNotEmpty(),
+						HasName(id.Name()).
+						//HasId(id.FullyQualifiedName()). // TODO: not empty
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner("ACCOUNTADMIN"). // TODO: Current role
+						HasComment("").
+						HasWarehouse("").
+						HasSchedule("").
+						//HasPredecessors(nil). // TODO:
+						HasState(sdk.TaskStateSuspended).
+						HasDefinition(statement).
+						HasCondition("").
+						HasAllowOverlappingExecution(false).
+						HasErrorIntegration(sdk.NewAccountObjectIdentifier("")). // TODO: *sdk.AOI
+						HasLastCommittedOn("").
+						HasLastSuspendedOn("").
+						HasOwnerRoleType("ROLE").
+						HasConfig("").
+						HasBudget(""),
+					//HasTaskRelations(sdk.TaskRelations{}). // TODO:
+				),
+			},
+			// Set
+			{
+				Config: config.FromModel(t, completeConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, "snowflake_task.test").
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasEnabledString(r.BooleanTrue).
+						//HasWarehouseString(acc.TestClient().Ids.WarehouseId().Name()).
+						HasScheduleString("10 MINUTES").
+						HasConfigString(expectedTaskConfig).
+						HasAllowOverlappingExecutionString(r.BooleanTrue).
+						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
+						HasCommentString(comment).
+						HasFinalizeString("").
+						HasAfterLen(0).
+						HasWhenString(condition).
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.test").
+						HasCreatedOnNotEmpty().
+						HasName(id.Name()).
+						//HasId(id.FullyQualifiedName()). // TODO: not empty
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner("ACCOUNTADMIN"). // TODO: Current role
+						HasComment(comment).
+						//HasWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+						HasSchedule("10 MINUTES").
+						//HasPredecessors(nil). // TODO:
+						HasState(sdk.TaskStateStarted).
+						HasDefinition(statement).
+						HasCondition(condition).
+						HasAllowOverlappingExecution(true).
+						HasErrorIntegration(errorNotificationIntegration.ID()).
+						HasLastCommittedOnNotEmpty().
+						HasLastSuspendedOn("").
+						HasOwnerRoleType("ROLE").
+						HasConfig(expectedTaskConfig).
+						HasBudget(""),
+					//HasTaskRelations(sdk.TaskRelations{}). // TODO:
+				),
+			},
+			// Unset
+			{
+				Config: config.FromModel(t, basicConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, "snowflake_task.test").
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasEnabledString(r.BooleanDefault).
+						HasWarehouseString("").
+						HasScheduleString("").
+						HasConfigString("").
+						HasAllowOverlappingExecutionString(r.BooleanDefault).
+						HasErrorIntegrationString("").
+						HasCommentString("").
+						HasFinalizeString("").
+						HasAfterLen(0).
+						HasWhenString("").
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.test").
+						//HasCreatedOnNotEmpty(),
+						HasName(id.Name()).
+						//HasId(id.FullyQualifiedName()). // TODO: not empty
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner("ACCOUNTADMIN"). // TODO: Current role
+						HasComment("").
+						HasWarehouse("").
+						HasSchedule("").
+						//HasPredecessors(nil). // TODO:
+						HasState(sdk.TaskStateSuspended).
+						HasDefinition(statement).
+						HasCondition("").
+						HasAllowOverlappingExecution(false).
+						HasErrorIntegration(sdk.NewAccountObjectIdentifier("")). // TODO: *sdk.AOI
+						HasLastCommittedOnNotEmpty().
+						HasLastSuspendedOnNotEmpty().
+						HasOwnerRoleType("ROLE").
+						HasConfig("").
+						HasBudget(""),
+					//HasTaskRelations(sdk.TaskRelations{}). // TODO:
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_AllParameters(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+}
+
+// TODO: Test other paths (alter finalize, after, itd)
 
 //type (
 //	AccTaskTestSettings struct {

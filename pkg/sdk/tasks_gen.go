@@ -122,6 +122,7 @@ type TaskSet struct {
 
 type TaskUnset struct {
 	Warehouse                               *bool                   `ddl:"keyword" sql:"WAREHOUSE"`
+	UserTaskManagedInitialWarehouseSize     *bool                   `ddl:"keyword" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
 	Schedule                                *bool                   `ddl:"keyword" sql:"SCHEDULE"`
 	Config                                  *bool                   `ddl:"keyword" sql:"CONFIG"`
 	AllowOverlappingExecution               *bool                   `ddl:"keyword" sql:"ALLOW_OVERLAPPING_EXECUTION"`
@@ -187,7 +188,7 @@ type Task struct {
 	SchemaName                string
 	Owner                     string
 	Comment                   string
-	Warehouse                 string // TODO: *AccountObjectIdentifier
+	Warehouse                 *AccountObjectIdentifier
 	Schedule                  string
 	Predecessors              []SchemaObjectIdentifier
 	State                     TaskState

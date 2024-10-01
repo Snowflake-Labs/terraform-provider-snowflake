@@ -110,7 +110,7 @@ func (t *TaskAssert) HasComment(expected string) *TaskAssert {
 func (t *TaskAssert) HasWarehouse(expected string) *TaskAssert {
 	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
 		t.Helper()
-		if o.Warehouse != expected {
+		if o.Warehouse != nil && o.Warehouse.FullyQualifiedName() != expected {
 			return fmt.Errorf("expected warehouse: %v; got: %v", expected, o.Warehouse)
 		}
 		return nil

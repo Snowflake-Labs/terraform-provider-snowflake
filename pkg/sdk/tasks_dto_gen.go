@@ -112,6 +112,7 @@ type TaskSetRequest struct {
 
 type TaskUnsetRequest struct {
 	Warehouse                               *bool
+	UserTaskManagedInitialWarehouseSize     *bool
 	Schedule                                *bool
 	Config                                  *bool
 	AllowOverlappingExecution               *bool
