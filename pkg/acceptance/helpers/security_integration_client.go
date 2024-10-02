@@ -56,6 +56,19 @@ func (c *SecurityIntegrationClient) CreateScim(t *testing.T) (*sdk.SecurityInteg
 	return c.CreateScimWithRequest(t, sdk.NewCreateScimSecurityIntegrationRequest(c.ids.RandomAccountObjectIdentifier(), sdk.ScimSecurityIntegrationScimClientGeneric, sdk.ScimSecurityIntegrationRunAsRoleGenericScimProvisioner))
 }
 
+func (c *SecurityIntegrationClient) CreateApiAuthenticationClientCredentialsWithRequest(t *testing.T, request *sdk.CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) (*sdk.SecurityIntegration, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().CreateApiAuthenticationWithClientCredentialsFlow(ctx, request)
+	require.NoError(t, err)
+
+	si, err := c.client().ShowByID(ctx, request.GetName())
+	require.NoError(t, err)
+
+	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
+}
+
 func (c *SecurityIntegrationClient) UpdateSaml2(t *testing.T, request *sdk.AlterSaml2SecurityIntegrationRequest) {
 	t.Helper()
 	ctx := context.Background()

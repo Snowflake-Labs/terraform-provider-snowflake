@@ -771,11 +771,15 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, configModelWithUpdatedTriggers),
 			},
-			// Update only triggers (not allowed in Snowflake)
+			// Update only triggers (not allowed in Snowflake; recreating)
 			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_resource_monitor.test", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, configModelWithoutTriggers),
-				ExpectError:              regexp.MustCompile("Due to Snowflake limitations triggers cannot be completely removed form"),
 			},
 		},
 	})

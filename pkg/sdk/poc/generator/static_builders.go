@@ -9,6 +9,10 @@ func (v *QueryStruct) Create() *QueryStruct {
 	return v.SQL("CREATE")
 }
 
+func (v *QueryStruct) CreateOrAlter() *QueryStruct {
+	return v.SQL("CREATE OR ALTER")
+}
+
 func (v *QueryStruct) Alter() *QueryStruct {
 	return v.SQL("ALTER")
 }

@@ -101,7 +101,7 @@ var ProceduresDef = g.NewInterface(
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
-		ListAssignment("SECRETS", "Secret", g.ParameterOptions().Parentheses()).
+		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
@@ -169,7 +169,7 @@ var ProceduresDef = g.NewInterface(
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
-		ListAssignment("SECRETS", "Secret", g.ParameterOptions().Parentheses()).
+		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).

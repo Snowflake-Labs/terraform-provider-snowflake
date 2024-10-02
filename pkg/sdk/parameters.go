@@ -654,6 +654,73 @@ var AllUserParameters = []UserParameter{
 	UserParameterPreventUnloadToInternalStages,
 }
 
+type TaskParameter string
+
+// TODO(SNOW-1348116 - next prs): Handle task parameters
+const (
+	// Task Parameters
+	TaskParameterSuspendTaskAfterNumFailures             TaskParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
+	TaskParameterTaskAutoRetryAttempts                   TaskParameter = "TASK_AUTO_RETRY_ATTEMPTS"
+	TaskParameterUserTaskManagedInitialWarehouseSize     TaskParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
+	TaskParameterUserTaskMinimumTriggerIntervalInSeconds TaskParameter = "USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"
+	TaskParameterUserTaskTimeoutMs                       TaskParameter = "USER_TASK_TIMEOUT_MS"
+
+	// Session Parameters (inherited)
+	TaskParameterAbortDetachedQuery                       TaskParameter = "ABORT_DETACHED_QUERY"
+	TaskParameterAutocommit                               TaskParameter = "AUTOCOMMIT"
+	TaskParameterBinaryInputFormat                        TaskParameter = "BINARY_INPUT_FORMAT"
+	TaskParameterBinaryOutputFormat                       TaskParameter = "BINARY_OUTPUT_FORMAT"
+	TaskParameterClientMemoryLimit                        TaskParameter = "CLIENT_MEMORY_LIMIT"
+	TaskParameterClientMetadataRequestUseConnectionCtx    TaskParameter = "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"
+	TaskParameterClientPrefetchThreads                    TaskParameter = "CLIENT_PREFETCH_THREADS"
+	TaskParameterClientResultChunkSize                    TaskParameter = "CLIENT_RESULT_CHUNK_SIZE"
+	TaskParameterClientResultColumnCaseInsensitive        TaskParameter = "CLIENT_RESULT_COLUMN_CASE_INSENSITIVE"
+	TaskParameterClientSessionKeepAlive                   TaskParameter = "CLIENT_SESSION_KEEP_ALIVE"
+	TaskParameterClientSessionKeepAliveHeartbeatFrequency TaskParameter = "CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY"
+	TaskParameterClientTimestampTypeMapping               TaskParameter = "CLIENT_TIMESTAMP_TYPE_MAPPING"
+	TaskParameterDateInputFormat                          TaskParameter = "DATE_INPUT_FORMAT"
+	TaskParameterDateOutputFormat                         TaskParameter = "DATE_OUTPUT_FORMAT"
+	TaskParameterEnableUnloadPhysicalTypeOptimization     TaskParameter = "ENABLE_UNLOAD_PHYSICAL_TYPE_OPTIMIZATION"
+	TaskParameterErrorOnNondeterministicMerge             TaskParameter = "ERROR_ON_NONDETERMINISTIC_MERGE"
+	TaskParameterErrorOnNondeterministicUpdate            TaskParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
+	TaskParameterGeographyOutputFormat                    TaskParameter = "GEOGRAPHY_OUTPUT_FORMAT"
+	TaskParameterGeometryOutputFormat                     TaskParameter = "GEOMETRY_OUTPUT_FORMAT"
+	TaskParameterJdbcTreatTimestampNtzAsUtc               TaskParameter = "JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC"
+	TaskParameterJdbcUseSessionTimezone                   TaskParameter = "JDBC_USE_SESSION_TIMEZONE"
+	TaskParameterJsonIndent                               TaskParameter = "JSON_INDENT"
+	TaskParameterLockTimeout                              TaskParameter = "LOCK_TIMEOUT"
+	TaskParameterLogLevel                                 TaskParameter = "LOG_LEVEL"
+	TaskParameterMultiStatementCount                      TaskParameter = "MULTI_STATEMENT_COUNT"
+	TaskParameterNoorderSequenceAsDefault                 TaskParameter = "NOORDER_SEQUENCE_AS_DEFAULT"
+	TaskParameterOdbcTreatDecimalAsInt                    TaskParameter = "ODBC_TREAT_DECIMAL_AS_INT"
+	TaskParameterQueryTag                                 TaskParameter = "QUERY_TAG"
+	TaskParameterQuotedIdentifiersIgnoreCase              TaskParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
+	TaskParameterRowsPerResultset                         TaskParameter = "ROWS_PER_RESULTSET"
+	TaskParameterS3StageVpceDnsName                       TaskParameter = "S3_STAGE_VPCE_DNS_NAME"
+	TaskParameterSearchPath                               TaskParameter = "SEARCH_PATH"
+	TaskParameterStatementQueuedTimeoutInSeconds          TaskParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
+	TaskParameterStatementTimeoutInSeconds                TaskParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
+	TaskParameterStrictJsonOutput                         TaskParameter = "STRICT_JSON_OUTPUT"
+	TaskParameterTimestampDayIsAlways24h                  TaskParameter = "TIMESTAMP_DAY_IS_ALWAYS_24H"
+	TaskParameterTimestampInputFormat                     TaskParameter = "TIMESTAMP_INPUT_FORMAT"
+	TaskParameterTimestampLtzOutputFormat                 TaskParameter = "TIMESTAMP_LTZ_OUTPUT_FORMAT"
+	TaskParameterTimestampNtzOutputFormat                 TaskParameter = "TIMESTAMP_NTZ_OUTPUT_FORMAT"
+	TaskParameterTimestampOutputFormat                    TaskParameter = "TIMESTAMP_OUTPUT_FORMAT"
+	TaskParameterTimestampTypeMapping                     TaskParameter = "TIMESTAMP_TYPE_MAPPING"
+	TaskParameterTimestampTzOutputFormat                  TaskParameter = "TIMESTAMP_TZ_OUTPUT_FORMAT"
+	TaskParameterTimezone                                 TaskParameter = "TIMEZONE"
+	TaskParameterTimeInputFormat                          TaskParameter = "TIME_INPUT_FORMAT"
+	TaskParameterTimeOutputFormat                         TaskParameter = "TIME_OUTPUT_FORMAT"
+	TaskParameterTraceLevel                               TaskParameter = "TRACE_LEVEL"
+	TaskParameterTransactionAbortOnError                  TaskParameter = "TRANSACTION_ABORT_ON_ERROR"
+	TaskParameterTransactionDefaultIsolationLevel         TaskParameter = "TRANSACTION_DEFAULT_ISOLATION_LEVEL"
+	TaskParameterTwoDigitCenturyStart                     TaskParameter = "TWO_DIGIT_CENTURY_START"
+	TaskParameterUnsupportedDdlAction                     TaskParameter = "UNSUPPORTED_DDL_ACTION"
+	TaskParameterUseCachedResult                          TaskParameter = "USE_CACHED_RESULT"
+	TaskParameterWeekOfYearPolicy                         TaskParameter = "WEEK_OF_YEAR_POLICY"
+	TaskParameterWeekStart                                TaskParameter = "WEEK_START"
+)
+
 type WarehouseParameter string
 
 const (
@@ -1239,6 +1306,7 @@ const (
 	ParameterTypeWarehouse        ParameterType = "WAREHOUSE"
 	ParameterTypeDatabase         ParameterType = "DATABASE"
 	ParameterTypeSchema           ParameterType = "SCHEMA"
+	ParameterTypeTask             ParameterType = "TASK"
 )
 
 type Parameter struct {

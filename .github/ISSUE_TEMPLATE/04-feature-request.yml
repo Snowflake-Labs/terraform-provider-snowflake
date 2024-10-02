@@ -102,6 +102,7 @@ body:
         - resource:sequence
         - resource:session_parameter
         - resource:share
+        - resource:shared_database
         - resource:stage
         - resource:storage_integration
         - resource:stream

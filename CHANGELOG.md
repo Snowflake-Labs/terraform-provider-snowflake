@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.96.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.95.0...v0.96.0) (2024-09-18)
+
+
+### 🎉 **What's new:**
+
+* Add authentication policies to SDK ([#2937](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2937)) ([7b49685](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7b496859d07ee650a52735ffc77b398ca6aa01f9))
+* Add SDK for External Volumes ([#3033](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3033)) ([2844a30](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2844a301b4d9e303c7d47f1badc2fe5c3acd34e3))
+* Masking policy data source v1 ([#3083](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3083)) ([2553fbf](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2553fbf75f551ac736896155d787384e3b205ef7))
+* Masking policy resource v1 ([#3078](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3078)) ([fa4ce56](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fa4ce56c1d4071722ee8dd039f7090c07afc0057))
+* Resource monitor v1 readiness ([#3052](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3052)) ([ac493f4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ac493f4dab2e6efe2fef05e39fd7cdc622a729ca))
+* Resource monitor v1 readiness part 2 ([#3064](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3064)) ([01b66cf](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/01b66cf0f2977071285bf5988c790cb257b61b3e))
+* Row access policy data source v1 ([#3066](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3066)) ([138a288](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/138a288c54971d62af32f74635f083c198f3774c))
+* Row access policy resource v1 ([#3063](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3063)) ([13cd694](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/13cd6948d98a1e40647407ec2e8c5bd0f0635917))
+
+
+### 🔧 **Misc**
+
+* Add Filip legacy to protected users ([#3054](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3054)) ([5f54ff9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5f54ff98d17f789872912ad9ef6e5ee21fb53b58))
+* Add Filip to protected users ([#3053](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3053)) ([74b8ea8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/74b8ea8dc209b42a395e575f77bb1cb96373747c))
+* Adjust authentication policy ([#3068](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3068)) ([f39a68c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f39a68c7af69a22a656aa74fbe1d7eac36f245ed))
+* Clean up old test object helpers ([#3049](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3049)) ([78ecb62](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/78ecb62935c1a40611418e59ed5f0d644cf85f03))
+* Example of granting role to multiple objects ([#3047](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3047)) ([86a7902](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/86a7902562d81c1eeb47be4530587e87ed8cfd44))
+* Update readme and objects rework state ([#3046](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3046)) ([5802dca](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5802dcae57ab7a0ed24b02d2c492394cf2f53e70))
+
+
+### 🐛 **Bug fixes:**
+
+* Add fix for model grants ([#3070](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3070)) ([cbc3d74](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/cbc3d746c7153025598b4c9d5cccfaae3a957c0e))
+* authentication policies ([#3061](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3061)) ([a65e564](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a65e564d49bffc7c2e215adb7bd4138f398c00a8))
+* Fix database show by and resource logic ([#3055](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3055)) ([1887e55](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1887e55908da3f689724f729d012740841995905))
+* Fix default secondary roles option import ([#3041](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3041)) ([0a3ce34](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0a3ce34f5f78db6438eceb6c58fb1dc21d16e6a5))
+* Fix sweepers for warehouse and database ([#3057](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3057)) ([6dd586b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6dd586bbe8a5945c0324ee2f0b5c16535859544e))
+* Fix views permadiff ([#3079](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3079)) ([c2d3e5c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c2d3e5c8104dcd43e81dcd3027a7fd3184f3a578))
+* Update v0.95.0 migration guide ([#3062](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3062)) ([d5dac60](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d5dac6005bf2d44f730e51bdab452fd1b4f1aaff))
+
 ## [0.95.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.94.1...v0.95.0) (2024-09-04)
 
 
