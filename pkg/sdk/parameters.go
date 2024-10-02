@@ -659,7 +659,11 @@ type TaskParameter string
 // TODO(SNOW-1348116 - next prs): Handle task parameters
 const (
 	// Task Parameters
-	TaskParameterUserTaskManagedInitialWarehouseSize TaskParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
+	TaskParameterSuspendTaskAfterNumFailures             TaskParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
+	TaskParameterTaskAutoRetryAttempts                   TaskParameter = "TASK_AUTO_RETRY_ATTEMPTS"
+	TaskParameterUserTaskManagedInitialWarehouseSize     TaskParameter = "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"
+	TaskParameterUserTaskMinimumTriggerIntervalInSeconds TaskParameter = "USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS"
+	TaskParameterUserTaskTimeoutMs                       TaskParameter = "USER_TASK_TIMEOUT_MS"
 
 	// Session Parameters (inherited)
 	TaskParameterAbortDetachedQuery                       TaskParameter = "ABORT_DETACHED_QUERY"
@@ -681,7 +685,6 @@ const (
 	TaskParameterErrorOnNondeterministicUpdate            TaskParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
 	TaskParameterGeographyOutputFormat                    TaskParameter = "GEOGRAPHY_OUTPUT_FORMAT"
 	TaskParameterGeometryOutputFormat                     TaskParameter = "GEOMETRY_OUTPUT_FORMAT"
-	TaskParameterJdbcTreatDecimalAsInt                    TaskParameter = "JDBC_TREAT_DECIMAL_AS_INT"
 	TaskParameterJdbcTreatTimestampNtzAsUtc               TaskParameter = "JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC"
 	TaskParameterJdbcUseSessionTimezone                   TaskParameter = "JDBC_USE_SESSION_TIMEZONE"
 	TaskParameterJsonIndent                               TaskParameter = "JSON_INDENT"
@@ -695,7 +698,6 @@ const (
 	TaskParameterRowsPerResultset                         TaskParameter = "ROWS_PER_RESULTSET"
 	TaskParameterS3StageVpceDnsName                       TaskParameter = "S3_STAGE_VPCE_DNS_NAME"
 	TaskParameterSearchPath                               TaskParameter = "SEARCH_PATH"
-	TaskParameterSimulatedDataSharingConsumer             TaskParameter = "SIMULATED_DATA_SHARING_CONSUMER"
 	TaskParameterStatementQueuedTimeoutInSeconds          TaskParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
 	TaskParameterStatementTimeoutInSeconds                TaskParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
 	TaskParameterStrictJsonOutput                         TaskParameter = "STRICT_JSON_OUTPUT"

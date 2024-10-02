@@ -280,7 +280,7 @@ func TestInt_Schemas(t *testing.T) {
 		swapSchema, cleanupSwapSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSwapSchema)
 
-		table, _ := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, _ := testClientHelper().Table.CreateInSchema(t, schema.ID())
 		t.Cleanup(func() {
 			newId := sdk.NewSchemaObjectIdentifierInSchema(swapSchema.ID(), table.Name)
 			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(newId))

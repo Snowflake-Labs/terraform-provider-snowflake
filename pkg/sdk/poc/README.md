@@ -132,15 +132,26 @@ type SomeReq struct {
 }
 ```
 
-- ConflictingFields validation results in: 
+- Wrong generated validations for `ConflictingFields` for more complicated validations 
+  - For now `everyValueSet()` should be manually changed to `moreThanOneValueSet()` if there is a need to validate only one of many options
+  - Consider following example for `secret`:
 ```go
-if everyValueSet(...) {
-    errs = append(errs, errOneOf(...))
+// For validation Conflicting fields:
+WithValidation(g.ConflictingFields, "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString")
+```
+```go
+// Generation results in:
+if valueSet(opts.Set) {
+    if everyValueSet(opts.Set.SetForOAuthClientCredentialsFlow, opts.Set.SetForOAuthAuthorizationFlow, opts.Set.SetForBasicAuthentication, opts.Set.SetForGenericString) {
+        errs = append(errs, errOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
+    }
 }
 
-// for now need to be changed manually to example bellow but should result in:
-if moreThanOneValueSet(...) {
-	errs = append(errs, errMoreThanOneOf(...))
+// For now needs to be manually changed to:
+if valueSet(opts.Set) {
+    if moreThanOneValueSet(opts.Set.SetForOAuthClientCredentialsFlow, opts.Set.SetForOAuthAuthorizationFlow, opts.Set.SetForBasicAuthentication, opts.Set.SetForGenericString) {
+        errs = append(errs, errOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
+    }
 }
 ```
 

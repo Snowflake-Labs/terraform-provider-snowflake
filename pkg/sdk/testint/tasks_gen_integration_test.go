@@ -130,6 +130,119 @@ func TestInt_Tasks(t *testing.T) {
 		)
 	}
 
+	sessionParametersSet := sdk.SessionParameters{
+		AbortDetachedQuery:                       sdk.Bool(true),
+		Autocommit:                               sdk.Bool(false),
+		BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
+		BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
+		ClientMemoryLimit:                        sdk.Int(1024),
+		ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+		ClientPrefetchThreads:                    sdk.Int(2),
+		ClientResultChunkSize:                    sdk.Int(48),
+		ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+		ClientSessionKeepAlive:                   sdk.Bool(true),
+		ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
+		ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
+		DateInputFormat:                          sdk.String("YYYY-MM-DD"),
+		DateOutputFormat:                         sdk.String("YY-MM-DD"),
+		EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
+		ErrorOnNondeterministicMerge:             sdk.Bool(false),
+		ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+		GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
+		GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
+		JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+		JdbcUseSessionTimezone:                   sdk.Bool(false),
+		JSONIndent:                               sdk.Int(4),
+		LockTimeout:                              sdk.Int(21222),
+		LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
+		MultiStatementCount:                      sdk.Int(0),
+		NoorderSequenceAsDefault:                 sdk.Bool(false),
+		OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+		QueryTag:                                 sdk.String("some_tag"),
+		QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+		RowsPerResultset:                         sdk.Int(2),
+		S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
+		SearchPath:                               sdk.String("$public, $current"),
+		StatementQueuedTimeoutInSeconds:          sdk.Int(10),
+		StatementTimeoutInSeconds:                sdk.Int(10),
+		StrictJSONOutput:                         sdk.Bool(true),
+		TimestampDayIsAlways24h:                  sdk.Bool(true),
+		TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
+		TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+		TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+		TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
+		TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
+		TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
+		Timezone:                                 sdk.String("Europe/Warsaw"),
+		TimeInputFormat:                          sdk.String("HH24:MI"),
+		TimeOutputFormat:                         sdk.String("HH24:MI"),
+		TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
+		TransactionAbortOnError:                  sdk.Bool(true),
+		TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
+		TwoDigitCenturyStart:                     sdk.Int(1980),
+		UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
+		UseCachedResult:                          sdk.Bool(false),
+		WeekOfYearPolicy:                         sdk.Int(1),
+		WeekStart:                                sdk.Int(1),
+	}
+
+	assertSessionParametersSet := func(parametersAssert *objectparametersassert.TaskParametersAssert) *objectparametersassert.TaskParametersAssert {
+		return parametersAssert.
+			HasAbortDetachedQuery(true).
+			HasAutocommit(false).
+			HasBinaryInputFormat(sdk.BinaryInputFormatUTF8).
+			HasBinaryOutputFormat(sdk.BinaryOutputFormatBase64).
+			HasClientMemoryLimit(1024).
+			HasClientMetadataRequestUseConnectionCtx(true).
+			HasClientPrefetchThreads(2).
+			HasClientResultChunkSize(48).
+			HasClientResultColumnCaseInsensitive(true).
+			HasClientSessionKeepAlive(true).
+			HasClientSessionKeepAliveHeartbeatFrequency(2400).
+			HasClientTimestampTypeMapping(sdk.ClientTimestampTypeMappingNtz).
+			HasDateInputFormat("YYYY-MM-DD").
+			HasDateOutputFormat("YY-MM-DD").
+			HasEnableUnloadPhysicalTypeOptimization(false).
+			HasErrorOnNondeterministicMerge(false).
+			HasErrorOnNondeterministicUpdate(true).
+			HasGeographyOutputFormat(sdk.GeographyOutputFormatWKB).
+			HasGeometryOutputFormat(sdk.GeometryOutputFormatWKB).
+			HasJdbcTreatTimestampNtzAsUtc(true).
+			HasJdbcUseSessionTimezone(false).
+			HasJsonIndent(4).
+			HasLockTimeout(21222).
+			HasLogLevel(sdk.LogLevelError).
+			HasMultiStatementCount(0).
+			HasNoorderSequenceAsDefault(false).
+			HasOdbcTreatDecimalAsInt(true).
+			HasQueryTag("some_tag").
+			HasQuotedIdentifiersIgnoreCase(true).
+			HasRowsPerResultset(2).
+			HasS3StageVpceDnsName("vpce-id.s3.region.vpce.amazonaws.com").
+			HasSearchPath("$public, $current").
+			HasStatementQueuedTimeoutInSeconds(10).
+			HasStatementTimeoutInSeconds(10).
+			HasStrictJsonOutput(true).
+			HasTimestampDayIsAlways24h(true).
+			HasTimestampInputFormat("YYYY-MM-DD").
+			HasTimestampLtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+			HasTimestampNtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+			HasTimestampOutputFormat("YYYY-MM-DD HH24:MI:SS").
+			HasTimestampTypeMapping(sdk.TimestampTypeMappingLtz).
+			HasTimestampTzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+			HasTimezone("Europe/Warsaw").
+			HasTimeInputFormat("HH24:MI").
+			HasTimeOutputFormat("HH24:MI").
+			HasTraceLevel(sdk.TraceLevelOnEvent).
+			HasTransactionAbortOnError(true).
+			HasTransactionDefaultIsolationLevel(sdk.TransactionDefaultIsolationLevelReadCommitted).
+			HasTwoDigitCenturyStart(1980).
+			HasUnsupportedDdlAction(sdk.UnsupportedDDLActionFail).
+			HasUseCachedResult(false).
+			HasWeekOfYearPolicy(1).
+			HasWeekStart(1)
+	}
+
 	t.Run("create task: no optionals", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
@@ -141,6 +254,8 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		assertTask(t, task, id, "")
+
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, id).HasAllDefaults())
 	})
 
 	t.Run("create task: with initial warehouse", func(t *testing.T) {
@@ -184,6 +299,11 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil, &errorIntegrationId)
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, id).
+			HasJsonIndent(4).
+			HasUserTaskTimeoutMs(500).
+			HasSuspendTaskAfterNumFailures(3),
+		)
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
@@ -421,10 +541,7 @@ func TestInt_Tasks(t *testing.T) {
 			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
 			WithAllowOverlappingExecution(true).
 			WithUserTaskTimeoutMs(10).
-			WithSessionParameters(sdk.SessionParameters{
-				// TODO(SNOW-1348116 - next prs): fill and assert parameters
-				Autocommit: sdk.Bool(true),
-			}).
+			WithSessionParameters(sessionParametersSet).
 			WithSuspendTaskAfterNumFailures(15).
 			WithComment("some_comment").
 			WithTaskAutoRetryAttempts(15).
@@ -446,6 +563,11 @@ func TestInt_Tasks(t *testing.T) {
 			HasComment("some_comment").
 			HasTaskRelations(sdk.TaskRelations{}),
 		)
+		assertions.AssertThat(t, assertSessionParametersSet(objectparametersassert.TaskParameters(t, task.ID()).
+			HasUserTaskTimeoutMs(10).
+			HasSuspendTaskAfterNumFailures(15).
+			HasTaskAutoRetryAttempts(15)),
+		)
 
 		err = client.Tasks.CreateOrAlter(ctx, sdk.NewCreateOrAlterTaskRequest(id, sql))
 		require.NoError(t, err)
@@ -461,6 +583,13 @@ func TestInt_Tasks(t *testing.T) {
 			HasCondition("").
 			HasComment("").
 			HasTaskRelations(sdk.TaskRelations{}),
+		)
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+			HasDefaultAutocommitValue().
+			HasDefaultAbortDetachedQueryValue().
+			HasDefaultUserTaskTimeoutMsValue().
+			HasDefaultSuspendTaskAfterNumFailuresValue().
+			HasDefaultTaskAutoRetryAttemptsValue(),
 		)
 
 		require.Equal(t, createdOn, alteredTask.CreatedOn)
@@ -490,11 +619,7 @@ func TestInt_Tasks(t *testing.T) {
 			// TODO(SNOW-1348116): Cannot set warehouse due to Snowflake error
 			// WithWarehouse(testClientHelper().Ids.WarehouseId()).
 			WithErrorNotificationIntegration(errorIntegrationId).
-			WithSessionParameters(sdk.SessionParameters{
-				Autocommit:             sdk.Bool(true),
-				ClientSessionKeepAlive: sdk.Bool(true),
-				// TODO(SNOW-1348116 - next prs): fill and assert parameters
-			}).
+			WithSessionParameters(sessionParametersSet).
 			WithSchedule("10 MINUTE").
 			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
 			WithAllowOverlappingExecution(true).
@@ -506,11 +631,6 @@ func TestInt_Tasks(t *testing.T) {
 		))
 		require.NoError(t, err)
 
-		// TODO(SNOW-1348116 - next prs): Assert parameters
-		// assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
-		//	HasUserTaskManagedInitialWarehouseSize()
-		// )
-
 		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
 			// HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
 			HasErrorIntegration(sdk.Pointer(errorIntegrationId)).
@@ -519,12 +639,69 @@ func TestInt_Tasks(t *testing.T) {
 			HasAllowOverlappingExecution(true).
 			HasComment("new comment"),
 		)
+		assertions.AssertThat(t, assertSessionParametersSet(objectparametersassert.TaskParameters(t, task.ID())).
+			HasUserTaskTimeoutMs(1000).
+			HasSuspendTaskAfterNumFailures(100).
+			HasTaskAutoRetryAttempts(10).
+			HasUserTaskMinimumTriggerIntervalInSeconds(15),
+		)
 
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnset(*sdk.NewTaskUnsetRequest().
 			WithErrorIntegration(true).
 			WithSessionParametersUnset(sdk.SessionParametersUnset{
-				Autocommit:             sdk.Bool(true),
-				ClientSessionKeepAlive: sdk.Bool(true),
+				AbortDetachedQuery:                       sdk.Bool(true),
+				Autocommit:                               sdk.Bool(true),
+				BinaryInputFormat:                        sdk.Bool(true),
+				BinaryOutputFormat:                       sdk.Bool(true),
+				ClientMemoryLimit:                        sdk.Bool(true),
+				ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+				ClientPrefetchThreads:                    sdk.Bool(true),
+				ClientResultChunkSize:                    sdk.Bool(true),
+				ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+				ClientSessionKeepAlive:                   sdk.Bool(true),
+				ClientSessionKeepAliveHeartbeatFrequency: sdk.Bool(true),
+				ClientTimestampTypeMapping:               sdk.Bool(true),
+				DateInputFormat:                          sdk.Bool(true),
+				DateOutputFormat:                         sdk.Bool(true),
+				EnableUnloadPhysicalTypeOptimization:     sdk.Bool(true),
+				ErrorOnNondeterministicMerge:             sdk.Bool(true),
+				ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+				GeographyOutputFormat:                    sdk.Bool(true),
+				GeometryOutputFormat:                     sdk.Bool(true),
+				JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+				JdbcUseSessionTimezone:                   sdk.Bool(true),
+				JSONIndent:                               sdk.Bool(true),
+				LockTimeout:                              sdk.Bool(true),
+				LogLevel:                                 sdk.Bool(true),
+				MultiStatementCount:                      sdk.Bool(true),
+				NoorderSequenceAsDefault:                 sdk.Bool(true),
+				OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+				QueryTag:                                 sdk.Bool(true),
+				QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+				RowsPerResultset:                         sdk.Bool(true),
+				S3StageVpceDnsName:                       sdk.Bool(true),
+				SearchPath:                               sdk.Bool(true),
+				StatementQueuedTimeoutInSeconds:          sdk.Bool(true),
+				StatementTimeoutInSeconds:                sdk.Bool(true),
+				StrictJSONOutput:                         sdk.Bool(true),
+				TimestampDayIsAlways24h:                  sdk.Bool(true),
+				TimestampInputFormat:                     sdk.Bool(true),
+				TimestampLTZOutputFormat:                 sdk.Bool(true),
+				TimestampNTZOutputFormat:                 sdk.Bool(true),
+				TimestampOutputFormat:                    sdk.Bool(true),
+				TimestampTypeMapping:                     sdk.Bool(true),
+				TimestampTZOutputFormat:                  sdk.Bool(true),
+				Timezone:                                 sdk.Bool(true),
+				TimeInputFormat:                          sdk.Bool(true),
+				TimeOutputFormat:                         sdk.Bool(true),
+				TraceLevel:                               sdk.Bool(true),
+				TransactionAbortOnError:                  sdk.Bool(true),
+				TransactionDefaultIsolationLevel:         sdk.Bool(true),
+				TwoDigitCenturyStart:                     sdk.Bool(true),
+				UnsupportedDDLAction:                     sdk.Bool(true),
+				UseCachedResult:                          sdk.Bool(true),
+				WeekOfYearPolicy:                         sdk.Bool(true),
+				WeekStart:                                sdk.Bool(true),
 			}).
 			WithWarehouse(true).
 			WithSchedule(true).
@@ -545,11 +722,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasAllowOverlappingExecution(false).
 			HasComment(""),
 		)
-
-		// TODO(SNOW-1348116 - next prs): Assert parameters
-		// assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
-		//	HasUserTaskManagedInitialWarehouseSize()
-		// )
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).HasAllDefaults())
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {

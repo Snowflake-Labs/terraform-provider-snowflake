@@ -52,6 +52,7 @@ type TestClient struct {
 	SessionPolicy                *SessionPolicyClient
 	Share                        *ShareClient
 	Stage                        *StageClient
+	Stream                       *StreamClient
 	Streamlit                    *StreamlitClient
 	Table                        *TableClient
 	Tag                          *TagClient
@@ -117,6 +118,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		SecurityIntegration:          NewSecurityIntegrationClient(context, idsGenerator),
 		SessionPolicy:                NewSessionPolicyClient(context, idsGenerator),
 		Share:                        NewShareClient(context, idsGenerator),
+		Stream:                       NewStreamClient(context, idsGenerator),
 		Streamlit:                    NewStreamlitClient(context, idsGenerator),
 		Stage:                        NewStageClient(context, idsGenerator),
 		Table:                        NewTableClient(context, idsGenerator),
