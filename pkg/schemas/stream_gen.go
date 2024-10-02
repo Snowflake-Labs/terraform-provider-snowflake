@@ -10,7 +10,6 @@ import (
 )
 
 // ShowStreamSchema represents output of SHOW query for the single Stream.
-// TODO: merge with desc schema
 var ShowStreamSchema = map[string]*schema.Schema{
 	"created_on": {
 		Type:     schema.TypeString,

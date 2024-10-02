@@ -76,8 +76,8 @@ var streamOnTableSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the stream.",
 	},
-	AtAttributeName:     schemas.AtSchema,
-	BeforeAttributeName: schemas.BeforeSchema,
+	AtAttributeName:     atSchema,
+	BeforeAttributeName: beforeSchema,
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
@@ -139,7 +139,7 @@ func ImportStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err := d.Set("schema", id.SchemaName()); err != nil {
 		return nil, err
 	}
-	if err := d.Set("append_only", booleanStringFromBool(*v.Mode == sdk.StreamModeAppendOnly)); err != nil {
+	if err := d.Set("append_only", booleanStringFromBool(v.IsAppendOnly())); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
@@ -253,7 +253,7 @@ func ReadStreamOnTable(withExternalChangesMarking bool) schema.ReadContextFunc {
 				mode = *stream.Mode
 			}
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"mode", "append_only", string(mode), booleanStringFromBool(mode == sdk.StreamModeAppendOnly), nil},
+				showMapping{"mode", "append_only", string(mode), booleanStringFromBool(stream.IsAppendOnly()), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}

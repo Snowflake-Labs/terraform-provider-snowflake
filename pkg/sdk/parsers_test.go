@@ -185,6 +185,11 @@ func TestParseCommaSeparatedSchemaObjectIdentifierArray_Invalid(t *testing.T) {
 			Error: "unexpected number of parts 2 in identifier a.b, expected 3 in a form of \"<database_name>.<schema_name>.<schema_object_name>\"",
 		},
 		{
+			Name:  "too many parts",
+			Value: "[a.b.c, a.b.c.d]",
+			Error: "unexpected number of parts 4 in identifier a.b.c.d, expected 3 in a form of \"<database_name>.<schema_name>.<schema_object_name>\"",
+		},
+		{
 			Name:  "missing parts - empty id",
 			Value: "[a.b.c, ]",
 			Error: "incompatible identifier",

@@ -12,14 +12,14 @@ import (
 type StreamSourceType string
 
 const (
-	StreamSourceTypeTable         StreamSourceType = "Table"
-	StreamSourceTypeExternalTable StreamSourceType = "External Table"
-	StreamSourceTypeView          StreamSourceType = "View"
-	StreamSourceTypeStage         StreamSourceType = "Stage"
+	StreamSourceTypeTable         StreamSourceType = "TABLE"
+	StreamSourceTypeExternalTable StreamSourceType = "EXTERNAL TABLE"
+	StreamSourceTypeView          StreamSourceType = "VIEW"
+	StreamSourceTypeStage         StreamSourceType = "STAGE"
 )
 
 func ToStreamSourceType(s string) (StreamSourceType, error) {
-	switch streamSourceType := StreamSourceType(s); streamSourceType {
+	switch streamSourceType := StreamSourceType(strings.ToUpper(s)); streamSourceType {
 	case StreamSourceTypeTable,
 		StreamSourceTypeExternalTable,
 		StreamSourceTypeView,

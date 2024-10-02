@@ -55,7 +55,7 @@ func TestInt_Streams(t *testing.T) {
 			HasComment("some comment").
 			HasSourceType(sdk.StreamSourceTypeTable).
 			HasMode(sdk.StreamModeAppendOnly).
-			HasTableId(tableId.FullyQualifiedName()),
+			HasTableId(tableId),
 		)
 
 		// at stream
@@ -132,7 +132,7 @@ func TestInt_Streams(t *testing.T) {
 			HasComment("some comment").
 			HasSourceType(sdk.StreamSourceTypeExternalTable).
 			HasMode(sdk.StreamModeInsertOnly).
-			HasTableId(externalTableId.FullyQualifiedName()),
+			HasTableId(externalTableId),
 		)
 	})
 
@@ -180,7 +180,7 @@ func TestInt_Streams(t *testing.T) {
 			HasComment("some comment").
 			HasSourceType(sdk.StreamSourceTypeView).
 			HasMode(sdk.StreamModeAppendOnly).
-			HasTableId(view.ID().FullyQualifiedName()),
+			HasTableId(view.ID()),
 		)
 	})
 
@@ -206,7 +206,7 @@ func TestInt_Streams(t *testing.T) {
 			HasComment("some comment").
 			HasSourceType(sdk.StreamSourceTypeTable).
 			HasMode(sdk.StreamModeDefault).
-			HasTableId(table.ID().FullyQualifiedName()),
+			HasTableId(table.ID()),
 		)
 	})
 
@@ -361,7 +361,7 @@ func TestInt_Streams(t *testing.T) {
 			HasComment("some comment").
 			HasSourceType(sdk.StreamSourceTypeTable).
 			HasMode(sdk.StreamModeDefault).
-			HasTableId(table.ID().FullyQualifiedName()),
+			HasTableId(table.ID()),
 		)
 	})
 
@@ -452,7 +452,7 @@ func TestInt_Streams(t *testing.T) {
 			HasComment("some comment").
 			HasSourceType(sdk.StreamSourceTypeTable).
 			HasMode(sdk.StreamModeDefault).
-			HasTableId(table.ID().FullyQualifiedName()),
+			HasTableId(table.ID()),
 		)
 	})
 

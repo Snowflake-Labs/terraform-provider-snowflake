@@ -177,6 +177,10 @@ func (v *Stream) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
+func (v *Stream) IsAppendOnly() bool {
+	return v != nil && v.Mode != nil && *v.Mode == StreamModeAppendOnly
+}
+
 // DescribeStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-stream.
 type DescribeStreamOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"`

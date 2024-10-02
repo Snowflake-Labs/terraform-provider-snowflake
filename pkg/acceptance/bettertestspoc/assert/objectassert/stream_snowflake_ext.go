@@ -1,13 +1,15 @@
 package objectassert
 
 import (
+	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-func (s *StreamAssert) HasTableId(expected string) *StreamAssert {
+func (s *StreamAssert) HasTableId(expected sdk.SchemaObjectIdentifier) *StreamAssert {
 	s.AddAssertion(func(t *testing.T, o *sdk.Stream) error {
 		t.Helper()
 		if o.TableName == nil {
@@ -17,7 +19,7 @@ func (s *StreamAssert) HasTableId(expected string) *StreamAssert {
 		if err != nil {
 			return err
 		}
-		if gotTableId.FullyQualifiedName() != expected {
+		if gotTableId.FullyQualifiedName() != expected.FullyQualifiedName() {
 			return fmt.Errorf("expected table name: %v; got: %v", expected, *o.TableName)
 		}
 		return nil
@@ -53,21 +55,21 @@ func (s *StreamAssert) HasSourceType(expected sdk.StreamSourceType) *StreamAsser
 	return s
 }
 
-func (s *StreamAssert) HasBaseTables(expected []sdk.SchemaObjectIdentifier) *StreamAssert {
+func (s *StreamAssert) HasBaseTables(expected ...sdk.SchemaObjectIdentifier) *StreamAssert {
 	s.AddAssertion(func(t *testing.T, o *sdk.Stream) error {
 		t.Helper()
-		if o.BaseTables == nil {
-			return fmt.Errorf("expected base tables to have value; got: nil")
-		}
 		if len(o.BaseTables) != len(expected) {
 			return fmt.Errorf("expected base tables length: %v; got: %v", len(expected), len(o.BaseTables))
 		}
-		for i := range o.BaseTables {
-			if o.BaseTables[i].FullyQualifiedName() != expected[i].FullyQualifiedName() {
-				return fmt.Errorf("expected base table id: %v; got: %v", expected[i], o.BaseTables[i])
+		var errs []error
+		for _, wantId := range expected {
+			if !slices.ContainsFunc(o.BaseTables, func(gotId sdk.SchemaObjectIdentifier) bool {
+				return wantId.FullyQualifiedName() == gotId.FullyQualifiedName()
+			}) {
+				errs = append(errs, fmt.Errorf("expected id: %s, to be in the list ids: %v", wantId.FullyQualifiedName(), o.BaseTables))
 			}
 		}
-		return nil
+		return errors.Join(errs...)
 	})
 	return s
 }

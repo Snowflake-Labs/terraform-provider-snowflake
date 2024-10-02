@@ -5,6 +5,7 @@ package schemas
 import (
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -102,11 +103,9 @@ func StreamDescriptionToSchema(stream sdk.Stream) map[string]any {
 		streamSchema["source_type"] = stream.SourceType
 	}
 	if stream.BaseTables != nil {
-		idsFQN := make([]string, len(stream.BaseTables))
-		for i := range idsFQN {
-			idsFQN[i] = stream.BaseTables[i].FullyQualifiedName()
-		}
-		streamSchema["base_tables"] = idsFQN
+		streamSchema["base_tables"] = collections.Map(stream.BaseTables, func(id sdk.SchemaObjectIdentifier) string {
+			return id.FullyQualifiedName()
+		})
 	}
 	if stream.Type != nil {
 		streamSchema["type"] = stream.Type

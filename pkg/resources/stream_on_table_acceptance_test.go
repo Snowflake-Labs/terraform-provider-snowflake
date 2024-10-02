@@ -12,6 +12,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -24,6 +25,7 @@ import (
 )
 
 func TestAcc_StreamOnTable_Basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceId := helpers.EncodeResourceIdentifier(id)
@@ -31,7 +33,28 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 
 	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
 	t.Cleanup(cleanupTable)
-	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
+
+	baseModel := func() *model.StreamOnTableModel {
+		return model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
+	}
+
+	modelWithExtraFields := baseModel().
+		WithCopyGrants(true).
+		WithComment("foo").
+		WithAppendOnly(r.BooleanTrue).
+		WithShowInitialRows(r.BooleanTrue).
+		WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+			"offset": pluginconfig.StringVariable("0"),
+		}))
+
+	modelWithExtraFieldsDefaultMode := baseModel().
+		WithCopyGrants(true).
+		WithComment("foo").
+		WithAppendOnly(r.BooleanFalse).
+		WithShowInitialRows(r.BooleanTrue).
+		WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+			"offset": pluginconfig.StringVariable("0"),
+		}))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -42,7 +65,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModel(t, baseModel()),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -84,7 +107,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			},
 			// import without optionals
 			{
-				Config:       config.FromModel(t, model),
+				Config:       config.FromModel(t, baseModel()),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
@@ -100,9 +123,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			// set all fields
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithCopyGrants(true).WithComment("foo").WithAppendOnly(r.BooleanTrue).WithShowInitialRows(r.BooleanTrue).WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-					"offset": pluginconfig.StringVariable("0"),
-				}))),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFields),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -149,7 +170,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 					acc.TestClient().Stream.Alter(t, sdk.NewAlterStreamRequest(id).WithSetComment("bar"))
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFields),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -198,7 +219,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			// update fields that recreate the object
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithAppendOnly(r.BooleanFalse)),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFieldsDefaultMode),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -246,7 +267,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			},
 			// import
 			{
-				Config:       config.FromModel(t, model),
+				Config:       config.FromModel(t, modelWithExtraFieldsDefaultMode),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
@@ -264,6 +285,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 }
 
 func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_stream_on_table.test"
@@ -318,8 +340,9 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 	})
 }
 
-// There is no way to check at/before fields in show and describe. That's why in we try creating with these values, but do not assert them.
+// There is no way to check at/before fields in show and describe. That's why we try creating with these values, but do not assert them.
 func TestAcc_StreamOnTable_At(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceId := helpers.EncodeResourceIdentifier(id)
@@ -331,8 +354,23 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 
 	lastQueryId := acc.TestClient().Context.LastQueryId(t)
 
-	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName()).
-		WithComment("foo").WithAppendOnly(r.BooleanTrue).WithShowInitialRows(r.BooleanTrue).WithCopyGrants(true)
+	baseModel := func() *model.StreamOnTableModel {
+		return model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName()).
+			WithComment("foo").
+			WithAppendOnly(r.BooleanTrue).
+			WithShowInitialRows(r.BooleanTrue).
+			WithCopyGrants(true)
+	}
+
+	modelWithOffset := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+		"offset": pluginconfig.StringVariable("0"),
+	}))
+	modelWithStream := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+		"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
+	}))
+	modelWithStatement := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+		"statement": pluginconfig.StringVariable(lastQueryId),
+	}))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -343,9 +381,7 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-					"offset": pluginconfig.StringVariable("0"),
-				}))),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -390,18 +426,14 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-					"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
-				}))),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStream),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-					"statement": pluginconfig.StringVariable(lastQueryId),
-				}))),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStatement),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
@@ -409,7 +441,7 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 			// TODO(SNOW-1689111): test timestamps
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateCheck: assert.AssertThatImport(t,
@@ -426,8 +458,9 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 	})
 }
 
-// There is no way to check at/before fields in show and describe. That's why in we try creating with these values, but do not assert them.
+// There is no way to check at/before fields in show and describe. That's why we try creating with these values, but do not assert them.
 func TestAcc_StreamOnTable_Before(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_stream_on_table.test"
@@ -438,8 +471,23 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 
 	lastQueryId := acc.TestClient().Context.LastQueryId(t)
 
-	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName()).
-		WithComment("foo").WithAppendOnly(r.BooleanTrue).WithShowInitialRows(r.BooleanTrue).WithCopyGrants(true)
+	baseModel := func() *model.StreamOnTableModel {
+		return model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName()).
+			WithComment("foo").
+			WithAppendOnly(r.BooleanTrue).
+			WithShowInitialRows(r.BooleanTrue).
+			WithCopyGrants(true)
+	}
+
+	modelWithOffset := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+		"offset": pluginconfig.StringVariable("0"),
+	}))
+	modelWithStream := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+		"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
+	}))
+	modelWithStatement := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+		"statement": pluginconfig.StringVariable(lastQueryId),
+	}))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -450,9 +498,7 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-					"offset": pluginconfig.StringVariable("0"),
-				}))),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -497,18 +543,14 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-					"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
-				}))),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStream),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-					"statement": pluginconfig.StringVariable(lastQueryId),
-				}))),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStatement),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
@@ -521,8 +563,29 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").
-		WithComment("foo").WithAppendOnly(r.BooleanTrue).WithShowInitialRows(r.BooleanTrue).WithCopyGrants(true)
+	modelWithInvalidTableId := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "invalid")
+
+	modelWithBefore := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").
+		WithComment("foo").
+		WithCopyGrants(false).
+		WithAppendOnly(r.BooleanFalse).
+		WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+			"offset":    pluginconfig.StringVariable("0"),
+			"timestamp": pluginconfig.StringVariable("0"),
+			"statement": pluginconfig.StringVariable("0"),
+			"stream":    pluginconfig.StringVariable("0"),
+		}))
+
+	modelWithAt := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").
+		WithComment("foo").
+		WithCopyGrants(false).
+		WithAppendOnly(r.BooleanFalse).
+		WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+			"offset":    pluginconfig.StringVariable("0"),
+			"timestamp": pluginconfig.StringVariable("0"),
+			"statement": pluginconfig.StringVariable("0"),
+			"stream":    pluginconfig.StringVariable("0"),
+		}))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -535,28 +598,18 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 			// multiple excluding options - before
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-					"offset":    pluginconfig.StringVariable("0"),
-					"timestamp": pluginconfig.StringVariable("0"),
-					"statement": pluginconfig.StringVariable("0"),
-					"stream":    pluginconfig.StringVariable("0"),
-				}))),
-				ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithBefore),
+				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
 			// multiple excluding options - at
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, model.WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-					"offset":    pluginconfig.StringVariable("0"),
-					"timestamp": pluginconfig.StringVariable("0"),
-					"statement": pluginconfig.StringVariable("0"),
-					"stream":    pluginconfig.StringVariable("0"),
-				}))),
-				ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithAt),
+				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
 			// invalid table id
 			{
-				Config:      config.FromModel(t, model.WithBeforeValue(nil).WithAtValue(nil).WithTable("invalid")),
+				Config:      config.FromModel(t, modelWithInvalidTableId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
 			},
 		},
