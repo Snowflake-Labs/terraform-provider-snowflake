@@ -70,7 +70,7 @@ func (c *SecretClient) CreateWithBasicAuthenticationFlow(t *testing.T, id sdk.Sc
 func (c *SecretClient) CreateWithGenericString(t *testing.T, id sdk.SchemaObjectIdentifier, secretString string) (*sdk.Secret, func()) {
 	t.Helper()
 	ctx := context.Background()
-	request := sdk.NewCreateWithGenericStringSecretRequest(id, secretString)
+	request := sdk.NewCreateWithGenericStringSecretRequest(id, secretString).WithOrReplace(true)
 
 	err := c.client().CreateWithGenericString(ctx, request)
 	require.NoError(t, err)

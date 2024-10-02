@@ -101,7 +101,7 @@ func handleSecretUpdate(id sdk.SchemaObjectIdentifier, d *schema.ResourceData) *
 		comment := d.Get("comment").(string)
 		request := sdk.NewAlterSecretRequest(id)
 		if len(comment) == 0 {
-			unsetRequest := sdk.NewSecretUnsetRequest().WithComment(*sdk.Bool(true))
+			unsetRequest := sdk.NewSecretUnsetRequest().WithComment(true)
 			return request.WithUnset(*unsetRequest)
 		} else {
 			setRequest := sdk.NewSecretSetRequest().WithComment(comment)

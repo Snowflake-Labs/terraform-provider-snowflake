@@ -38,6 +38,8 @@ func SecretWithBasicAuthentication() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		Description: "Secret with Basic Authentication where Secret's Type attribute is set to 'PASSWORD'.'",
 	}
 }
 

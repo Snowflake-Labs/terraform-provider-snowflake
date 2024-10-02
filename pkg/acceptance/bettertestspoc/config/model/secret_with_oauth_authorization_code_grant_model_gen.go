@@ -9,7 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 )
 
-type SecretWithAuthorizationCodeModel struct {
+type SecretWithAuthorizationCodeGrantModel struct {
 	ApiAuthentication           tfconfig.Variable `json:"api_authentication,omitempty"`
 	Comment                     tfconfig.Variable `json:"comment,omitempty"`
 	Database                    tfconfig.Variable `json:"database,omitempty"`
@@ -26,7 +26,7 @@ type SecretWithAuthorizationCodeModel struct {
 // Basic builders (resource name and required) //
 /////////////////////////////////////////////////
 
-func SecretWithAuthorizationCode(
+func SecretWithAuthorizationCodeGrant(
 	resourceName string,
 	apiAuthentication string,
 	database string,
@@ -34,8 +34,8 @@ func SecretWithAuthorizationCode(
 	name string,
 	oauthRefreshToken string,
 	oauthRefreshTokenExpiryTime string,
-) *SecretWithAuthorizationCodeModel {
-	s := &SecretWithAuthorizationCodeModel{ResourceModelMeta: config.Meta(resourceName, resources.SecretWithAuthorizationCode)}
+) *SecretWithAuthorizationCodeGrantModel {
+	s := &SecretWithAuthorizationCodeGrantModel{ResourceModelMeta: config.Meta(resourceName, resources.SecretWithAuthorizationCodeGrant)}
 	s.WithApiAuthentication(apiAuthentication)
 	s.WithDatabase(database)
 	s.WithName(name)
@@ -45,15 +45,15 @@ func SecretWithAuthorizationCode(
 	return s
 }
 
-func SecretWithAuthorizationCodeWithDefaultMeta(
+func SecretWithAuthorizationCodeGrantWithDefaultMeta(
 	apiAuthentication string,
 	database string,
 	name string,
 	oauthRefreshToken string,
 	oauthRefreshTokenExpiryTime string,
 	schema string,
-) *SecretWithAuthorizationCodeModel {
-	s := &SecretWithAuthorizationCodeModel{ResourceModelMeta: config.DefaultMeta(resources.SecretWithAuthorizationCode)}
+) *SecretWithAuthorizationCodeGrantModel {
+	s := &SecretWithAuthorizationCodeGrantModel{ResourceModelMeta: config.DefaultMeta(resources.SecretWithAuthorizationCodeGrant)}
 	s.WithApiAuthentication(apiAuthentication)
 	s.WithDatabase(database)
 	s.WithName(name)
@@ -67,42 +67,42 @@ func SecretWithAuthorizationCodeWithDefaultMeta(
 // below all the proper values //
 /////////////////////////////////
 
-func (s *SecretWithAuthorizationCodeModel) WithApiAuthentication(apiAuthentication string) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithApiAuthentication(apiAuthentication string) *SecretWithAuthorizationCodeGrantModel {
 	s.ApiAuthentication = tfconfig.StringVariable(apiAuthentication)
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithComment(comment string) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithComment(comment string) *SecretWithAuthorizationCodeGrantModel {
 	s.Comment = tfconfig.StringVariable(comment)
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithDatabase(database string) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithDatabase(database string) *SecretWithAuthorizationCodeGrantModel {
 	s.Database = tfconfig.StringVariable(database)
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithFullyQualifiedName(fullyQualifiedName string) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithFullyQualifiedName(fullyQualifiedName string) *SecretWithAuthorizationCodeGrantModel {
 	s.FullyQualifiedName = tfconfig.StringVariable(fullyQualifiedName)
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithName(name string) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithName(name string) *SecretWithAuthorizationCodeGrantModel {
 	s.Name = tfconfig.StringVariable(name)
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithOauthRefreshToken(oauthRefreshToken string) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithOauthRefreshToken(oauthRefreshToken string) *SecretWithAuthorizationCodeGrantModel {
 	s.OauthRefreshToken = tfconfig.StringVariable(oauthRefreshToken)
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithOauthRefreshTokenExpiryTime(oauthRefreshTokenExpiryTime string) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithOauthRefreshTokenExpiryTime(oauthRefreshTokenExpiryTime string) *SecretWithAuthorizationCodeGrantModel {
 	s.OauthRefreshTokenExpiryTime = tfconfig.StringVariable(oauthRefreshTokenExpiryTime)
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithSchema(schema string) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithSchema(schema string) *SecretWithAuthorizationCodeGrantModel {
 	s.Schema = tfconfig.StringVariable(schema)
 	return s
 }
@@ -111,42 +111,42 @@ func (s *SecretWithAuthorizationCodeModel) WithSchema(schema string) *SecretWith
 // below it's possible to set any value //
 //////////////////////////////////////////
 
-func (s *SecretWithAuthorizationCodeModel) WithApiAuthenticationValue(value tfconfig.Variable) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithApiAuthenticationValue(value tfconfig.Variable) *SecretWithAuthorizationCodeGrantModel {
 	s.ApiAuthentication = value
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithCommentValue(value tfconfig.Variable) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithCommentValue(value tfconfig.Variable) *SecretWithAuthorizationCodeGrantModel {
 	s.Comment = value
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithDatabaseValue(value tfconfig.Variable) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithDatabaseValue(value tfconfig.Variable) *SecretWithAuthorizationCodeGrantModel {
 	s.Database = value
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithFullyQualifiedNameValue(value tfconfig.Variable) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithFullyQualifiedNameValue(value tfconfig.Variable) *SecretWithAuthorizationCodeGrantModel {
 	s.FullyQualifiedName = value
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithNameValue(value tfconfig.Variable) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithNameValue(value tfconfig.Variable) *SecretWithAuthorizationCodeGrantModel {
 	s.Name = value
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithOauthRefreshTokenValue(value tfconfig.Variable) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithOauthRefreshTokenValue(value tfconfig.Variable) *SecretWithAuthorizationCodeGrantModel {
 	s.OauthRefreshToken = value
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithOauthRefreshTokenExpiryTimeValue(value tfconfig.Variable) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithOauthRefreshTokenExpiryTimeValue(value tfconfig.Variable) *SecretWithAuthorizationCodeGrantModel {
 	s.OauthRefreshTokenExpiryTime = value
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeModel) WithSchemaValue(value tfconfig.Variable) *SecretWithAuthorizationCodeModel {
+func (s *SecretWithAuthorizationCodeGrantModel) WithSchemaValue(value tfconfig.Variable) *SecretWithAuthorizationCodeGrantModel {
 	s.Schema = value
 	return s
 }

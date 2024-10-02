@@ -173,7 +173,7 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.ScimSecurityIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.SecurityIntegrations.ShowByID)
 	},
-	resources.SecretWithAuthorizationCode: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+	resources.SecretWithAuthorizationCodeGrant: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Secrets.ShowByID)
 	},
 	resources.SecretWithClientCredentials: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
@@ -182,10 +182,7 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.SecretWithBasicAuthentication: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Secrets.ShowByID)
 	},
-	resources.SecretWithAuthorizationCode: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
-		return runShowById(ctx, id, client.Secrets.ShowByID)
-	},
-	resources.SecretWithClientCredentials: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+	resources.SecretWithGenericString: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Secrets.ShowByID)
 	},
 	resources.SecondaryDatabase: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {

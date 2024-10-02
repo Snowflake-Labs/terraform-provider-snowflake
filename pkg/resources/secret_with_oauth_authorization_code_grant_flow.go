@@ -5,24 +5,26 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"time"
 )
 
-var secretAuthorizationCodeSchema = func() map[string]*schema.Schema {
-	secretAuthorizationCode := map[string]*schema.Schema{
+var secretAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
+	secretAuthorizationCodeGrant := map[string]*schema.Schema{
 		"oauth_refresh_token": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Specifies the token as a string that is used to obtain a new access token from the OAuth authorization server when the access token expires.",
 		},
 		"oauth_refresh_token_expiry_time": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Specifies the timestamp as a string when the OAuth refresh token expires. Accepted formats: YYYY-MM-DD, YYYY-MM-DD HH:MI:SS",
+			Type:             schema.TypeString,
+			Required:         true,
+			DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_refresh_token_expiry_time"),
+			Description:      "Specifies the timestamp as a string when the OAuth refresh token expires. Accepted string formats: YYYY-MM-DD, YYYY-MM-DD HH:MI, YYYY-MM-DD HH:MI:SS, YYYY-MM-DD HH:MI PDT",
 		},
 		"api_authentication": {
 			Type:             schema.TypeString,
@@ -31,24 +33,63 @@ var secretAuthorizationCodeSchema = func() map[string]*schema.Schema {
 			Description:      "Specifies the name value of the Snowflake security integration that connects Snowflake to an external service when setting Type to OAUTH2.",
 		},
 	}
-	return helpers.MergeMaps(secretCommonSchema, secretAuthorizationCode)
+	return helpers.MergeMaps(secretCommonSchema, secretAuthorizationCodeGrant)
 }()
 
-func SecretWithAuthorizationCode() *schema.Resource {
+func SecretWithAuthorizationCodeGrant() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSecretWithAuthorizationCode,
-		ReadContext:   ReadContextSecretWithAuthorizationCode,
-		UpdateContext: UpdateContextSecretWithAuthorizationCode,
-		DeleteContext: DeleteContextSecretWithAuthorizationCode,
+		CreateContext: CreateContextSecretWithAuthorizationCodeGrant,
+		ReadContext:   ReadContextSecretWithAuthorizationCodeGrant,
+		UpdateContext: UpdateContextSecretWithAuthorizationCodeGrant,
+		DeleteContext: DeleteContextSecretWithAuthorizationCodeGrant,
 
-		Schema: secretAuthorizationCodeSchema,
+		Schema: secretAuthorizationCodeGrantSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportSecretWithAuthorizationCodeGrant,
 		},
+		Description: "Secret with OAuth authorization code grant where Secret's Type attribute is set to 'OAUTH2'.'",
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "oauth_refresh_token_expiry_time"),
+		),
 	}
 }
 
-func CreateContextSecretWithAuthorizationCode(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ImportSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting secret with authorization code import")
+	client := meta.(*provider.Context).Client
+
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	secretDescription, err := client.Secrets.Describe(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// cannot import oauth_refresh_token because it is not present both in SHOW or DESCRIBE
+
+	if err := d.Set("oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.String()); err != nil {
+		return nil, err
+	}
+	if err := d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
+		return nil, err
+	}
+
+	secret, err := client.Secrets.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
+}
+
+func CreateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	commonCreate := handleSecretCreate(d)
 
@@ -75,10 +116,10 @@ func CreateContextSecretWithAuthorizationCode(ctx context.Context, d *schema.Res
 
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	return ReadContextSecretWithAuthorizationCode(ctx, d, meta)
+	return ReadContextSecretWithAuthorizationCodeGrant(ctx, d, meta)
 }
 
-func ReadContextSecretWithAuthorizationCode(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -108,19 +149,29 @@ func ReadContextSecretWithAuthorizationCode(ctx context.Context, d *schema.Resou
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
+
+	if err = setStateToValuesFromConfig(d, secretAuthorizationCodeGrantSchema, []string{"oauth_refresh_token_expiry_time"}); err != nil {
 		return diag.FromErr(err)
 	}
-	if err = d.Set("oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.In(time.UTC).Format(time.DateOnly)); err != nil {
-		return diag.FromErr(err)
-	}
+	/*
+		// Possible limitation
+		// Accepted formats are: YYYY-MM-DD; YYYY-MM-DD HH:MI:SS
+		// But snowflake holds this value as timestamp, so with this code below we can parse it and keep in state only with one of time.DateOnly or time.DateTime
+		if err = d.Set("oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.In(time.UTC).Format(time.DateOnly)); err != nil {
+			return diag.FromErr(err)
+		}
+	*/
 	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
-func UpdateContextSecretWithAuthorizationCode(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -157,10 +208,10 @@ func UpdateContextSecretWithAuthorizationCode(ctx context.Context, d *schema.Res
 		}
 	}
 
-	return ReadContextSecretWithAuthorizationCode(ctx, d, meta)
+	return ReadContextSecretWithAuthorizationCodeGrant(ctx, d, meta)
 }
 
-func DeleteContextSecretWithAuthorizationCode(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {

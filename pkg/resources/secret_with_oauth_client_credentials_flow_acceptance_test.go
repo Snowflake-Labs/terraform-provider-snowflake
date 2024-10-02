@@ -48,16 +48,16 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 				Config: config.FromModel(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.SecretWithClientCredentialsResource(t, "snowflake_secret_with_client_credentials.s").
+						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
 							HasSchemaString(id.SchemaName()).
 							HasApiAuthenticationString(integrationId.Name()).
 							HasCommentString(comment),
 					),
-					resource.TestCheckResourceAttr("snowflake_secret_with_client_credentials.s", "oauth_scopes.#", "2"),
-					resource.TestCheckTypeSetElemAttr("snowflake_secret_with_client_credentials.s", "oauth_scopes.*", "foo"),
-					resource.TestCheckTypeSetElemAttr("snowflake_secret_with_client_credentials.s", "oauth_scopes.*", "bar"),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "oauth_scopes.#", "2"),
+					resource.TestCheckTypeSetElemAttr(secretModel.ResourceReference(), "oauth_scopes.*", "foo"),
+					resource.TestCheckTypeSetElemAttr(secretModel.ResourceReference(), "oauth_scopes.*", "bar"),
 				),
 			},
 			// set oauth_scopes and comment in config

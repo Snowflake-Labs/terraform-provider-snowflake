@@ -26,7 +26,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 
 	secretModel := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "foo", id.SchemaName(), "foo")
 	secretModelWithoutComment := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "bar", id.SchemaName(), "bar")
-	secretModelEmpty := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "", id.SchemaName(), "")
+	secretModelEmptyCredentials := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "", id.SchemaName(), "")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -102,10 +102,10 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 			},
 			// create with empty username and password
 			{
-				Config: config.FromModel(t, secretModelEmpty),
+				Config: config.FromModel(t, secretModelEmptyCredentials),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.SecretWithBasicAuthenticationResource(t, secretModelEmpty.ResourceReference()).
+						resourceassert.SecretWithBasicAuthenticationResource(t, secretModelEmptyCredentials.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
 							HasSchemaString(id.SchemaName()).

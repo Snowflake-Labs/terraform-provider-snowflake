@@ -40,6 +40,7 @@ func SecretWithClientCredentials() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Description: "Secret with OAuth Client Credentials where Secret's Type attribute is set to 'OAUTH2'.'",
 	}
 }
 
@@ -126,6 +127,12 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		return diag.FromErr(err)
 	}
 
+	if request := handleSecretUpdate(id, d); request != nil {
+		if err := client.Secrets.Alter(ctx, request); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	if d.HasChange("oauth_scopes") {
 		stringScopes := expandStringList(d.Get("oauth_scopes").(*schema.Set).List())
 		oauthScopes := make([]sdk.ApiIntegrationScope, len(stringScopes))
@@ -134,15 +141,9 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		}
 
 		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForOAuthClientCredentialsFlowRequest().WithOauthScopes(sdk.OauthScopesListRequest{oauthScopes})
+		setRequest := sdk.NewSetForOAuthClientCredentialsFlowRequest().WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: oauthScopes})
 		request.WithSet(*sdk.NewSecretSetRequest().WithSetForOAuthClientCredentialsFlow(*setRequest))
 
-		if err := client.Secrets.Alter(ctx, request); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if request := handleSecretUpdate(id, d); request != nil {
 		if err := client.Secrets.Alter(ctx, request); err != nil {
 			return diag.FromErr(err)
 		}
