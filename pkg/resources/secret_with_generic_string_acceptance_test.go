@@ -20,14 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
+func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
 	comment := random.Comment()
 
-	secretModel := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "foo", id.SchemaName(), "foo")
-	secretModelWithoutComment := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "bar", id.SchemaName(), "bar")
-	secretModelEmptyCredentials := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "", id.SchemaName(), "")
+	secretModel := model.SecretWithGenericString("s", id.DatabaseName(), name, id.SchemaName(), "foo")
+	secretModelEmptySecretString := model.SecretWithGenericString("s", id.DatabaseName(), name, id.SchemaName(), "")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -35,37 +34,33 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithBasicAuthentication),
+		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithGenericString),
 		Steps: []resource.TestStep{
 			// create
 			{
 				Config: config.FromModel(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.SecretWithBasicAuthenticationResource(t, secretModel.ResourceReference()).
+						resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
 							HasSchemaString(id.SchemaName()).
-							HasUsernameString("foo").
-							HasPasswordString("foo").
-							HasCommentString(""),
+							HasSecretStringString("foo"),
 					),
 				),
 			},
-			// set username, password and comment
+			// set secret_string and comment
 			{
 				Config: config.FromModel(t, secretModel.
-					WithUsername("bar").
-					WithPassword("bar").
+					WithSecretString("bar").
 					WithComment(comment),
 				),
 				Check: assert.AssertThat(t,
-					resourceassert.SecretWithBasicAuthenticationResource(t, secretModel.ResourceReference()).
+					resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
 						HasNameString(name).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
-						HasUsernameString("bar").
-						HasPasswordString("bar").
+						HasSecretStringString("bar").
 						HasCommentString(comment),
 				),
 			},
@@ -74,25 +69,24 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 				ResourceName:            secretModel.ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{"secret_string"},
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "database", id.DatabaseId().Name()),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "schema", id.SchemaId().Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "username", "bar"),
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", comment),
 				),
 			},
 			// unset comment
 			{
-				Config: config.FromModel(t, secretModelWithoutComment),
+				Config: config.FromModel(t, secretModelEmptySecretString),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(comment), nil),
 					},
 				},
 				Check: assert.AssertThat(t,
-					resourceassert.SecretWithClientCredentialsResource(t, secretModelWithoutComment.ResourceReference()).
+					resourceassert.SecretWithClientCredentialsResource(t, secretModelEmptySecretString.ResourceReference()).
 						HasCommentString(""),
 				),
 			},
@@ -101,17 +95,16 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 				Config:  config.FromModel(t, secretModel),
 				Destroy: true,
 			},
-			// create with empty username and password
+			// create with empty secret_string
 			{
-				Config: config.FromModel(t, secretModelEmptyCredentials),
+				Config: config.FromModel(t, secretModelEmptySecretString),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.SecretWithBasicAuthenticationResource(t, secretModelEmptyCredentials.ResourceReference()).
+						resourceassert.SecretWithGenericStringResource(t, secretModelEmptySecretString.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
 							HasSchemaString(id.SchemaName()).
-							HasUsernameString("").
-							HasPasswordString("").
+							HasSecretStringString("").
 							HasCommentString(""),
 					),
 				),

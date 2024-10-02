@@ -12,63 +12,57 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var secretBasicAuthenticationSchema = func() map[string]*schema.Schema {
+var secretGenericStringSchema = func() map[string]*schema.Schema {
 	secretAuthorizationCode := map[string]*schema.Schema{
-		"username": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Specifies the username value to store in the secret when setting the TYPE value to PASSWORD.",
-		},
-		"password": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Specifies the password value to store in the secret when setting the TYPE value to PASSWORD.",
+		"secret_string": {
+			Type:     schema.TypeString,
+			Required: true,
+			Description: "Specifies the string to store in the secret.\n\nThe string can be an API token or a string of sensitive value that can be used in the handler code of a UDF or stored procedure. " +
+				"For details, see Creating and using an external access integration.\n\nYou should not use this property to store any kind of OAuth token; use one of the other secret types for your OAuth use cases.",
 		},
 	}
 	return helpers.MergeMaps(secretCommonSchema, secretAuthorizationCode)
 }()
 
-func SecretWithBasicAuthentication() *schema.Resource {
+func SecretWithGenericString() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSecretWithBasicAuthentication,
-		ReadContext:   ReadContextSecretWithBasicAuthentication,
-		UpdateContext: UpdateContextSecretWithBasicAuthentication,
-		DeleteContext: DeleteContextSecretWithBasicAuthentication,
+		CreateContext: CreateContextSecretWithGenericString,
+		ReadContext:   ReadContextSecretWithGenericString,
+		UpdateContext: UpdateContextSecretWithGenericString,
+		DeleteContext: DeleteContextSecretWithGenericString,
 
-		Schema: secretBasicAuthenticationSchema,
+		Schema: secretGenericStringSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		Description: "Secret with Basic Authentication where Secret's Type attribute is set to 'PASSWORD'.'",
+		Description: "Secret with Generic string where Secret's Type attribute is set to 'GENERIC_STRING'.'",
 	}
 }
 
-func CreateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func CreateContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	commonCreate := handleSecretCreate(d)
 
 	id := sdk.NewSchemaObjectIdentifier(commonCreate.database, commonCreate.schema, commonCreate.name)
 
-	usernameString := d.Get("username").(string)
-	passwordString := d.Get("password").(string)
+	secretSting := d.Get("secret_string").(string)
 
-	request := sdk.NewCreateWithBasicAuthenticationSecretRequest(id, usernameString, passwordString)
+	request := sdk.NewCreateWithGenericStringSecretRequest(id, secretSting)
 	if v, ok := d.GetOk("comment"); ok {
 		request.WithComment(v.(string))
 	}
 
-	err := client.Secrets.CreateWithBasicAuthentication(ctx, request)
+	err := client.Secrets.CreateWithGenericString(ctx, request)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	return ReadContextSecretWithBasicAuthentication(ctx, d, meta)
+	return ReadContextSecretWithGenericString(ctx, d, meta)
 }
 
-func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -94,6 +88,7 @@ func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.Res
 			},
 		}
 	}
+
 	secretDescription, err := client.Secrets.Describe(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
@@ -101,13 +96,10 @@ func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.Res
 	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
 		return diag.FromErr(err)
 	}
-	if err = d.Set("username", secretDescription.Username); err != nil {
-		return diag.FromErr(err)
-	}
 	return nil
 }
 
-func UpdateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -120,34 +112,22 @@ func UpdateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.R
 		}
 	}
 
-	if d.HasChange("username") {
-		username := d.Get("username").(string)
+	if d.HasChange("secret_string") {
+		secretString := d.Get("secret_string").(string)
 
 		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForBasicAuthenticationRequest().WithUsername(username)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForBasicAuthentication(*setRequest))
+		setRequest := sdk.NewSetForGenericStringRequest().WithSecretString(secretString)
+		request.WithSet(*sdk.NewSecretSetRequest().WithSetForGenericString(*setRequest))
 
 		if err := client.Secrets.Alter(ctx, request); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 
-	if d.HasChange("password") {
-		password := d.Get("password").(string)
-
-		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForBasicAuthenticationRequest().WithPassword(password)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForBasicAuthentication(*setRequest))
-
-		if err := client.Secrets.Alter(ctx, request); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	return ReadContextSecretWithBasicAuthentication(ctx, d, meta)
+	return ReadContextSecretWithGenericString(ctx, d, meta)
 }
 
-func DeleteContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {

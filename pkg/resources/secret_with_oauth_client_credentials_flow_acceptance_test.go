@@ -1,6 +1,8 @@
 package resources_test
 
 import (
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
@@ -8,7 +10,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"

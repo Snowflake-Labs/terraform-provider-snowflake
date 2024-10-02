@@ -2,6 +2,9 @@ package resources_test
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
@@ -16,8 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"testing"
-	"time"
 )
 
 func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
