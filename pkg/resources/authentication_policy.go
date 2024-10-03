@@ -6,33 +6,37 @@ import (
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var authenticationPolicySchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: blocklistedCharactersFieldDescription("Specifies the identifier for the authentication policy."),
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      blocklistedCharactersFieldDescription("Specifies the identifier for the authentication policy."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: blocklistedCharactersFieldDescription("The schema in which to create the authentication policy."),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("The schema in which to create the authentication policy."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: blocklistedCharactersFieldDescription("The database in which to create the authentication policy."),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("The database in which to create the authentication policy."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"authentication_methods": {
 		Type: schema.TypeSet,
@@ -41,7 +45,7 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 			ValidateDiagFunc: StringInSlice([]string{"ALL", "SAML", "PASSWORD", "OAUTH", "KEYPAIR"}, false),
 		},
 		Optional:    true,
-		Description: "A list of authentication methods that are allowed during login. This parameter accepts one or more of the following values: ALL, SAML, PASSWORD, OAUTH, KEYPAIR.",
+		Description: fmt.Sprintf("A list of authentication methods that are allowed during login. This parameter accepts one or more of the following values: %s", possibleValuesListed(sdk.AllAuthenticationMethods)),
 	},
 	"mfa_authentication_methods": {
 		Type: schema.TypeSet,
@@ -50,7 +54,7 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 			ValidateDiagFunc: StringInSlice([]string{"SAML", "PASSWORD"}, false),
 		},
 		Optional:    true,
-		Description: "A list of authentication methods that enforce multi-factor authentication (MFA) during login. Authentication methods not listed in this parameter do not prompt for multi-factor authentication. Allowed values are SAML and PASSWORD.",
+		Description: fmt.Sprintf("A list of authentication methods that enforce multi-factor authentication (MFA) during login. Authentication methods not listed in this parameter do not prompt for multi-factor authentication. Allowed values are %s.", possibleValuesListed(sdk.AllMfaAuthenticationMethods)),
 	},
 	"mfa_enrollment": {
 		Type:         schema.TypeString,
@@ -66,7 +70,7 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 			ValidateDiagFunc: StringInSlice([]string{"ALL", "SNOWFLAKE_UI", "DRIVERS", "SNOWSQL"}, false),
 		},
 		Optional:    true,
-		Description: "A list of clients that can authenticate with Snowflake. If a client tries to connect, and the client is not one of the valid CLIENT_TYPES, then the login attempt fails. Allowed values are ALL, SNOWFLAKE_UI, DRIVERS, SNOWSQL. The CLIENT_TYPES property of an authentication policy is a best effort method to block user logins based on specific clients. It should not be used as the sole control to establish a security boundary.",
+		Description: fmt.Sprintf("A list of clients that can authenticate with Snowflake. If a client tries to connect, and the client is not one of the valid CLIENT_TYPES, then the login attempt fails. Allowed values are %s. The CLIENT_TYPES property of an authentication policy is a best effort method to block user logins based on specific clients. It should not be used as the sole control to establish a security boundary.", possibleValuesListed(sdk.AllClientTypes)),
 	},
 	"security_integrations": {
 		Type: schema.TypeSet,
@@ -94,9 +98,36 @@ func AuthenticationPolicy() *schema.Resource {
 
 		Schema: authenticationPolicySchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportAuthenticationPolicy,
 		},
 	}
+}
+
+func ImportAuthenticationPolicy(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting authentication policy import")
+	client := meta.(*provider.Context).Client
+
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	authenticationPolicy, err := client.AuthenticationPolicies.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = d.Set("name", authenticationPolicy.Name); err != nil {
+		return nil, err
+	}
+	if err = d.Set("database", authenticationPolicy.DatabaseName); err != nil {
+		return nil, err
+	}
+	if err = d.Set("schema", authenticationPolicy.SchemaName); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func CreateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -108,37 +139,45 @@ func CreateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 	req := sdk.NewCreateAuthenticationPolicyRequest(id)
 
 	// Set optionals
-	authenticationMethodsRawList := expandStringList(d.Get("authentication_methods").(*schema.Set).List())
-	authenticationMethods := make([]sdk.AuthenticationMethods, len(authenticationMethodsRawList))
-	for i, v := range authenticationMethodsRawList {
-		authenticationMethods[i] = sdk.AuthenticationMethods{Method: sdk.AuthenticationMethodsOption(v)}
+	if v, ok := d.GetOk("authentication_methods"); ok {
+		authenticationMethodsRawList := expandStringList(v.(*schema.Set).List())
+		authenticationMethods := make([]sdk.AuthenticationMethods, len(authenticationMethodsRawList))
+		for i, v := range authenticationMethodsRawList {
+			authenticationMethods[i] = sdk.AuthenticationMethods{Method: sdk.AuthenticationMethodsOption(v)}
+		}
+		req.WithAuthenticationMethods(authenticationMethods)
 	}
-	req.WithAuthenticationMethods(authenticationMethods)
 
-	mfaAuthenticationMethodsRawList := expandStringList(d.Get("mfa_authentication_methods").(*schema.Set).List())
-	mfaAuthenticationMethods := make([]sdk.MfaAuthenticationMethods, len(mfaAuthenticationMethodsRawList))
-	for i, v := range mfaAuthenticationMethodsRawList {
-		mfaAuthenticationMethods[i] = sdk.MfaAuthenticationMethods{Method: sdk.MfaAuthenticationMethodsOption(v)}
+	if v, ok := d.GetOk("mfa_authentication_methods"); ok {
+		mfaAuthenticationMethodsRawList := expandStringList(v.(*schema.Set).List())
+		mfaAuthenticationMethods := make([]sdk.MfaAuthenticationMethods, len(mfaAuthenticationMethodsRawList))
+		for i, v := range mfaAuthenticationMethodsRawList {
+			mfaAuthenticationMethods[i] = sdk.MfaAuthenticationMethods{Method: sdk.MfaAuthenticationMethodsOption(v)}
+		}
+		req.WithMfaAuthenticationMethods(mfaAuthenticationMethods)
 	}
-	req.WithMfaAuthenticationMethods(mfaAuthenticationMethods)
 
 	if v, ok := d.GetOk("mfa_enrollment"); ok {
 		req = req.WithMfaEnrollment(sdk.MfaEnrollmentOption(v.(string)))
 	}
 
-	clientTypesRawList := expandStringList(d.Get("client_types").(*schema.Set).List())
-	clientTypes := make([]sdk.ClientTypes, len(clientTypesRawList))
-	for i, v := range clientTypesRawList {
-		clientTypes[i] = sdk.ClientTypes{ClientType: sdk.ClientTypesOption(v)}
+	if v, ok := d.GetOk("client_types"); ok {
+		clientTypesRawList := expandStringList(v.(*schema.Set).List())
+		clientTypes := make([]sdk.ClientTypes, len(clientTypesRawList))
+		for i, v := range clientTypesRawList {
+			clientTypes[i] = sdk.ClientTypes{ClientType: sdk.ClientTypesOption(v)}
+		}
+		req.WithClientTypes(clientTypes)
 	}
-	req.WithClientTypes(clientTypes)
 
-	securityIntegrationsRawList := expandStringList(d.Get("security_integrations").(*schema.Set).List())
-	securityIntegrations := make([]sdk.SecurityIntegrationsOption, len(securityIntegrationsRawList))
-	for i, v := range securityIntegrationsRawList {
-		securityIntegrations[i] = sdk.SecurityIntegrationsOption{Name: sdk.NewAccountObjectIdentifier(v)}
+	if v, ok := d.GetOk("security_integrations"); ok {
+		securityIntegrationsRawList := expandStringList(v.(*schema.Set).List())
+		securityIntegrations := make([]sdk.SecurityIntegrationsOption, len(securityIntegrationsRawList))
+		for i, v := range securityIntegrationsRawList {
+			securityIntegrations[i] = sdk.SecurityIntegrationsOption{Name: sdk.NewAccountObjectIdentifier(v)}
+		}
+		req.WithSecurityIntegrations(securityIntegrations)
 	}
-	req.WithSecurityIntegrations(securityIntegrations)
 
 	if v, ok := d.GetOk("comment"); ok {
 		req = req.WithComment(v.(string))
@@ -148,7 +187,7 @@ func CreateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 	if err := client.AuthenticationPolicies.Create(ctx, req); err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	return ReadContextAuthenticationPolicy(ctx, d, meta)
 }
@@ -162,7 +201,7 @@ func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData
 	}
 
 	authenticationPolicy, err := client.AuthenticationPolicies.ShowByID(ctx, id)
-	if authenticationPolicy == nil || err != nil {
+	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
@@ -173,26 +212,11 @@ func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData
 				},
 			}
 		}
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Failed to retrieve authentication policy",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
-			},
-		}
+		return diag.FromErr(err)
 	}
 
 	authenticationPolicyDescriptions, err := client.AuthenticationPolicies.Describe(ctx, id)
 	if err != nil {
-		return diag.FromErr(err)
-	}
-	if err = d.Set("name", authenticationPolicy.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err = d.Set("database", authenticationPolicy.DatabaseName); err != nil {
-		return diag.FromErr(err)
-	}
-	if err = d.Set("schema", authenticationPolicy.SchemaName); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -249,127 +273,124 @@ func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData
 
 func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	set, unset := sdk.NewAuthenticationPolicySetRequest(), sdk.NewAuthenticationPolicyUnsetRequest()
+
+	// change to name
+	if d.HasChange("name") {
+		newId, err := sdk.ParseSchemaObjectIdentifier(d.Get("name").(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		err = client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(id).WithRenameTo(newId))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
+		id = newId
+	}
 
 	// change to authentication methods
 	if d.HasChange("authentication_methods") {
-		authenticationMethods := expandStringList(d.Get("authentication_methods").(*schema.Set).List())
-		authenticationMethodsValues := make([]sdk.AuthenticationMethods, len(authenticationMethods))
-		for i, v := range authenticationMethods {
-			authenticationMethodsValues[i] = sdk.AuthenticationMethods{Method: sdk.AuthenticationMethodsOption(v)}
-		}
-
-		baseReq := sdk.NewAlterAuthenticationPolicyRequest(id)
-		if len(authenticationMethodsValues) == 0 {
-			unsetReq := sdk.NewAuthenticationPolicyUnsetRequest().WithAuthenticationMethods(*sdk.Bool(true))
-			baseReq.WithUnset(*unsetReq)
-		} else {
-			setReq := sdk.NewAuthenticationPolicySetRequest().WithAuthenticationMethods(authenticationMethodsValues)
-			baseReq.WithSet(*setReq)
-		}
-
-		if err := client.AuthenticationPolicies.Alter(ctx, baseReq); err != nil {
-			return diag.FromErr(err)
+		if v, ok := d.GetOk("authentication_methods"); ok {
+			authenticationMethods := expandStringList(v.(*schema.Set).List())
+			authenticationMethodsValues := make([]sdk.AuthenticationMethods, len(authenticationMethods))
+			for i, v := range authenticationMethods {
+				authenticationMethodsValues[i] = sdk.AuthenticationMethods{Method: sdk.AuthenticationMethodsOption(v)}
+			}
+			if len(authenticationMethodsValues) == 0 {
+				unset.AuthenticationMethods = sdk.Bool(true)
+			} else {
+				set.AuthenticationMethods = authenticationMethodsValues
+			}
 		}
 	}
 
 	// change to mfa authentication methods
 	if d.HasChange("mfa_authentication_methods") {
-		mfaAuthenticationMethods := expandStringList(d.Get("mfa_authentication_methods").(*schema.Set).List())
-		mfaAuthenticationMethodsValues := make([]sdk.MfaAuthenticationMethods, len(mfaAuthenticationMethods))
-		for i, v := range mfaAuthenticationMethods {
-			mfaAuthenticationMethodsValues[i] = sdk.MfaAuthenticationMethods{Method: sdk.MfaAuthenticationMethodsOption(v)}
-		}
+		if v, ok := d.GetOk("mfa_authentication_methods"); ok {
+			mfaAuthenticationMethods := expandStringList(v.(*schema.Set).List())
+			mfaAuthenticationMethodsValues := make([]sdk.MfaAuthenticationMethods, len(mfaAuthenticationMethods))
+			for i, v := range mfaAuthenticationMethods {
+				mfaAuthenticationMethodsValues[i] = sdk.MfaAuthenticationMethods{Method: sdk.MfaAuthenticationMethodsOption(v)}
+			}
 
-		baseReq := sdk.NewAlterAuthenticationPolicyRequest(id)
-		if len(mfaAuthenticationMethodsValues) == 0 {
-			unsetReq := sdk.NewAuthenticationPolicyUnsetRequest().WithMfaAuthenticationMethods(*sdk.Bool(true))
-			baseReq.WithUnset(*unsetReq)
-		} else {
-			setReq := sdk.NewAuthenticationPolicySetRequest().WithMfaAuthenticationMethods(mfaAuthenticationMethodsValues)
-			baseReq.WithSet(*setReq)
-		}
-
-		if err := client.AuthenticationPolicies.Alter(ctx, baseReq); err != nil {
-			return diag.FromErr(err)
+			if len(mfaAuthenticationMethodsValues) == 0 {
+				unset.MfaAuthenticationMethods = sdk.Bool(true)
+			} else {
+				set.MfaAuthenticationMethods = mfaAuthenticationMethodsValues
+			}
 		}
 	}
 
 	// change to mfa enrollment
 	if d.HasChange("mfa_enrollment") {
-		mfaEnrollment := d.Get("mfa_enrollment").(string)
-
-		baseReq := sdk.NewAlterAuthenticationPolicyRequest(id)
-		if len(mfaEnrollment) == 0 {
-			unsetReq := sdk.NewAuthenticationPolicyUnsetRequest().WithMfaEnrollment(*sdk.Bool(true))
-			baseReq.WithUnset(*unsetReq)
+		if v, ok := d.GetOk("mfa_enrollment"); ok {
+			set.MfaEnrollment = sdk.Pointer(sdk.MfaEnrollmentOption(v.(string)))
 		} else {
-			setReq := sdk.NewAuthenticationPolicySetRequest().WithMfaEnrollment(sdk.MfaEnrollmentOption(mfaEnrollment))
-			baseReq.WithSet(*setReq)
-		}
-
-		if err := client.AuthenticationPolicies.Alter(ctx, baseReq); err != nil {
-			return diag.FromErr(err)
+			unset.MfaEnrollment = sdk.Bool(true)
 		}
 	}
 
 	// change to client types
 	if d.HasChange("client_types") {
-		clientTypes := expandStringList(d.Get("client_types").(*schema.Set).List())
-		clientTypesValues := make([]sdk.ClientTypes, len(clientTypes))
-		for i, v := range clientTypes {
-			clientTypesValues[i] = sdk.ClientTypes{ClientType: sdk.ClientTypesOption(v)}
-		}
+		if v, ok := d.GetOk("client_types"); ok {
+			clientTypes := expandStringList(v.(*schema.Set).List())
+			clientTypesValues := make([]sdk.ClientTypes, len(clientTypes))
+			for i, v := range clientTypes {
+				clientTypesValues[i] = sdk.ClientTypes{ClientType: sdk.ClientTypesOption(v)}
+			}
 
-		baseReq := sdk.NewAlterAuthenticationPolicyRequest(id)
-		if len(clientTypesValues) == 0 {
-			unsetReq := sdk.NewAuthenticationPolicyUnsetRequest().WithClientTypes(*sdk.Bool(true))
-			baseReq.WithUnset(*unsetReq)
-		} else {
-			setReq := sdk.NewAuthenticationPolicySetRequest().WithClientTypes(clientTypesValues)
-			baseReq.WithSet(*setReq)
-		}
-
-		if err := client.AuthenticationPolicies.Alter(ctx, baseReq); err != nil {
-			return diag.FromErr(err)
+			if len(clientTypesValues) == 0 {
+				unset.ClientTypes = sdk.Bool(true)
+			} else {
+				set.ClientTypes = clientTypesValues
+			}
 		}
 	}
 
 	// change to security integrations
 	if d.HasChange("security_integrations") {
-		securityIntegrations := expandStringList(d.Get("security_integrations").(*schema.Set).List())
-		securityIntegrationsValues := make([]sdk.SecurityIntegrationsOption, len(securityIntegrations))
-		for i, v := range securityIntegrations {
-			securityIntegrationsValues[i] = sdk.SecurityIntegrationsOption{Name: sdk.NewAccountObjectIdentifier(v)}
-		}
+		if v, ok := d.GetOk("security_integrations"); ok {
+			securityIntegrations := expandStringList(v.(*schema.Set).List())
+			securityIntegrationsValues := make([]sdk.SecurityIntegrationsOption, len(securityIntegrations))
+			for i, v := range securityIntegrations {
+				securityIntegrationsValues[i] = sdk.SecurityIntegrationsOption{Name: sdk.NewAccountObjectIdentifier(v)}
+			}
 
-		baseReq := sdk.NewAlterAuthenticationPolicyRequest(id)
-		if len(securityIntegrationsValues) == 0 {
-			unsetReq := sdk.NewAuthenticationPolicyUnsetRequest().WithSecurityIntegrations(*sdk.Bool(true))
-			baseReq.WithUnset(*unsetReq)
-		} else {
-			setReq := sdk.NewAuthenticationPolicySetRequest().WithSecurityIntegrations(securityIntegrationsValues)
-			baseReq.WithSet(*setReq)
-		}
-
-		if err := client.AuthenticationPolicies.Alter(ctx, baseReq); err != nil {
-			return diag.FromErr(err)
+			if len(securityIntegrationsValues) == 0 {
+				unset.SecurityIntegrations = sdk.Bool(true)
+			} else {
+				set.SecurityIntegrations = securityIntegrationsValues
+			}
 		}
 	}
 
 	// change to comment
 	if d.HasChange("comment") {
-		comment := d.Get("comment").(string)
-		baseReq := sdk.NewAlterAuthenticationPolicyRequest(id)
-		if len(comment) == 0 {
-			unsetReq := sdk.NewAuthenticationPolicyUnsetRequest().WithComment(*sdk.Bool(true))
-			baseReq.WithUnset(*unsetReq)
+		if v, ok := d.GetOk("comment"); ok {
+			set.Comment = sdk.String(v.(string))
 		} else {
-			setReq := sdk.NewAuthenticationPolicySetRequest().WithComment(comment)
-			baseReq.WithSet(*setReq)
+			unset.Comment = sdk.Bool(true)
 		}
+	}
 
-		if err := client.AuthenticationPolicies.Alter(ctx, baseReq); err != nil {
+	if !reflect.DeepEqual(*set, *sdk.NewAuthenticationPolicySetRequest()) {
+		req := sdk.NewAlterAuthenticationPolicyRequest(id).WithSet(*set)
+		if err := client.AuthenticationPolicies.Alter(ctx, req); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if !reflect.DeepEqual(*unset, *sdk.NewAuthenticationPolicyUnsetRequest()) {
+		req := sdk.NewAlterAuthenticationPolicyRequest(id).WithUnset(*unset)
+		if err := client.AuthenticationPolicies.Alter(ctx, req); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -378,12 +399,14 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 }
 
 func DeleteContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	name := d.Id()
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(name).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if err := client.AuthenticationPolicies.Drop(ctx, sdk.NewDropAuthenticationPolicyRequest(id).WithIfExists(*sdk.Bool(true))); err != nil {
-		diag.FromErr(err)
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
