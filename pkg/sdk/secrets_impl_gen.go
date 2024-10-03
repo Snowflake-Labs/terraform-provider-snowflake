@@ -145,7 +145,6 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 				opts.Set.SetForFlow.SetForOAuthClientCredentials = &SetForOAuthClientCredentials{}
 
 				if r.Set.SetForFlow.SetForOAuthClientCredentials.OauthScopes != nil {
-
 					opts.Set.SetForFlow.SetForOAuthClientCredentials.OauthScopes = &OauthScopesList{
 						OauthScopesList: r.Set.SetForFlow.SetForOAuthClientCredentials.OauthScopes.OauthScopesList,
 					}
