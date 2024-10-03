@@ -76,6 +76,10 @@ type CreateTableRequest struct {
 	Comment                    *string
 }
 
+func (r *CreateTableRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
 type RowAccessPolicyRequest struct {
 	Name SchemaObjectIdentifier // required
 	On   []string               // required

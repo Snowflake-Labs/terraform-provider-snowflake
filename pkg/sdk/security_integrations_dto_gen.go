@@ -40,6 +40,10 @@ type CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest 
 	Comment                     *string
 }
 
+func (r *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
+
 type CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest struct {
 	OrReplace                   *bool
 	IfNotExists                 *bool

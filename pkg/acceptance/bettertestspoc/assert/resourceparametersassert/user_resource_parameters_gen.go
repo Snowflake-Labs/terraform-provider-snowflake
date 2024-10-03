@@ -16,21 +16,21 @@ type UserResourceParametersAssert struct {
 func UserResourceParameters(t *testing.T, name string) *UserResourceParametersAssert {
 	t.Helper()
 
-	u := UserResourceParametersAssert{
+	resourceParameterAssert := UserResourceParametersAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "parameters"),
 	}
-	u.AddAssertion(assert.ValueSet("parameters.#", "1"))
-	return &u
+	resourceParameterAssert.AddAssertion(assert.ValueSet("parameters.#", "1"))
+	return &resourceParameterAssert
 }
 
 func ImportedUserResourceParameters(t *testing.T, id string) *UserResourceParametersAssert {
 	t.Helper()
 
-	u := UserResourceParametersAssert{
+	resourceParameterAssert := UserResourceParametersAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "imported parameters"),
 	}
-	u.AddAssertion(assert.ValueSet("parameters.#", "1"))
-	return &u
+	resourceParameterAssert.AddAssertion(assert.ValueSet("parameters.#", "1"))
+	return &resourceParameterAssert
 }
 
 ////////////////////////////

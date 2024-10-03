@@ -69,8 +69,10 @@ func ReadStreams(d *schema.ResourceData, meta interface{}) error {
 	schemaName := d.Get("schema").(string)
 
 	currentStreams, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
-		WithIn(&sdk.In{
-			Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
+		WithIn(sdk.ExtendedIn{
+			In: sdk.In{
+				Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
+			},
 		}))
 	if err != nil {
 		log.Printf("[DEBUG] streams in schema (%s) not found", d.Id())

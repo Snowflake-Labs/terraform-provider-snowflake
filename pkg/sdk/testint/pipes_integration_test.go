@@ -28,7 +28,7 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 	schema, schemaCleanup := testClientHelper().Schema.CreateSchemaWithName(t, schemaIdentifier.Name())
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+	table, tableCleanup := testClientHelper().Table.CreateInSchema(t, schema.ID())
 	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -66,10 +66,10 @@ func TestInt_CreatePipeWithStrangeSchemaName(t *testing.T) {
 }
 
 func TestInt_PipesShowAndDescribe(t *testing.T) {
-	table1, table1Cleanup := testClientHelper().Table.CreateTable(t)
+	table1, table1Cleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(table1Cleanup)
 
-	table2, table2Cleanup := testClientHelper().Table.CreateTable(t)
+	table2, table2Cleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(table2Cleanup)
 
 	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -145,7 +145,7 @@ func TestInt_PipesShowAndDescribe(t *testing.T) {
 }
 
 func TestInt_PipeCreate(t *testing.T) {
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -213,7 +213,7 @@ func TestInt_PipeCreate(t *testing.T) {
 }
 
 func TestInt_PipeDrop(t *testing.T) {
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -237,7 +237,7 @@ func TestInt_PipeDrop(t *testing.T) {
 }
 
 func TestInt_PipeAlter(t *testing.T) {
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -339,7 +339,7 @@ func TestInt_PipesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)

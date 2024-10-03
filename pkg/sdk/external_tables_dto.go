@@ -35,6 +35,10 @@ type CreateExternalTableRequest struct {
 	tag                 []*TagAssociationRequest
 }
 
+func (r *CreateExternalTableRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
 func (s *CreateExternalTableRequest) GetColumns() []*ExternalTableColumnRequest {
 	return s.columns
 }

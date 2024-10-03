@@ -204,3 +204,11 @@ func TestInt_RolesUseSecondaryRoles(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+func TestInt_LastQueryId(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+	lastQueryId, err := client.ContextFunctions.LastQueryId(ctx)
+	require.NoError(t, err)
+	require.NotEmpty(t, lastQueryId)
+}

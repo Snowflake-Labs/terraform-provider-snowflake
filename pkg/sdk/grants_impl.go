@@ -503,14 +503,14 @@ func (v *grants) runOnAllPipes(ctx context.Context, inDatabase *AccountObjectIde
 }
 
 func (v *grants) runOnAllTasks(ctx context.Context, inDatabase *AccountObjectIdentifier, inSchema *DatabaseObjectIdentifier, command func(Task) error) error {
-	var in *In
+	var in In
 	switch {
 	case inDatabase != nil:
-		in = &In{
+		in = In{
 			Database: *inDatabase,
 		}
 	case inSchema != nil:
-		in = &In{
+		in = In{
 			Schema: *inSchema,
 		}
 	}

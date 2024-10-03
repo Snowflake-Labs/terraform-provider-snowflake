@@ -16,7 +16,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
@@ -407,7 +407,7 @@ func TestInt_MaterializedViewsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())

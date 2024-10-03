@@ -86,7 +86,7 @@ func (s *CreateForJavaFunctionRequest) WithExternalAccessIntegrations(ExternalAc
 	return s
 }
 
-func (s *CreateForJavaFunctionRequest) WithSecrets(Secrets []Secret) *CreateForJavaFunctionRequest {
+func (s *CreateForJavaFunctionRequest) WithSecrets(Secrets []SecretReference) *CreateForJavaFunctionRequest {
 	s.Secrets = Secrets
 	return s
 }
@@ -311,7 +311,7 @@ func (s *CreateForPythonFunctionRequest) WithExternalAccessIntegrations(External
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithSecrets(Secrets []Secret) *CreateForPythonFunctionRequest {
+func (s *CreateForPythonFunctionRequest) WithSecrets(Secrets []SecretReference) *CreateForPythonFunctionRequest {
 	s.Secrets = Secrets
 	return s
 }

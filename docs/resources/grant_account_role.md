@@ -43,7 +43,7 @@ resource "snowflake_user" "user" {
 }
 
 resource "snowflake_grant_account_role" "g" {
-  role_name = snowflake_role.role.name
+  role_name = snowflake_account_role.role.name
   user_name = snowflake_user.user.name
 }
 ```

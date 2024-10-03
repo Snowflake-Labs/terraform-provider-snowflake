@@ -53,7 +53,7 @@ func TestInt_PipeStatus(t *testing.T) {
 	schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+	table, tableCleanup := testClientHelper().Table.CreateInSchema(t, schema.ID())
 	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, schema.ID())
@@ -102,7 +102,7 @@ func TestInt_PipeForceResume(t *testing.T) {
 	schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 	t.Cleanup(schemaCleanup)
 
-	table, tableCleanup := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+	table, tableCleanup := testClientHelper().Table.CreateInSchema(t, schema.ID())
 	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := testClientHelper().Stage.CreateStageInSchema(t, schema.ID())

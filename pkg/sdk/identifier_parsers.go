@@ -3,6 +3,7 @@ package sdk
 import (
 	"bytes"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -152,6 +153,9 @@ func ParseExternalObjectIdentifier(identifier string) (ExternalObjectIdentifier,
 
 func ParseSchemaObjectIdentifierWithArguments(fullyQualifiedName string) (SchemaObjectIdentifierWithArguments, error) {
 	splitIdIndex := strings.IndexRune(fullyQualifiedName, '(')
+	if splitIdIndex == -1 {
+		return SchemaObjectIdentifierWithArguments{}, errors.New("unable to parse identifier: '(' not present")
+	}
 	parts, err := ParseIdentifierString(fullyQualifiedName[:splitIdIndex])
 	if err != nil {
 		return SchemaObjectIdentifierWithArguments{}, err

@@ -216,7 +216,7 @@ func TestInt_EventTables(t *testing.T) {
 		rowAccessPolicy2, rowAccessPolicy2Cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(rowAccessPolicy2Cleanup)
 
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 
 		// add policy

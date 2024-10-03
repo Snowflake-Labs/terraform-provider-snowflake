@@ -1,8 +1,15 @@
 package testint
 
 import (
-	"errors"
+	"fmt"
 	"testing"
+	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
@@ -12,208 +19,364 @@ import (
 func TestInt_Tasks(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
-
 	sql := "SELECT CURRENT_TIMESTAMP"
 
-	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier) {
+	// TODO [SNOW-1017580]: replace with real value
+	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
+	errorIntegrationId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+	err := client.NotificationIntegrations.Create(ctx,
+		sdk.NewCreateNotificationIntegrationRequest(errorIntegrationId, true).
+			WithAutomatedDataLoadsParams(sdk.NewAutomatedDataLoadsParamsRequest().
+				WithGoogleAutoParams(sdk.NewGoogleAutoParamsRequest(gcpPubsubSubscriptionName)),
+			),
+	)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(errorIntegrationId).WithIfExists(sdk.Bool(true))))
+	})
+
+	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, warehouseName string) {
 		t.Helper()
-		assert.Equal(t, id, task.ID())
-		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.Name(), task.Name)
-		assert.NotEmpty(t, task.Id)
-		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), task.DatabaseName)
-		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
-		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
-		assert.Equal(t, "", task.Comment)
-		assert.Equal(t, "", task.Warehouse)
-		assert.Equal(t, "", task.Schedule)
-		assert.Empty(t, task.Predecessors)
-		assert.Equal(t, sdk.TaskStateSuspended, task.State)
-		assert.Equal(t, sql, task.Definition)
-		assert.Equal(t, "", task.Condition)
-		assert.Equal(t, false, task.AllowOverlappingExecution)
-		assert.Empty(t, task.ErrorIntegration)
-		assert.Empty(t, task.LastCommittedOn)
-		assert.Empty(t, task.LastSuspendedOn)
-		assert.Equal(t, "ROLE", task.OwnerRoleType)
-		assert.Empty(t, task.Config)
-		assert.Empty(t, task.Budget)
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasNotEmptyCreatedOn().
+			HasName(id.Name()).
+			HasNotEmptyId().
+			HasDatabaseName(testClientHelper().Ids.DatabaseId().Name()).
+			HasSchemaName(testClientHelper().Ids.SchemaId().Name()).
+			HasOwner("ACCOUNTADMIN").
+			HasComment("").
+			HasWarehouse(warehouseName).
+			HasSchedule("").
+			HasPredecessors().
+			HasState(sdk.TaskStateStarted).
+			HasDefinition(sql).
+			HasCondition("").
+			HasAllowOverlappingExecution(false).
+			HasErrorIntegration(nil).
+			HasLastCommittedOn("").
+			HasLastSuspendedOn("").
+			HasOwnerRoleType("ROLE").
+			HasConfig("").
+			HasBudget("").
+			HasLastSuspendedOn("").
+			HasTaskRelations(sdk.TaskRelations{}),
+		)
 	}
 
-	assertTaskWithOptions := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *sdk.SchemaObjectIdentifier) {
+	assertTaskWithOptions := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, comment string, warehouse string, schedule string, condition string, allowOverlappingExecution bool, config string, predecessor *sdk.SchemaObjectIdentifier, errorIntegrationName *sdk.AccountObjectIdentifier) {
 		t.Helper()
-		assert.Equal(t, id, task.ID())
-		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.Name(), task.Name)
-		assert.NotEmpty(t, task.Id)
-		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), task.DatabaseName)
-		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
-		assert.Equal(t, "ACCOUNTADMIN", task.Owner)
-		assert.Equal(t, comment, task.Comment)
-		assert.Equal(t, warehouse, task.Warehouse)
-		assert.Equal(t, schedule, task.Schedule)
-		assert.Equal(t, sdk.TaskStateSuspended, task.State)
-		assert.Equal(t, sql, task.Definition)
-		assert.Equal(t, condition, task.Condition)
-		assert.Equal(t, allowOverlappingExecution, task.AllowOverlappingExecution)
-		assert.Empty(t, task.ErrorIntegration)
-		assert.Empty(t, task.LastCommittedOn)
-		assert.Empty(t, task.LastSuspendedOn)
-		assert.Equal(t, "ROLE", task.OwnerRoleType)
-		assert.Equal(t, config, task.Config)
-		assert.Empty(t, task.Budget)
+
+		asserts := objectassert.TaskFromObject(t, task).
+			HasNotEmptyCreatedOn().
+			HasName(id.Name()).
+			HasNotEmptyId().
+			HasDatabaseName(testClientHelper().Ids.DatabaseId().Name()).
+			HasSchemaName(testClientHelper().Ids.SchemaId().Name()).
+			HasOwner("ACCOUNTADMIN").
+			HasComment(comment).
+			HasWarehouse(warehouse).
+			HasSchedule(schedule).
+			HasState(sdk.TaskStateSuspended).
+			HasDefinition(sql).
+			HasCondition(condition).
+			HasAllowOverlappingExecution(allowOverlappingExecution).
+			HasErrorIntegration(errorIntegrationName).
+			HasLastCommittedOn("").
+			HasLastSuspendedOn("").
+			HasOwnerRoleType("ROLE").
+			HasConfig(config).
+			HasBudget("").
+			HasLastSuspendedOn("")
+
 		if predecessor != nil {
-			assert.Len(t, task.Predecessors, 1)
-			assert.Contains(t, task.Predecessors, *predecessor)
+			asserts.HasPredecessors(*predecessor)
+			asserts.HasTaskRelations(sdk.TaskRelations{
+				Predecessors: []sdk.SchemaObjectIdentifier{*predecessor},
+			})
 		} else {
-			assert.Empty(t, task.Predecessors)
+			asserts.HasPredecessors()
+			asserts.HasTaskRelations(sdk.TaskRelations{})
 		}
+
+		assertions.AssertThat(t, asserts)
 	}
 
 	assertTaskTerse := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, schedule string) {
 		t.Helper()
-		assert.Equal(t, id, task.ID())
-		assert.NotEmpty(t, task.CreatedOn)
-		assert.Equal(t, id.Name(), task.Name)
-		assert.Equal(t, testClientHelper().Ids.DatabaseId().Name(), task.DatabaseName)
-		assert.Equal(t, testClientHelper().Ids.SchemaId().Name(), task.SchemaName)
-		assert.Equal(t, schedule, task.Schedule)
-
-		// all below are not contained in the terse response, that's why all of them we expect to be empty
-		assert.Empty(t, task.Id)
-		assert.Empty(t, task.Owner)
-		assert.Empty(t, task.Comment)
-		assert.Empty(t, task.Warehouse)
-		assert.Empty(t, task.Predecessors)
-		assert.Empty(t, task.State)
-		assert.Empty(t, task.Definition)
-		assert.Empty(t, task.Condition)
-		assert.Empty(t, task.AllowOverlappingExecution)
-		assert.Empty(t, task.ErrorIntegration)
-		assert.Empty(t, task.LastCommittedOn)
-		assert.Empty(t, task.LastSuspendedOn)
-		assert.Empty(t, task.OwnerRoleType)
-		assert.Empty(t, task.Config)
-		assert.Empty(t, task.Budget)
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasNotEmptyCreatedOn().
+			HasName(id.Name()).
+			HasDatabaseName(testClientHelper().Ids.DatabaseId().Name()).
+			HasSchemaName(testClientHelper().Ids.SchemaId().Name()).
+			HasSchedule(schedule).
+			// all below are not contained in the terse response, that's why all of them we expect to be empty
+			HasId("").
+			HasOwner("").
+			HasComment("").
+			HasWarehouse("").
+			HasPredecessors().
+			HasState("").
+			HasDefinition("").
+			HasCondition("").
+			HasAllowOverlappingExecution(false).
+			HasErrorIntegration(nil).
+			HasLastCommittedOn("").
+			HasLastSuspendedOn("").
+			HasOwnerRoleType("").
+			HasConfig("").
+			HasBudget("").
+			HasLastSuspendedOn("").
+			HasTaskRelations(sdk.TaskRelations{}),
+		)
 	}
 
-	cleanupTaskProvider := func(id sdk.SchemaObjectIdentifier) func() {
-		return func() {
-			err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
-			require.NoError(t, err)
-		}
+	sessionParametersSet := sdk.SessionParameters{
+		AbortDetachedQuery:                       sdk.Bool(true),
+		Autocommit:                               sdk.Bool(false),
+		BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
+		BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
+		ClientMemoryLimit:                        sdk.Int(1024),
+		ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+		ClientPrefetchThreads:                    sdk.Int(2),
+		ClientResultChunkSize:                    sdk.Int(48),
+		ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+		ClientSessionKeepAlive:                   sdk.Bool(true),
+		ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
+		ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
+		DateInputFormat:                          sdk.String("YYYY-MM-DD"),
+		DateOutputFormat:                         sdk.String("YY-MM-DD"),
+		EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
+		ErrorOnNondeterministicMerge:             sdk.Bool(false),
+		ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+		GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
+		GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
+		JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+		JdbcUseSessionTimezone:                   sdk.Bool(false),
+		JSONIndent:                               sdk.Int(4),
+		LockTimeout:                              sdk.Int(21222),
+		LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
+		MultiStatementCount:                      sdk.Int(0),
+		NoorderSequenceAsDefault:                 sdk.Bool(false),
+		OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+		QueryTag:                                 sdk.String("some_tag"),
+		QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+		RowsPerResultset:                         sdk.Int(2),
+		S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
+		SearchPath:                               sdk.String("$public, $current"),
+		StatementQueuedTimeoutInSeconds:          sdk.Int(10),
+		StatementTimeoutInSeconds:                sdk.Int(10),
+		StrictJSONOutput:                         sdk.Bool(true),
+		TimestampDayIsAlways24h:                  sdk.Bool(true),
+		TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
+		TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+		TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+		TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
+		TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
+		TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
+		Timezone:                                 sdk.String("Europe/Warsaw"),
+		TimeInputFormat:                          sdk.String("HH24:MI"),
+		TimeOutputFormat:                         sdk.String("HH24:MI"),
+		TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
+		TransactionAbortOnError:                  sdk.Bool(true),
+		TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
+		TwoDigitCenturyStart:                     sdk.Int(1980),
+		UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
+		UseCachedResult:                          sdk.Bool(false),
+		WeekOfYearPolicy:                         sdk.Int(1),
+		WeekStart:                                sdk.Int(1),
 	}
 
-	createTaskBasicRequest := func(t *testing.T) *sdk.CreateTaskRequest {
-		t.Helper()
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-
-		return sdk.NewCreateTaskRequest(id, sql)
-	}
-
-	createTaskWithRequest := func(t *testing.T, request *sdk.CreateTaskRequest) *sdk.Task {
-		t.Helper()
-		id := request.GetName()
-
-		err := client.Tasks.Create(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
-
-		task, err := client.Tasks.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		return task
-	}
-
-	createTask := func(t *testing.T) *sdk.Task {
-		t.Helper()
-		return createTaskWithRequest(t, createTaskBasicRequest(t))
+	assertSessionParametersSet := func(parametersAssert *objectparametersassert.TaskParametersAssert) *objectparametersassert.TaskParametersAssert {
+		return parametersAssert.
+			HasAbortDetachedQuery(true).
+			HasAutocommit(false).
+			HasBinaryInputFormat(sdk.BinaryInputFormatUTF8).
+			HasBinaryOutputFormat(sdk.BinaryOutputFormatBase64).
+			HasClientMemoryLimit(1024).
+			HasClientMetadataRequestUseConnectionCtx(true).
+			HasClientPrefetchThreads(2).
+			HasClientResultChunkSize(48).
+			HasClientResultColumnCaseInsensitive(true).
+			HasClientSessionKeepAlive(true).
+			HasClientSessionKeepAliveHeartbeatFrequency(2400).
+			HasClientTimestampTypeMapping(sdk.ClientTimestampTypeMappingNtz).
+			HasDateInputFormat("YYYY-MM-DD").
+			HasDateOutputFormat("YY-MM-DD").
+			HasEnableUnloadPhysicalTypeOptimization(false).
+			HasErrorOnNondeterministicMerge(false).
+			HasErrorOnNondeterministicUpdate(true).
+			HasGeographyOutputFormat(sdk.GeographyOutputFormatWKB).
+			HasGeometryOutputFormat(sdk.GeometryOutputFormatWKB).
+			HasJdbcTreatTimestampNtzAsUtc(true).
+			HasJdbcUseSessionTimezone(false).
+			HasJsonIndent(4).
+			HasLockTimeout(21222).
+			HasLogLevel(sdk.LogLevelError).
+			HasMultiStatementCount(0).
+			HasNoorderSequenceAsDefault(false).
+			HasOdbcTreatDecimalAsInt(true).
+			HasQueryTag("some_tag").
+			HasQuotedIdentifiersIgnoreCase(true).
+			HasRowsPerResultset(2).
+			HasS3StageVpceDnsName("vpce-id.s3.region.vpce.amazonaws.com").
+			HasSearchPath("$public, $current").
+			HasStatementQueuedTimeoutInSeconds(10).
+			HasStatementTimeoutInSeconds(10).
+			HasStrictJsonOutput(true).
+			HasTimestampDayIsAlways24h(true).
+			HasTimestampInputFormat("YYYY-MM-DD").
+			HasTimestampLtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+			HasTimestampNtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+			HasTimestampOutputFormat("YYYY-MM-DD HH24:MI:SS").
+			HasTimestampTypeMapping(sdk.TimestampTypeMappingLtz).
+			HasTimestampTzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+			HasTimezone("Europe/Warsaw").
+			HasTimeInputFormat("HH24:MI").
+			HasTimeOutputFormat("HH24:MI").
+			HasTraceLevel(sdk.TraceLevelOnEvent).
+			HasTransactionAbortOnError(true).
+			HasTransactionDefaultIsolationLevel(sdk.TransactionDefaultIsolationLevelReadCommitted).
+			HasTwoDigitCenturyStart(1980).
+			HasUnsupportedDdlAction(sdk.UnsupportedDDLActionFail).
+			HasUseCachedResult(false).
+			HasWeekOfYearPolicy(1).
+			HasWeekStart(1)
 	}
 
 	t.Run("create task: no optionals", func(t *testing.T) {
-		request := createTaskBasicRequest(t)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
-		task := createTaskWithRequest(t, request)
+		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
-		assertTask(t, task, request.GetName())
+		task, err := testClientHelper().Task.Show(t, id)
+		require.NoError(t, err)
+
+		assertTask(t, task, id, "")
+
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, id).HasAllDefaults())
 	})
 
 	t.Run("create task: with initial warehouse", func(t *testing.T) {
-		request := createTaskBasicRequest(t).
-			WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(sdk.Pointer(sdk.WarehouseSizeXSmall)))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
-		task := createTaskWithRequest(t, request)
+		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeXSmall)))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
-		assertTask(t, task, request.GetName())
+		task, err := testClientHelper().Task.Show(t, id)
+		require.NoError(t, err)
+
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+			HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeXSmall),
+		)
+
+		assertTask(t, task, id, "")
 	})
 
-	t.Run("create task: almost complete case", func(t *testing.T) {
-		request := createTaskBasicRequest(t).
-			WithOrReplace(sdk.Bool(true)).
-			WithWarehouse(sdk.NewCreateTaskWarehouseRequest().WithWarehouse(sdk.Pointer(testClientHelper().Ids.WarehouseId()))).
-			WithSchedule(sdk.String("10 MINUTE")).
-			WithConfig(sdk.String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)).
-			WithAllowOverlappingExecution(sdk.Bool(true)).
-			WithSessionParameters(&sdk.SessionParameters{
+	t.Run("create task: complete case", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).
+			WithOrReplace(true).
+			WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(testClientHelper().Ids.WarehouseId())).
+			WithErrorNotificationIntegration(errorIntegrationId).
+			WithSchedule("10 MINUTE").
+			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
+			WithAllowOverlappingExecution(true).
+			WithSessionParameters(sdk.SessionParameters{
 				JSONIndent: sdk.Int(4),
 			}).
-			WithUserTaskTimeoutMs(sdk.Int(500)).
-			WithSuspendTaskAfterNumFailures(sdk.Int(3)).
-			WithComment(sdk.String("some comment")).
-			WithWhen(sdk.String(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
-		id := request.GetName()
+			WithUserTaskTimeoutMs(500).
+			WithSuspendTaskAfterNumFailures(3).
+			WithComment("some comment").
+			WithWhen(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
-		task := createTaskWithRequest(t, request)
+		task, err := testClientHelper().Task.Show(t, id)
+		require.NoError(t, err)
 
-		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil)
+		assertTaskWithOptions(t, task, id, "some comment", testClientHelper().Ids.WarehouseId().Name(), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil, &errorIntegrationId)
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, id).
+			HasJsonIndent(4).
+			HasUserTaskTimeoutMs(500).
+			HasSuspendTaskAfterNumFailures(3),
+		)
 	})
 
 	t.Run("create task: with after", func(t *testing.T) {
-		otherId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
-		request := sdk.NewCreateTaskRequest(otherId, sql).WithSchedule(sdk.String("10 MINUTE"))
+		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(rootTaskId, sql))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, rootTaskId))
 
-		createTaskWithRequest(t, request)
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTaskId}))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
-		request = createTaskBasicRequest(t).
-			WithAfter([]sdk.SchemaObjectIdentifier{otherId})
+		task, err := testClientHelper().Task.Show(t, id)
+		require.NoError(t, err)
 
-		task := createTaskWithRequest(t, request)
-
-		assertTaskWithOptions(t, task, request.GetName(), "", "", "", "", false, "", &otherId)
+		assertTaskWithOptions(t, task, id, "", "", "", "", false, "", &rootTaskId, nil)
 	})
 
+	t.Run("create task: with after and finalizer", func(t *testing.T) {
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		finalizerId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(rootTaskId, sql))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, rootTaskId))
+
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTaskId}))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
+
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(finalizerId, sql).WithFinalize(rootTaskId))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, finalizerId))
+
+		assertions.AssertThat(t, objectassert.Task(t, rootTaskId).
+			HasTaskRelations(sdk.TaskRelations{
+				Predecessors:  []sdk.SchemaObjectIdentifier{},
+				FinalizerTask: &finalizerId,
+			}),
+		)
+	})
+
+	// Tested graph
+	//		 t1
+	// 	   /    \
+	// root	     t3
+	//	   \    /
+	//		 t2
 	t.Run("create dag of tasks", func(t *testing.T) {
 		rootId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-
-		request := sdk.NewCreateTaskRequest(rootId, sql).WithSchedule(sdk.String("10 MINUTE"))
-		root := createTaskWithRequest(t, request)
-
+		root, rootCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(rootId, sql).WithSchedule("10 MINUTE"))
+		t.Cleanup(rootCleanup)
 		require.Empty(t, root.Predecessors)
 
-		t1Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-
-		request = sdk.NewCreateTaskRequest(t1Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootId})
-		t1 := createTaskWithRequest(t, request)
-
+		t1, t1Cleanup := testClientHelper().Task.CreateWithAfter(t, rootId)
+		t.Cleanup(t1Cleanup)
 		require.Equal(t, []sdk.SchemaObjectIdentifier{rootId}, t1.Predecessors)
 
-		t2Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-
-		request = sdk.NewCreateTaskRequest(t2Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{t1Id, rootId})
-		t2 := createTaskWithRequest(t, request)
+		t2, t2Cleanup := testClientHelper().Task.CreateWithAfter(t, t1.ID(), rootId)
+		t.Cleanup(t2Cleanup)
 
 		require.Contains(t, t2.Predecessors, rootId)
-		require.Contains(t, t2.Predecessors, t1Id)
+		require.Contains(t, t2.Predecessors, t1.ID())
 		require.Len(t, t2.Predecessors, 2)
 
-		t3Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		t3, t3Cleanup := testClientHelper().Task.CreateWithAfter(t, t2.ID(), t1.ID())
+		t.Cleanup(t3Cleanup)
 
-		request = sdk.NewCreateTaskRequest(t3Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{t2Id, t1Id})
-		t3 := createTaskWithRequest(t, request)
-
-		require.Contains(t, t3.Predecessors, t2Id)
-		require.Contains(t, t3.Predecessors, t1Id)
+		require.Contains(t, t3.Predecessors, t2.ID())
+		require.Contains(t, t3.Predecessors, t1.ID())
 		require.Len(t, t3.Predecessors, 2)
 
 		rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, rootId)
@@ -221,115 +384,114 @@ func TestInt_Tasks(t *testing.T) {
 		require.Len(t, rootTasks, 1)
 		require.Equal(t, rootId, rootTasks[0].ID())
 
-		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t1Id)
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t1.ID())
 		require.NoError(t, err)
 		require.Len(t, rootTasks, 1)
 		require.Equal(t, rootId, rootTasks[0].ID())
 
-		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t2Id)
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t2.ID())
 		require.NoError(t, err)
 		require.Len(t, rootTasks, 1)
 		require.Equal(t, rootId, rootTasks[0].ID())
 
-		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3Id)
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3.ID())
 		require.NoError(t, err)
 		require.Len(t, rootTasks, 1)
 		require.Equal(t, rootId, rootTasks[0].ID())
 
 		// cannot set ALLOW_OVERLAPPING_EXECUTION on child task
-		alterRequest := sdk.NewAlterTaskRequest(t1Id).WithSet(sdk.NewTaskSetRequest().WithAllowOverlappingExecution(sdk.Bool(true)))
+		alterRequest := sdk.NewAlterTaskRequest(t1.ID()).WithSet(*sdk.NewTaskSetRequest().WithAllowOverlappingExecution(true))
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.ErrorContains(t, err, "Cannot set allow_overlapping_execution on non-root task")
 
 		// can set ALLOW_OVERLAPPING_EXECUTION on root task
-		alterRequest = sdk.NewAlterTaskRequest(rootId).WithSet(sdk.NewTaskSetRequest().WithAllowOverlappingExecution(sdk.Bool(true)))
+		alterRequest = sdk.NewAlterTaskRequest(rootId).WithSet(*sdk.NewTaskSetRequest().WithAllowOverlappingExecution(true))
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		// can create cycle, because DAG is suspended
-		alterRequest = sdk.NewAlterTaskRequest(t1Id).WithAddAfter([]sdk.SchemaObjectIdentifier{t3Id})
+		alterRequest = sdk.NewAlterTaskRequest(t1.ID()).WithAddAfter([]sdk.SchemaObjectIdentifier{t3.ID()})
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
 		// can get the root task even with cycle
-		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3Id)
+		rootTasks, err = sdk.GetRootTasks(client.Tasks, ctx, t3.ID())
 		require.NoError(t, err)
 		require.Len(t, rootTasks, 1)
 		require.Equal(t, rootId, rootTasks[0].ID())
 
 		// we get an error when trying to start
-		alterRequest = sdk.NewAlterTaskRequest(rootId).WithResume(sdk.Bool(true))
+		alterRequest = sdk.NewAlterTaskRequest(rootId).WithResume(true)
 		err = client.Tasks.Alter(ctx, alterRequest)
 		require.ErrorContains(t, err, "Graph has at least one cycle containing task")
 	})
 
+	// Tested graph
+	// root1
+	//      \
+	//       t1
+	//      /
+	// root2
 	t.Run("create dag of tasks - multiple roots", func(t *testing.T) {
 		root1Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-
-		request := sdk.NewCreateTaskRequest(root1Id, sql).WithSchedule(sdk.String("10 MINUTE"))
-		root1 := createTaskWithRequest(t, request)
-
+		root1, root1Cleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(root1Id, sql).WithSchedule("10 MINUTE"))
+		t.Cleanup(root1Cleanup)
 		require.Empty(t, root1.Predecessors)
 
 		root2Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-
-		request = sdk.NewCreateTaskRequest(root2Id, sql).WithSchedule(sdk.String("10 MINUTE"))
-		root2 := createTaskWithRequest(t, request)
-
+		root2, root2Cleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(root2Id, sql).WithSchedule("10 MINUTE"))
+		t.Cleanup(root2Cleanup)
 		require.Empty(t, root2.Predecessors)
 
-		t1Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-
-		request = sdk.NewCreateTaskRequest(t1Id, sql).WithAfter([]sdk.SchemaObjectIdentifier{root1Id, root2Id})
-		t1 := createTaskWithRequest(t, request)
+		t1, t1Cleanup := testClientHelper().Task.CreateWithAfter(t, root1.ID(), root2.ID())
+		t.Cleanup(t1Cleanup)
 
 		require.Contains(t, t1.Predecessors, root1Id)
 		require.Contains(t, t1.Predecessors, root2Id)
 		require.Len(t, t1.Predecessors, 2)
 
-		rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, t1Id)
+		rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, t1.ID())
 		require.NoError(t, err)
 		require.Len(t, rootTasks, 2)
 		require.Contains(t, []sdk.SchemaObjectIdentifier{root1Id, root2Id}, rootTasks[0].ID())
 		require.Contains(t, []sdk.SchemaObjectIdentifier{root1Id, root2Id}, rootTasks[1].ID())
 
 		// we get an error when trying to start
-		alterRequest := sdk.NewAlterTaskRequest(root1Id).WithResume(sdk.Bool(true))
-		err = client.Tasks.Alter(ctx, alterRequest)
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(root1Id).WithResume(true))
 		require.ErrorContains(t, err, "The graph has more than one root task (one without predecessors)")
 	})
 
-	// TODO: this fails with `syntax error line 1 at position 89 unexpected 'GRANTS'`.
-	// The reason is that in the documentation there is a note: "This parameter is not supported currently.".
-	// t.Run("create task: with grants", func(t *testing.T) {
-	//	name := randomString(t)
-	//	id := NewSchemaObjectIdentifier(database.Name, schema.Name, name)
-	//
-	//	request := NewCreateTaskRequest(id, sql).
-	//		WithOrReplace(Bool(true)).
-	//		WithCopyGrants(Bool(true))
-	//
-	//	err := client.Tasks.Create(ctx, request)
-	//	require.NoError(t, err)
-	//	t.Cleanup(cleanupTaskProvider(id))
-	//
-	//	task, err := client.Tasks.ShowByID(ctx, id)
-	//
-	//	require.NoError(t, err)
-	//	assertTaskWithOptions(t, task, id, name, "", "", "", "", false, "", nil)
-	// })
+	t.Run("validate: finalizer set on non-root task", func(t *testing.T) {
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		finalizerId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+		err := testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(rootTaskId, sql))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, rootTaskId))
+
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTaskId}))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
+
+		err = testClient(t).Tasks.Create(ctx, sdk.NewCreateTaskRequest(finalizerId, sql).WithFinalize(id))
+		require.ErrorContains(t, err, "cannot finalize a non-root task")
+	})
 
 	t.Run("create task: with tags", func(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
-		request := createTaskBasicRequest(t).
-			WithTag([]sdk.TagAssociation{{
-				Name:  tag.ID(),
-				Value: "v1",
-			}})
-
-		task := createTaskWithRequest(t, request)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		task, taskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id, sql).
+			WithTag([]sdk.TagAssociation{
+				{
+					Name:  tag.ID(),
+					Value: "v1",
+				},
+			}),
+		)
+		t.Cleanup(taskCleanup)
 
 		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), task.ID(), sdk.ObjectTypeTask)
 		require.NoError(t, err)
@@ -338,34 +500,110 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("clone task: default", func(t *testing.T) {
-		sourceTask := createTask(t)
+		rootTask, rootTaskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(rootTaskCleanup)
+
+		sourceTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		sourceTask, taskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(sourceTaskId, sql).
+			WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}).
+			WithAllowOverlappingExecution(false).
+			WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(testClientHelper().Ids.WarehouseId())).
+			WithComment(random.Comment()).
+			WithWhen(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`),
+		)
+		t.Cleanup(taskCleanup)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-
-		request := sdk.NewCloneTaskRequest(id, sourceTask.ID())
-
-		err := client.Tasks.Clone(ctx, request)
+		err := client.Tasks.Clone(ctx, sdk.NewCloneTaskRequest(id, sourceTask.ID()))
 		require.NoError(t, err)
-		t.Cleanup(cleanupTaskProvider(id))
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
 
 		task, err := client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertTask(t, task, request.GetName())
+		assert.Equal(t, sourceTask.Definition, task.Definition)
+		assert.Equal(t, sourceTask.Config, task.Config)
+		assert.Equal(t, sourceTask.Condition, task.Condition)
+		assert.Equal(t, sourceTask.Warehouse, task.Warehouse)
+		assert.Equal(t, sourceTask.Predecessors, task.Predecessors)
+		assert.Equal(t, sourceTask.AllowOverlappingExecution, task.AllowOverlappingExecution)
+		assert.Equal(t, sourceTask.Comment, task.Comment)
+		assert.Equal(t, sourceTask.ErrorIntegration, task.ErrorIntegration)
+		assert.Equal(t, sourceTask.Schedule, task.Schedule)
+		assert.Equal(t, sourceTask.TaskRelations, task.TaskRelations)
+	})
+
+	t.Run("create or alter: complete", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		err := client.Tasks.CreateOrAlter(ctx, sdk.NewCreateOrAlterTaskRequest(id, sql).
+			WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(testClientHelper().Ids.WarehouseId())).
+			WithSchedule("10 MINUTES").
+			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
+			WithAllowOverlappingExecution(true).
+			WithUserTaskTimeoutMs(10).
+			WithSessionParameters(sessionParametersSet).
+			WithSuspendTaskAfterNumFailures(15).
+			WithComment("some_comment").
+			WithTaskAutoRetryAttempts(15).
+			WithWhen(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`),
+		)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Task.DropFunc(t, id))
+
+		task, err := client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+		createdOn := task.CreatedOn
+
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
+			HasSchedule("10 MINUTES").
+			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
+			HasAllowOverlappingExecution(true).
+			HasCondition(`SYSTEM$STREAM_HAS_DATA('MYSTREAM')`).
+			HasComment("some_comment").
+			HasTaskRelations(sdk.TaskRelations{}),
+		)
+		assertions.AssertThat(t, assertSessionParametersSet(objectparametersassert.TaskParameters(t, task.ID()).
+			HasUserTaskTimeoutMs(10).
+			HasSuspendTaskAfterNumFailures(15).
+			HasTaskAutoRetryAttempts(15)),
+		)
+
+		err = client.Tasks.CreateOrAlter(ctx, sdk.NewCreateOrAlterTaskRequest(id, sql))
+		require.NoError(t, err)
+
+		alteredTask, err := client.Tasks.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, alteredTask).
+			HasWarehouse("").
+			HasSchedule("").
+			HasConfig("").
+			HasAllowOverlappingExecution(false).
+			HasCondition("").
+			HasComment("").
+			HasTaskRelations(sdk.TaskRelations{}),
+		)
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+			HasDefaultAutocommitValue().
+			HasDefaultAbortDetachedQueryValue().
+			HasDefaultUserTaskTimeoutMsValue().
+			HasDefaultSuspendTaskAfterNumFailuresValue().
+			HasDefaultTaskAutoRetryAttemptsValue(),
+		)
+
+		require.Equal(t, createdOn, alteredTask.CreatedOn)
 	})
 
 	t.Run("drop task: existing", func(t *testing.T) {
-		request := createTaskBasicRequest(t)
-		id := request.GetName()
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
 
-		err := client.Tasks.Create(ctx, request)
+		err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(task.ID()))
 		require.NoError(t, err)
 
-		err = client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
-		require.NoError(t, err)
-
-		_, err = client.Tasks.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		_, err = client.Tasks.ShowByID(ctx, task.ID())
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	})
 
 	t.Run("drop task: non-existing", func(t *testing.T) {
@@ -374,75 +612,157 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: set value and unset value", func(t *testing.T) {
-		task := createTask(t)
-		id := task.ID()
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
 
-		alterRequest := sdk.NewAlterTaskRequest(id).WithSet(sdk.NewTaskSetRequest().WithComment(sdk.String("new comment")).WithUserTaskTimeoutMs(sdk.Int(1000)))
-		err := client.Tasks.Alter(ctx, alterRequest)
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSet(*sdk.NewTaskSetRequest().
+			// TODO(SNOW-1348116): Cannot set warehouse due to Snowflake error
+			// WithWarehouse(testClientHelper().Ids.WarehouseId()).
+			WithErrorNotificationIntegration(errorIntegrationId).
+			WithSessionParameters(sessionParametersSet).
+			WithSchedule("10 MINUTE").
+			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
+			WithAllowOverlappingExecution(true).
+			WithUserTaskTimeoutMs(1000).
+			WithSuspendTaskAfterNumFailures(100).
+			WithComment("new comment").
+			WithTaskAutoRetryAttempts(10).
+			WithUserTaskMinimumTriggerIntervalInSeconds(15),
+		))
 		require.NoError(t, err)
 
-		alteredTask, err := client.Tasks.ShowByID(ctx, id)
+		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
+			// HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
+			HasErrorIntegration(sdk.Pointer(errorIntegrationId)).
+			HasSchedule("10 MINUTE").
+			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
+			HasAllowOverlappingExecution(true).
+			HasComment("new comment"),
+		)
+		assertions.AssertThat(t, assertSessionParametersSet(objectparametersassert.TaskParameters(t, task.ID())).
+			HasUserTaskTimeoutMs(1000).
+			HasSuspendTaskAfterNumFailures(100).
+			HasTaskAutoRetryAttempts(10).
+			HasUserTaskMinimumTriggerIntervalInSeconds(15),
+		)
+
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnset(*sdk.NewTaskUnsetRequest().
+			WithErrorIntegration(true).
+			WithSessionParametersUnset(sdk.SessionParametersUnset{
+				AbortDetachedQuery:                       sdk.Bool(true),
+				Autocommit:                               sdk.Bool(true),
+				BinaryInputFormat:                        sdk.Bool(true),
+				BinaryOutputFormat:                       sdk.Bool(true),
+				ClientMemoryLimit:                        sdk.Bool(true),
+				ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+				ClientPrefetchThreads:                    sdk.Bool(true),
+				ClientResultChunkSize:                    sdk.Bool(true),
+				ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+				ClientSessionKeepAlive:                   sdk.Bool(true),
+				ClientSessionKeepAliveHeartbeatFrequency: sdk.Bool(true),
+				ClientTimestampTypeMapping:               sdk.Bool(true),
+				DateInputFormat:                          sdk.Bool(true),
+				DateOutputFormat:                         sdk.Bool(true),
+				EnableUnloadPhysicalTypeOptimization:     sdk.Bool(true),
+				ErrorOnNondeterministicMerge:             sdk.Bool(true),
+				ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+				GeographyOutputFormat:                    sdk.Bool(true),
+				GeometryOutputFormat:                     sdk.Bool(true),
+				JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+				JdbcUseSessionTimezone:                   sdk.Bool(true),
+				JSONIndent:                               sdk.Bool(true),
+				LockTimeout:                              sdk.Bool(true),
+				LogLevel:                                 sdk.Bool(true),
+				MultiStatementCount:                      sdk.Bool(true),
+				NoorderSequenceAsDefault:                 sdk.Bool(true),
+				OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+				QueryTag:                                 sdk.Bool(true),
+				QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+				RowsPerResultset:                         sdk.Bool(true),
+				S3StageVpceDnsName:                       sdk.Bool(true),
+				SearchPath:                               sdk.Bool(true),
+				StatementQueuedTimeoutInSeconds:          sdk.Bool(true),
+				StatementTimeoutInSeconds:                sdk.Bool(true),
+				StrictJSONOutput:                         sdk.Bool(true),
+				TimestampDayIsAlways24h:                  sdk.Bool(true),
+				TimestampInputFormat:                     sdk.Bool(true),
+				TimestampLTZOutputFormat:                 sdk.Bool(true),
+				TimestampNTZOutputFormat:                 sdk.Bool(true),
+				TimestampOutputFormat:                    sdk.Bool(true),
+				TimestampTypeMapping:                     sdk.Bool(true),
+				TimestampTZOutputFormat:                  sdk.Bool(true),
+				Timezone:                                 sdk.Bool(true),
+				TimeInputFormat:                          sdk.Bool(true),
+				TimeOutputFormat:                         sdk.Bool(true),
+				TraceLevel:                               sdk.Bool(true),
+				TransactionAbortOnError:                  sdk.Bool(true),
+				TransactionDefaultIsolationLevel:         sdk.Bool(true),
+				TwoDigitCenturyStart:                     sdk.Bool(true),
+				UnsupportedDDLAction:                     sdk.Bool(true),
+				UseCachedResult:                          sdk.Bool(true),
+				WeekOfYearPolicy:                         sdk.Bool(true),
+				WeekStart:                                sdk.Bool(true),
+			}).
+			WithWarehouse(true).
+			WithSchedule(true).
+			WithConfig(true).
+			WithAllowOverlappingExecution(true).
+			WithUserTaskTimeoutMs(true).
+			WithSuspendTaskAfterNumFailures(true).
+			WithComment(true).
+			WithTaskAutoRetryAttempts(true).
+			WithUserTaskMinimumTriggerIntervalInSeconds(true),
+		))
 		require.NoError(t, err)
 
-		assert.Equal(t, "new comment", alteredTask.Comment)
-
-		alterRequest = sdk.NewAlterTaskRequest(id).WithUnset(sdk.NewTaskUnsetRequest().WithComment(sdk.Bool(true)).WithUserTaskTimeoutMs(sdk.Bool(true)))
-		err = client.Tasks.Alter(ctx, alterRequest)
-		require.NoError(t, err)
-
-		alteredTask, err = client.Tasks.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		assert.Equal(t, "", alteredTask.Comment)
+		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
+			HasErrorIntegration(nil).
+			HasSchedule("").
+			HasConfig("").
+			HasAllowOverlappingExecution(false).
+			HasComment(""),
+		)
+		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).HasAllDefaults())
 	})
 
 	t.Run("alter task: set and unset tag", func(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
 
-		task := createTask(t)
-		id := task.ID()
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
 
 		tagValue := "abc"
-		tags := []sdk.TagAssociation{
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSetTags([]sdk.TagAssociation{
 			{
 				Name:  tag.ID(),
 				Value: tagValue,
 			},
-		}
-		alterRequestSetTags := sdk.NewAlterTaskRequest(id).WithSetTags(tags)
-
-		err := client.Tasks.Alter(ctx, alterRequestSetTags)
+		}))
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTask)
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), task.ID(), sdk.ObjectTypeTask)
 		require.NoError(t, err)
 
 		assert.Equal(t, tagValue, returnedTagValue)
 
-		unsetTags := []sdk.ObjectIdentifier{
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnsetTags([]sdk.ObjectIdentifier{
 			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterTaskRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.Tasks.Alter(ctx, alterRequestUnsetTags)
+		}))
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTask)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), task.ID(), sdk.ObjectTypeTask)
 		require.Error(t, err)
 	})
 
 	t.Run("alter task: resume and suspend", func(t *testing.T) {
-		request := createTaskBasicRequest(t).
-			WithSchedule(sdk.String("10 MINUTE"))
-
-		task := createTaskWithRequest(t, request)
-		id := task.ID()
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		task, taskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithSchedule("10 MINUTE"))
+		t.Cleanup(taskCleanup)
 
 		assert.Equal(t, sdk.TaskStateSuspended, task.State)
 
-		alterRequest := sdk.NewAlterTaskRequest(id).WithResume(sdk.Bool(true))
-		err := client.Tasks.Alter(ctx, alterRequest)
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithResume(true))
 		require.NoError(t, err)
 
 		alteredTask, err := client.Tasks.ShowByID(ctx, id)
@@ -450,8 +770,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		assert.Equal(t, sdk.TaskStateStarted, alteredTask.State)
 
-		alterRequest = sdk.NewAlterTaskRequest(id).WithSuspend(sdk.Bool(true))
-		err = client.Tasks.Alter(ctx, alterRequest)
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true))
 		require.NoError(t, err)
 
 		alteredTask, err = client.Tasks.ShowByID(ctx, id)
@@ -461,102 +780,124 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("alter task: remove after and add after", func(t *testing.T) {
-		request := createTaskBasicRequest(t).
-			WithSchedule(sdk.String("10 MINUTE"))
+		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		rootTask, rootTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule("10 MINUTE"))
+		t.Cleanup(rootTaskCleanup)
 
-		otherTask := createTaskWithRequest(t, request)
-		otherId := otherTask.ID()
+		task, taskCleanup := testClientHelper().Task.CreateWithAfter(t, rootTask.ID())
+		t.Cleanup(taskCleanup)
 
-		request = createTaskBasicRequest(t).
-			WithAfter([]sdk.SchemaObjectIdentifier{otherId})
+		assert.Contains(t, task.Predecessors, rootTask.ID())
 
-		task := createTaskWithRequest(t, request)
-		id := task.ID()
-
-		assert.Contains(t, task.Predecessors, otherId)
-
-		alterRequest := sdk.NewAlterTaskRequest(id).WithRemoveAfter([]sdk.SchemaObjectIdentifier{otherId})
-
-		err := client.Tasks.Alter(ctx, alterRequest)
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithRemoveAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
 		require.NoError(t, err)
 
-		task, err = client.Tasks.ShowByID(ctx, id)
+		task, err = client.Tasks.ShowByID(ctx, task.ID())
 
 		require.NoError(t, err)
 		assert.Empty(t, task.Predecessors)
 
-		alterRequest = sdk.NewAlterTaskRequest(id).WithAddAfter([]sdk.SchemaObjectIdentifier{otherId})
-
-		err = client.Tasks.Alter(ctx, alterRequest)
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithAddAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
 		require.NoError(t, err)
 
-		task, err = client.Tasks.ShowByID(ctx, id)
+		task, err = client.Tasks.ShowByID(ctx, task.ID())
 
 		require.NoError(t, err)
-		assert.Contains(t, task.Predecessors, otherId)
+		assert.Contains(t, task.Predecessors, rootTask.ID())
+	})
+
+	t.Run("alter task: set and unset final task", func(t *testing.T) {
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
+
+		finalTask, finalTaskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(finalTaskCleanup)
+
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasTaskRelations(sdk.TaskRelations{
+				FinalizerTask: nil,
+			}),
+		)
+
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSetFinalize(finalTask.ID()))
+		require.NoError(t, err)
+
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasTaskRelations(sdk.TaskRelations{
+				FinalizerTask: sdk.Pointer(finalTask.ID()),
+			}),
+		)
+
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnsetFinalize(true))
+		require.NoError(t, err)
+
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+			HasTaskRelations(sdk.TaskRelations{
+				FinalizerTask: nil,
+			}),
+		)
 	})
 
 	t.Run("alter task: modify when and as", func(t *testing.T) {
-		task := createTask(t)
-		id := task.ID()
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
 
 		newSql := "SELECT CURRENT_DATE"
-		alterRequest := sdk.NewAlterTaskRequest(id).WithModifyAs(sdk.String(newSql))
-		err := client.Tasks.Alter(ctx, alterRequest)
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithModifyAs(newSql))
 		require.NoError(t, err)
 
-		alteredTask, err := client.Tasks.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		assert.Equal(t, newSql, alteredTask.Definition)
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).HasDefinition(newSql))
 
 		newWhen := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
-		alterRequest = sdk.NewAlterTaskRequest(id).WithModifyWhen(sdk.String(newWhen))
-		err = client.Tasks.Alter(ctx, alterRequest)
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithModifyWhen(newWhen))
 		require.NoError(t, err)
 
-		alteredTask, err = client.Tasks.ShowByID(ctx, id)
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).HasCondition(newWhen))
+
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithRemoveWhen(true))
 		require.NoError(t, err)
 
-		assert.Equal(t, newWhen, alteredTask.Condition)
+		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).HasCondition(""))
 	})
 
 	t.Run("show task: default", func(t *testing.T) {
-		task1 := createTask(t)
-		task2 := createTask(t)
+		task1, task1Cleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(task1Cleanup)
 
-		showRequest := sdk.NewShowTaskRequest()
-		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
+		task2, task2Cleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(task2Cleanup)
+
+		returnedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().WithIn(sdk.In{Schema: testClientHelper().Ids.SchemaId()}))
 		require.NoError(t, err)
 
-		assert.LessOrEqual(t, 2, len(returnedTasks))
+		require.Len(t, returnedTasks, 2)
 		assert.Contains(t, returnedTasks, *task1)
 		assert.Contains(t, returnedTasks, *task2)
 	})
 
 	t.Run("show task: terse", func(t *testing.T) {
-		request := createTaskBasicRequest(t).
-			WithSchedule(sdk.String("10 MINUTE"))
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		task, taskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithSchedule("10 MINUTE"))
+		t.Cleanup(taskCleanup)
 
-		task := createTaskWithRequest(t, request)
-
-		showRequest := sdk.NewShowTaskRequest().WithTerse(sdk.Bool(true))
-		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
+		returnedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().WithIn(sdk.In{Schema: testClientHelper().Ids.SchemaId()}).WithTerse(true))
 		require.NoError(t, err)
 
-		assert.LessOrEqual(t, 1, len(returnedTasks))
+		require.Len(t, returnedTasks, 1)
 		assertTaskTerse(t, &returnedTasks[0], task.ID(), "10 MINUTE")
 	})
 
 	t.Run("show task: with options", func(t *testing.T) {
-		task1 := createTask(t)
-		task2 := createTask(t)
+		task1, task1Cleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(task1Cleanup)
 
-		showRequest := sdk.NewShowTaskRequest().
-			WithLike(&sdk.Like{Pattern: &task1.Name}).
-			WithIn(&sdk.In{Schema: testClientHelper().Ids.SchemaId()}).
-			WithLimit(&sdk.LimitFrom{Rows: sdk.Int(5)})
-		returnedTasks, err := client.Tasks.Show(ctx, showRequest)
+		task2, task2Cleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(task2Cleanup)
+
+		returnedTasks, err := client.Tasks.Show(ctx, sdk.NewShowTaskRequest().
+			WithLike(sdk.Like{Pattern: &task1.Name}).
+			WithIn(sdk.In{Schema: testClientHelper().Ids.SchemaId()}).
+			WithLimit(sdk.LimitFrom{Rows: sdk.Int(5)}))
 
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(returnedTasks))
@@ -565,32 +906,65 @@ func TestInt_Tasks(t *testing.T) {
 	})
 
 	t.Run("describe task: default", func(t *testing.T) {
-		task := createTask(t)
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
 
 		returnedTask, err := client.Tasks.Describe(ctx, task.ID())
 		require.NoError(t, err)
 
-		assertTask(t, returnedTask, task.ID())
+		assertTask(t, returnedTask, task.ID(), testClientHelper().Ids.WarehouseId().Name())
 	})
 
 	t.Run("execute task: default", func(t *testing.T) {
-		task := createTask(t)
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
 
-		executeRequest := sdk.NewExecuteTaskRequest(task.ID())
-		err := client.Tasks.Execute(ctx, executeRequest)
+		err := client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()))
 		require.NoError(t, err)
+	})
+
+	t.Run("execute task: retry last after successful last task", func(t *testing.T) {
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
+
+		_, subTaskCleanup := testClientHelper().Task.CreateWithAfter(t, task.ID())
+		t.Cleanup(subTaskCleanup)
+
+		err := client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()))
+		require.NoError(t, err)
+
+		err = client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()).WithRetryLast(true))
+		require.ErrorContains(t, err, fmt.Sprintf("Cannot perform retry: no suitable run of graph with root task %s to retry.", task.ID().Name()))
+	})
+
+	t.Run("execute task: retry last after failed last task", func(t *testing.T) {
+		task, taskCleanup := testClientHelper().Task.Create(t)
+		t.Cleanup(taskCleanup)
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		_, subTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id, "select * from not_existing_table"))
+		t.Cleanup(subTaskCleanup)
+
+		err := client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()))
+		require.NoError(t, err)
+
+		require.Eventually(t, func() bool {
+			err := client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()).WithRetryLast(true))
+			return err != nil
+		}, time.Second, time.Millisecond*500)
 	})
 
 	t.Run("temporarily suspend root tasks", func(t *testing.T) {
 		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+		rootTask, rootTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule("60 MINUTES"))
+		t.Cleanup(rootTaskCleanup)
 
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		task := createTaskWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
+		task, taskCleanup := testClientHelper().Task.CreateWithAfter(t, rootTask.ID())
+		t.Cleanup(taskCleanup)
 
-		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))))
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(true)))
 		t.Cleanup(func() {
-			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(sdk.Bool(true))))
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(true)))
 		})
 
 		tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, task.ID(), task.ID())
@@ -608,38 +982,49 @@ func TestInt_Tasks(t *testing.T) {
 		require.Equal(t, sdk.TaskStateStarted, rootTaskStatus.State)
 	})
 
+	// Tested graph
+	// root1
+	//      \
+	//       t1
+	//      /
+	// root2
+	// Because graph validation occurs only after resuming the root task, we assume that Snowflake will throw
+	// validation error with given graph configuration.
 	t.Run("resume root tasks within a graph containing more than one root task", func(t *testing.T) {
 		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+		rootTask, rootTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule("60 MINUTES"))
+		t.Cleanup(rootTaskCleanup)
 
 		secondRootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		secondRootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(secondRootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+		secondRootTask, secondRootTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(secondRootTaskId, sql).WithSchedule("60 MINUTES"))
+		t.Cleanup(secondRootTaskCleanup)
 
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		_ = createTaskWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID(), secondRootTask.ID()}))
+		_, cleanupTask := testClientHelper().Task.CreateWithAfter(t, rootTask.ID(), secondRootTask.ID())
+		t.Cleanup(cleanupTask)
 
-		require.ErrorContains(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))), "The graph has more than one root task (one without predecessors)")
-		require.ErrorContains(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(secondRootTask.ID()).WithResume(sdk.Bool(true))), "The graph has more than one root task (one without predecessors)")
+		require.ErrorContains(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(true)), "The graph has more than one root task (one without predecessors)")
+		require.ErrorContains(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(secondRootTask.ID()).WithResume(true)), "The graph has more than one root task (one without predecessors)")
 	})
 
 	t.Run("suspend root tasks temporarily with three sequentially connected tasks - last in DAG", func(t *testing.T) {
 		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+		rootTask, rootTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule("60 MINUTES"))
+		t.Cleanup(rootTaskCleanup)
 
-		middleTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		middleTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(middleTaskId, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
+		middleTask, middleTaskCleanup := testClientHelper().Task.CreateWithAfter(t, rootTask.ID())
+		t.Cleanup(middleTaskCleanup)
 
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		task := createTaskWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithAfter([]sdk.SchemaObjectIdentifier{middleTask.ID()}))
+		task, taskCleanup := testClientHelper().Task.CreateWithAfter(t, middleTask.ID())
+		t.Cleanup(taskCleanup)
 
-		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(middleTask.ID()).WithResume(sdk.Bool(true))))
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(middleTask.ID()).WithResume(true)))
 		t.Cleanup(func() {
-			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(middleTask.ID()).WithSuspend(sdk.Bool(true))))
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(middleTask.ID()).WithSuspend(true)))
 		})
 
-		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))))
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(true)))
 		t.Cleanup(func() {
-			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(sdk.Bool(true))))
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(true)))
 		})
 
 		tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, task.ID(), task.ID())
@@ -668,22 +1053,23 @@ func TestInt_Tasks(t *testing.T) {
 
 	t.Run("suspend root tasks temporarily with three sequentially connected tasks - middle in DAG", func(t *testing.T) {
 		rootTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		rootTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule(sdk.String("60 minutes")))
+		rootTask, rootTaskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(rootTaskId, sql).WithSchedule("60 MINUTES"))
+		t.Cleanup(rootTaskCleanup)
 
-		middleTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		middleTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(middleTaskId, sql).WithAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
+		middleTask, middleTaskCleanup := testClientHelper().Task.CreateWithAfter(t, rootTask.ID())
+		t.Cleanup(middleTaskCleanup)
 
-		childTaskId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		childTask := createTaskWithRequest(t, sdk.NewCreateTaskRequest(childTaskId, sql).WithAfter([]sdk.SchemaObjectIdentifier{middleTask.ID()}))
+		childTask, childTaskCleanup := testClientHelper().Task.CreateWithAfter(t, middleTask.ID())
+		t.Cleanup(childTaskCleanup)
 
-		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(childTask.ID()).WithResume(sdk.Bool(true))))
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(childTask.ID()).WithResume(true)))
 		t.Cleanup(func() {
-			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(childTask.ID()).WithSuspend(sdk.Bool(true))))
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(childTask.ID()).WithSuspend(true)))
 		})
 
-		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(sdk.Bool(true))))
+		require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(true)))
 		t.Cleanup(func() {
-			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(sdk.Bool(true))))
+			require.NoError(t, client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(true)))
 		})
 
 		tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, middleTask.ID(), middleTask.ID())
@@ -717,24 +1103,6 @@ func TestInt_TasksShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	cleanupTaskHandle := func(id sdk.SchemaObjectIdentifier) func() {
-		return func() {
-			err := client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
-			require.NoError(t, err)
-		}
-	}
-
-	createTaskHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
-		t.Helper()
-
-		err := client.Tasks.Create(ctx, sdk.NewCreateTaskRequest(id, "SELECT CURRENT_TIMESTAMP"))
-		require.NoError(t, err)
-		t.Cleanup(cleanupTaskHandle(id))
-	}
-
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
@@ -742,8 +1110,10 @@ func TestInt_TasksShowByID(t *testing.T) {
 		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierInSchema(id1.Name(), schema.ID())
 
-		createTaskHandle(t, id1)
-		createTaskHandle(t, id2)
+		_, t1Cleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id1, "SELECT CURRENT_TIMESTAMP"))
+		_, t2Cleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id2, "SELECT CURRENT_TIMESTAMP"))
+		t.Cleanup(t1Cleanup)
+		t.Cleanup(t2Cleanup)
 
 		e1, err := client.Tasks.ShowByID(ctx, id1)
 		require.NoError(t, err)

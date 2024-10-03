@@ -40,7 +40,7 @@ type CreateForJavaFunctionOptions struct {
 	Packages                   []FunctionPackage         `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
-	Secrets                    []Secret                  `ddl:"parameter,parentheses" sql:"SECRETS"`
+	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
 	FunctionDefinition         *string                   `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
@@ -118,7 +118,7 @@ type CreateForPythonFunctionOptions struct {
 	Packages                   []FunctionPackage         `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
-	Secrets                    []Secret                  `ddl:"parameter,parentheses" sql:"SECRETS"`
+	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	FunctionDefinition         *string                   `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 }
 

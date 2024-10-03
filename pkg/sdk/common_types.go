@@ -257,7 +257,7 @@ func ReturnNullValuesPointer(v ReturnNullValues) *ReturnNullValues {
 	return &v
 }
 
-type Secret struct {
+type SecretReference struct {
 	VariableName string `ddl:"keyword,single_quotes"`
 	Name         string `ddl:"parameter,no_quotes"`
 }

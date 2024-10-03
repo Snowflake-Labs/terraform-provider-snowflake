@@ -132,6 +132,29 @@ type SomeReq struct {
 }
 ```
 
+- Wrong generated validations for `ConflictingFields` for more complicated validations 
+  - For now `everyValueSet()` should be manually changed to `moreThanOneValueSet()` if there is a need to validate only one of many options
+  - Consider following example for `secret`:
+```go
+// For validation Conflicting fields:
+WithValidation(g.ConflictingFields, "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString")
+```
+```go
+// Generation results in:
+if valueSet(opts.Set) {
+    if everyValueSet(opts.Set.SetForOAuthClientCredentialsFlow, opts.Set.SetForOAuthAuthorizationFlow, opts.Set.SetForBasicAuthentication, opts.Set.SetForGenericString) {
+        errs = append(errs, errOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
+    }
+}
+
+// For now needs to be manually changed to:
+if valueSet(opts.Set) {
+    if moreThanOneValueSet(opts.Set.SetForOAuthClientCredentialsFlow, opts.Set.SetForOAuthAuthorizationFlow, opts.Set.SetForBasicAuthentication, opts.Set.SetForGenericString) {
+        errs = append(errs, errOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
+    }
+}
+```
+
 ##### Known limitations
 - automatic array conversion is not recursive, so we're only supporting one level mapping
   - []Request1{ foo Request2, bar int } won't be converted, but []Request1{ foo string, bar int } will

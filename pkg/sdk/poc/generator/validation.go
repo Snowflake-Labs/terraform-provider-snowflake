@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -68,7 +69,10 @@ func (v *Validation) Condition(field *Field) string {
 	case ValidateValueSet:
 		return fmt.Sprintf("!valueSet(%s)", strings.Join(v.fieldsWithPath(field), ","))
 	case ValidateValue:
-		return fmt.Sprintf("err := %s.validate(); err != nil", strings.Join(v.fieldsWithPath(field.Parent), ","))
+		if len(v.FieldNames) != 1 {
+			log.Panicf("expected ValidateValue to be called exactly one field, got: %v", v.FieldNames)
+		}
+		return fmt.Sprintf("err := %s.validate(); err != nil", v.fieldsWithPath(field)[0])
 	}
 	panic("condition for validation unknown")
 }

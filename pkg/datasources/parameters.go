@@ -129,7 +129,6 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	parameters, err = client.Parameters.ShowParameters(ctx, &opts)
-
 	if err != nil {
 		return fmt.Errorf("error listing parameters: %w", err)
 	}

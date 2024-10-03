@@ -50,7 +50,7 @@ func (s *CreateForJavaProcedureRequest) WithExternalAccessIntegrations(ExternalA
 	return s
 }
 
-func (s *CreateForJavaProcedureRequest) WithSecrets(Secrets []Secret) *CreateForJavaProcedureRequest {
+func (s *CreateForJavaProcedureRequest) WithSecrets(Secrets []SecretReference) *CreateForJavaProcedureRequest {
 	s.Secrets = Secrets
 	return s
 }
@@ -260,7 +260,7 @@ func (s *CreateForPythonProcedureRequest) WithExternalAccessIntegrations(Externa
 	return s
 }
 
-func (s *CreateForPythonProcedureRequest) WithSecrets(Secrets []Secret) *CreateForPythonProcedureRequest {
+func (s *CreateForPythonProcedureRequest) WithSecrets(Secrets []SecretReference) *CreateForPythonProcedureRequest {
 	s.Secrets = Secrets
 	return s
 }

@@ -40,7 +40,7 @@ type CreateForJavaProcedureOptions struct {
 	Imports                    []ProcedureImport         `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
-	Secrets                    []Secret                  `ddl:"parameter,parentheses" sql:"SECRETS"`
+	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
 	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
@@ -116,7 +116,7 @@ type CreateForPythonProcedureOptions struct {
 	Imports                    []ProcedureImport         `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
-	Secrets                    []Secret                  `ddl:"parameter,parentheses" sql:"SECRETS"`
+	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	ExecuteAs                  *ExecuteAs                `ddl:"keyword"`

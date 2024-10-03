@@ -45,6 +45,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"data_metric_function_references_def.go": sdk.DataMetricFunctionReferenceDef,
 	"external_volumes_def.go":                sdk.ExternalVolumesDef,
 	"authentication_policies_def.go":         sdk.AuthenticationPoliciesDef,
+	"secrets_def.go":                         sdk.SecretsDef,
 }
 
 func main() {

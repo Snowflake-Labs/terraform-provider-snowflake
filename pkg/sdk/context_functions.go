@@ -20,6 +20,7 @@ type ContextFunctions interface {
 	CurrentSession(ctx context.Context) (string, error)
 	CurrentUser(ctx context.Context) (AccountObjectIdentifier, error)
 	CurrentSessionDetails(ctx context.Context) (*CurrentSessionDetails, error)
+	LastQueryId(ctx context.Context) (string, error)
 
 	// Session Object functions.
 	CurrentDatabase(ctx context.Context) (string, error)
@@ -256,4 +257,18 @@ func (c *contextFunctions) IsRoleInSession(ctx context.Context, role AccountObje
 		return false, err
 	}
 	return s.IsRoleInSession, nil
+}
+
+func (c *contextFunctions) LastQueryId(ctx context.Context) (string, error) {
+	s := &struct {
+		LastQueryId sql.NullString `db:"LAST_QUERY_ID"`
+	}{}
+	err := c.client.queryOne(ctx, s, "SELECT LAST_QUERY_ID() as LAST_QUERY_ID")
+	if err != nil {
+		return "", err
+	}
+	if !s.LastQueryId.Valid {
+		return "", nil
+	}
+	return s.LastQueryId.String, nil
 }

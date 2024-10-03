@@ -14,7 +14,7 @@ import (
 func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	client := testClient(t)
 
-	tableTest, tableCleanup := testClientHelper().Table.CreateTable(t)
+	tableTest, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	ctx := context.Background()
@@ -108,7 +108,7 @@ func TestInt_DynamicTableDescribe(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
@@ -129,7 +129,7 @@ func TestInt_DynamicTableAlter(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	t.Run("alter with suspend or resume", func(t *testing.T) {
@@ -215,7 +215,7 @@ func TestInt_DynamicTablesShowByID(t *testing.T) {
 	createDynamicTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
 
-		tableTest, tableCleanup := testClientHelper().Table.CreateTable(t)
+		tableTest, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 		targetLag := sdk.TargetLag{
 			MaximumDuration: sdk.String("2 minutes"),

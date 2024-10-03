@@ -47,10 +47,12 @@ type TestClient struct {
 	Role                         *RoleClient
 	RowAccessPolicy              *RowAccessPolicyClient
 	Schema                       *SchemaClient
+	Secret                       *SecretClient
 	SecurityIntegration          *SecurityIntegrationClient
 	SessionPolicy                *SessionPolicyClient
 	Share                        *ShareClient
 	Stage                        *StageClient
+	Stream                       *StreamClient
 	Streamlit                    *StreamlitClient
 	Table                        *TableClient
 	Tag                          *TagClient
@@ -112,9 +114,11 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		Role:                         NewRoleClient(context, idsGenerator),
 		RowAccessPolicy:              NewRowAccessPolicyClient(context, idsGenerator),
 		Schema:                       NewSchemaClient(context, idsGenerator),
+		Secret:                       NewSecretClient(context, idsGenerator),
 		SecurityIntegration:          NewSecurityIntegrationClient(context, idsGenerator),
 		SessionPolicy:                NewSessionPolicyClient(context, idsGenerator),
 		Share:                        NewShareClient(context, idsGenerator),
+		Stream:                       NewStreamClient(context, idsGenerator),
 		Streamlit:                    NewStreamlitClient(context, idsGenerator),
 		Stage:                        NewStageClient(context, idsGenerator),
 		Table:                        NewTableClient(context, idsGenerator),

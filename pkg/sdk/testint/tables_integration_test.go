@@ -94,7 +94,7 @@ func TestInt_Table(t *testing.T) {
 	t.Run("create table: complete optionals", func(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		t.Cleanup(maskingPolicyCleanup)
-		table2, table2Cleanup := testClientHelper().Table.CreateTable(t)
+		table2, table2Cleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(table2Cleanup)
 		comment := random.Comment()
 
@@ -245,7 +245,7 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("col2", "VARCHAR"),
 			*sdk.NewTableColumnRequest("col3", "BOOLEAN"),
 		}
-		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, columns)
+		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateWithColumns(t, columns)
 		t.Cleanup(sourceTableCleanup)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -276,7 +276,7 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("col2", "VARCHAR"),
 			*sdk.NewTableColumnRequest("col3", "BOOLEAN"),
 		}
-		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateTableWithColumns(t, columns)
+		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateWithColumns(t, columns)
 		t.Cleanup(sourceTableCleanup)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -897,7 +897,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("drop table", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(table.ID()).WithIfExists(sdk.Bool(true)))
 		if err != nil {
 			t.Cleanup(tableCleanup)
@@ -909,9 +909,9 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("show tables", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
-		table2, table2Cleanup := testClientHelper().Table.CreateTable(t)
+		table2, table2Cleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(table2Cleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest())
@@ -927,7 +927,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("with terse", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithTerse(sdk.Bool(true)).WithLikePattern(table.ID().Name()))
@@ -938,7 +938,7 @@ func TestInt_Table(t *testing.T) {
 	})
 
 	t.Run("with starts with", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 
 		tables, err := client.Tables.Show(ctx, sdk.NewShowTableRequest().WithStartsWith(sdk.String(table.Name)))
