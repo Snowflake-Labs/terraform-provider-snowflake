@@ -315,7 +315,7 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		if err := waitForTaskStart(ctx, client, id); err != nil {
 			return diag.Diagnostics{
 				{
-					Severity: diag.Warning,
+					Severity: diag.Error,
 					Summary:  "Failed to start the task",
 					Detail:   fmt.Sprintf("Id: %s, err: %s", id.FullyQualifiedName(), err),
 				},
@@ -504,12 +504,13 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		}
 	}
 
-	if d.Get("enable").(bool) {
+	if d.Get("enabled").(bool) {
 		log.Printf("Resuming the task in handled update")
 		if err := waitForTaskStart(ctx, client, id); err != nil {
 			return diag.FromErr(fmt.Errorf("failed to resume task %s, err = %w", id.FullyQualifiedName(), err))
 		}
 	}
+	// We don't process the else case, because the task was already suspended at the beginning of the Update method.
 
 	log.Printf("Resuming the root tasks: %v", collections.Map(tasksToResume, sdk.SchemaObjectIdentifier.Name))
 	if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
@@ -577,7 +578,7 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 
 		if errs := errors.Join(
-			d.Set("enable", task.State == sdk.TaskStateStarted),
+			d.Set("enabled", task.State == sdk.TaskStateStarted),
 			d.Set("warehouse", warehouseId),
 			d.Set("schedule", task.Schedule),
 			d.Set("when", task.Condition),

@@ -94,12 +94,14 @@ type TaskModel struct {
 func Task(
 	resourceName string,
 	database string,
+	enabled bool,
 	name string,
 	schema string,
 	sqlStatement string,
 ) *TaskModel {
 	t := &TaskModel{ResourceModelMeta: config.Meta(resourceName, resources.Task)}
 	t.WithDatabase(database)
+	t.WithEnabled(enabled)
 	t.WithName(name)
 	t.WithSchema(schema)
 	t.WithSqlStatement(sqlStatement)
@@ -108,12 +110,14 @@ func Task(
 
 func TaskWithDefaultMeta(
 	database string,
+	enabled bool,
 	name string,
 	schema string,
 	sqlStatement string,
 ) *TaskModel {
 	t := &TaskModel{ResourceModelMeta: config.DefaultMeta(resources.Task)}
 	t.WithDatabase(database)
+	t.WithEnabled(enabled)
 	t.WithName(name)
 	t.WithSchema(schema)
 	t.WithSqlStatement(sqlStatement)
@@ -221,8 +225,8 @@ func (t *TaskModel) WithEnableUnloadPhysicalTypeOptimization(enableUnloadPhysica
 	return t
 }
 
-func (t *TaskModel) WithEnabled(enabled string) *TaskModel {
-	t.Enabled = tfconfig.StringVariable(enabled)
+func (t *TaskModel) WithEnabled(enabled bool) *TaskModel {
+	t.Enabled = tfconfig.BoolVariable(enabled)
 	return t
 }
 

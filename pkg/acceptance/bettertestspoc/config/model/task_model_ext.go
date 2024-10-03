@@ -7,11 +7,12 @@ import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 )
 
-func TaskWithId(resourceName string, id sdk.SchemaObjectIdentifier, sqlStatement string) *TaskModel {
+func TaskWithId(resourceName string, id sdk.SchemaObjectIdentifier, enabled bool, sqlStatement string) *TaskModel {
 	t := &TaskModel{ResourceModelMeta: config.Meta(resourceName, resources.Task)}
 	t.WithDatabase(id.DatabaseName())
 	t.WithSchema(id.SchemaName())
 	t.WithName(id.Name())
+	t.WithEnabled(enabled)
 	t.WithSqlStatement(sqlStatement)
 	return t
 }

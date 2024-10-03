@@ -35,7 +35,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	configModel := model.TaskWithId("test", id, statement)
+	configModel := model.TaskWithId("test", id, false, statement)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -53,7 +53,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasNameString(id.Name()).
-						HasEnabledString(r.BooleanDefault).
+						HasEnabledString(r.BooleanFalse).
 						HasWarehouseString("").
 						HasScheduleString("").
 						HasConfigString("").
@@ -134,8 +134,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 	taskConfigVariableValue := "$" + taskConfig
 	comment := random.Comment()
 	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
-	configModel := model.TaskWithId("test", id, statement).
-		WithEnabled(r.BooleanTrue).
+	configModel := model.TaskWithId("test", id, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithSchedule("10 MINUTES").
 		WithConfigValue(configvariable.StringVariable(taskConfigVariableValue)).
@@ -231,7 +230,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	basicConfigModel := model.TaskWithId("test", id, statement)
+	basicConfigModel := model.TaskWithId("test", id, false, statement)
 
 	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
@@ -243,8 +242,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 	taskConfigVariableValue := "$" + taskConfig
 	comment := random.Comment()
 	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
-	completeConfigModel := model.TaskWithId("test", id, statement).
-		WithEnabled(r.BooleanTrue).
+	completeConfigModel := model.TaskWithId("test", id, true, statement).
 		// TODO(SNOW-1348116 - decide in next prs): This won't work because alter set warehouse is broken
 		// we could actually make it work by enabling only uppercased ids in the warehouse field until it's fixed.
 		// WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
@@ -271,7 +269,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasNameString(id.Name()).
-						HasEnabledString(r.BooleanDefault).
+						HasEnabledString(r.BooleanFalse).
 						HasWarehouseString("").
 						HasScheduleString("").
 						HasConfigString("").
@@ -357,7 +355,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasNameString(id.Name()).
-						HasEnabledString(r.BooleanDefault).
+						HasEnabledString(r.BooleanFalse).
 						HasWarehouseString("").
 						HasScheduleString("").
 						HasConfigString("").
@@ -402,8 +400,10 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	configModel := model.TaskWithId("test", id, statement)
-	configModelWithAllParametersSet := model.TaskWithId("test", id, statement).
+	configModel := model.TaskWithId("test", id, true, statement).
+		WithSchedule("5 MINUTES")
+	configModelWithAllParametersSet := model.TaskWithId("test", id, true, statement).
+		WithSchedule("5 MINUTES").
 		WithSuspendTaskAfterNumFailures(15).
 		WithTaskAutoRetryAttempts(15).
 		WithUserTaskManagedInitialWarehouseSizeEnum(sdk.WarehouseSizeXSmall).
@@ -698,12 +698,10 @@ func TestAcc_Task_Enabled(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	configModelEnabled := model.TaskWithId("test", id, statement).
-		WithSchedule("5 MINUTES").
-		WithEnabled(r.BooleanTrue)
-	configModelDisabled := model.TaskWithId("test", id, statement).
-		WithSchedule("5 MINUTES").
-		WithEnabled(r.BooleanFalse)
+	configModelEnabled := model.TaskWithId("test", id, true, statement).
+		WithSchedule("5 MINUTES")
+	configModelDisabled := model.TaskWithId("test", id, false, statement).
+		WithSchedule("5 MINUTES")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -754,29 +752,23 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 	statement := "SELECT 1"
 	schedule := "5 MINUTES"
 
-	firstTaskStandaloneModel := model.TaskWithId("main_task", id, statement).
+	firstTaskStandaloneModel := model.TaskWithId("main_task", id, true, statement).
 		WithSchedule(schedule).
-		WithEnabled(r.BooleanTrue).
 		WithSuspendTaskAfterNumFailures(1)
-	secondTaskStandaloneModel := model.TaskWithId("second_task", id2, statement).
-		WithSchedule(schedule).
-		WithEnabled(r.BooleanTrue)
+	secondTaskStandaloneModel := model.TaskWithId("second_task", id2, true, statement).
+		WithSchedule(schedule)
 
-	rootTaskModel := model.TaskWithId("main_task", id, statement).
+	rootTaskModel := model.TaskWithId("main_task", id, true, statement).
 		WithSchedule(schedule).
-		WithEnabled(r.BooleanTrue).
 		WithSuspendTaskAfterNumFailures(2)
-	childTaskModel := model.TaskWithId("second_task", id2, statement).
-		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(id.FullyQualifiedName()))).
-		WithEnabled(r.BooleanTrue)
+	childTaskModel := model.TaskWithId("second_task", id2, true, statement).
+		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(id.FullyQualifiedName())))
 	childTaskModel.SetDependsOn([]string{rootTaskModel.ResourceReference()})
 
-	firstTaskStandaloneModelDisabled := model.TaskWithId("main_task", id, statement).
-		WithSchedule(schedule).
-		WithEnabled(r.BooleanFalse)
-	secondTaskStandaloneModelDisabled := model.TaskWithId("second_task", id2, statement).
-		WithSchedule(schedule).
-		WithEnabled(r.BooleanFalse)
+	firstTaskStandaloneModelDisabled := model.TaskWithId("main_task", id, false, statement).
+		WithSchedule(schedule)
+	secondTaskStandaloneModelDisabled := model.TaskWithId("second_task", id2, false, statement).
+		WithSchedule(schedule)
 	secondTaskStandaloneModelDisabled.SetDependsOn([]string{firstTaskStandaloneModelDisabled.ResourceReference()})
 
 	resource.Test(t, resource.TestCase{
@@ -856,29 +848,23 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 	statement := "SELECT 1"
 	schedule := "5 MINUTES"
 
-	firstTaskStandaloneModel := model.TaskWithId("main_task", rootTaskId, statement).
+	firstTaskStandaloneModel := model.TaskWithId("main_task", rootTaskId, true, statement).
 		WithSchedule(schedule).
-		WithEnabled(r.BooleanTrue).
 		WithSuspendTaskAfterNumFailures(1)
-	secondTaskStandaloneModel := model.TaskWithId("second_task", finalizerTaskId, statement).
-		WithSchedule(schedule).
-		WithEnabled(r.BooleanTrue)
+	secondTaskStandaloneModel := model.TaskWithId("second_task", finalizerTaskId, true, statement).
+		WithSchedule(schedule)
 
-	rootTaskModel := model.TaskWithId("main_task", rootTaskId, statement).
+	rootTaskModel := model.TaskWithId("main_task", rootTaskId, true, statement).
 		WithSchedule(schedule).
-		WithEnabled(r.BooleanTrue).
 		WithSuspendTaskAfterNumFailures(2)
-	childTaskModel := model.TaskWithId("second_task", finalizerTaskId, statement).
-		WithFinalize(rootTaskId.FullyQualifiedName()).
-		WithEnabled(r.BooleanTrue)
+	childTaskModel := model.TaskWithId("second_task", finalizerTaskId, true, statement).
+		WithFinalize(rootTaskId.FullyQualifiedName())
 	childTaskModel.SetDependsOn([]string{rootTaskModel.ResourceReference()})
 
-	firstTaskStandaloneModelDisabled := model.TaskWithId("main_task", rootTaskId, statement).
-		WithSchedule(schedule).
-		WithEnabled(r.BooleanFalse)
-	secondTaskStandaloneModelDisabled := model.TaskWithId("second_task", finalizerTaskId, statement).
-		WithSchedule(schedule).
-		WithEnabled(r.BooleanFalse)
+	firstTaskStandaloneModelDisabled := model.TaskWithId("main_task", rootTaskId, false, statement).
+		WithSchedule(schedule)
+	secondTaskStandaloneModelDisabled := model.TaskWithId("second_task", finalizerTaskId, false, statement).
+		WithSchedule(schedule)
 	secondTaskStandaloneModelDisabled.SetDependsOn([]string{firstTaskStandaloneModelDisabled.ResourceReference()})
 
 	resource.Test(t, resource.TestCase{
@@ -955,28 +941,22 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
 	schedule := "5 MINUTES"
-	rootTaskConfigModel := model.TaskWithId("root", rootId, statement).
-		WithEnabled(r.BooleanTrue).
+	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
 		WithSchedule(schedule).
 		WithSuspendTaskAfterNumFailures(1)
-	childTaskConfigModel := model.TaskWithId("child", childId, statement).
-		WithEnabled(r.BooleanTrue).
+	childTaskConfigModel := model.TaskWithId("child", childId, true, statement).
 		WithSchedule(schedule)
 
-	rootTaskConfigModelAfterSuspendFailuresUpdate := model.TaskWithId("root", rootId, statement).
-		WithEnabled(r.BooleanTrue).
+	rootTaskConfigModelAfterSuspendFailuresUpdate := model.TaskWithId("root", rootId, true, statement).
 		WithSchedule(schedule).
 		WithSuspendTaskAfterNumFailures(2)
-	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, statement).
-		WithEnabled(r.BooleanTrue).
+	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, true, statement).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName())))
 	childTaskConfigModelWithAfter.SetDependsOn([]string{rootTaskConfigModelAfterSuspendFailuresUpdate.ResourceReference()})
 
-	rootTaskConfigModelDisabled := model.TaskWithId("root", rootId, statement).
-		WithEnabled(r.BooleanFalse).
+	rootTaskConfigModelDisabled := model.TaskWithId("root", rootId, false, statement).
 		WithSchedule(schedule)
-	childTaskConfigModelDisabled := model.TaskWithId("child", childId, statement).
-		WithEnabled(r.BooleanFalse).
+	childTaskConfigModelDisabled := model.TaskWithId("child", childId, false, statement).
 		WithSchedule(schedule)
 	childTaskConfigModelDisabled.SetDependsOn([]string{rootTaskConfigModelDisabled.ResourceReference()})
 
@@ -1057,22 +1037,19 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 	statement := "SELECT 1"
 	schedule := "5 MINUTES"
 
-	rootTaskConfigModel := model.TaskWithId("root", rootId, statement).
+	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithEnabled(r.BooleanTrue).
 		WithSchedule(schedule).
 		WithSqlStatement(statement)
 
-	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, statement).
+	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithEnabled(r.BooleanTrue).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithSqlStatement(statement)
 	childTaskConfigModelWithAfter.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
 
-	childTaskConfigModelWithoutAfter := model.TaskWithId("child", childId, statement).
+	childTaskConfigModelWithoutAfter := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithEnabled(r.BooleanTrue).
 		WithSchedule(schedule).
 		WithSqlStatement(statement)
 	childTaskConfigModelWithoutAfter.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
@@ -1120,22 +1097,19 @@ func TestAcc_Task_WithFinalizer(t *testing.T) {
 	statement := "SELECT 1"
 	schedule := "5 MINUTES"
 
-	rootTaskConfigModel := model.TaskWithId("root", rootId, statement).
+	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithEnabled(r.BooleanTrue).
 		WithSchedule(schedule).
 		WithSqlStatement(statement)
 
-	childTaskConfigModelWithFinalizer := model.TaskWithId("child", childId, statement).
+	childTaskConfigModelWithFinalizer := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithEnabled(r.BooleanTrue).
 		WithFinalize(rootId.FullyQualifiedName()).
 		WithSqlStatement(statement)
 	childTaskConfigModelWithFinalizer.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
 
-	childTaskConfigModelWithoutFinalizer := model.TaskWithId("child", childId, statement).
+	childTaskConfigModelWithoutFinalizer := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithEnabled(r.BooleanTrue).
 		WithSchedule(schedule).
 		WithSqlStatement(statement)
 	childTaskConfigModelWithoutFinalizer.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
@@ -1183,23 +1157,20 @@ func TestAcc_Task_issue2207(t *testing.T) {
 	statement := "SELECT 1"
 	schedule := "5 MINUTES"
 
-	rootTaskConfigModel := model.TaskWithId("root", rootId, statement).
+	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithEnabled(r.BooleanTrue).
 		WithSchedule(schedule).
 		WithSqlStatement(statement)
 
-	childTaskConfigModel := model.TaskWithId("child", childId, statement).
+	childTaskConfigModel := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithEnabled(r.BooleanTrue).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithComment("abc").
 		WithSqlStatement(statement)
 	childTaskConfigModel.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
 
-	childTaskConfigModelWithDifferentComment := model.TaskWithId("child", childId, statement).
+	childTaskConfigModelWithDifferentComment := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithEnabled(r.BooleanTrue).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithComment("def").
 		WithSqlStatement(statement)
@@ -1256,13 +1227,11 @@ func TestAcc_Task_issue2036(t *testing.T) {
 	schedule := "5 MINUTES"
 	when := "TRUE"
 
-	taskConfigModelWithoutWhen := model.TaskWithId("test", id, statement).
-		WithEnabled(r.BooleanTrue).
+	taskConfigModelWithoutWhen := model.TaskWithId("test", id, true, statement).
 		WithSchedule(schedule).
 		WithSqlStatement(statement)
 
-	taskConfigModelWithWhen := model.TaskWithId("test", id, statement).
-		WithEnabled(r.BooleanTrue).
+	taskConfigModelWithWhen := model.TaskWithId("test", id, true, statement).
 		WithSchedule(schedule).
 		WithSqlStatement(statement).
 		WithWhen(when)

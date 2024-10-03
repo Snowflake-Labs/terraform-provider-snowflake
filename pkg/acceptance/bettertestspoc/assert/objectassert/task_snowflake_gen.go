@@ -135,18 +135,6 @@ func (t *TaskAssert) HasSchedule(expected string) *TaskAssert {
 	return t
 }
 
-// TODO:
-//func (t *TaskAssert) HasPredecessors(expected []sdk.SchemaObjectIdentifier) *TaskAssert {
-//	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
-//		t.Helper()
-//		if o.Predecessors != expected {
-//			return fmt.Errorf("expected predecessors: %v; got: %v", expected, o.Predecessors)
-//		}
-//		return nil
-//	})
-//	return t
-//}
-
 func (t *TaskAssert) HasState(expected sdk.TaskState) *TaskAssert {
 	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
 		t.Helper()
@@ -262,18 +250,6 @@ func (t *TaskAssert) HasBudget(expected string) *TaskAssert {
 	})
 	return t
 }
-
-// TODO:
-//func (t *TaskAssert) HasTaskRelations(expected sdk.TaskRelations) *TaskAssert {
-//	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
-//		t.Helper()
-//		if o.TaskRelations != expected {
-//			return fmt.Errorf("expected task relations: %v; got: %v", expected, o.TaskRelations)
-//		}
-//		return nil
-//	})
-//	return t
-//}
 
 func (t *TaskAssert) HasLastSuspendedReason(expected string) *TaskAssert {
 	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
