@@ -79,7 +79,7 @@ var FunctionsDef = g.NewInterface(
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
-		ListAssignment("SECRETS", "Secret", g.ParameterOptions().Parentheses()).
+		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
@@ -152,7 +152,7 @@ var FunctionsDef = g.NewInterface(
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
-		ListAssignment("SECRETS", "Secret", g.ParameterOptions().Parentheses()).
+		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").

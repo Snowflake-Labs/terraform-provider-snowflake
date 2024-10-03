@@ -64,6 +64,11 @@ var allStructs = []SdkObjectDef{
 	},
 	{
 		IdType:       "sdk.SchemaObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeSecret,
+		ObjectStruct: sdk.Secret{},
+	},
+	{
+		IdType:       "sdk.SchemaObjectIdentifier",
 		ObjectType:   sdk.ObjectTypeStream,
 		ObjectStruct: sdk.Stream{},
 	},

@@ -4,6 +4,9 @@ This document is meant to help you migrate your Terraform config to the new newe
 describe deprecations or breaking changes and help you to change your configuration to keep the same (or similar) behavior
 across different versions.
 
+> [!TIP]
+> We highly recommend upgrading the versions one by one instead of bulk upgrades.
+
 ## v0.96.0 ➞ v0.97.0
 
 ### *(new feature)* snowflake_stream_on_table resource
