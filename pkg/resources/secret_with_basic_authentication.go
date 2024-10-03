@@ -13,7 +13,7 @@ import (
 )
 
 var secretBasicAuthenticationSchema = func() map[string]*schema.Schema {
-	secretAuthorizationCode := map[string]*schema.Schema{
+	secretBasicAuthentication := map[string]*schema.Schema{
 		"username": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -25,7 +25,7 @@ var secretBasicAuthenticationSchema = func() map[string]*schema.Schema {
 			Description: "Specifies the password value to store in the secret when setting the TYPE value to PASSWORD.",
 		},
 	}
-	return helpers.MergeMaps(secretCommonSchema, secretAuthorizationCode)
+	return helpers.MergeMaps(secretCommonSchema, secretBasicAuthentication)
 }()
 
 func SecretWithBasicAuthentication() *schema.Resource {

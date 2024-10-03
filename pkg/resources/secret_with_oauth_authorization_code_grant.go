@@ -25,7 +25,7 @@ var secretAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 			Type:             schema.TypeString,
 			Required:         true,
 			DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_refresh_token_expiry_time"),
-			Description:      "Specifies the timestamp as a string when the OAuth refresh token expires. Accepted string formats: YYYY-MM-DD, YYYY-MM-DD HH:MI, YYYY-MM-DD HH:MI:SS, YYYY-MM-DD HH:MI PDT",
+			Description:      "Specifies the timestamp as a string when the OAuth refresh token expires. Accepted string formats: YYYY-MM-DD, YYYY-MM-DD HH:MI, YYYY-MM-DD HH:MI:SS, YYYY-MM-DD HH:MI <timezone>",
 		},
 		"api_authentication": {
 			Type:             schema.TypeString,
@@ -69,8 +69,6 @@ func ImportSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.Resou
 	if err != nil {
 		return nil, err
 	}
-
-	// cannot import oauth_refresh_token because it is not present both in SHOW or DESCRIBE
 
 	if err := d.Set("oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.String()); err != nil {
 		return nil, err
@@ -154,14 +152,6 @@ func ReadContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.
 	if err = setStateToValuesFromConfig(d, secretAuthorizationCodeGrantSchema, []string{"oauth_refresh_token_expiry_time"}); err != nil {
 		return diag.FromErr(err)
 	}
-	/*
-		// Possible limitation
-		// Accepted formats are: YYYY-MM-DD; YYYY-MM-DD HH:MI:SS
-		// But snowflake holds this value as timestamp, so with this code below we can parse it and keep in state only with one of time.DateOnly or time.DateTime
-		if err = d.Set("oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.In(time.UTC).Format(time.DateOnly)); err != nil {
-			return diag.FromErr(err)
-		}
-	*/
 	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
 		return diag.FromErr(err)
 	}
