@@ -2,12 +2,12 @@
 page_title: "snowflake_secret_with_client_credentials Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Secret with OAuth Client Credentials where Secret's Type attribute is set to 'OAUTH2'.'
+  Secret with OAuth Client Credentials where Secrets Type attribute is set to OAUTH2.
 ---
 
 # snowflake_secret_with_client_credentials (Resource)
 
-Secret with OAuth Client Credentials where Secret's Type attribute is set to 'OAUTH2'.
+Secret with OAuth Client Credentials where Secrets Type attribute is set to OAUTH2.
 
 ## Example Usage
 

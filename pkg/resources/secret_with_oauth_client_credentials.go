@@ -41,7 +41,7 @@ func SecretWithClientCredentials() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Description: "Secret with OAuth Client Credentials where Secret's Type attribute is set to 'OAUTH2'.",
+		Description: "Secret with OAuth Client Credentials where Secrets Type attribute is set to OAUTH2.",
 	}
 }
 

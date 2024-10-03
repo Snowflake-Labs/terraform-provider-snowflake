@@ -48,7 +48,7 @@ func SecretWithAuthorizationCodeGrant() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportSecretWithAuthorizationCodeGrant,
 		},
-		Description: "Secret with OAuth authorization code grant where Secret's Type attribute is set to 'OAUTH2'.",
+		Description: "Secret with OAuth authorization code grant where Secrets Type attribute is set to OAUTH2.",
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "oauth_refresh_token_expiry_time"),

@@ -2,18 +2,18 @@
 page_title: "snowflake_secret_with_generic_string Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Secret with Generic string where Secret's Type attribute is set to 'GENERIC_STRING'.'
+  Secret with Generic string where Secrets Type attribute is set to GENERIC_STRING.
 ---
 
 # snowflake_secret_with_generic_string (Resource)
 
-Secret with Generic string where Secret's Type attribute is set to 'GENERIC_STRING'.
+Secret with Generic string where Secrets Type attribute is set to GENERIC_STRING.
 
 ## Example Usage
 
 ```terraform
 # basic resource
-resource "snowflake_secret_with_client_credentials" "test" {
+resource "snowflake_secret_with_generic_string" "test" {
   name          = "EXAMPLE_SECRET"
   database      = "EXAMPLE_DB"
   schema        = "EXAMPLE_SCHEMA"
