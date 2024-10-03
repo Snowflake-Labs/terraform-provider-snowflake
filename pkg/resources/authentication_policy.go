@@ -95,6 +95,7 @@ func AuthenticationPolicy() *schema.Resource {
 		ReadContext:   ReadContextAuthenticationPolicy,
 		UpdateContext: UpdateContextAuthenticationPolicy,
 		DeleteContext: DeleteContextAuthenticationPolicy,
+		Description:   "Resource used to manage authentication policy objects. For more information, check [authentication policy documentation](https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy).",
 
 		Schema: authenticationPolicySchema,
 		Importer: &schema.ResourceImporter{
