@@ -17,7 +17,7 @@ var secretGenericStringSchema = func() map[string]*schema.Schema {
 		"secret_string": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Specifies the string to store in the secret.\n\nThe string can be an API token or a string of sensitive value that can be used in the handler code of a UDF or stored procedure.\n\nFor details, see Creating and using an external access integration.\n\nYou should not use this property to store any kind of OAuth token; use one of the other secret types for your OAuth use cases.",
+			Description: "Specifies the string to store in the secret. The string can be an API token or a string of sensitive value that can be used in the handler code of a UDF or stored procedure. For details, see [Creating and using an external access integration](https://docs.snowflake.com/en/developer-guide/external-network-access/creating-using-external-network-access). You should not use this property to store any kind of OAuth token; use one of the other secret types for your OAuth use cases.",
 		},
 	}
 	return helpers.MergeMaps(secretCommonSchema, secretGenericString)
