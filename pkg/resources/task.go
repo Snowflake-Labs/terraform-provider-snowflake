@@ -4,13 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"slices"
+	"strings"
+	"time"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"log"
-	"strings"
-	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -18,7 +20,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // TODO: Go through descriptions
@@ -46,12 +47,17 @@ var taskSchema = map[string]*schema.Schema{
 		Description:      blocklistedCharactersFieldDescription("Specifies the identifier for the task; must be unique for the database and schema in which the task is created."),
 	},
 	"enabled": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		Default:          BooleanDefault,
-		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("state", func(state any) any { return state.(string) == string(sdk.TaskStateStarted) }),
-		Description:      booleanStringFieldDescription("Specifies if the task should be started (enabled) after creation or should remain suspended (default)."),
+		Type:     schema.TypeBool,
+		Required: true,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("state", func(state any) any {
+			log.Printf("The value is diff suppress for state is: %v\n", state)
+			stateEnum, err := sdk.ToTaskState(state.(string))
+			if err != nil {
+				return false
+			}
+			return stateEnum == sdk.TaskStateStarted
+		}),
+		Description: "Specifies if the task should be started (enabled) after creation or should remain suspended (default).",
 	},
 	"warehouse": {
 		Type:             schema.TypeString,
@@ -61,17 +67,6 @@ var taskSchema = map[string]*schema.Schema{
 		Description:      "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. (Conflicts with user_task_managed_initial_warehouse_size)",
 		ConflictsWith:    []string{"user_task_managed_initial_warehouse_size"},
 	},
-	//"user_task_managed_initial_warehouse_size": {
-	//	Type:             schema.TypeString,
-	//	Optional:         true,
-	//	ValidateDiagFunc: sdkValidation(sdk.ToWarehouseSize),
-	//	DiffSuppressFunc: SuppressIfAny(
-	//		NormalizeAndCompare(sdk.ToWarehouseSize),
-	//		IgnoreChangeToCurrentSnowflakePlainValueInOutput(ParametersAttributeName, strings.ToLower(string(sdk.TaskParameterUserTaskManagedInitialWarehouseSize))),
-	//	),
-	//	Description:   fmt.Sprintf("Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. Valid values are (case-insensitive): %s. (Conflicts with warehouse)", possibleValuesListed(sdk.ValidWarehouseSizesString)),
-	//	ConflictsWith: []string{"warehouse"},
-	//},
 	"schedule": {
 		Type:             schema.TypeString,
 		Optional:         true,
@@ -85,8 +80,7 @@ var taskSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: SuppressIfAny(
 			IgnoreChangeToCurrentSnowflakeValueInShow("config"),
 			func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-				// TODO: Trim left and right instead of replace all + extract
-				return strings.ReplaceAll(oldValue, "$", "") == strings.ReplaceAll(newValue, "$", "")
+				return strings.Trim(oldValue, "$") == strings.Trim(newValue, "$")
 			},
 		),
 		// TODO: it could be retrieved with system function and show/desc (which should be used?)
@@ -101,28 +95,12 @@ var taskSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("allow_overlapping_execution"),
 		Description:      booleanStringFieldDescription("By default, Snowflake ensures that only one instance of a particular DAG is allowed to run at a time, setting the parameter value to TRUE permits DAG runs to overlap."),
 	},
-	//"user_task_timeout_ms": {
-	//	Type:             schema.TypeInt,
-	//	Optional:         true,
-	//	Default:          IntDefault,
-	//	ValidateFunc:     validation.IntAtLeast(0),
-	//	DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(ParametersAttributeName, strings.ToLower(string(sdk.TaskParameterUserTaskTimeoutMs))+".0.value"),
-	//	Description:      "Specifies the time limit on a single run of the task before it times out (in milliseconds).",
-	//},
-	//"suspend_task_after_num_failures": {
-	//	Type:             schema.TypeInt,
-	//	Optional:         true,
-	//	Default:          IntDefault,
-	//	ValidateFunc:     validation.IntAtLeast(0),
-	//	DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(ParametersAttributeName, strings.ToLower(string(sdk.TaskParameterSuspendTaskAfterNumFailures))+".0.value"),
-	//	Description:      "Specifies the number of consecutive failed task runs after which the current task is suspended automatically. The default is 0 (no automatic suspension).",
-	//},
 	"error_integration": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("error_integration")),
-		Description:      "Specifies the name of the notification integration used for error notifications.",
+		Description:      blocklistedCharactersFieldDescription("Specifies the name of the notification integration used for error notifications."),
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -135,25 +113,10 @@ var taskSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		DiffSuppressFunc: SuppressIfAny(
 			suppressIdentifierQuoting,
-			IgnoreChangeToCurrentSnowflakeValueInShow("task_relations.0.finalize"),
+			IgnoreChangeToCurrentSnowflakeValueInShow("task_relations.0.finalized_root_task"),
 		),
+		Description:   blocklistedCharactersFieldDescription("TODO"),
 		ConflictsWith: []string{"schedule", "after"},
-	},
-	//"task_auto_retry_attempts": {
-	//	Type:             schema.TypeInt,
-	//	Optional:         true,
-	//	Default:          IntDefault,
-	//	ValidateFunc:     validation.IntAtLeast(0),
-	//	DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(ParametersAttributeName, strings.ToLower(string(sdk.TaskParameterTaskAutoRetryAttempts))+".0.value"),
-	//	Description:      "Specifies the number of automatic task graph retry attempts. If any task graphs complete in a FAILED state, Snowflake can automatically retry the task graphs from the last task in the graph that failed.",
-	//},
-	"user_task_minimum_trigger_interval_in_seconds": {
-		Type:             schema.TypeInt,
-		Optional:         true,
-		Default:          IntDefault,
-		ValidateFunc:     validation.IntAtLeast(15),
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakePlainValueInOutput(ParametersAttributeName, strings.ToLower(string(sdk.TaskParameterUserTaskMinimumTriggerIntervalInSeconds))+".0.value"),
-		Description:      "Defines how frequently a task can execute in seconds. If data changes occur more often than the specified minimum, changes will be grouped and processed together.",
 	},
 	"after": {
 		Type: schema.TypeSet,
@@ -162,10 +125,8 @@ var taskSchema = map[string]*schema.Schema{
 			DiffSuppressFunc: suppressIdentifierQuoting,
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},
-		Optional: true,
-		// TODO: Check
-		// Cannot use IgnoreChangeToCurrentSnowflakeValueInShow because output from predecessors may be ordered
-		Description:   "Specifies one or more predecessor tasks for the current task. Use this option to create a DAG of tasks or add this task to an existing DAG. A DAG is a series of tasks that starts with a scheduled root task and is linked together by dependencies.",
+		Optional:      true,
+		Description:   blocklistedCharactersFieldDescription("Specifies one or more predecessor tasks for the current task. Use this option to create a DAG of tasks or add this task to an existing DAG. A DAG is a series of tasks that starts with a scheduled root task and is linked together by dependencies."),
 		ConflictsWith: []string{"schedule", "finalize"},
 	},
 	"when": {
@@ -174,7 +135,7 @@ var taskSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: SuppressIfAny(DiffSuppressStatement, IgnoreChangeToCurrentSnowflakeValueInShow("condition")),
 		Description:      "Specifies a Boolean SQL expression; multiple conditions joined with AND/OR are supported.",
 	},
-	"sql_statement": { // TODO: Test all possibilities of this field (procedure, procedural logic, single sql statement)
+	"sql_statement": {
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         false,
@@ -206,6 +167,7 @@ func Task() *schema.Resource {
 		UpdateContext: UpdateTask,
 		ReadContext:   ReadTask(true),
 		DeleteContext: DeleteTask,
+		Description:   "Resource used to manage task objects. For more information, check [task documentation](https://docs.snowflake.com/en/user-guide/tasks-intro).",
 
 		Schema: helpers.MergeMaps(taskSchema, taskParametersSchema),
 		Importer: &schema.ResourceImporter{
@@ -239,10 +201,7 @@ func ImportTask(ctx context.Context, d *schema.ResourceData, meta any) ([]*schem
 		return nil, err
 	}
 
-	if err = errors.Join(
-		d.Set("enabled", booleanStringFromBool(task.State == sdk.TaskStateStarted)),
-		d.Set("allow_overlapping_execution", booleanStringFromBool(task.AllowOverlappingExecution)),
-	); err != nil {
+	if err := d.Set("allow_overlapping_execution", booleanStringFromBool(task.AllowOverlappingExecution)); err != nil {
 		return nil, err
 	}
 
@@ -257,6 +216,8 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	name := d.Get("name").(string)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 	req := sdk.NewCreateTaskRequest(id, d.Get("sql_statement").(string))
+
+	tasksToResume := make([]sdk.SchemaObjectIdentifier, 0)
 
 	if v, ok := d.GetOk("warehouse"); ok {
 		warehouseId, err := sdk.ParseAccountObjectIdentifier(v.(string))
@@ -282,22 +243,6 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		req.WithAllowOverlappingExecution(parsedBool)
 	}
 
-	//if v, ok := d.GetOk("session_parameters"); ok {
-	//	sessionParameters, err := sdk.GetSessionParametersFrom(v.(map[string]any))
-	//	if err != nil {
-	//		return diag.FromErr(err)
-	//	}
-	//	req.WithSessionParameters(*sessionParameters)
-	//}
-
-	//if v := d.Get("user_task_timeout_ms"); v != IntDefault {
-	//	req.WithUserTaskTimeoutMs(v.(int))
-	//}
-	//
-	//if v := d.Get("suspend_task_after_num_failures"); v != IntDefault {
-	//	req.WithSuspendTaskAfterNumFailures(v.(int))
-	//}
-
 	// TODO: Decide on name (error_notification_integration ?)
 	if v, ok := d.GetOk("error_integration"); ok {
 		notificationIntegrationId, err := sdk.ParseAccountObjectIdentifier(v.(string))
@@ -312,36 +257,41 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 
 	if v, ok := d.GetOk("finalize"); ok {
+		// TODO: Create with finalize
 		rootTaskId, err := sdk.ParseSchemaObjectIdentifier(v.(string))
 		if err != nil {
 			return diag.FromErr(err)
 		}
+
+		rootTask, err := client.Tasks.ShowByID(ctx, rootTaskId)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if rootTask.State == sdk.TaskStateStarted {
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTaskId).WithSuspend(true)); err != nil {
+				return diag.FromErr(sdk.JoinErrors(err))
+			}
+			tasksToResume = append(tasksToResume, rootTaskId)
+		}
+
 		req.WithFinalize(rootTaskId)
 	}
 
-	//if v := d.Get("task_auto_retry_attempts"); v != IntDefault {
-	//	req.WithTaskAutoRetryAttempts(v.(int))
-	//}
-	//
-	//if v := d.Get("user_task_minimum_trigger_interval_in_seconds"); v != IntDefault {
-	//	req.WithUserTaskMinimumTriggerIntervalInSeconds(v.(int))
-	//}
-
 	if v, ok := d.GetOk("after"); ok { // TODO: Should after take in task names or fully qualified names?
-		after := expandStringList(v.([]interface{}))
+		after := expandStringList(v.(*schema.Set).List())
 		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0)
-		for _, dep := range after {
-			precedingTaskId := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, dep)
-			tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, precedingTaskId, id) // TODO: What if this fails and only half of the tasks are suspended?
-			defer func() {
-				if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-					log.Printf("[WARN] failed to resume tasks: %s", err)
-				}
-			}()
+		for _, parentTaskIdString := range after {
+			parentTaskId, err := sdk.ParseSchemaObjectIdentifier(parentTaskIdString)
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			precedingTasks = append(precedingTasks, precedingTaskId)
+			resumeTasks, err := client.Tasks.SuspendRootTasks(ctx, parentTaskId, id) // TODO: What if this fails and only half of the tasks are suspended?
+			tasksToResume = append(tasksToResume, resumeTasks...)
+			if err != nil {
+				return diag.FromErr(sdk.JoinErrors(err))
+			}
+			precedingTasks = append(precedingTasks, parentTaskId)
 		}
 		req.WithAfter(precedingTasks)
 	}
@@ -361,16 +311,22 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	// TODO: State upgrader for "id"
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	if v := d.Get("enabled").(string); v != BooleanDefault {
-		enabled, err := booleanStringToBool(v)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if enabled {
-			if err := waitForTaskStart(ctx, client, id); err != nil {
-				log.Printf("[WARN] failed to resume task %s", name)
+	if d.Get("enabled").(bool) {
+		if err := waitForTaskStart(ctx, client, id); err != nil {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Warning,
+					Summary:  "Failed to start the task",
+					Detail:   fmt.Sprintf("Id: %s, err: %s", id.FullyQualifiedName(), err),
+				},
 			}
 		}
+		// TODO: Check documentation
+		// Tasks are created as suspended
+	}
+
+	if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+		log.Printf("[WARN] failed to resume tasks: %s", err)
 	}
 
 	return ReadTask(false)(ctx, d, meta)
@@ -383,18 +339,29 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		return diag.FromErr(err)
 	}
 
-	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, id, id)
-	defer func() {
-		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-			log.Printf("[WARN] failed to resume tasks: %s", err)
-		}
-	}()
+	// TODO: Fix the order of actions
+	// TODO: Move suspending etc. to SDK
+
+	task, err := client.Tasks.ShowByID(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	set := sdk.NewTaskSetRequest()
+	// TODO: Should it be defer ?
+	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, id, id)
+	if err != nil {
+		return diag.FromErr(sdk.JoinErrors(err))
+	}
+
+	if task.State == sdk.TaskStateStarted {
+		log.Printf("Suspending the task in if")
+		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true)); err != nil {
+			return diag.FromErr(sdk.JoinErrors(err))
+		}
+	}
+
 	unset := sdk.NewTaskUnsetRequest()
+	set := sdk.NewTaskSetRequest()
 
 	err = errors.Join(
 		accountObjectIdentifierAttributeUpdate(d, "warehouse", &set.Warehouse, &unset.Warehouse),
@@ -410,12 +377,6 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 
 	if updateDiags := handleTaskParametersUpdate(d, set, unset); len(updateDiags) > 0 {
 		return updateDiags
-	}
-
-	if *set != (sdk.TaskSetRequest{}) {
-		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSet(*set)); err != nil {
-			return diag.FromErr(err)
-		}
 	}
 
 	if *unset != (sdk.TaskUnsetRequest{}) {
@@ -442,30 +403,85 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		}
 	}
 
-	if d.HasChange("after") {
-		// TOOD: after
-		// Making changes to after require suspending the current task
-		// (the task will be brought up to the correct running state in the "enabled" check at the bottom of Update function).
-		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true)); err != nil {
-			return diag.FromErr(err)
-		}
+	if d.HasChange("finalize") {
+		if v, ok := d.GetOk("finalize"); ok {
+			rootTaskId, err := sdk.ParseSchemaObjectIdentifier(v.(string))
+			if err != nil {
+				return diag.FromErr(err)
+			}
 
+			rootTask, err := client.Tasks.ShowByID(ctx, rootTaskId)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			if rootTask.State == sdk.TaskStateStarted {
+				if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTaskId).WithSuspend(true)); err != nil {
+					return diag.FromErr(sdk.JoinErrors(err))
+				}
+			}
+
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSetFinalize(rootTaskId)); err != nil {
+				return diag.FromErr(err)
+			}
+
+			if rootTask.State == sdk.TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(identifier sdk.SchemaObjectIdentifier) bool {
+				return identifier.FullyQualifiedName() == rootTaskId.FullyQualifiedName()
+			}) {
+				tasksToResume = append(tasksToResume, rootTaskId)
+			}
+		} else {
+			if task.TaskRelations.FinalizedRootTask == nil {
+				return diag.Errorf("trying to remove the finalizer when it's already unset")
+			}
+
+			rootTask, err := client.Tasks.ShowByID(ctx, *task.TaskRelations.FinalizedRootTask)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			if rootTask.State == sdk.TaskStateStarted {
+				if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(true)); err != nil {
+					return diag.FromErr(sdk.JoinErrors(err))
+				}
+			}
+
+			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithUnsetFinalize(true)); err != nil {
+				return diag.FromErr(err)
+			}
+
+			if rootTask.State == sdk.TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(identifier sdk.SchemaObjectIdentifier) bool {
+				return identifier.FullyQualifiedName() == rootTask.ID().FullyQualifiedName()
+			}) {
+				tasksToResume = append(tasksToResume, rootTask.ID())
+			}
+		}
+	}
+
+	if d.HasChange("after") {
 		oldAfter, newAfter := d.GetChange("after")
 		addedTasks, removedTasks := ListDiff(
 			expandStringList(oldAfter.(*schema.Set).List()),
 			expandStringList(newAfter.(*schema.Set).List()),
 		)
 
-		// Order of commands matters:
-		// The "after"s can only be added when the task doesn't have a "schedule".
-		// That's why this ALTER has to be below regular ALTER SET/UNSET commands.
 		if len(addedTasks) > 0 {
 			addedTaskIds, err := collections.MapErr(addedTasks, sdk.ParseSchemaObjectIdentifier)
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithAddAfter(addedTaskIds)); err != nil {
+			for _, addedTaskId := range addedTaskIds {
+				// TODO: Look into suspend root tasks function
+				addedTasksToResume, err := client.Tasks.SuspendRootTasks(ctx, addedTaskId, sdk.NewSchemaObjectIdentifier("", "", ""))
+				tasksToResume = append(tasksToResume, addedTasksToResume...)
+				if err != nil {
+					return diag.FromErr(sdk.JoinErrors(err))
+				}
+			}
+
+			err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithAddAfter(addedTaskIds))
+			if err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -475,30 +491,29 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			if err != nil {
 				return diag.FromErr(err)
 			}
-
-			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithRemoveAfter(removedTaskIds)); err != nil {
+			err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithRemoveAfter(removedTaskIds))
+			if err != nil {
 				return diag.FromErr(err)
 			}
 		}
 	}
 
-	if d.HasChange("enabled") {
-		if v := d.Get("enabled").(string); v != BooleanDefault {
-			enabled, err := booleanStringToBool(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			if enabled {
-				if waitForTaskStart(ctx, client, id) != nil {
-					log.Printf("[WARN] failed to resume task %s", id.FullyQualifiedName())
-				}
-			} else {
-				if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true)); err != nil {
-					return diag.FromErr(err)
-				}
-			}
+	if *set != (sdk.TaskSetRequest{}) {
+		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSet(*set)); err != nil {
+			return diag.FromErr(err)
 		}
+	}
+
+	if d.Get("enable").(bool) {
+		log.Printf("Resuming the task in handled update")
+		if err := waitForTaskStart(ctx, client, id); err != nil {
+			return diag.FromErr(fmt.Errorf("failed to resume task %s, err = %w", id.FullyQualifiedName(), err))
+		}
+	}
+
+	log.Printf("Resuming the root tasks: %v", collections.Map(tasksToResume, sdk.SchemaObjectIdentifier.Name))
+	if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+		log.Printf("[WARN] failed to resume tasks: %s", err)
 	}
 
 	return ReadTask(false)(ctx, d, meta)
@@ -534,17 +549,21 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"state", "enabled", string(task.State), booleanStringFromBool(task.State == sdk.TaskStateStarted), nil},
 				showMapping{"allow_overlapping_execution", "allow_overlapping_execution", task.AllowOverlappingExecution, booleanStringFromBool(task.AllowOverlappingExecution), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
+		} else {
+			if err = setStateToValuesFromConfig(d, taskSchema, []string{
+				"allow_overlapping_execution",
+			}); err != nil {
+				return diag.FromErr(err)
+			}
 		}
-		if err = setStateToValuesFromConfig(d, taskSchema, []string{
-			"enabled",
-			"allow_overlapping_execution",
-		}); err != nil {
-			return diag.FromErr(err)
+
+		warehouseId := ""
+		if task.Warehouse != nil {
+			warehouseId = task.Warehouse.Name()
 		}
 
 		errorIntegrationId := ""
@@ -552,15 +571,14 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 			errorIntegrationId = task.ErrorIntegration.Name()
 		}
 
-		finalizedTaskId := ""
-		if task.TaskRelations.FinalizerTask != nil {
-			finalizedTaskId = task.TaskRelations.FinalizerTask.FullyQualifiedName()
+		finalizedRootTaskId := ""
+		if task.TaskRelations.FinalizedRootTask != nil {
+			finalizedRootTaskId = task.TaskRelations.FinalizedRootTask.FullyQualifiedName()
 		}
 
 		if errs := errors.Join(
-			// TODO: handleTaskParametersRead(d, taskParameters)
-			// TODO: Reorder
-			d.Set("warehouse", task.Warehouse),
+			d.Set("enable", task.State == sdk.TaskStateStarted),
+			d.Set("warehouse", warehouseId),
 			d.Set("schedule", task.Schedule),
 			d.Set("when", task.Condition),
 			d.Set("config", task.Config),
@@ -568,7 +586,7 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 			d.Set("comment", task.Comment),
 			d.Set("sql_statement", task.Definition),
 			d.Set("after", collections.Map(task.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName)),
-			d.Set("finalize", finalizedTaskId),
+			d.Set("finalize", finalizedRootTaskId),
 			handleTaskParameterRead(d, taskParameters),
 			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 			d.Set(ShowOutputAttributeName, []map[string]any{schemas.TaskToSchema(task)}),
@@ -595,7 +613,7 @@ func DeleteTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		}
 	}()
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(sdk.JoinErrors(err))
 	}
 
 	err = client.Tasks.Drop(ctx, sdk.NewDropTaskRequest(id).WithIfExists(true))
@@ -624,28 +642,19 @@ func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObje
 	})
 }
 
-// TODO: Remove functions below
-
-// difference find keys in 'a' but not in 'b'.
-func difference(a, b map[string]any) map[string]any {
-	diff := make(map[string]any)
-	for k := range a {
-		if _, ok := b[k]; !ok {
-			diff[k] = a[k]
-		}
+func waitForTaskSuspend(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
+	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true))
+	if err != nil {
+		return fmt.Errorf("error suspending task %s err = %w", id.FullyQualifiedName(), err)
 	}
-	return diff
-}
-
-// differentValue find keys present both in 'a' and 'b' but having different values.
-func differentValue(a, b map[string]any) map[string]any {
-	diff := make(map[string]any)
-	for k, va := range a {
-		if vb, ok := b[k]; ok {
-			if vb != va {
-				diff[k] = vb
-			}
+	return util.Retry(5, 5*time.Second, func() (error, bool) {
+		task, err := client.Tasks.ShowByID(ctx, id)
+		if err != nil {
+			return fmt.Errorf("error suspending task %s err = %w", id.FullyQualifiedName(), err), false
 		}
-	}
-	return diff
+		if task.State != sdk.TaskStateSuspended {
+			return nil, false
+		}
+		return nil, true
+	})
 }

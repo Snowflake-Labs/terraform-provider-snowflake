@@ -153,6 +153,11 @@ func GetRootTasks(v Tasks, ctx context.Context, id SchemaObjectIdentifier) ([]Ta
 			return nil, err
 		}
 
+		if task.TaskRelations.FinalizedRootTask != nil {
+			tasksToExamine.Push(*task.TaskRelations.FinalizedRootTask)
+			continue
+		}
+
 		predecessors := task.Predecessors
 		if len(predecessors) == 0 {
 			rootTasks = append(rootTasks, *task)

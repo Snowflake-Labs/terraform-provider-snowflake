@@ -10,27 +10,79 @@ import (
 )
 
 type TaskModel struct {
-	After                                   tfconfig.Variable `json:"after,omitempty"`
-	AllowOverlappingExecution               tfconfig.Variable `json:"allow_overlapping_execution,omitempty"`
-	Comment                                 tfconfig.Variable `json:"comment,omitempty"`
-	Config                                  tfconfig.Variable `json:"config,omitempty"`
-	Database                                tfconfig.Variable `json:"database,omitempty"`
-	Enabled                                 tfconfig.Variable `json:"enabled,omitempty"`
-	ErrorIntegration                        tfconfig.Variable `json:"error_integration,omitempty"`
-	Finalize                                tfconfig.Variable `json:"finalize,omitempty"`
-	FullyQualifiedName                      tfconfig.Variable `json:"fully_qualified_name,omitempty"`
-	Name                                    tfconfig.Variable `json:"name,omitempty"`
-	Schedule                                tfconfig.Variable `json:"schedule,omitempty"`
-	Schema                                  tfconfig.Variable `json:"schema,omitempty"`
-	SessionParameters                       tfconfig.Variable `json:"session_parameters,omitempty"`
-	SqlStatement                            tfconfig.Variable `json:"sql_statement,omitempty"`
-	SuspendTaskAfterNumFailures             tfconfig.Variable `json:"suspend_task_after_num_failures,omitempty"`
-	TaskAutoRetryAttempts                   tfconfig.Variable `json:"task_auto_retry_attempts,omitempty"`
-	UserTaskManagedInitialWarehouseSize     tfconfig.Variable `json:"user_task_managed_initial_warehouse_size,omitempty"`
-	UserTaskMinimumTriggerIntervalInSeconds tfconfig.Variable `json:"user_task_minimum_trigger_interval_in_seconds,omitempty"`
-	UserTaskTimeoutMs                       tfconfig.Variable `json:"user_task_timeout_ms,omitempty"`
-	Warehouse                               tfconfig.Variable `json:"warehouse,omitempty"`
-	When                                    tfconfig.Variable `json:"when,omitempty"`
+	AbortDetachedQuery                       tfconfig.Variable `json:"abort_detached_query,omitempty"`
+	After                                    tfconfig.Variable `json:"after,omitempty"`
+	AllowOverlappingExecution                tfconfig.Variable `json:"allow_overlapping_execution,omitempty"`
+	Autocommit                               tfconfig.Variable `json:"autocommit,omitempty"`
+	BinaryInputFormat                        tfconfig.Variable `json:"binary_input_format,omitempty"`
+	BinaryOutputFormat                       tfconfig.Variable `json:"binary_output_format,omitempty"`
+	ClientMemoryLimit                        tfconfig.Variable `json:"client_memory_limit,omitempty"`
+	ClientMetadataRequestUseConnectionCtx    tfconfig.Variable `json:"client_metadata_request_use_connection_ctx,omitempty"`
+	ClientPrefetchThreads                    tfconfig.Variable `json:"client_prefetch_threads,omitempty"`
+	ClientResultChunkSize                    tfconfig.Variable `json:"client_result_chunk_size,omitempty"`
+	ClientResultColumnCaseInsensitive        tfconfig.Variable `json:"client_result_column_case_insensitive,omitempty"`
+	ClientSessionKeepAlive                   tfconfig.Variable `json:"client_session_keep_alive,omitempty"`
+	ClientSessionKeepAliveHeartbeatFrequency tfconfig.Variable `json:"client_session_keep_alive_heartbeat_frequency,omitempty"`
+	ClientTimestampTypeMapping               tfconfig.Variable `json:"client_timestamp_type_mapping,omitempty"`
+	Comment                                  tfconfig.Variable `json:"comment,omitempty"`
+	Config                                   tfconfig.Variable `json:"config,omitempty"`
+	Database                                 tfconfig.Variable `json:"database,omitempty"`
+	DateInputFormat                          tfconfig.Variable `json:"date_input_format,omitempty"`
+	DateOutputFormat                         tfconfig.Variable `json:"date_output_format,omitempty"`
+	EnableUnloadPhysicalTypeOptimization     tfconfig.Variable `json:"enable_unload_physical_type_optimization,omitempty"`
+	Enabled                                  tfconfig.Variable `json:"enabled,omitempty"`
+	ErrorIntegration                         tfconfig.Variable `json:"error_integration,omitempty"`
+	ErrorOnNondeterministicMerge             tfconfig.Variable `json:"error_on_nondeterministic_merge,omitempty"`
+	ErrorOnNondeterministicUpdate            tfconfig.Variable `json:"error_on_nondeterministic_update,omitempty"`
+	Finalize                                 tfconfig.Variable `json:"finalize,omitempty"`
+	FullyQualifiedName                       tfconfig.Variable `json:"fully_qualified_name,omitempty"`
+	GeographyOutputFormat                    tfconfig.Variable `json:"geography_output_format,omitempty"`
+	GeometryOutputFormat                     tfconfig.Variable `json:"geometry_output_format,omitempty"`
+	JdbcTreatTimestampNtzAsUtc               tfconfig.Variable `json:"jdbc_treat_timestamp_ntz_as_utc,omitempty"`
+	JdbcUseSessionTimezone                   tfconfig.Variable `json:"jdbc_use_session_timezone,omitempty"`
+	JsonIndent                               tfconfig.Variable `json:"json_indent,omitempty"`
+	LockTimeout                              tfconfig.Variable `json:"lock_timeout,omitempty"`
+	LogLevel                                 tfconfig.Variable `json:"log_level,omitempty"`
+	MultiStatementCount                      tfconfig.Variable `json:"multi_statement_count,omitempty"`
+	Name                                     tfconfig.Variable `json:"name,omitempty"`
+	NoorderSequenceAsDefault                 tfconfig.Variable `json:"noorder_sequence_as_default,omitempty"`
+	OdbcTreatDecimalAsInt                    tfconfig.Variable `json:"odbc_treat_decimal_as_int,omitempty"`
+	QueryTag                                 tfconfig.Variable `json:"query_tag,omitempty"`
+	QuotedIdentifiersIgnoreCase              tfconfig.Variable `json:"quoted_identifiers_ignore_case,omitempty"`
+	RowsPerResultset                         tfconfig.Variable `json:"rows_per_resultset,omitempty"`
+	S3StageVpceDnsName                       tfconfig.Variable `json:"s3_stage_vpce_dns_name,omitempty"`
+	Schedule                                 tfconfig.Variable `json:"schedule,omitempty"`
+	Schema                                   tfconfig.Variable `json:"schema,omitempty"`
+	SearchPath                               tfconfig.Variable `json:"search_path,omitempty"`
+	SqlStatement                             tfconfig.Variable `json:"sql_statement,omitempty"`
+	StatementQueuedTimeoutInSeconds          tfconfig.Variable `json:"statement_queued_timeout_in_seconds,omitempty"`
+	StatementTimeoutInSeconds                tfconfig.Variable `json:"statement_timeout_in_seconds,omitempty"`
+	StrictJsonOutput                         tfconfig.Variable `json:"strict_json_output,omitempty"`
+	SuspendTaskAfterNumFailures              tfconfig.Variable `json:"suspend_task_after_num_failures,omitempty"`
+	TaskAutoRetryAttempts                    tfconfig.Variable `json:"task_auto_retry_attempts,omitempty"`
+	TimeInputFormat                          tfconfig.Variable `json:"time_input_format,omitempty"`
+	TimeOutputFormat                         tfconfig.Variable `json:"time_output_format,omitempty"`
+	TimestampDayIsAlways24h                  tfconfig.Variable `json:"timestamp_day_is_always_24h,omitempty"`
+	TimestampInputFormat                     tfconfig.Variable `json:"timestamp_input_format,omitempty"`
+	TimestampLtzOutputFormat                 tfconfig.Variable `json:"timestamp_ltz_output_format,omitempty"`
+	TimestampNtzOutputFormat                 tfconfig.Variable `json:"timestamp_ntz_output_format,omitempty"`
+	TimestampOutputFormat                    tfconfig.Variable `json:"timestamp_output_format,omitempty"`
+	TimestampTypeMapping                     tfconfig.Variable `json:"timestamp_type_mapping,omitempty"`
+	TimestampTzOutputFormat                  tfconfig.Variable `json:"timestamp_tz_output_format,omitempty"`
+	Timezone                                 tfconfig.Variable `json:"timezone,omitempty"`
+	TraceLevel                               tfconfig.Variable `json:"trace_level,omitempty"`
+	TransactionAbortOnError                  tfconfig.Variable `json:"transaction_abort_on_error,omitempty"`
+	TransactionDefaultIsolationLevel         tfconfig.Variable `json:"transaction_default_isolation_level,omitempty"`
+	TwoDigitCenturyStart                     tfconfig.Variable `json:"two_digit_century_start,omitempty"`
+	UnsupportedDdlAction                     tfconfig.Variable `json:"unsupported_ddl_action,omitempty"`
+	UseCachedResult                          tfconfig.Variable `json:"use_cached_result,omitempty"`
+	UserTaskManagedInitialWarehouseSize      tfconfig.Variable `json:"user_task_managed_initial_warehouse_size,omitempty"`
+	UserTaskMinimumTriggerIntervalInSeconds  tfconfig.Variable `json:"user_task_minimum_trigger_interval_in_seconds,omitempty"`
+	UserTaskTimeoutMs                        tfconfig.Variable `json:"user_task_timeout_ms,omitempty"`
+	Warehouse                                tfconfig.Variable `json:"warehouse,omitempty"`
+	WeekOfYearPolicy                         tfconfig.Variable `json:"week_of_year_policy,omitempty"`
+	WeekStart                                tfconfig.Variable `json:"week_start,omitempty"`
+	When                                     tfconfig.Variable `json:"when,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -72,10 +124,70 @@ func TaskWithDefaultMeta(
 // below all the proper values //
 /////////////////////////////////
 
+func (t *TaskModel) WithAbortDetachedQuery(abortDetachedQuery bool) *TaskModel {
+	t.AbortDetachedQuery = tfconfig.BoolVariable(abortDetachedQuery)
+	return t
+}
+
 // after attribute type is not yet supported, so WithAfter can't be generated
 
-func (t *TaskModel) WithAllowOverlappingExecution(allowOverlappingExecution bool) *TaskModel {
-	t.AllowOverlappingExecution = tfconfig.BoolVariable(allowOverlappingExecution)
+func (t *TaskModel) WithAllowOverlappingExecution(allowOverlappingExecution string) *TaskModel {
+	t.AllowOverlappingExecution = tfconfig.StringVariable(allowOverlappingExecution)
+	return t
+}
+
+func (t *TaskModel) WithAutocommit(autocommit bool) *TaskModel {
+	t.Autocommit = tfconfig.BoolVariable(autocommit)
+	return t
+}
+
+func (t *TaskModel) WithBinaryInputFormat(binaryInputFormat string) *TaskModel {
+	t.BinaryInputFormat = tfconfig.StringVariable(binaryInputFormat)
+	return t
+}
+
+func (t *TaskModel) WithBinaryOutputFormat(binaryOutputFormat string) *TaskModel {
+	t.BinaryOutputFormat = tfconfig.StringVariable(binaryOutputFormat)
+	return t
+}
+
+func (t *TaskModel) WithClientMemoryLimit(clientMemoryLimit int) *TaskModel {
+	t.ClientMemoryLimit = tfconfig.IntegerVariable(clientMemoryLimit)
+	return t
+}
+
+func (t *TaskModel) WithClientMetadataRequestUseConnectionCtx(clientMetadataRequestUseConnectionCtx bool) *TaskModel {
+	t.ClientMetadataRequestUseConnectionCtx = tfconfig.BoolVariable(clientMetadataRequestUseConnectionCtx)
+	return t
+}
+
+func (t *TaskModel) WithClientPrefetchThreads(clientPrefetchThreads int) *TaskModel {
+	t.ClientPrefetchThreads = tfconfig.IntegerVariable(clientPrefetchThreads)
+	return t
+}
+
+func (t *TaskModel) WithClientResultChunkSize(clientResultChunkSize int) *TaskModel {
+	t.ClientResultChunkSize = tfconfig.IntegerVariable(clientResultChunkSize)
+	return t
+}
+
+func (t *TaskModel) WithClientResultColumnCaseInsensitive(clientResultColumnCaseInsensitive bool) *TaskModel {
+	t.ClientResultColumnCaseInsensitive = tfconfig.BoolVariable(clientResultColumnCaseInsensitive)
+	return t
+}
+
+func (t *TaskModel) WithClientSessionKeepAlive(clientSessionKeepAlive bool) *TaskModel {
+	t.ClientSessionKeepAlive = tfconfig.BoolVariable(clientSessionKeepAlive)
+	return t
+}
+
+func (t *TaskModel) WithClientSessionKeepAliveHeartbeatFrequency(clientSessionKeepAliveHeartbeatFrequency int) *TaskModel {
+	t.ClientSessionKeepAliveHeartbeatFrequency = tfconfig.IntegerVariable(clientSessionKeepAliveHeartbeatFrequency)
+	return t
+}
+
+func (t *TaskModel) WithClientTimestampTypeMapping(clientTimestampTypeMapping string) *TaskModel {
+	t.ClientTimestampTypeMapping = tfconfig.StringVariable(clientTimestampTypeMapping)
 	return t
 }
 
@@ -94,6 +206,21 @@ func (t *TaskModel) WithDatabase(database string) *TaskModel {
 	return t
 }
 
+func (t *TaskModel) WithDateInputFormat(dateInputFormat string) *TaskModel {
+	t.DateInputFormat = tfconfig.StringVariable(dateInputFormat)
+	return t
+}
+
+func (t *TaskModel) WithDateOutputFormat(dateOutputFormat string) *TaskModel {
+	t.DateOutputFormat = tfconfig.StringVariable(dateOutputFormat)
+	return t
+}
+
+func (t *TaskModel) WithEnableUnloadPhysicalTypeOptimization(enableUnloadPhysicalTypeOptimization bool) *TaskModel {
+	t.EnableUnloadPhysicalTypeOptimization = tfconfig.BoolVariable(enableUnloadPhysicalTypeOptimization)
+	return t
+}
+
 func (t *TaskModel) WithEnabled(enabled string) *TaskModel {
 	t.Enabled = tfconfig.StringVariable(enabled)
 	return t
@@ -104,15 +231,98 @@ func (t *TaskModel) WithErrorIntegration(errorIntegration string) *TaskModel {
 	return t
 }
 
-// finalize attribute type is not yet supported, so WithFinalize can't be generated
+func (t *TaskModel) WithErrorOnNondeterministicMerge(errorOnNondeterministicMerge bool) *TaskModel {
+	t.ErrorOnNondeterministicMerge = tfconfig.BoolVariable(errorOnNondeterministicMerge)
+	return t
+}
+
+func (t *TaskModel) WithErrorOnNondeterministicUpdate(errorOnNondeterministicUpdate bool) *TaskModel {
+	t.ErrorOnNondeterministicUpdate = tfconfig.BoolVariable(errorOnNondeterministicUpdate)
+	return t
+}
+
+func (t *TaskModel) WithFinalize(finalize string) *TaskModel {
+	t.Finalize = tfconfig.StringVariable(finalize)
+	return t
+}
 
 func (t *TaskModel) WithFullyQualifiedName(fullyQualifiedName string) *TaskModel {
 	t.FullyQualifiedName = tfconfig.StringVariable(fullyQualifiedName)
 	return t
 }
 
+func (t *TaskModel) WithGeographyOutputFormat(geographyOutputFormat string) *TaskModel {
+	t.GeographyOutputFormat = tfconfig.StringVariable(geographyOutputFormat)
+	return t
+}
+
+func (t *TaskModel) WithGeometryOutputFormat(geometryOutputFormat string) *TaskModel {
+	t.GeometryOutputFormat = tfconfig.StringVariable(geometryOutputFormat)
+	return t
+}
+
+func (t *TaskModel) WithJdbcTreatTimestampNtzAsUtc(jdbcTreatTimestampNtzAsUtc bool) *TaskModel {
+	t.JdbcTreatTimestampNtzAsUtc = tfconfig.BoolVariable(jdbcTreatTimestampNtzAsUtc)
+	return t
+}
+
+func (t *TaskModel) WithJdbcUseSessionTimezone(jdbcUseSessionTimezone bool) *TaskModel {
+	t.JdbcUseSessionTimezone = tfconfig.BoolVariable(jdbcUseSessionTimezone)
+	return t
+}
+
+func (t *TaskModel) WithJsonIndent(jsonIndent int) *TaskModel {
+	t.JsonIndent = tfconfig.IntegerVariable(jsonIndent)
+	return t
+}
+
+func (t *TaskModel) WithLockTimeout(lockTimeout int) *TaskModel {
+	t.LockTimeout = tfconfig.IntegerVariable(lockTimeout)
+	return t
+}
+
+func (t *TaskModel) WithLogLevel(logLevel string) *TaskModel {
+	t.LogLevel = tfconfig.StringVariable(logLevel)
+	return t
+}
+
+func (t *TaskModel) WithMultiStatementCount(multiStatementCount int) *TaskModel {
+	t.MultiStatementCount = tfconfig.IntegerVariable(multiStatementCount)
+	return t
+}
+
 func (t *TaskModel) WithName(name string) *TaskModel {
 	t.Name = tfconfig.StringVariable(name)
+	return t
+}
+
+func (t *TaskModel) WithNoorderSequenceAsDefault(noorderSequenceAsDefault bool) *TaskModel {
+	t.NoorderSequenceAsDefault = tfconfig.BoolVariable(noorderSequenceAsDefault)
+	return t
+}
+
+func (t *TaskModel) WithOdbcTreatDecimalAsInt(odbcTreatDecimalAsInt bool) *TaskModel {
+	t.OdbcTreatDecimalAsInt = tfconfig.BoolVariable(odbcTreatDecimalAsInt)
+	return t
+}
+
+func (t *TaskModel) WithQueryTag(queryTag string) *TaskModel {
+	t.QueryTag = tfconfig.StringVariable(queryTag)
+	return t
+}
+
+func (t *TaskModel) WithQuotedIdentifiersIgnoreCase(quotedIdentifiersIgnoreCase bool) *TaskModel {
+	t.QuotedIdentifiersIgnoreCase = tfconfig.BoolVariable(quotedIdentifiersIgnoreCase)
+	return t
+}
+
+func (t *TaskModel) WithRowsPerResultset(rowsPerResultset int) *TaskModel {
+	t.RowsPerResultset = tfconfig.IntegerVariable(rowsPerResultset)
+	return t
+}
+
+func (t *TaskModel) WithS3StageVpceDnsName(s3StageVpceDnsName string) *TaskModel {
+	t.S3StageVpceDnsName = tfconfig.StringVariable(s3StageVpceDnsName)
 	return t
 }
 
@@ -126,10 +336,28 @@ func (t *TaskModel) WithSchema(schema string) *TaskModel {
 	return t
 }
 
-// session_parameters attribute type is not yet supported, so WithSessionParameters can't be generated
+func (t *TaskModel) WithSearchPath(searchPath string) *TaskModel {
+	t.SearchPath = tfconfig.StringVariable(searchPath)
+	return t
+}
 
 func (t *TaskModel) WithSqlStatement(sqlStatement string) *TaskModel {
 	t.SqlStatement = tfconfig.StringVariable(sqlStatement)
+	return t
+}
+
+func (t *TaskModel) WithStatementQueuedTimeoutInSeconds(statementQueuedTimeoutInSeconds int) *TaskModel {
+	t.StatementQueuedTimeoutInSeconds = tfconfig.IntegerVariable(statementQueuedTimeoutInSeconds)
+	return t
+}
+
+func (t *TaskModel) WithStatementTimeoutInSeconds(statementTimeoutInSeconds int) *TaskModel {
+	t.StatementTimeoutInSeconds = tfconfig.IntegerVariable(statementTimeoutInSeconds)
+	return t
+}
+
+func (t *TaskModel) WithStrictJsonOutput(strictJsonOutput bool) *TaskModel {
+	t.StrictJsonOutput = tfconfig.BoolVariable(strictJsonOutput)
 	return t
 }
 
@@ -140,6 +368,86 @@ func (t *TaskModel) WithSuspendTaskAfterNumFailures(suspendTaskAfterNumFailures 
 
 func (t *TaskModel) WithTaskAutoRetryAttempts(taskAutoRetryAttempts int) *TaskModel {
 	t.TaskAutoRetryAttempts = tfconfig.IntegerVariable(taskAutoRetryAttempts)
+	return t
+}
+
+func (t *TaskModel) WithTimeInputFormat(timeInputFormat string) *TaskModel {
+	t.TimeInputFormat = tfconfig.StringVariable(timeInputFormat)
+	return t
+}
+
+func (t *TaskModel) WithTimeOutputFormat(timeOutputFormat string) *TaskModel {
+	t.TimeOutputFormat = tfconfig.StringVariable(timeOutputFormat)
+	return t
+}
+
+func (t *TaskModel) WithTimestampDayIsAlways24h(timestampDayIsAlways24h bool) *TaskModel {
+	t.TimestampDayIsAlways24h = tfconfig.BoolVariable(timestampDayIsAlways24h)
+	return t
+}
+
+func (t *TaskModel) WithTimestampInputFormat(timestampInputFormat string) *TaskModel {
+	t.TimestampInputFormat = tfconfig.StringVariable(timestampInputFormat)
+	return t
+}
+
+func (t *TaskModel) WithTimestampLtzOutputFormat(timestampLtzOutputFormat string) *TaskModel {
+	t.TimestampLtzOutputFormat = tfconfig.StringVariable(timestampLtzOutputFormat)
+	return t
+}
+
+func (t *TaskModel) WithTimestampNtzOutputFormat(timestampNtzOutputFormat string) *TaskModel {
+	t.TimestampNtzOutputFormat = tfconfig.StringVariable(timestampNtzOutputFormat)
+	return t
+}
+
+func (t *TaskModel) WithTimestampOutputFormat(timestampOutputFormat string) *TaskModel {
+	t.TimestampOutputFormat = tfconfig.StringVariable(timestampOutputFormat)
+	return t
+}
+
+func (t *TaskModel) WithTimestampTypeMapping(timestampTypeMapping string) *TaskModel {
+	t.TimestampTypeMapping = tfconfig.StringVariable(timestampTypeMapping)
+	return t
+}
+
+func (t *TaskModel) WithTimestampTzOutputFormat(timestampTzOutputFormat string) *TaskModel {
+	t.TimestampTzOutputFormat = tfconfig.StringVariable(timestampTzOutputFormat)
+	return t
+}
+
+func (t *TaskModel) WithTimezone(timezone string) *TaskModel {
+	t.Timezone = tfconfig.StringVariable(timezone)
+	return t
+}
+
+func (t *TaskModel) WithTraceLevel(traceLevel string) *TaskModel {
+	t.TraceLevel = tfconfig.StringVariable(traceLevel)
+	return t
+}
+
+func (t *TaskModel) WithTransactionAbortOnError(transactionAbortOnError bool) *TaskModel {
+	t.TransactionAbortOnError = tfconfig.BoolVariable(transactionAbortOnError)
+	return t
+}
+
+func (t *TaskModel) WithTransactionDefaultIsolationLevel(transactionDefaultIsolationLevel string) *TaskModel {
+	t.TransactionDefaultIsolationLevel = tfconfig.StringVariable(transactionDefaultIsolationLevel)
+	return t
+}
+
+func (t *TaskModel) WithTwoDigitCenturyStart(twoDigitCenturyStart int) *TaskModel {
+	t.TwoDigitCenturyStart = tfconfig.IntegerVariable(twoDigitCenturyStart)
+	return t
+}
+
+func (t *TaskModel) WithUnsupportedDdlAction(unsupportedDdlAction string) *TaskModel {
+	t.UnsupportedDdlAction = tfconfig.StringVariable(unsupportedDdlAction)
+	return t
+}
+
+func (t *TaskModel) WithUseCachedResult(useCachedResult bool) *TaskModel {
+	t.UseCachedResult = tfconfig.BoolVariable(useCachedResult)
 	return t
 }
 
@@ -163,6 +471,16 @@ func (t *TaskModel) WithWarehouse(warehouse string) *TaskModel {
 	return t
 }
 
+func (t *TaskModel) WithWeekOfYearPolicy(weekOfYearPolicy int) *TaskModel {
+	t.WeekOfYearPolicy = tfconfig.IntegerVariable(weekOfYearPolicy)
+	return t
+}
+
+func (t *TaskModel) WithWeekStart(weekStart int) *TaskModel {
+	t.WeekStart = tfconfig.IntegerVariable(weekStart)
+	return t
+}
+
 func (t *TaskModel) WithWhen(when string) *TaskModel {
 	t.When = tfconfig.StringVariable(when)
 	return t
@@ -172,6 +490,11 @@ func (t *TaskModel) WithWhen(when string) *TaskModel {
 // below it's possible to set any value //
 //////////////////////////////////////////
 
+func (t *TaskModel) WithAbortDetachedQueryValue(value tfconfig.Variable) *TaskModel {
+	t.AbortDetachedQuery = value
+	return t
+}
+
 func (t *TaskModel) WithAfterValue(value tfconfig.Variable) *TaskModel {
 	t.After = value
 	return t
@@ -179,6 +502,61 @@ func (t *TaskModel) WithAfterValue(value tfconfig.Variable) *TaskModel {
 
 func (t *TaskModel) WithAllowOverlappingExecutionValue(value tfconfig.Variable) *TaskModel {
 	t.AllowOverlappingExecution = value
+	return t
+}
+
+func (t *TaskModel) WithAutocommitValue(value tfconfig.Variable) *TaskModel {
+	t.Autocommit = value
+	return t
+}
+
+func (t *TaskModel) WithBinaryInputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.BinaryInputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithBinaryOutputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.BinaryOutputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithClientMemoryLimitValue(value tfconfig.Variable) *TaskModel {
+	t.ClientMemoryLimit = value
+	return t
+}
+
+func (t *TaskModel) WithClientMetadataRequestUseConnectionCtxValue(value tfconfig.Variable) *TaskModel {
+	t.ClientMetadataRequestUseConnectionCtx = value
+	return t
+}
+
+func (t *TaskModel) WithClientPrefetchThreadsValue(value tfconfig.Variable) *TaskModel {
+	t.ClientPrefetchThreads = value
+	return t
+}
+
+func (t *TaskModel) WithClientResultChunkSizeValue(value tfconfig.Variable) *TaskModel {
+	t.ClientResultChunkSize = value
+	return t
+}
+
+func (t *TaskModel) WithClientResultColumnCaseInsensitiveValue(value tfconfig.Variable) *TaskModel {
+	t.ClientResultColumnCaseInsensitive = value
+	return t
+}
+
+func (t *TaskModel) WithClientSessionKeepAliveValue(value tfconfig.Variable) *TaskModel {
+	t.ClientSessionKeepAlive = value
+	return t
+}
+
+func (t *TaskModel) WithClientSessionKeepAliveHeartbeatFrequencyValue(value tfconfig.Variable) *TaskModel {
+	t.ClientSessionKeepAliveHeartbeatFrequency = value
+	return t
+}
+
+func (t *TaskModel) WithClientTimestampTypeMappingValue(value tfconfig.Variable) *TaskModel {
+	t.ClientTimestampTypeMapping = value
 	return t
 }
 
@@ -197,6 +575,21 @@ func (t *TaskModel) WithDatabaseValue(value tfconfig.Variable) *TaskModel {
 	return t
 }
 
+func (t *TaskModel) WithDateInputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.DateInputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithDateOutputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.DateOutputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithEnableUnloadPhysicalTypeOptimizationValue(value tfconfig.Variable) *TaskModel {
+	t.EnableUnloadPhysicalTypeOptimization = value
+	return t
+}
+
 func (t *TaskModel) WithEnabledValue(value tfconfig.Variable) *TaskModel {
 	t.Enabled = value
 	return t
@@ -204,6 +597,16 @@ func (t *TaskModel) WithEnabledValue(value tfconfig.Variable) *TaskModel {
 
 func (t *TaskModel) WithErrorIntegrationValue(value tfconfig.Variable) *TaskModel {
 	t.ErrorIntegration = value
+	return t
+}
+
+func (t *TaskModel) WithErrorOnNondeterministicMergeValue(value tfconfig.Variable) *TaskModel {
+	t.ErrorOnNondeterministicMerge = value
+	return t
+}
+
+func (t *TaskModel) WithErrorOnNondeterministicUpdateValue(value tfconfig.Variable) *TaskModel {
+	t.ErrorOnNondeterministicUpdate = value
 	return t
 }
 
@@ -217,8 +620,78 @@ func (t *TaskModel) WithFullyQualifiedNameValue(value tfconfig.Variable) *TaskMo
 	return t
 }
 
+func (t *TaskModel) WithGeographyOutputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.GeographyOutputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithGeometryOutputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.GeometryOutputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithJdbcTreatTimestampNtzAsUtcValue(value tfconfig.Variable) *TaskModel {
+	t.JdbcTreatTimestampNtzAsUtc = value
+	return t
+}
+
+func (t *TaskModel) WithJdbcUseSessionTimezoneValue(value tfconfig.Variable) *TaskModel {
+	t.JdbcUseSessionTimezone = value
+	return t
+}
+
+func (t *TaskModel) WithJsonIndentValue(value tfconfig.Variable) *TaskModel {
+	t.JsonIndent = value
+	return t
+}
+
+func (t *TaskModel) WithLockTimeoutValue(value tfconfig.Variable) *TaskModel {
+	t.LockTimeout = value
+	return t
+}
+
+func (t *TaskModel) WithLogLevelValue(value tfconfig.Variable) *TaskModel {
+	t.LogLevel = value
+	return t
+}
+
+func (t *TaskModel) WithMultiStatementCountValue(value tfconfig.Variable) *TaskModel {
+	t.MultiStatementCount = value
+	return t
+}
+
 func (t *TaskModel) WithNameValue(value tfconfig.Variable) *TaskModel {
 	t.Name = value
+	return t
+}
+
+func (t *TaskModel) WithNoorderSequenceAsDefaultValue(value tfconfig.Variable) *TaskModel {
+	t.NoorderSequenceAsDefault = value
+	return t
+}
+
+func (t *TaskModel) WithOdbcTreatDecimalAsIntValue(value tfconfig.Variable) *TaskModel {
+	t.OdbcTreatDecimalAsInt = value
+	return t
+}
+
+func (t *TaskModel) WithQueryTagValue(value tfconfig.Variable) *TaskModel {
+	t.QueryTag = value
+	return t
+}
+
+func (t *TaskModel) WithQuotedIdentifiersIgnoreCaseValue(value tfconfig.Variable) *TaskModel {
+	t.QuotedIdentifiersIgnoreCase = value
+	return t
+}
+
+func (t *TaskModel) WithRowsPerResultsetValue(value tfconfig.Variable) *TaskModel {
+	t.RowsPerResultset = value
+	return t
+}
+
+func (t *TaskModel) WithS3StageVpceDnsNameValue(value tfconfig.Variable) *TaskModel {
+	t.S3StageVpceDnsName = value
 	return t
 }
 
@@ -232,13 +705,28 @@ func (t *TaskModel) WithSchemaValue(value tfconfig.Variable) *TaskModel {
 	return t
 }
 
-func (t *TaskModel) WithSessionParametersValue(value tfconfig.Variable) *TaskModel {
-	t.SessionParameters = value
+func (t *TaskModel) WithSearchPathValue(value tfconfig.Variable) *TaskModel {
+	t.SearchPath = value
 	return t
 }
 
 func (t *TaskModel) WithSqlStatementValue(value tfconfig.Variable) *TaskModel {
 	t.SqlStatement = value
+	return t
+}
+
+func (t *TaskModel) WithStatementQueuedTimeoutInSecondsValue(value tfconfig.Variable) *TaskModel {
+	t.StatementQueuedTimeoutInSeconds = value
+	return t
+}
+
+func (t *TaskModel) WithStatementTimeoutInSecondsValue(value tfconfig.Variable) *TaskModel {
+	t.StatementTimeoutInSeconds = value
+	return t
+}
+
+func (t *TaskModel) WithStrictJsonOutputValue(value tfconfig.Variable) *TaskModel {
+	t.StrictJsonOutput = value
 	return t
 }
 
@@ -249,6 +737,86 @@ func (t *TaskModel) WithSuspendTaskAfterNumFailuresValue(value tfconfig.Variable
 
 func (t *TaskModel) WithTaskAutoRetryAttemptsValue(value tfconfig.Variable) *TaskModel {
 	t.TaskAutoRetryAttempts = value
+	return t
+}
+
+func (t *TaskModel) WithTimeInputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.TimeInputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithTimeOutputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.TimeOutputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithTimestampDayIsAlways24hValue(value tfconfig.Variable) *TaskModel {
+	t.TimestampDayIsAlways24h = value
+	return t
+}
+
+func (t *TaskModel) WithTimestampInputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.TimestampInputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithTimestampLtzOutputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.TimestampLtzOutputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithTimestampNtzOutputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.TimestampNtzOutputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithTimestampOutputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.TimestampOutputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithTimestampTypeMappingValue(value tfconfig.Variable) *TaskModel {
+	t.TimestampTypeMapping = value
+	return t
+}
+
+func (t *TaskModel) WithTimestampTzOutputFormatValue(value tfconfig.Variable) *TaskModel {
+	t.TimestampTzOutputFormat = value
+	return t
+}
+
+func (t *TaskModel) WithTimezoneValue(value tfconfig.Variable) *TaskModel {
+	t.Timezone = value
+	return t
+}
+
+func (t *TaskModel) WithTraceLevelValue(value tfconfig.Variable) *TaskModel {
+	t.TraceLevel = value
+	return t
+}
+
+func (t *TaskModel) WithTransactionAbortOnErrorValue(value tfconfig.Variable) *TaskModel {
+	t.TransactionAbortOnError = value
+	return t
+}
+
+func (t *TaskModel) WithTransactionDefaultIsolationLevelValue(value tfconfig.Variable) *TaskModel {
+	t.TransactionDefaultIsolationLevel = value
+	return t
+}
+
+func (t *TaskModel) WithTwoDigitCenturyStartValue(value tfconfig.Variable) *TaskModel {
+	t.TwoDigitCenturyStart = value
+	return t
+}
+
+func (t *TaskModel) WithUnsupportedDdlActionValue(value tfconfig.Variable) *TaskModel {
+	t.UnsupportedDdlAction = value
+	return t
+}
+
+func (t *TaskModel) WithUseCachedResultValue(value tfconfig.Variable) *TaskModel {
+	t.UseCachedResult = value
 	return t
 }
 
@@ -269,6 +837,16 @@ func (t *TaskModel) WithUserTaskTimeoutMsValue(value tfconfig.Variable) *TaskMod
 
 func (t *TaskModel) WithWarehouseValue(value tfconfig.Variable) *TaskModel {
 	t.Warehouse = value
+	return t
+}
+
+func (t *TaskModel) WithWeekOfYearPolicyValue(value tfconfig.Variable) *TaskModel {
+	t.WeekOfYearPolicy = value
+	return t
+}
+
+func (t *TaskModel) WithWeekStartValue(value tfconfig.Variable) *TaskModel {
+	t.WeekStart = value
 	return t
 }
 

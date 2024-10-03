@@ -1,9 +1,12 @@
 package resources_test
 
 import (
-	"fmt"
+	"strings"
+	"testing"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
@@ -15,20 +18,20 @@ import (
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
-	"strings"
-	"testing"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-// TODO: More tests for complicated DAGs
+// TODO(SNOW-1348116 - next pr): More tests for complicated DAGs
 
 func TestAcc_Task_Basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
+	currentRole := acc.TestClient().Context.CurrentRole(t)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
@@ -45,7 +48,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 			{
 				Config: config.FromModel(t, configModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.test").
+					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -61,13 +64,13 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasAfterLen(0).
 						HasWhenString("").
 						HasSqlStatementString(statement),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.test").
+					resourceshowoutputassert.TaskShowOutput(t, configModel.ResourceReference()).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasIdNotEmpty().
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasOwner("ACCOUNTADMIN"). // TODO: Current role
+						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse("").
 						HasSchedule("").
@@ -76,19 +79,19 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasDefinition(statement).
 						HasCondition("").
 						HasAllowOverlappingExecution(false).
-						HasErrorIntegration(sdk.NewAccountObjectIdentifier("")). // TODO: *sdk.AOI
+						HasErrorIntegration("").
 						HasLastCommittedOn("").
 						HasLastSuspendedOn("").
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
-						HasBudget(""),
-					//HasTaskRelations(sdk.TaskRelations{}). // TODO:
-					resourceparametersassert.TaskResourceParameters(t, "snowflake_task.test").
+						HasBudget("").
+						HasTaskRelations(sdk.TaskRelations{}),
+					resourceparametersassert.TaskResourceParameters(t, configModel.ResourceReference()).
 						HasAllDefaults(),
 				),
 			},
 			{
-				ResourceName: "snowflake_task.test",
+				ResourceName: configModel.ResourceReference(),
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedTaskResource(t, helpers.EncodeResourceIdentifier(id)).
@@ -117,6 +120,8 @@ func TestAcc_Task_Complete(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
+	currentRole := acc.TestClient().Context.CurrentRole(t)
+
 	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
 
@@ -134,7 +139,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithSchedule("10 MINUTES").
 		WithConfigValue(configvariable.StringVariable(taskConfigVariableValue)).
-		WithAllowOverlappingExecution(true).
+		WithAllowOverlappingExecution(r.BooleanTrue).
 		WithErrorIntegration(errorNotificationIntegration.ID().Name()).
 		WithComment(comment).
 		WithWhen(condition)
@@ -150,7 +155,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 			{
 				Config: config.FromModel(t, configModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.test").
+					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -166,29 +171,29 @@ func TestAcc_Task_Complete(t *testing.T) {
 						HasNoAfter().
 						HasWhenString(condition).
 						HasSqlStatementString(statement),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.test").
+					resourceshowoutputassert.TaskShowOutput(t, configModel.ResourceReference()).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
-						//HasId(id.FullyQualifiedName()). // TODO: not empty
+						HasIdNotEmpty().
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasOwner("ACCOUNTADMIN"). // TODO: Current role
+						HasOwner(currentRole.Name()).
 						HasComment(comment).
 						HasWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 						HasSchedule("10 MINUTES").
-						//HasPredecessors(nil). // TODO:
+						HasPredecessors().
 						HasState(sdk.TaskStateStarted).
 						HasDefinition(statement).
 						HasCondition(condition).
 						HasAllowOverlappingExecution(true).
-						HasErrorIntegration(errorNotificationIntegration.ID()).
+						HasErrorIntegration(errorNotificationIntegration.ID().Name()).
 						HasLastCommittedOnNotEmpty().
 						HasLastSuspendedOn("").
 						HasOwnerRoleType("ROLE").
 						HasConfig(expectedTaskConfig).
-						HasBudget(""),
-					//HasTaskRelations(sdk.TaskRelations{}). // TODO:
-					resourceparametersassert.TaskResourceParameters(t, "snowflake_task.test").
+						HasBudget("").
+						HasTaskRelations(sdk.TaskRelations{}),
+					resourceparametersassert.TaskResourceParameters(t, configModel.ResourceReference()).
 						HasAllDefaults(),
 				),
 			},
@@ -222,11 +227,11 @@ func TestAcc_Task_Updates(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
+	currentRole := acc.TestClient().Context.CurrentRole(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
 	basicConfigModel := model.TaskWithId("test", id, statement)
-
-	// TODO: Assert the rest of fields (e.g. parameters)
 
 	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
@@ -240,11 +245,12 @@ func TestAcc_Task_Updates(t *testing.T) {
 	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
 	completeConfigModel := model.TaskWithId("test", id, statement).
 		WithEnabled(r.BooleanTrue).
-		// TODO: Warehouse cannot be set (error)
-		//WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule("10 MINUTES").
+		// TODO(SNOW-1348116 - decide in next prs): This won't work because alter set warehouse is broken
+		// we could actually make it work by enabling only uppercased ids in the warehouse field until it's fixed.
+		// WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithSchedule("5 MINUTES").
 		WithConfigValue(configvariable.StringVariable(taskConfigVariableValue)).
-		WithAllowOverlappingExecution(true).
+		WithAllowOverlappingExecution(r.BooleanTrue).
 		WithErrorIntegration(errorNotificationIntegration.ID().Name()).
 		WithComment(comment).
 		WithWhen(condition)
@@ -260,7 +266,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 			{
 				Config: config.FromModel(t, basicConfigModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.test").
+					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -276,42 +282,41 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasAfterLen(0).
 						HasWhenString("").
 						HasSqlStatementString(statement),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.test").
-						//HasCreatedOnNotEmpty(),
+					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
+						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
-						//HasId(id.FullyQualifiedName()). // TODO: not empty
+						HasIdNotEmpty().
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasOwner("ACCOUNTADMIN"). // TODO: Current role
+						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse("").
 						HasSchedule("").
-						//HasPredecessors(nil). // TODO:
+						HasPredecessors().
 						HasState(sdk.TaskStateSuspended).
 						HasDefinition(statement).
 						HasCondition("").
 						HasAllowOverlappingExecution(false).
-						HasErrorIntegration(sdk.NewAccountObjectIdentifier("")). // TODO: *sdk.AOI
+						HasErrorIntegration("").
 						HasLastCommittedOn("").
 						HasLastSuspendedOn("").
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
-						HasBudget(""),
-					//HasTaskRelations(sdk.TaskRelations{}). // TODO:
+						HasBudget("").
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 			// Set
 			{
 				Config: config.FromModel(t, completeConfigModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.test").
+					resourceassert.TaskResource(t, completeConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasNameString(id.Name()).
 						HasEnabledString(r.BooleanTrue).
-						//HasWarehouseString(acc.TestClient().Ids.WarehouseId().Name()).
-						HasScheduleString("10 MINUTES").
+						HasScheduleString("5 MINUTES").
 						HasConfigString(expectedTaskConfig).
 						HasAllowOverlappingExecutionString(r.BooleanTrue).
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
@@ -320,35 +325,34 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasAfterLen(0).
 						HasWhenString(condition).
 						HasSqlStatementString(statement),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.test").
+					resourceshowoutputassert.TaskShowOutput(t, completeConfigModel.ResourceReference()).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
-						//HasId(id.FullyQualifiedName()). // TODO: not empty
+						HasIdNotEmpty().
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasOwner("ACCOUNTADMIN"). // TODO: Current role
+						HasOwner(currentRole.Name()).
 						HasComment(comment).
-						//HasWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-						HasSchedule("10 MINUTES").
-						//HasPredecessors(nil). // TODO:
+						HasSchedule("5 MINUTES").
+						HasPredecessors().
 						HasState(sdk.TaskStateStarted).
 						HasDefinition(statement).
 						HasCondition(condition).
 						HasAllowOverlappingExecution(true).
-						HasErrorIntegration(errorNotificationIntegration.ID()).
+						HasErrorIntegration(errorNotificationIntegration.ID().Name()).
 						HasLastCommittedOnNotEmpty().
 						HasLastSuspendedOn("").
 						HasOwnerRoleType("ROLE").
 						HasConfig(expectedTaskConfig).
-						HasBudget(""),
-					//HasTaskRelations(sdk.TaskRelations{}). // TODO:
+						HasBudget("").
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 			// Unset
 			{
 				Config: config.FromModel(t, basicConfigModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.test").
+					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -364,28 +368,28 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasAfterLen(0).
 						HasWhenString("").
 						HasSqlStatementString(statement),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.test").
-						//HasCreatedOnNotEmpty(),
+					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
+						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
-						//HasId(id.FullyQualifiedName()). // TODO: not empty
+						HasIdNotEmpty().
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasOwner("ACCOUNTADMIN"). // TODO: Current role
+						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse("").
 						HasSchedule("").
-						//HasPredecessors(nil). // TODO:
+						HasPredecessors().
 						HasState(sdk.TaskStateSuspended).
 						HasDefinition(statement).
 						HasCondition("").
 						HasAllowOverlappingExecution(false).
-						HasErrorIntegration(sdk.NewAccountObjectIdentifier("")). // TODO: *sdk.AOI
+						HasErrorIntegration("").
 						HasLastCommittedOnNotEmpty().
 						HasLastSuspendedOnNotEmpty().
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
-						HasBudget(""),
-					//HasTaskRelations(sdk.TaskRelations{}). // TODO:
+						HasBudget("").
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 		},
@@ -395,552 +399,311 @@ func TestAcc_Task_Updates(t *testing.T) {
 func TestAcc_Task_AllParameters(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-}
 
-// TODO: Test other paths (alter finalize, after, itd)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	configModel := model.TaskWithId("test", id, statement)
+	configModelWithAllParametersSet := model.TaskWithId("test", id, statement).
+		WithSuspendTaskAfterNumFailures(15).
+		WithTaskAutoRetryAttempts(15).
+		WithUserTaskManagedInitialWarehouseSizeEnum(sdk.WarehouseSizeXSmall).
+		WithUserTaskMinimumTriggerIntervalInSeconds(30).
+		WithUserTaskTimeoutMs(1000).
+		WithAbortDetachedQuery(true).
+		WithAutocommit(false).
+		WithBinaryInputFormatEnum(sdk.BinaryInputFormatUTF8).
+		WithBinaryOutputFormatEnum(sdk.BinaryOutputFormatBase64).
+		WithClientMemoryLimit(1024).
+		WithClientMetadataRequestUseConnectionCtx(true).
+		WithClientPrefetchThreads(2).
+		WithClientResultChunkSize(48).
+		WithClientResultColumnCaseInsensitive(true).
+		WithClientSessionKeepAlive(true).
+		WithClientSessionKeepAliveHeartbeatFrequency(2400).
+		WithClientTimestampTypeMappingEnum(sdk.ClientTimestampTypeMappingNtz).
+		WithDateInputFormat("YYYY-MM-DD").
+		WithDateOutputFormat("YY-MM-DD").
+		WithEnableUnloadPhysicalTypeOptimization(false).
+		WithErrorOnNondeterministicMerge(false).
+		WithErrorOnNondeterministicUpdate(true).
+		WithGeographyOutputFormatEnum(sdk.GeographyOutputFormatWKB).
+		WithGeometryOutputFormatEnum(sdk.GeometryOutputFormatWKB).
+		WithJdbcUseSessionTimezone(false).
+		WithJsonIndent(4).
+		WithLockTimeout(21222).
+		WithLogLevelEnum(sdk.LogLevelError).
+		WithMultiStatementCount(0).
+		WithNoorderSequenceAsDefault(false).
+		WithOdbcTreatDecimalAsInt(true).
+		WithQueryTag("some_tag").
+		WithQuotedIdentifiersIgnoreCase(true).
+		WithRowsPerResultset(2).
+		WithS3StageVpceDnsName("vpce-id.s3.region.vpce.amazonaws.com").
+		WithSearchPath("$public, $current").
+		WithStatementQueuedTimeoutInSeconds(10).
+		WithStatementTimeoutInSeconds(10).
+		WithStrictJsonOutput(true).
+		WithTimestampDayIsAlways24h(true).
+		WithTimestampInputFormat("YYYY-MM-DD").
+		WithTimestampLtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+		WithTimestampNtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+		WithTimestampOutputFormat("YYYY-MM-DD HH24:MI:SS").
+		WithTimestampTypeMappingEnum(sdk.TimestampTypeMappingLtz).
+		WithTimestampTzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+		WithTimezone("Europe/Warsaw").
+		WithTimeInputFormat("HH24:MI").
+		WithTimeOutputFormat("HH24:MI").
+		WithTraceLevelEnum(sdk.TraceLevelOnEvent).
+		WithTransactionAbortOnError(true).
+		WithTransactionDefaultIsolationLevelEnum(sdk.TransactionDefaultIsolationLevelReadCommitted).
+		WithTwoDigitCenturyStart(1980).
+		WithUnsupportedDdlActionEnum(sdk.UnsupportedDDLActionFail).
+		WithUseCachedResult(false).
+		WithWeekOfYearPolicy(1).
+		WithWeekStart(1)
 
-//type (
-//	AccTaskTestSettings struct {
-//		DatabaseName  string
-//		WarehouseName string
-//		RootTask      *TaskSettings
-//		ChildTask     *TaskSettings
-//		SoloTask      *TaskSettings
-//	}
-//
-//	TaskSettings struct {
-//		Name              string
-//		Enabled           bool
-//		Schema            string
-//		SQL               string
-//		Schedule          string
-//		Comment           string
-//		When              string
-//		SessionParams     map[string]string
-//		UserTaskTimeoutMs int64
-//	}
-//)
-//
-//var (
-//	rootname  = acc.TestClient().Ids.AlphaContaining("_root_task")
-//	rootId    = sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, rootname)
-//	childname = acc.TestClient().Ids.AlphaContaining("_child_task")
-//	childId   = sdk.NewSchemaObjectIdentifier(acc.TestDatabaseName, acc.TestSchemaName, childname)
-//	soloname  = acc.TestClient().Ids.AlphaContaining("_standalone_task")
-//
-//	initialState = &AccTaskTestSettings{ //nolint
-//		WarehouseName: acc.TestWarehouseName,
-//		DatabaseName:  acc.TestDatabaseName,
-//		RootTask: &TaskSettings{
-//			Name:              rootname,
-//			Schema:            acc.TestSchemaName,
-//			SQL:               "SHOW FUNCTIONS",
-//			Enabled:           true,
-//			Schedule:          "5 MINUTE",
-//			UserTaskTimeoutMs: 1800000,
-//			SessionParams: map[string]string{
-//				string(sdk.SessionParameterLockTimeout):      "1000",
-//				string(sdk.SessionParameterStrictJSONOutput): "true",
-//			},
-//		},
-//
-//		ChildTask: &TaskSettings{
-//			Name:    childname,
-//			SQL:     "SELECT 1",
-//			Enabled: false,
-//			Comment: "initial state",
-//		},
-//
-//		SoloTask: &TaskSettings{
-//			Name:    soloname,
-//			Schema:  acc.TestSchemaName,
-//			SQL:     "SELECT 1",
-//			When:    "TRUE",
-//			Enabled: false,
-//		},
-//	}
-//
-//	// Enables the Child and changes the SQL.
-//	stepOne = &AccTaskTestSettings{ //nolint
-//		WarehouseName: acc.TestWarehouseName,
-//		DatabaseName:  acc.TestDatabaseName,
-//		RootTask: &TaskSettings{
-//			Name:              rootname,
-//			Schema:            acc.TestSchemaName,
-//			SQL:               "SHOW FUNCTIONS",
-//			Enabled:           true,
-//			Schedule:          "5 MINUTE",
-//			UserTaskTimeoutMs: 1800000,
-//			SessionParams: map[string]string{
-//				string(sdk.SessionParameterLockTimeout):      "1000",
-//				string(sdk.SessionParameterStrictJSONOutput): "true",
-//			},
-//		},
-//
-//		ChildTask: &TaskSettings{
-//			Name:    childname,
-//			SQL:     "SELECT *",
-//			Enabled: true,
-//			Comment: "secondary state",
-//		},
-//
-//		SoloTask: &TaskSettings{
-//			Name:    soloname,
-//			Schema:  acc.TestSchemaName,
-//			SQL:     "SELECT *",
-//			When:    "TRUE",
-//			Enabled: true,
-//			SessionParams: map[string]string{
-//				string(sdk.SessionParameterTimestampInputFormat): "YYYY-MM-DD HH24",
-//			},
-//			Schedule:          "5 MINUTE",
-//			UserTaskTimeoutMs: 1800000,
-//		},
-//	}
-//
-//	// Changes Root Schedule and SQL.
-//	stepTwo = &AccTaskTestSettings{ //nolint
-//		WarehouseName: acc.TestWarehouseName,
-//		DatabaseName:  acc.TestDatabaseName,
-//		RootTask: &TaskSettings{
-//			Name:              rootname,
-//			Schema:            acc.TestSchemaName,
-//			SQL:               "SHOW TABLES",
-//			Enabled:           true,
-//			Schedule:          "15 MINUTE",
-//			UserTaskTimeoutMs: 1800000,
-//			SessionParams: map[string]string{
-//				string(sdk.SessionParameterLockTimeout):      "1000",
-//				string(sdk.SessionParameterStrictJSONOutput): "true",
-//			},
-//		},
-//
-//		ChildTask: &TaskSettings{
-//			Name:    childname,
-//			SQL:     "SELECT 1",
-//			Enabled: true,
-//			Comment: "third state",
-//		},
-//
-//		SoloTask: &TaskSettings{
-//			Name:              soloname,
-//			Schema:            acc.TestSchemaName,
-//			SQL:               "SELECT *",
-//			When:              "FALSE",
-//			Enabled:           true,
-//			Schedule:          "15 MINUTE",
-//			UserTaskTimeoutMs: 900000,
-//		},
-//	}
-//
-//	stepThree = &AccTaskTestSettings{ //nolint
-//		WarehouseName: acc.TestWarehouseName,
-//		DatabaseName:  acc.TestDatabaseName,
-//
-//		RootTask: &TaskSettings{
-//			Name:              rootname,
-//			Schema:            acc.TestSchemaName,
-//			SQL:               "SHOW FUNCTIONS",
-//			Enabled:           false,
-//			Schedule:          "5 MINUTE",
-//			UserTaskTimeoutMs: 1800000,
-//			// Changes session params: one is updated, one is removed, one is added
-//			SessionParams: map[string]string{
-//				string(sdk.SessionParameterLockTimeout):         "2000",
-//				string(sdk.SessionParameterMultiStatementCount): "5",
-//			},
-//		},
-//
-//		ChildTask: &TaskSettings{
-//			Name:    childname,
-//			SQL:     "SELECT 1",
-//			Enabled: false,
-//			Comment: "reset",
-//		},
-//
-//		SoloTask: &TaskSettings{
-//			Name:    soloname,
-//			Schema:  acc.TestSchemaName,
-//			SQL:     "SELECT 1",
-//			When:    "TRUE",
-//			Enabled: true,
-//			SessionParams: map[string]string{
-//				string(sdk.SessionParameterTimestampInputFormat): "YYYY-MM-DD HH24",
-//			},
-//			Schedule:          "5 MINUTE",
-//			UserTaskTimeoutMs: 0,
-//		},
-//	}
-//)
-
-//func TestAcc_Task(t *testing.T) {
-//	resource.Test(t, resource.TestCase{
-//		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-//		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-//			tfversion.RequireAbove(tfversion.Version1_5_0),
-//		},
-//		PreCheck:     func() { acc.TestAccPreCheck(t) },
-//		CheckDestroy: acc.CheckDestroy(t, resources.Task),
-//		Steps: []resource.TestStep{
-//			{
-//				Config: taskConfig(initialState),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "false"),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "schema", acc.TestSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql_statement", initialState.RootTask.SQL),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", initialState.ChildTask.SQL),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "after.0", rootname),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", initialState.ChildTask.Comment),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", initialState.RootTask.Schedule),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", initialState.ChildTask.Schedule),
-//					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", initialState.RootTask.UserTaskTimeoutMs),
-//					resource.TestCheckNoResourceAttr("snowflake_task.solo_task", "user_task_timeout_ms"),
-//					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", "true"),
-//					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
-//				),
-//			},
-//			{
-//				Config: taskConfig(stepOne),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "schema", acc.TestSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql_statement", stepOne.RootTask.SQL),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", stepOne.ChildTask.SQL),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", stepOne.ChildTask.Comment),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", stepOne.RootTask.Schedule),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", stepOne.ChildTask.Schedule),
-//					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepOne.RootTask.UserTaskTimeoutMs),
-//					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepOne.SoloTask.UserTaskTimeoutMs),
-//					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", "true"),
-//					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
-//				),
-//			},
-//			{
-//				Config: taskConfig(stepTwo),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "schema", acc.TestSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql_statement", stepTwo.RootTask.SQL),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", stepTwo.ChildTask.SQL),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", stepTwo.ChildTask.Comment),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", stepTwo.RootTask.Schedule),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", stepTwo.ChildTask.Schedule),
-//					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepTwo.RootTask.UserTaskTimeoutMs),
-//					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepTwo.SoloTask.UserTaskTimeoutMs),
-//					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", "true"),
-//					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
-//				),
-//			},
-//			{
-//				Config: taskConfig(stepThree),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "false"),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "false"),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "schema", acc.TestSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql_statement", stepThree.RootTask.SQL),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", stepThree.ChildTask.SQL),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", stepThree.ChildTask.Comment),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", stepThree.RootTask.Schedule),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", stepThree.ChildTask.Schedule),
-//					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepThree.RootTask.UserTaskTimeoutMs),
-//					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", stepThree.SoloTask.UserTaskTimeoutMs),
-//					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 2000),
-//					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT"),
-//					checkInt64("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT", 5),
-//				),
-//			},
-//			{
-//				Config: taskConfig(initialState),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "false"),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "name", rootname),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "fully_qualified_name", rootId.FullyQualifiedName()),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "name", childname),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "fully_qualified_name", childId.FullyQualifiedName()),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "database", acc.TestDatabaseName),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "schema", acc.TestSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "schema", acc.TestSchemaName),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "sql_statement", initialState.RootTask.SQL),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "sql_statement", initialState.ChildTask.SQL),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "comment", initialState.ChildTask.Comment),
-//					checkInt64("snowflake_task.root_task", "user_task_timeout_ms", stepOne.RootTask.UserTaskTimeoutMs),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "schedule", initialState.RootTask.Schedule),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "schedule", initialState.ChildTask.Schedule),
-//					// Terraform SDK is not able to differentiate if the
-//					// attribute has deleted or set to zero value.
-//					// ResourceData.GetChange returns the zero value of defined
-//					// type in schema as new the value. Provider handles 0 for
-//					// `user_task_timeout_ms` by unsetting the
-//					// USER_TASK_TIMEOUT_MS session variable.
-//					checkInt64("snowflake_task.solo_task", "user_task_timeout_ms", initialState.ChildTask.UserTaskTimeoutMs),
-//					checkInt64("snowflake_task.root_task", "session_parameters.LOCK_TIMEOUT", 1000),
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "session_parameters.STRICT_JSON_OUTPUT", "true"),
-//					resource.TestCheckNoResourceAttr("snowflake_task.root_task", "session_parameters.MULTI_STATEMENT_COUNT"),
-//				),
-//			},
-//		},
-//	})
-//}
-
-//func taskConfig(settings *AccTaskTestSettings) string { //nolint
-//	config, err := template.New("task_acceptance_test_config").Parse(`
-//resource "snowflake_warehouse" "wh" {
-//	name = "{{ .WarehouseName }}-{{ .RootTask.Name }}"
-//}
-//resource "snowflake_task" "root_task" {
-//	name     	  = "{{ .RootTask.Name }}"
-//	database  	  = "{{ .DatabaseName }}"
-//	schema   	  = "{{ .RootTask.Schema }}"
-//	warehouse 	  = "${snowflake_warehouse.wh.name}"
-//	sql_statement = "{{ .RootTask.SQL }}"
-//	enabled  	  = {{ .RootTask.Enabled }}
-//	schedule 	  = "{{ .RootTask.Schedule }}"
-//	{{ if .RootTask.UserTaskTimeoutMs }}
-//	user_task_timeout_ms = {{ .RootTask.UserTaskTimeoutMs }}
-//	{{- end }}
-//
-//	{{ if .RootTask.SessionParams }}
-//	session_parameters = {
-//	{{ range $key, $value := .RootTask.SessionParams}}
-//        {{ $key }} = "{{ $value }}",
-//	{{- end }}
-//	}
-//	{{- end }}
-//}
-//resource "snowflake_task" "child_task" {
-//	name     	  = "{{ .ChildTask.Name }}"
-//	database   	  = snowflake_task.root_task.database
-//	schema    	  = snowflake_task.root_task.schema
-//	warehouse 	  = snowflake_task.root_task.warehouse
-//	sql_statement = "{{ .ChildTask.SQL }}"
-//	enabled  	  = {{ .ChildTask.Enabled }}
-//	after    	  = [snowflake_task.root_task.name]
-//	comment 	  = "{{ .ChildTask.Comment }}"
-//	{{ if .ChildTask.UserTaskTimeoutMs }}
-//	user_task_timeout_ms = {{ .ChildTask.UserTaskTimeoutMs }}
-//	{{- end }}
-//
-//	{{ if .ChildTask.SessionParams }}
-//	session_parameters = {
-//	{{ range $key, $value := .ChildTask.SessionParams}}
-//        {{ $key }} = "{{ $value }}",
-//	{{- end }}
-//	}
-//	{{- end }}
-//}
-//resource "snowflake_task" "solo_task" {
-//	name     	  = "{{ .SoloTask.Name }}"
-//	database  	  = "{{ .DatabaseName }}"
-//	schema    	  = "{{ .SoloTask.Schema }}"
-//	warehouse 	  = "{{ .WarehouseName }}"
-//	sql_statement = "{{ .SoloTask.SQL }}"
-//	enabled  	  = {{ .SoloTask.Enabled }}
-//	when     	  = "{{ .SoloTask.When }}"
-//	{{ if .SoloTask.Schedule }}
-//	schedule    = "{{ .SoloTask.Schedule }}"
-//	{{- end }}
-//
-//	{{ if .SoloTask.UserTaskTimeoutMs }}
-//	user_task_timeout_ms = {{ .SoloTask.UserTaskTimeoutMs }}
-//	{{- end }}
-//
-//	{{ if .SoloTask.SessionParams }}
-//	session_parameters = {
-//	{{ range $key, $value :=  .SoloTask.SessionParams}}
-//        {{ $key }} = "{{ $value }}",
-//	{{- end }}
-//	}
-//	{{- end }}
-//}
-//	`)
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//
-//	var result bytes.Buffer
-//	config.Execute(&result, settings) //nolint
-//
-//	return result.String()
-//}
-
-/*
-todo: this test is failing due to error message below. Need to figure out why this is happening
-=== RUN   TestAcc_Task_Managed
-
-	task_acceptance_test.go:371: Step 2/4 error: Error running apply: exit status 1
-
-	    Error: error updating warehouse on task "terraform_test_database"."terraform_test_schema"."tst-terraform-DBMPMESYJB" err = 091083 (42601): Nonexistent warehouse terraform_test_warehouse-tst-terraform-DBMPMESYJB was specified.
-
-	      with snowflake_task.managed_task,
-	      on terraform_plugin_test.tf line 7, in resource "snowflake_task" "managed_task":
-	       7: resource "snowflake_task" "managed_task" {
-
-
-	func TestAcc_Task_Managed(t *testing.T) {
-		accName := acc.TestClient().Ids.Alpha()
-		resource.Test(t, resource.TestCase{
-					ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-			PreCheck:     func() { acc.TestAccPreCheck(t) },
-			CheckDestroy: acc.CheckDestroy(t, resources.Task),
-			Steps: []resource.TestStep{
-				{
-					Config: taskConfigManaged1(accName, acc.TestDatabaseName, acc.TestSchemaName),
-					Check: resource.ComposeTestCheckFunc(
-						checkBool("snowflake_task.managed_task", "enabled", true),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "database", acc.TestDatabaseName),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "schema", acc.TestSchemaName),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", "XSMALL"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task_no_init", "user_task_managed_initial_warehouse_size", ""),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task_no_init", "session_parameters.TIMESTAMP_INPUT_FORMAT", "YYYY-MM-DD HH24"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", ""),
-					),
-				},
-				{
-					Config: taskConfigManaged2(accName, acc.TestDatabaseName, acc.TestSchemaName, acc.TestWarehouseName),
-					Check: resource.ComposeTestCheckFunc(
-						checkBool("snowflake_task.managed_task", "enabled", true),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "database", acc.TestDatabaseName),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "schema", acc.TestSchemaName),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", ""),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", fmt.Sprintf("%s-%s", acc.TestWarehouseName, accName)),
-					),
-				},
-				{
-					Config: taskConfigManaged1(accName, acc.TestDatabaseName, acc.TestSchemaName),
-					Check: resource.ComposeTestCheckFunc(
-						checkBool("snowflake_task.managed_task", "enabled", true),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "database", acc.TestDatabaseName),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "schema", acc.TestSchemaName),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task_no_init", "session_parameters.TIMESTAMP_INPUT_FORMAT", "YYYY-MM-DD HH24"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task_no_init", "user_task_managed_initial_warehouse_size", ""),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", ""),
-					),
-				},
-				{
-					Config: taskConfigManaged3(accName, acc.TestDatabaseName, acc.TestSchemaName),
-					Check: resource.ComposeTestCheckFunc(
-						checkBool("snowflake_task.managed_task", "enabled", true),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "database", acc.TestDatabaseName),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "schema", acc.TestSchemaName),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "sql_statement", "SELECT 1"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "schedule", "5 MINUTE"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "user_task_managed_initial_warehouse_size", "SMALL"),
-						resource.TestCheckResourceAttr("snowflake_task.managed_task", "warehouse", ""),
-					),
-				},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			// create with default values for all the parameters
+			{
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					objectparametersassert.TaskParameters(t, id).
+						HasAllDefaults().
+						HasAllDefaultsExplicit(),
+					resourceparametersassert.TaskResourceParameters(t, configModel.ResourceReference()).
+						HasAllDefaults(),
+				),
 			},
-		})
-	}
-*/
-func taskConfigManaged1(name string, databaseName string, schemaName string) string {
-	s := `
-resource "snowflake_task" "managed_task" {
-	name     	                             = "%s"
-	database  	                             = "%s"
-	schema    	                             = "%s"
-	sql_statement                            = "SELECT 1"
-	enabled  	                             = true
-	schedule                                 = "5 MINUTE"
-    user_task_managed_initial_warehouse_size = "XSMALL"
-}
-resource "snowflake_task" "managed_task_no_init" {
-	name     	  = "%s_no_init"
-	database  	  = "%s"
-	schema    	  = "%s"
-	sql_statement = "SELECT 1"
-	enabled  	  = true
-	schedule      = "5 MINUTE"
-	session_parameters = {
-		TIMESTAMP_INPUT_FORMAT = "YYYY-MM-DD HH24",
-	}
+			// import when no parameter set
+			{
+				ResourceName: configModel.ResourceReference(),
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceparametersassert.ImportedTaskResourceParameters(t, helpers.EncodeResourceIdentifier(id)).
+						HasAllDefaults(),
+				),
+			},
+			// set all parameters
+			{
+				Config: config.FromModel(t, configModelWithAllParametersSet),
+				Check: assert.AssertThat(t,
+					objectparametersassert.TaskParameters(t, id).
+						HasSuspendTaskAfterNumFailures(15).
+						HasTaskAutoRetryAttempts(15).
+						HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeXSmall).
+						HasUserTaskMinimumTriggerIntervalInSeconds(30).
+						HasUserTaskTimeoutMs(1000).
+						HasAbortDetachedQuery(true).
+						HasAutocommit(false).
+						HasBinaryInputFormat(sdk.BinaryInputFormatUTF8).
+						HasBinaryOutputFormat(sdk.BinaryOutputFormatBase64).
+						HasClientMemoryLimit(1024).
+						HasClientMetadataRequestUseConnectionCtx(true).
+						HasClientPrefetchThreads(2).
+						HasClientResultChunkSize(48).
+						HasClientResultColumnCaseInsensitive(true).
+						HasClientSessionKeepAlive(true).
+						HasClientSessionKeepAliveHeartbeatFrequency(2400).
+						HasClientTimestampTypeMapping(sdk.ClientTimestampTypeMappingNtz).
+						HasDateInputFormat("YYYY-MM-DD").
+						HasDateOutputFormat("YY-MM-DD").
+						HasEnableUnloadPhysicalTypeOptimization(false).
+						HasErrorOnNondeterministicMerge(false).
+						HasErrorOnNondeterministicUpdate(true).
+						HasGeographyOutputFormat(sdk.GeographyOutputFormatWKB).
+						HasGeometryOutputFormat(sdk.GeometryOutputFormatWKB).
+						HasJdbcUseSessionTimezone(false).
+						HasJsonIndent(4).
+						HasLockTimeout(21222).
+						HasLogLevel(sdk.LogLevelError).
+						HasMultiStatementCount(0).
+						HasNoorderSequenceAsDefault(false).
+						HasOdbcTreatDecimalAsInt(true).
+						HasQueryTag("some_tag").
+						HasQuotedIdentifiersIgnoreCase(true).
+						HasRowsPerResultset(2).
+						HasS3StageVpceDnsName("vpce-id.s3.region.vpce.amazonaws.com").
+						HasSearchPath("$public, $current").
+						HasStatementQueuedTimeoutInSeconds(10).
+						HasStatementTimeoutInSeconds(10).
+						HasStrictJsonOutput(true).
+						HasTimestampDayIsAlways24h(true).
+						HasTimestampInputFormat("YYYY-MM-DD").
+						HasTimestampLtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimestampNtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimestampOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimestampTypeMapping(sdk.TimestampTypeMappingLtz).
+						HasTimestampTzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimezone("Europe/Warsaw").
+						HasTimeInputFormat("HH24:MI").
+						HasTimeOutputFormat("HH24:MI").
+						HasTraceLevel(sdk.TraceLevelOnEvent).
+						HasTransactionAbortOnError(true).
+						HasTransactionDefaultIsolationLevel(sdk.TransactionDefaultIsolationLevelReadCommitted).
+						HasTwoDigitCenturyStart(1980).
+						HasUnsupportedDdlAction(sdk.UnsupportedDDLActionFail).
+						HasUseCachedResult(false).
+						HasWeekOfYearPolicy(1).
+						HasWeekStart(1),
+					resourceparametersassert.TaskResourceParameters(t, configModelWithAllParametersSet.ResourceReference()).
+						HasSuspendTaskAfterNumFailures(15).
+						HasTaskAutoRetryAttempts(15).
+						HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeXSmall).
+						HasUserTaskMinimumTriggerIntervalInSeconds(30).
+						HasUserTaskTimeoutMs(1000).
+						HasAbortDetachedQuery(true).
+						HasAutocommit(false).
+						HasBinaryInputFormat(sdk.BinaryInputFormatUTF8).
+						HasBinaryOutputFormat(sdk.BinaryOutputFormatBase64).
+						HasClientMemoryLimit(1024).
+						HasClientMetadataRequestUseConnectionCtx(true).
+						HasClientPrefetchThreads(2).
+						HasClientResultChunkSize(48).
+						HasClientResultColumnCaseInsensitive(true).
+						HasClientSessionKeepAlive(true).
+						HasClientSessionKeepAliveHeartbeatFrequency(2400).
+						HasClientTimestampTypeMapping(sdk.ClientTimestampTypeMappingNtz).
+						HasDateInputFormat("YYYY-MM-DD").
+						HasDateOutputFormat("YY-MM-DD").
+						HasEnableUnloadPhysicalTypeOptimization(false).
+						HasErrorOnNondeterministicMerge(false).
+						HasErrorOnNondeterministicUpdate(true).
+						HasGeographyOutputFormat(sdk.GeographyOutputFormatWKB).
+						HasGeometryOutputFormat(sdk.GeometryOutputFormatWKB).
+						HasJdbcUseSessionTimezone(false).
+						HasJsonIndent(4).
+						HasLockTimeout(21222).
+						HasLogLevel(sdk.LogLevelError).
+						HasMultiStatementCount(0).
+						HasNoorderSequenceAsDefault(false).
+						HasOdbcTreatDecimalAsInt(true).
+						HasQueryTag("some_tag").
+						HasQuotedIdentifiersIgnoreCase(true).
+						HasRowsPerResultset(2).
+						HasS3StageVpceDnsName("vpce-id.s3.region.vpce.amazonaws.com").
+						HasSearchPath("$public, $current").
+						HasStatementQueuedTimeoutInSeconds(10).
+						HasStatementTimeoutInSeconds(10).
+						HasStrictJsonOutput(true).
+						HasTimestampDayIsAlways24h(true).
+						HasTimestampInputFormat("YYYY-MM-DD").
+						HasTimestampLtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimestampNtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimestampOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimestampTypeMapping(sdk.TimestampTypeMappingLtz).
+						HasTimestampTzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimezone("Europe/Warsaw").
+						HasTimeInputFormat("HH24:MI").
+						HasTimeOutputFormat("HH24:MI").
+						HasTraceLevel(sdk.TraceLevelOnEvent).
+						HasTransactionAbortOnError(true).
+						HasTransactionDefaultIsolationLevel(sdk.TransactionDefaultIsolationLevelReadCommitted).
+						HasTwoDigitCenturyStart(1980).
+						HasUnsupportedDdlAction(sdk.UnsupportedDDLActionFail).
+						HasUseCachedResult(false).
+						HasWeekOfYearPolicy(1).
+						HasWeekStart(1),
+				),
+			},
+			// import when all parameters set
+			{
+				ResourceName: configModelWithAllParametersSet.ResourceReference(),
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceparametersassert.ImportedTaskResourceParameters(t, helpers.EncodeResourceIdentifier(id)).
+						HasSuspendTaskAfterNumFailures(15).
+						HasTaskAutoRetryAttempts(15).
+						HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeXSmall).
+						HasUserTaskMinimumTriggerIntervalInSeconds(30).
+						HasUserTaskTimeoutMs(1000).
+						HasAbortDetachedQuery(true).
+						HasAutocommit(false).
+						HasBinaryInputFormat(sdk.BinaryInputFormatUTF8).
+						HasBinaryOutputFormat(sdk.BinaryOutputFormatBase64).
+						HasClientMemoryLimit(1024).
+						HasClientMetadataRequestUseConnectionCtx(true).
+						HasClientPrefetchThreads(2).
+						HasClientResultChunkSize(48).
+						HasClientResultColumnCaseInsensitive(true).
+						HasClientSessionKeepAlive(true).
+						HasClientSessionKeepAliveHeartbeatFrequency(2400).
+						HasClientTimestampTypeMapping(sdk.ClientTimestampTypeMappingNtz).
+						HasDateInputFormat("YYYY-MM-DD").
+						HasDateOutputFormat("YY-MM-DD").
+						HasEnableUnloadPhysicalTypeOptimization(false).
+						HasErrorOnNondeterministicMerge(false).
+						HasErrorOnNondeterministicUpdate(true).
+						HasGeographyOutputFormat(sdk.GeographyOutputFormatWKB).
+						HasGeometryOutputFormat(sdk.GeometryOutputFormatWKB).
+						HasJdbcUseSessionTimezone(false).
+						HasJsonIndent(4).
+						HasLockTimeout(21222).
+						HasLogLevel(sdk.LogLevelError).
+						HasMultiStatementCount(0).
+						HasNoorderSequenceAsDefault(false).
+						HasOdbcTreatDecimalAsInt(true).
+						HasQueryTag("some_tag").
+						HasQuotedIdentifiersIgnoreCase(true).
+						HasRowsPerResultset(2).
+						HasS3StageVpceDnsName("vpce-id.s3.region.vpce.amazonaws.com").
+						HasSearchPath("$public, $current").
+						HasStatementQueuedTimeoutInSeconds(10).
+						HasStatementTimeoutInSeconds(10).
+						HasStrictJsonOutput(true).
+						HasTimestampDayIsAlways24h(true).
+						HasTimestampInputFormat("YYYY-MM-DD").
+						HasTimestampLtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimestampNtzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimestampOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimestampTypeMapping(sdk.TimestampTypeMappingLtz).
+						HasTimestampTzOutputFormat("YYYY-MM-DD HH24:MI:SS").
+						HasTimezone("Europe/Warsaw").
+						HasTimeInputFormat("HH24:MI").
+						HasTimeOutputFormat("HH24:MI").
+						HasTraceLevel(sdk.TraceLevelOnEvent).
+						HasTransactionAbortOnError(true).
+						HasTransactionDefaultIsolationLevel(sdk.TransactionDefaultIsolationLevelReadCommitted).
+						HasTwoDigitCenturyStart(1980).
+						HasUnsupportedDdlAction(sdk.UnsupportedDDLActionFail).
+						HasUseCachedResult(false).
+						HasWeekOfYearPolicy(1).
+						HasWeekStart(1),
+				),
+			},
+			// unset all the parameters
+			{
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					objectparametersassert.TaskParameters(t, id).
+						HasAllDefaults().
+						HasAllDefaultsExplicit(),
+					resourceparametersassert.TaskResourceParameters(t, configModel.ResourceReference()).
+						HasAllDefaults(),
+				),
+			},
+		},
+	})
 }
 
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
-}
+func TestAcc_Task_Enabled(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
-func taskConfigManaged2(name, databaseName, schemaName, warehouseName string) string {
-	s := `
-resource "snowflake_warehouse" "wh" {
-	name = "%s-%s"
-}
-
-resource "snowflake_task" "managed_task" {
-	name     	  = "%s"
-	database  	  = "%s"
-	schema    	  = "%s"
-	sql_statement = "SELECT 1"
-	enabled  	  = true
-	schedule      = "5 MINUTE"
-	warehouse     = snowflake_warehouse.wh.name
-}
-`
-	return fmt.Sprintf(s, warehouseName, name, name, databaseName, schemaName)
-}
-
-func taskConfigManaged3(name, databaseName, schemaName string) string {
-	s := `
-resource "snowflake_task" "managed_task" {
-	name     	                             = "%s"
-	database  	                             = "%s"
-	schema    	                             = "%s"
-	sql_statement                            = "SELECT 1"
-	enabled  	                             = true
-	schedule                                 = "5 MINUTE"
-    user_task_managed_initial_warehouse_size = "SMALL"
-}
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName)
-}
-
-func TestAcc_Task_SwitchScheduled(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
-	taskRootName := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	configModelEnabled := model.TaskWithId("test", id, statement).
+		WithSchedule("5 MINUTES").
+		WithEnabled(r.BooleanTrue)
+	configModelDisabled := model.TaskWithId("test", id, statement).
+		WithSchedule("5 MINUTES").
+		WithEnabled(r.BooleanFalse)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -951,228 +714,594 @@ func TestAcc_Task_SwitchScheduled(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: taskConfigManagedScheduled(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "1"),
+				Config: config.FromModel(t, configModelDisabled),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelDisabled.ResourceReference()).
+						HasEnabledString(r.BooleanFalse),
+					resourceshowoutputassert.TaskShowOutput(t, configModelDisabled.ResourceReference()).
+						HasState(sdk.TaskStateSuspended),
 				),
 			},
 			{
-				Config: taskConfigManagedScheduled2(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", ""),
-					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "2"),
+				Config: config.FromModel(t, configModelEnabled),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelEnabled.ResourceReference()).
+						HasEnabledString(r.BooleanTrue),
+					resourceshowoutputassert.TaskShowOutput(t, configModelEnabled.ResourceReference()).
+						HasState(sdk.TaskStateStarted),
 				),
 			},
 			{
-				Config: taskConfigManagedScheduled(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", "5 MINUTE"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "1"),
-				),
-			},
-			{
-				Config: taskConfigManagedScheduled3(accName, taskRootName, acc.TestDatabaseName, acc.TestSchemaName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "false"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "sql_statement", "SELECT 1"),
-					resource.TestCheckResourceAttr("snowflake_task.test_task", "schedule", ""),
-					resource.TestCheckResourceAttr("snowflake_task.test_task_root", "suspend_task_after_num_failures", "0"),
+				Config: config.FromModel(t, configModelDisabled),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelDisabled.ResourceReference()).
+						HasEnabledString(r.BooleanFalse),
+					resourceshowoutputassert.TaskShowOutput(t, configModelDisabled.ResourceReference()).
+						HasState(sdk.TaskStateSuspended),
 				),
 			},
 		},
 	})
 }
 
-func taskConfigManagedScheduled(name string, taskRootName string, databaseName string, schemaName string) string {
-	return fmt.Sprintf(`
-resource "snowflake_task" "test_task_root" {
-	name     	                    = "%[1]s"
-	database  	                    = "%[2]s"
-	schema    	                    = "%[3]s"
-	sql_statement                   = "SELECT 1"
-	enabled  	                    = true
-	schedule                        = "5 MINUTE"
-    suspend_task_after_num_failures = 1
+// TODO: This test may also be not deterministic and sometimes it fail when resuming a task while other task is modifying DAG (removing after)
+func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	id2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	schedule := "5 MINUTES"
+
+	firstTaskStandaloneModel := model.TaskWithId("main_task", id, statement).
+		WithSchedule(schedule).
+		WithEnabled(r.BooleanTrue).
+		WithSuspendTaskAfterNumFailures(1)
+	secondTaskStandaloneModel := model.TaskWithId("second_task", id2, statement).
+		WithSchedule(schedule).
+		WithEnabled(r.BooleanTrue)
+
+	rootTaskModel := model.TaskWithId("main_task", id, statement).
+		WithSchedule(schedule).
+		WithEnabled(r.BooleanTrue).
+		WithSuspendTaskAfterNumFailures(2)
+	childTaskModel := model.TaskWithId("second_task", id2, statement).
+		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(id.FullyQualifiedName()))).
+		WithEnabled(r.BooleanTrue)
+	childTaskModel.SetDependsOn([]string{rootTaskModel.ResourceReference()})
+
+	firstTaskStandaloneModelDisabled := model.TaskWithId("main_task", id, statement).
+		WithSchedule(schedule).
+		WithEnabled(r.BooleanFalse)
+	secondTaskStandaloneModelDisabled := model.TaskWithId("second_task", id2, statement).
+		WithSchedule(schedule).
+		WithEnabled(r.BooleanFalse)
+	secondTaskStandaloneModelDisabled.SetDependsOn([]string{firstTaskStandaloneModelDisabled.ResourceReference()})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, firstTaskStandaloneModel) + config.FromModel(t, secondTaskStandaloneModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, firstTaskStandaloneModel.ResourceReference()).
+						HasScheduleString(schedule).
+						HasEnabledString(r.BooleanTrue).
+						HasSuspendTaskAfterNumFailuresString("1"),
+					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModel.ResourceReference()).
+						HasSchedule(schedule).
+						HasState(sdk.TaskStateStarted),
+					resourceassert.TaskResource(t, secondTaskStandaloneModel.ResourceReference()).
+						HasScheduleString(schedule).
+						HasEnabledString(r.BooleanTrue),
+					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModel.ResourceReference()).
+						HasSchedule(schedule).
+						HasState(sdk.TaskStateStarted),
+				),
+			},
+			// Change the second task to run after the first one (creating a DAG)
+			{
+				Config: config.FromModel(t, rootTaskModel) + config.FromModel(t, childTaskModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, rootTaskModel.ResourceReference()).
+						HasScheduleString(schedule).
+						HasEnabledString(r.BooleanTrue).
+						HasSuspendTaskAfterNumFailuresString("2"),
+					resourceshowoutputassert.TaskShowOutput(t, rootTaskModel.ResourceReference()).
+						HasSchedule(schedule).
+						HasState(sdk.TaskStateStarted),
+					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
+						HasAfterLen(1).
+						HasEnabledString(r.BooleanTrue),
+					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
+						HasPredecessors(id).
+						HasState(sdk.TaskStateStarted),
+				),
+			},
+			// Change tasks in DAG to standalone tasks (disabled to check if resuming/suspending works correctly)
+			{
+				Config: config.FromModel(t, firstTaskStandaloneModelDisabled) + config.FromModel(t, secondTaskStandaloneModelDisabled),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, firstTaskStandaloneModelDisabled.ResourceReference()).
+						HasScheduleString(schedule).
+						HasEnabledString(r.BooleanFalse).
+						HasSuspendTaskAfterNumFailuresString("10"),
+					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModelDisabled.ResourceReference()).
+						HasSchedule(schedule).
+						HasState(sdk.TaskStateSuspended),
+					resourceassert.TaskResource(t, secondTaskStandaloneModelDisabled.ResourceReference()).
+						HasScheduleString(schedule).
+						HasEnabledString(r.BooleanFalse),
+					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModelDisabled.ResourceReference()).
+						HasSchedule(schedule).
+						HasState(sdk.TaskStateSuspended),
+				),
+			},
+		},
+	})
 }
 
-resource "snowflake_task" "test_task" {
-	depends_on = [snowflake_task.test_task_root]
-	name     	  = "%[4]s"
-	database  	  = "%[2]s"
-	schema    	  = "%[3]s"
-	sql_statement = "SELECT 1"
-	enabled  	  = true
-	schedule      = "5 MINUTE"
-}
-`, taskRootName, databaseName, schemaName, name)
+func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	rootTaskId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	finalizerTaskId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	schedule := "5 MINUTES"
+
+	firstTaskStandaloneModel := model.TaskWithId("main_task", rootTaskId, statement).
+		WithSchedule(schedule).
+		WithEnabled(r.BooleanTrue).
+		WithSuspendTaskAfterNumFailures(1)
+	secondTaskStandaloneModel := model.TaskWithId("second_task", finalizerTaskId, statement).
+		WithSchedule(schedule).
+		WithEnabled(r.BooleanTrue)
+
+	rootTaskModel := model.TaskWithId("main_task", rootTaskId, statement).
+		WithSchedule(schedule).
+		WithEnabled(r.BooleanTrue).
+		WithSuspendTaskAfterNumFailures(2)
+	childTaskModel := model.TaskWithId("second_task", finalizerTaskId, statement).
+		WithFinalize(rootTaskId.FullyQualifiedName()).
+		WithEnabled(r.BooleanTrue)
+	childTaskModel.SetDependsOn([]string{rootTaskModel.ResourceReference()})
+
+	firstTaskStandaloneModelDisabled := model.TaskWithId("main_task", rootTaskId, statement).
+		WithSchedule(schedule).
+		WithEnabled(r.BooleanFalse)
+	secondTaskStandaloneModelDisabled := model.TaskWithId("second_task", finalizerTaskId, statement).
+		WithSchedule(schedule).
+		WithEnabled(r.BooleanFalse)
+	secondTaskStandaloneModelDisabled.SetDependsOn([]string{firstTaskStandaloneModelDisabled.ResourceReference()})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, firstTaskStandaloneModel) + config.FromModel(t, secondTaskStandaloneModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, firstTaskStandaloneModel.ResourceReference()).
+						HasScheduleString(schedule).
+						HasEnabledString(r.BooleanTrue).
+						HasSuspendTaskAfterNumFailuresString("1"),
+					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModel.ResourceReference()).
+						HasSchedule(schedule).
+						HasState(sdk.TaskStateStarted),
+					resourceassert.TaskResource(t, secondTaskStandaloneModel.ResourceReference()).
+						HasScheduleString(schedule).
+						HasEnabledString(r.BooleanTrue),
+					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModel.ResourceReference()).
+						HasSchedule(schedule).
+						HasState(sdk.TaskStateStarted),
+				),
+			},
+			// Change the second task to run after the first one (creating a DAG)
+			{
+				Config: config.FromModel(t, rootTaskModel) + config.FromModel(t, childTaskModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, rootTaskModel.ResourceReference()).
+						HasScheduleString(schedule).
+						HasEnabledString(r.BooleanTrue).
+						HasSuspendTaskAfterNumFailuresString("2"),
+					resourceshowoutputassert.TaskShowOutput(t, rootTaskModel.ResourceReference()).
+						HasSchedule(schedule).
+						// HasTaskRelations(sdk.TaskRelations{FinalizerTask: &finalizerTaskId}).
+						HasState(sdk.TaskStateStarted),
+					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
+						HasEnabledString(r.BooleanTrue),
+					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
+						// HasTaskRelations(sdk.TaskRelations{FinalizedRootTask: &rootTaskId}).
+						HasState(sdk.TaskStateStarted),
+				),
+			},
+			// Change tasks in DAG to standalone tasks (disabled to check if resuming/suspending works correctly)
+			{
+				Config: config.FromModel(t, firstTaskStandaloneModelDisabled) + config.FromModel(t, secondTaskStandaloneModelDisabled),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, firstTaskStandaloneModelDisabled.ResourceReference()).
+						HasScheduleString(schedule).
+						HasEnabledString(r.BooleanFalse).
+						HasSuspendTaskAfterNumFailuresString("10"),
+					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModelDisabled.ResourceReference()).
+						HasSchedule(schedule).
+						HasState(sdk.TaskStateSuspended),
+					resourceassert.TaskResource(t, secondTaskStandaloneModelDisabled.ResourceReference()).
+						HasScheduleString(schedule).
+						HasEnabledString(r.BooleanFalse),
+					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModelDisabled.ResourceReference()).
+						HasSchedule(schedule).
+						HasState(sdk.TaskStateSuspended),
+				),
+			},
+		},
+	})
 }
 
-func taskConfigManagedScheduled2(name string, taskRootName string, databaseName string, schemaName string) string {
-	return fmt.Sprintf(`
-resource "snowflake_task" "test_task_root" {
-	name     	                    = "%[1]s"
-	database  	                    = "%[2]s"
-	schema    	                    = "%[3]s"
-	sql_statement                   = "SELECT 1"
-	enabled  	                    = true
-	schedule                        = "5 MINUTE"
-    suspend_task_after_num_failures = 2
+// TODO(SNOW-1348116 - analyse in next pr): This test is not deterministic and sometimes it fails when resuming a task while other task is modifying DAG (removing after)
+func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
+	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	schedule := "5 MINUTES"
+	rootTaskConfigModel := model.TaskWithId("root", rootId, statement).
+		WithEnabled(r.BooleanTrue).
+		WithSchedule(schedule).
+		WithSuspendTaskAfterNumFailures(1)
+	childTaskConfigModel := model.TaskWithId("child", childId, statement).
+		WithEnabled(r.BooleanTrue).
+		WithSchedule(schedule)
+
+	rootTaskConfigModelAfterSuspendFailuresUpdate := model.TaskWithId("root", rootId, statement).
+		WithEnabled(r.BooleanTrue).
+		WithSchedule(schedule).
+		WithSuspendTaskAfterNumFailures(2)
+	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, statement).
+		WithEnabled(r.BooleanTrue).
+		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName())))
+	childTaskConfigModelWithAfter.SetDependsOn([]string{rootTaskConfigModelAfterSuspendFailuresUpdate.ResourceReference()})
+
+	rootTaskConfigModelDisabled := model.TaskWithId("root", rootId, statement).
+		WithEnabled(r.BooleanFalse).
+		WithSchedule(schedule)
+	childTaskConfigModelDisabled := model.TaskWithId("child", childId, statement).
+		WithEnabled(r.BooleanFalse).
+		WithSchedule(schedule)
+	childTaskConfigModelDisabled.SetDependsOn([]string{rootTaskConfigModelDisabled.ResourceReference()})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, "snowflake_task.child").
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule).
+						HasAfterLen(0).
+						HasSuspendTaskAfterNumFailuresString("10"),
+					resourceassert.TaskResource(t, "snowflake_task.root").
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule).
+						HasSuspendTaskAfterNumFailuresString("1"),
+				),
+			},
+			{
+				Config: config.FromModel(t, rootTaskConfigModelAfterSuspendFailuresUpdate) + config.FromModel(t, childTaskConfigModelWithAfter),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, "snowflake_task.child").
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString("").
+						HasAfterLen(1).
+						HasSuspendTaskAfterNumFailuresString("10"),
+					resourceassert.TaskResource(t, "snowflake_task.root").
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule).
+						HasSuspendTaskAfterNumFailuresString("2"),
+				),
+			},
+			{
+				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, "snowflake_task.child").
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule).
+						HasAfterLen(0).
+						HasSuspendTaskAfterNumFailuresString("10"),
+					resourceassert.TaskResource(t, "snowflake_task.root").
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule).
+						HasSuspendTaskAfterNumFailuresString("1"),
+				),
+			},
+			{
+				Config: config.FromModel(t, rootTaskConfigModelDisabled) + config.FromModel(t, childTaskConfigModelDisabled),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, "snowflake_task.child").
+						HasEnabledString(r.BooleanFalse).
+						HasScheduleString(schedule).
+						HasAfterLen(0).
+						HasSuspendTaskAfterNumFailuresString("10"),
+					resourceassert.TaskResource(t, "snowflake_task.root").
+						HasEnabledString(r.BooleanFalse).
+						HasScheduleString(schedule).
+						HasSuspendTaskAfterNumFailuresString("10"),
+				),
+			},
+		},
+	})
 }
 
-resource "snowflake_task" "test_task" {
-	name     	  = "%[4]s"
-	database  	  = "%[2]s"
-	schema    	  = "%[3]s"
-	sql_statement = "SELECT 1"
-	enabled  	  = true
-	after         = [snowflake_task.test_task_root.name]
-}
-`, taskRootName, databaseName, schemaName, name)
+func TestAcc_Task_WithAfter(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	schedule := "5 MINUTES"
+
+	rootTaskConfigModel := model.TaskWithId("root", rootId, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithEnabled(r.BooleanTrue).
+		WithSchedule(schedule).
+		WithSqlStatement(statement)
+
+	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithEnabled(r.BooleanTrue).
+		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
+		WithSqlStatement(statement)
+	childTaskConfigModelWithAfter.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+
+	childTaskConfigModelWithoutAfter := model.TaskWithId("child", childId, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithEnabled(r.BooleanTrue).
+		WithSchedule(schedule).
+		WithSqlStatement(statement)
+	childTaskConfigModelWithoutAfter.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithAfter),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule),
+					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasAfterLen(1),
+				),
+			},
+			{
+				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithoutAfter),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule),
+					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasAfterLen(0),
+				),
+			},
+		},
+	})
 }
 
-func taskConfigManagedScheduled3(name string, taskRootName string, databaseName string, schemaName string) string {
-	s := `
-resource "snowflake_task" "test_task_root" {
-	name     	  = "%s"
-	database  	  = "%s"
-	schema    	  = "%s"
-	sql_statement = "SELECT 1"
-	enabled  	  = false
-	schedule      = "5 MINUTE"
+func TestAcc_Task_WithFinalizer(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	schedule := "5 MINUTES"
+
+	rootTaskConfigModel := model.TaskWithId("root", rootId, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithEnabled(r.BooleanTrue).
+		WithSchedule(schedule).
+		WithSqlStatement(statement)
+
+	childTaskConfigModelWithFinalizer := model.TaskWithId("child", childId, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithEnabled(r.BooleanTrue).
+		WithFinalize(rootId.FullyQualifiedName()).
+		WithSqlStatement(statement)
+	childTaskConfigModelWithFinalizer.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+
+	childTaskConfigModelWithoutFinalizer := model.TaskWithId("child", childId, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithEnabled(r.BooleanTrue).
+		WithSchedule(schedule).
+		WithSqlStatement(statement)
+	childTaskConfigModelWithoutFinalizer.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithFinalizer),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule),
+					resourceassert.TaskResource(t, childTaskConfigModelWithFinalizer.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasFinalizeString(rootId.FullyQualifiedName()),
+				),
+			},
+			{
+				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithoutFinalizer),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule),
+					resourceassert.TaskResource(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasFinalizeString(""),
+				),
+			},
+		},
+	})
 }
 
-resource "snowflake_task" "test_task" {
-	name     	  = "%s"
-	database  	  = "%s"
-	schema    	  = "%s"
-	sql_statement = "SELECT 1"
-	enabled  	  = false
-	after         = [snowflake_task.test_task_root.name]
-}
-`
-	return fmt.Sprintf(s, taskRootName, databaseName, schemaName, name, databaseName, schemaName)
+func TestAcc_Task_issue2207(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	schedule := "5 MINUTES"
+
+	rootTaskConfigModel := model.TaskWithId("root", rootId, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithEnabled(r.BooleanTrue).
+		WithSchedule(schedule).
+		WithSqlStatement(statement)
+
+	childTaskConfigModel := model.TaskWithId("child", childId, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithEnabled(r.BooleanTrue).
+		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
+		WithComment("abc").
+		WithSqlStatement(statement)
+	childTaskConfigModel.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+
+	childTaskConfigModelWithDifferentComment := model.TaskWithId("child", childId, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithEnabled(r.BooleanTrue).
+		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
+		WithComment("def").
+		WithSqlStatement(statement)
+	childTaskConfigModelWithDifferentComment.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule),
+					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasAfterLen(1).
+						HasCommentString("abc"),
+				),
+			},
+			// change comment
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(childTaskConfigModelWithDifferentComment.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithDifferentComment),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasScheduleString(schedule),
+					resourceassert.TaskResource(t, childTaskConfigModelWithDifferentComment.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasAfterLen(1).
+						HasCommentString("def"),
+				),
+			},
+		},
+	})
 }
 
-func checkInt64(name, key string, value int64) func(*terraform.State) error {
-	return func(state *terraform.State) error {
-		return resource.TestCheckResourceAttr(name, key, fmt.Sprintf("%v", value))(state)
-	}
-}
+func TestAcc_Task_issue2036(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
-//func TestAcc_Task_issue2207(t *testing.T) {
-//	prefix := acc.TestClient().Ids.Alpha()
-//	rootName := prefix + "_root_task"
-//	childName := prefix + "_child_task"
-//
-//	m := func() map[string]config.Variable {
-//		return map[string]config.Variable{
-//			"root_name":  config.StringVariable(rootName),
-//			"database":   config.StringVariable(acc.TestDatabaseName),
-//			"schema":     config.StringVariable(acc.TestSchemaName),
-//			"warehouse":  config.StringVariable(acc.TestWarehouseName),
-//			"child_name": config.StringVariable(childName),
-//			"comment":    config.StringVariable("abc"),
-//		}
-//	}
-//	m2 := m()
-//	m2["comment"] = config.StringVariable("def")
-//
-//	resource.Test(t, resource.TestCase{
-//		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-//		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-//		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-//			tfversion.RequireAbove(tfversion.Version1_5_0),
-//		},
-//		CheckDestroy: acc.CheckDestroy(t, resources.Task),
-//		Steps: []resource.TestStep{
-//			{
-//				ConfigDirectory: config.TestStepDirectory(),
-//				ConfigVariables: m(),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "true"),
-//				),
-//				ConfigPlanChecks: resource.ConfigPlanChecks{
-//					PostApplyPostRefresh: []plancheck.PlanCheck{
-//						plancheck.ExpectEmptyPlan(),
-//					},
-//				},
-//			},
-//			// change comment
-//			{
-//				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
-//				ConfigVariables: m2,
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_task.root_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.child_task", "enabled", "true"),
-//				),
-//			},
-//		},
-//	})
-//}
-//
-//func TestAcc_Task_issue2036(t *testing.T) {
-//	name := acc.TestClient().Ids.Alpha()
-//
-//	m := func() map[string]config.Variable {
-//		return map[string]config.Variable{
-//			"name":      config.StringVariable(name),
-//			"database":  config.StringVariable(acc.TestDatabaseName),
-//			"schema":    config.StringVariable(acc.TestSchemaName),
-//			"warehouse": config.StringVariable(acc.TestWarehouseName),
-//		}
-//	}
-//
-//	resource.Test(t, resource.TestCase{
-//		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-//		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-//		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-//			tfversion.RequireAbove(tfversion.Version1_5_0),
-//		},
-//		CheckDestroy: acc.CheckDestroy(t, resources.Task),
-//		Steps: []resource.TestStep{
-//			// create without when
-//			{
-//				ConfigDirectory: config.TestStepDirectory(),
-//				ConfigVariables: m(),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", ""),
-//				),
-//			},
-//			// add when
-//			{
-//				ConfigDirectory: config.TestStepDirectory(),
-//				ConfigVariables: m(),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", "TRUE"),
-//				),
-//			},
-//			// remove when
-//			{
-//				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
-//				ConfigVariables: m(),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr("snowflake_task.test_task", "enabled", "true"),
-//					resource.TestCheckResourceAttr("snowflake_task.test_task", "when", ""),
-//				),
-//			},
-//		},
-//	})
-//}
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	schedule := "5 MINUTES"
+	when := "TRUE"
+
+	taskConfigModelWithoutWhen := model.TaskWithId("test", id, statement).
+		WithEnabled(r.BooleanTrue).
+		WithSchedule(schedule).
+		WithSqlStatement(statement)
+
+	taskConfigModelWithWhen := model.TaskWithId("test", id, statement).
+		WithEnabled(r.BooleanTrue).
+		WithSchedule(schedule).
+		WithSqlStatement(statement).
+		WithWhen(when)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			// create without when
+			{
+				Config: config.FromModel(t, taskConfigModelWithoutWhen),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, taskConfigModelWithoutWhen.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasWhenString(""),
+				),
+			},
+			// add when
+			{
+				Config: config.FromModel(t, taskConfigModelWithWhen),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, taskConfigModelWithWhen.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasWhenString("TRUE"),
+				),
+			},
+			// remove when
+			{
+				Config: config.FromModel(t, taskConfigModelWithoutWhen),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, taskConfigModelWithoutWhen.ResourceReference()).
+						HasEnabledString(r.BooleanTrue).
+						HasWhenString(""),
+				),
+			},
+		},
+	})
+}

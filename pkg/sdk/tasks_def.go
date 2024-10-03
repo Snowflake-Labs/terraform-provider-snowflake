@@ -27,8 +27,9 @@ func ToTaskState(s string) (TaskState, error) {
 }
 
 type TaskRelationsRepresentation struct {
-	Predecessors  []string `json:"Predecessors"`
-	FinalizerTask string   `json:"FinalizerTask"`
+	Predecessors      []string `json:"Predecessors"`
+	FinalizerTask     string   `json:"FinalizerTask"`
+	FinalizedRootTask string   `json:"FinalizedRootTask"`
 }
 
 func (r *TaskRelationsRepresentation) ToTaskRelations() (TaskRelations, error) {
@@ -53,12 +54,21 @@ func (r *TaskRelationsRepresentation) ToTaskRelations() (TaskRelations, error) {
 		taskRelations.FinalizerTask = &finalizerTask
 	}
 
+	if len(r.FinalizedRootTask) > 0 {
+		finalizedRootTask, err := ParseSchemaObjectIdentifier(r.FinalizedRootTask)
+		if err != nil {
+			return TaskRelations{}, err
+		}
+		taskRelations.FinalizedRootTask = &finalizedRootTask
+	}
+
 	return taskRelations, nil
 }
 
 type TaskRelations struct {
-	Predecessors  []SchemaObjectIdentifier
-	FinalizerTask *SchemaObjectIdentifier
+	Predecessors      []SchemaObjectIdentifier
+	FinalizerTask     *SchemaObjectIdentifier
+	FinalizedRootTask *SchemaObjectIdentifier
 }
 
 func ToTaskRelations(s string) (TaskRelations, error) {

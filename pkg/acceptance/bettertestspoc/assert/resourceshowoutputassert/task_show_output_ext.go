@@ -2,9 +2,10 @@ package resourceshowoutputassert
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"strconv"
 )
 
 func (t *TaskShowOutputAssert) HasCreatedOnNotEmpty() *TaskShowOutputAssert {

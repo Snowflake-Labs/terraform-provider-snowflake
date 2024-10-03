@@ -107,11 +107,17 @@ func (t *TaskAssert) HasComment(expected string) *TaskAssert {
 	return t
 }
 
-func (t *TaskAssert) HasWarehouse(expected string) *TaskAssert {
+func (t *TaskAssert) HasWarehouse(expected *sdk.AccountObjectIdentifier) *TaskAssert {
 	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
 		t.Helper()
-		if o.Warehouse != nil && o.Warehouse.FullyQualifiedName() != expected {
-			return fmt.Errorf("expected warehouse: %v; got: %v", expected, o.Warehouse)
+		if o.Warehouse == nil && expected != nil {
+			return fmt.Errorf("expected warehouse to have value; got: nil")
+		}
+		if o.Warehouse != nil && expected == nil {
+			return fmt.Errorf("expected warehouse to no have value; got: %s", o.Warehouse.Name())
+		}
+		if o.Warehouse != nil && expected != nil && o.Warehouse.Name() != expected.Name() {
+			return fmt.Errorf("expected warehouse: %v; got: %v", expected.Name(), o.Warehouse.Name())
 		}
 		return nil
 	})
@@ -128,6 +134,18 @@ func (t *TaskAssert) HasSchedule(expected string) *TaskAssert {
 	})
 	return t
 }
+
+// TODO:
+//func (t *TaskAssert) HasPredecessors(expected []sdk.SchemaObjectIdentifier) *TaskAssert {
+//	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
+//		t.Helper()
+//		if o.Predecessors != expected {
+//			return fmt.Errorf("expected predecessors: %v; got: %v", expected, o.Predecessors)
+//		}
+//		return nil
+//	})
+//	return t
+//}
 
 func (t *TaskAssert) HasState(expected sdk.TaskState) *TaskAssert {
 	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
@@ -176,8 +194,14 @@ func (t *TaskAssert) HasAllowOverlappingExecution(expected bool) *TaskAssert {
 func (t *TaskAssert) HasErrorIntegration(expected *sdk.AccountObjectIdentifier) *TaskAssert {
 	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
 		t.Helper()
-		if o.ErrorIntegration != expected {
-			return fmt.Errorf("expected error integration: %v; got: %v", expected, o.ErrorIntegration)
+		if o.ErrorIntegration == nil && expected != nil {
+			return fmt.Errorf("expected error integration to have value; got: nil")
+		}
+		if o.ErrorIntegration != nil && expected == nil {
+			return fmt.Errorf("expected error integration to have no value; got: %s", o.ErrorIntegration.Name())
+		}
+		if o.ErrorIntegration != nil && expected != nil && o.ErrorIntegration.Name() != expected.Name() {
+			return fmt.Errorf("expected error integration: %v; got: %v", expected.Name(), o.ErrorIntegration.Name())
 		}
 		return nil
 	})
@@ -238,6 +262,18 @@ func (t *TaskAssert) HasBudget(expected string) *TaskAssert {
 	})
 	return t
 }
+
+// TODO:
+//func (t *TaskAssert) HasTaskRelations(expected sdk.TaskRelations) *TaskAssert {
+//	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
+//		t.Helper()
+//		if o.TaskRelations != expected {
+//			return fmt.Errorf("expected task relations: %v; got: %v", expected, o.TaskRelations)
+//		}
+//		return nil
+//	})
+//	return t
+//}
 
 func (t *TaskAssert) HasLastSuspendedReason(expected string) *TaskAssert {
 	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {

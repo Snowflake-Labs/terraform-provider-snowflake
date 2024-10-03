@@ -101,7 +101,11 @@ var ShowTaskSchema = map[string]*schema.Schema{
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				"finalize": {
+				"finalizer": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"finalized_root_task": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -125,7 +129,9 @@ func TaskToSchema(task *sdk.Task) map[string]any {
 	taskSchema["schema_name"] = task.SchemaName
 	taskSchema["owner"] = task.Owner
 	taskSchema["comment"] = task.Comment
-	taskSchema["warehouse"] = task.Warehouse
+	if task.Warehouse != nil {
+		taskSchema["warehouse"] = task.Warehouse.Name()
+	}
 	taskSchema["schedule"] = task.Schedule
 	taskSchema["predecessors"] = collections.Map(task.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName)
 	taskSchema["state"] = string(task.State)
@@ -141,10 +147,19 @@ func TaskToSchema(task *sdk.Task) map[string]any {
 	taskSchema["config"] = task.Config
 	taskSchema["budget"] = task.Budget
 	taskSchema["last_suspended_reason"] = task.LastSuspendedReason
+	finalizer := ""
+	if task.TaskRelations.FinalizerTask != nil {
+		finalizer = task.TaskRelations.FinalizerTask.FullyQualifiedName()
+	}
+	finalizedRootTask := ""
+	if task.TaskRelations.FinalizedRootTask != nil {
+		finalizedRootTask = task.TaskRelations.FinalizedRootTask.FullyQualifiedName()
+	}
 	taskSchema["task_relations"] = []any{
 		map[string]any{
-			"predecessors": collections.Map(task.TaskRelations.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName),
-			"finalize":     task.TaskRelations.FinalizerTask,
+			"predecessors":        collections.Map(task.TaskRelations.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName),
+			"finalizer":           finalizer,
+			"finalized_root_task": finalizedRootTask,
 		},
 	}
 	return taskSchema

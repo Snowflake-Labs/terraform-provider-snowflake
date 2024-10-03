@@ -74,6 +74,34 @@ func (c *GrantClient) RevokePrivilegesOnSchemaObjectFromAccountRole(
 	require.NoError(t, err)
 }
 
+func (c *GrantClient) GrantPrivilegesOnWarehouseToAccountRole(
+	t *testing.T,
+	accountRoleId sdk.AccountObjectIdentifier,
+	warehouseId sdk.AccountObjectIdentifier,
+	privileges []sdk.AccountObjectPrivilege,
+	withGrantOption bool,
+) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().GrantPrivilegesToAccountRole(
+		ctx,
+		&sdk.AccountRoleGrantPrivileges{
+			AccountObjectPrivileges: privileges,
+		},
+		&sdk.AccountRoleGrantOn{
+			AccountObject: &sdk.GrantOnAccountObject{
+				Warehouse: &warehouseId,
+			},
+		},
+		accountRoleId,
+		&sdk.GrantPrivilegesToAccountRoleOptions{
+			WithGrantOption: sdk.Bool(withGrantOption),
+		},
+	)
+	require.NoError(t, err)
+}
+
 func (c *GrantClient) GrantPrivilegesOnSchemaObjectToAccountRole(
 	t *testing.T,
 	accountRoleId sdk.AccountObjectIdentifier,

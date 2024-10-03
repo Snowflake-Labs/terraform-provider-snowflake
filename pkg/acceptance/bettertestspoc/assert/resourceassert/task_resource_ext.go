@@ -1,8 +1,9 @@
 package resourceassert
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"strconv"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 )
 
 func (t *TaskResourceAssert) HasAfterLen(len int) *TaskResourceAssert {

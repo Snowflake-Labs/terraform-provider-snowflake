@@ -1,8 +1,9 @@
 package resourceparametersassert
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 func (u *TaskResourceParametersAssert) HasAllDefaults() *TaskResourceParametersAssert {

@@ -2,13 +2,14 @@ package resources
 
 import (
 	"context"
+	"strconv"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"strconv"
-	"strings"
 )
 
 var (
@@ -84,7 +85,7 @@ func init() {
 		// task parameters
 		{Name: sdk.TaskParameterSuspendTaskAfterNumFailures, Type: schema.TypeInt, ValidateDiag: validation.ToDiagFunc(validation.IntAtLeast(0)), Description: "Specifies the number of consecutive failed task runs after which the current task is suspended automatically. The default is 0 (no automatic suspension)."},
 		{Name: sdk.TaskParameterTaskAutoRetryAttempts, Type: schema.TypeInt, ValidateDiag: validation.ToDiagFunc(validation.IntAtLeast(0)), Description: "Specifies the number of automatic task graph retry attempts. If any task graphs complete in a FAILED state, Snowflake can automatically retry the task graphs from the last task in the graph that failed."},
-		{Name: sdk.TaskParameterUserTaskManagedInitialWarehouseSize, Type: schema.TypeString, ValidateDiag: sdkValidation(sdk.ToWarehouseSize), DiffSuppress: NormalizeAndCompare(sdk.ToWarehouseSize), Description: "Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. Valid values are (case-insensitive): %s. (Conflicts with warehouse)"},
+		{Name: sdk.TaskParameterUserTaskManagedInitialWarehouseSize, Type: schema.TypeString, ValidateDiag: sdkValidation(sdk.ToWarehouseSize), DiffSuppress: NormalizeAndCompare(sdk.ToWarehouseSize), ConflictsWith: []string{"warehouse"}, Description: "Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. Valid values are (case-insensitive): %s. (Conflicts with warehouse)"},
 		{Name: sdk.TaskParameterUserTaskMinimumTriggerIntervalInSeconds, Type: schema.TypeInt, ValidateDiag: validation.ToDiagFunc(validation.IntAtLeast(0)), Description: "Minimum amount of time between Triggered Task executions in seconds"},
 		{Name: sdk.TaskParameterUserTaskTimeoutMs, Type: schema.TypeInt, ValidateDiag: validation.ToDiagFunc(validation.IntAtLeast(0)), Description: "Specifies the time limit on a single run of the task before it times out (in milliseconds)."},
 		// session params
@@ -154,6 +155,7 @@ func init() {
 			Optional:         true,
 			ValidateDiagFunc: field.ValidateDiag,
 			DiffSuppressFunc: field.DiffSuppress,
+			ConflictsWith:    field.ConflictsWith,
 		}
 	}
 }

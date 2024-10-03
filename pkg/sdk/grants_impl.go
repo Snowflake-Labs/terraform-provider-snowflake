@@ -403,11 +403,15 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 		return err
 	}
 
+	if currentTask.Warehouse == nil {
+		return fmt.Errorf("no warehouse found to be attached to the task: %s", taskId.FullyQualifiedName())
+	}
+
 	currentGrantsOnTaskWarehouse, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
 		On: &ShowGrantsOn{
 			Object: &Object{
 				ObjectType: ObjectTypeWarehouse,
-				Name:       NewAccountObjectIdentifier(currentTask.Warehouse),
+				Name:       *currentTask.Warehouse,
 			},
 		},
 	})
