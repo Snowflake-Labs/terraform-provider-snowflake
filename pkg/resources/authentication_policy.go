@@ -19,20 +19,20 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Specifies the identifier for the authentication policy.",
+		Description: blocklistedCharactersFieldDescription("Specifies the identifier for the authentication policy."),
 		ForceNew:    true,
 	},
 	"schema": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "The schema in which to create the authentication policy.",
+		Description: blocklistedCharactersFieldDescription("The schema in which to create the authentication policy."),
 	},
 	"database": {
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "The database in which to create the authentication policy.",
+		Description: blocklistedCharactersFieldDescription("The database in which to create the authentication policy."),
 	},
 	"authentication_methods": {
 		Type: schema.TypeSet,
@@ -156,7 +156,10 @@ func CreateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	authenticationPolicy, err := client.AuthenticationPolicies.ShowByID(ctx, id)
 	if authenticationPolicy == nil || err != nil {
