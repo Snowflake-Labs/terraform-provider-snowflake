@@ -16,6 +16,37 @@ The newly introduced resources are aligned with the latest Snowflake documentati
 This segregation was based on the object on which the stream is created. The mapping between SQL statements and the resources is the following:
 - `ON TABLE <table_name>` -> `snowflake_stream_on_table`
 
+To use the new `stream_on_table`, change the old `stream` from
+```terraform
+resource "snowflake_stream" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  on_table    = snowflake_table.table.fully_qualified_name
+  append_only = true
+
+  comment = "A stream."
+}
+```
+
+to
+
+```
+resource "snowflake_stream_on_table" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  table             = snowflake_table.table.fully_qualified_name
+  append_only       = "true"
+
+  comment = "A stream."
+}
+```
+
+Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+
 ## v0.95.0 ➞ v0.96.0
 
 ### snowflake_masking_policies data source changes

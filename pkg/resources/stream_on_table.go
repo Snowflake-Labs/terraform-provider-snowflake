@@ -168,20 +168,14 @@ func CreateStreamOnTable(orReplace bool) schema.CreateContextFunc {
 			req.WithCopyGrants(true).WithOrReplace(true)
 		}
 
-		if v := d.Get("append_only").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			req.WithAppendOnly(parsed)
+		err = booleanStringAttributeCreate(d, "append_only", &req.AppendOnly)
+		if err != nil {
+			return diag.FromErr(err)
 		}
 
-		if v := d.Get("show_initial_rows").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			req.WithShowInitialRows(parsed)
+		err = booleanStringAttributeCreate(d, "show_initial_rows", &req.ShowInitialRows)
+		if err != nil {
+			return diag.FromErr(err)
 		}
 
 		streamTimeTravelReq := handleStreamTimeTravel(d)

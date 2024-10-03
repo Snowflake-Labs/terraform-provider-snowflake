@@ -78,6 +78,7 @@ var ShowStreamSchema = map[string]*schema.Schema{
 
 var _ = ShowStreamSchema
 
+// Adjusted manually.
 func StreamToSchema(stream *sdk.Stream) map[string]any {
 	streamSchema := make(map[string]any)
 	streamSchema["created_on"] = stream.CreatedOn.String()
