@@ -42,7 +42,7 @@ var streamOnTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "Retains the access permissions from the original stream when a new stream is created using the OR REPLACE clause.",
+		Description: "Retains the access permissions from the original stream when a new stream is created using the OR REPLACE clause. Use only if the resource is already managed by Terraform.",
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 			return oldValue != "" && oldValue != newValue
 		},
@@ -69,7 +69,7 @@ var streamOnTableSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
-		Description:      booleanStringFieldDescription("Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed."),
+		Description:      externalChangesNotDetectedFieldDescription(booleanStringFieldDescription("Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed.")),
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -162,10 +162,14 @@ func CreateStreamOnTable(orReplace bool) schema.CreateContextFunc {
 		req := sdk.NewCreateOnTableStreamRequest(id, tableId)
 		if orReplace {
 			req.WithOrReplace(true)
-		}
-
-		if v := d.Get("copy_grants"); v.(bool) {
-			req.WithCopyGrants(true).WithOrReplace(true)
+		} else if d.Get("copy_grants").(bool) {
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "COPY GRANTS cannot be used without OR REPLACE. If you are creating this object, first import it, so that it's managed by the provider, and try again.",
+					Detail:   fmt.Sprintf("stream name: %s", id.FullyQualifiedName()),
+				},
+			}
 		}
 
 		err = booleanStringAttributeCreate(d, "append_only", &req.AppendOnly)

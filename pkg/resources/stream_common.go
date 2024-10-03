@@ -63,7 +63,7 @@ var atSchema = &schema.Schema{
 	Type:        schema.TypeList,
 	Optional:    true,
 	MaxItems:    1,
-	Description: "This field specifies that the request is inclusive of any changes made by a statement or transaction with a timestamp equal to the specified parameter. Due to Snowflake limitations, the provider does not detect external changes on this field.",
+	Description: externalChangesNotDetectedFieldDescription("This field specifies that the request is inclusive of any changes made by a statement or transaction with a timestamp equal to the specified parameter. Due to Snowflake limitations, the provider does not detect external changes on this field."),
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"timestamp": {
@@ -101,7 +101,7 @@ var beforeSchema = &schema.Schema{
 	Type:        schema.TypeList,
 	Optional:    true,
 	MaxItems:    1,
-	Description: "This field specifies that the request refers to a point immediately preceding the specified parameter. This point in time is just before the statement, identified by its query ID, is completed.  Due to Snowflake limitations, the provider does not detect external changes on this field.",
+	Description: externalChangesNotDetectedFieldDescription("This field specifies that the request refers to a point immediately preceding the specified parameter. This point in time is just before the statement, identified by its query ID, is completed.  Due to Snowflake limitations, the provider does not detect external changes on this field."),
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"timestamp": {

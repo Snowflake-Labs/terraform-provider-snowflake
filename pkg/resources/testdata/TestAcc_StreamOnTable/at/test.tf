@@ -3,10 +3,10 @@ resource "snowflake_stream_on_table" "test" {
   database = var.database
   schema   = var.schema
 
-  copy_grants       = true
+  copy_grants       = var.copy_grants
   table             = var.table
   append_only       = var.append_only
-  show_initial_rows = "true"
+  show_initial_rows = var.show_initial_rows
 
   at {
     timestamp = try(var.at["timestamp"], null)

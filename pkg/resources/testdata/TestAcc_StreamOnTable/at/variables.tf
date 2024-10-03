@@ -18,8 +18,12 @@ variable "copy_grants" {
   type = bool
 }
 
+variable "show_initial_rows" {
+  type = string
+}
+
 variable "append_only" {
-  type = bool
+  type = string
 }
 
 variable "at" {

@@ -39,7 +39,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 	}
 
 	modelWithExtraFields := baseModel().
-		WithCopyGrants(true).
+		WithCopyGrants(false).
 		WithComment("foo").
 		WithAppendOnly(r.BooleanTrue).
 		WithShowInitialRows(r.BooleanTrue).
@@ -48,7 +48,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 		}))
 
 	modelWithExtraFieldsDefaultMode := baseModel().
-		WithCopyGrants(true).
+		WithCopyGrants(false).
 		WithComment("foo").
 		WithAppendOnly(r.BooleanFalse).
 		WithShowInitialRows(r.BooleanTrue).
@@ -303,7 +303,7 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model.WithCopyGrants(true)),
+				Config: config.FromModel(t, model.WithCopyGrants(false)),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
@@ -313,7 +313,7 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, model.WithCopyGrants(false)),
+				Config: config.FromModel(t, model.WithCopyGrants(true)),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
@@ -325,7 +325,7 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, model.WithCopyGrants(true)),
+				Config: config.FromModel(t, model.WithCopyGrants(false)),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
@@ -359,7 +359,7 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 			WithComment("foo").
 			WithAppendOnly(r.BooleanTrue).
 			WithShowInitialRows(r.BooleanTrue).
-			WithCopyGrants(true)
+			WithCopyGrants(false)
 	}
 
 	modelWithOffset := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
@@ -476,7 +476,7 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 			WithComment("foo").
 			WithAppendOnly(r.BooleanTrue).
 			WithShowInitialRows(r.BooleanTrue).
-			WithCopyGrants(true)
+			WithCopyGrants(false)
 	}
 
 	modelWithOffset := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
@@ -569,6 +569,7 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 		WithComment("foo").
 		WithCopyGrants(false).
 		WithAppendOnly(r.BooleanFalse).
+		WithShowInitialRows(r.BooleanFalse).
 		WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 			"offset":    pluginconfig.StringVariable("0"),
 			"timestamp": pluginconfig.StringVariable("0"),
@@ -580,12 +581,15 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 		WithComment("foo").
 		WithCopyGrants(false).
 		WithAppendOnly(r.BooleanFalse).
+		WithShowInitialRows(r.BooleanFalse).
 		WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 			"offset":    pluginconfig.StringVariable("0"),
 			"timestamp": pluginconfig.StringVariable("0"),
 			"statement": pluginconfig.StringVariable("0"),
 			"stream":    pluginconfig.StringVariable("0"),
 		}))
+
+	modelWithCopyGrantsOnCreate := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").WithCopyGrants(true)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -611,6 +615,11 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 			{
 				Config:      config.FromModel(t, modelWithInvalidTableId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
+			},
+			// copy grants during create
+			{
+				Config:      config.FromModel(t, modelWithCopyGrantsOnCreate),
+				ExpectError: regexp.MustCompile("Error: COPY GRANTS cannot be used without OR REPLACE. If you are creating this object, first import it, so that it's managed by the provider, and try again"),
 			},
 		},
 	})
