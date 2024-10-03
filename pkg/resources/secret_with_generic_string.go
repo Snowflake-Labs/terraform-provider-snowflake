@@ -34,7 +34,7 @@ func SecretWithGenericString() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Description: "Secret with Generic string where Secret's Type attribute is set to 'GENERIC_STRING'.'",
+		Description: "Secret with Generic string where Secret's Type attribute is set to 'GENERIC_STRING'.",
 	}
 }
 

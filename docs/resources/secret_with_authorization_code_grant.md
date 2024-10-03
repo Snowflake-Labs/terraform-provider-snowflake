@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_secret_with_authorization_code_grant (Resource)
 
-Secret with OAuth authorization code grant where Secret's Type attribute is set to 'OAUTH2'.'
+Secret with OAuth authorization code grant where Secret's Type attribute is set to 'OAUTH2'.
 
 ## Example Usage
 

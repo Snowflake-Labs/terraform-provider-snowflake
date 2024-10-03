@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_secret_with_generic_string (Resource)
 
-Secret with Generic string where Secret's Type attribute is set to 'GENERIC_STRING'.'
+Secret with Generic string where Secret's Type attribute is set to 'GENERIC_STRING'.
 
 ## Example Usage
 

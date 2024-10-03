@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_secret_with_basic_authentication (Resource)
 
-Secret with Basic Authentication where Secret's Type attribute is set to 'PASSWORD'.'
+Secret with Basic Authentication where Secret's Type attribute is set to 'PASSWORD'.
 
 ## Example Usage
 
