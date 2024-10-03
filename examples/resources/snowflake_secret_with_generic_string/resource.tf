@@ -1,5 +1,5 @@
 # basic resource
-resource "snowflake_secret_with_client_credentials" "test" {
+resource "snowflake_secret_with_generic_string" "test" {
   name          = "EXAMPLE_SECRET"
   database      = "EXAMPLE_DB"
   schema        = "EXAMPLE_SCHEMA"
