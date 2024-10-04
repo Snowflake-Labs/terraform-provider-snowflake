@@ -7,6 +7,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 // ShowStreamSchema represents output of SHOW query for the single Stream.
@@ -103,11 +104,7 @@ func StreamToSchema(stream *sdk.Stream) map[string]any {
 		streamSchema["source_type"] = stream.SourceType
 	}
 	if stream.BaseTables != nil {
-		idsFQN := make([]string, len(stream.BaseTables))
-		for i := range idsFQN {
-			idsFQN[i] = stream.BaseTables[i].FullyQualifiedName()
-		}
-		streamSchema["base_tables"] = idsFQN
+		streamSchema["base_tables"] = collections.Map(stream.BaseTables, sdk.SchemaObjectIdentifier.FullyQualifiedName)
 	}
 	if stream.Type != nil {
 		streamSchema["type"] = stream.Type

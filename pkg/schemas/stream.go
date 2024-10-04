@@ -103,9 +103,7 @@ func StreamDescriptionToSchema(stream sdk.Stream) map[string]any {
 		streamSchema["source_type"] = stream.SourceType
 	}
 	if stream.BaseTables != nil {
-		streamSchema["base_tables"] = collections.Map(stream.BaseTables, func(id sdk.SchemaObjectIdentifier) string {
-			return id.FullyQualifiedName()
-		})
+		streamSchema["base_tables"] = collections.Map(stream.BaseTables, sdk.SchemaObjectIdentifier.FullyQualifiedName)
 	}
 	if stream.Type != nil {
 		streamSchema["type"] = stream.Type
