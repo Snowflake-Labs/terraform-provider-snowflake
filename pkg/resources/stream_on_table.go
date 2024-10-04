@@ -42,7 +42,7 @@ var streamOnTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "Retains the access permissions from the original stream when a new stream is created using the OR REPLACE clause. Use only if the resource is already managed by Terraform.",
+		Description: "Retains the access permissions from the original stream when a new stream is created using the OR REPLACE clause. Use only if the resource is already managed by Terraform. Otherwise, this field is skipped.",
 		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 			return oldValue != "" && oldValue != newValue
 		},
@@ -162,13 +162,8 @@ func CreateStreamOnTable(orReplace bool) schema.CreateContextFunc {
 		req := sdk.NewCreateOnTableStreamRequest(id, tableId)
 		if orReplace {
 			req.WithOrReplace(true)
-		} else if d.Get("copy_grants").(bool) {
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "COPY GRANTS cannot be used without OR REPLACE. If you are creating this object, first import it, so that it's managed by the provider, and try again.",
-					Detail:   fmt.Sprintf("stream name: %s", id.FullyQualifiedName()),
-				},
+			if d.Get("copy_grants").(bool) {
+				req.WithCopyGrants(true)
 			}
 		}
 
