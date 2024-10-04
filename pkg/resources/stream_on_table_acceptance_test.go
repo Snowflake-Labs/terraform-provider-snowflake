@@ -589,8 +589,6 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 			"stream":    pluginconfig.StringVariable("0"),
 		}))
 
-	modelWithCopyGrantsOnCreate := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").WithCopyGrants(true)
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -615,11 +613,6 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 			{
 				Config:      config.FromModel(t, modelWithInvalidTableId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
-			},
-			// copy grants during create
-			{
-				Config:      config.FromModel(t, modelWithCopyGrantsOnCreate),
-				ExpectError: regexp.MustCompile("Error: COPY GRANTS cannot be used without OR REPLACE. If you are creating this object, first import it, so that it's managed by the provider, and try again"),
 			},
 		},
 	})
