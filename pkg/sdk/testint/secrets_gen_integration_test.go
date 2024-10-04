@@ -19,7 +19,7 @@ func TestInt_Secrets(t *testing.T) {
 
 	integrationId := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-	// "YYYY-MM-DD" or "YYYY-MM-DD HH-MI-SS" format has to be used, otherwise Snowflake returns error: "Invalid date/time format"
+	// "YYYY-MM-DD" or "YYYY-MM-DD HH:MI-SS" format has to be used, otherwise Snowflake returns error: "Invalid date/time format"
 	refreshTokenExpiryTime := time.Now().Add(24 * time.Hour).Format(time.DateOnly)
 
 	_, apiIntegrationCleanup := testClientHelper().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
@@ -94,8 +94,7 @@ func TestInt_Secrets(t *testing.T) {
 		})
 	})
 
-	// It is possible to create secret without specifying both refresh token properties and OAuth scopes
-	// Regarding the https://docs.snowflake.com/en/sql-reference/sql/create-secret secret with empty oauth_scopes list should inherit scopes from security_integration, but it does not
+	// TODO [SNOW-1678767]: possible to create secret without specifying refresh token, token expiry time and OAuth scopes properties
 	t.Run("Create: secretWithOAuth - minimal, without token and scopes", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId)
@@ -121,7 +120,7 @@ func TestInt_Secrets(t *testing.T) {
 		})
 	})
 
-	// regarding the https://docs.snowflake.com/en/sql-reference/sql/create-secret secret with empty oauth_scopes list should inherit scopes from security_integration, but it does not
+	// TODO [SNOW-1678756]: oauth_copes not inherited or not displayed correctly when not provided
 	t.Run("Create: SecretWithOAuthClientCredentialsFlow - Empty Scopes List", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, integrationId).WithOauthScopes(sdk.OauthScopesListRequest{})
@@ -146,7 +145,7 @@ func TestInt_Secrets(t *testing.T) {
 
 		assert.NotContains(t, details.OauthScopes, "foo")
 		assert.NotContains(t, details.OauthScopes, "bar")
-		assert.Equal(t, []string{""}, details.OauthScopes)
+		assert.Equal(t, []string{}, details.OauthScopes)
 	})
 
 	t.Run("Create: SecretWithOAuthAuthorizationCodeFlow - refreshTokenExpiry date format", func(t *testing.T) {
@@ -308,9 +307,10 @@ func TestInt_Secrets(t *testing.T) {
 			WithSet(
 				*sdk.NewSecretSetRequest().
 					WithComment(comment).
-					WithSetForOAuthClientCredentialsFlow(
-						*sdk.NewSetForOAuthClientCredentialsFlowRequest().
+					WithSetForFlow(*sdk.NewSetForFlowRequest().
+						WithSetForOAuthClientCredentials(*sdk.NewSetForOAuthClientCredentialsRequest().
 							WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: []sdk.ApiIntegrationScope{{Scope: "foo"}, {Scope: "bar"}}}),
+						),
 					),
 			)
 		err := client.Secrets.Alter(ctx, setRequest)
@@ -353,10 +353,11 @@ func TestInt_Secrets(t *testing.T) {
 			WithSet(
 				*sdk.NewSecretSetRequest().
 					WithComment(comment).
-					WithSetForOAuthAuthorizationFlow(
-						*sdk.NewSetForOAuthAuthorizationFlowRequest().
+					WithSetForFlow(*sdk.NewSetForFlowRequest().
+						WithSetForOAuthAuthorization(*sdk.NewSetForOAuthAuthorizationRequest().
 							WithOauthRefreshToken("bar").
 							WithOauthRefreshTokenExpiryTime(alteredRefreshTokenExpiryTime),
+						),
 					),
 			)
 		err := client.Secrets.Alter(ctx, setRequest)
@@ -398,10 +399,11 @@ func TestInt_Secrets(t *testing.T) {
 			WithSet(
 				*sdk.NewSecretSetRequest().
 					WithComment(comment).
-					WithSetForBasicAuthentication(
-						*sdk.NewSetForBasicAuthenticationRequest().
+					WithSetForFlow(*sdk.NewSetForFlowRequest().
+						WithSetForBasicAuthentication(*sdk.NewSetForBasicAuthenticationRequest().
 							WithUsername("bar").
 							WithPassword("bar"),
+						),
 					),
 			)
 		err := client.Secrets.Alter(ctx, setRequest)
@@ -442,9 +444,10 @@ func TestInt_Secrets(t *testing.T) {
 			WithSet(
 				*sdk.NewSecretSetRequest().
 					WithComment(comment).
-					WithSetForGenericString(
-						*sdk.NewSetForGenericStringRequest().
+					WithSetForFlow(*sdk.NewSetForFlowRequest().
+						WithSetForGenericString(*sdk.NewSetForGenericStringRequest().
 							WithSecretString("bar"),
+						),
 					),
 			)
 		err := client.Secrets.Alter(ctx, setRequest)
