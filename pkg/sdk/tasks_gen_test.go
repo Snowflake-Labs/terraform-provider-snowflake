@@ -81,7 +81,7 @@ func TestTasks_Create(t *testing.T) {
 		}
 		opts.UserTaskTimeoutMs = Int(5)
 		opts.SuspendTaskAfterNumFailures = Int(6)
-		opts.ErrorNotificationIntegration = Pointer(NewAccountObjectIdentifier("some_error_integration"))
+		opts.ErrorIntegration = Pointer(NewAccountObjectIdentifier("some_error_integration"))
 		opts.Comment = String("some comment")
 		opts.Finalize = &finalizerId
 		opts.TaskAutoRetryAttempts = Int(10)
@@ -157,7 +157,7 @@ func TestTasks_CreateOrAlter(t *testing.T) {
 			LockTimeout: Int(5),
 		}
 		opts.SuspendTaskAfterNumFailures = Int(6)
-		opts.ErrorNotificationIntegration = Pointer(NewAccountObjectIdentifier("some_error_integration"))
+		opts.ErrorIntegration = Pointer(NewAccountObjectIdentifier("some_error_integration"))
 		opts.Comment = String("some comment")
 		opts.Finalize = &finalizerId
 		opts.TaskAutoRetryAttempts = Int(10)
@@ -328,7 +328,7 @@ func TestTasks_Alter(t *testing.T) {
 		opts.Set = &TaskSet{
 			Warehouse: &warehouseId,
 		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET WAREHOUSE = '%s'", id.FullyQualifiedName(), warehouseId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET WAREHOUSE = %s", id.FullyQualifiedName(), warehouseId.FullyQualifiedName())
 	})
 
 	t.Run("alter set session parameter", func(t *testing.T) {

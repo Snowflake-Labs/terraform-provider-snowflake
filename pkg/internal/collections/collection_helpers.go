@@ -23,15 +23,15 @@ func Map[T any, R any](collection []T, mapper func(T) R) []R {
 	return result
 }
 
-// TODO: Test
 func MapErr[T any, R any](collection []T, mapper func(T) (R, error)) ([]R, error) {
 	result := make([]R, len(collection))
+	errs := make([]error, 0)
 	for i, elem := range collection {
 		value, err := mapper(elem)
 		if err != nil {
-			return nil, err
+			errs = append(errs, err)
 		}
 		result[i] = value
 	}
-	return result, nil
+	return result, errors.Join(errs...)
 }

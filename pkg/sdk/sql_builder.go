@@ -244,7 +244,6 @@ func (b sqlBuilder) parseInterface(v interface{}, tag reflect.StructTag) (sqlCla
 		return sqlIdentifierClause{
 			key:   sqlTag,
 			value: v.(Identifier),
-			qm:    b.getModifier(tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			em:    b.getModifier(tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 		}, nil
 	}
@@ -331,7 +330,6 @@ func (b sqlBuilder) parseFieldStruct(field reflect.StructField, value reflect.Va
 				return sqlIdentifierClause{
 					key:   sqlTag,
 					value: reflectedValue.(Identifier),
-					qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 					em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 				}, nil
 			}
@@ -402,7 +400,6 @@ func (b sqlBuilder) parseFieldSlice(field reflect.StructField, value reflect.Val
 		if ok {
 			listClauses = append(listClauses, sqlIdentifierClause{
 				value: identifier,
-				qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 				em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 			})
 			continue
@@ -535,7 +532,6 @@ func (b sqlBuilder) parseField(field reflect.StructField, value reflect.Value) (
 		clause = sqlIdentifierClause{
 			key:   sqlTag,
 			value: reflectedValue.(Identifier),
-			qm:    b.getModifier(field.Tag, "ddl", quoteModifierType, NoQuotes).(quoteModifier),
 			em:    b.getModifier(field.Tag, "ddl", equalsModifierType, NoEquals).(equalsModifier),
 		}
 	case "parameter":
@@ -607,7 +603,6 @@ func (v sqlKeywordClause) String() string {
 type sqlIdentifierClause struct {
 	key   string
 	value Identifier
-	qm    quoteModifier
 	em    equalsModifier
 }
 
@@ -621,10 +616,6 @@ func (v sqlIdentifierClause) String() string {
 	}
 	// else try to get the string value
 	if v.key != "" {
-		if v.qm == SingleQuotes {
-			name = `'` + name + `'`
-		}
-
 		return v.em.Modify(v.key) + name
 	}
 	return name

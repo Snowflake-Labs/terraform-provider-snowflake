@@ -22,8 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// TODO: Go through descriptions
-
 var taskSchema = map[string]*schema.Schema{
 	"database": {
 		Type:             schema.TypeString,
@@ -50,28 +48,27 @@ var taskSchema = map[string]*schema.Schema{
 		Type:     schema.TypeBool,
 		Required: true,
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("state", func(state any) any {
-			log.Printf("The value is diff suppress for state is: %v\n", state)
 			stateEnum, err := sdk.ToTaskState(state.(string))
 			if err != nil {
 				return false
 			}
 			return stateEnum == sdk.TaskStateStarted
 		}),
-		Description: "Specifies if the task should be started (enabled) after creation or should remain suspended (default).",
+		Description: "Specifies if the task should be started or suspended.",
 	},
 	"warehouse": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
-		Description:      "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. (Conflicts with user_task_managed_initial_warehouse_size)",
+		Description:      "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. Due to Snowflake limitations warehouse identifier can consist of only upper-cased letters. (Conflicts with user_task_managed_initial_warehouse_size)",
 		ConflictsWith:    []string{"user_task_managed_initial_warehouse_size"},
 	},
 	"schedule": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("schedule"),
-		Description:      "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflict with finalize and after)",
+		Description:      "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after)",
 		ConflictsWith:    []string{"finalize", "after"},
 	},
 	"config": {
@@ -79,12 +76,11 @@ var taskSchema = map[string]*schema.Schema{
 		Optional: true,
 		DiffSuppressFunc: SuppressIfAny(
 			IgnoreChangeToCurrentSnowflakeValueInShow("config"),
+			// TODO(SNOW-1348116 - next pr): Currently config has to be passed with $$ prefix and suffix. The best solution would be to put there only json, so it could be retrieved from file, etc. Move $$ adding to the SDK.
 			func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 				return strings.Trim(oldValue, "$") == strings.Trim(newValue, "$")
 			},
 		),
-		// TODO: it could be retrieved with system function and show/desc (which should be used?)
-		// TODO: Doc request: there's no schema for JSON config format
 		Description: "Specifies a string representation of key value pairs that can be accessed by all tasks in the task graph. Must be in JSON format.",
 	},
 	"allow_overlapping_execution": {
@@ -115,7 +111,7 @@ var taskSchema = map[string]*schema.Schema{
 			suppressIdentifierQuoting,
 			IgnoreChangeToCurrentSnowflakeValueInShow("task_relations.0.finalized_root_task"),
 		),
-		Description:   blocklistedCharactersFieldDescription("TODO"),
+		Description:   blocklistedCharactersFieldDescription("Specifies the name of a root task that the finalizer task is associated with. Finalizer tasks run after all other tasks in the task graph run to completion. You can define the SQL of a finalizer task to handle notifications and the release and cleanup of resources that a task graph uses. For more information, see [Release and cleanup of task graphs](https://docs.snowflake.com/en/user-guide/tasks-graphs.html#label-finalizer-task)."),
 		ConflictsWith: []string{"schedule", "after"},
 	},
 	"after": {
@@ -126,7 +122,7 @@ var taskSchema = map[string]*schema.Schema{
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},
 		Optional:      true,
-		Description:   blocklistedCharactersFieldDescription("Specifies one or more predecessor tasks for the current task. Use this option to create a DAG of tasks or add this task to an existing DAG. A DAG is a series of tasks that starts with a scheduled root task and is linked together by dependencies."),
+		Description:   blocklistedCharactersFieldDescription("Specifies one or more predecessor tasks for the current task. Use this option to [create a DAG](https://docs.snowflake.com/en/user-guide/tasks-graphs.html#label-task-dag) of tasks or add this task to an existing DAG. A DAG is a series of tasks that starts with a scheduled root task and is linked together by dependencies."),
 		ConflictsWith: []string{"schedule", "finalize"},
 	},
 	"when": {
@@ -228,7 +224,7 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 
 	if v, ok := d.GetOk("schedule"); ok {
-		req.WithSchedule(v.(string)) // TODO: What about cron, how do we track changed (only through show)
+		req.WithSchedule(v.(string))
 	}
 
 	if v, ok := d.GetOk("config"); ok {
@@ -243,13 +239,12 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		req.WithAllowOverlappingExecution(parsedBool)
 	}
 
-	// TODO: Decide on name (error_notification_integration ?)
 	if v, ok := d.GetOk("error_integration"); ok {
 		notificationIntegrationId, err := sdk.ParseAccountObjectIdentifier(v.(string))
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		req.WithErrorNotificationIntegration(notificationIntegrationId)
+		req.WithErrorIntegration(notificationIntegrationId)
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -257,7 +252,6 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 
 	if v, ok := d.GetOk("finalize"); ok {
-		// TODO: Create with finalize
 		rootTaskId, err := sdk.ParseSchemaObjectIdentifier(v.(string))
 		if err != nil {
 			return diag.FromErr(err)
@@ -278,7 +272,7 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		req.WithFinalize(rootTaskId)
 	}
 
-	if v, ok := d.GetOk("after"); ok { // TODO: Should after take in task names or fully qualified names?
+	if v, ok := d.GetOk("after"); ok {
 		after := expandStringList(v.(*schema.Set).List())
 		precedingTasks := make([]sdk.SchemaObjectIdentifier, 0)
 		for _, parentTaskIdString := range after {
@@ -286,7 +280,7 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			resumeTasks, err := client.Tasks.SuspendRootTasks(ctx, parentTaskId, id) // TODO: What if this fails and only half of the tasks are suspended?
+			resumeTasks, err := client.Tasks.SuspendRootTasks(ctx, parentTaskId, id)
 			tasksToResume = append(tasksToResume, resumeTasks...)
 			if err != nil {
 				return diag.FromErr(sdk.JoinErrors(err))
@@ -308,7 +302,7 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		return diag.FromErr(err)
 	}
 
-	// TODO: State upgrader for "id"
+	// TODO(SNOW-1348116 - next pr): State upgrader for "id" (and potentially other fields)
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	if d.Get("enabled").(bool) {
@@ -321,8 +315,7 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 				},
 			}
 		}
-		// TODO: Check documentation
-		// Tasks are created as suspended
+		// Else case not handled, because tasks are created as suspended (https://docs.snowflake.com/en/sql-reference/sql/create-task; "important" section)
 	}
 
 	if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
@@ -339,15 +332,11 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		return diag.FromErr(err)
 	}
 
-	// TODO: Fix the order of actions
-	// TODO: Move suspending etc. to SDK
-
 	task, err := client.Tasks.ShowByID(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// TODO: Should it be defer ?
 	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, id, id)
 	if err != nil {
 		return diag.FromErr(sdk.JoinErrors(err))
@@ -368,7 +357,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		stringAttributeUpdate(d, "schedule", &set.Schedule, &unset.Schedule),
 		stringAttributeUpdate(d, "config", &set.Config, &unset.Config),
 		booleanStringAttributeUpdate(d, "allow_overlapping_execution", &set.AllowOverlappingExecution, &unset.AllowOverlappingExecution),
-		accountObjectIdentifierAttributeUpdate(d, "error_integration", &set.ErrorNotificationIntegration, &unset.ErrorIntegration), // TODO: name inconsistency
+		accountObjectIdentifierAttributeUpdate(d, "error_integration", &set.ErrorIntegration, &unset.ErrorIntegration),
 		stringAttributeUpdate(d, "comment", &set.Comment, &unset.Comment),
 	)
 	if err != nil {
@@ -472,7 +461,6 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			}
 
 			for _, addedTaskId := range addedTaskIds {
-				// TODO: Look into suspend root tasks function
 				addedTasksToResume, err := client.Tasks.SuspendRootTasks(ctx, addedTaskId, sdk.NewSchemaObjectIdentifier("", "", ""))
 				tasksToResume = append(tasksToResume, addedTasksToResume...)
 				if err != nil {

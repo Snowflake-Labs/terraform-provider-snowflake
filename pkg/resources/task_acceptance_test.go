@@ -26,6 +26,8 @@ import (
 )
 
 // TODO(SNOW-1348116 - next pr): More tests for complicated DAGs
+// TODO(SNOW-1348116 - next pr): Test for stored procedures passed to sql_statement (decide on name)
+// TODO(SNOW-1348116 - next pr): Test with cron schedule
 
 func TestAcc_Task_Basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
@@ -61,7 +63,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterLen(0).
+						HasAfterIds().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, configModel.ResourceReference()).
@@ -232,6 +234,10 @@ func TestAcc_Task_Updates(t *testing.T) {
 	statement := "SELECT 1"
 	basicConfigModel := model.TaskWithId("test", id, false, statement)
 
+	// New warehouse created, because the common one has lower-case letters that won't work
+	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
+	t.Cleanup(warehouseCleanup)
+
 	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
 
@@ -243,9 +249,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 	comment := random.Comment()
 	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
 	completeConfigModel := model.TaskWithId("test", id, true, statement).
-		// TODO(SNOW-1348116 - decide in next prs): This won't work because alter set warehouse is broken
-		// we could actually make it work by enabling only uppercased ids in the warehouse field until it's fixed.
-		// WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithWarehouse(warehouse.ID().Name()).
 		WithSchedule("5 MINUTES").
 		WithConfigValue(configvariable.StringVariable(taskConfigVariableValue)).
 		WithAllowOverlappingExecution(r.BooleanTrue).
@@ -277,7 +281,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterLen(0).
+						HasAfterIds().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -314,13 +318,14 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasSchemaString(id.SchemaName()).
 						HasNameString(id.Name()).
 						HasEnabledString(r.BooleanTrue).
+						HasWarehouseString(warehouse.ID().Name()).
 						HasScheduleString("5 MINUTES").
 						HasConfigString(expectedTaskConfig).
 						HasAllowOverlappingExecutionString(r.BooleanTrue).
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
 						HasCommentString(comment).
 						HasFinalizeString("").
-						HasAfterLen(0).
+						HasAfterIds().
 						HasWhenString(condition).
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, completeConfigModel.ResourceReference()).
@@ -330,6 +335,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
 						HasOwner(currentRole.Name()).
+						HasWarehouse(warehouse.ID().Name()).
 						HasComment(comment).
 						HasSchedule("5 MINUTES").
 						HasPredecessors().
@@ -363,7 +369,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterLen(0).
+						HasAfterIds().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -742,7 +748,7 @@ func TestAcc_Task_Enabled(t *testing.T) {
 	})
 }
 
-// TODO: This test may also be not deterministic and sometimes it fail when resuming a task while other task is modifying DAG (removing after)
+// TODO(SNOW-1348116 - analyze in next pr): This test may also be not deterministic and sometimes it fail when resuming a task while other task is modifying DAG (removing after)
 func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -809,7 +815,7 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 						HasSchedule(schedule).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
-						HasAfterLen(1).
+						HasAfterIds(id).
 						HasEnabledString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
 						HasPredecessors(id).
@@ -935,7 +941,7 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 	})
 }
 
-// TODO(SNOW-1348116 - analyse in next pr): This test is not deterministic and sometimes it fails when resuming a task while other task is modifying DAG (removing after)
+// TODO(SNOW-1348116 - analyze in next pr): This test is not deterministic and sometimes it fails when resuming a task while other task is modifying DAG (removing after)
 func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -974,7 +980,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, "snowflake_task.child").
 						HasEnabledString(r.BooleanTrue).
 						HasScheduleString(schedule).
-						HasAfterLen(0).
+						HasAfterIds().
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceassert.TaskResource(t, "snowflake_task.root").
 						HasEnabledString(r.BooleanTrue).
@@ -988,7 +994,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, "snowflake_task.child").
 						HasEnabledString(r.BooleanTrue).
 						HasScheduleString("").
-						HasAfterLen(1).
+						HasAfterIds(rootId).
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceassert.TaskResource(t, "snowflake_task.root").
 						HasEnabledString(r.BooleanTrue).
@@ -1002,7 +1008,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, "snowflake_task.child").
 						HasEnabledString(r.BooleanTrue).
 						HasScheduleString(schedule).
-						HasAfterLen(0).
+						HasAfterIds().
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceassert.TaskResource(t, "snowflake_task.root").
 						HasEnabledString(r.BooleanTrue).
@@ -1016,7 +1022,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, "snowflake_task.child").
 						HasEnabledString(r.BooleanFalse).
 						HasScheduleString(schedule).
-						HasAfterLen(0).
+						HasAfterIds().
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceassert.TaskResource(t, "snowflake_task.root").
 						HasEnabledString(r.BooleanFalse).
@@ -1070,7 +1076,7 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 						HasScheduleString(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasEnabledString(r.BooleanTrue).
-						HasAfterLen(1),
+						HasAfterIds(rootId),
 				),
 			},
 			{
@@ -1081,7 +1087,7 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 						HasScheduleString(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasEnabledString(r.BooleanTrue).
-						HasAfterLen(0),
+						HasAfterIds(),
 				),
 			},
 		},
@@ -1192,7 +1198,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 						HasScheduleString(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasEnabledString(r.BooleanTrue).
-						HasAfterLen(1).
+						HasAfterIds(rootId).
 						HasCommentString("abc"),
 				),
 			},
@@ -1210,7 +1216,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 						HasScheduleString(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithDifferentComment.ResourceReference()).
 						HasEnabledString(r.BooleanTrue).
-						HasAfterLen(1).
+						HasAfterIds(rootId).
 						HasCommentString("def"),
 				),
 			},
