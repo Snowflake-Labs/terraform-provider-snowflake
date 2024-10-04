@@ -1,41 +1,47 @@
 ---
-page_title: "snowflake_stream_on_table Resource - terraform-provider-snowflake"
+page_title: "snowflake_stream_on_external_table Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Resource used to manage streams on tables. For more information, check stream documentation https://docs.snowflake.com/en/sql-reference/sql/create-stream.
+  Resource used to manage streams on external tables. For more information, check stream documentation https://docs.snowflake.com/en/sql-reference/sql/create-stream.
 ---
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0960--v0970) to use it.
 
-# snowflake_stream_on_table (Resource)
+# snowflake_stream_on_external_table (Resource)
 
-Resource used to manage streams on tables. For more information, check [stream documentation](https://docs.snowflake.com/en/sql-reference/sql/create-stream).
+Resource used to manage streams on external tables. For more information, check [stream documentation](https://docs.snowflake.com/en/sql-reference/sql/create-stream).
 
 ## Example Usage
 
 ```terraform
-resource "snowflake_table" "table" {
-  database = "database"
-  schema   = "schema"
-  name     = "name"
+resource "snowflake_external_table" "external_table" {
+  database    = "db"
+  schema      = "schema"
+  name        = "external_table"
+  comment     = "External table"
+  file_format = "TYPE = CSV FIELD_DELIMITER = '|'"
+  location    = "@stage/directory/"
 
   column {
-    type = "NUMBER(38,0)"
     name = "id"
+    type = "int"
+  }
+
+  column {
+    name = "data"
+    type = "text"
   }
 }
 
 
-# resource with more fields set
-resource "snowflake_stream_on_table" "stream" {
+resource "snowflake_stream_on_external_table" "stream" {
   name     = "stream"
   schema   = "schema"
   database = "database"
 
-  copy_grants       = true
-  table             = snowflake_table.table.fully_qualified_name
-  append_only       = "true"
-  show_initial_rows = "true"
+  copy_grants    = true
+  external_table = snowflake_external_table.external_table.fully_qualified_name
+  insert_only    = "true"
 
   at {
     statement = "8e5d0ca9-005e-44e6-b858-a8f5b37c5726"
@@ -53,18 +59,17 @@ resource "snowflake_stream_on_table" "stream" {
 ### Required
 
 - `database` (String) The database in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `external_table` (String) Specifies an identifier for the external table the stream will monitor. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 - `name` (String) Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 - `schema` (String) The schema in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
-- `table` (String) Specifies an identifier for the table the stream will monitor. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 
 ### Optional
 
-- `append_only` (String) Specifies whether this is an append-only stream. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `at` (Block List, Max: 1) This field specifies that the request is inclusive of any changes made by a statement or transaction with a timestamp equal to the specified parameter. Due to Snowflake limitations, the provider does not detect external changes on this field. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint". (see [below for nested schema](#nestedblock--at))
 - `before` (Block List, Max: 1) This field specifies that the request refers to a point immediately preceding the specified parameter. This point in time is just before the statement, identified by its query ID, is completed.  Due to Snowflake limitations, the provider does not detect external changes on this field. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint". (see [below for nested schema](#nestedblock--before))
 - `comment` (String) Specifies a comment for the stream.
 - `copy_grants` (Boolean) Retains the access permissions from the original stream when a new stream is created using the OR REPLACE clause.
-- `show_initial_rows` (String) Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `insert_only` (String) Specifies whether this is an insert-only stream. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 
 ### Read-Only
 
@@ -143,5 +148,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_stream_on_table.example '"<database_name>"."<schema_name>"."<stream_name>"'
+terraform import snowflake_stream_on_external_table.example '"<database_name>"."<schema_name>"."<stream_name>"'
 ```

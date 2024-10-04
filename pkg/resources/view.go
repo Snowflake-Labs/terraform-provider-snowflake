@@ -390,7 +390,7 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			req.WithComment(v)
 		}
 
-		if v := d.Get("column"); len(v.([]any)) > 0 {
+		if v := d.Get("column"); len(d.GetRawConfig().AsValueMap()["column"].AsValueSlice()) > 0 {
 			columns, err := extractColumns(v)
 			if err != nil {
 				return diag.FromErr(err)

@@ -181,6 +181,10 @@ func (v *Stream) IsAppendOnly() bool {
 	return v != nil && v.Mode != nil && *v.Mode == StreamModeAppendOnly
 }
 
+func (v *Stream) IsInsertOnly() bool {
+	return v != nil && v.Mode != nil && *v.Mode == StreamModeInsertOnly
+}
+
 // DescribeStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-stream.
 type DescribeStreamOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"`

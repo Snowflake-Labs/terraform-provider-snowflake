@@ -15,60 +15,53 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var streamOnTableSchema = func() map[string]*schema.Schema {
-	streamOnTable := map[string]*schema.Schema{
-		"table": {
+var streamOnExternalTableSchema = func() map[string]*schema.Schema {
+	streamOnExternalTable := map[string]*schema.Schema{
+		"external_table": {
 			Type:             schema.TypeString,
 			Required:         true,
-			Description:      blocklistedCharactersFieldDescription("Specifies an identifier for the table the stream will monitor."),
+			Description:      blocklistedCharactersFieldDescription("Specifies an identifier for the external table the stream will monitor."),
 			DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("table_name")),
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},
-		"append_only": {
+		"insert_only": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Default:          BooleanDefault,
 			ValidateDiagFunc: validateBooleanString,
 			DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("mode", func(x any) any {
-				return x.(string) == string(sdk.StreamModeAppendOnly)
+				return x.(string) == string(sdk.StreamModeInsertOnly)
 			}),
-			Description: booleanStringFieldDescription("Specifies whether this is an append-only stream."),
-		},
-		"show_initial_rows": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Default:          BooleanDefault,
-			ValidateDiagFunc: validateBooleanString,
-			Description:      externalChangesNotDetectedFieldDescription(booleanStringFieldDescription("Specifies whether to return all existing rows in the source table as row inserts the first time the stream is consumed.")),
+			Description: booleanStringFieldDescription("Specifies whether this is an insert-only stream."),
 		},
 		AtAttributeName:     atSchema,
 		BeforeAttributeName: beforeSchema,
 	}
-	return helpers.MergeMaps(streamCommonSchema, streamOnTable)
+	return helpers.MergeMaps(streamCommonSchema, streamOnExternalTable)
 }()
 
-func StreamOnTable() *schema.Resource {
+func StreamOnExternalTable() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateStreamOnTable(false),
-		ReadContext:   ReadStreamOnTable(true),
-		UpdateContext: UpdateStreamOnTable,
+		CreateContext: CreateStreamOnExternalTable(false),
+		ReadContext:   ReadStreamOnExternalTable(true),
+		UpdateContext: UpdateStreamOnExternalTable,
 		DeleteContext: DeleteStreamContext,
-		Description:   "Resource used to manage streams on tables. For more information, check [stream documentation](https://docs.snowflake.com/en/sql-reference/sql/create-stream).",
+		Description:   "Resource used to manage streams on external tables. For more information, check [stream documentation](https://docs.snowflake.com/en/sql-reference/sql/create-stream).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(streamOnTableSchema, ShowOutputAttributeName, "table", "append_only", "comment"),
-			ComputedIfAnyAttributeChanged(streamOnTableSchema, DescribeOutputAttributeName, "table", "append_only", "comment"),
+			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, ShowOutputAttributeName, "table", "insert_only", "comment"),
+			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, DescribeOutputAttributeName, "table", "insert_only", "comment"),
 		),
 
-		Schema: streamOnTableSchema,
+		Schema: streamOnExternalTableSchema,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportStreamOnTable,
+			StateContext: ImportStreamOnExternalTable,
 		},
 	}
 }
 
-func ImportStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+func ImportStreamOnExternalTable(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	log.Printf("[DEBUG] Starting stream import")
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
@@ -89,13 +82,13 @@ func ImportStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err := d.Set("schema", id.SchemaName()); err != nil {
 		return nil, err
 	}
-	if err := d.Set("append_only", booleanStringFromBool(v.IsAppendOnly())); err != nil {
+	if err := d.Set("insert_only", booleanStringFromBool(v.IsInsertOnly())); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
 }
 
-func CreateStreamOnTable(orReplace bool) schema.CreateContextFunc {
+func CreateStreamOnExternalTable(orReplace bool) schema.CreateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
 		databaseName := d.Get("database").(string)
@@ -103,18 +96,17 @@ func CreateStreamOnTable(orReplace bool) schema.CreateContextFunc {
 		name := d.Get("name").(string)
 		id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-		tableIdRaw := d.Get("table").(string)
-		tableId, err := sdk.ParseSchemaObjectIdentifier(tableIdRaw)
+		externalTableIdRaw := d.Get("external_table").(string)
+		externalTableId, err := sdk.ParseSchemaObjectIdentifier(externalTableIdRaw)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		req := sdk.NewCreateOnTableStreamRequest(id, tableId)
+		req := sdk.NewCreateOnExternalTableStreamRequest(id, externalTableId)
 
 		errs := errors.Join(
 			copyGrantsAttributeCreate(d, orReplace, &req.OrReplace, &req.CopyGrants),
-			booleanStringAttributeCreate(d, "append_only", &req.AppendOnly),
-			booleanStringAttributeCreate(d, "show_initial_rows", &req.ShowInitialRows),
+			booleanStringAttributeCreate(d, "insert_only", &req.InsertOnly),
 			stringAttributeCreate(d, "comment", &req.Comment),
 		)
 		if errs != nil {
@@ -126,17 +118,17 @@ func CreateStreamOnTable(orReplace bool) schema.CreateContextFunc {
 			req.WithOn(*streamTimeTravelReq)
 		}
 
-		err = client.Streams.CreateOnTable(ctx, req)
+		err = client.Streams.CreateOnExternalTable(ctx, req)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		d.SetId(helpers.EncodeResourceIdentifier(id))
 
-		return ReadStreamOnTable(false)(ctx, d, meta)
+		return ReadStreamOnExternalTable(false)(ctx, d, meta)
 	}
 }
 
-func ReadStreamOnTable(withExternalChangesMarking bool) schema.ReadContextFunc {
+func ReadStreamOnExternalTable(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
 		id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
@@ -157,7 +149,10 @@ func ReadStreamOnTable(withExternalChangesMarking bool) schema.ReadContextFunc {
 			}
 			return diag.FromErr(err)
 		}
-		tableId, err := sdk.ParseSchemaObjectIdentifier(*stream.TableName)
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
+		}
+		externalTableId, err := sdk.ParseSchemaObjectIdentifier(*stream.TableName)
 		if err != nil {
 			return diag.Diagnostics{
 				diag.Diagnostic{
@@ -167,7 +162,7 @@ func ReadStreamOnTable(withExternalChangesMarking bool) schema.ReadContextFunc {
 				},
 			}
 		}
-		if err := d.Set("table", tableId.FullyQualifiedName()); err != nil {
+		if err := d.Set("external_table", externalTableId.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 		streamDescription, err := client.Streams.Describe(ctx, id)
@@ -183,14 +178,14 @@ func ReadStreamOnTable(withExternalChangesMarking bool) schema.ReadContextFunc {
 				mode = *stream.Mode
 			}
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"mode", "append_only", string(mode), booleanStringFromBool(stream.IsAppendOnly()), nil},
+				showMapping{"mode", "insert_only", string(mode), booleanStringFromBool(stream.IsInsertOnly()), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
 		}
 
-		if err = setStateToValuesFromConfig(d, streamOnTableSchema, []string{
-			"append_only",
+		if err = setStateToValuesFromConfig(d, streamOnExternalTableSchema, []string{
+			"insert_only",
 		}); err != nil {
 			return diag.FromErr(err)
 		}
@@ -199,7 +194,7 @@ func ReadStreamOnTable(withExternalChangesMarking bool) schema.ReadContextFunc {
 	}
 }
 
-func UpdateStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func UpdateStreamOnExternalTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -207,9 +202,9 @@ func UpdateStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	// change on these fields can not be ForceNew because then the object is dropped explicitly and copying grants does not have effect
-	if keys := changedKeys(d, "table", "append_only", "at", "before", "show_initial_rows"); len(keys) > 0 {
+	if keys := changedKeys(d, "external_table", "insert_only", "at", "before"); len(keys) > 0 {
 		log.Printf("[DEBUG] Detected change on %q, recreating...", keys)
-		return CreateStreamOnTable(true)(ctx, d, meta)
+		return CreateStreamOnExternalTable(true)(ctx, d, meta)
 	}
 
 	if d.HasChange("comment") {
@@ -227,5 +222,5 @@ func UpdateStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	return ReadStreamOnTable(false)(ctx, d, meta)
+	return ReadStreamOnExternalTable(false)(ctx, d, meta)
 }
