@@ -118,12 +118,11 @@ func (c *UserClient) SetDaysToExpiry(t *testing.T, id sdk.AccountObjectIdentifie
 	require.NoError(t, err)
 }
 
-func (c *UserClient) SetType(t *testing.T, id sdk.AccountObjectIdentifier, value string) {
+func (c *UserClient) SetType(t *testing.T, id sdk.AccountObjectIdentifier, userType sdk.UserType) {
 	t.Helper()
 	ctx := context.Background()
 
-	// TODO [SNOW-1645348]: use type from SDK
-	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("ALTER USER %s SET TYPE = %s", id.FullyQualifiedName(), value))
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("ALTER USER %s SET TYPE = %s", id.FullyQualifiedName(), userType))
 	require.NoError(t, err)
 }
 

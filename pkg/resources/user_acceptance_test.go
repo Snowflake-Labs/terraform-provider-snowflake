@@ -993,8 +993,8 @@ func TestAcc_User_handleExternalTypeChange(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					acc.TestClient().User.SetType(t, userId, "SERVICE")
-					objectassert.User(t, userId).HasType("SERVICE")
+					acc.TestClient().User.SetType(t, userId, sdk.UserTypeService)
+					objectassert.User(t, userId).HasType(string(sdk.UserTypeService))
 				},
 				Config: config.FromModel(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
