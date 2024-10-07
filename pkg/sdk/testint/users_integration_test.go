@@ -395,6 +395,7 @@ func TestInt_Users(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
 			HasName(user.Name).
+			HasType(string(sdk.UserTypeService)).
 			HasCreatedOnNotEmpty().
 			// login name is always case-insensitive
 			HasLoginName(strings.ToUpper(newValue)).
@@ -420,6 +421,95 @@ func TestInt_Users(t *testing.T) {
 			HasExpiresAtTimeNotEmpty().
 			HasLockedUntilTimeNotEmpty().
 			HasHasPassword(false).
+			HasHasRsaPublicKey(true),
+		)
+	})
+
+	t.Run("create: all object properties - type legacy service", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		currentRole := testClientHelper().Context.CurrentRole(t)
+
+		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			//MinsToBypassMFA:       sdk.Int(30),
+			//FirstName:             sdk.String(newValue),
+			//MiddleName:            sdk.String(newValue),
+			//LastName:              sdk.String(newValue),
+			Password:              sdk.String(password),
+			MustChangePassword:    sdk.Bool(true),
+			LoginName:             sdk.String(newValue),
+			DisplayName:           sdk.String(newValue),
+			Email:                 sdk.String(email),
+			Disable:               sdk.Bool(true),
+			DaysToExpiry:          sdk.Int(5),
+			MinsToUnlock:          sdk.Int(15),
+			DefaultWarehouse:      sdk.Pointer(warehouseId),
+			DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
+			DefaultRole:           sdk.Pointer(roleId),
+			DefaultSecondaryRoles: &sdk.SecondaryRoles{All: sdk.Bool(true)},
+			RSAPublicKey:          sdk.String(key),
+			RSAPublicKey2:         sdk.String(key2),
+			Comment:               sdk.String("some comment"),
+			Type:                  sdk.Pointer(sdk.UserTypeLegacyService),
+		}}
+
+		err := client.Users.Create(ctx, id, createOpts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, id.Name(), userDetails.Name.Value)
+		assert.Equal(t, strings.ToUpper(newValue), userDetails.LoginName.Value)
+		assert.Equal(t, newValue, userDetails.DisplayName.Value)
+		assert.Equal(t, email, userDetails.Email.Value)
+		assert.Equal(t, true, userDetails.Disabled.Value)
+		assert.NotEmpty(t, userDetails.DaysToExpiry.Value)
+		assert.Equal(t, 14, *userDetails.MinsToUnlock.Value)
+		assert.Equal(t, warehouseId.Name(), userDetails.DefaultWarehouse.Value)
+		assert.Equal(t, fmt.Sprintf("%s.%s", schemaId.DatabaseName(), schemaId.Name()), userDetails.DefaultNamespace.Value)
+		assert.Equal(t, roleId.Name(), userDetails.DefaultRole.Value)
+		assert.Equal(t, `["ALL"]`, userDetails.DefaultSecondaryRoles.Value)
+		assert.Equal(t, "some comment", userDetails.Comment.Value)
+		assert.Equal(t, string(sdk.UserTypeLegacyService), userDetails.Type.Value)
+		assert.NotEmpty(t, userDetails.Password.Value)
+		assert.Equal(t, true, userDetails.MustChangePassword.Value)
+
+		assert.Equal(t, "", userDetails.FirstName.Value)
+		assert.Equal(t, "", userDetails.MiddleName.Value)
+		assert.Equal(t, "", userDetails.LastName.Value)
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+
+		user, err := client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasName(user.Name).
+			HasType(string(sdk.UserTypeLegacyService)).
+			HasCreatedOnNotEmpty().
+			// login name is always case-insensitive
+			HasLoginName(strings.ToUpper(newValue)).
+			HasDisplayName(newValue).
+			HasFirstName("").
+			HasLastName("").
+			HasEmail(email).
+			HasMinsToUnlock("14").
+			HasDaysToExpiryNotEmpty().
+			HasComment("some comment").
+			HasDisabled(true).
+			HasMustChangePassword(true).
+			HasSnowflakeLock(false).
+			HasDefaultWarehouse(warehouseId.Name()).
+			HasDefaultNamespaceId(schemaId).
+			HasDefaultRole(roleId.Name()).
+			HasDefaultSecondaryRoles(`["ALL"]`).
+			HasExtAuthnDuo(false).
+			HasExtAuthnUid("").
+			HasMinsToBypassMfa("").
+			HasOwner(currentRole.Name()).
+			HasLastSuccessLoginEmpty().
+			HasExpiresAtTimeNotEmpty().
+			HasLockedUntilTimeNotEmpty().
+			HasHasPassword(true).
 			HasHasRsaPublicKey(true),
 		)
 	})
