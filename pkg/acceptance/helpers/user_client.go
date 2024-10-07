@@ -30,6 +30,24 @@ func (c *UserClient) CreateUser(t *testing.T) (*sdk.User, func()) {
 	return c.CreateUserWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{})
 }
 
+func (c *UserClient) CreateServiceUser(t *testing.T) (*sdk.User, func()) {
+	t.Helper()
+	return c.CreateUserWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{
+		ObjectProperties: &sdk.UserObjectProperties{
+			Type: sdk.Pointer(sdk.UserTypeService),
+		},
+	})
+}
+
+func (c *UserClient) CreateLegacyServiceUser(t *testing.T) (*sdk.User, func()) {
+	t.Helper()
+	return c.CreateUserWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{
+		ObjectProperties: &sdk.UserObjectProperties{
+			Type: sdk.Pointer(sdk.UserTypeLegacyService),
+		},
+	})
+}
+
 func (c *UserClient) CreateUserWithPrefix(t *testing.T, prefix string) (*sdk.User, func()) {
 	t.Helper()
 	return c.CreateUserWithOptions(t, c.ids.RandomAccountObjectIdentifierWithPrefix(prefix), &sdk.CreateUserOptions{})

@@ -18,7 +18,6 @@ import (
 )
 
 // TODO [SNOW-1645875]: test setting/unsetting policies
-// TODO [this PR]: test attributes settable/not settable on service/legacy service user (create and alter)
 // TODO [this PR]: fix TestAcc_User_issue2970
 func TestInt_Users(t *testing.T) {
 	client := testClient(t)
@@ -531,6 +530,29 @@ func TestInt_Users(t *testing.T) {
 		})
 	}
 
+	incorrectObjectPropertiesForLegacyServiceType := []struct {
+		property             string
+		userObjectProperties *sdk.UserObjectProperties
+	}{
+		{property: "MINS_TO_BYPASS_MFA", userObjectProperties: &sdk.UserObjectProperties{MinsToBypassMFA: sdk.Int(30)}},
+		{property: "FIRST_NAME", userObjectProperties: &sdk.UserObjectProperties{FirstName: sdk.String(newValue)}},
+		{property: "MIDDLE_NAME", userObjectProperties: &sdk.UserObjectProperties{MiddleName: sdk.String(newValue)}},
+		{property: "LAST_NAME", userObjectProperties: &sdk.UserObjectProperties{LastName: sdk.String(newValue)}},
+	}
+
+	for _, tt := range incorrectObjectPropertiesForLegacyServiceType {
+		tt := tt
+		t.Run(fmt.Sprintf("create: incorrect object property %s - type legacy service", tt.property), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+			tt.userObjectProperties.Type = sdk.Pointer(sdk.UserTypeLegacyService)
+			createOpts := &sdk.CreateUserOptions{ObjectProperties: tt.userObjectProperties}
+
+			err := client.Users.Create(ctx, id, createOpts)
+			require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=LEGACY_SERVICE.", tt.property))
+		})
+	}
+
 	t.Run("create: set mins to bypass mfa to negative manually", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
@@ -954,6 +976,344 @@ func TestInt_Users(t *testing.T) {
 			HasOwner(currentRole.Name()),
 		)
 	})
+
+	t.Run("alter: set and unset object properties - type service", func(t *testing.T) {
+		user, userCleanup := testClientHelper().User.CreateServiceUser(t)
+		t.Cleanup(userCleanup)
+
+		currentRole := testClientHelper().Context.CurrentRole(t)
+
+		assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
+			HasDefaults(user.Name).
+			HasDisplayName(user.Name).
+			HasOwner(currentRole.Name()),
+		)
+
+		// omitting FirstName, MiddleName, LastName, Password, MustChangePassword, MinsToBypassMFA, and DisableMfa
+		alterOpts := &sdk.AlterUserOptions{Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					LoginName:             sdk.String(newValue),
+					DisplayName:           sdk.String(newValue),
+					Email:                 sdk.String(email),
+					Disable:               sdk.Bool(true),
+					DaysToExpiry:          sdk.Int(5),
+					MinsToUnlock:          sdk.Int(15),
+					DefaultWarehouse:      sdk.Pointer(warehouseId),
+					DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
+					DefaultRole:           sdk.Pointer(roleId),
+					DefaultSecondaryRoles: &sdk.SecondaryRoles{All: sdk.Bool(true)},
+					RSAPublicKey:          sdk.String(key),
+					RSAPublicKey2:         sdk.String(key2),
+					Comment:               sdk.String("some comment"),
+				},
+			},
+		}}
+
+		err := client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasName(user.Name).
+			HasCreatedOnNotEmpty().
+			// login name is always case-insensitive
+			HasLoginName(strings.ToUpper(newValue)).
+			HasDisplayName(newValue).
+			HasFirstName("").
+			HasLastName("").
+			HasEmail(email).
+			HasMinsToUnlock("14").
+			HasDaysToExpiryNotEmpty().
+			HasComment("some comment").
+			HasDisabled(true).
+			HasMustChangePassword(false).
+			HasSnowflakeLock(false).
+			HasDefaultWarehouse(warehouseId.Name()).
+			HasDefaultNamespaceId(schemaId).
+			HasDefaultRole(roleId.Name()).
+			HasDefaultSecondaryRoles(`["ALL"]`).
+			HasExtAuthnDuo(false).
+			HasExtAuthnUid("").
+			HasMinsToBypassMfa("").
+			HasOwner(currentRole.Name()).
+			HasLastSuccessLoginEmpty().
+			HasExpiresAtTimeNotEmpty().
+			HasLockedUntilTimeNotEmpty().
+			HasHasPassword(false).
+			HasHasRsaPublicKey(true),
+		)
+
+		alterOpts = &sdk.AlterUserOptions{Unset: &sdk.UserUnset{
+			ObjectProperties: &sdk.UserObjectPropertiesUnset{
+				LoginName:             sdk.Bool(true),
+				DisplayName:           sdk.Bool(true),
+				Email:                 sdk.Bool(true),
+				Disable:               sdk.Bool(true),
+				DaysToExpiry:          sdk.Bool(true),
+				MinsToUnlock:          sdk.Bool(true),
+				DefaultWarehouse:      sdk.Bool(true),
+				DefaultNamespace:      sdk.Bool(true),
+				DefaultRole:           sdk.Bool(true),
+				DefaultSecondaryRoles: sdk.Bool(true),
+				RSAPublicKey:          sdk.Bool(true),
+				RSAPublicKey2:         sdk.Bool(true),
+				Comment:               sdk.Bool(true),
+			},
+		}}
+
+		err = client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasDefaults(user.Name).
+			HasDisplayName("").
+			HasOwner(currentRole.Name()),
+		)
+	})
+
+	t.Run("alter: set and unset object properties - type legacy service", func(t *testing.T) {
+		user, userCleanup := testClientHelper().User.CreateLegacyServiceUser(t)
+		t.Cleanup(userCleanup)
+
+		currentRole := testClientHelper().Context.CurrentRole(t)
+
+		assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
+			HasDefaults(user.Name).
+			HasDisplayName(user.Name).
+			HasOwner(currentRole.Name()),
+		)
+
+		// omitting FirstName, MiddleName, LastName, MinsToBypassMFA, and DisableMfa
+		alterOpts := &sdk.AlterUserOptions{Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					Password:              sdk.String(password),
+					MustChangePassword:    sdk.Bool(true),
+					LoginName:             sdk.String(newValue),
+					DisplayName:           sdk.String(newValue),
+					Email:                 sdk.String(email),
+					Disable:               sdk.Bool(true),
+					DaysToExpiry:          sdk.Int(5),
+					MinsToUnlock:          sdk.Int(15),
+					DefaultWarehouse:      sdk.Pointer(warehouseId),
+					DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
+					DefaultRole:           sdk.Pointer(roleId),
+					DefaultSecondaryRoles: &sdk.SecondaryRoles{All: sdk.Bool(true)},
+					RSAPublicKey:          sdk.String(key),
+					RSAPublicKey2:         sdk.String(key2),
+					Comment:               sdk.String("some comment"),
+				},
+			},
+		}}
+
+		err := client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasName(user.Name).
+			HasCreatedOnNotEmpty().
+			// login name is always case-insensitive
+			HasLoginName(strings.ToUpper(newValue)).
+			HasDisplayName(newValue).
+			HasFirstName("").
+			HasLastName("").
+			HasEmail(email).
+			HasMinsToUnlock("14").
+			HasDaysToExpiryNotEmpty().
+			HasComment("some comment").
+			HasDisabled(true).
+			HasMustChangePassword(true).
+			HasSnowflakeLock(false).
+			HasDefaultWarehouse(warehouseId.Name()).
+			HasDefaultNamespaceId(schemaId).
+			HasDefaultRole(roleId.Name()).
+			HasDefaultSecondaryRoles(`["ALL"]`).
+			HasExtAuthnDuo(false).
+			HasExtAuthnUid("").
+			HasMinsToBypassMfa("").
+			HasOwner(currentRole.Name()).
+			HasLastSuccessLoginEmpty().
+			HasExpiresAtTimeNotEmpty().
+			HasLockedUntilTimeNotEmpty().
+			HasHasPassword(true).
+			HasHasRsaPublicKey(true),
+		)
+
+		alterOpts = &sdk.AlterUserOptions{Unset: &sdk.UserUnset{
+			ObjectProperties: &sdk.UserObjectPropertiesUnset{
+				Password:              sdk.Bool(true),
+				MustChangePassword:    sdk.Bool(true),
+				LoginName:             sdk.Bool(true),
+				DisplayName:           sdk.Bool(true),
+				Email:                 sdk.Bool(true),
+				Disable:               sdk.Bool(true),
+				DaysToExpiry:          sdk.Bool(true),
+				MinsToUnlock:          sdk.Bool(true),
+				DefaultWarehouse:      sdk.Bool(true),
+				DefaultNamespace:      sdk.Bool(true),
+				DefaultRole:           sdk.Bool(true),
+				DefaultSecondaryRoles: sdk.Bool(true),
+				RSAPublicKey:          sdk.Bool(true),
+				RSAPublicKey2:         sdk.Bool(true),
+				Comment:               sdk.Bool(true),
+			},
+		}}
+
+		err = client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasDefaults(user.Name).
+			HasDisplayName("").
+			HasOwner(currentRole.Name()),
+		)
+	})
+
+	incorrectAlterForServiceType := []struct {
+		property           string
+		alterSet           *sdk.UserAlterObjectProperties
+		alterUnset         *sdk.UserObjectPropertiesUnset
+		expectNoUnsetError bool
+	}{
+		{
+			property:   "MINS_TO_BYPASS_MFA",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{MinsToBypassMFA: sdk.Int(30)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{MinsToBypassMFA: sdk.Bool(true)},
+			// unset for MINS_TO_BYPASS_MFA is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "MUST_CHANGE_PASSWORD",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{MustChangePassword: sdk.Bool(true)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{MustChangePassword: sdk.Bool(true)},
+		},
+		{
+			property:   "FIRST_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{FirstName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{FirstName: sdk.Bool(true)},
+			// unset for FIRST_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "MIDDLE_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{MiddleName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{MiddleName: sdk.Bool(true)},
+			// unset for MIDDLE_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "LAST_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{LastName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{LastName: sdk.Bool(true)},
+			// unset for LAST_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "PASSWORD",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{Password: sdk.String(password)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{Password: sdk.Bool(true)},
+			// unset for PASSWORD is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "DISABLE_MFA",
+			alterSet:   &sdk.UserAlterObjectProperties{DisableMfa: sdk.Bool(true)},
+			alterUnset: &sdk.UserObjectPropertiesUnset{DisableMfa: sdk.Bool(true)},
+		},
+	}
+
+	for _, tt := range incorrectAlterForServiceType {
+		tt := tt
+		t.Run(fmt.Sprintf("alter: set and unset incorrect object property %s - type service", tt.property), func(t *testing.T) {
+			serviceUser, serviceUserCleanup := testClientHelper().User.CreateServiceUser(t)
+			t.Cleanup(serviceUserCleanup)
+
+			alterSet := &sdk.AlterUserOptions{Set: &sdk.UserSet{
+				ObjectProperties: tt.alterSet,
+			}}
+
+			err := client.Users.Alter(ctx, serviceUser.ID(), alterSet)
+			require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=SERVICE.", tt.property))
+
+			alterUnset := &sdk.AlterUserOptions{Unset: &sdk.UserUnset{
+				ObjectProperties: tt.alterUnset,
+			}}
+
+			err = client.Users.Alter(ctx, serviceUser.ID(), alterUnset)
+			if tt.expectNoUnsetError {
+				require.Nil(t, err)
+			} else {
+				require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=SERVICE.", tt.property))
+			}
+		})
+	}
+
+	incorrectAlterForLegacyServiceType := []struct {
+		property           string
+		alterSet           *sdk.UserAlterObjectProperties
+		alterUnset         *sdk.UserObjectPropertiesUnset
+		expectNoUnsetError bool
+	}{
+		{
+			property:   "MINS_TO_BYPASS_MFA",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{MinsToBypassMFA: sdk.Int(30)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{MinsToBypassMFA: sdk.Bool(true)},
+			// unset for MINS_TO_BYPASS_MFA is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "FIRST_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{FirstName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{FirstName: sdk.Bool(true)},
+			// unset for FIRST_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "MIDDLE_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{MiddleName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{MiddleName: sdk.Bool(true)},
+			// unset for MIDDLE_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "LAST_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{LastName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{LastName: sdk.Bool(true)},
+			// unset for LAST_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "DISABLE_MFA",
+			alterSet:   &sdk.UserAlterObjectProperties{DisableMfa: sdk.Bool(true)},
+			alterUnset: &sdk.UserObjectPropertiesUnset{DisableMfa: sdk.Bool(true)},
+		},
+	}
+
+	for _, tt := range incorrectAlterForLegacyServiceType {
+		tt := tt
+		t.Run(fmt.Sprintf("alter: set and unset incorrect object property %s - type legacy service", tt.property), func(t *testing.T) {
+			legacyServiceUser, legacyServiceUserCleanup := testClientHelper().User.CreateLegacyServiceUser(t)
+			t.Cleanup(legacyServiceUserCleanup)
+
+			alterSet := &sdk.AlterUserOptions{Set: &sdk.UserSet{
+				ObjectProperties: tt.alterSet,
+			}}
+
+			err := client.Users.Alter(ctx, legacyServiceUser.ID(), alterSet)
+			require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=LEGACY_SERVICE.", tt.property))
+
+			alterUnset := &sdk.AlterUserOptions{Unset: &sdk.UserUnset{
+				ObjectProperties: tt.alterUnset,
+			}}
+
+			err = client.Users.Alter(ctx, legacyServiceUser.ID(), alterUnset)
+			if tt.expectNoUnsetError {
+				require.Nil(t, err)
+			} else {
+				require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=LEGACY_SERVICE.", tt.property))
+			}
+		})
+	}
 
 	t.Run("set and unset authentication policy", func(t *testing.T) {
 		authenticationPolicyTest, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.Create(t)
