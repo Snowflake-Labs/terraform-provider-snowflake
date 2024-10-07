@@ -487,6 +487,7 @@ type UserDetails struct {
 	Name                                *StringProperty
 	Comment                             *StringProperty
 	DisplayName                         *StringProperty
+	Type                                *StringProperty
 	LoginName                           *StringProperty
 	FirstName                           *StringProperty
 	MiddleName                          *StringProperty
@@ -509,8 +510,10 @@ type UserDetails struct {
 	MinsToBypassNetworkPolicy           *IntProperty
 	RsaPublicKey                        *StringProperty
 	RsaPublicKeyFp                      *StringProperty
+	RsaPublicKeyLastSetTime             *StringProperty
 	RsaPublicKey2                       *StringProperty
 	RsaPublicKey2Fp                     *StringProperty
+	RsaPublicKey2LastSetTime            *StringProperty
 	PasswordLastSetTime                 *StringProperty
 	CustomLandingPageUrl                *StringProperty
 	CustomLandingPageUrlFlushNextUiLoad *BoolProperty
@@ -527,6 +530,8 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 			v.Comment = row.toStringProperty()
 		case "DISPLAY_NAME":
 			v.DisplayName = row.toStringProperty()
+		case "TYPE":
+			v.Type = row.toStringProperty()
 		case "LOGIN_NAME":
 			v.LoginName = row.toStringProperty()
 		case "FIRST_NAME":
@@ -563,6 +568,8 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 			v.ExtAuthnDuo = row.toBoolProperty()
 		case "EXT_AUTHN_UID":
 			v.ExtAuthnUid = row.toStringProperty()
+		case "HAS_MFA":
+			v.HasMfa = row.toBoolProperty()
 		case "MINS_TO_BYPASS_MFA":
 			v.MinsToBypassMfa = row.toIntProperty()
 		case "MINS_TO_BYPASS_NETWORK_POLICY":
@@ -571,18 +578,20 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 			v.RsaPublicKey = row.toStringProperty()
 		case "RSA_PUBLIC_KEY_FP":
 			v.RsaPublicKeyFp = row.toStringProperty()
+		case "RSA_PUBLIC_KEY_LAST_SET_TIME":
+			v.RsaPublicKeyLastSetTime = row.toStringProperty()
 		case "RSA_PUBLIC_KEY_2":
 			v.RsaPublicKey2 = row.toStringProperty()
 		case "RSA_PUBLIC_KEY_2_FP":
 			v.RsaPublicKey2Fp = row.toStringProperty()
+		case "RSA_PUBLIC_KEY_2_LAST_SET_TIME":
+			v.RsaPublicKey2LastSetTime = row.toStringProperty()
 		case "PASSWORD_LAST_SET_TIME":
 			v.PasswordLastSetTime = row.toStringProperty()
 		case "CUSTOM_LANDING_PAGE_URL":
 			v.CustomLandingPageUrl = row.toStringProperty()
 		case "CUSTOM_LANDING_PAGE_URL_FLUSH_NEXT_UI_LOAD":
 			v.CustomLandingPageUrlFlushNextUiLoad = row.toBoolProperty()
-		case "HAS_MFA":
-			v.HasMfa = row.toBoolProperty()
 		}
 	}
 	return v

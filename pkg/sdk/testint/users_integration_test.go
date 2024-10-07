@@ -6,22 +6,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TODO [SNOW-1645875]: test setting/unsetting policies
-// TODO [SNOW-1645348]: add type and other 8.26 additions
 // TODO [this PR]: test parameters settable on service/legacy service user (create and alter)
 // TODO [this PR]: test attributes settable on service/legacy service user (create and alter)
+// TODO [this PR]: fix TestAcc_User_issue2970
 func TestInt_Users(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -238,6 +237,41 @@ func TestInt_Users(t *testing.T) {
 			HasOwner(currentRole.Name()),
 		)
 	})
+
+	createWithTypeTests := []struct {
+		expectedType sdk.UserType
+	}{
+		{expectedType: sdk.UserTypeService},
+		{expectedType: sdk.UserTypeLegacyService},
+	}
+
+	for _, tt := range createWithTypeTests {
+		tt := tt
+		t.Run(fmt.Sprintf("create: type %s - no options", tt.expectedType), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+			err := client.Users.Create(ctx, id, &sdk.CreateUserOptions{
+				ObjectProperties: &sdk.UserObjectProperties{
+					Type: sdk.Pointer(tt.expectedType),
+				},
+			})
+			require.NoError(t, err)
+			t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+			userDetails, err := client.Users.Describe(ctx, id)
+			require.NoError(t, err)
+			assert.Equal(t, id.Name(), userDetails.Name.Value)
+			assert.Equal(t, string(tt.expectedType), userDetails.Type.Value)
+
+			user, err := client.Users.ShowByID(ctx, id)
+			require.NoError(t, err)
+
+			assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
+				HasDefaults(id.Name()).
+				HasType(string(tt.expectedType)),
+			)
+		})
+	}
 
 	t.Run("create: all object properties", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
