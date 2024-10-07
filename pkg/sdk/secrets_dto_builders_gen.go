@@ -155,45 +155,54 @@ func (s *SecretSetRequest) WithComment(Comment string) *SecretSetRequest {
 	return s
 }
 
-func (s *SecretSetRequest) WithSetForOAuthClientCredentialsFlow(SetForOAuthClientCredentialsFlow SetForOAuthClientCredentialsFlowRequest) *SecretSetRequest {
-	s.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow
+func (s *SecretSetRequest) WithSetForFlow(SetForFlow SetForFlowRequest) *SecretSetRequest {
+	s.SetForFlow = &SetForFlow
 	return s
 }
 
-func (s *SecretSetRequest) WithSetForOAuthAuthorizationFlow(SetForOAuthAuthorizationFlow SetForOAuthAuthorizationFlowRequest) *SecretSetRequest {
-	s.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow
+func NewSetForFlowRequest() *SetForFlowRequest {
+	return &SetForFlowRequest{}
+}
+
+func (s *SetForFlowRequest) WithSetForOAuthClientCredentials(SetForOAuthClientCredentials SetForOAuthClientCredentialsRequest) *SetForFlowRequest {
+	s.SetForOAuthClientCredentials = &SetForOAuthClientCredentials
 	return s
 }
 
-func (s *SecretSetRequest) WithSetForBasicAuthentication(SetForBasicAuthentication SetForBasicAuthenticationRequest) *SecretSetRequest {
+func (s *SetForFlowRequest) WithSetForOAuthAuthorization(SetForOAuthAuthorization SetForOAuthAuthorizationRequest) *SetForFlowRequest {
+	s.SetForOAuthAuthorization = &SetForOAuthAuthorization
+	return s
+}
+
+func (s *SetForFlowRequest) WithSetForBasicAuthentication(SetForBasicAuthentication SetForBasicAuthenticationRequest) *SetForFlowRequest {
 	s.SetForBasicAuthentication = &SetForBasicAuthentication
 	return s
 }
 
-func (s *SecretSetRequest) WithSetForGenericString(SetForGenericString SetForGenericStringRequest) *SecretSetRequest {
+func (s *SetForFlowRequest) WithSetForGenericString(SetForGenericString SetForGenericStringRequest) *SetForFlowRequest {
 	s.SetForGenericString = &SetForGenericString
 	return s
 }
 
-func NewSetForOAuthClientCredentialsFlowRequest() *SetForOAuthClientCredentialsFlowRequest {
-	return &SetForOAuthClientCredentialsFlowRequest{}
+func NewSetForOAuthClientCredentialsRequest() *SetForOAuthClientCredentialsRequest {
+	return &SetForOAuthClientCredentialsRequest{}
 }
 
-func (s *SetForOAuthClientCredentialsFlowRequest) WithOauthScopes(OauthScopes OauthScopesListRequest) *SetForOAuthClientCredentialsFlowRequest {
+func (s *SetForOAuthClientCredentialsRequest) WithOauthScopes(OauthScopes OauthScopesListRequest) *SetForOAuthClientCredentialsRequest {
 	s.OauthScopes = &OauthScopes
 	return s
 }
 
-func NewSetForOAuthAuthorizationFlowRequest() *SetForOAuthAuthorizationFlowRequest {
-	return &SetForOAuthAuthorizationFlowRequest{}
+func NewSetForOAuthAuthorizationRequest() *SetForOAuthAuthorizationRequest {
+	return &SetForOAuthAuthorizationRequest{}
 }
 
-func (s *SetForOAuthAuthorizationFlowRequest) WithOauthRefreshToken(OauthRefreshToken string) *SetForOAuthAuthorizationFlowRequest {
+func (s *SetForOAuthAuthorizationRequest) WithOauthRefreshToken(OauthRefreshToken string) *SetForOAuthAuthorizationRequest {
 	s.OauthRefreshToken = &OauthRefreshToken
 	return s
 }
 
-func (s *SetForOAuthAuthorizationFlowRequest) WithOauthRefreshTokenExpiryTime(OauthRefreshTokenExpiryTime string) *SetForOAuthAuthorizationFlowRequest {
+func (s *SetForOAuthAuthorizationRequest) WithOauthRefreshTokenExpiryTime(OauthRefreshTokenExpiryTime string) *SetForOAuthAuthorizationRequest {
 	s.OauthRefreshTokenExpiryTime = &OauthRefreshTokenExpiryTime
 	return s
 }

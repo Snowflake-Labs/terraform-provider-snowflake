@@ -138,33 +138,37 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 			Comment: r.Set.Comment,
 		}
 
-		if r.Set.SetForOAuthClientCredentialsFlow != nil {
-			opts.Set.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow{}
+		if r.Set.SetForFlow != nil {
+			opts.Set.SetForFlow = &SetForFlow{}
 
-			if r.Set.SetForOAuthClientCredentialsFlow.OauthScopes != nil {
-				opts.Set.SetForOAuthClientCredentialsFlow.OauthScopes = &OauthScopesList{
-					OauthScopesList: r.Set.SetForOAuthClientCredentialsFlow.OauthScopes.OauthScopesList,
+			if r.Set.SetForFlow.SetForOAuthClientCredentials != nil {
+				opts.Set.SetForFlow.SetForOAuthClientCredentials = &SetForOAuthClientCredentials{}
+
+				if r.Set.SetForFlow.SetForOAuthClientCredentials.OauthScopes != nil {
+					opts.Set.SetForFlow.SetForOAuthClientCredentials.OauthScopes = &OauthScopesList{
+						OauthScopesList: r.Set.SetForFlow.SetForOAuthClientCredentials.OauthScopes.OauthScopesList,
+					}
 				}
 			}
-		}
 
-		if r.Set.SetForOAuthAuthorizationFlow != nil {
-			opts.Set.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow{
-				OauthRefreshToken:           r.Set.SetForOAuthAuthorizationFlow.OauthRefreshToken,
-				OauthRefreshTokenExpiryTime: r.Set.SetForOAuthAuthorizationFlow.OauthRefreshTokenExpiryTime,
+			if r.Set.SetForFlow.SetForOAuthAuthorization != nil {
+				opts.Set.SetForFlow.SetForOAuthAuthorization = &SetForOAuthAuthorization{
+					OauthRefreshToken:           r.Set.SetForFlow.SetForOAuthAuthorization.OauthRefreshToken,
+					OauthRefreshTokenExpiryTime: r.Set.SetForFlow.SetForOAuthAuthorization.OauthRefreshTokenExpiryTime,
+				}
 			}
-		}
 
-		if r.Set.SetForBasicAuthentication != nil {
-			opts.Set.SetForBasicAuthentication = &SetForBasicAuthentication{
-				Username: r.Set.SetForBasicAuthentication.Username,
-				Password: r.Set.SetForBasicAuthentication.Password,
+			if r.Set.SetForFlow.SetForBasicAuthentication != nil {
+				opts.Set.SetForFlow.SetForBasicAuthentication = &SetForBasicAuthentication{
+					Username: r.Set.SetForFlow.SetForBasicAuthentication.Username,
+					Password: r.Set.SetForFlow.SetForBasicAuthentication.Password,
+				}
 			}
-		}
 
-		if r.Set.SetForGenericString != nil {
-			opts.Set.SetForGenericString = &SetForGenericString{
-				SecretString: r.Set.SetForGenericString.SecretString,
+			if r.Set.SetForFlow.SetForGenericString != nil {
+				opts.Set.SetForFlow.SetForGenericString = &SetForGenericString{
+					SecretString: r.Set.SetForFlow.SetForGenericString.SecretString,
+				}
 			}
 		}
 	}

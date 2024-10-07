@@ -86,16 +86,19 @@ type AlterSecretOptions struct {
 	Unset    *SecretUnset           `ddl:"keyword"`
 }
 type SecretSet struct {
-	Comment                          *string                           `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	SetForOAuthClientCredentialsFlow *SetForOAuthClientCredentialsFlow `ddl:"keyword"`
-	SetForOAuthAuthorizationFlow     *SetForOAuthAuthorizationFlow     `ddl:"keyword"`
-	SetForBasicAuthentication        *SetForBasicAuthentication        `ddl:"keyword"`
-	SetForGenericString              *SetForGenericString              `ddl:"keyword"`
+	Comment    *string     `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	SetForFlow *SetForFlow `ddl:"keyword"`
 }
-type SetForOAuthClientCredentialsFlow struct {
+type SetForFlow struct {
+	SetForOAuthClientCredentials *SetForOAuthClientCredentials `ddl:"keyword"`
+	SetForOAuthAuthorization     *SetForOAuthAuthorization     `ddl:"keyword"`
+	SetForBasicAuthentication    *SetForBasicAuthentication    `ddl:"keyword"`
+	SetForGenericString          *SetForGenericString          `ddl:"keyword"`
+}
+type SetForOAuthClientCredentials struct {
 	OauthScopes *OauthScopesList `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
 }
-type SetForOAuthAuthorizationFlow struct {
+type SetForOAuthAuthorization struct {
 	OauthRefreshToken           *string `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN"`
 	OauthRefreshTokenExpiryTime *string `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN_EXPIRY_TIME"`
 }

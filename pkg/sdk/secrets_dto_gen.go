@@ -61,18 +61,22 @@ type AlterSecretRequest struct {
 }
 
 type SecretSetRequest struct {
-	Comment                          *string
-	SetForOAuthClientCredentialsFlow *SetForOAuthClientCredentialsFlowRequest
-	SetForOAuthAuthorizationFlow     *SetForOAuthAuthorizationFlowRequest
-	SetForBasicAuthentication        *SetForBasicAuthenticationRequest
-	SetForGenericString              *SetForGenericStringRequest
+	Comment    *string
+	SetForFlow *SetForFlowRequest
 }
 
-type SetForOAuthClientCredentialsFlowRequest struct {
+type SetForFlowRequest struct {
+	SetForOAuthClientCredentials *SetForOAuthClientCredentialsRequest
+	SetForOAuthAuthorization     *SetForOAuthAuthorizationRequest
+	SetForBasicAuthentication    *SetForBasicAuthenticationRequest
+	SetForGenericString          *SetForGenericStringRequest
+}
+
+type SetForOAuthClientCredentialsRequest struct {
 	OauthScopes *OauthScopesListRequest
 }
 
-type SetForOAuthAuthorizationFlowRequest struct {
+type SetForOAuthAuthorizationRequest struct {
 	OauthRefreshToken           *string
 	OauthRefreshTokenExpiryTime *string
 }
