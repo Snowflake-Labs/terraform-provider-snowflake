@@ -226,6 +226,8 @@ func User() *schema.Resource {
 	}
 }
 
+// TODO [SNOW-1645348]: legacy service user
+// TODO [SNOW-1645348]: change docs in user (regarding service and legacy service)
 func ServiceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateUser,
