@@ -339,7 +339,7 @@ func TestInt_Users(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		currentRole := testClientHelper().Context.CurrentRole(t)
 
-		// ommiting FirstName, MiddleName, LastName, Password, MustChangePassword, and MinsToBypassMFA
+		// omitting FirstName, MiddleName, LastName, Password, MustChangePassword, and MinsToBypassMFA
 		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
 			LoginName:             sdk.String(newValue),
 			DisplayName:           sdk.String(newValue),
@@ -423,7 +423,7 @@ func TestInt_Users(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		currentRole := testClientHelper().Context.CurrentRole(t)
 
-		// ommiting FirstName, MiddleName, LastName, and MinsToBypassMFA
+		// omitting FirstName, MiddleName, LastName, and MinsToBypassMFA
 		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
 			Password:              sdk.String(password),
 			MustChangePassword:    sdk.Bool(true),

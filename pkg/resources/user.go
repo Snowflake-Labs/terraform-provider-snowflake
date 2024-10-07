@@ -226,6 +226,39 @@ func User() *schema.Resource {
 	}
 }
 
+func ServiceUser() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: CreateUser,
+		UpdateContext: UpdateUser,
+		ReadContext:   GetReadUserFunc(true),
+		DeleteContext: DeleteUser,
+		Description:   "Resource used to manage service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
+
+		Schema: helpers.MergeMaps(serviceUserSchema, userParametersSchema),
+		Importer: &schema.ResourceImporter{
+			StateContext: ImportUser,
+		},
+
+		CustomizeDiff: customdiff.All(
+			// TODO [SNOW-1645348]: generalize this list
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "login_name", "display_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "default_secondary_roles_option", "rsa_public_key", "rsa_public_key_2", "comment"),
+			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
+			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
+			userParametersCustomDiff,
+			// TODO [SNOW-1645348]: revisit with service user work
+			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+				if n := diff.Get("user_type"); n != nil {
+					logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
+					if !slices.Contains([]string{"SERVICE"}, strings.ToUpper(n.(string))) {
+						return errors.Join(diff.SetNewComputed("user_type"), diff.ForceNew("user_type"))
+					}
+				}
+				return nil
+			},
+		),
+	}
+}
+
 func ImportUser(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting user import")
 	client := meta.(*provider.Context).Client

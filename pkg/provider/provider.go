@@ -472,6 +472,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_scim_integration":                                             resources.SCIMIntegration(),
 		"snowflake_secondary_database":                                           resources.SecondaryDatabase(),
 		"snowflake_sequence":                                                     resources.Sequence(),
+		"snowflake_service_user":                                                 resources.ServiceUser(),
 		"snowflake_session_parameter":                                            resources.SessionParameter(),
 		"snowflake_share":                                                        resources.Share(),
 		"snowflake_shared_database":                                              resources.SharedDatabase(),
