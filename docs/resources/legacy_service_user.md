@@ -1,8 +1,8 @@
 ---
-page_title: "snowflake_service_user Resource - terraform-provider-snowflake"
+page_title: "snowflake_legacy_service_user Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Resource used to manage service user objects. For more information, check user documentation https://docs.snowflake.com/en/sql-reference/commands-user-role.
+  Resource used to manage legacy service user objects. For more information, check user documentation https://docs.snowflake.com/en/sql-reference/commands-user-role.
 ---
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0960--v0970) to use it.
@@ -11,24 +11,25 @@ description: |-
 
 -> **Note** Attaching user policies will be handled in the following versions of the provider which may still affect this resource.
 
--> **Note** Other two user types are handled in separate resources: `snowflake_legacy_service_user` for user type `legacy_service` and `snowflake_user` for user type `person`.
+-> **Note** Other two user types are handled in separate resources: `snowflake_service_user` for user type `service` and `snowflake_user` for user type `person`.
 
 -> **Note** External changes to `days_to_expiry`, `mins_to_unlock`, and `mins_to_bypass_mfa` are not currently handled by the provider (because the value changes continuously on Snowflake side after setting it).
 
-# snowflake_service_user (Resource)
+# snowflake_legacy_service_user (Resource)
 
-Resource used to manage service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).
+Resource used to manage legacy service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).
 
 ## Example Usage
 
 ```terraform
-resource "snowflake_service_user" "service_user" {
-  name         = "Snowflake Service User"
-  login_name   = "service_user"
-  comment      = "A service user of snowflake."
+resource "snowflake_legacy_service_user" "user" {
+  name         = "Snowflake Legacy Service User"
+  login_name   = "legacy_service_user"
+  comment      = "A legacy service user of snowflake."
+  password     = "secret"
   disabled     = false
-  display_name = "Snowflake Service User"
-  email        = "service_user@snowflake.example"
+  display_name = "Snowflake Legacy Service User"
+  email        = "legacy.service.user@snowflake.example"
 
   default_warehouse       = "warehouse"
   default_secondary_roles = "ALL"
@@ -36,6 +37,8 @@ resource "snowflake_service_user" "service_user" {
 
   rsa_public_key   = "..."
   rsa_public_key_2 = "..."
+
+  must_change_password = true
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -88,9 +91,11 @@ resource "snowflake_service_user" "service_user" {
 - `login_name` (String, Sensitive) The name users use to log in. If not supplied, snowflake will use name instead. Login names are always case-insensitive.
 - `mins_to_unlock` (Number) Specifies the number of minutes until the temporary lock on the user login is cleared. To protect against unauthorized user login, Snowflake places a temporary lock on a user after five consecutive unsuccessful login attempts. When creating a user, this property can be set to prevent them from logging in until the specified amount of time passes. To remove a lock immediately for a user, specify a value of 0 for this parameter. **Note** because this value changes continuously after setting it, the provider is currently NOT handling the external changes to it. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `multi_statement_count` (Number) Number of statements to execute when using the multi-statement capability. For more information, check [MULTI_STATEMENT_COUNT docs](https://docs.snowflake.com/en/sql-reference/parameters#multi-statement-count).
+- `must_change_password` (String) Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `network_policy` (String) Specifies the network policy to enforce for your account. Network policies enable restricting access to your account based on users’ IP address. For more details, see [Controlling network traffic with network policies](https://docs.snowflake.com/en/user-guide/network-policies). Any existing network policy (created using [CREATE NETWORK POLICY](https://docs.snowflake.com/en/sql-reference/sql/create-network-policy)). For more information, check [NETWORK_POLICY docs](https://docs.snowflake.com/en/sql-reference/parameters#network-policy).
 - `noorder_sequence_as_default` (Boolean) Specifies whether the ORDER or NOORDER property is set by default when you create a new sequence or add a new table column. The ORDER and NOORDER properties determine whether or not the values are generated for the sequence or auto-incremented column in [increasing or decreasing order](https://docs.snowflake.com/en/user-guide/querying-sequences.html#label-querying-sequences-increasing-values). For more information, check [NOORDER_SEQUENCE_AS_DEFAULT docs](https://docs.snowflake.com/en/sql-reference/parameters#noorder-sequence-as-default).
 - `odbc_treat_decimal_as_int` (Boolean) Specifies how ODBC processes columns that have a scale of zero (0). For more information, check [ODBC_TREAT_DECIMAL_AS_INT docs](https://docs.snowflake.com/en/sql-reference/parameters#odbc-treat-decimal-as-int).
+- `password` (String, Sensitive) Password for the user. **WARNING:** this will put the password in the terraform state file. Use carefully.
 - `prevent_unload_to_internal_stages` (Boolean) Specifies whether to prevent data unload operations to internal (Snowflake) stages using [COPY INTO <location>](https://docs.snowflake.com/en/sql-reference/sql/copy-into-location) statements. For more information, check [PREVENT_UNLOAD_TO_INTERNAL_STAGES docs](https://docs.snowflake.com/en/sql-reference/parameters#prevent-unload-to-internal-stages).
 - `query_tag` (String) Optional string that can be used to tag queries and other SQL statements executed within a session. The tags are displayed in the output of the [QUERY_HISTORY, QUERY_HISTORY_BY_*](https://docs.snowflake.com/en/sql-reference/functions/query_history) functions. For more information, check [QUERY_TAG docs](https://docs.snowflake.com/en/sql-reference/parameters#query-tag).
 - `quoted_identifiers_ignore_case` (Boolean) Specifies whether letters in double-quoted object identifiers are stored and resolved as uppercase letters. By default, Snowflake preserves the case of alphabetic characters when storing and resolving double-quoted identifiers (see [Identifier resolution](https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html#label-identifier-casing)). You can use this parameter in situations in which [third-party applications always use double quotes around identifiers](https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html#label-identifier-casing-parameter). For more information, check [QUOTED_IDENTIFIERS_IGNORE_CASE docs](https://docs.snowflake.com/en/sql-reference/parameters#quoted-identifiers-ignore-case).
@@ -930,5 +935,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_service_user.example userName
+terraform import snowflake_legacy_service_user.example userName
 ```

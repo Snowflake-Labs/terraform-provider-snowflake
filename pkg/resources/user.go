@@ -226,8 +226,6 @@ func User() *schema.Resource {
 	}
 }
 
-// TODO [SNOW-1645348]: legacy service user
-// TODO [SNOW-1645348]: change docs in user (regarding service and legacy service)
 func ServiceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateUser,
@@ -252,6 +250,39 @@ func ServiceUser() *schema.Resource {
 				if n := diff.Get("user_type"); n != nil {
 					logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
 					if !slices.Contains([]string{"SERVICE"}, strings.ToUpper(n.(string))) {
+						return errors.Join(diff.SetNewComputed("user_type"), diff.ForceNew("user_type"))
+					}
+				}
+				return nil
+			},
+		),
+	}
+}
+
+// TODO [SNOW-1645348]: mins to bypass mfa should be removed from docs
+func LegacyServiceUser() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: CreateUser,
+		UpdateContext: UpdateUser,
+		ReadContext:   GetReadUserFunc(true),
+		DeleteContext: DeleteUser,
+		Description:   "Resource used to manage legacy service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
+
+		Schema: helpers.MergeMaps(legacyServiceUserSchema, userParametersSchema),
+		Importer: &schema.ResourceImporter{
+			StateContext: ImportUser,
+		},
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "default_secondary_roles_option", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment"),
+			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
+			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
+			userParametersCustomDiff,
+			// TODO [SNOW-1645348]: revisit with service user work
+			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+				if n := diff.Get("user_type"); n != nil {
+					logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
+					if !slices.Contains([]string{"LEGACY_SERVICE"}, strings.ToUpper(n.(string))) {
 						return errors.Join(diff.SetNewComputed("user_type"), diff.ForceNew("user_type"))
 					}
 				}

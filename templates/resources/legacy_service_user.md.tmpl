@@ -15,7 +15,7 @@ description: |-
 
 -> **Note** Attaching user policies will be handled in the following versions of the provider which may still affect this resource.
 
--> **Note** Other two user types are handled in separate resources: `snowflake_legacy_service_user` for user type `legacy_service` and `snowflake_user` for user type `person`.
+-> **Note** Other two user types are handled in separate resources: `snowflake_service_user` for user type `service` and `snowflake_user` for user type `person`.
 
 -> **Note** External changes to `days_to_expiry`, `mins_to_unlock`, and `mins_to_bypass_mfa` are not currently handled by the provider (because the value changes continuously on Snowflake side after setting it).
 
