@@ -340,13 +340,8 @@ func TestInt_Users(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		currentRole := testClientHelper().Context.CurrentRole(t)
 
+		// ommiting FirstName, MiddleName, LastName, Password, MustChangePassword, and MinsToBypassMFA
 		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
-			//MinsToBypassMFA:       sdk.Int(30),
-			//MustChangePassword:    sdk.Bool(true),
-			//FirstName:             sdk.String(newValue),
-			//MiddleName:            sdk.String(newValue),
-			//LastName:              sdk.String(newValue),
-			//Password:              sdk.String(password),
 			LoginName:             sdk.String(newValue),
 			DisplayName:           sdk.String(newValue),
 			Email:                 sdk.String(email),
@@ -429,11 +424,8 @@ func TestInt_Users(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		currentRole := testClientHelper().Context.CurrentRole(t)
 
+		// ommiting FirstName, MiddleName, LastName, and MinsToBypassMFA
 		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
-			//MinsToBypassMFA:       sdk.Int(30),
-			//FirstName:             sdk.String(newValue),
-			//MiddleName:            sdk.String(newValue),
-			//LastName:              sdk.String(newValue),
 			Password:              sdk.String(password),
 			MustChangePassword:    sdk.Bool(true),
 			LoginName:             sdk.String(newValue),
@@ -513,6 +505,31 @@ func TestInt_Users(t *testing.T) {
 			HasHasRsaPublicKey(true),
 		)
 	})
+
+	incorrectObjectPropertiesForServiceType := []struct {
+		property             string
+		userObjectProperties *sdk.UserObjectProperties
+	}{
+		{property: "MINS_TO_BYPASS_MFA", userObjectProperties: &sdk.UserObjectProperties{MinsToBypassMFA: sdk.Int(30)}},
+		{property: "MUST_CHANGE_PASSWORD", userObjectProperties: &sdk.UserObjectProperties{MustChangePassword: sdk.Bool(true)}},
+		{property: "FIRST_NAME", userObjectProperties: &sdk.UserObjectProperties{FirstName: sdk.String(newValue)}},
+		{property: "MIDDLE_NAME", userObjectProperties: &sdk.UserObjectProperties{MiddleName: sdk.String(newValue)}},
+		{property: "LAST_NAME", userObjectProperties: &sdk.UserObjectProperties{LastName: sdk.String(newValue)}},
+		{property: "PASSWORD", userObjectProperties: &sdk.UserObjectProperties{Password: sdk.String(password)}},
+	}
+
+	for _, tt := range incorrectObjectPropertiesForServiceType {
+		tt := tt
+		t.Run(fmt.Sprintf("create: incorrect object property %s - type service", tt.property), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+			tt.userObjectProperties.Type = sdk.Pointer(sdk.UserTypeService)
+			createOpts := &sdk.CreateUserOptions{ObjectProperties: tt.userObjectProperties}
+
+			err := client.Users.Create(ctx, id, createOpts)
+			require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=SERVICE.", tt.property))
+		})
+	}
 
 	t.Run("create: set mins to bypass mfa to negative manually", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
