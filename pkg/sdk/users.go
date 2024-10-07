@@ -736,3 +736,9 @@ func ToUserType(s string) (UserType, error) {
 		return "", fmt.Errorf("invalid user type: %s", s)
 	}
 }
+
+var AllUserTypes = []UserType{
+	UserTypePerson,
+	UserTypeService,
+	UserTypeLegacyService,
+}

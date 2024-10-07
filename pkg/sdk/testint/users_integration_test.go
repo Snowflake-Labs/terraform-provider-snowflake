@@ -18,7 +18,6 @@ import (
 )
 
 // TODO [SNOW-1645875]: test setting/unsetting policies
-// TODO [this PR]: test parameters settable on service/legacy service user (create and alter)
 // TODO [this PR]: test attributes settable on service/legacy service user (create and alter)
 // TODO [this PR]: fix TestAcc_User_issue2970
 func TestInt_Users(t *testing.T) {
@@ -238,21 +237,14 @@ func TestInt_Users(t *testing.T) {
 		)
 	})
 
-	createWithTypeTests := []struct {
-		expectedType sdk.UserType
-	}{
-		{expectedType: sdk.UserTypeService},
-		{expectedType: sdk.UserTypeLegacyService},
-	}
-
-	for _, tt := range createWithTypeTests {
-		tt := tt
-		t.Run(fmt.Sprintf("create: type %s - no options", tt.expectedType), func(t *testing.T) {
+	for _, userType := range sdk.AllUserTypes {
+		userType := userType
+		t.Run(fmt.Sprintf("create: type %s - no options", userType), func(t *testing.T) {
 			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 			err := client.Users.Create(ctx, id, &sdk.CreateUserOptions{
 				ObjectProperties: &sdk.UserObjectProperties{
-					Type: sdk.Pointer(tt.expectedType),
+					Type: sdk.Pointer(userType),
 				},
 			})
 			require.NoError(t, err)
@@ -261,14 +253,14 @@ func TestInt_Users(t *testing.T) {
 			userDetails, err := client.Users.Describe(ctx, id)
 			require.NoError(t, err)
 			assert.Equal(t, id.Name(), userDetails.Name.Value)
-			assert.Equal(t, string(tt.expectedType), userDetails.Type.Value)
+			assert.Equal(t, string(userType), userDetails.Type.Value)
 
 			user, err := client.Users.ShowByID(ctx, id)
 			require.NoError(t, err)
 
 			assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
 				HasDefaults(id.Name()).
-				HasType(string(tt.expectedType)),
+				HasType(string(userType)),
 			)
 		})
 	}
@@ -537,85 +529,91 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, randomWithHyphenAndMixedCase, userDetails.DefaultRole.Value)
 	})
 
-	t.Run("create: with all parameters set", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+	for _, userType := range sdk.AllUserTypes {
+		userType := userType
+		t.Run(fmt.Sprintf("create: with all parameters set - type %s", userType), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-		opts := &sdk.CreateUserOptions{
-			SessionParameters: &sdk.SessionParameters{
-				AbortDetachedQuery:                       sdk.Bool(true),
-				Autocommit:                               sdk.Bool(false),
-				BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
-				BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
-				ClientMemoryLimit:                        sdk.Int(1024),
-				ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
-				ClientPrefetchThreads:                    sdk.Int(2),
-				ClientResultChunkSize:                    sdk.Int(48),
-				ClientResultColumnCaseInsensitive:        sdk.Bool(true),
-				ClientSessionKeepAlive:                   sdk.Bool(true),
-				ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
-				ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
-				DateInputFormat:                          sdk.String("YYYY-MM-DD"),
-				DateOutputFormat:                         sdk.String("YY-MM-DD"),
-				EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
-				ErrorOnNondeterministicMerge:             sdk.Bool(false),
-				ErrorOnNondeterministicUpdate:            sdk.Bool(true),
-				GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
-				GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
-				JdbcTreatDecimalAsInt:                    sdk.Bool(false),
-				JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
-				JdbcUseSessionTimezone:                   sdk.Bool(false),
-				JSONIndent:                               sdk.Int(4),
-				LockTimeout:                              sdk.Int(21222),
-				LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
-				MultiStatementCount:                      sdk.Int(0),
-				NoorderSequenceAsDefault:                 sdk.Bool(false),
-				OdbcTreatDecimalAsInt:                    sdk.Bool(true),
-				QueryTag:                                 sdk.String("some_tag"),
-				QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
-				RowsPerResultset:                         sdk.Int(2),
-				S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
-				SearchPath:                               sdk.String("$public, $current"),
-				SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
-				StatementQueuedTimeoutInSeconds:          sdk.Int(10),
-				StatementTimeoutInSeconds:                sdk.Int(10),
-				StrictJSONOutput:                         sdk.Bool(true),
-				TimestampDayIsAlways24h:                  sdk.Bool(true),
-				TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
-				TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
-				TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
-				TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
-				TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
-				TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
-				Timezone:                                 sdk.String("Europe/Warsaw"),
-				TimeInputFormat:                          sdk.String("HH24:MI"),
-				TimeOutputFormat:                         sdk.String("HH24:MI"),
-				TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
-				TransactionAbortOnError:                  sdk.Bool(true),
-				TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
-				TwoDigitCenturyStart:                     sdk.Int(1980),
-				UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
-				UseCachedResult:                          sdk.Bool(false),
-				WeekOfYearPolicy:                         sdk.Int(1),
-				WeekStart:                                sdk.Int(1),
-			},
-			ObjectParameters: &sdk.UserObjectParameters{
-				EnableUnredactedQuerySyntaxError: sdk.Bool(true),
-				NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
-				PreventUnloadToInternalStages:    sdk.Bool(true),
-			},
-		}
+			opts := &sdk.CreateUserOptions{
+				ObjectProperties: &sdk.UserObjectProperties{
+					Type: sdk.Pointer(userType),
+				},
+				SessionParameters: &sdk.SessionParameters{
+					AbortDetachedQuery:                       sdk.Bool(true),
+					Autocommit:                               sdk.Bool(false),
+					BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
+					BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
+					ClientMemoryLimit:                        sdk.Int(1024),
+					ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+					ClientPrefetchThreads:                    sdk.Int(2),
+					ClientResultChunkSize:                    sdk.Int(48),
+					ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+					ClientSessionKeepAlive:                   sdk.Bool(true),
+					ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
+					ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
+					DateInputFormat:                          sdk.String("YYYY-MM-DD"),
+					DateOutputFormat:                         sdk.String("YY-MM-DD"),
+					EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
+					ErrorOnNondeterministicMerge:             sdk.Bool(false),
+					ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+					GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
+					GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
+					JdbcTreatDecimalAsInt:                    sdk.Bool(false),
+					JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+					JdbcUseSessionTimezone:                   sdk.Bool(false),
+					JSONIndent:                               sdk.Int(4),
+					LockTimeout:                              sdk.Int(21222),
+					LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
+					MultiStatementCount:                      sdk.Int(0),
+					NoorderSequenceAsDefault:                 sdk.Bool(false),
+					OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+					QueryTag:                                 sdk.String("some_tag"),
+					QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+					RowsPerResultset:                         sdk.Int(2),
+					S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
+					SearchPath:                               sdk.String("$public, $current"),
+					SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
+					StatementQueuedTimeoutInSeconds:          sdk.Int(10),
+					StatementTimeoutInSeconds:                sdk.Int(10),
+					StrictJSONOutput:                         sdk.Bool(true),
+					TimestampDayIsAlways24h:                  sdk.Bool(true),
+					TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
+					TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+					TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+					TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
+					TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
+					TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
+					Timezone:                                 sdk.String("Europe/Warsaw"),
+					TimeInputFormat:                          sdk.String("HH24:MI"),
+					TimeOutputFormat:                         sdk.String("HH24:MI"),
+					TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
+					TransactionAbortOnError:                  sdk.Bool(true),
+					TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
+					TwoDigitCenturyStart:                     sdk.Int(1980),
+					UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
+					UseCachedResult:                          sdk.Bool(false),
+					WeekOfYearPolicy:                         sdk.Int(1),
+					WeekStart:                                sdk.Int(1),
+				},
+				ObjectParameters: &sdk.UserObjectParameters{
+					EnableUnredactedQuerySyntaxError: sdk.Bool(true),
+					NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
+					PreventUnloadToInternalStages:    sdk.Bool(true),
+				},
+			}
 
-		err := client.Users.Create(ctx, id, opts)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+			err := client.Users.Create(ctx, id, opts)
+			require.NoError(t, err)
+			t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		assertParametersSet(objectparametersassert.UserParameters(t, id))
+			assertParametersSet(objectparametersassert.UserParameters(t, id))
 
-		// check that ShowParameters works too
-		parameters, err := client.Users.ShowParameters(ctx, id)
-		require.NoError(t, err)
-		assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
-	})
+			// check that ShowParameters works too
+			parameters, err := client.Users.ShowParameters(ctx, id)
+			require.NoError(t, err)
+			assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
+		})
+	}
 
 	t.Run("create: with all parameters default", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
@@ -797,173 +795,180 @@ func TestInt_Users(t *testing.T) {
 		require.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	})
 
-	t.Run("alter: set and unset parameters", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+	for _, userType := range sdk.AllUserTypes {
+		userType := userType
+		t.Run(fmt.Sprintf("alter: set and unset parameters - type %s", userType), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-		err := client.Users.Create(ctx, id, nil)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
-
-		alterOpts := &sdk.AlterUserOptions{
-			Set: &sdk.UserSet{
-				SessionParameters: &sdk.SessionParameters{
-					AbortDetachedQuery:                       sdk.Bool(true),
-					Autocommit:                               sdk.Bool(false),
-					BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
-					BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
-					ClientMemoryLimit:                        sdk.Int(1024),
-					ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
-					ClientPrefetchThreads:                    sdk.Int(2),
-					ClientResultChunkSize:                    sdk.Int(48),
-					ClientResultColumnCaseInsensitive:        sdk.Bool(true),
-					ClientSessionKeepAlive:                   sdk.Bool(true),
-					ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
-					ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
-					DateInputFormat:                          sdk.String("YYYY-MM-DD"),
-					DateOutputFormat:                         sdk.String("YY-MM-DD"),
-					EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
-					ErrorOnNondeterministicMerge:             sdk.Bool(false),
-					ErrorOnNondeterministicUpdate:            sdk.Bool(true),
-					GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
-					GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
-					JdbcTreatDecimalAsInt:                    sdk.Bool(false),
-					JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
-					JdbcUseSessionTimezone:                   sdk.Bool(false),
-					JSONIndent:                               sdk.Int(4),
-					LockTimeout:                              sdk.Int(21222),
-					LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
-					MultiStatementCount:                      sdk.Int(0),
-					NoorderSequenceAsDefault:                 sdk.Bool(false),
-					OdbcTreatDecimalAsInt:                    sdk.Bool(true),
-					QueryTag:                                 sdk.String("some_tag"),
-					QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
-					RowsPerResultset:                         sdk.Int(2),
-					S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
-					SearchPath:                               sdk.String("$public, $current"),
-					SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
-					StatementQueuedTimeoutInSeconds:          sdk.Int(10),
-					StatementTimeoutInSeconds:                sdk.Int(10),
-					StrictJSONOutput:                         sdk.Bool(true),
-					TimestampDayIsAlways24h:                  sdk.Bool(true),
-					TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
-					TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
-					TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
-					TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
-					TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
-					TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
-					Timezone:                                 sdk.String("Europe/Warsaw"),
-					TimeInputFormat:                          sdk.String("HH24:MI"),
-					TimeOutputFormat:                         sdk.String("HH24:MI"),
-					TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
-					TransactionAbortOnError:                  sdk.Bool(true),
-					TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
-					TwoDigitCenturyStart:                     sdk.Int(1980),
-					UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
-					UseCachedResult:                          sdk.Bool(false),
-					WeekOfYearPolicy:                         sdk.Int(1),
-					WeekStart:                                sdk.Int(1),
+			err := client.Users.Create(ctx, id, &sdk.CreateUserOptions{
+				ObjectProperties: &sdk.UserObjectProperties{
+					Type: sdk.Pointer(userType),
 				},
-				ObjectParameters: &sdk.UserObjectParameters{
-					EnableUnredactedQuerySyntaxError: sdk.Bool(true),
-					NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
-					PreventUnloadToInternalStages:    sdk.Bool(true),
+			})
+			require.NoError(t, err)
+			t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+			alterOpts := &sdk.AlterUserOptions{
+				Set: &sdk.UserSet{
+					SessionParameters: &sdk.SessionParameters{
+						AbortDetachedQuery:                       sdk.Bool(true),
+						Autocommit:                               sdk.Bool(false),
+						BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
+						BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
+						ClientMemoryLimit:                        sdk.Int(1024),
+						ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+						ClientPrefetchThreads:                    sdk.Int(2),
+						ClientResultChunkSize:                    sdk.Int(48),
+						ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+						ClientSessionKeepAlive:                   sdk.Bool(true),
+						ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
+						ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
+						DateInputFormat:                          sdk.String("YYYY-MM-DD"),
+						DateOutputFormat:                         sdk.String("YY-MM-DD"),
+						EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
+						ErrorOnNondeterministicMerge:             sdk.Bool(false),
+						ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+						GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
+						GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
+						JdbcTreatDecimalAsInt:                    sdk.Bool(false),
+						JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+						JdbcUseSessionTimezone:                   sdk.Bool(false),
+						JSONIndent:                               sdk.Int(4),
+						LockTimeout:                              sdk.Int(21222),
+						LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
+						MultiStatementCount:                      sdk.Int(0),
+						NoorderSequenceAsDefault:                 sdk.Bool(false),
+						OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+						QueryTag:                                 sdk.String("some_tag"),
+						QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+						RowsPerResultset:                         sdk.Int(2),
+						S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
+						SearchPath:                               sdk.String("$public, $current"),
+						SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
+						StatementQueuedTimeoutInSeconds:          sdk.Int(10),
+						StatementTimeoutInSeconds:                sdk.Int(10),
+						StrictJSONOutput:                         sdk.Bool(true),
+						TimestampDayIsAlways24h:                  sdk.Bool(true),
+						TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
+						TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+						TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+						TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
+						TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
+						TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
+						Timezone:                                 sdk.String("Europe/Warsaw"),
+						TimeInputFormat:                          sdk.String("HH24:MI"),
+						TimeOutputFormat:                         sdk.String("HH24:MI"),
+						TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
+						TransactionAbortOnError:                  sdk.Bool(true),
+						TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
+						TwoDigitCenturyStart:                     sdk.Int(1980),
+						UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
+						UseCachedResult:                          sdk.Bool(false),
+						WeekOfYearPolicy:                         sdk.Int(1),
+						WeekStart:                                sdk.Int(1),
+					},
+					ObjectParameters: &sdk.UserObjectParameters{
+						EnableUnredactedQuerySyntaxError: sdk.Bool(true),
+						NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
+						PreventUnloadToInternalStages:    sdk.Bool(true),
+					},
 				},
-			},
-		}
+			}
 
-		err = client.Users.Alter(ctx, id, alterOpts)
-		require.NoError(t, err)
+			err = client.Users.Alter(ctx, id, alterOpts)
+			require.NoError(t, err)
 
-		assertParametersSet(objectparametersassert.UserParameters(t, id))
+			assertParametersSet(objectparametersassert.UserParameters(t, id))
 
-		// check that ShowParameters works too
-		parameters, err := client.Users.ShowParameters(ctx, id)
-		require.NoError(t, err)
-		assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
+			// check that ShowParameters works too
+			parameters, err := client.Users.ShowParameters(ctx, id)
+			require.NoError(t, err)
+			assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
 
-		alterOpts = &sdk.AlterUserOptions{
-			Unset: &sdk.UserUnset{
-				SessionParameters: &sdk.SessionParametersUnset{
-					AbortDetachedQuery:                       sdk.Bool(true),
-					Autocommit:                               sdk.Bool(true),
-					BinaryInputFormat:                        sdk.Bool(true),
-					BinaryOutputFormat:                       sdk.Bool(true),
-					ClientMemoryLimit:                        sdk.Bool(true),
-					ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
-					ClientPrefetchThreads:                    sdk.Bool(true),
-					ClientResultChunkSize:                    sdk.Bool(true),
-					ClientResultColumnCaseInsensitive:        sdk.Bool(true),
-					ClientSessionKeepAlive:                   sdk.Bool(true),
-					ClientSessionKeepAliveHeartbeatFrequency: sdk.Bool(true),
-					ClientTimestampTypeMapping:               sdk.Bool(true),
-					DateInputFormat:                          sdk.Bool(true),
-					DateOutputFormat:                         sdk.Bool(true),
-					EnableUnloadPhysicalTypeOptimization:     sdk.Bool(true),
-					ErrorOnNondeterministicMerge:             sdk.Bool(true),
-					ErrorOnNondeterministicUpdate:            sdk.Bool(true),
-					GeographyOutputFormat:                    sdk.Bool(true),
-					GeometryOutputFormat:                     sdk.Bool(true),
-					JdbcTreatDecimalAsInt:                    sdk.Bool(true),
-					JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
-					JdbcUseSessionTimezone:                   sdk.Bool(true),
-					JSONIndent:                               sdk.Bool(true),
-					LockTimeout:                              sdk.Bool(true),
-					LogLevel:                                 sdk.Bool(true),
-					MultiStatementCount:                      sdk.Bool(true),
-					NoorderSequenceAsDefault:                 sdk.Bool(true),
-					OdbcTreatDecimalAsInt:                    sdk.Bool(true),
-					QueryTag:                                 sdk.Bool(true),
-					QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
-					RowsPerResultset:                         sdk.Bool(true),
-					S3StageVpceDnsName:                       sdk.Bool(true),
-					SearchPath:                               sdk.Bool(true),
-					SimulatedDataSharingConsumer:             sdk.Bool(true),
-					StatementQueuedTimeoutInSeconds:          sdk.Bool(true),
-					StatementTimeoutInSeconds:                sdk.Bool(true),
-					StrictJSONOutput:                         sdk.Bool(true),
-					TimestampDayIsAlways24h:                  sdk.Bool(true),
-					TimestampInputFormat:                     sdk.Bool(true),
-					TimestampLTZOutputFormat:                 sdk.Bool(true),
-					TimestampNTZOutputFormat:                 sdk.Bool(true),
-					TimestampOutputFormat:                    sdk.Bool(true),
-					TimestampTypeMapping:                     sdk.Bool(true),
-					TimestampTZOutputFormat:                  sdk.Bool(true),
-					Timezone:                                 sdk.Bool(true),
-					TimeInputFormat:                          sdk.Bool(true),
-					TimeOutputFormat:                         sdk.Bool(true),
-					TraceLevel:                               sdk.Bool(true),
-					TransactionAbortOnError:                  sdk.Bool(true),
-					TransactionDefaultIsolationLevel:         sdk.Bool(true),
-					TwoDigitCenturyStart:                     sdk.Bool(true),
-					UnsupportedDDLAction:                     sdk.Bool(true),
-					UseCachedResult:                          sdk.Bool(true),
-					WeekOfYearPolicy:                         sdk.Bool(true),
-					WeekStart:                                sdk.Bool(true),
+			alterOpts = &sdk.AlterUserOptions{
+				Unset: &sdk.UserUnset{
+					SessionParameters: &sdk.SessionParametersUnset{
+						AbortDetachedQuery:                       sdk.Bool(true),
+						Autocommit:                               sdk.Bool(true),
+						BinaryInputFormat:                        sdk.Bool(true),
+						BinaryOutputFormat:                       sdk.Bool(true),
+						ClientMemoryLimit:                        sdk.Bool(true),
+						ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+						ClientPrefetchThreads:                    sdk.Bool(true),
+						ClientResultChunkSize:                    sdk.Bool(true),
+						ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+						ClientSessionKeepAlive:                   sdk.Bool(true),
+						ClientSessionKeepAliveHeartbeatFrequency: sdk.Bool(true),
+						ClientTimestampTypeMapping:               sdk.Bool(true),
+						DateInputFormat:                          sdk.Bool(true),
+						DateOutputFormat:                         sdk.Bool(true),
+						EnableUnloadPhysicalTypeOptimization:     sdk.Bool(true),
+						ErrorOnNondeterministicMerge:             sdk.Bool(true),
+						ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+						GeographyOutputFormat:                    sdk.Bool(true),
+						GeometryOutputFormat:                     sdk.Bool(true),
+						JdbcTreatDecimalAsInt:                    sdk.Bool(true),
+						JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+						JdbcUseSessionTimezone:                   sdk.Bool(true),
+						JSONIndent:                               sdk.Bool(true),
+						LockTimeout:                              sdk.Bool(true),
+						LogLevel:                                 sdk.Bool(true),
+						MultiStatementCount:                      sdk.Bool(true),
+						NoorderSequenceAsDefault:                 sdk.Bool(true),
+						OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+						QueryTag:                                 sdk.Bool(true),
+						QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+						RowsPerResultset:                         sdk.Bool(true),
+						S3StageVpceDnsName:                       sdk.Bool(true),
+						SearchPath:                               sdk.Bool(true),
+						SimulatedDataSharingConsumer:             sdk.Bool(true),
+						StatementQueuedTimeoutInSeconds:          sdk.Bool(true),
+						StatementTimeoutInSeconds:                sdk.Bool(true),
+						StrictJSONOutput:                         sdk.Bool(true),
+						TimestampDayIsAlways24h:                  sdk.Bool(true),
+						TimestampInputFormat:                     sdk.Bool(true),
+						TimestampLTZOutputFormat:                 sdk.Bool(true),
+						TimestampNTZOutputFormat:                 sdk.Bool(true),
+						TimestampOutputFormat:                    sdk.Bool(true),
+						TimestampTypeMapping:                     sdk.Bool(true),
+						TimestampTZOutputFormat:                  sdk.Bool(true),
+						Timezone:                                 sdk.Bool(true),
+						TimeInputFormat:                          sdk.Bool(true),
+						TimeOutputFormat:                         sdk.Bool(true),
+						TraceLevel:                               sdk.Bool(true),
+						TransactionAbortOnError:                  sdk.Bool(true),
+						TransactionDefaultIsolationLevel:         sdk.Bool(true),
+						TwoDigitCenturyStart:                     sdk.Bool(true),
+						UnsupportedDDLAction:                     sdk.Bool(true),
+						UseCachedResult:                          sdk.Bool(true),
+						WeekOfYearPolicy:                         sdk.Bool(true),
+						WeekStart:                                sdk.Bool(true),
+					},
+					ObjectParameters: &sdk.UserObjectParametersUnset{
+						EnableUnredactedQuerySyntaxError: sdk.Bool(true),
+						NetworkPolicy:                    sdk.Bool(true),
+						PreventUnloadToInternalStages:    sdk.Bool(true),
+					},
 				},
-				ObjectParameters: &sdk.UserObjectParametersUnset{
-					EnableUnredactedQuerySyntaxError: sdk.Bool(true),
-					NetworkPolicy:                    sdk.Bool(true),
-					PreventUnloadToInternalStages:    sdk.Bool(true),
-				},
-			},
-		}
+			}
 
-		err = client.Users.Alter(ctx, id, alterOpts)
-		require.NoError(t, err)
+			err = client.Users.Alter(ctx, id, alterOpts)
+			require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
-			HasAllDefaults().
-			HasAllDefaultsExplicit(),
-		)
+			assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
+				HasAllDefaults().
+				HasAllDefaultsExplicit(),
+			)
 
-		// check that ShowParameters works too
-		parameters, err = client.Users.ShowParameters(ctx, id)
-		require.NoError(t, err)
-		assertions.AssertThatObject(t, objectparametersassert.UserParametersPrefetched(t, id, parameters).
-			HasAllDefaults().
-			HasAllDefaultsExplicit(),
-		)
-	})
+			// check that ShowParameters works too
+			parameters, err = client.Users.ShowParameters(ctx, id)
+			require.NoError(t, err)
+			assertions.AssertThatObject(t, objectparametersassert.UserParametersPrefetched(t, id, parameters).
+				HasAllDefaults().
+				HasAllDefaultsExplicit(),
+			)
+		})
+	}
 
 	t.Run("alter: set and unset properties and parameters at the same time", func(t *testing.T) {
 		user, userCleanup := testClientHelper().User.CreateUser(t)
