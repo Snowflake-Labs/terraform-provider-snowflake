@@ -249,6 +249,7 @@ type UserObjectProperties struct {
 	RSAPublicKeyFp        *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_FP"`
 	RSAPublicKey2         *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_2"`
 	RSAPublicKey2Fp       *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_2_FP"`
+	Type                  *UserType                `ddl:"parameter,no_quotes" sql:"TYPE"`
 	Comment               *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
@@ -704,4 +705,25 @@ var ValidSecondaryRolesOptionsString = []string{
 	string(SecondaryRolesOptionDefault),
 	string(SecondaryRolesOptionNone),
 	string(SecondaryRolesOptionAll),
+}
+
+type UserType string
+
+const (
+	UserTypePerson        UserType = "PERSON"
+	UserTypeService       UserType = "SERVICE"
+	UserTypeLegacyService UserType = "LEGACY_SERVICE"
+)
+
+func ToUserType(s string) (UserType, error) {
+	switch strings.ToUpper(s) {
+	case string(UserTypePerson):
+		return UserTypePerson, nil
+	case string(UserTypeService):
+		return UserTypeService, nil
+	case string(UserTypeLegacyService):
+		return UserTypeLegacyService, nil
+	default:
+		return "", fmt.Errorf("invalid user type: %s", s)
+	}
 }
