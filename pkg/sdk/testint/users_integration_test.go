@@ -20,6 +20,8 @@ import (
 
 // TODO [SNOW-1645875]: test setting/unsetting policies
 // TODO [SNOW-1645348]: add type and other 8.26 additions
+// TODO [this PR]: test parameters settable on service/legacy service user (create and alter)
+// TODO [this PR]: test attributes settable on service/legacy service user (create and alter)
 func TestInt_Users(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
