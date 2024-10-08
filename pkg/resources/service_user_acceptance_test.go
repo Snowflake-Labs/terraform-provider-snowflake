@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -77,7 +78,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		CheckDestroy: acc.CheckDestroy(t, resources.ServiceUser),
 		Steps: []resource.TestStep{
 			// CREATE WITHOUT ATTRIBUTES
 			{
@@ -306,7 +307,7 @@ func TestAcc_ServiceUser_AllParameters(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		CheckDestroy: acc.CheckDestroy(t, resources.ServiceUser),
 		Steps: []resource.TestStep{
 			// create with default values for all the parameters
 			{
@@ -544,7 +545,7 @@ func TestAcc_ServiceUser_handleExternalTypeChange(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		CheckDestroy: acc.CheckDestroy(t, resources.ServiceUser),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, userModel),
@@ -587,4 +588,56 @@ func TestAcc_ServiceUser_handleExternalTypeChange(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_ServiceUser_setIncompatibleAttributes(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.ServiceUser),
+		Steps: []resource.TestStep{
+			{
+				Config:      serviceUserConfigWithIncompatibleAttribute(userId, "first_name", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"first_name\" is not expected here"),
+			},
+			{
+				Config:      serviceUserConfigWithIncompatibleAttribute(userId, "middle_name", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"middle_name\" is not expected here"),
+			},
+			{
+				Config:      serviceUserConfigWithIncompatibleAttribute(userId, "last_name", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"last_name\" is not expected here"),
+			},
+			{
+				Config:      serviceUserConfigWithIncompatibleAttribute(userId, "mins_to_bypass_mfa", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"mins_to_bypass_mfa\" is not expected here"),
+			},
+			{
+				Config:      serviceUserConfigWithIncompatibleAttribute(userId, "disable_mfa", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"disable_mfa\" is not expected here"),
+			},
+			{
+				Config:      serviceUserConfigWithIncompatibleAttribute(userId, "password", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"password\" is not expected here"),
+			},
+			{
+				Config:      serviceUserConfigWithIncompatibleAttribute(userId, "must_change_password", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"must_change_password\" is not expected here"),
+			},
+		},
+	})
+}
+
+func serviceUserConfigWithIncompatibleAttribute(userId sdk.AccountObjectIdentifier, key string, value string) string {
+	return fmt.Sprintf(`
+        resource "snowflake_service_user" "test" {
+        	name = %s
+			%s = "%s"
+        }
+	`, userId.FullyQualifiedName(), key, value)
 }

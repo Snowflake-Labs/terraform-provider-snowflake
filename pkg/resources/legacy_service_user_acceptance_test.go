@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -84,7 +85,7 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		CheckDestroy: acc.CheckDestroy(t, resources.LegacyServiceUser),
 		Steps: []resource.TestStep{
 			// CREATE WITHOUT ATTRIBUTES
 			{
@@ -322,7 +323,7 @@ func TestAcc_LegacyServiceUser_AllParameters(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		CheckDestroy: acc.CheckDestroy(t, resources.LegacyServiceUser),
 		Steps: []resource.TestStep{
 			// create with default values for all the parameters
 			{
@@ -560,7 +561,7 @@ func TestAcc_LegacyServiceUser_handleExternalTypeChange(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		CheckDestroy: acc.CheckDestroy(t, resources.LegacyServiceUser),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, userModel),
@@ -605,7 +606,50 @@ func TestAcc_LegacyServiceUser_handleExternalTypeChange(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-1645348]: test trying to set not acceptable attributes in service and legacy service resources
+func TestAcc_LegacyServiceUser_setIncompatibleAttributes(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.LegacyServiceUser),
+		Steps: []resource.TestStep{
+			{
+				Config:      legacyServiceUserConfigWithIncompatibleAttribute(userId, "first_name", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"first_name\" is not expected here"),
+			},
+			{
+				Config:      legacyServiceUserConfigWithIncompatibleAttribute(userId, "middle_name", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"middle_name\" is not expected here"),
+			},
+			{
+				Config:      legacyServiceUserConfigWithIncompatibleAttribute(userId, "last_name", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"last_name\" is not expected here"),
+			},
+			{
+				Config:      legacyServiceUserConfigWithIncompatibleAttribute(userId, "mins_to_bypass_mfa", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"mins_to_bypass_mfa\" is not expected here"),
+			},
+			{
+				Config:      legacyServiceUserConfigWithIncompatibleAttribute(userId, "disable_mfa", random.AlphaN(6)),
+				ExpectError: regexp.MustCompile("An argument named \"disable_mfa\" is not expected here"),
+			},
+		},
+	})
+}
+
+func legacyServiceUserConfigWithIncompatibleAttribute(userId sdk.AccountObjectIdentifier, key string, value string) string {
+	return fmt.Sprintf(`
+        resource "snowflake_legacy_service_user" "test" {
+        	name = %s
+			%s = "%s"
+        }
+	`, userId.FullyQualifiedName(), key, value)
+}
+
 // TODO [SNOW-1645348]: test datasource
 // TODO [SNOW-1645348]: update migration guide with resource description
 // TODO [SNOW-1645348]: check documentation
