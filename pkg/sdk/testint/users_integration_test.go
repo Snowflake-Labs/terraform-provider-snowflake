@@ -18,7 +18,6 @@ import (
 )
 
 // TODO [SNOW-1645875]: test setting/unsetting policies
-// TODO [this PR]: fix TestAcc_User_issue2970
 func TestInt_Users(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)

@@ -690,7 +690,7 @@ func TestAcc_User_issue2970(t *testing.T) {
 
 	newPass := random.Password()
 	newKey, _ := random.GenerateRSAPublicKey(t)
-	incorrectlyFormattedNewKey := fmt.Sprintf("-----BEGIN PUBLIC KEY-----\n%s-----END PUBLIC KEY-----\n", newKey)
+	incorrectlyFormattedNewKey := fmt.Sprintf("-invalid----BEGIN PUBLIC KEY-----\n%s-----END PUBLIC KEY-----\n", newKey)
 
 	userModel := model.User(resourceName, userId.Name()).
 		WithPassword(pass).
