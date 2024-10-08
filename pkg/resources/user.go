@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -203,16 +202,7 @@ func User() *schema.Resource {
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
-			// TODO [SNOW-1645348]: revisit with service user work
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-				if n := diff.Get("user_type"); n != nil {
-					logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
-					if !slices.Contains([]string{"", "PERSON"}, strings.ToUpper(n.(string))) {
-						return errors.Join(diff.SetNewComputed("user_type"), diff.ForceNew("user_type"))
-					}
-				}
-				return nil
-			},
+			RecreateWhenUserTypeChangedExternally(sdk.UserTypePerson),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -245,16 +235,7 @@ func ServiceUser() *schema.Resource {
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
-			// TODO [SNOW-1645348]: revisit with service user work
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-				if n := diff.Get("user_type"); n != nil {
-					logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
-					if !slices.Contains([]string{"SERVICE"}, strings.ToUpper(n.(string))) {
-						return errors.Join(diff.SetNewComputed("user_type"), diff.ForceNew("user_type"))
-					}
-				}
-				return nil
-			},
+			RecreateWhenUserTypeChangedExternally(sdk.UserTypeService),
 		),
 	}
 }
@@ -277,16 +258,7 @@ func LegacyServiceUser() *schema.Resource {
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
-			// TODO [SNOW-1645348]: revisit with service user work
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-				if n := diff.Get("user_type"); n != nil {
-					logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
-					if !slices.Contains([]string{"LEGACY_SERVICE"}, strings.ToUpper(n.(string))) {
-						return errors.Join(diff.SetNewComputed("user_type"), diff.ForceNew("user_type"))
-					}
-				}
-				return nil
-			},
+			RecreateWhenUserTypeChangedExternally(sdk.UserTypeLegacyService),
 		),
 	}
 }
