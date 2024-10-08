@@ -186,7 +186,7 @@ func User() *schema.Resource {
 		SchemaVersion: 1,
 
 		CreateContext: GetCreateUserFunc(sdk.UserTypePerson),
-		UpdateContext: UpdateUser,
+		UpdateContext: GetUpdateUserFunc(sdk.UserTypePerson),
 		ReadContext:   GetReadUserFunc(true),
 		DeleteContext: DeleteUser,
 		Description:   "Resource used to manage user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
@@ -219,7 +219,7 @@ func User() *schema.Resource {
 func ServiceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: GetCreateUserFunc(sdk.UserTypeService),
-		UpdateContext: UpdateUser,
+		UpdateContext: GetUpdateUserFunc(sdk.UserTypeService),
 		ReadContext:   GetReadUserFunc(true),
 		DeleteContext: DeleteUser,
 		Description:   "Resource used to manage service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
@@ -243,7 +243,7 @@ func ServiceUser() *schema.Resource {
 func LegacyServiceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: GetCreateUserFunc(sdk.UserTypeLegacyService),
-		UpdateContext: UpdateUser,
+		UpdateContext: GetUpdateUserFunc(sdk.UserTypeLegacyService),
 		ReadContext:   GetReadUserFunc(true),
 		DeleteContext: DeleteUser,
 		Description:   "Resource used to manage legacy service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
@@ -517,120 +517,144 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 	}
 }
 
-func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if d.HasChange("name") {
-		newID := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
-			NewName: newID,
-		})
+func GetUpdateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		d.SetId(helpers.EncodeResourceIdentifier(newID))
-		id = newID
-	}
+		if d.HasChange("name") {
+			newID := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 
-	setObjectProperties := sdk.UserAlterObjectProperties{}
-	unsetObjectProperties := sdk.UserObjectPropertiesUnset{}
-	errs := errors.Join(
-		stringAttributeUpdate(d, "password", &setObjectProperties.Password, &unsetObjectProperties.Password),
-		stringAttributeUpdate(d, "login_name", &setObjectProperties.LoginName, &unsetObjectProperties.LoginName),
-		stringAttributeUpdate(d, "display_name", &setObjectProperties.DisplayName, &unsetObjectProperties.DisplayName),
-		stringAttributeUpdate(d, "first_name", &setObjectProperties.FirstName, &unsetObjectProperties.FirstName),
-		stringAttributeUpdate(d, "middle_name", &setObjectProperties.MiddleName, &unsetObjectProperties.MiddleName),
-		stringAttributeUpdate(d, "last_name", &setObjectProperties.LastName, &unsetObjectProperties.LastName),
-		stringAttributeUpdate(d, "email", &setObjectProperties.Email, &unsetObjectProperties.Email),
-		booleanStringAttributeUpdate(d, "must_change_password", &setObjectProperties.MustChangePassword, &unsetObjectProperties.MustChangePassword),
-		booleanStringAttributeUpdate(d, "disabled", &setObjectProperties.Disable, &unsetObjectProperties.Disable),
-		intAttributeUpdate(d, "days_to_expiry", &setObjectProperties.DaysToExpiry, &unsetObjectProperties.DaysToExpiry),
-		intAttributeWithSpecialDefaultUpdate(d, "mins_to_unlock", &setObjectProperties.MinsToUnlock, &unsetObjectProperties.MinsToUnlock),
-		accountObjectIdentifierAttributeUpdate(d, "default_warehouse", &setObjectProperties.DefaultWarehouse, &unsetObjectProperties.DefaultWarehouse),
-		objectIdentifierAttributeUpdate(d, "default_namespace", &setObjectProperties.DefaultNamespace, &unsetObjectProperties.DefaultNamespace),
-		accountObjectIdentifierAttributeUpdate(d, "default_role", &setObjectProperties.DefaultRole, &unsetObjectProperties.DefaultRole),
-		func() error {
-			if d.HasChange("default_secondary_roles_option") {
-				defaultSecondaryRolesOption, err := sdk.ToSecondaryRolesOption(d.Get("default_secondary_roles_option").(string))
-				if err != nil {
-					return err
-				}
-				switch defaultSecondaryRolesOption {
-				case sdk.SecondaryRolesOptionDefault:
-					unsetObjectProperties.DefaultSecondaryRoles = sdk.Bool(true)
-				case sdk.SecondaryRolesOptionNone:
-					setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{None: sdk.Bool(true)}
-				case sdk.SecondaryRolesOptionAll:
-					setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{All: sdk.Bool(true)}
-				}
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+				NewName: newID,
+			})
+			if err != nil {
+				return diag.FromErr(err)
 			}
-			return nil
-		}(),
-		intAttributeWithSpecialDefaultUpdate(d, "mins_to_bypass_mfa", &setObjectProperties.MinsToBypassMFA, &unsetObjectProperties.MinsToBypassMFA),
-		stringAttributeUpdate(d, "rsa_public_key", &setObjectProperties.RSAPublicKey, &unsetObjectProperties.RSAPublicKey),
-		stringAttributeUpdate(d, "rsa_public_key_2", &setObjectProperties.RSAPublicKey2, &unsetObjectProperties.RSAPublicKey2),
-		stringAttributeUpdate(d, "comment", &setObjectProperties.Comment, &unsetObjectProperties.Comment),
-		booleanStringAttributeUpdate(d, "disable_mfa", &setObjectProperties.DisableMfa, &unsetObjectProperties.DisableMfa),
-	)
-	if errs != nil {
-		return diag.FromErr(errs)
-	}
 
-	if (setObjectProperties != sdk.UserAlterObjectProperties{}) {
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &setObjectProperties}})
-		if err != nil {
-			d.Partial(true)
-			return diag.FromErr(err)
+			d.SetId(helpers.EncodeResourceIdentifier(newID))
+			id = newID
 		}
-	}
-	if (unsetObjectProperties != sdk.UserObjectPropertiesUnset{}) {
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Unset: &sdk.UserUnset{ObjectProperties: &unsetObjectProperties}})
-		if err != nil {
-			d.Partial(true)
-			return diag.FromErr(err)
+
+		setObjectProperties := sdk.UserAlterObjectProperties{}
+		unsetObjectProperties := sdk.UserObjectPropertiesUnset{}
+		errs := errors.Join(
+			// password handled separately for proper user types,
+			stringAttributeUpdate(d, "login_name", &setObjectProperties.LoginName, &unsetObjectProperties.LoginName),
+			stringAttributeUpdate(d, "display_name", &setObjectProperties.DisplayName, &unsetObjectProperties.DisplayName),
+			// first_name handled separately for proper user types,
+			// middle_name handled separately for proper user types,
+			// last_name handled separately for proper user types,
+			stringAttributeUpdate(d, "email", &setObjectProperties.Email, &unsetObjectProperties.Email),
+			// must_change_password handled separately for proper user types,
+			booleanStringAttributeUpdate(d, "disabled", &setObjectProperties.Disable, &unsetObjectProperties.Disable),
+			intAttributeUpdate(d, "days_to_expiry", &setObjectProperties.DaysToExpiry, &unsetObjectProperties.DaysToExpiry),
+			intAttributeWithSpecialDefaultUpdate(d, "mins_to_unlock", &setObjectProperties.MinsToUnlock, &unsetObjectProperties.MinsToUnlock),
+			accountObjectIdentifierAttributeUpdate(d, "default_warehouse", &setObjectProperties.DefaultWarehouse, &unsetObjectProperties.DefaultWarehouse),
+			objectIdentifierAttributeUpdate(d, "default_namespace", &setObjectProperties.DefaultNamespace, &unsetObjectProperties.DefaultNamespace),
+			accountObjectIdentifierAttributeUpdate(d, "default_role", &setObjectProperties.DefaultRole, &unsetObjectProperties.DefaultRole),
+			func() error {
+				if d.HasChange("default_secondary_roles_option") {
+					defaultSecondaryRolesOption, err := sdk.ToSecondaryRolesOption(d.Get("default_secondary_roles_option").(string))
+					if err != nil {
+						return err
+					}
+					switch defaultSecondaryRolesOption {
+					case sdk.SecondaryRolesOptionDefault:
+						unsetObjectProperties.DefaultSecondaryRoles = sdk.Bool(true)
+					case sdk.SecondaryRolesOptionNone:
+						setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{None: sdk.Bool(true)}
+					case sdk.SecondaryRolesOptionAll:
+						setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{All: sdk.Bool(true)}
+					}
+				}
+				return nil
+			}(),
+			// mins_to_bypass_mfa handled separately for proper user types,
+			stringAttributeUpdate(d, "rsa_public_key", &setObjectProperties.RSAPublicKey, &unsetObjectProperties.RSAPublicKey),
+			stringAttributeUpdate(d, "rsa_public_key_2", &setObjectProperties.RSAPublicKey2, &unsetObjectProperties.RSAPublicKey2),
+			stringAttributeUpdate(d, "comment", &setObjectProperties.Comment, &unsetObjectProperties.Comment),
+			// disable_mfa handled separately for proper user types,
+		)
+		if errs != nil {
+			return diag.FromErr(errs)
 		}
-	}
 
-	set := &sdk.UserSet{
-		SessionParameters: &sdk.SessionParameters{},
-		ObjectParameters:  &sdk.UserObjectParameters{},
-	}
-	unset := &sdk.UserUnset{
-		SessionParameters: &sdk.SessionParametersUnset{},
-		ObjectParameters:  &sdk.UserObjectParametersUnset{},
-	}
-	if updateParamDiags := handleUserParametersUpdate(d, set, unset); len(updateParamDiags) > 0 {
-		return updateParamDiags
-	}
-
-	if (*set.SessionParameters != sdk.SessionParameters{} || *set.ObjectParameters != sdk.UserObjectParameters{}) {
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
-			Set: set,
-		})
-		if err != nil {
-			return diag.FromErr(err)
+		var userTypeSpecificFieldsErrs error
+		switch userType {
+		case sdk.UserTypePerson:
+			userTypeSpecificFieldsErrs = errors.Join(
+				stringAttributeUpdate(d, "password", &setObjectProperties.Password, &unsetObjectProperties.Password),
+				stringAttributeUpdate(d, "first_name", &setObjectProperties.FirstName, &unsetObjectProperties.FirstName),
+				stringAttributeUpdate(d, "middle_name", &setObjectProperties.MiddleName, &unsetObjectProperties.MiddleName),
+				stringAttributeUpdate(d, "last_name", &setObjectProperties.LastName, &unsetObjectProperties.LastName),
+				booleanStringAttributeUpdate(d, "must_change_password", &setObjectProperties.MustChangePassword, &unsetObjectProperties.MustChangePassword),
+				intAttributeWithSpecialDefaultUpdate(d, "mins_to_bypass_mfa", &setObjectProperties.MinsToBypassMFA, &unsetObjectProperties.MinsToBypassMFA),
+				booleanStringAttributeUpdate(d, "disable_mfa", &setObjectProperties.DisableMfa, &unsetObjectProperties.DisableMfa),
+			)
+		case sdk.UserTypeLegacyService:
+			userTypeSpecificFieldsErrs = errors.Join(
+				stringAttributeUpdate(d, "password", &setObjectProperties.Password, &unsetObjectProperties.Password),
+				booleanStringAttributeUpdate(d, "must_change_password", &setObjectProperties.MustChangePassword, &unsetObjectProperties.MustChangePassword),
+			)
 		}
-	}
-
-	if (*unset.SessionParameters != sdk.SessionParametersUnset{}) || (*unset.ObjectParameters != sdk.UserObjectParametersUnset{}) {
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
-			Unset: &sdk.UserUnset{
-				SessionParameters: unset.SessionParameters,
-				ObjectParameters:  unset.ObjectParameters,
-			},
-		})
-		if err != nil {
-			return diag.FromErr(err)
+		if userTypeSpecificFieldsErrs != nil {
+			return diag.FromErr(userTypeSpecificFieldsErrs)
 		}
-	}
 
-	return GetReadUserFunc(false)(ctx, d, meta)
+		if (setObjectProperties != sdk.UserAlterObjectProperties{}) {
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &setObjectProperties}})
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		}
+		if (unsetObjectProperties != sdk.UserObjectPropertiesUnset{}) {
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Unset: &sdk.UserUnset{ObjectProperties: &unsetObjectProperties}})
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		}
+
+		set := &sdk.UserSet{
+			SessionParameters: &sdk.SessionParameters{},
+			ObjectParameters:  &sdk.UserObjectParameters{},
+		}
+		unset := &sdk.UserUnset{
+			SessionParameters: &sdk.SessionParametersUnset{},
+			ObjectParameters:  &sdk.UserObjectParametersUnset{},
+		}
+		if updateParamDiags := handleUserParametersUpdate(d, set, unset); len(updateParamDiags) > 0 {
+			return updateParamDiags
+		}
+
+		if (*set.SessionParameters != sdk.SessionParameters{} || *set.ObjectParameters != sdk.UserObjectParameters{}) {
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+				Set: set,
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if (*unset.SessionParameters != sdk.SessionParametersUnset{}) || (*unset.ObjectParameters != sdk.UserObjectParametersUnset{}) {
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+				Unset: &sdk.UserUnset{
+					SessionParameters: unset.SessionParameters,
+					ObjectParameters:  unset.ObjectParameters,
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		return GetReadUserFunc(false)(ctx, d, meta)
+	}
 }
 
 func DeleteUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
