@@ -201,6 +201,7 @@ func TestAcc_Schemas_BadCombination(t *testing.T) {
 func TestAcc_Schemas_SchemaNotFound_WithPostConditions(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},

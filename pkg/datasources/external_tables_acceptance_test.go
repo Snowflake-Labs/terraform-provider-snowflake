@@ -17,6 +17,7 @@ func TestAcc_ExternalTables(t *testing.T) {
 	externalTableName := acc.TestClient().Ids.Alpha()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
