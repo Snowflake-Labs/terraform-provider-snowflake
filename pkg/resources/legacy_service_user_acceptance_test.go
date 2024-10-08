@@ -649,5 +649,3 @@ func legacyServiceUserConfigWithIncompatibleAttribute(userId sdk.AccountObjectId
         }
 	`, userId.FullyQualifiedName(), key, value)
 }
-
-// TODO [SNOW-1645348]: check documentation
