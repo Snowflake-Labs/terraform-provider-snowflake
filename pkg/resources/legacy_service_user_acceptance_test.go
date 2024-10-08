@@ -604,3 +604,8 @@ func TestAcc_LegacyServiceUser_handleExternalTypeChange(t *testing.T) {
 		},
 	})
 }
+
+// TODO [SNOW-1645348]: test trying to set not acceptable attributes in service and legacy service resources
+// TODO [SNOW-1645348]: test datasource
+// TODO [SNOW-1645348]: update migration guide with resource description
+// TODO [SNOW-1645348]: check documentation
