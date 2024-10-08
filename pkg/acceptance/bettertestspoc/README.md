@@ -349,3 +349,5 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
     The error is a result of both things:
     1. Lists of objects are partially generated, and only parameter name is generated in some functions (the type has to be added manually).
     2. `testing` is a package name that makes Go think that we want to have unnamed parameter there, but we just didn't generate the type for that field in the function argument.
+- Additional asserts for sets and lists that wouldn't rely on the order of items saved to the state (SNOW-1706544)
+ 

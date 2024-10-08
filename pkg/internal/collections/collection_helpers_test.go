@@ -1,6 +1,9 @@
 package collections
 
 import (
+	"errors"
+	"fmt"
+	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 
@@ -55,6 +58,51 @@ func Test_Map(t *testing.T) {
 		require.PanicsWithError(t, "runtime error: invalid memory address or nil pointer dereference", func() {
 			stringSlice := []string{"1", "22", "333"}
 			_ = Map[string, int](stringSlice, nil)
+		})
+	})
+}
+
+func Test_MapErr(t *testing.T) {
+	t.Run("basic mapping", func(t *testing.T) {
+		stringSlice := []string{"1", "22", "333"}
+		stringLenSlice, err := MapErr(stringSlice, func(s string) (int, error) { return len(s), nil })
+		assert.NoError(t, err)
+		assert.Equal(t, stringLenSlice, []int{1, 2, 3})
+	})
+
+	t.Run("basic mapping - multiple errors", func(t *testing.T) {
+		stringSlice := []string{"1", "22", "333"}
+		stringLenSlice, err := MapErr(stringSlice, func(s string) (int, error) {
+			if s == "1" {
+				return -1, fmt.Errorf("error: 1")
+			}
+			if s == "22" {
+				return -1, fmt.Errorf("error: 22")
+			}
+			return len(s), nil
+		})
+		assert.Equal(t, stringLenSlice, []int{-1, -1, 3})
+		assert.ErrorContains(t, err, errors.Join(fmt.Errorf("error: 1"), fmt.Errorf("error: 22")).Error())
+	})
+
+	t.Run("validation: empty slice", func(t *testing.T) {
+		stringSlice := make([]string, 0)
+		stringLenSlice, err := MapErr(stringSlice, func(s string) (int, error) { return len(s), nil })
+		assert.NoError(t, err)
+		assert.Equal(t, stringLenSlice, []int{})
+	})
+
+	t.Run("validation: nil slice", func(t *testing.T) {
+		var stringSlice []string = nil
+		stringLenSlice, err := MapErr(stringSlice, func(s string) (int, error) { return len(s), nil })
+		assert.NoError(t, err)
+		assert.Equal(t, stringLenSlice, []int{})
+	})
+
+	t.Run("validation: nil mapping function", func(t *testing.T) {
+		assert.PanicsWithError(t, "runtime error: invalid memory address or nil pointer dereference", func() {
+			stringSlice := []string{"1", "22", "333"}
+			_, _ = MapErr[string, int](stringSlice, nil)
 		})
 	})
 }

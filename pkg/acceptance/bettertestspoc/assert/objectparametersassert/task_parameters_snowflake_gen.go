@@ -1027,7 +1027,7 @@ func (t *TaskParametersAssert) HasDefaultTaskAutoRetryAttemptsValueExplicit() *T
 }
 
 func (t *TaskParametersAssert) HasDefaultUserTaskManagedInitialWarehouseSizeValueExplicit() *TaskParametersAssert {
-	return t.HasUserTaskManagedInitialWarehouseSize("Medium")
+	return t.HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSize("Medium"))
 }
 
 func (t *TaskParametersAssert) HasDefaultUserTaskMinimumTriggerIntervalInSecondsValueExplicit() *TaskParametersAssert {
