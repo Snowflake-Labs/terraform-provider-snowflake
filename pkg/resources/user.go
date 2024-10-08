@@ -293,7 +293,7 @@ func GetImportUserFunc(userType sdk.UserType) func(ctx context.Context, d *schem
 		if err != nil {
 			return nil, err
 		}
-		if userType == sdk.UserTypePerson {
+		if userType == sdk.UserTypePerson || userType == sdk.UserTypeLegacyService {
 			err := setBooleanStringFromBoolProperty(d, "must_change_password", userDetails.MustChangePassword)
 			if err != nil {
 				return nil, err
