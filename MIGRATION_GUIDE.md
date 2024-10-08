@@ -7,6 +7,36 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v0.96.0 ➞ v0.97.0
+
+### new snowflake_service_user and snowflake_legacy_service_user resources
+
+Release v0.95.0 introduced reworked `snowflake_user` resource. As [noted](#note-user-types), the new `SERVICE` and `LEGACY_SERVICE` user types were not supported.
+
+This release introduces two new resources to handle these new user types: `snowflake_service_user` and `snowflake_legacy_service_user`.
+
+Both resources have schemas almost identical to the `snowflake_user` resource with the following exceptions:
+- `snowflake_service_user` does not contain the following fields (because they are not supported for the user of type `SERVICE` in Snowflake):
+  - `password`
+  - `first_name`
+  - `middle_name`
+  - `last_name`
+  - `must_change_password`
+  - `mins_to_bypass_mfa`
+  - `disable_mfa`
+- `snowflake_legacy_service_user` does not contain the following fields (because they are not supported for the user of type `LEGACY_SERVICE` in Snowflake):
+  - `first_name`
+  - `middle_name`
+  - `last_name`
+  - `mins_to_bypass_mfa`
+  - `disable_mfa`
+
+`snowflake_users` datasource was adjusted to handle different user types and `type` field was added to the `describe_output`.
+
+If you used to manage service or legacy service users through `snowflake_user` resource (e.g. using `lifecycle.ignore_changes`) or `snowflake_unsafe_execute`, please migrate to the new resources following [our guidelines on resource migration](docs/technical-documentation/resource_migration.md).
+
+Connected issues: [#2951](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2951)
+
 ## v0.95.0 ➞ v0.96.0
 
 ### snowflake_masking_policies data source changes
