@@ -13,7 +13,7 @@ description: |-
 
 -> **Note** Other two user types are handled in separate resources: `snowflake_legacy_service_user` for user type `legacy_service` and `snowflake_user` for user type `person`.
 
--> **Note** External changes to `days_to_expiry`, `mins_to_unlock`, and `mins_to_bypass_mfa` are not currently handled by the provider (because the value changes continuously on Snowflake side after setting it).
+-> **Note** External changes to `days_to_expiry` and `mins_to_unlock` are not currently handled by the provider (because the value changes continuously on Snowflake side after setting it).
 
 # snowflake_service_user (Resource)
 

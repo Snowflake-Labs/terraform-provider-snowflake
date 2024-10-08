@@ -259,7 +259,6 @@ func ServiceUser() *schema.Resource {
 	}
 }
 
-// TODO [SNOW-1645348]: mins to bypass mfa should be removed from docs
 func LegacyServiceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateUser,
