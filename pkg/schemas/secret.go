@@ -37,17 +37,14 @@ var DescribeSecretSchema = map[string]*schema.Schema{
 	},
 	"username": {
 		Type:     schema.TypeString,
-		Optional: true,
 		Computed: true,
 	},
 	"oauth_access_token_expiry_time": {
 		Type:     schema.TypeString,
-		Optional: true,
 		Computed: true,
 	},
 	"oauth_refresh_token_expiry_time": {
 		Type:     schema.TypeString,
-		Optional: true,
 		Computed: true,
 	},
 	"oauth_scopes": {
@@ -57,13 +54,13 @@ var DescribeSecretSchema = map[string]*schema.Schema{
 	},
 	"integration_name": {
 		Type:     schema.TypeString,
-		Optional: true,
 		Computed: true,
 	},
 }
 
 func SecretDescriptionToSchema(details sdk.SecretDetails) map[string]any {
 	s := map[string]any{
+		"created_on":       details.CreatedOn.String(),
 		"name":             details.Name,
 		"database_name":    details.DatabaseName,
 		"schema_name":      details.SchemaName,

@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -49,14 +50,33 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 							HasUsernameString("foo").
 							HasPasswordString("foo").
 							HasCommentString(""),
+
+						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
+							HasName(name).
+							HasDatabaseName(id.DatabaseName()).
+							HasSecretType("PASSWORD").
+							HasSchemaName(id.SchemaName()).
+							HasComment(""),
 					),
+
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.created_on"),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.name", name),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.database_name", id.DatabaseName()),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.schema_name", id.SchemaName()),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.secret_type", "PASSWORD"),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.username", "foo"),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_access_token_expiry_time", ""),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time", ""),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.integration_name", ""),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.#", "0"),
 				),
 			},
 			// set username, password and comment
 			{
 				Config: config.FromModel(t, secretModel.
-					WithUsername("bar").
 					WithPassword("bar").
+					WithUsername("bar").
 					WithComment(comment),
 				),
 				Check: assert.AssertThat(t,
@@ -94,6 +114,20 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.SecretWithClientCredentialsResource(t, secretModelWithoutComment.ResourceReference()).
 						HasCommentString(""),
+				),
+			},
+			// import with no fields set
+			{
+				ResourceName:            secretModel.ResourceReference(),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateCheck: importchecks.ComposeImportStateCheck(
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "database", id.DatabaseId().Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "schema", id.SchemaId().Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "username", "bar"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", ""),
 				),
 			},
 			// destroy

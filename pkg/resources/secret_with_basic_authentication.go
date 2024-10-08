@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"reflect"
 )
 
 var secretBasicAuthenticationSchema = func() map[string]*schema.Schema {
@@ -17,12 +18,13 @@ var secretBasicAuthenticationSchema = func() map[string]*schema.Schema {
 		"username": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Specifies the username value to store in the secret when setting the TYPE value to PASSWORD.",
+			Description: "Specifies the username value to store in the secret.",
 		},
 		"password": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Specifies the password value to store in the secret when setting the TYPE value to PASSWORD.",
+			Sensitive:   true,
+			Description: externalChangesNotDetectedFieldDescription("Specifies the password value to store in the secret."),
 		},
 	}
 	return helpers.MergeMaps(secretCommonSchema, secretBasicAuthentication)
@@ -34,21 +36,43 @@ func SecretWithBasicAuthentication() *schema.Resource {
 		ReadContext:   ReadContextSecretWithBasicAuthentication,
 		UpdateContext: UpdateContextSecretWithBasicAuthentication,
 		DeleteContext: DeleteContextSecretWithBasicAuthentication,
+		Description:   "Resource used to manage secret objects with Basic Authentication. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
 		Schema: secretBasicAuthenticationSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportSecretWithBasicAuthentication,
 		},
-
-		Description: "Secret with Basic Authentication where Secrets Type attribute is set to PASSWORD.",
 	}
 }
 
-func CreateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ImportSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting secret with basic authentication import")
 	client := meta.(*provider.Context).Client
-	commonCreate := handleSecretCreate(d)
 
-	id := sdk.NewSchemaObjectIdentifier(commonCreate.database, commonCreate.schema, commonCreate.name)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handleSecretImport(d); err != nil {
+		return nil, err
+	}
+	secretDescription, err := client.Secrets.Describe(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("username", secretDescription.Username); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func CreateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	databaseName, schemaName, name := handleSecretCreate(d)
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
 	usernameString := d.Get("username").(string)
 	passwordString := d.Get("password").(string)
@@ -68,7 +92,7 @@ func CreateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.R
 	return ReadContextSecretWithBasicAuthentication(ctx, d, meta)
 }
 
-func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -76,7 +100,7 @@ func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.Res
 	}
 
 	secret, err := client.Secrets.ShowByID(ctx, id)
-	if secret == nil || err != nil {
+	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
@@ -98,7 +122,7 @@ func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.Res
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
+	if err = handleSecretRead(d, id, secret, secretDescription); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set("username", secretDescription.Username); err != nil {
@@ -107,39 +131,44 @@ func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func UpdateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if request := handleSecretUpdate(id, d); request != nil {
-		if err := client.Secrets.Alter(ctx, request); err != nil {
-			return diag.FromErr(err)
-		}
+	commonSet, commonUnset := handleSecretUpdate(d)
+	set := &sdk.SecretSetRequest{
+		Comment: commonSet.comment,
+	}
+	unset := &sdk.SecretUnsetRequest{
+		Comment: commonUnset.comment,
+	}
+	setForFlow := &sdk.SetForFlowRequest{
+		SetForBasicAuthentication: &sdk.SetForBasicAuthenticationRequest{},
 	}
 
 	if d.HasChange("username") {
 		username := d.Get("username").(string)
-
-		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForBasicAuthenticationRequest().WithUsername(username)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForBasicAuthentication(*setRequest))
-
-		if err := client.Secrets.Alter(ctx, request); err != nil {
-			return diag.FromErr(err)
-		}
+		setForFlow.SetForBasicAuthentication.WithUsername(username)
+		set.WithSetForFlow(*setForFlow)
 	}
 
 	if d.HasChange("password") {
 		password := d.Get("password").(string)
+		setForFlow.SetForBasicAuthentication.WithPassword(password)
+		set.WithSetForFlow(*setForFlow)
+	}
 
-		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForBasicAuthenticationRequest().WithPassword(password)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForBasicAuthentication(*setRequest))
+	if !reflect.DeepEqual(*set, sdk.SecretSetRequest{}) {
+		if err := client.Secrets.Alter(ctx, sdk.NewAlterSecretRequest(id).WithSet(*set)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
-		if err := client.Secrets.Alter(ctx, request); err != nil {
+	if !reflect.DeepEqual(*unset, sdk.SecretUnsetRequest{}) {
+		if err := client.Secrets.Alter(ctx, sdk.NewAlterSecretRequest(id).WithUnset(*unset)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -147,14 +176,14 @@ func UpdateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.R
 	return ReadContextSecretWithBasicAuthentication(ctx, d, meta)
 }
 
-func DeleteContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextSecretWithBasicAuthentication(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(*sdk.Bool(true))); err != nil {
+	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}
 

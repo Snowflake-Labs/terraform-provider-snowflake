@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"testing"
 	"time"
 
@@ -60,8 +61,26 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 							HasOauthRefreshTokenString(refreshToken).
 							HasOauthRefreshTokenExpiryTimeString(refreshTokenExpiryDateTime).
 							HasCommentString(comment),
-						assert.Check(resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time")),
+
+						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
+							HasName(name).
+							HasDatabaseName(id.DatabaseName()).
+							HasSecretType("OAUTH2").
+							HasSchemaName(id.SchemaName()).
+							HasComment(comment),
 					),
+
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.created_on"),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.name", name),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.database_name", id.DatabaseName()),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.schema_name", id.SchemaName()),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.secret_type", "OAUTH2"),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.username", ""),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_access_token_expiry_time", ""),
+					resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time"),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.integration_name", integrationId.Name()),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.#", "0"),
 				),
 			},
 			// set all

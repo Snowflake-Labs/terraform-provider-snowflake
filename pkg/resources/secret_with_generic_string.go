@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
+	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -17,6 +19,7 @@ var secretGenericStringSchema = func() map[string]*schema.Schema {
 		"secret_string": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Specifies the string to store in the secret. The string can be an API token or a string of sensitive value that can be used in the handler code of a UDF or stored procedure. For details, see [Creating and using an external access integration](https://docs.snowflake.com/en/developer-guide/external-network-access/creating-using-external-network-access). You should not use this property to store any kind of OAuth token; use one of the other secret types for your OAuth use cases.",
 		},
 	}
@@ -29,20 +32,33 @@ func SecretWithGenericString() *schema.Resource {
 		ReadContext:   ReadContextSecretWithGenericString,
 		UpdateContext: UpdateContextSecretWithGenericString,
 		DeleteContext: DeleteContextSecretWithGenericString,
+		Description:   "Resource used to manage secret objects with Generic String. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
 		Schema: secretGenericStringSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportSecretWithGenericString,
 		},
-		Description: "Secret with Generic string where Secrets Type attribute is set to GENERIC_STRING.",
 	}
 }
 
-func CreateContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	commonCreate := handleSecretCreate(d)
+func ImportSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting secret with generic string import")
 
-	id := sdk.NewSchemaObjectIdentifier(commonCreate.database, commonCreate.schema, commonCreate.name)
+	_, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handleSecretImport(d); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func CreateContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id := sdk.NewSchemaObjectIdentifier(handleSecretCreate(d))
 
 	secretSting := d.Get("secret_string").(string)
 
@@ -61,7 +77,7 @@ func CreateContextSecretWithGenericString(ctx context.Context, d *schema.Resourc
 	return ReadContextSecretWithGenericString(ctx, d, meta)
 }
 
-func ReadContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -69,7 +85,7 @@ func ReadContextSecretWithGenericString(ctx context.Context, d *schema.ResourceD
 	}
 
 	secret, err := client.Secrets.ShowByID(ctx, id)
-	if secret == nil || err != nil {
+	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
@@ -98,27 +114,35 @@ func ReadContextSecretWithGenericString(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func UpdateContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if request := handleSecretUpdate(id, d); request != nil {
-		if err := client.Secrets.Alter(ctx, request); err != nil {
-			return diag.FromErr(err)
-		}
+	commonSet, commonUnset := handleSecretUpdate(d)
+	set := &sdk.SecretSetRequest{
+		Comment: commonSet.comment,
+	}
+	unset := &sdk.SecretUnsetRequest{
+		Comment: commonUnset.comment,
 	}
 
 	if d.HasChange("secret_string") {
 		secretString := d.Get("secret_string").(string)
+		req := sdk.NewSetForFlowRequest().WithSetForGenericString(*sdk.NewSetForGenericStringRequest().WithSecretString(secretString))
+		set.WithSetForFlow(*req)
+	}
 
-		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForGenericStringRequest().WithSecretString(secretString)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForGenericString(*setRequest))
+	if !reflect.DeepEqual(*set, sdk.SecretSetRequest{}) {
+		if err := client.Secrets.Alter(ctx, sdk.NewAlterSecretRequest(id).WithSet(*set)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
-		if err := client.Secrets.Alter(ctx, request); err != nil {
+	if !reflect.DeepEqual(*unset, sdk.SecretUnsetRequest{}) {
+		if err := client.Secrets.Alter(ctx, sdk.NewAlterSecretRequest(id).WithUnset(*unset)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -126,14 +150,14 @@ func UpdateContextSecretWithGenericString(ctx context.Context, d *schema.Resourc
 	return ReadContextSecretWithGenericString(ctx, d, meta)
 }
 
-func DeleteContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(*sdk.Bool(true))); err != nil {
+	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}
 
