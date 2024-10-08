@@ -187,7 +187,7 @@ func User() *schema.Resource {
 
 		CreateContext: GetCreateUserFunc(sdk.UserTypePerson),
 		UpdateContext: GetUpdateUserFunc(sdk.UserTypePerson),
-		ReadContext:   GetReadUserFunc(true),
+		ReadContext:   GetReadUserFunc(sdk.UserTypePerson, true),
 		DeleteContext: DeleteUser,
 		Description:   "Resource used to manage user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
 
@@ -220,7 +220,7 @@ func ServiceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: GetCreateUserFunc(sdk.UserTypeService),
 		UpdateContext: GetUpdateUserFunc(sdk.UserTypeService),
-		ReadContext:   GetReadUserFunc(true),
+		ReadContext:   GetReadUserFunc(sdk.UserTypeService, true),
 		DeleteContext: DeleteUser,
 		Description:   "Resource used to manage service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
 
@@ -244,7 +244,7 @@ func LegacyServiceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: GetCreateUserFunc(sdk.UserTypeLegacyService),
 		UpdateContext: GetUpdateUserFunc(sdk.UserTypeLegacyService),
-		ReadContext:   GetReadUserFunc(true),
+		ReadContext:   GetReadUserFunc(sdk.UserTypeLegacyService, true),
 		DeleteContext: DeleteUser,
 		Description:   "Resource used to manage legacy service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
 
@@ -410,11 +410,11 @@ func GetCreateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schem
 			}
 		}
 
-		return append(diags, GetReadUserFunc(false)(ctx, d, meta)...)
+		return append(diags, GetReadUserFunc(userType, false)(ctx, d, meta)...)
 	}
 }
 
-func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
+func GetReadUserFunc(userType sdk.UserType, withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
 		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
@@ -458,25 +458,31 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 
 		if withExternalChangesMarking {
-			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"login_name", "login_name", u.LoginName, u.LoginName, nil},
-				showMapping{"display_name", "display_name", u.DisplayName, u.DisplayName, nil},
-				showMapping{"must_change_password", "must_change_password", u.MustChangePassword, fmt.Sprintf("%t", u.MustChangePassword), nil},
-				showMapping{"disabled", "disabled", u.Disabled, fmt.Sprintf("%t", u.Disabled), nil},
-				showMapping{"default_namespace", "default_namespace", u.DefaultNamespace, u.DefaultNamespace, nil},
-				showMapping{"default_secondary_roles", "default_secondary_roles_option", u.DefaultSecondaryRoles, u.GetSecondaryRolesOption(), nil},
-			); err != nil {
+			showMappings := []showMapping{
+				{"login_name", "login_name", u.LoginName, u.LoginName, nil},
+				{"display_name", "display_name", u.DisplayName, u.DisplayName, nil},
+				{"disabled", "disabled", u.Disabled, fmt.Sprintf("%t", u.Disabled), nil},
+				{"default_namespace", "default_namespace", u.DefaultNamespace, u.DefaultNamespace, nil},
+				{"default_secondary_roles", "default_secondary_roles_option", u.DefaultSecondaryRoles, u.GetSecondaryRolesOption(), nil},
+			}
+			if userType == sdk.UserTypePerson {
+				showMappings = append(showMappings, showMapping{"must_change_password", "must_change_password", u.MustChangePassword, fmt.Sprintf("%t", u.MustChangePassword), nil})
+			}
+			if err = handleExternalChangesToObjectInShow(d, showMappings...); err != nil {
 				return diag.FromErr(err)
 			}
 		}
 
-		if err = setStateToValuesFromConfig(d, userSchema, []string{
+		fieldsToSetStateToValueFromConfig := []string{
 			"login_name",
 			"display_name",
-			"must_change_password",
 			"disabled",
 			"default_namespace",
-		}); err != nil {
+		}
+		if userType == sdk.UserTypePerson {
+			fieldsToSetStateToValueFromConfig = append(fieldsToSetStateToValueFromConfig, "must_change_password")
+		}
+		if err = setStateToValuesFromConfig(d, userSchema, fieldsToSetStateToValueFromConfig); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -485,9 +491,9 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			// can't read password
 			// not reading login_name on purpose (handled as external change to show output)
 			// not reading display_name on purpose (handled as external change to show output)
-			setFromStringPropertyIfNotEmpty(d, "first_name", userDetails.FirstName),
-			setFromStringPropertyIfNotEmpty(d, "middle_name", userDetails.MiddleName),
-			setFromStringPropertyIfNotEmpty(d, "last_name", userDetails.LastName),
+			// first_name handled separately for proper user types,
+			// middle_name handled separately for proper user types,
+			// last_name handled separately for proper user types,
 			setFromStringPropertyIfNotEmpty(d, "email", userDetails.Email),
 			// not reading must_change_password on purpose (handled as external change to show output)
 			// not reading disabled on purpose (handled as external change to show output)
@@ -503,6 +509,18 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			setFromStringPropertyIfNotEmpty(d, "comment", userDetails.Comment),
 			// can't read disable_mfa
 			d.Set("user_type", u.Type),
+
+			func() error {
+				var errs error
+				if userType == sdk.UserTypePerson {
+					errs = errors.Join(
+						setFromStringPropertyIfNotEmpty(d, "first_name", userDetails.FirstName),
+						setFromStringPropertyIfNotEmpty(d, "middle_name", userDetails.MiddleName),
+						setFromStringPropertyIfNotEmpty(d, "last_name", userDetails.LastName),
+					)
+				}
+				return errs
+			}(),
 
 			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 			handleUserParameterRead(d, userParameters),
@@ -653,7 +671,7 @@ func GetUpdateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schem
 			}
 		}
 
-		return GetReadUserFunc(false)(ctx, d, meta)
+		return GetReadUserFunc(userType, false)(ctx, d, meta)
 	}
 }
 
