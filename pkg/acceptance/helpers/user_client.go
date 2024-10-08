@@ -126,6 +126,14 @@ func (c *UserClient) SetType(t *testing.T, id sdk.AccountObjectIdentifier, userT
 	require.NoError(t, err)
 }
 
+func (c *UserClient) UnsetType(t *testing.T, id sdk.AccountObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("ALTER USER %s UNSET TYPE", id.FullyQualifiedName()))
+	require.NoError(t, err)
+}
+
 func (c *UserClient) SetLoginName(t *testing.T, id sdk.AccountObjectIdentifier, newLoginName string) {
 	t.Helper()
 	ctx := context.Background()

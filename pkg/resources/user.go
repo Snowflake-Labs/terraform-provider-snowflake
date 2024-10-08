@@ -372,6 +372,9 @@ func GetCreateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schem
 				stringAttributeCreate(d, "password", &opts.ObjectProperties.Password),
 				booleanStringAttributeCreate(d, "must_change_password", &opts.ObjectProperties.MustChangePassword),
 			)
+			opts.ObjectProperties.Type = sdk.Pointer(sdk.UserTypeLegacyService)
+		case sdk.UserTypeService:
+			opts.ObjectProperties.Type = sdk.Pointer(sdk.UserTypeService)
 		}
 		if userTypeSpecificFieldsErrs != nil {
 			return diag.FromErr(userTypeSpecificFieldsErrs)

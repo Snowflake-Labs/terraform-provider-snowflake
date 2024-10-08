@@ -1007,6 +1007,40 @@ func TestAcc_User_handleExternalTypeChange(t *testing.T) {
 					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType(""),
 				),
 			},
+			// no change should happen if the change is to PERSON explicitly
+			{
+				PreConfig: func() {
+					acc.TestClient().User.SetType(t, userId, sdk.UserTypePerson)
+					objectassert.User(t, userId).HasType("PERSON")
+				},
+				Config: config.FromModel(t, userModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).HasNameString(userId.Name()).HasUserTypeString("PERSON"),
+					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType("PERSON"),
+				),
+			},
+			// no change should happen if we fall back to default
+			{
+				PreConfig: func() {
+					acc.TestClient().User.UnsetType(t, userId)
+					objectassert.User(t, userId).HasType("")
+				},
+				Config: config.FromModel(t, userModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).HasNameString(userId.Name()).HasUserTypeString(""),
+					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType(""),
+				),
+			},
 		},
 	})
 }

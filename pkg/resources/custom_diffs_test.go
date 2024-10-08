@@ -717,7 +717,7 @@ func Test_RecreateWhenUserTypeChangedExternally(t *testing.T) {
 			name:         "service - nothing in state",
 			userType:     sdk.UserTypeService,
 			stateValue:   map[string]string{},
-			wantForceNew: false,
+			wantForceNew: true,
 		},
 		{
 			name:     "service - service in state",
@@ -751,15 +751,14 @@ func Test_RecreateWhenUserTypeChangedExternally(t *testing.T) {
 			},
 			wantForceNew: true,
 		},
-		// TODO: check this case with acceptance test
-		//{
-		//	name:     "service - empty value in state",
-		//	userType: sdk.UserTypeService,
-		//	stateValue: map[string]string{
-		//		"user_type": "",
-		//	},
-		//	wantForceNew: true,
-		//},
+		{
+			name:     "service - empty value in state",
+			userType: sdk.UserTypeService,
+			stateValue: map[string]string{
+				"user_type": "",
+			},
+			wantForceNew: true,
+		},
 		{
 			name:     "service - garbage in state",
 			userType: sdk.UserTypeService,
