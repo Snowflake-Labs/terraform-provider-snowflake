@@ -198,7 +198,7 @@ func User() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			// TODO [SNOW-1629468 - next pr]: test "default_role", "default_secondary_roles"
-			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "default_secondary_roles_option", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, userExternalChangesAttributes...),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
@@ -230,8 +230,7 @@ func ServiceUser() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			// TODO [SNOW-1645348]: generalize this list
-			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "login_name", "display_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "default_secondary_roles_option", "rsa_public_key", "rsa_public_key_2", "comment"),
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, serviceUserExternalChangesAttributes...),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
@@ -254,7 +253,7 @@ func LegacyServiceUser() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "default_secondary_roles_option", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment"),
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, legacyServiceUserExternalChangesAttributes...),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
