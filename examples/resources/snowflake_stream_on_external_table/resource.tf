@@ -17,7 +17,17 @@ resource "snowflake_external_table" "external_table" {
   }
 }
 
+# basic resource
+resource "snowflake_stream_on_external_table" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
 
+  external_table = snowflake_external_table.external_table.fully_qualified_name
+}
+
+
+# resource with additional fields
 resource "snowflake_stream_on_external_table" "stream" {
   name     = "stream"
   schema   = "schema"

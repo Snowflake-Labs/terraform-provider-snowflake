@@ -34,11 +34,9 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
 	t.Cleanup(cleanupTable)
 
-	baseModel := func() *model.StreamOnTableModel {
-		return model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
-	}
+	baseModel := model.StreamOnTableBase("test", id, table.ID())
 
-	modelWithExtraFields := baseModel().
+	modelWithExtraFields := model.StreamOnTableBase("test", id, table.ID()).
 		WithCopyGrants(false).
 		WithComment("foo").
 		WithAppendOnly(r.BooleanTrue).
@@ -47,7 +45,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			"offset": pluginconfig.StringVariable("0"),
 		}))
 
-	modelWithExtraFieldsDefaultMode := baseModel().
+	modelWithExtraFieldsDefaultMode := model.StreamOnTableBase("test", id, table.ID()).
 		WithCopyGrants(false).
 		WithComment("foo").
 		WithAppendOnly(r.BooleanFalse).
@@ -65,7 +63,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				Config: config.FromModel(t, baseModel()),
+				Config: config.FromModel(t, baseModel),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -107,7 +105,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			},
 			// import without optionals
 			{
-				Config:       config.FromModel(t, baseModel()),
+				Config:       config.FromModel(t, baseModel),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
@@ -354,21 +352,21 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 
 	lastQueryId := acc.TestClient().Context.LastQueryId(t)
 
-	baseModel := func() *model.StreamOnTableModel {
-		return model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName()).
+	commonModel := func() *model.StreamOnTableModel {
+		return model.StreamOnTableBase("test", id, table.ID()).
 			WithComment("foo").
 			WithAppendOnly(r.BooleanTrue).
 			WithShowInitialRows(r.BooleanTrue).
 			WithCopyGrants(false)
 	}
 
-	modelWithOffset := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithOffset := commonModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"offset": pluginconfig.StringVariable("0"),
 	}))
-	modelWithStream := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithStream := commonModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
 	}))
-	modelWithStatement := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithStatement := commonModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"statement": pluginconfig.StringVariable(lastQueryId),
 	}))
 
@@ -471,21 +469,21 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 
 	lastQueryId := acc.TestClient().Context.LastQueryId(t)
 
-	baseModel := func() *model.StreamOnTableModel {
-		return model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName()).
+	commonModel := func() *model.StreamOnTableModel {
+		return model.StreamOnTableBase("test", id, table.ID()).
 			WithComment("foo").
 			WithAppendOnly(r.BooleanTrue).
 			WithShowInitialRows(r.BooleanTrue).
 			WithCopyGrants(false)
 	}
 
-	modelWithOffset := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithOffset := commonModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"offset": pluginconfig.StringVariable("0"),
 	}))
-	modelWithStream := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithStream := commonModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
 	}))
-	modelWithStatement := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithStatement := commonModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"statement": pluginconfig.StringVariable(lastQueryId),
 	}))
 

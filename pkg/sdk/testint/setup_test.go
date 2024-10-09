@@ -39,13 +39,6 @@ func TestMain(m *testing.M) {
 func execute(m *testing.M) int {
 	defer timer("tests")()
 	setup()
-	defer func() {
-		if r := recover(); r != nil {
-			cleanup()
-			log.Println("[DEBUG] Recovered in f", r)
-			os.Exit(1)
-		}
-	}()
 	exitVal := m.Run()
 	cleanup()
 	return exitVal

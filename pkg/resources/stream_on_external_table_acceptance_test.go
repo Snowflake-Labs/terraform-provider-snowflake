@@ -39,18 +39,16 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stageLocation)
 	t.Cleanup(externalTableCleanup)
 
-	baseModel := func() *model.StreamOnExternalTableModel {
-		return model.StreamOnExternalTable("test", id.DatabaseName(), externalTable.ID().FullyQualifiedName(), id.Name(), id.SchemaName()).WithInsertOnly(r.BooleanTrue)
-	}
+	baseModel := model.StreamOnExternalTableBase("test", id, externalTable.ID())
 
-	modelWithExtraFields := baseModel().
+	modelWithExtraFields := model.StreamOnExternalTableBase("test", id, externalTable.ID()).
 		WithCopyGrants(true).
 		WithComment("foo").
 		WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 			"offset": pluginconfig.StringVariable("0"),
 		}))
 
-	modelWithExtraFieldsModified := baseModel().
+	modelWithExtraFieldsModified := model.StreamOnExternalTableBase("test", id, externalTable.ID()).
 		WithCopyGrants(true).
 		WithComment("bar").
 		WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
@@ -66,7 +64,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				Config: config.FromModel(t, baseModel()),
+				Config: config.FromModel(t, baseModel),
 				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -108,7 +106,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 			},
 			// import without optionals
 			{
-				Config:       config.FromModel(t, baseModel()),
+				Config:       config.FromModel(t, baseModel),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
@@ -363,17 +361,17 @@ func TestAcc_StreamOnExternalTable_At(t *testing.T) {
 	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stageLocation)
 	t.Cleanup(externalTableCleanup)
 
-	baseModel := func() *model.StreamOnExternalTableModel {
-		return model.StreamOnExternalTable("test", id.DatabaseName(), externalTable.ID().FullyQualifiedName(), id.Name(), id.SchemaName()).
+	commonModel := func() *model.StreamOnExternalTableModel {
+		return model.StreamOnExternalTableBase("test", id, externalTable.ID()).
 			WithComment("foo").
 			WithInsertOnly(r.BooleanTrue).
 			WithCopyGrants(false)
 	}
 
-	modelWithOffset := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithOffset := commonModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"offset": pluginconfig.StringVariable("0"),
 	}))
-	modelWithStream := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithStream := commonModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
 	}))
 
@@ -455,17 +453,17 @@ func TestAcc_StreamOnExternalTable_Before(t *testing.T) {
 	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stageLocation)
 	t.Cleanup(externalTableCleanup)
 
-	baseModel := func() *model.StreamOnExternalTableModel {
-		return model.StreamOnExternalTable("test", id.DatabaseName(), externalTable.ID().FullyQualifiedName(), id.Name(), id.SchemaName()).
+	commonModel := func() *model.StreamOnExternalTableModel {
+		return model.StreamOnExternalTableBase("test", id, externalTable.ID()).
 			WithComment("foo").
 			WithInsertOnly(r.BooleanTrue).
 			WithCopyGrants(false)
 	}
 
-	modelWithOffset := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithOffset := commonModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"offset": pluginconfig.StringVariable("0"),
 	}))
-	modelWithStream := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithStream := commonModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
 	}))
 

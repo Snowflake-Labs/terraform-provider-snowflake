@@ -49,8 +49,8 @@ func StreamOnExternalTable() *schema.Resource {
 		Description:   "Resource used to manage streams on external tables. For more information, check [stream documentation](https://docs.snowflake.com/en/sql-reference/sql/create-stream).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, ShowOutputAttributeName, "table", "insert_only", "comment"),
-			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, DescribeOutputAttributeName, "table", "insert_only", "comment"),
+			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, ShowOutputAttributeName, "external_table", "insert_only", "comment"),
+			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, DescribeOutputAttributeName, "external_table", "insert_only", "comment"),
 		),
 
 		Schema: streamOnExternalTableSchema,
@@ -147,9 +147,6 @@ func ReadStreamOnExternalTable(withExternalChangesMarking bool) schema.ReadConte
 					},
 				}
 			}
-			return diag.FromErr(err)
-		}
-		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
 		externalTableId, err := sdk.ParseSchemaObjectIdentifier(*stream.TableName)

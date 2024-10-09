@@ -390,6 +390,9 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			req.WithComment(v)
 		}
 
+		// Read directly from the config. Otherwise, when recreating the resource with columns already in the state,
+		// the column would get populated with old values. This could cause errors when columns are not set in the config,
+		// but are changed in `statement`.
 		if v := d.Get("column"); len(d.GetRawConfig().AsValueMap()["column"].AsValueSlice()) > 0 {
 			columns, err := extractColumns(v)
 			if err != nil {
