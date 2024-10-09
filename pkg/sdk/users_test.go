@@ -194,6 +194,16 @@ func TestUserAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errors.New("policies cannot be unset with user properties or parameters at the same time"))
 	})
 
+	t.Run("alter: unset type", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Unset: &UserUnset{
+				ObjectProperties: &UserObjectPropertiesUnset{Type: Bool(true)},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s UNSET TYPE", id.FullyQualifiedName())
+	})
+
 	t.Run("validation: unset two policies", func(t *testing.T) {
 		opts := &AlterUserOptions{
 			name: id,

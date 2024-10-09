@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -122,7 +121,15 @@ func (c *UserClient) SetType(t *testing.T, id sdk.AccountObjectIdentifier, userT
 	t.Helper()
 	ctx := context.Background()
 
-	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("ALTER USER %s SET TYPE = %s", id.FullyQualifiedName(), userType))
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{
+		Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					Type: sdk.Pointer(userType),
+				},
+			},
+		},
+	})
 	require.NoError(t, err)
 }
 
@@ -130,7 +137,13 @@ func (c *UserClient) UnsetType(t *testing.T, id sdk.AccountObjectIdentifier) {
 	t.Helper()
 	ctx := context.Background()
 
-	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("ALTER USER %s UNSET TYPE", id.FullyQualifiedName()))
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{
+		Unset: &sdk.UserUnset{
+			ObjectProperties: &sdk.UserObjectPropertiesUnset{
+				Type: sdk.Bool(true),
+			},
+		},
+	})
 	require.NoError(t, err)
 }
 

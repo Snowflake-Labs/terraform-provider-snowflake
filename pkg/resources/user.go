@@ -189,7 +189,7 @@ func User() *schema.Resource {
 		UpdateContext: GetUpdateUserFunc(sdk.UserTypePerson),
 		ReadContext:   GetReadUserFunc(sdk.UserTypePerson, true),
 		DeleteContext: DeleteUser,
-		Description:   "Resource used to manage user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
+		Description:   "Resource used to manage user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
 		Schema: helpers.MergeMaps(userSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
@@ -222,7 +222,7 @@ func ServiceUser() *schema.Resource {
 		UpdateContext: GetUpdateUserFunc(sdk.UserTypeService),
 		ReadContext:   GetReadUserFunc(sdk.UserTypeService, true),
 		DeleteContext: DeleteUser,
-		Description:   "Resource used to manage service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
+		Description:   "Resource used to manage service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
 		Schema: helpers.MergeMaps(serviceUserSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
@@ -245,7 +245,7 @@ func LegacyServiceUser() *schema.Resource {
 		UpdateContext: GetUpdateUserFunc(sdk.UserTypeLegacyService),
 		ReadContext:   GetReadUserFunc(sdk.UserTypeLegacyService, true),
 		DeleteContext: DeleteUser,
-		Description:   "Resource used to manage legacy service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
+		Description:   "Resource used to manage legacy service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
 		Schema: helpers.MergeMaps(legacyServiceUserSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
@@ -467,7 +467,7 @@ func GetReadUserFunc(userType sdk.UserType, withExternalChangesMarking bool) sch
 				{"default_namespace", "default_namespace", u.DefaultNamespace, u.DefaultNamespace, nil},
 				{"default_secondary_roles", "default_secondary_roles_option", u.DefaultSecondaryRoles, u.GetSecondaryRolesOption(), nil},
 			}
-			if userType == sdk.UserTypePerson {
+			if userType == sdk.UserTypePerson || userType == sdk.UserTypeLegacyService {
 				showMappings = append(showMappings, showMapping{"must_change_password", "must_change_password", u.MustChangePassword, fmt.Sprintf("%t", u.MustChangePassword), nil})
 			}
 			if err = handleExternalChangesToObjectInShow(d, showMappings...); err != nil {

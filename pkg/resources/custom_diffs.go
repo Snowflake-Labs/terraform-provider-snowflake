@@ -185,11 +185,7 @@ func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.Customi
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get("user_type"); n != nil {
 			logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
-			acceptableUserTypes := []string{string(userType)}
-			if userType == sdk.UserTypePerson {
-				acceptableUserTypes = append(acceptableUserTypes, "")
-			}
-			if !slices.Contains(acceptableUserTypes, strings.ToUpper(n.(string))) {
+			if acceptableUserTypes, ok := sdk.AcceptableUserTypes[userType]; ok && !slices.Contains(acceptableUserTypes, strings.ToUpper(n.(string))) {
 				// we have to set here a value instead of just SetNewComputed
 				// because with empty value (default snowflake behavior for type) ForceNew fails
 				// because there are no changes (at least from the SDKv2 point of view) for "user_type"

@@ -285,6 +285,7 @@ type UserObjectPropertiesUnset struct {
 	DisableMfa            *bool `ddl:"keyword" sql:"DISABLE_MFA"`
 	RSAPublicKey          *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY"`
 	RSAPublicKey2         *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY_2"`
+	Type                  *bool `ddl:"keyword" sql:"TYPE"`
 	Comment               *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
@@ -740,4 +741,10 @@ var AllUserTypes = []UserType{
 	UserTypePerson,
 	UserTypeService,
 	UserTypeLegacyService,
+}
+
+var AcceptableUserTypes = map[UserType][]string{
+	UserTypePerson:        {"", string(UserTypePerson)},
+	UserTypeService:       {string(UserTypeService)},
+	UserTypeLegacyService: {string(UserTypeLegacyService)},
 }
