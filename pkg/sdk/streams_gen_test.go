@@ -1,6 +1,10 @@
 package sdk
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func TestStreams_CreateOnTable(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
@@ -539,4 +543,116 @@ func TestStreams_Describe(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE STREAM %s`, id.FullyQualifiedName())
 	})
+}
+
+func TestToStreamSourceType(t *testing.T) {
+	tests := []struct {
+		input   string
+		want    StreamSourceType
+		wantErr string
+	}{
+		{
+			input: "TABLE",
+			want:  StreamSourceTypeTable,
+		},
+		{
+			input: "EXTERNAL TABLE",
+			want:  StreamSourceTypeExternalTable,
+		},
+		{
+			input: "VIEW",
+			want:  StreamSourceTypeView,
+		},
+		{
+			input: "STAGE",
+			want:  StreamSourceTypeStage,
+		},
+		{
+			input: "table",
+			want:  StreamSourceTypeTable,
+		},
+		{
+			input: "external table",
+			want:  StreamSourceTypeExternalTable,
+		},
+		{
+			input: "view",
+			want:  StreamSourceTypeView,
+		},
+		{
+			input: "stage",
+			want:  StreamSourceTypeStage,
+		},
+		{
+			input:   "",
+			wantErr: "invalid stream source type",
+		},
+		{
+			input:   "foo",
+			wantErr: "invalid stream source type",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got, err := ToStreamSourceType(tt.input)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestToStreamMode(t *testing.T) {
+	tests := []struct {
+		input   string
+		want    StreamMode
+		wantErr string
+	}{
+		{
+			input: "DEFAULT",
+			want:  StreamModeDefault,
+		},
+		{
+			input: "APPEND_ONLY",
+			want:  StreamModeAppendOnly,
+		},
+		{
+			input: "INSERT_ONLY",
+			want:  StreamModeInsertOnly,
+		},
+		{
+			input: "default",
+			want:  StreamModeDefault,
+		},
+		{
+			input: "append_only",
+			want:  StreamModeAppendOnly,
+		},
+		{
+			input: "insert_only",
+			want:  StreamModeInsertOnly,
+		},
+		{
+			input:   "",
+			wantErr: "invalid stream mode",
+		},
+		{
+			input:   "foo",
+			wantErr: "invalid stream mode",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got, err := ToStreamMode(tt.input)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
 }

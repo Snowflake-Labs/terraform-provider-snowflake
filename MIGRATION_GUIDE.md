@@ -9,7 +9,45 @@ across different versions.
 
 ## v0.96.0 ➞ v0.97.0
 
-### new snowflake_service_user and snowflake_legacy_service_user resources
+### *(new feature)* snowflake_stream_on_table resource
+
+To enhance clarity and functionality, the new resource `snowflake_stream_on_table` has been introduced to replace the previous `snowflake_stream`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into more specialized resources.
+The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes).
+This segregation was based on the object on which the stream is created. The mapping between SQL statements and the resources is the following:
+- `ON TABLE <table_name>` -> `snowflake_stream_on_table`
+
+To use the new `stream_on_table`, change the old `stream` from
+```terraform
+resource "snowflake_stream" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  on_table    = snowflake_table.table.fully_qualified_name
+  append_only = true
+
+  comment = "A stream."
+}
+```
+
+to
+
+```
+resource "snowflake_stream_on_table" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  table             = snowflake_table.table.fully_qualified_name
+  append_only       = "true"
+
+  comment = "A stream."
+}
+```
+
+Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+
+### *(new feature)* new snowflake_service_user and snowflake_legacy_service_user resources
 
 Release v0.95.0 introduced reworked `snowflake_user` resource. As [noted](#note-user-types), the new `SERVICE` and `LEGACY_SERVICE` user types were not supported.
 

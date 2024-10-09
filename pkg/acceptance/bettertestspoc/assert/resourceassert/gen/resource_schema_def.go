@@ -57,4 +57,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "MaskingPolicy",
 		schema: resources.MaskingPolicy().Schema,
 	},
+	{
+		name:   "StreamOnTable",
+		schema: resources.StreamOnTable().Schema,
+	},
 }

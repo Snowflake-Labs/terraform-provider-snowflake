@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
@@ -242,10 +243,20 @@ func (r showStreamsDbRow) convert() *Stream {
 		s.TableName = &r.TableName.String
 	}
 	if r.SourceType.Valid {
-		s.SourceType = &r.SourceType.String
+		sourceType, err := ToStreamSourceType(r.SourceType.String)
+		if err != nil {
+			log.Printf("[DEBUG] error converting show stream: %v", err)
+		} else {
+			s.SourceType = &sourceType
+		}
 	}
 	if r.BaseTables.Valid {
-		s.BaseTables = &r.BaseTables.String
+		baseTables, err := ParseCommaSeparatedSchemaObjectIdentifierArray(r.BaseTables.String)
+		if err != nil {
+			log.Printf("[DEBUG] error converting show stream: %v", err)
+		} else {
+			s.BaseTables = baseTables
+		}
 	}
 	if r.Type.Valid {
 		s.Type = &r.Type.String
@@ -254,7 +265,12 @@ func (r showStreamsDbRow) convert() *Stream {
 		s.Stale = &r.Stale.String
 	}
 	if r.Mode.Valid {
-		s.Mode = &r.Mode.String
+		mode, err := ToStreamMode(r.Mode.String)
+		if err != nil {
+			log.Printf("[DEBUG] error converting show stream: %v", err)
+		} else {
+			s.Mode = &mode
+		}
 	}
 	if r.InvalidReason.Valid {
 		s.InvalidReason = &r.InvalidReason.String

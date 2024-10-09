@@ -480,6 +480,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_stage":                                                        resources.Stage(),
 		"snowflake_storage_integration":                                          resources.StorageIntegration(),
 		"snowflake_stream":                                                       resources.Stream(),
+		"snowflake_stream_on_table":                                              resources.StreamOnTable(),
 		"snowflake_streamlit":                                                    resources.Streamlit(),
 		"snowflake_table":                                                        resources.Table(),
 		"snowflake_table_column_masking_policy_application":                      resources.TableColumnMaskingPolicyApplication(),

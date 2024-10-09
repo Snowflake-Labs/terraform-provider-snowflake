@@ -61,11 +61,6 @@ func (s *StreamShowOutputAssert) HasSchemaName(expected string) *StreamShowOutpu
 	return s
 }
 
-func (s *StreamShowOutputAssert) HasTableOn(expected string) *StreamShowOutputAssert {
-	s.AddAssertion(assert.ResourceShowOutputValueSet("table_on", expected))
-	return s
-}
-
 func (s *StreamShowOutputAssert) HasOwner(expected string) *StreamShowOutputAssert {
 	s.AddAssertion(assert.ResourceShowOutputValueSet("owner", expected))
 	return s
@@ -81,13 +76,8 @@ func (s *StreamShowOutputAssert) HasTableName(expected string) *StreamShowOutput
 	return s
 }
 
-func (s *StreamShowOutputAssert) HasSourceType(expected string) *StreamShowOutputAssert {
-	s.AddAssertion(assert.ResourceShowOutputValueSet("source_type", expected))
-	return s
-}
-
-func (s *StreamShowOutputAssert) HasBaseTables(expected string) *StreamShowOutputAssert {
-	s.AddAssertion(assert.ResourceShowOutputValueSet("base_tables", expected))
+func (s *StreamShowOutputAssert) HasSourceType(expected sdk.StreamSourceType) *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("source_type", expected))
 	return s
 }
 
@@ -101,8 +91,8 @@ func (s *StreamShowOutputAssert) HasStale(expected string) *StreamShowOutputAsse
 	return s
 }
 
-func (s *StreamShowOutputAssert) HasMode(expected string) *StreamShowOutputAssert {
-	s.AddAssertion(assert.ResourceShowOutputValueSet("mode", expected))
+func (s *StreamShowOutputAssert) HasMode(expected sdk.StreamMode) *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("mode", expected))
 	return s
 }
 

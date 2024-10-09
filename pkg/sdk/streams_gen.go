@@ -163,11 +163,11 @@ type Stream struct {
 	Owner         *string
 	Comment       *string
 	TableName     *string
-	SourceType    *string
-	BaseTables    *string
+	SourceType    *StreamSourceType
+	BaseTables    []SchemaObjectIdentifier
 	Type          *string
 	Stale         *string
-	Mode          *string
+	Mode          *StreamMode
 	StaleAfter    *time.Time
 	InvalidReason *string
 	OwnerRoleType *string
@@ -175,6 +175,10 @@ type Stream struct {
 
 func (v *Stream) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
+func (v *Stream) IsAppendOnly() bool {
+	return v != nil && v.Mode != nil && *v.Mode == StreamModeAppendOnly
 }
 
 // DescribeStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-stream.
