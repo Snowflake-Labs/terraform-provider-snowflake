@@ -3,6 +3,9 @@
 package schemas
 
 import (
+	"log"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -42,7 +45,10 @@ var ShowStreamSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"base_tables": {
-		Type:     schema.TypeString,
+		Type: schema.TypeList,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
 		Computed: true,
 	},
 	"type": {
@@ -73,6 +79,7 @@ var ShowStreamSchema = map[string]*schema.Schema{
 
 var _ = ShowStreamSchema
 
+// Adjusted manually.
 func StreamToSchema(stream *sdk.Stream) map[string]any {
 	streamSchema := make(map[string]any)
 	streamSchema["created_on"] = stream.CreatedOn.String()
@@ -86,13 +93,18 @@ func StreamToSchema(stream *sdk.Stream) map[string]any {
 		streamSchema["comment"] = stream.Comment
 	}
 	if stream.TableName != nil {
-		streamSchema["table_name"] = stream.TableName
+		tableId, err := sdk.ParseSchemaObjectIdentifier(*stream.TableName)
+		if err != nil {
+			log.Printf("[DEBUG] could not parse table ID: %v", err)
+		} else {
+			streamSchema["table_name"] = tableId.FullyQualifiedName()
+		}
 	}
 	if stream.SourceType != nil {
 		streamSchema["source_type"] = stream.SourceType
 	}
 	if stream.BaseTables != nil {
-		streamSchema["base_tables"] = stream.BaseTables
+		streamSchema["base_tables"] = collections.Map(stream.BaseTables, sdk.SchemaObjectIdentifier.FullyQualifiedName)
 	}
 	if stream.Type != nil {
 		streamSchema["type"] = stream.Type

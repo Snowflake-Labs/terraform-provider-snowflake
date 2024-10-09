@@ -77,7 +77,7 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `SHOW ROW ACCESS POLICY` for the given row access policy.",
+		Description: "Outputs the result of `SHOW ROW ACCESS POLICIES` for the given row access policy.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowRowAccessPolicySchema,
 		},

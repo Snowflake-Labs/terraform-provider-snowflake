@@ -62,34 +62,40 @@ var oauthScopesListDef = g.NewQueryStruct("OauthScopesList").List("OauthScopesLi
 var secretSet = g.NewQueryStruct("SecretSet").
 	OptionalComment().
 	OptionalQueryStructField(
-		"SetForOAuthClientCredentialsFlow",
-		g.NewQueryStruct("SetForOAuthClientCredentialsFlow").
-			OptionalQueryStructField("OauthScopes", oauthScopesListDef, g.ParameterOptions().SQL("OAUTH_SCOPES").Parentheses()),
+		"SetForFlow",
+		g.NewQueryStruct("SetForFlow").
+			OptionalQueryStructField(
+				"SetForOAuthClientCredentials",
+				g.NewQueryStruct("SetForOAuthClientCredentials").
+					OptionalQueryStructField("OauthScopes", oauthScopesListDef, g.ParameterOptions().SQL("OAUTH_SCOPES").Parentheses()),
+				g.KeywordOptions(),
+			).
+			OptionalQueryStructField(
+				"SetForOAuthAuthorization",
+				g.NewQueryStruct("SetForOAuthAuthorization").
+					OptionalTextAssignment("OAUTH_REFRESH_TOKEN", g.ParameterOptions().SingleQuotes()).
+					OptionalTextAssignment("OAUTH_REFRESH_TOKEN_EXPIRY_TIME", g.ParameterOptions().SingleQuotes()),
+				g.KeywordOptions(),
+			).
+			OptionalQueryStructField(
+				"SetForBasicAuthentication",
+				g.NewQueryStruct("SetForBasicAuthentication").
+					OptionalTextAssignment("USERNAME", g.ParameterOptions().SingleQuotes()).
+					OptionalTextAssignment("PASSWORD", g.ParameterOptions().SingleQuotes()),
+				g.KeywordOptions(),
+			).
+			OptionalQueryStructField(
+				"SetForGenericString",
+				g.NewQueryStruct("SetForGenericString").
+					OptionalTextAssignment("SECRET_STRING", g.ParameterOptions().SingleQuotes()),
+				g.KeywordOptions(),
+			).
+			WithValidation(g.ExactlyOneValueSet, "SetForOAuthClientCredentials", "SetForOAuthAuthorization", "SetForBasicAuthentication", "SetForGenericString"),
 		g.KeywordOptions(),
 	).
-	OptionalQueryStructField(
-		"SetForOAuthAuthorizationFlow",
-		g.NewQueryStruct("SetForOAuthAuthorizationFlow").
-			OptionalTextAssignment("OAUTH_REFRESH_TOKEN", g.ParameterOptions().SingleQuotes()).
-			OptionalTextAssignment("OAUTH_REFRESH_TOKEN_EXPIRY_TIME", g.ParameterOptions().SingleQuotes()),
-		g.KeywordOptions(),
-	).
-	OptionalQueryStructField(
-		"SetForBasicAuthentication",
-		g.NewQueryStruct("SetForBasicAuthentication").
-			OptionalTextAssignment("USERNAME", g.ParameterOptions().SingleQuotes()).
-			OptionalTextAssignment("PASSWORD", g.ParameterOptions().SingleQuotes()),
-		g.KeywordOptions(),
-	).
-	OptionalQueryStructField(
-		"SetForGenericString",
-		g.NewQueryStruct("SetForGenericString").
-			OptionalTextAssignment("SECRET_STRING", g.ParameterOptions().SingleQuotes()),
-		g.KeywordOptions(),
-	).
-	WithValidation(g.ConflictingFields, "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString")
+	WithValidation(g.AtLeastOneValueSet, "SetForFlow", "Comment")
 
-// UNSET doest work, need to use "SET COMMENT = NULL"
+// TODO [SNOW-1678749]: Change to use UNSET when it will be possible
 var secretUnset = g.NewQueryStruct("SecretUnset").
 	PredefinedQueryStructField("Comment", "*bool", g.KeywordOptions().SQL("SET COMMENT = NULL"))
 

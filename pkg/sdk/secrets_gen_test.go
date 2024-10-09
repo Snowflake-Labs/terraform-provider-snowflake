@@ -196,26 +196,46 @@ func TestSecrets_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSecretOptions", "Set", "Unset"))
 	})
 
-	t.Run("validation: conflicting fields for [opts.Set.SetForOAuthClientCredentialsFlow opts.Set.SetForOAuthAuthorizationFlow opts.Set.SetForBasicAuthentication opts.Set.SetForGenericString]", func(t *testing.T) {
+	t.Run("validation: conflicting fields for [opts.Set.SetForFlow.SetForOAuthClientCredentials opts.Set.SetForFlow.SetForOAuthAuthorization opts.Set.SetForFlow.SetForBasicAuthentication opts.Set.SetForFlow.SetForGenericString]", func(t *testing.T) {
 		opts := setOpts()
-		opts.Set.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow{OauthScopes: &OauthScopesList{[]ApiIntegrationScope{{Scope: "foo"}}}}
-		opts.Set.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow{OauthRefreshToken: String("foo"), OauthRefreshTokenExpiryTime: String("bar")}
-		opts.Set.SetForBasicAuthentication = &SetForBasicAuthentication{Username: String("foo"), Password: String("bar")}
-		opts.Set.SetForGenericString = &SetForGenericString{SecretString: String("secret")}
-		assertOptsInvalidJoinedErrors(t, opts, errOneOf("AlterSecretOptions.Set", "SetForOAuthClientCredentialsFlow", "SetForOAuthAuthorizationFlow", "SetForBasicAuthentication", "SetForGenericString"))
+		opts.Set.SetForFlow = &SetForFlow{}
+		opts.Set.SetForFlow.SetForOAuthClientCredentials = &SetForOAuthClientCredentials{OauthScopes: &OauthScopesList{[]ApiIntegrationScope{{Scope: "foo"}}}}
+		opts.Set.SetForFlow.SetForOAuthAuthorization = &SetForOAuthAuthorization{OauthRefreshToken: String("foo"), OauthRefreshTokenExpiryTime: String("bar")}
+		opts.Set.SetForFlow.SetForBasicAuthentication = &SetForBasicAuthentication{Username: String("foo"), Password: String("bar")}
+		opts.Set.SetForFlow.SetForGenericString = &SetForGenericString{SecretString: String("secret")}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSecretOptions.Set.SetForFlow", "SetForOAuthClientCredentials", "SetForOAuthAuthorization", "SetForBasicAuthentication", "SetForGenericString"))
+	})
+
+	t.Run("validation: not every fields specified for conflicting fields [opts.Set.SetForFlow.SetForOAuthClientCredentials opts.Set.SetForFlow.SetForOAuthAuthorization opts.Set.SetForFlow.SetForBasicAuthentication opts.Set.SetForFlow.SetForGenericString]", func(t *testing.T) {
+		opts := setOpts()
+		opts.Set.SetForFlow = &SetForFlow{}
+		opts.Set.SetForFlow.SetForBasicAuthentication = &SetForBasicAuthentication{Username: String("foo"), Password: String("bar")}
+		opts.Set.SetForFlow.SetForGenericString = &SetForGenericString{SecretString: String("secret")}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterSecretOptions.Set.SetForFlow", "SetForOAuthClientCredentials", "SetForOAuthAuthorization", "SetForBasicAuthentication", "SetForGenericString"))
+	})
+
+	t.Run("validation: valid comment only for at lease one of [opts.Set.SetForFlow opts.Set.Comment]", func(t *testing.T) {
+		opts := setOpts()
+		opts.Set.Comment = String("test")
+		assertOptsValid(t, opts)
+	})
+
+	t.Run("validation: at least one of [opts.Set.SetForFlow opts.Set.Comment]", func(t *testing.T) {
+		opts := setOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterSecretOptions.Set", "SetForFlow", "Comment"))
 	})
 
 	t.Run("alter: set options for Oauth Client Credentials Flow", func(t *testing.T) {
 		opts := setOpts()
 		opts.Set.Comment = String("test")
-		opts.Set.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow{OauthScopes: &OauthScopesList{[]ApiIntegrationScope{{"sample_scope"}}}}
+		opts.Set.SetForFlow = &SetForFlow{SetForOAuthClientCredentials: &SetForOAuthClientCredentials{OauthScopes: &OauthScopesList{[]ApiIntegrationScope{{"sample_scope"}}}}}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test' OAUTH_SCOPES = ('sample_scope')", id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set options for Oauth Client Credentials Flow - empty oauth scopes list", func(t *testing.T) {
 		opts := setOpts()
 		opts.Set.Comment = String("test")
-		opts.Set.SetForOAuthClientCredentialsFlow = &SetForOAuthClientCredentialsFlow{OauthScopes: &OauthScopesList{}}
+		opts.Set.SetForFlow = &SetForFlow{SetForOAuthClientCredentials: &SetForOAuthClientCredentials{OauthScopes: &OauthScopesList{}}}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test' OAUTH_SCOPES = ()", id.FullyQualifiedName())
 	})
 
@@ -228,20 +248,20 @@ func TestSecrets_Alter(t *testing.T) {
 	t.Run("alter: set options for Oauth Authorization Flow", func(t *testing.T) {
 		opts := setOpts()
 		opts.Set.Comment = String("test")
-		opts.Set.SetForOAuthAuthorizationFlow = &SetForOAuthAuthorizationFlow{
+		opts.Set.SetForFlow = &SetForFlow{SetForOAuthAuthorization: &SetForOAuthAuthorization{
 			OauthRefreshToken:           String("test_token"),
 			OauthRefreshTokenExpiryTime: String("2024-11-11"),
-		}
+		}}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test' OAUTH_REFRESH_TOKEN = 'test_token' OAUTH_REFRESH_TOKEN_EXPIRY_TIME = '2024-11-11'", id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set options for Basic Authentication", func(t *testing.T) {
 		opts := setOpts()
 		opts.Set.Comment = String("test")
-		opts.Set.SetForBasicAuthentication = &SetForBasicAuthentication{
+		opts.Set.SetForFlow = &SetForFlow{SetForBasicAuthentication: &SetForBasicAuthentication{
 			Username: String("foo"),
 			Password: String("bar"),
-		}
+		}}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test' USERNAME = 'foo' PASSWORD = 'bar'", id.FullyQualifiedName())
 	})
 
@@ -254,7 +274,7 @@ func TestSecrets_Alter(t *testing.T) {
 	t.Run("alter: set options for Generic string", func(t *testing.T) {
 		opts := setOpts()
 		opts.Set.Comment = String("test")
-		opts.Set.SetForGenericString = &SetForGenericString{String("test")}
+		opts.Set.SetForFlow = &SetForFlow{SetForGenericString: &SetForGenericString{String("test")}}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER SECRET IF EXISTS %s SET COMMENT = 'test' SECRET_STRING = 'test'", id.FullyQualifiedName())
 	})
 

@@ -37,3 +37,18 @@ func ParseCommaSeparatedStringArray(value string, trimQuotes bool) []string {
 	}
 	return trimmedListItems
 }
+
+// ParseCommaSeparatedSchemaObjectIdentifierArray can be used to parse Snowflake output containing a list of schema-level object identifiers
+// in the format of ["db".SCHEMA."name", "db"."schema2"."name2", ...],
+func ParseCommaSeparatedSchemaObjectIdentifierArray(value string) ([]SchemaObjectIdentifier, error) {
+	idsRaw := ParseCommaSeparatedStringArray(value, false)
+	ids := make([]SchemaObjectIdentifier, len(idsRaw))
+	for i := range idsRaw {
+		id, err := ParseSchemaObjectIdentifier(idsRaw[i])
+		if err != nil {
+			return nil, err
+		}
+		ids[i] = id
+	}
+	return ids, nil
+}

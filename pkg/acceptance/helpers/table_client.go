@@ -129,6 +129,14 @@ func (c *TableClient) GetTableColumnsFor(t *testing.T, tableId sdk.SchemaObjectI
 	return columns
 }
 
+func (c *TableClient) InsertInt(t *testing.T, tableId sdk.SchemaObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("INSERT INTO %s VALUES(1);", tableId.FullyQualifiedName()))
+	require.NoError(t, err)
+}
+
 type InformationSchemaColumns struct {
 	TableCatalog           string         `db:"TABLE_CATALOG"`
 	TableSchema            string         `db:"TABLE_SCHEMA"`

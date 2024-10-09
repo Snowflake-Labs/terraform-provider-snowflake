@@ -344,8 +344,9 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - Omit computed fields in the model (like FullyQualifiedName), because it doesn't make sense to set them
 - There's an error when generating models, steps to reproduce:
   - Go to view resource code and change `data_metric_function` field to `testing` and make it required
-  - During the generation, the following error appears: mixed named and unnamed parameters. 
+  - During the generation, the following error appears: mixed named and unnamed parameters.
     It's a golang error indicating that the parameter has both unnamed and named parameters in function (e.g. `func(abc string, int)`).
     The error is a result of both things:
     1. Lists of objects are partially generated, and only parameter name is generated in some functions (the type has to be added manually).
     2. `testing` is a package name that makes Go think that we want to have unnamed parameter there, but we just didn't generate the type for that field in the function argument.
+- generate assertions checking that time is not empty - we often do not compare time fields by value, but check if they are set

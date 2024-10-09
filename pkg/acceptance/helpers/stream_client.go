@@ -67,3 +67,11 @@ func (c *StreamClient) Show(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.S
 
 	return c.client().ShowByID(ctx, id)
 }
+
+func (c *StreamClient) Alter(t *testing.T, req *sdk.AlterStreamRequest) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, req)
+	require.NoError(t, err)
+}
