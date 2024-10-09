@@ -47,8 +47,6 @@ resource "snowflake_stream_on_table" "stream" {
 
 Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
 
-## v0.96.0 ➞ v0.97.0
-
 ### *(new feature)* Secret resources
 Added a new secrets resources for managing secrets.
 We decided to split each secret flow into individual resources, i.e.:
