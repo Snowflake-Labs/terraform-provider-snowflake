@@ -33,8 +33,10 @@ func (v *tags) Show(ctx context.Context, request *ShowTagRequest) ([]Tag, error)
 }
 
 func (v *tags) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error) {
-	request := NewShowTagRequest().WithIn(&In{
-		Schema: id.SchemaId(),
+	request := NewShowTagRequest().WithIn(&ExtendedIn{
+		In: In{
+			Schema: id.SchemaId(),
+		},
 	}).WithLike(id.Name())
 
 	tags, err := v.Show(ctx, request)
@@ -76,12 +78,13 @@ func (s *CreateTagRequest) toOpts() *createTagOptions {
 
 func (s *AlterTagRequest) toOpts() *alterTagOptions {
 	return &alterTagOptions{
-		name:   s.name,
-		Add:    s.add,
-		Drop:   s.drop,
-		Set:    s.set,
-		Unset:  s.unset,
-		Rename: s.rename,
+		name:     s.name,
+		ifExists: s.ifExists,
+		Add:      s.add,
+		Drop:     s.drop,
+		Set:      s.set,
+		Unset:    s.unset,
+		Rename:   s.rename,
 	}
 }
 

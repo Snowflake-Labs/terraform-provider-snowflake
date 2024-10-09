@@ -178,7 +178,7 @@ func (s *ShowTagRequest) WithLike(pattern string) *ShowTagRequest {
 	return s
 }
 
-func (s *ShowTagRequest) WithIn(in *In) *ShowTagRequest {
+func (s *ShowTagRequest) WithIn(in *ExtendedIn) *ShowTagRequest {
 	s.in = in
 	return s
 }

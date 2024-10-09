@@ -37,7 +37,8 @@ type CreateTagRequest struct {
 }
 
 type AlterTagRequest struct {
-	name SchemaObjectIdentifier // required
+	ifExists *bool
+	name     SchemaObjectIdentifier // required
 
 	// One of
 	add    *TagAdd
@@ -61,7 +62,7 @@ type TagUnsetRequest struct {
 
 type ShowTagRequest struct {
 	like *Like
-	in   *In
+	in   *ExtendedIn
 }
 
 type DropTagRequest struct {
