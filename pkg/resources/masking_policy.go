@@ -95,7 +95,7 @@ var maskingPolicySchema = map[string]*schema.Schema{
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `SHOW MASKING POLICY` for the given masking policy.",
+		Description: "Outputs the result of `SHOW MASKING POLICIES` for the given masking policy.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowMaskingPolicySchema,
 		},
@@ -221,7 +221,6 @@ func CreateMaskingPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		if err != nil {
 			return diag.FromErr(err)
 		}
-
 		opts.ExemptOtherPolicies = sdk.Pointer(parsed)
 	}
 

@@ -247,11 +247,11 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	switch *stream.SourceType {
-	case "Stage":
+	case sdk.StreamSourceTypeStage:
 		if err := d.Set("on_stage", *stream.TableName); err != nil {
 			return err
 		}
-	case "View":
+	case sdk.StreamSourceTypeView:
 		if err := d.Set("on_view", *stream.TableName); err != nil {
 			return err
 		}
