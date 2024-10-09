@@ -36,7 +36,7 @@ var secretClientCredentialsSchema = func() map[string]*schema.Schema {
 func SecretWithClientCredentials() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateContextSecretWithClientCredentials,
-		ReadContext:   ReadContextSecretWithClientCredentials(true),
+		ReadContext:   ReadContextSecretWithClientCredentials,
 		UpdateContext: UpdateContextSecretWithClientCredentials,
 		DeleteContext: DeleteContextSecretWithClientCredentials,
 		Description:   "Resource used to manage secret objects with OAuth Client Credentials. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
@@ -77,7 +77,8 @@ func ImportSecretWithClientCredentials(ctx context.Context, d *schema.ResourceDa
 }
 func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := sdk.NewSchemaObjectIdentifier(handleSecretCreate(d))
+	databaseName, schemaName, name := handleSecretCreate(d)
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
 	apiIntegrationString := d.Get("api_authentication").(string)
 	apiIntegration, err := sdk.ParseAccountObjectIdentifier(apiIntegrationString)
@@ -105,64 +106,54 @@ func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	return ReadContextSecretWithClientCredentials(false)(ctx, d, meta)
+	return ReadContextSecretWithClientCredentials(ctx, d, meta)
 }
 
-func ReadContextSecretWithClientCredentials(withExternalChangesMarking bool) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		client := meta.(*provider.Context).Client
-		id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
-		if err != nil {
-			return diag.FromErr(err)
-		}
+func ReadContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-		secret, err := client.Secrets.ShowByID(ctx, id)
-		if err != nil {
-			if errors.Is(err, sdk.ErrObjectNotFound) {
-				d.SetId("")
-				return diag.Diagnostics{
-					diag.Diagnostic{
-						Severity: diag.Warning,
-						Summary:  "Failed to retrieve secret. Target object not found. Marking the resource as removed.",
-					},
-				}
-			}
+	secret, err := client.Secrets.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
 			return diag.Diagnostics{
 				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Failed to retrieve secret.",
-					Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve secret with client credentials. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Secret with client credentials name: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}
 		}
-		secretDescription, err := client.Secrets.Describe(ctx, id)
-		if err != nil {
-			return diag.FromErr(err)
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to retrieve secret with client credentials.",
+				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
+			},
 		}
-
-		if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err = d.Set("oauth_scopes", secretDescription.OauthScopes); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if withExternalChangesMarking {
-			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"oauth_scopes", "oauth_scopes", secretDescription.OauthScopes, secretDescription.OauthScopes, nil},
-				showMapping{"comment", "comment", secretDescription.Comment, secretDescription.Comment, nil},
-			); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-
-		return nil
 	}
+	secretDescription, err := client.Secrets.Describe(ctx, id)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set("oauth_scopes", secretDescription.OauthScopes); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -202,7 +193,7 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		}
 	}
 
-	return ReadContextSecretWithClientCredentials(false)(ctx, d, meta)
+	return ReadContextSecretWithClientCredentials(ctx, d, meta)
 }
 
 func DeleteContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

@@ -85,6 +85,28 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 						HasCommentString(comment),
 				),
 			},
+			// set comment externally, external changes for secret_string are not being detected
+			{
+				PreConfig: func() {
+					acc.TestClient().Secret.Alter(t, sdk.NewAlterSecretRequest(id).WithSet(*sdk.NewSecretSetRequest().WithComment("test_comment")))
+				},
+				Config: config.FromModel(t, secretModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectDrift(secretModel.ResourceReference(), "comment", sdk.String(comment), sdk.String("test_comment")),
+						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String("test_comment"), sdk.String(comment)),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
+						HasNameString(name).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasSecretStringString("bar").
+						HasCommentString(comment),
+				),
+			},
 			// import
 			{
 				ResourceName:            secretModel.ResourceReference(),
@@ -103,6 +125,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 				Config: config.FromModel(t, secretModelEmptySecretString),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
 						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(comment), nil),
 					},
 				},

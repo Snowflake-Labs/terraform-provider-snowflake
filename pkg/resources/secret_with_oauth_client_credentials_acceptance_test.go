@@ -89,6 +89,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 					WithComment(newComment)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
 						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[bar foo]"), sdk.String("[test]")),
 					},
 				},
@@ -119,6 +120,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 				Config: config.FromModel(t, secretModel.WithOauthScopes([]string{"foo"})),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
 						planchecks.ExpectDrift(secretModel.ResourceReference(), "oauth_scopes", sdk.String("[test]"), sdk.String("[bar]")),
 						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[bar]"), sdk.String("[foo]")),
 					},
@@ -140,6 +142,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 				Config: config.FromModel(t, secretModelWithoutComment.WithOauthScopes([]string{"foo"})),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
 						planchecks.ExpectChange(secretModelWithoutComment.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(newComment), nil),
 					},
 				},
@@ -157,6 +160,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 				Config: config.FromModel(t, secretModelWithoutComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
 						planchecks.ExpectChange(secretModelWithoutComment.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String("aaa"), nil),
 					},
 				},
@@ -254,6 +258,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
 						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[]"), sdk.String("[foo]")),
 					},
 				},

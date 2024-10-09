@@ -106,7 +106,8 @@ func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.Res
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Warning,
-					Summary:  "Failed to retrieve secret. Target object not found. Marking the resource as removed.",
+					Summary:  "Failed to retrieve secret with basic authentication. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Secret with basic authentication name: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}
 		}
@@ -114,7 +115,7 @@ func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.Res
 			diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Failed to retrieve secret.",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
+				Detail:   fmt.Sprintf("Secret with basic authentication name: %s, Err: %s", id.FullyQualifiedName(), err),
 			},
 		}
 	}

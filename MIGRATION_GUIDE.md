@@ -7,6 +7,18 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v0.96.0 ➞ v0.97.0
+
+### *(new feature)* Secret resources
+Added a new secrets resources for managing secrets.
+We decided to split each secret flow into individual resources, i.e.:
+- `snowflake_secret_with_client_credentials`
+- `snowflake_secret_with_authorization_code_grant`
+- `snowflake_secret_with_basic_authentication`
+- `snowflake_secret_with_generic_string`
+
+See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secret). 
+
 ## v0.95.0 ➞ v0.96.0
 
 ### snowflake_masking_policies data source changes

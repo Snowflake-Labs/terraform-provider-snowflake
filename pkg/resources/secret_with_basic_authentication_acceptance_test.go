@@ -89,6 +89,35 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 						HasCommentString(comment),
 				),
 			},
+			// set username and comment externally
+			{
+				PreConfig: func() {
+					acc.TestClient().Secret.Alter(t, sdk.NewAlterSecretRequest(id).WithSet(*sdk.NewSecretSetRequest().
+						WithComment("test_comment").
+						WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForBasicAuthentication(*sdk.NewSetForBasicAuthenticationRequest().WithUsername("test_username"))),
+					))
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectDrift(secretModel.ResourceReference(), "comment", sdk.String(comment), sdk.String("test_comment")),
+						planchecks.ExpectDrift(secretModel.ResourceReference(), "username", sdk.String("bar"), sdk.String("test_username")),
+
+						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String("test_comment"), sdk.String(comment)),
+						planchecks.ExpectChange(secretModel.ResourceReference(), "username", tfjson.ActionUpdate, sdk.String("test_username"), sdk.String("bar")),
+					},
+				},
+				Config: config.FromModel(t, secretModel),
+				Check: assert.AssertThat(t,
+					resourceassert.SecretWithBasicAuthenticationResource(t, secretModel.ResourceReference()).
+						HasNameString(name).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasUsernameString("bar").
+						HasPasswordString("bar").
+						HasCommentString(comment),
+				),
+			},
 			// import
 			{
 				ResourceName:            secretModel.ResourceReference(),
@@ -108,6 +137,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 				Config: config.FromModel(t, secretModelWithoutComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
 						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(comment), nil),
 					},
 				},
@@ -130,12 +160,39 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", ""),
 				),
 			},
-			// destroy
-			{
-				Config:  config.FromModel(t, secretModel),
-				Destroy: true,
-			},
 			// create with empty username and password
+			{
+				Config: config.FromModel(t, secretModelEmptyCredentials),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithBasicAuthenticationResource(t, secretModelEmptyCredentials.ResourceReference()).
+							HasNameString(name).
+							HasDatabaseString(id.DatabaseName()).
+							HasSchemaString(id.SchemaName()).
+							HasUsernameString("").
+							HasPasswordString("").
+							HasCommentString(""),
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_SecretWithBasicAuthentication_EmptyCredentials(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
+	secretModelEmptyCredentials := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "", id.SchemaName(), "")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithBasicAuthentication),
+		Steps: []resource.TestStep{
+
 			{
 				Config: config.FromModel(t, secretModelEmptyCredentials),
 				Check: resource.ComposeTestCheckFunc(

@@ -92,9 +92,66 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
 						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(comment), sdk.String(newComment)),
 						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_refresh_token", tfjson.ActionUpdate, sdk.String(refreshToken), sdk.String(newRefreshToken)),
 						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_refresh_token_expiry_time", tfjson.ActionUpdate, sdk.String(refreshTokenExpiryDateTime), sdk.String(newRefreshTokenExpiryDateOnly)),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithAuthorizationCodeResource(t, secretModel.ResourceReference()).
+							HasNameString(name).
+							HasDatabaseString(id.DatabaseName()).
+							HasSchemaString(id.SchemaName()).
+							HasApiAuthenticationString(integrationId.Name()).
+							HasOauthRefreshTokenString(newRefreshToken).
+							HasOauthRefreshTokenExpiryTimeString(newRefreshTokenExpiryDateOnly).
+							HasCommentString(newComment),
+						assert.Check(resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time")),
+					),
+				),
+			},
+			// set comment externally
+			{
+				PreConfig: func() {
+					acc.TestClient().Secret.Alter(t, sdk.NewAlterSecretRequest(id).WithSet(*sdk.NewSecretSetRequest().
+						WithComment("secret resource - changed comment"),
+					))
+				},
+				Config: config.FromModel(t, secretModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String("secret resource - changed comment"), sdk.String(newComment)),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithAuthorizationCodeResource(t, secretModel.ResourceReference()).
+							HasNameString(name).
+							HasDatabaseString(id.DatabaseName()).
+							HasSchemaString(id.SchemaName()).
+							HasApiAuthenticationString(integrationId.Name()).
+							HasOauthRefreshTokenString(newRefreshToken).
+							HasOauthRefreshTokenExpiryTimeString(newRefreshTokenExpiryDateOnly).
+							HasCommentString(newComment),
+						assert.Check(resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time")),
+					),
+				),
+			},
+			// set refresh_token_expiry_time externally
+			{
+				PreConfig: func() {
+					acc.TestClient().Secret.Alter(t, sdk.NewAlterSecretRequest(id).WithSet(*sdk.NewSecretSetRequest().
+						WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthAuthorization(*sdk.NewSetForOAuthAuthorizationRequest().WithOauthRefreshTokenExpiryTime(time.Now().Add(24 * time.Hour).Format(time.DateTime)))),
+					))
+				},
+				Config: config.FromModel(t, secretModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectComputed(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(

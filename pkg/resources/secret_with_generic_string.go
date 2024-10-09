@@ -20,7 +20,7 @@ var secretGenericStringSchema = func() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "Specifies the string to store in the secret. The string can be an API token or a string of sensitive value that can be used in the handler code of a UDF or stored procedure. For details, see [Creating and using an external access integration](https://docs.snowflake.com/en/developer-guide/external-network-access/creating-using-external-network-access). You should not use this property to store any kind of OAuth token; use one of the other secret types for your OAuth use cases.",
+			Description: externalChangesNotDetectedFieldDescription("Specifies the string to store in the secret. The string can be an API token or a string of sensitive value that can be used in the handler code of a UDF or stored procedure. For details, see [Creating and using an external access integration](https://docs.snowflake.com/en/developer-guide/external-network-access/creating-using-external-network-access). You should not use this property to store any kind of OAuth token; use one of the other secret types for your OAuth use cases."),
 		},
 	}
 	return helpers.MergeMaps(secretCommonSchema, secretGenericString)
@@ -58,7 +58,8 @@ func ImportSecretWithGenericString(ctx context.Context, d *schema.ResourceData, 
 
 func CreateContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := sdk.NewSchemaObjectIdentifier(handleSecretCreate(d))
+	databaseName, schemaName, name := handleSecretCreate(d)
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
 	secretSting := d.Get("secret_string").(string)
 
@@ -91,15 +92,16 @@ func ReadContextSecretWithGenericString(ctx context.Context, d *schema.ResourceD
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Warning,
-					Summary:  "Failed to retrieve secret. Target object not found. Marking the resource as removed.",
+					Summary:  "Failed to retrieve secret with generic string. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Secret with generic string name: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}
 		}
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Failed to retrieve secret.",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
+				Summary:  "Failed to retrieve secret generic string.",
+				Detail:   fmt.Sprintf("Secret with generic string name: %s, Err: %s", id.FullyQualifiedName(), err),
 			},
 		}
 	}
