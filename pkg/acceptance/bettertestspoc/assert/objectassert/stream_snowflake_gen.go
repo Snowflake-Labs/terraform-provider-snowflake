@@ -117,34 +117,6 @@ func (s *StreamAssert) HasTableName(expected string) *StreamAssert {
 	return s
 }
 
-func (s *StreamAssert) HasSourceType(expected string) *StreamAssert {
-	s.AddAssertion(func(t *testing.T, o *sdk.Stream) error {
-		t.Helper()
-		if o.SourceType == nil {
-			return fmt.Errorf("expected source type to have value; got: nil")
-		}
-		if *o.SourceType != expected {
-			return fmt.Errorf("expected source type: %v; got: %v", expected, *o.SourceType)
-		}
-		return nil
-	})
-	return s
-}
-
-func (s *StreamAssert) HasBaseTables(expected string) *StreamAssert {
-	s.AddAssertion(func(t *testing.T, o *sdk.Stream) error {
-		t.Helper()
-		if o.BaseTables == nil {
-			return fmt.Errorf("expected base tables to have value; got: nil")
-		}
-		if *o.BaseTables != expected {
-			return fmt.Errorf("expected base tables: %v; got: %v", expected, *o.BaseTables)
-		}
-		return nil
-	})
-	return s
-}
-
 func (s *StreamAssert) HasType(expected string) *StreamAssert {
 	s.AddAssertion(func(t *testing.T, o *sdk.Stream) error {
 		t.Helper()
@@ -167,20 +139,6 @@ func (s *StreamAssert) HasStale(expected string) *StreamAssert {
 		}
 		if *o.Stale != expected {
 			return fmt.Errorf("expected stale: %v; got: %v", expected, *o.Stale)
-		}
-		return nil
-	})
-	return s
-}
-
-func (s *StreamAssert) HasMode(expected string) *StreamAssert {
-	s.AddAssertion(func(t *testing.T, o *sdk.Stream) error {
-		t.Helper()
-		if o.Mode == nil {
-			return fmt.Errorf("expected mode to have value; got: nil")
-		}
-		if *o.Mode != expected {
-			return fmt.Errorf("expected mode: %v; got: %v", expected, *o.Mode)
 		}
 		return nil
 	})

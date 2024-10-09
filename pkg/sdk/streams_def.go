@@ -1,8 +1,53 @@
 package sdk
 
-import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+import (
+	"fmt"
+	"strings"
+
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+)
 
 //go:generate go run ./poc/main.go
+
+type StreamSourceType string
+
+const (
+	StreamSourceTypeTable         StreamSourceType = "TABLE"
+	StreamSourceTypeExternalTable StreamSourceType = "EXTERNAL TABLE"
+	StreamSourceTypeView          StreamSourceType = "VIEW"
+	StreamSourceTypeStage         StreamSourceType = "STAGE"
+)
+
+func ToStreamSourceType(s string) (StreamSourceType, error) {
+	switch streamSourceType := StreamSourceType(strings.ToUpper(s)); streamSourceType {
+	case StreamSourceTypeTable,
+		StreamSourceTypeExternalTable,
+		StreamSourceTypeView,
+		StreamSourceTypeStage:
+		return streamSourceType, nil
+	default:
+		return "", fmt.Errorf("invalid stream source type: %s", s)
+	}
+}
+
+type StreamMode string
+
+const (
+	StreamModeDefault    StreamMode = "DEFAULT"
+	StreamModeAppendOnly StreamMode = "APPEND_ONLY"
+	StreamModeInsertOnly StreamMode = "INSERT_ONLY"
+)
+
+func ToStreamMode(s string) (StreamMode, error) {
+	switch streamMode := StreamMode(strings.ToUpper(s)); streamMode {
+	case StreamModeDefault,
+		StreamModeAppendOnly,
+		StreamModeInsertOnly:
+		return streamMode, nil
+	default:
+		return "", fmt.Errorf("invalid stream mode: %s", s)
+	}
+}
 
 var (
 	onStreamDef = g.NewQueryStruct("OnStream").
@@ -45,11 +90,11 @@ var (
 				Field("Owner", "*string").
 				Field("Comment", "*string").
 				Field("TableName", "*string").
-				Field("SourceType", "*string").
-				Field("BaseTables", "*string").
+				Field("SourceType", "*StreamSourceType").
+				Field("BaseTables", "[]SchemaObjectIdentifier").
 				Field("Type", "*string").
 				Field("Stale", "*string").
-				Field("Mode", "*string").
+				Field("Mode", "*StreamMode").
 				Field("StaleAfter", "*time.Time").
 				Field("InvalidReason", "*string").
 				Field("OwnerRoleType", "*string")
