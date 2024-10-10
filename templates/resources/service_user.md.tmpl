@@ -9,15 +9,15 @@ description: |-
 {{- end }}
 ---
 
-!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v094x--v0950) to use it.
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0960--v0970) to use it.
 
 -> **Note** `snowflake_user_password_policy_attachment` will be reworked in the following versions of the provider which may still affect this resource.
 
 -> **Note** Attaching user policies will be handled in the following versions of the provider which may still affect this resource.
 
--> **Note** Other two user types are handled in separate resources: `snowflake_service_user` for user type `service` and `snowflake_legacy_service_user` for user type `legacy_service`.
+-> **Note** Other two user types are handled in separate resources: `snowflake_legacy_service_user` for user type `legacy_service` and `snowflake_user` for user type `person`.
 
--> **Note** External changes to `days_to_expiry`, `mins_to_unlock`, and `mins_to_bypass_mfa` are not currently handled by the provider (because the value changes continuously on Snowflake side after setting it).
+-> **Note** External changes to `days_to_expiry` and `mins_to_unlock` are not currently handled by the provider (because the value changes continuously on Snowflake side after setting it).
 
 # {{.Name}} ({{.Type}})
 
