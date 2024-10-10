@@ -2,12 +2,15 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/sdkv2enhancements"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -176,4 +179,19 @@ func ForceNewIfAllKeysAreNotSet(key string, keys ...string) schema.CustomizeDiff
 		}
 		return allUnset
 	})
+}
+
+func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.CustomizeDiffFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		if n := diff.Get("user_type"); n != nil {
+			logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
+			if acceptableUserTypes, ok := sdk.AcceptableUserTypes[userType]; ok && !slices.Contains(acceptableUserTypes, strings.ToUpper(n.(string))) {
+				// we have to set here a value instead of just SetNewComputed
+				// because with empty value (default snowflake behavior for type) ForceNew fails
+				// because there are no changes (at least from the SDKv2 point of view) for "user_type"
+				return errors.Join(diff.SetNew("user_type", "<changed externally>"), diff.ForceNew("user_type"))
+			}
+		}
+		return nil
+	}
 }

@@ -129,6 +129,20 @@ func createProviderWithValuePropertyAndCustomDiff(t *testing.T, valueSchema *sch
 	}
 }
 
+func createProviderWithNamedPropertyAndCustomDiff(t *testing.T, propertyName string, valueSchema *schema.Schema, customDiffFunc schema.CustomizeDiffFunc) *schema.Provider {
+	t.Helper()
+	return &schema.Provider{
+		ResourcesMap: map[string]*schema.Resource{
+			"test": {
+				Schema: map[string]*schema.Schema{
+					propertyName: valueSchema,
+				},
+				CustomizeDiff: customDiffFunc,
+			},
+		},
+	}
+}
+
 func calculateDiff(t *testing.T, providerConfig *schema.Provider, rawConfigValue cty.Value, stateValue map[string]any) *terraform.InstanceDiff {
 	t.Helper()
 	diff, err := providerConfig.ResourcesMap["test"].Diff(
@@ -632,6 +646,141 @@ func TestForceNewIfAllKeysAreNotSet(t *testing.T) {
 				p,
 				tt.stateValue,
 				tt.rawConfigValue,
+			)
+			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
+		})
+	}
+}
+
+func Test_RecreateWhenUserTypeChangedExternally(t *testing.T) {
+	tests := []struct {
+		name         string
+		userType     sdk.UserType
+		stateValue   map[string]string
+		wantForceNew bool
+	}{
+		{
+			name:         "person - nothing in state",
+			userType:     sdk.UserTypePerson,
+			stateValue:   map[string]string{},
+			wantForceNew: false,
+		},
+		{
+			name:     "person - person in state",
+			userType: sdk.UserTypePerson,
+			stateValue: map[string]string{
+				"user_type": "PERSON",
+			},
+			wantForceNew: false,
+		},
+		{
+			name:     "person - person in state lowercased",
+			userType: sdk.UserTypePerson,
+			stateValue: map[string]string{
+				"user_type": "person",
+			},
+			wantForceNew: false,
+		},
+		{
+			name:     "person - service in state",
+			userType: sdk.UserTypePerson,
+			stateValue: map[string]string{
+				"user_type": "SERVICE",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:     "person - service in state lowercased",
+			userType: sdk.UserTypePerson,
+			stateValue: map[string]string{
+				"user_type": "service",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:     "person - empty value in state",
+			userType: sdk.UserTypePerson,
+			stateValue: map[string]string{
+				"user_type": "",
+			},
+			wantForceNew: false,
+		},
+		{
+			name:     "person - garbage in state",
+			userType: sdk.UserTypePerson,
+			stateValue: map[string]string{
+				"user_type": "garbage",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:         "service - nothing in state",
+			userType:     sdk.UserTypeService,
+			stateValue:   map[string]string{},
+			wantForceNew: true,
+		},
+		{
+			name:     "service - service in state",
+			userType: sdk.UserTypeService,
+			stateValue: map[string]string{
+				"user_type": "SERVICE",
+			},
+			wantForceNew: false,
+		},
+		{
+			name:     "service - service in state lowercased",
+			userType: sdk.UserTypeService,
+			stateValue: map[string]string{
+				"user_type": "service",
+			},
+			wantForceNew: false,
+		},
+		{
+			name:     "service - person in state",
+			userType: sdk.UserTypeService,
+			stateValue: map[string]string{
+				"user_type": "PERSON",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:     "service - person in state lowercased",
+			userType: sdk.UserTypeService,
+			stateValue: map[string]string{
+				"user_type": "person",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:     "service - empty value in state",
+			userType: sdk.UserTypeService,
+			stateValue: map[string]string{
+				"user_type": "",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:     "service - garbage in state",
+			userType: sdk.UserTypeService,
+			stateValue: map[string]string{
+				"user_type": "garbage",
+			},
+			wantForceNew: true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			customDiff := resources.RecreateWhenUserTypeChangedExternally(tt.userType)
+			testProvider := createProviderWithNamedPropertyAndCustomDiff(t, "user_type", &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}, customDiff)
+			diff := calculateDiffFromAttributes(
+				t,
+				testProvider,
+				tt.stateValue,
+				map[string]any{},
 			)
 			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
 		})

@@ -54,7 +54,7 @@ var stageSchema = map[string]*schema.Schema{
 	"file_format": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "Specifies the file format for the stage.",
+		Description:      "Specifies the file format for the stage. Specifying the default Snowflake value (e.g. TYPE = CSV) will currently result in a permadiff (check [#2679](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2679)). For now, omit the default values; it will be fixed in the upcoming provider versions.",
 		DiffSuppressFunc: suppressQuoting,
 	},
 	"copy_options": {

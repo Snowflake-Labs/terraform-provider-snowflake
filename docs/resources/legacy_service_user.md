@@ -1,64 +1,59 @@
 ---
-page_title: "snowflake_user Resource - terraform-provider-snowflake"
+page_title: "snowflake_legacy_service_user Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Resource used to manage user objects. For more information, check user documentation https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management.
+  Resource used to manage legacy service user objects. For more information, check user documentation https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management.
 ---
 
-!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v094x--v0950) to use it.
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0960--v0970) to use it.
 
 -> **Note** `snowflake_user_password_policy_attachment` will be reworked in the following versions of the provider which may still affect this resource.
 
 -> **Note** Attaching user policies will be handled in the following versions of the provider which may still affect this resource.
 
--> **Note** Other two user types are handled in separate resources: `snowflake_service_user` for user type `service` and `snowflake_legacy_service_user` for user type `legacy_service`.
+-> **Note** Other two user types are handled in separate resources: `snowflake_service_user` for user type `service` and `snowflake_user` for user type `person`.
 
--> **Note** External changes to `days_to_expiry`, `mins_to_unlock`, and `mins_to_bypass_mfa` are not currently handled by the provider (because the value changes continuously on Snowflake side after setting it).
+-> **Note** External changes to `days_to_expiry` and `mins_to_unlock` are not currently handled by the provider (because the value changes continuously on Snowflake side after setting it).
 
-# snowflake_user (Resource)
+# snowflake_legacy_service_user (Resource)
 
-Resource used to manage user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).
+Resource used to manage legacy service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).
 
 ## Example Usage
 
 ```terraform
 # minimal
-resource "snowflake_user" "minimal" {
-  name = "Snowflake User - minimal"
+resource "snowflake_legacy_service_user" "minimal" {
+  name = "Snowflake Legacy Service User - minimal"
 }
 
 # with all attributes set
-resource "snowflake_user" "user" {
-  name         = "Snowflake User"
-  login_name   = "snowflake_user"
-  first_name   = "Snowflake"
-  middle_name  = "Middle"
-  last_name    = "User"
-  comment      = "User of snowflake."
+resource "snowflake_legacy_service_user" "user" {
+  name         = "Snowflake Legacy Service User"
+  login_name   = "legacy_service_user"
+  comment      = "A legacy service user of snowflake."
   password     = "secret"
   disabled     = "false"
-  display_name = "Snowflake User display name"
-  email        = "user@snowflake.example"
+  display_name = "Snowflake Legacy Service User display name"
+  email        = "legacy.service.user@snowflake.example"
 
   default_warehouse              = "warehouse"
   default_secondary_roles_option = "ALL"
   default_role                   = "role1"
   default_namespace              = "some.namespace"
 
-  mins_to_unlock     = 9
-  days_to_expiry     = 8
-  mins_to_bypass_mfa = 10
+  mins_to_unlock = 9
+  days_to_expiry = 8
 
   rsa_public_key   = "..."
   rsa_public_key_2 = "..."
 
   must_change_password = "true"
-  disable_mfa          = "false"
 }
 
 # all parameters set on the resource level
-resource "snowflake_user" "u" {
-  name = "Snowflake User with all parameters"
+resource "snowflake_legacy_service_user" "u" {
+  name = "Snowflake Legacy Service User with all parameters"
 
   abort_detached_query                          = true
   autocommit                                    = false
@@ -152,7 +147,6 @@ resource "snowflake_user" "u" {
 - `default_role` (String) Specifies the role that is active by default for the user’s session upon login. Note that specifying a default role for a user does **not** grant the role to the user. The role must be granted explicitly to the user using the [GRANT ROLE](https://docs.snowflake.com/en/sql-reference/sql/grant-role) command. In addition, the CREATE USER operation does not verify that the role exists.
 - `default_secondary_roles_option` (String) Specifies the secondary roles that are active for the user’s session upon login. Valid values are (case-insensitive): `DEFAULT` | `NONE` | `ALL`. More information can be found in [doc](https://docs.snowflake.com/en/sql-reference/sql/create-user#optional-object-properties-objectproperties).
 - `default_warehouse` (String) Specifies the virtual warehouse that is active by default for the user’s session upon login. Note that the CREATE USER operation does not verify that the warehouse exists.
-- `disable_mfa` (String) Allows enabling or disabling [multi-factor authentication](https://docs.snowflake.com/en/user-guide/security-mfa). Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `disabled` (String) Specifies whether the user is disabled, which prevents logging in and aborts all the currently-running queries for the user. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `display_name` (String) Name displayed for the user in the Snowflake web interface.
 - `email` (String, Sensitive) Email address for the user.
@@ -160,19 +154,15 @@ resource "snowflake_user" "u" {
 - `enable_unredacted_query_syntax_error` (Boolean) Controls whether query text is redacted if a SQL query fails due to a syntax or parsing error. If `FALSE`, the content of a failed query is redacted in the views, pages, and functions that provide a query history. Only users with a role that is granted or inherits the AUDIT privilege can set the ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR parameter. When using the ALTER USER command to set the parameter to `TRUE` for a particular user, modify the user that you want to see the query text, not the user who executed the query (if those are different users). For more information, check [ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR docs](https://docs.snowflake.com/en/sql-reference/parameters#enable-unredacted-query-syntax-error).
 - `error_on_nondeterministic_merge` (Boolean) Specifies whether to return an error when the [MERGE](https://docs.snowflake.com/en/sql-reference/sql/merge) command is used to update or delete a target row that joins multiple source rows and the system cannot determine the action to perform on the target row. For more information, check [ERROR_ON_NONDETERMINISTIC_MERGE docs](https://docs.snowflake.com/en/sql-reference/parameters#error-on-nondeterministic-merge).
 - `error_on_nondeterministic_update` (Boolean) Specifies whether to return an error when the [UPDATE](https://docs.snowflake.com/en/sql-reference/sql/update) command is used to update a target row that joins multiple source rows and the system cannot determine the action to perform on the target row. For more information, check [ERROR_ON_NONDETERMINISTIC_UPDATE docs](https://docs.snowflake.com/en/sql-reference/parameters#error-on-nondeterministic-update).
-- `first_name` (String, Sensitive) First name of the user.
 - `geography_output_format` (String) Display format for [GEOGRAPHY values](https://docs.snowflake.com/en/sql-reference/data-types-geospatial.html#label-data-types-geography). For more information, check [GEOGRAPHY_OUTPUT_FORMAT docs](https://docs.snowflake.com/en/sql-reference/parameters#geography-output-format).
 - `geometry_output_format` (String) Display format for [GEOMETRY values](https://docs.snowflake.com/en/sql-reference/data-types-geospatial.html#label-data-types-geometry). For more information, check [GEOMETRY_OUTPUT_FORMAT docs](https://docs.snowflake.com/en/sql-reference/parameters#geometry-output-format).
 - `jdbc_treat_decimal_as_int` (Boolean) Specifies how JDBC processes columns that have a scale of zero (0). For more information, check [JDBC_TREAT_DECIMAL_AS_INT docs](https://docs.snowflake.com/en/sql-reference/parameters#jdbc-treat-decimal-as-int).
 - `jdbc_treat_timestamp_ntz_as_utc` (Boolean) Specifies how JDBC processes TIMESTAMP_NTZ values. For more information, check [JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC docs](https://docs.snowflake.com/en/sql-reference/parameters#jdbc-treat-timestamp-ntz-as-utc).
 - `jdbc_use_session_timezone` (Boolean) Specifies whether the JDBC Driver uses the time zone of the JVM or the time zone of the session (specified by the [TIMEZONE](https://docs.snowflake.com/en/sql-reference/parameters#label-timezone) parameter) for the getDate(), getTime(), and getTimestamp() methods of the ResultSet class. For more information, check [JDBC_USE_SESSION_TIMEZONE docs](https://docs.snowflake.com/en/sql-reference/parameters#jdbc-use-session-timezone).
 - `json_indent` (Number) Specifies the number of blank spaces to indent each new element in JSON output in the session. Also specifies whether to insert newline characters after each element. For more information, check [JSON_INDENT docs](https://docs.snowflake.com/en/sql-reference/parameters#json-indent).
-- `last_name` (String, Sensitive) Last name of the user.
 - `lock_timeout` (Number) Number of seconds to wait while trying to lock a resource, before timing out and aborting the statement. For more information, check [LOCK_TIMEOUT docs](https://docs.snowflake.com/en/sql-reference/parameters#lock-timeout).
 - `log_level` (String) Specifies the severity level of messages that should be ingested and made available in the active event table. Messages at the specified level (and at more severe levels) are ingested. For more information about log levels, see [Setting log level](https://docs.snowflake.com/en/developer-guide/logging-tracing/logging-log-level). For more information, check [LOG_LEVEL docs](https://docs.snowflake.com/en/sql-reference/parameters#log-level).
 - `login_name` (String, Sensitive) The name users use to log in. If not supplied, snowflake will use name instead. Login names are always case-insensitive.
-- `middle_name` (String, Sensitive) Middle name of the user.
-- `mins_to_bypass_mfa` (Number) Specifies the number of minutes to temporarily bypass MFA for the user. This property can be used to allow a MFA-enrolled user to temporarily bypass MFA during login in the event that their MFA device is not available. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `mins_to_unlock` (Number) Specifies the number of minutes until the temporary lock on the user login is cleared. To protect against unauthorized user login, Snowflake places a temporary lock on a user after five consecutive unsuccessful login attempts. When creating a user, this property can be set to prevent them from logging in until the specified amount of time passes. To remove a lock immediately for a user, specify a value of 0 for this parameter. **Note** because this value changes continuously after setting it, the provider is currently NOT handling the external changes to it. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `multi_statement_count` (Number) Number of statements to execute when using the multi-statement capability. For more information, check [MULTI_STATEMENT_COUNT docs](https://docs.snowflake.com/en/sql-reference/parameters#multi-statement-count).
 - `must_change_password` (String) Specifies whether the user is forced to change their password on next login (including their first/initial login) into the system. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
@@ -1019,5 +1009,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_user.example '"<user_name>"'
+terraform import snowflake_legacy_service_user.example '"<user_name>"'
 ```

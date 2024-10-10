@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_Users_Complete(t *testing.T) {
+func TestAcc_Users_PersonUser(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	comment := random.Comment()
@@ -60,11 +60,12 @@ func TestAcc_Users_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModelAllAttributes) + datasourceWithLike(),
+				Config: config.FromModel(t, userModelAllAttributes) + datasourceWithLike(resources.User),
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
+						HasType("").
 						HasCreatedOnNotEmpty().
 						HasLoginName(fmt.Sprintf("%s_LOGIN", id.Name())).
 						HasDisplayName("Display Name").
@@ -87,6 +88,7 @@ func TestAcc_Users_Complete(t *testing.T) {
 					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
 						HasAllDefaults(),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", "")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "Display Name")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
@@ -120,11 +122,169 @@ func TestAcc_Users_Complete(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, userModelNoAttributes) + datasourceWithLike(),
+				Config: config.FromModel(t, userModelNoAttributes) + datasourceWithLike(resources.User),
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
+						HasType("").
+						HasCreatedOnNotEmpty().
+						HasLoginName(strings.ToUpper(id.Name())).
+						HasDisplayName("").
+						HasFirstName("").
+						HasLastName("").
+						HasEmail("").
+						HasMustChangePassword(false).
+						HasDisabled(false).
+						HasSnowflakeLock(false).
+						HasDaysToExpiry("").
+						HasMinsToUnlock("").
+						HasDefaultWarehouse("").
+						HasDefaultNamespace("").
+						HasDefaultRole("").
+						HasDefaultSecondaryRoles("").
+						HasMinsToBypassMfa("").
+						HasHasRsaPublicKey(false).
+						HasComment(""),
+					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
+						HasAllDefaults(),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", strings.ToUpper(id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.middle_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.last_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.email", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.must_change_password", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_namespace", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_role", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2_fp", "")),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Users_ServiceUser(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	comment := random.Comment()
+	key1, key1Fp := random.GenerateRSAPublicKey(t)
+	key2, key2Fp := random.GenerateRSAPublicKey(t)
+
+	userModelNoAttributes := model.ServiceUser("u", id.Name())
+	userModelAllAttributes := model.ServiceUser("u", id.Name()).
+		WithLoginName(id.Name() + "_login").
+		WithDisplayName("Display Name").
+		WithEmail("fake@email.com").
+		WithDisabled("false").
+		WithDaysToExpiry(8).
+		WithMinsToUnlock(9).
+		WithDefaultWarehouse("some_warehouse").
+		WithDefaultNamespace("some.namespace").
+		WithDefaultRole("some_role").
+		WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
+		WithRsaPublicKey(key1).
+		WithRsaPublicKey2(key2).
+		WithComment(comment)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ServiceUser),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, userModelAllAttributes) + datasourceWithLike(resources.ServiceUser),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
+					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
+						HasName(id.Name()).
+						HasType(string(sdk.UserTypeService)).
+						HasCreatedOnNotEmpty().
+						HasLoginName(fmt.Sprintf("%s_LOGIN", id.Name())).
+						HasDisplayName("Display Name").
+						HasFirstName("").
+						HasLastName("").
+						HasEmail("fake@email.com").
+						HasMustChangePassword(false).
+						HasDisabled(false).
+						HasSnowflakeLock(false).
+						HasDaysToExpiryNotEmpty().
+						HasMinsToUnlockNotEmpty().
+						HasDefaultWarehouse("some_warehouse").
+						HasDefaultNamespace("some.namespace").
+						HasDefaultRole("some_role").
+						HasDefaultSecondaryRoles(`["ALL"]`).
+						HasMinsToBypassMfa("").
+						HasHasRsaPublicKey(true).
+						HasComment(comment).
+						HasHasMfa(false),
+					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
+						HasAllDefaults(),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", comment)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", string(sdk.UserTypeService))),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "Display Name")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.middle_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.last_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.email", "fake@email.com")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.must_change_password", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "some_warehouse")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_namespace", "some.namespace")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_role", "some_role")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", key1)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "SHA256:"+key1Fp)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2", key2)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2_fp", "SHA256:"+key2Fp)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.has_mfa", "false")),
+				),
+			},
+			{
+				Config: config.FromModel(t, userModelNoAttributes) + datasourceWithLike(resources.ServiceUser),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
+					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
+						HasName(id.Name()).
+						HasType(string(sdk.UserTypeService)).
 						HasCreatedOnNotEmpty().
 						HasLoginName(strings.ToUpper(id.Name())).
 						HasDisplayName("").
@@ -147,6 +307,7 @@ func TestAcc_Users_Complete(t *testing.T) {
 						HasAllDefaults(),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", string(sdk.UserTypeService))),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", strings.ToUpper(id.Name()))),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "")),
@@ -166,7 +327,167 @@ func TestAcc_Users_Complete(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", "")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2_fp", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Users_LegacyServiceUser(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	comment := random.Comment()
+	pass := random.Password()
+	key1, key1Fp := random.GenerateRSAPublicKey(t)
+	key2, key2Fp := random.GenerateRSAPublicKey(t)
+
+	userModelNoAttributes := model.LegacyServiceUser("u", id.Name())
+	userModelAllAttributes := model.LegacyServiceUser("u", id.Name()).
+		WithPassword(pass).
+		WithLoginName(id.Name() + "_login").
+		WithDisplayName("Display Name").
+		WithEmail("fake@email.com").
+		WithMustChangePassword("true").
+		WithDisabled("false").
+		WithDaysToExpiry(8).
+		WithMinsToUnlock(9).
+		WithDefaultWarehouse("some_warehouse").
+		WithDefaultNamespace("some.namespace").
+		WithDefaultRole("some_role").
+		WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
+		WithRsaPublicKey(key1).
+		WithRsaPublicKey2(key2).
+		WithComment(comment)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.LegacyServiceUser),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, userModelAllAttributes) + datasourceWithLike(resources.LegacyServiceUser),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
+					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
+						HasName(id.Name()).
+						HasType(string(sdk.UserTypeLegacyService)).
+						HasCreatedOnNotEmpty().
+						HasLoginName(fmt.Sprintf("%s_LOGIN", id.Name())).
+						HasDisplayName("Display Name").
+						HasFirstName("").
+						HasLastName("").
+						HasEmail("fake@email.com").
+						HasMustChangePassword(true).
+						HasDisabled(false).
+						HasSnowflakeLock(false).
+						HasDaysToExpiryNotEmpty().
+						HasMinsToUnlockNotEmpty().
+						HasDefaultWarehouse("some_warehouse").
+						HasDefaultNamespace("some.namespace").
+						HasDefaultRole("some_role").
+						HasDefaultSecondaryRoles(`["ALL"]`).
+						HasMinsToBypassMfa("").
+						HasHasRsaPublicKey(true).
+						HasComment(comment).
+						HasHasMfa(false),
+					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
+						HasAllDefaults(),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", string(sdk.UserTypeLegacyService))),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", comment)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "Display Name")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.middle_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.last_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.email", "fake@email.com")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password", "********")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.must_change_password", "true")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "some_warehouse")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_namespace", "some.namespace")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_role", "some_role")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", key1)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "SHA256:"+key1Fp)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2", key2)),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2_fp", "SHA256:"+key2Fp)),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.has_mfa", "false")),
+				),
+			},
+			{
+				Config: config.FromModel(t, userModelNoAttributes) + datasourceWithLike(resources.LegacyServiceUser),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
+					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
+						HasName(id.Name()).
+						HasType(string(sdk.UserTypeLegacyService)).
+						HasCreatedOnNotEmpty().
+						HasLoginName(strings.ToUpper(id.Name())).
+						HasDisplayName("").
+						HasFirstName("").
+						HasLastName("").
+						HasEmail("").
+						HasMustChangePassword(false).
+						HasDisabled(false).
+						HasSnowflakeLock(false).
+						HasDaysToExpiry("").
+						HasMinsToUnlock("").
+						HasDefaultWarehouse("").
+						HasDefaultNamespace("").
+						HasDefaultRole("").
+						HasDefaultSecondaryRoles("").
+						HasMinsToBypassMfa("").
+						HasHasRsaPublicKey(false).
+						HasComment(""),
+					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
+						HasAllDefaults(),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", string(sdk.UserTypeLegacyService))),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", strings.ToUpper(id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.middle_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.last_name", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.email", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.must_change_password", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
+					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_namespace", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_role", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
+					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", "")),
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "")),
@@ -223,12 +544,12 @@ func TestAcc_Users_DifferentFiltering(t *testing.T) {
 	})
 }
 
-func datasourceWithLike() string {
-	return `
+func datasourceWithLike(resource resources.Resource) string {
+	return fmt.Sprintf(`
 	data "snowflake_users" "test" {
-		like = snowflake_user.u.name
+		like = %s.u.name
 	}
-`
+	`, resource)
 }
 
 func datasourceWithLikeMultipleUsers() string {

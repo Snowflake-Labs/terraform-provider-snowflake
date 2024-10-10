@@ -30,6 +30,14 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.User().Schema,
 	},
 	{
+		name:   "ServiceUser",
+		schema: resources.ServiceUser().Schema,
+	},
+	{
+		name:   "LegacyServiceUser",
+		schema: resources.LegacyServiceUser().Schema,
+	},
+	{
 		name:   "View",
 		schema: resources.View().Schema,
 	},

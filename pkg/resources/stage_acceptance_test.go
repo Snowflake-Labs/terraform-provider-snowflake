@@ -5,15 +5,17 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -254,4 +256,81 @@ resource "snowflake_stage" "test" {
 	schema = "%[3]s"
 }
 `, stageId.Name(), stageId.DatabaseName(), stageId.SchemaName())
+}
+
+// TODO [SNOW-1348110]: fix behavior with stage rework
+func TestAcc_Stage_Issue2679(t *testing.T) {
+	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	resourceName := "snowflake_stage.test"
+
+	fileFormatWithDefaultTypeCsv := "TYPE = CSV NULL_IF = []"
+	fileFormatWithoutType := "NULL_IF = []"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Stage),
+		Steps: []resource.TestStep{
+			{
+				Config: stageIssue2679Config(integrationId, stageId, fileFormatWithDefaultTypeCsv),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", stageId.Name()),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: stageIssue2679Config(integrationId, stageId, fileFormatWithoutType),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", stageId.Name()),
+					// TODO [SNOW-1348110]: use generated assertions after stage rework
+					func(_ *terraform.State) error {
+						properties, err := acc.TestClient().Stage.Describe(t, stageId)
+						if err != nil {
+							return err
+						}
+						typeProperty, err := collections.FindFirst(properties, func(property sdk.StageProperty) bool {
+							return property.Parent == "STAGE_FILE_FORMAT" && property.Name == "TYPE"
+						})
+						if err != nil {
+							return err
+						}
+						if typeProperty.Value != "CSV" {
+							return fmt.Errorf("expected type property 'CSV', got '%s'", typeProperty.Value)
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+func stageIssue2679Config(integrationId sdk.AccountObjectIdentifier, stageId sdk.SchemaObjectIdentifier, fileFormat string) string {
+	return fmt.Sprintf(`
+resource "snowflake_storage_integration" "test" {
+	name = "%[1]s"
+	storage_allowed_locations = ["s3://aaaaa"]
+	storage_provider = "S3"
+	
+	storage_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
+}
+
+resource "snowflake_stage" "test" {
+	name = "%[2]s"
+	database = "%[3]s"
+	schema = "%[4]s"
+	file_format = "%[5]s"
+	storage_integration = snowflake_storage_integration.test.name
+	url = "s3://aaaaa"
+}
+`, integrationId.Name(), stageId.Name(), stageId.DatabaseName(), stageId.SchemaName(), fileFormat)
 }
