@@ -923,6 +923,63 @@ func TestAcc_View_Issue3073(t *testing.T) {
 	})
 }
 
+func TestAcc_View_IncorrectColumnsWithOrReplace(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	statement := `SELECT ROLE_NAME as "role_name", ROLE_OWNER as "role_owner" FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	statementUnquotedColumns := `SELECT ROLE_NAME as role_name, ROLE_OWNER as role_owner FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+	statementUnquotedColumns3 := `SELECT ROLE_NAME as role_name, ROLE_OWNER as role_owner, IS_GRANTABLE as is_grantable FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+	viewLowercaseStatementModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statementUnquotedColumns)
+	viewLowercaseStatementModel3 := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statementUnquotedColumns3)
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
+		Steps: []resource.TestStep{
+			{
+				Config: accconfig.FromModel(t, viewModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_view.test", "column.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "column.0.column_name", "role_name"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "column.1.column_name", "role_owner"),
+				),
+			},
+			// use columns without quotes in the statement
+			{
+				Config: accconfig.FromModel(t, viewLowercaseStatementModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_view.test", "column.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "column.0.column_name", "ROLE_NAME"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "column.1.column_name", "ROLE_OWNER"),
+				),
+			},
+			// add a new column to the statement
+			{
+				Config: accconfig.FromModel(t, viewLowercaseStatementModel3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_view.test", "column.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "column.0.column_name", "ROLE_NAME"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "column.1.column_name", "ROLE_OWNER"),
+					resource.TestCheckResourceAttr("snowflake_view.test", "column.2.column_name", "IS_GRANTABLE"),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()

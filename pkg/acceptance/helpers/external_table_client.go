@@ -33,7 +33,16 @@ func (c *ExternalTableClient) PublishDataToStage(t *testing.T, stageId sdk.Schem
 	require.NoError(t, err)
 }
 
-func (c *ExternalTableClient) CreateOnTableWithRequest(t *testing.T, req *sdk.CreateExternalTableRequest) (*sdk.ExternalTable, func()) {
+func (c *ExternalTableClient) CreateWithLocation(t *testing.T, location string) (*sdk.ExternalTable, func()) {
+	t.Helper()
+
+	externalTableId := c.ids.RandomSchemaObjectIdentifier()
+	req := sdk.NewCreateExternalTableRequest(externalTableId, location).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON)).WithColumns([]*sdk.ExternalTableColumnRequest{sdk.NewExternalTableColumnRequest("id", sdk.DataTypeNumber, "value:time::int")})
+
+	return c.CreateWithRequest(t, req)
+}
+
+func (c *ExternalTableClient) CreateWithRequest(t *testing.T, req *sdk.CreateExternalTableRequest) (*sdk.ExternalTable, func()) {
 	t.Helper()
 	ctx := context.Background()
 

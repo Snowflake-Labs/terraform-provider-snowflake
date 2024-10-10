@@ -48,6 +48,7 @@ const (
 	Stage                                                  resource = "snowflake_stage"
 	StorageIntegration                                     resource = "snowflake_storage_integration"
 	Stream                                                 resource = "snowflake_stream"
+	StreamOnExternalTable                                  resource = "snowflake_stream_on_external_table"
 	StreamOnTable                                          resource = "snowflake_stream_on_table"
 	Streamlit                                              resource = "snowflake_streamlit"
 	Table                                                  resource = "snowflake_table"
