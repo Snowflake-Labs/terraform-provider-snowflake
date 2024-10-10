@@ -31,12 +31,12 @@ func NewCreateTagRequest(name SchemaObjectIdentifier) *CreateTagRequest {
 }
 
 func (s *CreateTagRequest) WithOrReplace(orReplace bool) *CreateTagRequest {
-	s.orReplace = orReplace
+	s.orReplace = &orReplace
 	return s
 }
 
 func (s *CreateTagRequest) WithIfExists(ifExists bool) *CreateTagRequest {
-	s.ifNotExists = ifExists
+	s.ifNotExists = &ifExists
 	return s
 }
 
@@ -68,6 +68,11 @@ func NewAlterTagRequest(name SchemaObjectIdentifier) *AlterTagRequest {
 	s := AlterTagRequest{}
 	s.name = name
 	return &s
+}
+
+func (s *AlterTagRequest) WithIfExists(ifExists bool) *AlterTagRequest {
+	s.ifExists = &ifExists
+	return s
 }
 
 func (s *AlterTagRequest) WithAdd(values []string) *AlterTagRequest {

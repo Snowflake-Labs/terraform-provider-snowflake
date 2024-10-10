@@ -26,14 +26,18 @@ type UnsetTagRequest struct {
 }
 
 type CreateTagRequest struct {
-	orReplace   bool
-	ifNotExists bool
+	orReplace   *bool
+	ifNotExists *bool
 
 	name SchemaObjectIdentifier // required
 
 	// One of
 	comment       *string
 	allowedValues *AllowedValues
+}
+
+func (r *CreateTagRequest) GetName() SchemaObjectIdentifier {
+	return r.name
 }
 
 type AlterTagRequest struct {

@@ -26,6 +26,12 @@ type systemFunctions struct {
 }
 
 func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (string, error) {
+	// setting object type to view results in:
+	// SQL compilation error: Invalid value VIEW for argument OBJECT_TYPE. Please use object type TABLE for all kinds of table-like objects.
+	if objectType == ObjectTypeView {
+		objectType = ObjectTypeTable
+	}
+
 	s := &struct {
 		Tag string `db:"TAG"`
 	}{}
