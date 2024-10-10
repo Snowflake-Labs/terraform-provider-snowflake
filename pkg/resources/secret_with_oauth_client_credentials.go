@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -163,13 +163,9 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		return diag.FromErr(err)
 	}
 
-	commonSet, commonUnset := handleSecretUpdate(d)
-	set := &sdk.SecretSetRequest{
-		Comment: commonSet.comment,
-	}
-	unset := &sdk.SecretUnsetRequest{
-		Comment: commonUnset.comment,
-	}
+	set := &sdk.SecretSetRequest{}
+	unset := &sdk.SecretUnsetRequest{}
+	handleSecretUpdate(d, set, unset)
 
 	if d.HasChange("oauth_scopes") {
 		stringScopes := expandStringList(d.Get("oauth_scopes").(*schema.Set).List())

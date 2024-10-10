@@ -123,13 +123,9 @@ func UpdateContextSecretWithGenericString(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 
-	commonSet, commonUnset := handleSecretUpdate(d)
-	set := &sdk.SecretSetRequest{
-		Comment: commonSet.comment,
-	}
-	unset := &sdk.SecretUnsetRequest{
-		Comment: commonUnset.comment,
-	}
+	set := &sdk.SecretSetRequest{}
+	unset := &sdk.SecretUnsetRequest{}
+	handleSecretUpdate(d, set, unset)
 
 	if d.HasChange("secret_string") {
 		secretString := d.Get("secret_string").(string)

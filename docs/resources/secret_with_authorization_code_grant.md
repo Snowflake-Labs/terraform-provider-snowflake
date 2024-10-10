@@ -5,7 +5,7 @@ description: |-
   Resource used to manage secret objects with OAuth Authorization Code Grant. For more information, check secret documentation https://docs.snowflake.com/en/sql-reference/sql/create-secret.
 ---
 
-!> **V1 release candidate** This resource is a release candidate for the V1. It is on the list of remaining GA objects for V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
+!> **V1 release candidate** This resource is a release candidate for the V1. It is on the list of remaining GA objects for V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0960--v0970) to use it.
 
 # snowflake_secret_with_authorization_code_grant (Resource)
 

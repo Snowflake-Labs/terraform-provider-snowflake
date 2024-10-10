@@ -162,26 +162,24 @@ func UpdateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schem
 		return diag.FromErr(err)
 	}
 
-	commonSet, commonUnset := handleSecretUpdate(d)
-	set := &sdk.SecretSetRequest{
-		Comment: commonSet.comment,
-		SetForFlow: &sdk.SetForFlowRequest{
-			SetForOAuthAuthorization: &sdk.SetForOAuthAuthorizationRequest{},
-		},
-	}
+	set := &sdk.SecretSetRequest{}
+	unset := &sdk.SecretUnsetRequest{}
+	handleSecretUpdate(d, set, unset)
 
-	unset := &sdk.SecretUnsetRequest{
-		Comment: commonUnset.comment,
+	setForFlow := &sdk.SetForFlowRequest{
+		SetForOAuthAuthorization: &sdk.SetForOAuthAuthorizationRequest{},
 	}
 
 	if d.HasChange("oauth_refresh_token") {
 		refreshToken := d.Get("oauth_refresh_token").(string)
-		set.SetForFlow.SetForOAuthAuthorization.WithOauthRefreshToken(refreshToken)
+		setForFlow.SetForOAuthAuthorization.WithOauthRefreshToken(refreshToken)
+		set.WithSetForFlow(*setForFlow)
 	}
 
 	if d.HasChange("oauth_refresh_token_expiry_time") {
 		refreshTokenExpiryTime := d.Get("oauth_refresh_token_expiry_time").(string)
-		set.SetForFlow.SetForOAuthAuthorization.WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime)
+		setForFlow.SetForOAuthAuthorization.WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime)
+		set.WithSetForFlow(*setForFlow)
 	}
 
 	if !reflect.DeepEqual(*set, sdk.SecretSetRequest{}) {

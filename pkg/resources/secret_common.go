@@ -2,6 +2,8 @@ package resources
 
 import (
 	"context"
+	"errors"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,37 +67,24 @@ func handleSecretCreate(d *schema.ResourceData) (database, schema, name string) 
 }
 
 func handleSecretRead(d *schema.ResourceData, id sdk.SchemaObjectIdentifier, secret *sdk.Secret, secretDescription *sdk.SecretDetails) error {
-	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
-	}
-	if err := d.Set("comment", secret.Comment); err != nil {
-		return err
-	}
-	if err := d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecretToSchema(secret)}); err != nil {
-		return err
-	}
-	if err := d.Set(DescribeOutputAttributeName, []map[string]any{schemas.SecretDescriptionToSchema(*secretDescription)}); err != nil {
+	err := errors.Join(
+		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+		d.Set("comment", secret.Comment),
+		d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecretToSchema(secret)}),
+		d.Set(DescribeOutputAttributeName, []map[string]any{schemas.SecretDescriptionToSchema(*secretDescription)}),
+	)
+	if err != nil {
 		return err
 	}
 	return nil
 }
 
-type commonSecretSet struct {
-	comment *string
-}
-
-type commonSecretUnset struct {
-	comment *bool
-}
-
-func handleSecretUpdate(d *schema.ResourceData) (commonSecretSet, commonSecretUnset) {
-	set, unset := commonSecretSet{}, commonSecretUnset{}
+func handleSecretUpdate(d *schema.ResourceData, set *sdk.SecretSetRequest, unset *sdk.SecretUnsetRequest) {
 	if d.HasChange("comment") {
 		if v, ok := d.GetOk("comment"); ok {
-			set.comment = sdk.Pointer(v.(string))
+			set.WithComment(v.(string))
 		} else {
-			unset.comment = sdk.Pointer(true)
+			unset.WithComment(true)
 		}
 	}
-	return set, unset
 }

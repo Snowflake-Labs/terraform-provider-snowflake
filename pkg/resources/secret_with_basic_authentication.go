@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"reflect"
 )
 
 var secretBasicAuthenticationSchema = func() map[string]*schema.Schema {
@@ -139,13 +140,9 @@ func UpdateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	commonSet, commonUnset := handleSecretUpdate(d)
-	set := &sdk.SecretSetRequest{
-		Comment: commonSet.comment,
-	}
-	unset := &sdk.SecretUnsetRequest{
-		Comment: commonUnset.comment,
-	}
+	set := &sdk.SecretSetRequest{}
+	unset := &sdk.SecretUnsetRequest{}
+	handleSecretUpdate(d, set, unset)
 	setForFlow := &sdk.SetForFlowRequest{
 		SetForBasicAuthentication: &sdk.SetForBasicAuthenticationRequest{},
 	}

@@ -40,7 +40,11 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 	)
 	t.Cleanup(apiIntegrationCleanup)
 
-	secretModel := model.SecretWithAuthorizationCodeGrant("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, refreshToken, refreshTokenExpiryDateTime).WithComment(comment)
+	secretModel := model.SecretWithAuthorizationCodeGrant("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, refreshToken, refreshTokenExpiryDateTime)
+	secretModelAllSet := model.SecretWithAuthorizationCodeGrant("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, newRefreshToken, newRefreshTokenExpiryDateOnly).WithComment(comment)
+	secretModelExternalChanges := model.SecretWithAuthorizationCodeGrant("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, newRefreshToken, externallyChangedRefreshTokenExpiryTime).WithComment(newComment)
+
+	secretName := secretModel.ResourceReference()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -62,55 +66,51 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 							HasApiAuthenticationString(integrationId.Name()).
 							HasOauthRefreshTokenString(refreshToken).
 							HasOauthRefreshTokenExpiryTimeString(refreshTokenExpiryDateTime).
-							HasCommentString(comment),
+							HasCommentString(""),
 
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
 							HasSecretType("OAUTH2").
 							HasSchemaName(id.SchemaName()).
-							HasComment(comment),
+							HasComment(""),
 					),
 
-					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.created_on"),
-					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.name", name),
-					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.database_name", id.DatabaseName()),
-					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.schema_name", id.SchemaName()),
-					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.secret_type", "OAUTH2"),
-					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.username", ""),
-					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_access_token_expiry_time", ""),
-					resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time"),
-					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.integration_name", integrationId.Name()),
-					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.#", "0"),
+					resource.TestCheckResourceAttr(secretName, "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttrSet(secretName, "describe_output.0.created_on"),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.name", name),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.database_name", id.DatabaseName()),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.schema_name", id.SchemaName()),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", "OAUTH2"),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.username", ""),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_access_token_expiry_time", ""),
+					resource.TestCheckResourceAttrSet(secretName, "describe_output.0.oauth_refresh_token_expiry_time"),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.integration_name", integrationId.Name()),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_scopes.#", "0"),
 				),
 			},
 			// set all
 			{
-				Config: config.FromModel(t, secretModel.
-					WithOauthRefreshTokenExpiryTime(newRefreshTokenExpiryDateOnly).
-					WithOauthRefreshToken(newRefreshToken).
-					WithComment(newComment),
-				),
+				Config: config.FromModel(t, secretModelAllSet),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
-						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(comment), sdk.String(newComment)),
-						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_refresh_token", tfjson.ActionUpdate, sdk.String(refreshToken), sdk.String(newRefreshToken)),
-						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_refresh_token_expiry_time", tfjson.ActionUpdate, sdk.String(refreshTokenExpiryDateTime), sdk.String(newRefreshTokenExpiryDateOnly)),
+						plancheck.ExpectResourceAction(secretName, plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(secretName, "comment", tfjson.ActionUpdate, nil, sdk.String(comment)),
+						planchecks.ExpectChange(secretName, "oauth_refresh_token", tfjson.ActionUpdate, sdk.String(refreshToken), sdk.String(newRefreshToken)),
+						planchecks.ExpectChange(secretName, "oauth_refresh_token_expiry_time", tfjson.ActionUpdate, sdk.String(refreshTokenExpiryDateTime), sdk.String(newRefreshTokenExpiryDateOnly)),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.SecretWithAuthorizationCodeResource(t, secretModel.ResourceReference()).
+						resourceassert.SecretWithAuthorizationCodeResource(t, secretName).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
 							HasSchemaString(id.SchemaName()).
 							HasApiAuthenticationString(integrationId.Name()).
 							HasOauthRefreshTokenString(newRefreshToken).
 							HasOauthRefreshTokenExpiryTimeString(newRefreshTokenExpiryDateOnly).
-							HasCommentString(newComment),
-						assert.Check(resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time")),
+							HasCommentString(comment),
+						assert.Check(resource.TestCheckResourceAttrSet(secretName, "describe_output.0.oauth_refresh_token_expiry_time")),
 					),
 				),
 			},
@@ -122,31 +122,31 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 						WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthAuthorization(*sdk.NewSetForOAuthAuthorizationRequest().WithOauthRefreshTokenExpiryTime(time.Now().Add(24 * time.Hour).Format(time.DateOnly)))),
 					))
 				},
-				Config: config.FromModel(t, secretModel.WithOauthRefreshTokenExpiryTime(externallyChangedRefreshTokenExpiryTime).WithComment("comment")),
+				Config: config.FromModel(t, secretModelExternalChanges),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
-						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String("secret resource - changed comment"), sdk.String("comment")),
-						planchecks.ExpectComputed(secretModel.ResourceReference(), r.DescribeOutputAttributeName, true),
+						plancheck.ExpectResourceAction(secretName, plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(secretName, "comment", tfjson.ActionUpdate, sdk.String("secret resource - changed comment"), sdk.String(newComment)),
+						planchecks.ExpectComputed(secretName, r.DescribeOutputAttributeName, true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.SecretWithAuthorizationCodeResource(t, secretModel.ResourceReference()).
+						resourceassert.SecretWithAuthorizationCodeResource(t, secretName).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
 							HasSchemaString(id.SchemaName()).
 							HasApiAuthenticationString(integrationId.Name()).
 							HasOauthRefreshTokenString(newRefreshToken).
 							HasOauthRefreshTokenExpiryTimeString(externallyChangedRefreshTokenExpiryTime).
-							HasCommentString("comment"),
-						assert.Check(resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time")),
+							HasCommentString(newComment),
+						assert.Check(resource.TestCheckResourceAttrSet(secretName, "describe_output.0.oauth_refresh_token_expiry_time")),
 					),
 				),
 			},
 			// import
 			{
-				ResourceName:            secretModel.ResourceReference(),
+				ResourceName:            secretName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"oauth_refresh_token"},
@@ -156,7 +156,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasApiAuthenticationString(integrationId.Name()).
-						HasCommentString("comment").
+						HasCommentString(newComment).
 						HasOauthRefreshTokenExpiryTimeNotEmpty(),
 				),
 			},
@@ -244,7 +244,6 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalChange(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
 	comment := random.Comment()
-	//newComment := random.Comment()
 	refreshTokenExpiryDateTime := time.Now().Add(24 * time.Hour).Format(time.DateTime)
 	newRefreshTokenExpiryDateOnly := time.Now().Add(4 * 24 * time.Hour).Format(time.DateOnly)
 	refreshToken := "test_token"
