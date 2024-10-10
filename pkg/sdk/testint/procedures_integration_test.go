@@ -485,6 +485,10 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 
+		value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeProcedure)
+		require.NoError(t, err)
+		assert.Equal(t, "v1", value)
+
 		unsetTags := []sdk.ObjectIdentifier{
 			tagTest.ID(),
 		}

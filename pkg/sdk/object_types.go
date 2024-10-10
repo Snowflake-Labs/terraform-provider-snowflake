@@ -25,6 +25,7 @@ const (
 	ObjectTypeNetworkPolicy        ObjectType = "NETWORK POLICY"
 	ObjectTypePasswordPolicy       ObjectType = "PASSWORD POLICY"
 	ObjectTypeSessionPolicy        ObjectType = "SESSION POLICY"
+	ObjectTypePrivacyPolicy        ObjectType = "PRIVACY POLICY"
 	ObjectTypeReplicationGroup     ObjectType = "REPLICATION GROUP"
 	ObjectTypeFailoverGroup        ObjectType = "FAILOVER GROUP"
 	ObjectTypeConnection           ObjectType = "CONNECTION"
@@ -56,6 +57,8 @@ const (
 	ObjectTypeFileFormat           ObjectType = "FILE FORMAT"
 	ObjectTypePipe                 ObjectType = "PIPE"
 	ObjectTypeAlert                ObjectType = "ALERT"
+	ObjectTypeBudget               ObjectType = "SNOWFLAKE.CORE.BUDGET"
+	ObjectTypeClassification       ObjectType = "SNOWFLAKE.ML.CLASSIFICATION"
 	ObjectTypeApplication          ObjectType = "APPLICATION"
 	ObjectTypeApplicationPackage   ObjectType = "APPLICATION PACKAGE"
 	ObjectTypeApplicationRole      ObjectType = "APPLICATION ROLE"
@@ -98,6 +101,7 @@ func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
 		ObjectTypeNetworkPolicy:        PluralObjectTypeNetworkPolicies,
 		ObjectTypePasswordPolicy:       PluralObjectTypePasswordPolicies,
 		ObjectTypeSessionPolicy:        PluralObjectTypeSessionPolicies,
+		ObjectTypePrivacyPolicy:        PluralObjectTypePrivacyPolicies,
 		ObjectTypeReplicationGroup:     PluralObjectTypeReplicationGroups,
 		ObjectTypeFailoverGroup:        PluralObjectTypeFailoverGroups,
 		ObjectTypeConnection:           PluralObjectTypeConnections,
@@ -129,6 +133,8 @@ func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {
 		ObjectTypeFileFormat:           PluralObjectTypeFileFormats,
 		ObjectTypePipe:                 PluralObjectTypePipes,
 		ObjectTypeAlert:                PluralObjectTypeAlerts,
+		ObjectTypeBudget:               PluralObjectTypeBudgets,
+		ObjectTypeClassification:       PluralObjectTypeClassifications,
 		ObjectTypeApplication:          PluralObjectTypeApplications,
 		ObjectTypeApplicationPackage:   PluralObjectTypeApplicationPackages,
 		ObjectTypeApplicationRole:      PluralObjectTypeApplicationRoles,
@@ -206,6 +212,7 @@ const (
 	PluralObjectTypeNetworkPolicies        PluralObjectType = "NETWORK POLICIES"
 	PluralObjectTypePasswordPolicies       PluralObjectType = "PASSWORD POLICIES"
 	PluralObjectTypeSessionPolicies        PluralObjectType = "SESSION POLICIES"
+	PluralObjectTypePrivacyPolicies        PluralObjectType = "PRIVACY POLICIES"
 	PluralObjectTypeReplicationGroups      PluralObjectType = "REPLICATION GROUPS"
 	PluralObjectTypeFailoverGroups         PluralObjectType = "FAILOVER GROUPS"
 	PluralObjectTypeConnections            PluralObjectType = "CONNECTIONS"
@@ -237,6 +244,8 @@ const (
 	PluralObjectTypeFileFormats            PluralObjectType = "FILE FORMATS"
 	PluralObjectTypePipes                  PluralObjectType = "PIPES"
 	PluralObjectTypeAlerts                 PluralObjectType = "ALERTS"
+	PluralObjectTypeBudgets                PluralObjectType = "SNOWFLAKE.CORE.BUDGET"
+	PluralObjectTypeClassifications        PluralObjectType = "SNOWFLAKE.ML.CLASSIFICATION"
 	PluralObjectTypeApplications           PluralObjectType = "APPLICATIONS"
 	PluralObjectTypeApplicationPackages    PluralObjectType = "APPLICATION PACKAGES"
 	PluralObjectTypeApplicationRoles       PluralObjectType = "APPLICATION ROLES"

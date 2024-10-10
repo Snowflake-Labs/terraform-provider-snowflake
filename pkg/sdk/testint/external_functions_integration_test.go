@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -192,6 +193,35 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		require.NoError(t, err)
 
 		assertExternalFunction(t, externalFunction.ID(), true)
+	})
+
+	// Based on the documentation, set/unset tags is done through FUNCTION (https://docs.snowflake.com/en/sql-reference/sql/alter-function#external-functions).
+	// TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
+	t.Run("alter external function: set and unset tags", func(t *testing.T) {
+		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
+		t.Cleanup(tagCleanup)
+
+		externalFunction := createExternalFunction(t)
+
+		id := externalFunction.ID()
+		setTags := []sdk.TagAssociation{
+			{
+				Name:  tag.ID(),
+				Value: "v1",
+			},
+		}
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetTags(setTags))
+		require.NoError(t, err)
+
+		value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeFunction)
+		require.NoError(t, err)
+		assert.Equal(t, "v1", value)
+
+		unsetTags := []sdk.ObjectIdentifier{
+			tag.ID(),
+		}
+		err = client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetTags(unsetTags))
+		require.NoError(t, err)
 	})
 
 	t.Run("show external function: with like", func(t *testing.T) {

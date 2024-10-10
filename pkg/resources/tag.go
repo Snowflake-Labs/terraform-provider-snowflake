@@ -47,6 +47,7 @@ var tagSchema = map[string]*schema.Schema{
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
+// TODO: remove after rework of external table, materialized views stage and table
 var tagReferenceSchema = &schema.Schema{
 	Type:        schema.TypeList,
 	Optional:    true,

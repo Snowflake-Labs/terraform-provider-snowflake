@@ -29,19 +29,27 @@ func (c *TagClient) CreateTag(t *testing.T) (*sdk.Tag, func()) {
 	return c.CreateTagInSchema(t, c.ids.SchemaId())
 }
 
+func (c *TagClient) CreateTagWithIdentifier(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.Tag, func()) {
+	t.Helper()
+	return c.CreateWithRequest(t, sdk.NewCreateTagRequest(id))
+}
+
 func (c *TagClient) CreateTagInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Tag, func()) {
+	t.Helper()
+	return c.CreateWithRequest(t, sdk.NewCreateTagRequest(c.ids.RandomSchemaObjectIdentifierInSchema(schemaId)))
+}
+
+func (c *TagClient) CreateWithRequest(t *testing.T, req *sdk.CreateTagRequest) (*sdk.Tag, func()) {
 	t.Helper()
 	ctx := context.Background()
 
-	id := c.ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-
-	err := c.client().Create(ctx, sdk.NewCreateTagRequest(id))
+	err := c.client().Create(ctx, req)
 	require.NoError(t, err)
 
-	tag, err := c.client().ShowByID(ctx, id)
+	tag, err := c.client().ShowByID(ctx, req.GetName())
 	require.NoError(t, err)
 
-	return tag, c.DropTagFunc(t, id)
+	return tag, c.DropTagFunc(t, req.GetName())
 }
 
 func (c *TagClient) DropTagFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
@@ -52,4 +60,11 @@ func (c *TagClient) DropTagFunc(t *testing.T, id sdk.SchemaObjectIdentifier) fun
 		err := c.client().Drop(ctx, sdk.NewDropTagRequest(id).WithIfExists(true))
 		require.NoError(t, err)
 	}
+}
+
+func (c *TagClient) Show(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.Tag, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
 }
