@@ -5,5 +5,5 @@ import (
 )
 
 func StreamOnExternalTableBase(resourceName string, id, externalTableId sdk.SchemaObjectIdentifier) *StreamOnExternalTableModel {
-	return StreamOnExternalTable(resourceName, id.DatabaseName(), externalTableId.FullyQualifiedName(), id.Name(), id.SchemaName())
+	return StreamOnExternalTable(resourceName, id.DatabaseName(), externalTableId.FullyQualifiedName(), id.Name(), id.SchemaName()).WithInsertOnly("true")
 }

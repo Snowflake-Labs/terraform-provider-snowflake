@@ -17,6 +17,8 @@ This segregation was based on the object on which the stream is created. The map
 - `ON TABLE <table_name>` -> `snowflake_stream_on_table`
 - `ON EXTERNAL TABLE <external_table_name>` -> `snowflake_stream_on_external_table` (this was previously not supported)
 
+The resources for streams on directory tables and streams on views will be implemented in the future releases.
+
 To use the new `stream_on_table`, change the old `stream` from
 ```terraform
 resource "snowflake_stream" "stream" {
