@@ -39,6 +39,8 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stageLocation)
 	t.Cleanup(externalTableCleanup)
 
+	var createdOn string
+
 	baseModel := model.StreamOnExternalTableBase("test", id, externalTable.ID())
 
 	modelWithExtraFields := model.StreamOnExternalTableBase("test", id, externalTable.ID()).
@@ -52,6 +54,13 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 		WithCopyGrants(true).
 		WithComment("bar").
 		WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+			"offset": pluginconfig.StringVariable("0"),
+		}))
+
+	modelWithExtraFieldsModifiedCauseRecreation := model.StreamOnExternalTableBase("test", id, externalTable.ID()).
+		WithCopyGrants(true).
+		WithComment("bar").
+		WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 			"offset": pluginconfig.StringVariable("0"),
 		}))
 
@@ -102,6 +111,10 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeInsertOnly))),
 					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.stale_after")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner_role_type", "ROLE")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						createdOn = value
+						return nil
+					})),
 				),
 			},
 			// import without optionals
@@ -262,6 +275,61 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeInsertOnly))),
 					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.stale_after")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner_role_type", "ROLE")),
+				),
+			},
+			// update fields to force recreation
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/before"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFieldsModifiedCauseRecreation),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()).
+					HasInsertOnlyString(r.BooleanTrue).
+					HasExternalTableString(externalTable.ID().FullyQualifiedName()),
+					resourceshowoutputassert.StreamShowOutput(t, resourceName).
+						HasCreatedOnNotEmpty().
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner(snowflakeroles.Accountadmin.Name()).
+						HasTableName(externalTable.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeExternalTable).
+						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasType("DELTA").
+						HasStale("false").
+						HasMode(sdk.StreamModeInsertOnly).
+						HasStaleAfterNotEmpty().
+						HasInvalidReason("N/A").
+						HasComment("bar").
+						HasOwnerRoleType("ROLE"),
+					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.created_on")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "bar")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", externalTable.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeExternalTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", externalTable.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeInsertOnly))),
+					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.stale_after")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner_role_type", "ROLE")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						if value == createdOn {
+							return fmt.Errorf("view was not recreated")
+						}
+						return nil
+					})),
 				),
 			},
 			// import
