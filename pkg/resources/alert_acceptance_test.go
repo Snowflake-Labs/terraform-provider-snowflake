@@ -10,6 +10,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -201,4 +202,59 @@ resource "snowflake_alert" "test_alert" {
 		fmt.Println(err)
 	}
 	return result.String()
+}
+
+// Can't reproduce the issue, leaving the test for now.
+func TestAcc_Alert_Issue3117(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix("small caps with spaces")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Alert),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.92.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: alertIssue3117Config(id, acc.TestClient().Ids.WarehouseId()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   alertIssue3117Config(id, acc.TestClient().Ids.WarehouseId()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func alertIssue3117Config(alertId sdk.SchemaObjectIdentifier, warehouseId sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_alert" "test_alert" {
+  database  = "%[1]s"
+  schema    = "%[2]s"
+  name      = "%[3]s"
+  warehouse = "%[4]s"
+
+  alert_schedule {
+    interval = 1 #check every minute for new alerts
+  }
+
+  action    = "select 0 as c"
+  condition = "select 0 as c"
+
+  enabled   = true
+  comment   = "Alert config for GH issue 3117"
+}
+`, alertId.DatabaseName(), alertId.SchemaName(), alertId.Name(), warehouseId.Name())
 }
