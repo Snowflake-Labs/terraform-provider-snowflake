@@ -1,0 +1,1 @@
+terraform import snowflake_authentication_policy.example "databaseName|schemaName|authenticationPolicyName"
