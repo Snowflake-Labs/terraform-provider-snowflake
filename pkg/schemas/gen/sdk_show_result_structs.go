@@ -51,6 +51,7 @@ var SdkShowResultStructs = []any{
 	sdk.User{},
 	sdk.View{},
 	sdk.Warehouse{},
+	sdk.ExternalVolume{},
 }
 
 // TODO [SNOW-1501905]: currently all this structs have the "Show" added to the schema, while these are not show outputs

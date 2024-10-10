@@ -330,3 +330,183 @@ func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed [
 
 	return added, removed
 }
+
+func StorageLocationsEqual(s1 sdk.ExternalVolumeStorageLocation, s2 sdk.ExternalVolumeStorageLocation) (bool, error) {
+	s1StorageProvider, err := GetStorageLocationStorageProvider(s1)
+	if err != nil {
+		return false, err
+	}
+
+	s2StorageProvider, err := GetStorageLocationStorageProvider(s2)
+	if err != nil {
+		return false, err
+	}
+
+	if s1StorageProvider != s2StorageProvider {
+		return false, nil
+	}
+
+	switch s1StorageProvider {
+	case sdk.StorageProviderS3, sdk.StorageProviderS3GOV:
+		externalIdsEqual := s1.S3StorageLocationParams.StorageAwsExternalId == nil && s2.S3StorageLocationParams.StorageAwsExternalId == nil ||
+			(s1.S3StorageLocationParams.StorageAwsExternalId != nil && s2.S3StorageLocationParams.StorageAwsExternalId != nil &&
+				*s1.S3StorageLocationParams.StorageAwsExternalId == *s2.S3StorageLocationParams.StorageAwsExternalId)
+
+		if externalIdsEqual &&
+			s1.S3StorageLocationParams.Name == s2.S3StorageLocationParams.Name &&
+			s1.S3StorageLocationParams.StorageProvider == s2.S3StorageLocationParams.StorageProvider &&
+			s1.S3StorageLocationParams.StorageAwsRoleArn == s2.S3StorageLocationParams.StorageAwsRoleArn &&
+			s1.S3StorageLocationParams.StorageBaseUrl == s2.S3StorageLocationParams.StorageBaseUrl {
+
+			if s1.S3StorageLocationParams.Encryption == nil && s2.S3StorageLocationParams.Encryption == nil {
+				return true, nil
+			} else if s1.S3StorageLocationParams.Encryption != nil && s2.S3StorageLocationParams.Encryption != nil {
+				typeEqual := s1.S3StorageLocationParams.Encryption.Type == s2.S3StorageLocationParams.Encryption.Type
+				kmsKeyIdEqual := s1.S3StorageLocationParams.Encryption.KmsKeyId == nil && s2.S3StorageLocationParams.Encryption.KmsKeyId == nil ||
+					(s1.S3StorageLocationParams.Encryption.KmsKeyId != nil && s2.S3StorageLocationParams.Encryption.KmsKeyId != nil &&
+						*s1.S3StorageLocationParams.Encryption.KmsKeyId == *s2.S3StorageLocationParams.Encryption.KmsKeyId)
+				return typeEqual && kmsKeyIdEqual, nil
+			}
+		}
+	case sdk.StorageProviderGCS:
+		if s1.GCSStorageLocationParams.Name == s2.GCSStorageLocationParams.Name &&
+			s1.GCSStorageLocationParams.StorageBaseUrl == s2.GCSStorageLocationParams.StorageBaseUrl {
+
+			if s1.GCSStorageLocationParams.Encryption == nil && s2.GCSStorageLocationParams.Encryption == nil {
+				return true, nil
+			} else if s1.GCSStorageLocationParams.Encryption != nil && s2.GCSStorageLocationParams.Encryption != nil {
+				typeEqual := s1.GCSStorageLocationParams.Encryption.Type == s2.GCSStorageLocationParams.Encryption.Type
+				kmsKeyIdEqual := s1.GCSStorageLocationParams.Encryption.KmsKeyId == nil && s2.GCSStorageLocationParams.Encryption.KmsKeyId == nil ||
+					(s1.GCSStorageLocationParams.Encryption.KmsKeyId != nil && s2.GCSStorageLocationParams.Encryption.KmsKeyId != nil &&
+						*s1.GCSStorageLocationParams.Encryption.KmsKeyId == *s2.GCSStorageLocationParams.Encryption.KmsKeyId)
+				return typeEqual && kmsKeyIdEqual, nil
+			}
+		}
+	case sdk.StorageProviderAzure:
+		return s1.AzureStorageLocationParams.Name == s2.AzureStorageLocationParams.Name &&
+			s1.AzureStorageLocationParams.AzureTenantId == s2.AzureStorageLocationParams.AzureTenantId &&
+			s1.AzureStorageLocationParams.StorageBaseUrl == s2.AzureStorageLocationParams.StorageBaseUrl, nil
+	}
+
+	return false, nil
+}
+
+// Returns a copy of the given storage location with a 'temp_' prefix on the Name field
+func CopyStorageLocationWithTempName(
+	storageLocation sdk.ExternalVolumeStorageLocation,
+) (sdk.ExternalVolumeStorageLocation, error) {
+	storageProvider, err := GetStorageLocationStorageProvider(storageLocation)
+	if err != nil {
+		return sdk.ExternalVolumeStorageLocation{}, err
+	}
+
+	currName, err := GetStorageLocationName(storageLocation)
+	if err != nil {
+		return sdk.ExternalVolumeStorageLocation{}, err
+	}
+
+	newName := fmt.Sprintf("temp_%s", currName)
+	var tempNameStorageLocation sdk.ExternalVolumeStorageLocation
+	switch storageProvider {
+	case sdk.StorageProviderS3, sdk.StorageProviderS3GOV:
+		tempNameStorageLocation = sdk.ExternalVolumeStorageLocation{
+			S3StorageLocationParams: &sdk.S3StorageLocationParams{
+				Name:                 newName,
+				StorageProvider:      storageLocation.S3StorageLocationParams.StorageProvider,
+				StorageBaseUrl:       storageLocation.S3StorageLocationParams.StorageBaseUrl,
+				StorageAwsRoleArn:    storageLocation.S3StorageLocationParams.StorageAwsRoleArn,
+				StorageAwsExternalId: storageLocation.S3StorageLocationParams.StorageAwsExternalId,
+				Encryption:           storageLocation.S3StorageLocationParams.Encryption,
+			},
+		}
+	case sdk.StorageProviderGCS:
+		tempNameStorageLocation = sdk.ExternalVolumeStorageLocation{
+			GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
+				Name:           newName,
+				StorageBaseUrl: storageLocation.GCSStorageLocationParams.StorageBaseUrl,
+				Encryption:     storageLocation.GCSStorageLocationParams.Encryption,
+			},
+		}
+	case sdk.StorageProviderAzure:
+		tempNameStorageLocation = sdk.ExternalVolumeStorageLocation{
+			AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
+				Name:           newName,
+				StorageBaseUrl: storageLocation.AzureStorageLocationParams.StorageBaseUrl,
+				AzureTenantId:  storageLocation.AzureStorageLocationParams.AzureTenantId,
+			},
+		}
+	}
+
+	return tempNameStorageLocation, nil
+}
+
+func GetStorageLocationName(s sdk.ExternalVolumeStorageLocation) (string, error) {
+	if s.S3StorageLocationParams != nil && (*s.S3StorageLocationParams != sdk.S3StorageLocationParams{}) {
+		if len(s.S3StorageLocationParams.Name) == 0 {
+			return "", fmt.Errorf("Invalid S3 storage location - no name set")
+		}
+
+		return s.S3StorageLocationParams.Name, nil
+	} else if s.GCSStorageLocationParams != nil && (*s.GCSStorageLocationParams != sdk.GCSStorageLocationParams{}) {
+		if len(s.GCSStorageLocationParams.Name) == 0 {
+			return "", fmt.Errorf("Invalid GCS storage location - no name set")
+		}
+
+		return s.GCSStorageLocationParams.Name, nil
+	} else if s.AzureStorageLocationParams != nil && (*s.AzureStorageLocationParams != sdk.AzureStorageLocationParams{}) {
+		if len(s.AzureStorageLocationParams.Name) == 0 {
+			return "", fmt.Errorf("Invalid Azure storage location - no name set")
+		}
+
+		return s.AzureStorageLocationParams.Name, nil
+	} else {
+		return "", fmt.Errorf("Invalid storage location")
+	}
+}
+
+func GetStorageLocationStorageProvider(s sdk.ExternalVolumeStorageLocation) (sdk.StorageProvider, error) {
+	if s.S3StorageLocationParams != nil && (*s.S3StorageLocationParams != sdk.S3StorageLocationParams{}) {
+		return sdk.ToStorageProvider(string(s.S3StorageLocationParams.StorageProvider))
+	} else if s.GCSStorageLocationParams != nil && (*s.GCSStorageLocationParams != sdk.GCSStorageLocationParams{}) {
+		return sdk.StorageProviderGCS, nil
+	} else if s.AzureStorageLocationParams != nil && (*s.AzureStorageLocationParams != sdk.AzureStorageLocationParams{}) {
+		return sdk.StorageProviderAzure, nil
+	} else {
+		return "", fmt.Errorf("Invalid storage location")
+	}
+}
+
+// Returns the index of the last matching elements in the list
+// e.g. [1,2,3] [1,3,2] -> 0, [1,2,3] [1,2,4] -> 1
+// -1 is returned if there are no common prefixes in the list
+func LongestCommonPrefix(a []sdk.ExternalVolumeStorageLocation, b []sdk.ExternalVolumeStorageLocation) (int, error) {
+	longestCommonPrefix := 0
+
+	if len(a) == 0 || len(b) == 0 {
+		return -1, nil
+	}
+
+	first_elements_equal, err := StorageLocationsEqual(a[0], b[0])
+	if err != nil {
+		return -1, err
+	}
+
+	if !first_elements_equal {
+		return -1, nil
+	}
+
+	for i := 1; i < min(len(a), len(b)); i++ {
+		storageLocationsAreEqual, err := StorageLocationsEqual(a[i], b[i])
+		if err != nil {
+			return -1, err
+		}
+
+		if !storageLocationsAreEqual {
+			break
+		}
+
+		longestCommonPrefix = i
+	}
+
+	return longestCommonPrefix, nil
+}
