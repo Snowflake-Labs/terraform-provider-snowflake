@@ -1,40 +1,32 @@
 # minimal
-resource "snowflake_user" "minimal" {
-  name = "Snowflake User - minimal"
+resource "snowflake_service_user" "minimal" {
+  name = "Snowflake Service User - minimal"
 }
 
 # with all attributes set
-resource "snowflake_user" "user" {
-  name         = "Snowflake User"
-  login_name   = "snowflake_user"
-  first_name   = "Snowflake"
-  middle_name  = "Middle"
-  last_name    = "User"
-  comment      = "User of snowflake."
-  password     = "secret"
+resource "snowflake_service_user" "service_user" {
+  name         = "Snowflake Service User"
+  login_name   = "service_user"
+  comment      = "A service user of snowflake."
   disabled     = "false"
-  display_name = "Snowflake User display name"
-  email        = "user@snowflake.example"
+  display_name = "Snowflake Service User"
+  email        = "service_user@snowflake.example"
 
   default_warehouse              = "warehouse"
   default_secondary_roles_option = "ALL"
   default_role                   = "role1"
   default_namespace              = "some.namespace"
 
-  mins_to_unlock     = 9
-  days_to_expiry     = 8
-  mins_to_bypass_mfa = 10
+  mins_to_unlock = 9
+  days_to_expiry = 8
 
   rsa_public_key   = "..."
   rsa_public_key_2 = "..."
-
-  must_change_password = "true"
-  disable_mfa          = "false"
 }
 
 # all parameters set on the resource level
-resource "snowflake_user" "u" {
-  name = "Snowflake User with all parameters"
+resource "snowflake_service_user" "u" {
+  name = "Snowflake Service User with all parameters"
 
   abort_detached_query                          = true
   autocommit                                    = false

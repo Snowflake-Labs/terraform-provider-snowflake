@@ -6,20 +6,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TODO [SNOW-1645875]: test setting/unsetting policies
-// TODO [SNOW-1645348]: add type and other 8.26 additions
 func TestInt_Users(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -237,6 +235,34 @@ func TestInt_Users(t *testing.T) {
 		)
 	})
 
+	for _, userType := range sdk.AllUserTypes {
+		userType := userType
+		t.Run(fmt.Sprintf("create: type %s - no options", userType), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+			err := client.Users.Create(ctx, id, &sdk.CreateUserOptions{
+				ObjectProperties: &sdk.UserObjectProperties{
+					Type: sdk.Pointer(userType),
+				},
+			})
+			require.NoError(t, err)
+			t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+			userDetails, err := client.Users.Describe(ctx, id)
+			require.NoError(t, err)
+			assert.Equal(t, id.Name(), userDetails.Name.Value)
+			assert.Equal(t, string(userType), userDetails.Type.Value)
+
+			user, err := client.Users.ShowByID(ctx, id)
+			require.NoError(t, err)
+
+			assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
+				HasDefaults(id.Name()).
+				HasType(string(userType)),
+			)
+		})
+	}
+
 	t.Run("create: all object properties", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		currentRole := testClientHelper().Context.CurrentRole(t)
@@ -307,6 +333,224 @@ func TestInt_Users(t *testing.T) {
 			HasHasRsaPublicKey(true),
 		)
 	})
+
+	t.Run("create: all object properties - type service", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		currentRole := testClientHelper().Context.CurrentRole(t)
+
+		// omitting FirstName, MiddleName, LastName, Password, MustChangePassword, and MinsToBypassMFA
+		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			LoginName:             sdk.String(newValue),
+			DisplayName:           sdk.String(newValue),
+			Email:                 sdk.String(email),
+			Disable:               sdk.Bool(true),
+			DaysToExpiry:          sdk.Int(5),
+			MinsToUnlock:          sdk.Int(15),
+			DefaultWarehouse:      sdk.Pointer(warehouseId),
+			DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
+			DefaultRole:           sdk.Pointer(roleId),
+			DefaultSecondaryRoles: &sdk.SecondaryRoles{All: sdk.Bool(true)},
+			RSAPublicKey:          sdk.String(key),
+			RSAPublicKey2:         sdk.String(key2),
+			Comment:               sdk.String("some comment"),
+			Type:                  sdk.Pointer(sdk.UserTypeService),
+		}}
+
+		err := client.Users.Create(ctx, id, createOpts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, id.Name(), userDetails.Name.Value)
+		assert.Equal(t, strings.ToUpper(newValue), userDetails.LoginName.Value)
+		assert.Equal(t, newValue, userDetails.DisplayName.Value)
+		assert.Equal(t, email, userDetails.Email.Value)
+		assert.Equal(t, true, userDetails.Disabled.Value)
+		assert.NotEmpty(t, userDetails.DaysToExpiry.Value)
+		assert.Equal(t, 14, *userDetails.MinsToUnlock.Value)
+		assert.Equal(t, warehouseId.Name(), userDetails.DefaultWarehouse.Value)
+		assert.Equal(t, fmt.Sprintf("%s.%s", schemaId.DatabaseName(), schemaId.Name()), userDetails.DefaultNamespace.Value)
+		assert.Equal(t, roleId.Name(), userDetails.DefaultRole.Value)
+		assert.Equal(t, `["ALL"]`, userDetails.DefaultSecondaryRoles.Value)
+		assert.Equal(t, "some comment", userDetails.Comment.Value)
+		assert.Equal(t, string(sdk.UserTypeService), userDetails.Type.Value)
+
+		assert.Equal(t, "", userDetails.FirstName.Value)
+		assert.Equal(t, "", userDetails.MiddleName.Value)
+		assert.Equal(t, "", userDetails.LastName.Value)
+		assert.Equal(t, "", userDetails.Password.Value)
+		assert.Equal(t, false, userDetails.MustChangePassword.Value)
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+
+		user, err := client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasName(user.Name).
+			HasType(string(sdk.UserTypeService)).
+			HasCreatedOnNotEmpty().
+			// login name is always case-insensitive
+			HasLoginName(strings.ToUpper(newValue)).
+			HasDisplayName(newValue).
+			HasFirstName("").
+			HasLastName("").
+			HasEmail(email).
+			HasMinsToUnlock("14").
+			HasDaysToExpiryNotEmpty().
+			HasComment("some comment").
+			HasDisabled(true).
+			HasMustChangePassword(false).
+			HasSnowflakeLock(false).
+			HasDefaultWarehouse(warehouseId.Name()).
+			HasDefaultNamespaceId(schemaId).
+			HasDefaultRole(roleId.Name()).
+			HasDefaultSecondaryRoles(`["ALL"]`).
+			HasExtAuthnDuo(false).
+			HasExtAuthnUid("").
+			HasMinsToBypassMfa("").
+			HasOwner(currentRole.Name()).
+			HasLastSuccessLoginEmpty().
+			HasExpiresAtTimeNotEmpty().
+			HasLockedUntilTimeNotEmpty().
+			HasHasPassword(false).
+			HasHasRsaPublicKey(true),
+		)
+	})
+
+	t.Run("create: all object properties - type legacy service", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		currentRole := testClientHelper().Context.CurrentRole(t)
+
+		// omitting FirstName, MiddleName, LastName, and MinsToBypassMFA
+		createOpts := &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+			Password:              sdk.String(password),
+			MustChangePassword:    sdk.Bool(true),
+			LoginName:             sdk.String(newValue),
+			DisplayName:           sdk.String(newValue),
+			Email:                 sdk.String(email),
+			Disable:               sdk.Bool(true),
+			DaysToExpiry:          sdk.Int(5),
+			MinsToUnlock:          sdk.Int(15),
+			DefaultWarehouse:      sdk.Pointer(warehouseId),
+			DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
+			DefaultRole:           sdk.Pointer(roleId),
+			DefaultSecondaryRoles: &sdk.SecondaryRoles{All: sdk.Bool(true)},
+			RSAPublicKey:          sdk.String(key),
+			RSAPublicKey2:         sdk.String(key2),
+			Comment:               sdk.String("some comment"),
+			Type:                  sdk.Pointer(sdk.UserTypeLegacyService),
+		}}
+
+		err := client.Users.Create(ctx, id, createOpts)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Equal(t, id.Name(), userDetails.Name.Value)
+		assert.Equal(t, strings.ToUpper(newValue), userDetails.LoginName.Value)
+		assert.Equal(t, newValue, userDetails.DisplayName.Value)
+		assert.Equal(t, email, userDetails.Email.Value)
+		assert.Equal(t, true, userDetails.Disabled.Value)
+		assert.NotEmpty(t, userDetails.DaysToExpiry.Value)
+		assert.Equal(t, 14, *userDetails.MinsToUnlock.Value)
+		assert.Equal(t, warehouseId.Name(), userDetails.DefaultWarehouse.Value)
+		assert.Equal(t, fmt.Sprintf("%s.%s", schemaId.DatabaseName(), schemaId.Name()), userDetails.DefaultNamespace.Value)
+		assert.Equal(t, roleId.Name(), userDetails.DefaultRole.Value)
+		assert.Equal(t, `["ALL"]`, userDetails.DefaultSecondaryRoles.Value)
+		assert.Equal(t, "some comment", userDetails.Comment.Value)
+		assert.Equal(t, string(sdk.UserTypeLegacyService), userDetails.Type.Value)
+		assert.NotEmpty(t, userDetails.Password.Value)
+		assert.Equal(t, true, userDetails.MustChangePassword.Value)
+
+		assert.Equal(t, "", userDetails.FirstName.Value)
+		assert.Equal(t, "", userDetails.MiddleName.Value)
+		assert.Equal(t, "", userDetails.LastName.Value)
+		assert.Nil(t, userDetails.MinsToBypassMfa.Value)
+
+		user, err := client.Users.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasName(user.Name).
+			HasType(string(sdk.UserTypeLegacyService)).
+			HasCreatedOnNotEmpty().
+			// login name is always case-insensitive
+			HasLoginName(strings.ToUpper(newValue)).
+			HasDisplayName(newValue).
+			HasFirstName("").
+			HasLastName("").
+			HasEmail(email).
+			HasMinsToUnlock("14").
+			HasDaysToExpiryNotEmpty().
+			HasComment("some comment").
+			HasDisabled(true).
+			HasMustChangePassword(true).
+			HasSnowflakeLock(false).
+			HasDefaultWarehouse(warehouseId.Name()).
+			HasDefaultNamespaceId(schemaId).
+			HasDefaultRole(roleId.Name()).
+			HasDefaultSecondaryRoles(`["ALL"]`).
+			HasExtAuthnDuo(false).
+			HasExtAuthnUid("").
+			HasMinsToBypassMfa("").
+			HasOwner(currentRole.Name()).
+			HasLastSuccessLoginEmpty().
+			HasExpiresAtTimeNotEmpty().
+			HasLockedUntilTimeNotEmpty().
+			HasHasPassword(true).
+			HasHasRsaPublicKey(true),
+		)
+	})
+
+	incorrectObjectPropertiesForServiceType := []struct {
+		property             string
+		userObjectProperties *sdk.UserObjectProperties
+	}{
+		{property: "MINS_TO_BYPASS_MFA", userObjectProperties: &sdk.UserObjectProperties{MinsToBypassMFA: sdk.Int(30)}},
+		{property: "MUST_CHANGE_PASSWORD", userObjectProperties: &sdk.UserObjectProperties{MustChangePassword: sdk.Bool(true)}},
+		{property: "FIRST_NAME", userObjectProperties: &sdk.UserObjectProperties{FirstName: sdk.String(newValue)}},
+		{property: "MIDDLE_NAME", userObjectProperties: &sdk.UserObjectProperties{MiddleName: sdk.String(newValue)}},
+		{property: "LAST_NAME", userObjectProperties: &sdk.UserObjectProperties{LastName: sdk.String(newValue)}},
+		{property: "PASSWORD", userObjectProperties: &sdk.UserObjectProperties{Password: sdk.String(password)}},
+	}
+
+	for _, tt := range incorrectObjectPropertiesForServiceType {
+		tt := tt
+		t.Run(fmt.Sprintf("create: incorrect object property %s - type service", tt.property), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+			tt.userObjectProperties.Type = sdk.Pointer(sdk.UserTypeService)
+			createOpts := &sdk.CreateUserOptions{ObjectProperties: tt.userObjectProperties}
+
+			err := client.Users.Create(ctx, id, createOpts)
+			require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=SERVICE.", tt.property))
+		})
+	}
+
+	incorrectObjectPropertiesForLegacyServiceType := []struct {
+		property             string
+		userObjectProperties *sdk.UserObjectProperties
+	}{
+		{property: "MINS_TO_BYPASS_MFA", userObjectProperties: &sdk.UserObjectProperties{MinsToBypassMFA: sdk.Int(30)}},
+		{property: "FIRST_NAME", userObjectProperties: &sdk.UserObjectProperties{FirstName: sdk.String(newValue)}},
+		{property: "MIDDLE_NAME", userObjectProperties: &sdk.UserObjectProperties{MiddleName: sdk.String(newValue)}},
+		{property: "LAST_NAME", userObjectProperties: &sdk.UserObjectProperties{LastName: sdk.String(newValue)}},
+	}
+
+	for _, tt := range incorrectObjectPropertiesForLegacyServiceType {
+		tt := tt
+		t.Run(fmt.Sprintf("create: incorrect object property %s - type legacy service", tt.property), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+
+			tt.userObjectProperties.Type = sdk.Pointer(sdk.UserTypeLegacyService)
+			createOpts := &sdk.CreateUserOptions{ObjectProperties: tt.userObjectProperties}
+
+			err := client.Users.Create(ctx, id, createOpts)
+			require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=LEGACY_SERVICE.", tt.property))
+		})
+	}
 
 	t.Run("create: set mins to bypass mfa to negative manually", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
@@ -501,85 +745,91 @@ func TestInt_Users(t *testing.T) {
 		assert.Equal(t, randomWithHyphenAndMixedCase, userDetails.DefaultRole.Value)
 	})
 
-	t.Run("create: with all parameters set", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+	for _, userType := range sdk.AllUserTypes {
+		userType := userType
+		t.Run(fmt.Sprintf("create: with all parameters set - type %s", userType), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-		opts := &sdk.CreateUserOptions{
-			SessionParameters: &sdk.SessionParameters{
-				AbortDetachedQuery:                       sdk.Bool(true),
-				Autocommit:                               sdk.Bool(false),
-				BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
-				BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
-				ClientMemoryLimit:                        sdk.Int(1024),
-				ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
-				ClientPrefetchThreads:                    sdk.Int(2),
-				ClientResultChunkSize:                    sdk.Int(48),
-				ClientResultColumnCaseInsensitive:        sdk.Bool(true),
-				ClientSessionKeepAlive:                   sdk.Bool(true),
-				ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
-				ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
-				DateInputFormat:                          sdk.String("YYYY-MM-DD"),
-				DateOutputFormat:                         sdk.String("YY-MM-DD"),
-				EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
-				ErrorOnNondeterministicMerge:             sdk.Bool(false),
-				ErrorOnNondeterministicUpdate:            sdk.Bool(true),
-				GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
-				GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
-				JdbcTreatDecimalAsInt:                    sdk.Bool(false),
-				JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
-				JdbcUseSessionTimezone:                   sdk.Bool(false),
-				JSONIndent:                               sdk.Int(4),
-				LockTimeout:                              sdk.Int(21222),
-				LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
-				MultiStatementCount:                      sdk.Int(0),
-				NoorderSequenceAsDefault:                 sdk.Bool(false),
-				OdbcTreatDecimalAsInt:                    sdk.Bool(true),
-				QueryTag:                                 sdk.String("some_tag"),
-				QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
-				RowsPerResultset:                         sdk.Int(2),
-				S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
-				SearchPath:                               sdk.String("$public, $current"),
-				SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
-				StatementQueuedTimeoutInSeconds:          sdk.Int(10),
-				StatementTimeoutInSeconds:                sdk.Int(10),
-				StrictJSONOutput:                         sdk.Bool(true),
-				TimestampDayIsAlways24h:                  sdk.Bool(true),
-				TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
-				TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
-				TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
-				TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
-				TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
-				TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
-				Timezone:                                 sdk.String("Europe/Warsaw"),
-				TimeInputFormat:                          sdk.String("HH24:MI"),
-				TimeOutputFormat:                         sdk.String("HH24:MI"),
-				TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
-				TransactionAbortOnError:                  sdk.Bool(true),
-				TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
-				TwoDigitCenturyStart:                     sdk.Int(1980),
-				UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
-				UseCachedResult:                          sdk.Bool(false),
-				WeekOfYearPolicy:                         sdk.Int(1),
-				WeekStart:                                sdk.Int(1),
-			},
-			ObjectParameters: &sdk.UserObjectParameters{
-				EnableUnredactedQuerySyntaxError: sdk.Bool(true),
-				NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
-				PreventUnloadToInternalStages:    sdk.Bool(true),
-			},
-		}
+			opts := &sdk.CreateUserOptions{
+				ObjectProperties: &sdk.UserObjectProperties{
+					Type: sdk.Pointer(userType),
+				},
+				SessionParameters: &sdk.SessionParameters{
+					AbortDetachedQuery:                       sdk.Bool(true),
+					Autocommit:                               sdk.Bool(false),
+					BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
+					BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
+					ClientMemoryLimit:                        sdk.Int(1024),
+					ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+					ClientPrefetchThreads:                    sdk.Int(2),
+					ClientResultChunkSize:                    sdk.Int(48),
+					ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+					ClientSessionKeepAlive:                   sdk.Bool(true),
+					ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
+					ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
+					DateInputFormat:                          sdk.String("YYYY-MM-DD"),
+					DateOutputFormat:                         sdk.String("YY-MM-DD"),
+					EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
+					ErrorOnNondeterministicMerge:             sdk.Bool(false),
+					ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+					GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
+					GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
+					JdbcTreatDecimalAsInt:                    sdk.Bool(false),
+					JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+					JdbcUseSessionTimezone:                   sdk.Bool(false),
+					JSONIndent:                               sdk.Int(4),
+					LockTimeout:                              sdk.Int(21222),
+					LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
+					MultiStatementCount:                      sdk.Int(0),
+					NoorderSequenceAsDefault:                 sdk.Bool(false),
+					OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+					QueryTag:                                 sdk.String("some_tag"),
+					QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+					RowsPerResultset:                         sdk.Int(2),
+					S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
+					SearchPath:                               sdk.String("$public, $current"),
+					SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
+					StatementQueuedTimeoutInSeconds:          sdk.Int(10),
+					StatementTimeoutInSeconds:                sdk.Int(10),
+					StrictJSONOutput:                         sdk.Bool(true),
+					TimestampDayIsAlways24h:                  sdk.Bool(true),
+					TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
+					TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+					TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+					TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
+					TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
+					TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
+					Timezone:                                 sdk.String("Europe/Warsaw"),
+					TimeInputFormat:                          sdk.String("HH24:MI"),
+					TimeOutputFormat:                         sdk.String("HH24:MI"),
+					TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
+					TransactionAbortOnError:                  sdk.Bool(true),
+					TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
+					TwoDigitCenturyStart:                     sdk.Int(1980),
+					UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
+					UseCachedResult:                          sdk.Bool(false),
+					WeekOfYearPolicy:                         sdk.Int(1),
+					WeekStart:                                sdk.Int(1),
+				},
+				ObjectParameters: &sdk.UserObjectParameters{
+					EnableUnredactedQuerySyntaxError: sdk.Bool(true),
+					NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
+					PreventUnloadToInternalStages:    sdk.Bool(true),
+				},
+			}
 
-		err := client.Users.Create(ctx, id, opts)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+			err := client.Users.Create(ctx, id, opts)
+			require.NoError(t, err)
+			t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
 
-		assertParametersSet(objectparametersassert.UserParameters(t, id))
+			assertParametersSet(objectparametersassert.UserParameters(t, id))
 
-		// check that ShowParameters works too
-		parameters, err := client.Users.ShowParameters(ctx, id)
-		require.NoError(t, err)
-		assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
-	})
+			// check that ShowParameters works too
+			parameters, err := client.Users.ShowParameters(ctx, id)
+			require.NoError(t, err)
+			assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
+		})
+	}
 
 	t.Run("create: with all parameters default", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
@@ -726,6 +976,366 @@ func TestInt_Users(t *testing.T) {
 		)
 	})
 
+	t.Run("alter: set and unset object properties - type service", func(t *testing.T) {
+		user, userCleanup := testClientHelper().User.CreateServiceUser(t)
+		t.Cleanup(userCleanup)
+
+		currentRole := testClientHelper().Context.CurrentRole(t)
+
+		assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
+			HasDefaults(user.Name).
+			HasDisplayName(user.Name).
+			HasOwner(currentRole.Name()),
+		)
+
+		// omitting FirstName, MiddleName, LastName, Password, MustChangePassword, MinsToBypassMFA, and DisableMfa
+		alterOpts := &sdk.AlterUserOptions{Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					LoginName:             sdk.String(newValue),
+					DisplayName:           sdk.String(newValue),
+					Email:                 sdk.String(email),
+					Disable:               sdk.Bool(true),
+					DaysToExpiry:          sdk.Int(5),
+					MinsToUnlock:          sdk.Int(15),
+					DefaultWarehouse:      sdk.Pointer(warehouseId),
+					DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
+					DefaultRole:           sdk.Pointer(roleId),
+					DefaultSecondaryRoles: &sdk.SecondaryRoles{All: sdk.Bool(true)},
+					RSAPublicKey:          sdk.String(key),
+					RSAPublicKey2:         sdk.String(key2),
+					Comment:               sdk.String("some comment"),
+				},
+			},
+		}}
+
+		err := client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasName(user.Name).
+			HasCreatedOnNotEmpty().
+			// login name is always case-insensitive
+			HasLoginName(strings.ToUpper(newValue)).
+			HasDisplayName(newValue).
+			HasFirstName("").
+			HasLastName("").
+			HasEmail(email).
+			HasMinsToUnlock("14").
+			HasDaysToExpiryNotEmpty().
+			HasComment("some comment").
+			HasDisabled(true).
+			HasMustChangePassword(false).
+			HasSnowflakeLock(false).
+			HasDefaultWarehouse(warehouseId.Name()).
+			HasDefaultNamespaceId(schemaId).
+			HasDefaultRole(roleId.Name()).
+			HasDefaultSecondaryRoles(`["ALL"]`).
+			HasExtAuthnDuo(false).
+			HasExtAuthnUid("").
+			HasMinsToBypassMfa("").
+			HasOwner(currentRole.Name()).
+			HasLastSuccessLoginEmpty().
+			HasExpiresAtTimeNotEmpty().
+			HasLockedUntilTimeNotEmpty().
+			HasHasPassword(false).
+			HasHasRsaPublicKey(true),
+		)
+
+		alterOpts = &sdk.AlterUserOptions{Unset: &sdk.UserUnset{
+			ObjectProperties: &sdk.UserObjectPropertiesUnset{
+				LoginName:             sdk.Bool(true),
+				DisplayName:           sdk.Bool(true),
+				Email:                 sdk.Bool(true),
+				Disable:               sdk.Bool(true),
+				DaysToExpiry:          sdk.Bool(true),
+				MinsToUnlock:          sdk.Bool(true),
+				DefaultWarehouse:      sdk.Bool(true),
+				DefaultNamespace:      sdk.Bool(true),
+				DefaultRole:           sdk.Bool(true),
+				DefaultSecondaryRoles: sdk.Bool(true),
+				RSAPublicKey:          sdk.Bool(true),
+				RSAPublicKey2:         sdk.Bool(true),
+				Comment:               sdk.Bool(true),
+			},
+		}}
+
+		err = client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasDefaults(user.Name).
+			HasDisplayName("").
+			HasOwner(currentRole.Name()),
+		)
+	})
+
+	t.Run("alter: set and unset object properties - type legacy service", func(t *testing.T) {
+		user, userCleanup := testClientHelper().User.CreateLegacyServiceUser(t)
+		t.Cleanup(userCleanup)
+
+		currentRole := testClientHelper().Context.CurrentRole(t)
+
+		assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
+			HasDefaults(user.Name).
+			HasDisplayName(user.Name).
+			HasOwner(currentRole.Name()),
+		)
+
+		// omitting FirstName, MiddleName, LastName, MinsToBypassMFA, and DisableMfa
+		alterOpts := &sdk.AlterUserOptions{Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					Password:              sdk.String(password),
+					MustChangePassword:    sdk.Bool(true),
+					LoginName:             sdk.String(newValue),
+					DisplayName:           sdk.String(newValue),
+					Email:                 sdk.String(email),
+					Disable:               sdk.Bool(true),
+					DaysToExpiry:          sdk.Int(5),
+					MinsToUnlock:          sdk.Int(15),
+					DefaultWarehouse:      sdk.Pointer(warehouseId),
+					DefaultNamespace:      sdk.Pointer(schemaIdObjectIdentifier),
+					DefaultRole:           sdk.Pointer(roleId),
+					DefaultSecondaryRoles: &sdk.SecondaryRoles{All: sdk.Bool(true)},
+					RSAPublicKey:          sdk.String(key),
+					RSAPublicKey2:         sdk.String(key2),
+					Comment:               sdk.String("some comment"),
+				},
+			},
+		}}
+
+		err := client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasName(user.Name).
+			HasCreatedOnNotEmpty().
+			// login name is always case-insensitive
+			HasLoginName(strings.ToUpper(newValue)).
+			HasDisplayName(newValue).
+			HasFirstName("").
+			HasLastName("").
+			HasEmail(email).
+			HasMinsToUnlock("14").
+			HasDaysToExpiryNotEmpty().
+			HasComment("some comment").
+			HasDisabled(true).
+			HasMustChangePassword(true).
+			HasSnowflakeLock(false).
+			HasDefaultWarehouse(warehouseId.Name()).
+			HasDefaultNamespaceId(schemaId).
+			HasDefaultRole(roleId.Name()).
+			HasDefaultSecondaryRoles(`["ALL"]`).
+			HasExtAuthnDuo(false).
+			HasExtAuthnUid("").
+			HasMinsToBypassMfa("").
+			HasOwner(currentRole.Name()).
+			HasLastSuccessLoginEmpty().
+			HasExpiresAtTimeNotEmpty().
+			HasLockedUntilTimeNotEmpty().
+			HasHasPassword(true).
+			HasHasRsaPublicKey(true),
+		)
+
+		alterOpts = &sdk.AlterUserOptions{Unset: &sdk.UserUnset{
+			ObjectProperties: &sdk.UserObjectPropertiesUnset{
+				Password:              sdk.Bool(true),
+				MustChangePassword:    sdk.Bool(true),
+				LoginName:             sdk.Bool(true),
+				DisplayName:           sdk.Bool(true),
+				Email:                 sdk.Bool(true),
+				Disable:               sdk.Bool(true),
+				DaysToExpiry:          sdk.Bool(true),
+				MinsToUnlock:          sdk.Bool(true),
+				DefaultWarehouse:      sdk.Bool(true),
+				DefaultNamespace:      sdk.Bool(true),
+				DefaultRole:           sdk.Bool(true),
+				DefaultSecondaryRoles: sdk.Bool(true),
+				RSAPublicKey:          sdk.Bool(true),
+				RSAPublicKey2:         sdk.Bool(true),
+				Comment:               sdk.Bool(true),
+			},
+		}}
+
+		err = client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasDefaults(user.Name).
+			HasDisplayName("").
+			HasOwner(currentRole.Name()),
+		)
+	})
+
+	t.Run("alter: unset type", func(t *testing.T) {
+		user, userCleanup := testClientHelper().User.CreateServiceUser(t)
+		t.Cleanup(userCleanup)
+
+		assertions.AssertThatObject(t, objectassert.UserFromObject(t, user).
+			HasType(string(sdk.UserTypeService)),
+		)
+
+		alterOpts := &sdk.AlterUserOptions{Unset: &sdk.UserUnset{
+			ObjectProperties: &sdk.UserObjectPropertiesUnset{
+				Type: sdk.Bool(true),
+			},
+		}}
+
+		err := client.Users.Alter(ctx, user.ID(), alterOpts)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.User(t, user.ID()).
+			HasType(""),
+		)
+	})
+
+	incorrectAlterForServiceType := []struct {
+		property           string
+		alterSet           *sdk.UserAlterObjectProperties
+		alterUnset         *sdk.UserObjectPropertiesUnset
+		expectNoUnsetError bool
+	}{
+		{
+			property:   "MINS_TO_BYPASS_MFA",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{MinsToBypassMFA: sdk.Int(30)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{MinsToBypassMFA: sdk.Bool(true)},
+			// unset for MINS_TO_BYPASS_MFA is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "MUST_CHANGE_PASSWORD",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{MustChangePassword: sdk.Bool(true)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{MustChangePassword: sdk.Bool(true)},
+		},
+		{
+			property:   "FIRST_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{FirstName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{FirstName: sdk.Bool(true)},
+			// unset for FIRST_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "MIDDLE_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{MiddleName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{MiddleName: sdk.Bool(true)},
+			// unset for MIDDLE_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "LAST_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{LastName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{LastName: sdk.Bool(true)},
+			// unset for LAST_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "PASSWORD",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{Password: sdk.String(password)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{Password: sdk.Bool(true)},
+			// unset for PASSWORD is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "DISABLE_MFA",
+			alterSet:   &sdk.UserAlterObjectProperties{DisableMfa: sdk.Bool(true)},
+			alterUnset: &sdk.UserObjectPropertiesUnset{DisableMfa: sdk.Bool(true)},
+		},
+	}
+
+	for _, tt := range incorrectAlterForServiceType {
+		tt := tt
+		t.Run(fmt.Sprintf("alter: set and unset incorrect object property %s - type service", tt.property), func(t *testing.T) {
+			serviceUser, serviceUserCleanup := testClientHelper().User.CreateServiceUser(t)
+			t.Cleanup(serviceUserCleanup)
+
+			alterSet := &sdk.AlterUserOptions{Set: &sdk.UserSet{
+				ObjectProperties: tt.alterSet,
+			}}
+
+			err := client.Users.Alter(ctx, serviceUser.ID(), alterSet)
+			require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=SERVICE.", tt.property))
+
+			alterUnset := &sdk.AlterUserOptions{Unset: &sdk.UserUnset{
+				ObjectProperties: tt.alterUnset,
+			}}
+
+			err = client.Users.Alter(ctx, serviceUser.ID(), alterUnset)
+			if tt.expectNoUnsetError {
+				require.Nil(t, err)
+			} else {
+				require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=SERVICE.", tt.property))
+			}
+		})
+	}
+
+	incorrectAlterForLegacyServiceType := []struct {
+		property           string
+		alterSet           *sdk.UserAlterObjectProperties
+		alterUnset         *sdk.UserObjectPropertiesUnset
+		expectNoUnsetError bool
+	}{
+		{
+			property:   "MINS_TO_BYPASS_MFA",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{MinsToBypassMFA: sdk.Int(30)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{MinsToBypassMFA: sdk.Bool(true)},
+			// unset for MINS_TO_BYPASS_MFA is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "FIRST_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{FirstName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{FirstName: sdk.Bool(true)},
+			// unset for FIRST_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "MIDDLE_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{MiddleName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{MiddleName: sdk.Bool(true)},
+			// unset for MIDDLE_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "LAST_NAME",
+			alterSet:   &sdk.UserAlterObjectProperties{UserObjectProperties: sdk.UserObjectProperties{LastName: sdk.String(newValue)}},
+			alterUnset: &sdk.UserObjectPropertiesUnset{LastName: sdk.Bool(true)},
+			// unset for LAST_NAME is not returning an error from Snowflake
+			expectNoUnsetError: true,
+		},
+		{
+			property:   "DISABLE_MFA",
+			alterSet:   &sdk.UserAlterObjectProperties{DisableMfa: sdk.Bool(true)},
+			alterUnset: &sdk.UserObjectPropertiesUnset{DisableMfa: sdk.Bool(true)},
+		},
+	}
+
+	for _, tt := range incorrectAlterForLegacyServiceType {
+		tt := tt
+		t.Run(fmt.Sprintf("alter: set and unset incorrect object property %s - type legacy service", tt.property), func(t *testing.T) {
+			legacyServiceUser, legacyServiceUserCleanup := testClientHelper().User.CreateLegacyServiceUser(t)
+			t.Cleanup(legacyServiceUserCleanup)
+
+			alterSet := &sdk.AlterUserOptions{Set: &sdk.UserSet{
+				ObjectProperties: tt.alterSet,
+			}}
+
+			err := client.Users.Alter(ctx, legacyServiceUser.ID(), alterSet)
+			require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=LEGACY_SERVICE.", tt.property))
+
+			alterUnset := &sdk.AlterUserOptions{Unset: &sdk.UserUnset{
+				ObjectProperties: tt.alterUnset,
+			}}
+
+			err = client.Users.Alter(ctx, legacyServiceUser.ID(), alterUnset)
+			if tt.expectNoUnsetError {
+				require.Nil(t, err)
+			} else {
+				require.ErrorContains(t, err, fmt.Sprintf("Cannot set %s on users with TYPE=LEGACY_SERVICE.", tt.property))
+			}
+		})
+	}
+
 	t.Run("set and unset authentication policy", func(t *testing.T) {
 		authenticationPolicyTest, authenticationPolicyCleanup := testClientHelper().AuthenticationPolicy.Create(t)
 		t.Cleanup(authenticationPolicyCleanup)
@@ -761,173 +1371,180 @@ func TestInt_Users(t *testing.T) {
 		require.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	})
 
-	t.Run("alter: set and unset parameters", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+	for _, userType := range sdk.AllUserTypes {
+		userType := userType
+		t.Run(fmt.Sprintf("alter: set and unset parameters - type %s", userType), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-		err := client.Users.Create(ctx, id, nil)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
-
-		alterOpts := &sdk.AlterUserOptions{
-			Set: &sdk.UserSet{
-				SessionParameters: &sdk.SessionParameters{
-					AbortDetachedQuery:                       sdk.Bool(true),
-					Autocommit:                               sdk.Bool(false),
-					BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
-					BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
-					ClientMemoryLimit:                        sdk.Int(1024),
-					ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
-					ClientPrefetchThreads:                    sdk.Int(2),
-					ClientResultChunkSize:                    sdk.Int(48),
-					ClientResultColumnCaseInsensitive:        sdk.Bool(true),
-					ClientSessionKeepAlive:                   sdk.Bool(true),
-					ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
-					ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
-					DateInputFormat:                          sdk.String("YYYY-MM-DD"),
-					DateOutputFormat:                         sdk.String("YY-MM-DD"),
-					EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
-					ErrorOnNondeterministicMerge:             sdk.Bool(false),
-					ErrorOnNondeterministicUpdate:            sdk.Bool(true),
-					GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
-					GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
-					JdbcTreatDecimalAsInt:                    sdk.Bool(false),
-					JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
-					JdbcUseSessionTimezone:                   sdk.Bool(false),
-					JSONIndent:                               sdk.Int(4),
-					LockTimeout:                              sdk.Int(21222),
-					LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
-					MultiStatementCount:                      sdk.Int(0),
-					NoorderSequenceAsDefault:                 sdk.Bool(false),
-					OdbcTreatDecimalAsInt:                    sdk.Bool(true),
-					QueryTag:                                 sdk.String("some_tag"),
-					QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
-					RowsPerResultset:                         sdk.Int(2),
-					S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
-					SearchPath:                               sdk.String("$public, $current"),
-					SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
-					StatementQueuedTimeoutInSeconds:          sdk.Int(10),
-					StatementTimeoutInSeconds:                sdk.Int(10),
-					StrictJSONOutput:                         sdk.Bool(true),
-					TimestampDayIsAlways24h:                  sdk.Bool(true),
-					TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
-					TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
-					TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
-					TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
-					TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
-					TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
-					Timezone:                                 sdk.String("Europe/Warsaw"),
-					TimeInputFormat:                          sdk.String("HH24:MI"),
-					TimeOutputFormat:                         sdk.String("HH24:MI"),
-					TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
-					TransactionAbortOnError:                  sdk.Bool(true),
-					TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
-					TwoDigitCenturyStart:                     sdk.Int(1980),
-					UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
-					UseCachedResult:                          sdk.Bool(false),
-					WeekOfYearPolicy:                         sdk.Int(1),
-					WeekStart:                                sdk.Int(1),
+			err := client.Users.Create(ctx, id, &sdk.CreateUserOptions{
+				ObjectProperties: &sdk.UserObjectProperties{
+					Type: sdk.Pointer(userType),
 				},
-				ObjectParameters: &sdk.UserObjectParameters{
-					EnableUnredactedQuerySyntaxError: sdk.Bool(true),
-					NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
-					PreventUnloadToInternalStages:    sdk.Bool(true),
+			})
+			require.NoError(t, err)
+			t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
+
+			alterOpts := &sdk.AlterUserOptions{
+				Set: &sdk.UserSet{
+					SessionParameters: &sdk.SessionParameters{
+						AbortDetachedQuery:                       sdk.Bool(true),
+						Autocommit:                               sdk.Bool(false),
+						BinaryInputFormat:                        sdk.Pointer(sdk.BinaryInputFormatUTF8),
+						BinaryOutputFormat:                       sdk.Pointer(sdk.BinaryOutputFormatBase64),
+						ClientMemoryLimit:                        sdk.Int(1024),
+						ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+						ClientPrefetchThreads:                    sdk.Int(2),
+						ClientResultChunkSize:                    sdk.Int(48),
+						ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+						ClientSessionKeepAlive:                   sdk.Bool(true),
+						ClientSessionKeepAliveHeartbeatFrequency: sdk.Int(2400),
+						ClientTimestampTypeMapping:               sdk.Pointer(sdk.ClientTimestampTypeMappingNtz),
+						DateInputFormat:                          sdk.String("YYYY-MM-DD"),
+						DateOutputFormat:                         sdk.String("YY-MM-DD"),
+						EnableUnloadPhysicalTypeOptimization:     sdk.Bool(false),
+						ErrorOnNondeterministicMerge:             sdk.Bool(false),
+						ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+						GeographyOutputFormat:                    sdk.Pointer(sdk.GeographyOutputFormatWKB),
+						GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
+						JdbcTreatDecimalAsInt:                    sdk.Bool(false),
+						JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+						JdbcUseSessionTimezone:                   sdk.Bool(false),
+						JSONIndent:                               sdk.Int(4),
+						LockTimeout:                              sdk.Int(21222),
+						LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
+						MultiStatementCount:                      sdk.Int(0),
+						NoorderSequenceAsDefault:                 sdk.Bool(false),
+						OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+						QueryTag:                                 sdk.String("some_tag"),
+						QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+						RowsPerResultset:                         sdk.Int(2),
+						S3StageVpceDnsName:                       sdk.String("vpce-id.s3.region.vpce.amazonaws.com"),
+						SearchPath:                               sdk.String("$public, $current"),
+						SimulatedDataSharingConsumer:             sdk.String("some_consumer"),
+						StatementQueuedTimeoutInSeconds:          sdk.Int(10),
+						StatementTimeoutInSeconds:                sdk.Int(10),
+						StrictJSONOutput:                         sdk.Bool(true),
+						TimestampDayIsAlways24h:                  sdk.Bool(true),
+						TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
+						TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+						TimestampNTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
+						TimestampOutputFormat:                    sdk.String("YYYY-MM-DD HH24:MI:SS"),
+						TimestampTypeMapping:                     sdk.Pointer(sdk.TimestampTypeMappingLtz),
+						TimestampTZOutputFormat:                  sdk.String("YYYY-MM-DD HH24:MI:SS"),
+						Timezone:                                 sdk.String("Europe/Warsaw"),
+						TimeInputFormat:                          sdk.String("HH24:MI"),
+						TimeOutputFormat:                         sdk.String("HH24:MI"),
+						TraceLevel:                               sdk.Pointer(sdk.TraceLevelOnEvent),
+						TransactionAbortOnError:                  sdk.Bool(true),
+						TransactionDefaultIsolationLevel:         sdk.Pointer(sdk.TransactionDefaultIsolationLevelReadCommitted),
+						TwoDigitCenturyStart:                     sdk.Int(1980),
+						UnsupportedDDLAction:                     sdk.Pointer(sdk.UnsupportedDDLActionFail),
+						UseCachedResult:                          sdk.Bool(false),
+						WeekOfYearPolicy:                         sdk.Int(1),
+						WeekStart:                                sdk.Int(1),
+					},
+					ObjectParameters: &sdk.UserObjectParameters{
+						EnableUnredactedQuerySyntaxError: sdk.Bool(true),
+						NetworkPolicy:                    sdk.Pointer(networkPolicy.ID()),
+						PreventUnloadToInternalStages:    sdk.Bool(true),
+					},
 				},
-			},
-		}
+			}
 
-		err = client.Users.Alter(ctx, id, alterOpts)
-		require.NoError(t, err)
+			err = client.Users.Alter(ctx, id, alterOpts)
+			require.NoError(t, err)
 
-		assertParametersSet(objectparametersassert.UserParameters(t, id))
+			assertParametersSet(objectparametersassert.UserParameters(t, id))
 
-		// check that ShowParameters works too
-		parameters, err := client.Users.ShowParameters(ctx, id)
-		require.NoError(t, err)
-		assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
+			// check that ShowParameters works too
+			parameters, err := client.Users.ShowParameters(ctx, id)
+			require.NoError(t, err)
+			assertParametersSet(objectparametersassert.UserParametersPrefetched(t, id, parameters))
 
-		alterOpts = &sdk.AlterUserOptions{
-			Unset: &sdk.UserUnset{
-				SessionParameters: &sdk.SessionParametersUnset{
-					AbortDetachedQuery:                       sdk.Bool(true),
-					Autocommit:                               sdk.Bool(true),
-					BinaryInputFormat:                        sdk.Bool(true),
-					BinaryOutputFormat:                       sdk.Bool(true),
-					ClientMemoryLimit:                        sdk.Bool(true),
-					ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
-					ClientPrefetchThreads:                    sdk.Bool(true),
-					ClientResultChunkSize:                    sdk.Bool(true),
-					ClientResultColumnCaseInsensitive:        sdk.Bool(true),
-					ClientSessionKeepAlive:                   sdk.Bool(true),
-					ClientSessionKeepAliveHeartbeatFrequency: sdk.Bool(true),
-					ClientTimestampTypeMapping:               sdk.Bool(true),
-					DateInputFormat:                          sdk.Bool(true),
-					DateOutputFormat:                         sdk.Bool(true),
-					EnableUnloadPhysicalTypeOptimization:     sdk.Bool(true),
-					ErrorOnNondeterministicMerge:             sdk.Bool(true),
-					ErrorOnNondeterministicUpdate:            sdk.Bool(true),
-					GeographyOutputFormat:                    sdk.Bool(true),
-					GeometryOutputFormat:                     sdk.Bool(true),
-					JdbcTreatDecimalAsInt:                    sdk.Bool(true),
-					JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
-					JdbcUseSessionTimezone:                   sdk.Bool(true),
-					JSONIndent:                               sdk.Bool(true),
-					LockTimeout:                              sdk.Bool(true),
-					LogLevel:                                 sdk.Bool(true),
-					MultiStatementCount:                      sdk.Bool(true),
-					NoorderSequenceAsDefault:                 sdk.Bool(true),
-					OdbcTreatDecimalAsInt:                    sdk.Bool(true),
-					QueryTag:                                 sdk.Bool(true),
-					QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
-					RowsPerResultset:                         sdk.Bool(true),
-					S3StageVpceDnsName:                       sdk.Bool(true),
-					SearchPath:                               sdk.Bool(true),
-					SimulatedDataSharingConsumer:             sdk.Bool(true),
-					StatementQueuedTimeoutInSeconds:          sdk.Bool(true),
-					StatementTimeoutInSeconds:                sdk.Bool(true),
-					StrictJSONOutput:                         sdk.Bool(true),
-					TimestampDayIsAlways24h:                  sdk.Bool(true),
-					TimestampInputFormat:                     sdk.Bool(true),
-					TimestampLTZOutputFormat:                 sdk.Bool(true),
-					TimestampNTZOutputFormat:                 sdk.Bool(true),
-					TimestampOutputFormat:                    sdk.Bool(true),
-					TimestampTypeMapping:                     sdk.Bool(true),
-					TimestampTZOutputFormat:                  sdk.Bool(true),
-					Timezone:                                 sdk.Bool(true),
-					TimeInputFormat:                          sdk.Bool(true),
-					TimeOutputFormat:                         sdk.Bool(true),
-					TraceLevel:                               sdk.Bool(true),
-					TransactionAbortOnError:                  sdk.Bool(true),
-					TransactionDefaultIsolationLevel:         sdk.Bool(true),
-					TwoDigitCenturyStart:                     sdk.Bool(true),
-					UnsupportedDDLAction:                     sdk.Bool(true),
-					UseCachedResult:                          sdk.Bool(true),
-					WeekOfYearPolicy:                         sdk.Bool(true),
-					WeekStart:                                sdk.Bool(true),
+			alterOpts = &sdk.AlterUserOptions{
+				Unset: &sdk.UserUnset{
+					SessionParameters: &sdk.SessionParametersUnset{
+						AbortDetachedQuery:                       sdk.Bool(true),
+						Autocommit:                               sdk.Bool(true),
+						BinaryInputFormat:                        sdk.Bool(true),
+						BinaryOutputFormat:                       sdk.Bool(true),
+						ClientMemoryLimit:                        sdk.Bool(true),
+						ClientMetadataRequestUseConnectionCtx:    sdk.Bool(true),
+						ClientPrefetchThreads:                    sdk.Bool(true),
+						ClientResultChunkSize:                    sdk.Bool(true),
+						ClientResultColumnCaseInsensitive:        sdk.Bool(true),
+						ClientSessionKeepAlive:                   sdk.Bool(true),
+						ClientSessionKeepAliveHeartbeatFrequency: sdk.Bool(true),
+						ClientTimestampTypeMapping:               sdk.Bool(true),
+						DateInputFormat:                          sdk.Bool(true),
+						DateOutputFormat:                         sdk.Bool(true),
+						EnableUnloadPhysicalTypeOptimization:     sdk.Bool(true),
+						ErrorOnNondeterministicMerge:             sdk.Bool(true),
+						ErrorOnNondeterministicUpdate:            sdk.Bool(true),
+						GeographyOutputFormat:                    sdk.Bool(true),
+						GeometryOutputFormat:                     sdk.Bool(true),
+						JdbcTreatDecimalAsInt:                    sdk.Bool(true),
+						JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
+						JdbcUseSessionTimezone:                   sdk.Bool(true),
+						JSONIndent:                               sdk.Bool(true),
+						LockTimeout:                              sdk.Bool(true),
+						LogLevel:                                 sdk.Bool(true),
+						MultiStatementCount:                      sdk.Bool(true),
+						NoorderSequenceAsDefault:                 sdk.Bool(true),
+						OdbcTreatDecimalAsInt:                    sdk.Bool(true),
+						QueryTag:                                 sdk.Bool(true),
+						QuotedIdentifiersIgnoreCase:              sdk.Bool(true),
+						RowsPerResultset:                         sdk.Bool(true),
+						S3StageVpceDnsName:                       sdk.Bool(true),
+						SearchPath:                               sdk.Bool(true),
+						SimulatedDataSharingConsumer:             sdk.Bool(true),
+						StatementQueuedTimeoutInSeconds:          sdk.Bool(true),
+						StatementTimeoutInSeconds:                sdk.Bool(true),
+						StrictJSONOutput:                         sdk.Bool(true),
+						TimestampDayIsAlways24h:                  sdk.Bool(true),
+						TimestampInputFormat:                     sdk.Bool(true),
+						TimestampLTZOutputFormat:                 sdk.Bool(true),
+						TimestampNTZOutputFormat:                 sdk.Bool(true),
+						TimestampOutputFormat:                    sdk.Bool(true),
+						TimestampTypeMapping:                     sdk.Bool(true),
+						TimestampTZOutputFormat:                  sdk.Bool(true),
+						Timezone:                                 sdk.Bool(true),
+						TimeInputFormat:                          sdk.Bool(true),
+						TimeOutputFormat:                         sdk.Bool(true),
+						TraceLevel:                               sdk.Bool(true),
+						TransactionAbortOnError:                  sdk.Bool(true),
+						TransactionDefaultIsolationLevel:         sdk.Bool(true),
+						TwoDigitCenturyStart:                     sdk.Bool(true),
+						UnsupportedDDLAction:                     sdk.Bool(true),
+						UseCachedResult:                          sdk.Bool(true),
+						WeekOfYearPolicy:                         sdk.Bool(true),
+						WeekStart:                                sdk.Bool(true),
+					},
+					ObjectParameters: &sdk.UserObjectParametersUnset{
+						EnableUnredactedQuerySyntaxError: sdk.Bool(true),
+						NetworkPolicy:                    sdk.Bool(true),
+						PreventUnloadToInternalStages:    sdk.Bool(true),
+					},
 				},
-				ObjectParameters: &sdk.UserObjectParametersUnset{
-					EnableUnredactedQuerySyntaxError: sdk.Bool(true),
-					NetworkPolicy:                    sdk.Bool(true),
-					PreventUnloadToInternalStages:    sdk.Bool(true),
-				},
-			},
-		}
+			}
 
-		err = client.Users.Alter(ctx, id, alterOpts)
-		require.NoError(t, err)
+			err = client.Users.Alter(ctx, id, alterOpts)
+			require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
-			HasAllDefaults().
-			HasAllDefaultsExplicit(),
-		)
+			assertions.AssertThatObject(t, objectparametersassert.UserParameters(t, id).
+				HasAllDefaults().
+				HasAllDefaultsExplicit(),
+			)
 
-		// check that ShowParameters works too
-		parameters, err = client.Users.ShowParameters(ctx, id)
-		require.NoError(t, err)
-		assertions.AssertThatObject(t, objectparametersassert.UserParametersPrefetched(t, id, parameters).
-			HasAllDefaults().
-			HasAllDefaultsExplicit(),
-		)
-	})
+			// check that ShowParameters works too
+			parameters, err = client.Users.ShowParameters(ctx, id)
+			require.NoError(t, err)
+			assertions.AssertThatObject(t, objectparametersassert.UserParametersPrefetched(t, id, parameters).
+				HasAllDefaults().
+				HasAllDefaultsExplicit(),
+			)
+		})
+	}
 
 	t.Run("alter: set and unset properties and parameters at the same time", func(t *testing.T) {
 		user, userCleanup := testClientHelper().User.CreateUser(t)

@@ -690,7 +690,7 @@ func TestAcc_User_issue2970(t *testing.T) {
 
 	newPass := random.Password()
 	newKey, _ := random.GenerateRSAPublicKey(t)
-	incorrectlyFormattedNewKey := fmt.Sprintf("-----BEGIN PUBLIC KEY-----\n%s-----END PUBLIC KEY-----\n", newKey)
+	incorrectlyFormattedNewKey := fmt.Sprintf("-invalid----BEGIN PUBLIC KEY-----\n%s-----END PUBLIC KEY-----\n", newKey)
 
 	userModel := model.User(resourceName, userId.Name()).
 		WithPassword(pass).
@@ -993,13 +993,47 @@ func TestAcc_User_handleExternalTypeChange(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					acc.TestClient().User.SetType(t, userId, "SERVICE")
-					objectassert.User(t, userId).HasType("SERVICE")
+					acc.TestClient().User.SetType(t, userId, sdk.UserTypeService)
+					objectassert.User(t, userId).HasType(string(sdk.UserTypeService))
 				},
 				Config: config.FromModel(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(userModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).HasNameString(userId.Name()).HasUserTypeString(""),
+					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType(""),
+				),
+			},
+			// no change should happen if the change is to PERSON explicitly
+			{
+				PreConfig: func() {
+					acc.TestClient().User.SetType(t, userId, sdk.UserTypePerson)
+					objectassert.User(t, userId).HasType("PERSON")
+				},
+				Config: config.FromModel(t, userModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).HasNameString(userId.Name()).HasUserTypeString("PERSON"),
+					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType("PERSON"),
+				),
+			},
+			// no change should happen if we fall back to default
+			{
+				PreConfig: func() {
+					acc.TestClient().User.UnsetType(t, userId)
+					objectassert.User(t, userId).HasType("")
+				},
+				Config: config.FromModel(t, userModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				Check: assert.AssertThat(t,

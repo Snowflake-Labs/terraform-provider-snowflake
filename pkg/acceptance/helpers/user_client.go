@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -28,6 +27,24 @@ func (c *UserClient) client() sdk.Users {
 func (c *UserClient) CreateUser(t *testing.T) (*sdk.User, func()) {
 	t.Helper()
 	return c.CreateUserWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{})
+}
+
+func (c *UserClient) CreateServiceUser(t *testing.T) (*sdk.User, func()) {
+	t.Helper()
+	return c.CreateUserWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{
+		ObjectProperties: &sdk.UserObjectProperties{
+			Type: sdk.Pointer(sdk.UserTypeService),
+		},
+	})
+}
+
+func (c *UserClient) CreateLegacyServiceUser(t *testing.T) (*sdk.User, func()) {
+	t.Helper()
+	return c.CreateUserWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{
+		ObjectProperties: &sdk.UserObjectProperties{
+			Type: sdk.Pointer(sdk.UserTypeLegacyService),
+		},
+	})
 }
 
 func (c *UserClient) CreateUserWithPrefix(t *testing.T, prefix string) (*sdk.User, func()) {
@@ -100,12 +117,33 @@ func (c *UserClient) SetDaysToExpiry(t *testing.T, id sdk.AccountObjectIdentifie
 	require.NoError(t, err)
 }
 
-func (c *UserClient) SetType(t *testing.T, id sdk.AccountObjectIdentifier, value string) {
+func (c *UserClient) SetType(t *testing.T, id sdk.AccountObjectIdentifier, userType sdk.UserType) {
 	t.Helper()
 	ctx := context.Background()
 
-	// TODO [SNOW-1645348]: use type from SDK
-	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf("ALTER USER %s SET TYPE = %s", id.FullyQualifiedName(), value))
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{
+		Set: &sdk.UserSet{
+			ObjectProperties: &sdk.UserAlterObjectProperties{
+				UserObjectProperties: sdk.UserObjectProperties{
+					Type: sdk.Pointer(userType),
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+}
+
+func (c *UserClient) UnsetType(t *testing.T, id sdk.AccountObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, &sdk.AlterUserOptions{
+		Unset: &sdk.UserUnset{
+			ObjectProperties: &sdk.UserObjectPropertiesUnset{
+				Type: sdk.Bool(true),
+			},
+		},
+	})
 	require.NoError(t, err)
 }
 
