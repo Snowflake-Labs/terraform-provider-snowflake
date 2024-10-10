@@ -116,7 +116,7 @@ func UpdateContextSecretWithGenericString(ctx context.Context, d *schema.Resourc
 
 		request := sdk.NewAlterSecretRequest(id)
 		setRequest := sdk.NewSetForGenericStringRequest().WithSecretString(secretString)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForGenericString(*setRequest))
+		request.WithSet(*sdk.NewSecretSetRequest().WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForGenericString(*setRequest)))
 
 		if err := client.Secrets.Alter(ctx, request); err != nil {
 			return diag.FromErr(err)

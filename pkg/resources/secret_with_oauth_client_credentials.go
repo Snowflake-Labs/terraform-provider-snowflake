@@ -142,8 +142,8 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		}
 
 		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForOAuthClientCredentialsFlowRequest().WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: oauthScopes})
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForOAuthClientCredentialsFlow(*setRequest))
+		setRequest := sdk.NewSetForOAuthClientCredentialsRequest().WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: oauthScopes})
+		request.WithSet(*sdk.NewSecretSetRequest().WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthClientCredentials(*setRequest)))
 
 		if err := client.Secrets.Alter(ctx, request); err != nil {
 			return diag.FromErr(err)

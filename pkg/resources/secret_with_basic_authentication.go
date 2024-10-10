@@ -125,7 +125,7 @@ func UpdateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.R
 
 		request := sdk.NewAlterSecretRequest(id)
 		setRequest := sdk.NewSetForBasicAuthenticationRequest().WithUsername(username)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForBasicAuthentication(*setRequest))
+		request.WithSet(*sdk.NewSecretSetRequest().WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForBasicAuthentication(*setRequest)))
 
 		if err := client.Secrets.Alter(ctx, request); err != nil {
 			return diag.FromErr(err)
@@ -137,7 +137,7 @@ func UpdateContextSecretWithBasicAuthentication(ctx context.Context, d *schema.R
 
 		request := sdk.NewAlterSecretRequest(id)
 		setRequest := sdk.NewSetForBasicAuthenticationRequest().WithPassword(password)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForBasicAuthentication(*setRequest))
+		request.WithSet(*sdk.NewSecretSetRequest().WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForBasicAuthentication(*setRequest)))
 
 		if err := client.Secrets.Alter(ctx, request); err != nil {
 			return diag.FromErr(err)

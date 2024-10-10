@@ -179,8 +179,8 @@ func UpdateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schem
 		refreshToken := d.Get("oauth_refresh_token").(string)
 
 		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForOAuthAuthorizationFlowRequest().WithOauthRefreshToken(refreshToken)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForOAuthAuthorizationFlow(*setRequest))
+		setRequest := sdk.NewSetForOAuthAuthorizationRequest().WithOauthRefreshToken(refreshToken)
+		request.WithSet(*sdk.NewSecretSetRequest().WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthAuthorization(*setRequest)))
 
 		if err := client.Secrets.Alter(ctx, request); err != nil {
 			return diag.FromErr(err)
@@ -191,8 +191,8 @@ func UpdateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schem
 		refreshTokenExpiryTime := d.Get("oauth_refresh_token_expiry_time").(string)
 
 		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForOAuthAuthorizationFlowRequest().WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForOAuthAuthorizationFlow(*setRequest))
+		setRequest := sdk.NewSetForOAuthAuthorizationRequest().WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime)
+		request.WithSet(*sdk.NewSecretSetRequest().WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthAuthorization(*setRequest)))
 
 		if err := client.Secrets.Alter(ctx, request); err != nil {
 			return diag.FromErr(err)
