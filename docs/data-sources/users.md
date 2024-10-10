@@ -162,6 +162,7 @@ Read-Only:
 - `rsa_public_key_fp` (String)
 - `snowflake_lock` (Boolean)
 - `snowflake_support` (Boolean)
+- `type` (String)
 
 
 <a id="nestedobjatt--users--parameters"></a>
