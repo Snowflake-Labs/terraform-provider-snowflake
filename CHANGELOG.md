@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.97.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.96.0...v0.97.0) (2024-10-10)
+
+
+### 🎉 **What's new:**
+
+* Add secret to sdk ([#3091](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3091)) ([7430aee](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7430aeeee8bfd59f3e48e689d37c3969ea7e367e))
+* Add service user and legacy service user resources ([#3119](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3119)) ([0e88e08](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0e88e082282adf35f605c323569908a99bd406f9))
+* Handle all Task parameters in SDK ([#3103](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3103)) ([08ae072](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/08ae0729acea25293d4143e9f70f77fe4bfbd29e))
+* Stream on external table resource ([#3122](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3122)) ([d837341](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d837341c2d18b6fbb4657ad3a1837190a8ee77d8))
+* Stream on table resource ([#3109](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3109)) ([97fa9b4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/97fa9b4485cf26c5bf93dedfe3b88f688a71b3e6))
+* Tasks v1 readiness - SDK part ([#3086](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3086)) ([0a77383](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0a77383ff51a13be40db72f4d0462fb92d0a4fbd))
+* Upgrade stream sdk ([#3105](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3105)) ([ad5fa11](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ad5fa113da84a2a1aeaa275643cd586126e6f603))
+
+
+### 🔧 **Misc**
+
+* Add pre check to each datasource ([#3065](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3065)) ([560ab6b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/560ab6b444ac461684b0d25c68bcb2d55201aba8))
+* Bump golang-ci lint to 1.61 ([#3112](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3112)) ([f23e085](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f23e085536febfddec941b49ac0033f93e8662cc))
+* Secret Validation change ([#3111](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3111)) ([666630e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/666630e4a865bebafaa95e1afb149d27fa90a935))
+
+
+### 🐛 **Bug fixes:**
+
+* Fix parsing text in view, check parenthesis in ParseSchemaObjectIdentifierWithArguments ([#3102](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3102)) ([b0a67e6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b0a67e638314e795ffd7075c302db51e6d0c73d9))
+* Try to reproduce 2679 and 3117 ([#3124](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3124)) ([ccdbc30](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ccdbc306f2a074cbabf0ba96d67e522eb82d36e7))
+
 ## [0.96.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.95.0...v0.96.0) (2024-09-18)
 
 
