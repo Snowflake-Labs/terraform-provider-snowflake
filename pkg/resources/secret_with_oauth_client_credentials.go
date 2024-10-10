@@ -75,6 +75,7 @@ func ImportSecretWithClientCredentials(ctx context.Context, d *schema.ResourceDa
 
 	return []*schema.ResourceData{d}, nil
 }
+
 func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	databaseName, schemaName, name := handleSecretCreate(d)

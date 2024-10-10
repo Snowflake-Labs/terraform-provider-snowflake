@@ -1,12 +1,12 @@
 package resources_test
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -191,7 +191,6 @@ func TestAcc_SecretWithBasicAuthentication_CreateWithEmptyCredentials(t *testing
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithBasicAuthentication),
 		Steps: []resource.TestStep{
-
 			{
 				Config: config.FromModel(t, secretModelEmptyCredentials),
 				Check: resource.ComposeTestCheckFunc(

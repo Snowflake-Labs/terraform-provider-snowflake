@@ -63,7 +63,10 @@ func ImportSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.Resou
 	logging.DebugLogger.Printf("[DEBUG] Starting secret with authorization code import")
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
-	if err := handleSecretImport(d); err != nil {
+	if err != nil {
+		return nil, err
+	}
+	if err = handleSecretImport(d); err != nil {
 		return nil, err
 	}
 

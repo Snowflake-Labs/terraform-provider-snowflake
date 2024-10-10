@@ -2,6 +2,7 @@ package resourceassert
 
 import (
 	"fmt"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 )
 
