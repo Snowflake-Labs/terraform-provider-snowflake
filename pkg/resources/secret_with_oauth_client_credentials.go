@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,7 +20,8 @@ var secretClientCredentialsSchema = func() map[string]*schema.Schema {
 			Type:             schema.TypeString,
 			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			Required:         true,
-			Description:      "Specifies the name value of the Snowflake security integration that connects Snowflake to an external service when setting Type to OAUTH2.",
+			Description:      "Specifies the name value of the Snowflake security integration that connects Snowflake to an external service.",
+			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
 		"oauth_scopes": {
 			Type:        schema.TypeSet,
@@ -36,18 +39,47 @@ func SecretWithClientCredentials() *schema.Resource {
 		ReadContext:   ReadContextSecretWithClientCredentials,
 		UpdateContext: UpdateContextSecretWithClientCredentials,
 		DeleteContext: DeleteContextSecretWithClientCredentials,
+		Description:   "Resource used to manage secret objects with OAuth Client Credentials. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
 		Schema: secretClientCredentialsSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportSecretWithClientCredentials,
 		},
-		Description: "Secret with OAuth Client Credentials where Secrets Type attribute is set to OAUTH2.",
 	}
 }
 
-func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ImportSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting secret with client credentials import")
 	client := meta.(*provider.Context).Client
-	commonCreate := handleSecretCreate(d)
+
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	if err := handleSecretImport(d); err != nil {
+		return nil, err
+	}
+	secretDescription, err := client.Secrets.Describe(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
+		return nil, err
+	}
+
+	if err := d.Set("oauth_scopes", secretDescription.OauthScopes); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	databaseName, schemaName, name := handleSecretCreate(d)
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
 	apiIntegrationString := d.Get("api_authentication").(string)
 	apiIntegration, err := sdk.ParseAccountObjectIdentifier(apiIntegrationString)
@@ -55,18 +87,17 @@ func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		return diag.FromErr(err)
 	}
 
-	id := sdk.NewSchemaObjectIdentifier(commonCreate.database, commonCreate.schema, commonCreate.name)
+	request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, apiIntegration)
 
 	stringScopes := expandStringList(d.Get("oauth_scopes").(*schema.Set).List())
 	oauthScopes := make([]sdk.ApiIntegrationScope, len(stringScopes))
 	for i, scope := range stringScopes {
 		oauthScopes[i] = sdk.ApiIntegrationScope{Scope: scope}
 	}
+	request.WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: oauthScopes})
 
-	request := sdk.NewCreateWithOAuthClientCredentialsFlowSecretRequest(id, apiIntegration).WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: oauthScopes})
-
-	if commonCreate.comment != nil {
-		request.WithComment(*commonCreate.comment)
+	if v, ok := d.GetOk("comment"); ok {
+		request.WithComment(v.(string))
 	}
 
 	err = client.Secrets.CreateWithOAuthClientCredentialsFlow(ctx, request)
@@ -79,7 +110,7 @@ func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 	return ReadContextSecretWithClientCredentials(ctx, d, meta)
 }
 
-func ReadContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -87,20 +118,21 @@ func ReadContextSecretWithClientCredentials(ctx context.Context, d *schema.Resou
 	}
 
 	secret, err := client.Secrets.ShowByID(ctx, id)
-	if secret == nil || err != nil {
+	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Warning,
-					Summary:  "Failed to retrieve secret. Target object not found. Marking the resource as removed.",
+					Summary:  "Failed to retrieve secret with client credentials. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Secret with client credentials name: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}
 		}
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Failed to retrieve secret.",
+				Summary:  "Failed to retrieve secret with client credentials.",
 				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
 			},
 		}
@@ -109,30 +141,32 @@ func ReadContextSecretWithClientCredentials(ctx context.Context, d *schema.Resou
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
 	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
 		return diag.FromErr(err)
 	}
+
 	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
 		return diag.FromErr(err)
 	}
+
 	if err = d.Set("oauth_scopes", secretDescription.OauthScopes); err != nil {
 		return diag.FromErr(err)
 	}
+
 	return nil
 }
 
-func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if request := handleSecretUpdate(id, d); request != nil {
-		if err := client.Secrets.Alter(ctx, request); err != nil {
-			return diag.FromErr(err)
-		}
-	}
+	set := &sdk.SecretSetRequest{}
+	unset := &sdk.SecretUnsetRequest{}
+	handleSecretUpdate(d, set, unset)
 
 	if d.HasChange("oauth_scopes") {
 		stringScopes := expandStringList(d.Get("oauth_scopes").(*schema.Set).List())
@@ -140,12 +174,18 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		for i, scope := range stringScopes {
 			oauthScopes[i] = sdk.ApiIntegrationScope{Scope: scope}
 		}
+		req := sdk.NewSetForOAuthClientCredentialsRequest().WithOauthScopes(*sdk.NewOauthScopesListRequest(oauthScopes))
+		set.WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthClientCredentials(*req))
+	}
 
-		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForOAuthClientCredentialsRequest().WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: oauthScopes})
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthClientCredentials(*setRequest)))
+	if !reflect.DeepEqual(*set, sdk.SecretSetRequest{}) {
+		if err := client.Secrets.Alter(ctx, sdk.NewAlterSecretRequest(id).WithSet(*set)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
-		if err := client.Secrets.Alter(ctx, request); err != nil {
+	if !reflect.DeepEqual(*unset, sdk.SecretUnsetRequest{}) {
+		if err := client.Secrets.Alter(ctx, sdk.NewAlterSecretRequest(id).WithUnset(*unset)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -153,14 +193,14 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 	return ReadContextSecretWithClientCredentials(ctx, d, meta)
 }
 
-func DeleteContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(*sdk.Bool(true))); err != nil {
+	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}
 

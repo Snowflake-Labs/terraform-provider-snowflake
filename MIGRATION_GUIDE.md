@@ -47,6 +47,16 @@ resource "snowflake_stream_on_table" "stream" {
 
 Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
 
+### *(new feature)* Secret resources
+Added a new secrets resources for managing secrets.
+We decided to split each secret flow into individual resources, i.e.:
+- `snowflake_secret_with_client_credentials`
+- `snowflake_secret_with_authorization_code_grant`
+- `snowflake_secret_with_basic_authentication`
+- `snowflake_secret_with_generic_string`
+
+See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secret). 
+
 ### *(new feature)* new snowflake_service_user and snowflake_legacy_service_user resources
 
 Release v0.95.0 introduced reworked `snowflake_user` resource. As [noted](#note-user-types), the new `SERVICE` and `LEGACY_SERVICE` user types were not supported.

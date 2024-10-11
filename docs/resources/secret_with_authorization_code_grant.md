@@ -2,12 +2,14 @@
 page_title: "snowflake_secret_with_authorization_code_grant Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Secret with OAuth authorization code grant where Secrets Type attribute is set to OAUTH2.
+  Resource used to manage secret objects with OAuth Authorization Code Grant. For more information, check secret documentation https://docs.snowflake.com/en/sql-reference/sql/create-secret.
 ---
+
+!> **V1 release candidate** This resource is a release candidate for the V1. It is on the list of remaining GA objects for V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0960--v0970) to use it.
 
 # snowflake_secret_with_authorization_code_grant (Resource)
 
-Secret with OAuth authorization code grant where Secrets Type attribute is set to OAUTH2.
+Resource used to manage secret objects with OAuth Authorization Code Grant. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).
 
 ## Example Usage
 
@@ -20,10 +22,19 @@ resource "snowflake_secret_with_authorization_code_grant" "test" {
   api_authentication              = "EXAMPLE_SECURITY_INTEGRATION_NAME"
   oauth_refresh_token             = "EXAMPLE_TOKEN"
   oauth_refresh_token_expiry_time = "2025-01-02 15:04:01"
+}
+
+# resource with all fields set
+resource "snowflake_secret_with_authorization_code_grant" "test" {
+  name                            = "EXAMPLE_SECRET"
+  database                        = "EXAMPLE_DB"
+  schema                          = "EXAMPLE_SCHEMA"
+  api_authentication              = "EXAMPLE_SECURITY_INTEGRATION_NAME"
+  oauth_refresh_token             = "EXAMPLE_TOKEN"
+  oauth_refresh_token_expiry_time = "2025-01-02 15:04:01"
   comment                         = "EXAMPLE_COMMENT"
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
@@ -32,10 +43,10 @@ resource "snowflake_secret_with_authorization_code_grant" "test" {
 
 ### Required
 
-- `api_authentication` (String) Specifies the name value of the Snowflake security integration that connects Snowflake to an external service when setting Type to OAUTH2.
+- `api_authentication` (String) Specifies the name value of the Snowflake security integration that connects Snowflake to an external service.
 - `database` (String) The database in which to create the secret Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 - `name` (String) String that specifies the identifier (i.e. name) for the secret, must be unique in your schema. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
-- `oauth_refresh_token` (String) Specifies the token as a string that is used to obtain a new access token from the OAuth authorization server when the access token expires.
+- `oauth_refresh_token` (String, Sensitive) Specifies the token as a string that is used to obtain a new access token from the OAuth authorization server when the access token expires. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `oauth_refresh_token_expiry_time` (String) Specifies the timestamp as a string when the OAuth refresh token expires. Accepted string formats: YYYY-MM-DD, YYYY-MM-DD HH:MI, YYYY-MM-DD HH:MI:SS, YYYY-MM-DD HH:MI <timezone>
 - `schema` (String) The schema in which to create the secret. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 
@@ -48,7 +59,7 @@ resource "snowflake_secret_with_authorization_code_grant" "test" {
 - `describe_output` (List of Object) Outputs the result of `DESCRIBE SECRET` for the given secret. (see [below for nested schema](#nestedatt--describe_output))
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
-- `show_output` (List of Object) Outputs the result of `SHOW SECRET` for the given secret. (see [below for nested schema](#nestedatt--show_output))
+- `show_output` (List of Object) Outputs the result of `SHOW SECRETS` for the given secret. (see [below for nested schema](#nestedatt--show_output))
 
 <a id="nestedatt--describe_output"></a>
 ### Nested Schema for `describe_output`

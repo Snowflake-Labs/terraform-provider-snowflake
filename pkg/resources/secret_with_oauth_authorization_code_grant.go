@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -19,19 +20,21 @@ var secretAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 		"oauth_refresh_token": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Specifies the token as a string that is used to obtain a new access token from the OAuth authorization server when the access token expires.",
+			Sensitive:   true,
+			Description: externalChangesNotDetectedFieldDescription("Specifies the token as a string that is used to obtain a new access token from the OAuth authorization server when the access token expires."),
 		},
 		"oauth_refresh_token_expiry_time": {
 			Type:             schema.TypeString,
 			Required:         true,
-			DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("oauth_refresh_token_expiry_time"),
+			DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("oauth_refresh_token_expiry_time"),
 			Description:      "Specifies the timestamp as a string when the OAuth refresh token expires. Accepted string formats: YYYY-MM-DD, YYYY-MM-DD HH:MI, YYYY-MM-DD HH:MI:SS, YYYY-MM-DD HH:MI <timezone>",
 		},
 		"api_authentication": {
 			Type:             schema.TypeString,
 			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			Required:         true,
-			Description:      "Specifies the name value of the Snowflake security integration that connects Snowflake to an external service when setting Type to OAUTH2.",
+			Description:      "Specifies the name value of the Snowflake security integration that connects Snowflake to an external service.",
+			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
 	}
 	return helpers.MergeMaps(secretCommonSchema, secretAuthorizationCodeGrant)
@@ -43,15 +46,15 @@ func SecretWithAuthorizationCodeGrant() *schema.Resource {
 		ReadContext:   ReadContextSecretWithAuthorizationCodeGrant,
 		UpdateContext: UpdateContextSecretWithAuthorizationCodeGrant,
 		DeleteContext: DeleteContextSecretWithAuthorizationCodeGrant,
+		Description:   "Resource used to manage secret objects with OAuth Authorization Code Grant. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
 		Schema: secretAuthorizationCodeGrantSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportSecretWithAuthorizationCodeGrant,
 		},
-		Description: "Secret with OAuth authorization code grant where Secrets Type attribute is set to OAUTH2.",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "oauth_refresh_token_expiry_time"),
+			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "oauth_refresh_token_expiry_time", "api_authentication"),
 		),
 	}
 }
@@ -59,9 +62,11 @@ func SecretWithAuthorizationCodeGrant() *schema.Resource {
 func ImportSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting secret with authorization code import")
 	client := meta.(*provider.Context).Client
-
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
+		return nil, err
+	}
+	if err = handleSecretImport(d); err != nil {
 		return nil, err
 	}
 
@@ -70,29 +75,17 @@ func ImportSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.Resou
 		return nil, err
 	}
 
-	if err := d.Set("oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.String()); err != nil {
-		return nil, err
-	}
-	if err := d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
+	if err = d.Set("oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.String()); err != nil {
 		return nil, err
 	}
 
-	secret, err := client.Secrets.ShowByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
-		return nil, err
-	}
 	return []*schema.ResourceData{d}, nil
 }
 
-func CreateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func CreateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	commonCreate := handleSecretCreate(d)
-
-	id := sdk.NewSchemaObjectIdentifier(commonCreate.database, commonCreate.schema, commonCreate.name)
+	databaseName, schemaName, name := handleSecretCreate(d)
+	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
 	apiIntegrationString := d.Get("api_authentication").(string)
 	apiIntegration, err := sdk.ParseAccountObjectIdentifier(apiIntegrationString)
@@ -118,7 +111,7 @@ func CreateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schem
 	return ReadContextSecretWithAuthorizationCodeGrant(ctx, d, meta)
 }
 
-func ReadContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -126,21 +119,22 @@ func ReadContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.
 	}
 
 	secret, err := client.Secrets.ShowByID(ctx, id)
-	if secret == nil || err != nil {
+	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Warning,
-					Summary:  "Failed to retrieve secret. Target object not found. Marking the resource as removed.",
+					Summary:  "Failed to retrieve secret with authorization code grant. Target object not found. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Secret with authorization code grant name: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}
 		}
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Failed to retrieve secret.",
-				Detail:   fmt.Sprintf("Id: %s\nError: %s", d.Id(), err),
+				Summary:  "Failed to retrieve secret with authorization code grant.",
+				Detail:   fmt.Sprintf("Secret with authorization code grant name: %s, Err: %s", id.FullyQualifiedName(), err),
 			},
 		}
 	}
@@ -149,12 +143,14 @@ func ReadContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.
 		return diag.FromErr(err)
 	}
 
-	if err = setStateToValuesFromConfig(d, secretAuthorizationCodeGrantSchema, []string{"oauth_refresh_token_expiry_time"}); err != nil {
-		return diag.FromErr(err)
-	}
 	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
 		return diag.FromErr(err)
 	}
+
+	if err = setStateToValuesFromConfig(d, secretAuthorizationCodeGrantSchema, []string{"oauth_refresh_token_expiry_time"}); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
 		return diag.FromErr(err)
 	}
@@ -162,39 +158,41 @@ func ReadContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.
 	return nil
 }
 
-func UpdateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if request := handleSecretUpdate(id, d); request != nil {
-		if err := client.Secrets.Alter(ctx, request); err != nil {
-			return diag.FromErr(err)
-		}
+	set := &sdk.SecretSetRequest{}
+	unset := &sdk.SecretUnsetRequest{}
+	handleSecretUpdate(d, set, unset)
+
+	setForFlow := &sdk.SetForFlowRequest{
+		SetForOAuthAuthorization: &sdk.SetForOAuthAuthorizationRequest{},
 	}
 
 	if d.HasChange("oauth_refresh_token") {
 		refreshToken := d.Get("oauth_refresh_token").(string)
-
-		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForOAuthAuthorizationRequest().WithOauthRefreshToken(refreshToken)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthAuthorization(*setRequest)))
-
-		if err := client.Secrets.Alter(ctx, request); err != nil {
-			return diag.FromErr(err)
-		}
+		setForFlow.SetForOAuthAuthorization.WithOauthRefreshToken(refreshToken)
+		set.WithSetForFlow(*setForFlow)
 	}
 
 	if d.HasChange("oauth_refresh_token_expiry_time") {
 		refreshTokenExpiryTime := d.Get("oauth_refresh_token_expiry_time").(string)
+		setForFlow.SetForOAuthAuthorization.WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime)
+		set.WithSetForFlow(*setForFlow)
+	}
 
-		request := sdk.NewAlterSecretRequest(id)
-		setRequest := sdk.NewSetForOAuthAuthorizationRequest().WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime)
-		request.WithSet(*sdk.NewSecretSetRequest().WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthAuthorization(*setRequest)))
+	if !reflect.DeepEqual(*set, sdk.SecretSetRequest{}) {
+		if err := client.Secrets.Alter(ctx, sdk.NewAlterSecretRequest(id).WithSet(*set)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
-		if err := client.Secrets.Alter(ctx, request); err != nil {
+	if !reflect.DeepEqual(*unset, sdk.SecretUnsetRequest{}) {
+		if err := client.Secrets.Alter(ctx, sdk.NewAlterSecretRequest(id).WithUnset(*unset)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -202,14 +200,14 @@ func UpdateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schem
 	return ReadContextSecretWithAuthorizationCodeGrant(ctx, d, meta)
 }
 
-func DeleteContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(*sdk.Bool(true))); err != nil {
+	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}
 

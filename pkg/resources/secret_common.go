@@ -1,6 +1,9 @@
 package resources
 
 import (
+	"context"
+	"errors"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,6 +13,7 @@ var secretCommonSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
+		ForceNew:         true,
 		Description:      blocklistedCharactersFieldDescription("String that specifies the identifier (i.e. name) for the secret, must be unique in your schema."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
@@ -35,7 +39,7 @@ var secretCommonSchema = map[string]*schema.Schema{
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `SHOW SECRET` for the given secret.",
+		Description: "Outputs the result of `SHOW SECRETS` for the given secret.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowSecretSchema,
 		},
@@ -51,62 +55,36 @@ var secretCommonSchema = map[string]*schema.Schema{
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
-type commonSecretCreate struct {
-	name     string
-	database string
-	schema   string
-	comment  *string
+func handleSecretImport(d *schema.ResourceData) error {
+	if _, err := ImportName[sdk.SchemaObjectIdentifier](context.Background(), d, nil); err != nil {
+		return err
+	}
+	return nil
 }
 
-func handleSecretCreate(d *schema.ResourceData) commonSecretCreate {
-	create := commonSecretCreate{
-		name:     d.Get("name").(string),
-		database: d.Get("database").(string),
-		schema:   d.Get("schema").(string),
-	}
-	if v, ok := d.GetOk("comment"); ok {
-		create.comment = sdk.Pointer(v.(string))
-	}
-
-	return create
+func handleSecretCreate(d *schema.ResourceData) (database, schema, name string) {
+	return d.Get("database").(string), d.Get("schema").(string), d.Get("name").(string)
 }
 
 func handleSecretRead(d *schema.ResourceData, id sdk.SchemaObjectIdentifier, secret *sdk.Secret, secretDescription *sdk.SecretDetails) error {
-	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
-	}
-	if err := d.Set("name", id.Name()); err != nil {
-		return err
-	}
-	if err := d.Set("database", secret.DatabaseName); err != nil {
-		return err
-	}
-	if err := d.Set("schema", secret.SchemaName); err != nil {
-		return err
-	}
-	if err := d.Set("comment", secret.Comment); err != nil {
-		return err
-	}
-	if err := d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecretToSchema(secret)}); err != nil {
-		return err
-	}
-	if err := d.Set(DescribeOutputAttributeName, []map[string]any{schemas.SecretDescriptionToSchema(*secretDescription)}); err != nil {
+	err := errors.Join(
+		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+		d.Set("comment", secret.Comment),
+		d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecretToSchema(secret)}),
+		d.Set(DescribeOutputAttributeName, []map[string]any{schemas.SecretDescriptionToSchema(*secretDescription)}),
+	)
+	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func handleSecretUpdate(id sdk.SchemaObjectIdentifier, d *schema.ResourceData) *sdk.AlterSecretRequest {
+func handleSecretUpdate(d *schema.ResourceData, set *sdk.SecretSetRequest, unset *sdk.SecretUnsetRequest) {
 	if d.HasChange("comment") {
-		comment := d.Get("comment").(string)
-		request := sdk.NewAlterSecretRequest(id)
-		if len(comment) == 0 {
-			unsetRequest := sdk.NewSecretUnsetRequest().WithComment(true)
-			return request.WithUnset(*unsetRequest)
+		if v, ok := d.GetOk("comment"); ok {
+			set.WithComment(v.(string))
 		} else {
-			setRequest := sdk.NewSecretSetRequest().WithComment(comment)
-			return request.WithSet(*setRequest)
+			unset.WithComment(true)
 		}
 	}
-	return nil
 }
