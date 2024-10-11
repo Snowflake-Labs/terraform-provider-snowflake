@@ -2,16 +2,16 @@ package datasources_test
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-	accConfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	accConfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -147,6 +147,157 @@ func TestAcc_Secrets_WithClientCredentials(t *testing.T) {
 				Config: dataSecretsClientCredentials,
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.#", "1")),
+
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.oauth_scopes.#", "2")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(dsName, "secrets.0.show_output.0.oauth_scopes.*", "username")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(dsName, "secrets.0.show_output.0.oauth_scopes.*", "test_scope")),
+
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.secret_type", "OAUTH2")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.username", "")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.oauth_scopes.#", "2")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(dsName, "secrets.0.describe_output.0.oauth_scopes.*", "username")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(dsName, "secrets.0.describe_output.0.oauth_scopes.*", "test_scope")),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Secrets_WithAuthorizationCodeGrant(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_, apiIntegrationCleanup := acc.TestClient().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
+		sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(integrationId, true, "test_oauth_client_id", "test_oauth_client_secret").
+			WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "username"}, {Scope: "test_scope"}}),
+	)
+	t.Cleanup(apiIntegrationCleanup)
+
+	secretModel := model.SecretWithAuthorizationCodeGrant("test", integrationId.Name(), id.DatabaseName(), id.SchemaName(), id.Name(), "test_token", time.Now().Add(24*time.Hour).Format(time.DateTime)).WithComment("test_comment")
+
+	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithAuthorizationCodeGrant)
+
+	dsName := "data.snowflake_secrets.test"
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithAuthorizationCodeGrant),
+		Steps: []resource.TestStep{
+			{
+				Config: dataSecretsAuthorizationCode,
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.#", "1")),
+
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.comment", "test_comment")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.oauth_scopes.#", "0")),
+
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.secret_type", "OAUTH2")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.username", "")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.comment", "test_comment")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.oauth_scopes.#", "0")),
+					assert.Check(resource.TestCheckResourceAttrSet(dsName, "secrets.0.describe_output.0.oauth_refresh_token_expiry_time")),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Secrets_WithBasicAuthentication(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	secretModel := model.SecretWithBasicAuthentication("test", id.DatabaseName(), id.Name(), "test_passwd", id.SchemaName(), "test_username")
+
+	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithBasicAuthentication)
+
+	dsName := "data.snowflake_secrets.test"
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithBasicAuthentication),
+		Steps: []resource.TestStep{
+			{
+				Config: dataSecretsAuthorizationCode,
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.#", "1")),
+
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.oauth_scopes.#", "0")),
+
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.secret_type", "PASSWORD")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.username", "test_username")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.oauth_scopes.#", "0")),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Secrets_WithGenericString(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	secretModel := model.SecretWithGenericString("test", id.DatabaseName(), id.Name(), id.SchemaName(), "test_secret_string")
+
+	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithGenericString)
+
+	dsName := "data.snowflake_secrets.test"
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithGenericString),
+		Steps: []resource.TestStep{
+			{
+				Config: dataSecretsAuthorizationCode,
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.#", "1")),
+
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.show_output.0.oauth_scopes.#", "0")),
+
+					assert.Check(resource.TestCheckResourceAttrSet(dsName, "secrets.0.describe_output.0.created_on")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.secret_type", "GENERIC_STRING")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.username", "")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.0.describe_output.0.oauth_scopes.#", "0")),
 				),
 			},
 		},
