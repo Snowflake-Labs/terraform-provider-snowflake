@@ -283,35 +283,34 @@ func TestAcc_TagAssociationIssue1926(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
 				),
 			},
-			// /*
-			// todo: (SNOW-1205719) uncomment this
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
-				ConfigVariables: m2,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
-					resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName2, columnName2)),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
-				),
-			},
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
-				ConfigVariables: m3,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
-					resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName2, columnName3)),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
-				),
-			},
-			// */
+			/*
+				todo: (SNOW-1205719) uncomment this
+				{
+					ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
+					ConfigVariables: m2,
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
+						resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+						resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName2, columnName2)),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
+					),
+				},
+				{
+					ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
+					ConfigVariables: m3,
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
+						resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+						resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName2, columnName3)),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
+						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
+					),
+				},*/
 		},
 	})
 }

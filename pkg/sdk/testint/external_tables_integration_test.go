@@ -279,7 +279,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, sdk.ObjectTypeTable)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, sdk.ObjectTypeExternalTable)
 		require.Error(t, err)
 	})
 

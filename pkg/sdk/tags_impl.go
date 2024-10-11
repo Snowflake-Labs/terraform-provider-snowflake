@@ -116,6 +116,7 @@ func (s *SetTagRequest) toOpts() *setTagOptions {
 		objectName: s.objectName,
 		SetTags:    s.SetTags,
 	}
+	// TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
 	if o.objectType == ObjectTypeColumn {
 		id, ok := o.objectName.(TableColumnIdentifier)
 		if ok {
@@ -133,6 +134,7 @@ func (s *UnsetTagRequest) toOpts() *unsetTagOptions {
 		objectName: s.objectName,
 		UnsetTags:  s.UnsetTags,
 	}
+	// TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
 	if o.objectType == ObjectTypeColumn {
 		id, ok := o.objectName.(TableColumnIdentifier)
 		if ok {

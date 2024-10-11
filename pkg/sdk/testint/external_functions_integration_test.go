@@ -195,8 +195,6 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		assertExternalFunction(t, externalFunction.ID(), true)
 	})
 
-	// Based on the documentation, set/unset tags is done through FUNCTION (https://docs.snowflake.com/en/sql-reference/sql/alter-function#external-functions).
-	// TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
 	t.Run("alter external function: set and unset tags", func(t *testing.T) {
 		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 		t.Cleanup(tagCleanup)
@@ -213,7 +211,7 @@ func TestInt_ExternalFunctions(t *testing.T) {
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetTags(setTags))
 		require.NoError(t, err)
 
-		value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeFunction)
+		value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeExternalFunction)
 		require.NoError(t, err)
 		assert.Equal(t, "v1", value)
 
