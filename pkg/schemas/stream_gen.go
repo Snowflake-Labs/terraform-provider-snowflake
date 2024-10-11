@@ -5,9 +5,9 @@ package schemas
 import (
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 // ShowStreamSchema represents output of SHOW query for the single Stream.
@@ -112,7 +112,7 @@ func StreamToSchema(stream *sdk.Stream) map[string]any {
 		if stream.SourceType != nil && *stream.SourceType == sdk.StreamSourceTypeStage {
 			streamSchema["base_tables"] = stream.BaseTables
 		} else {
-			streamSchema["base_tables"] = collections.Map(stream.BaseTables, func(s string) string{
+			streamSchema["base_tables"] = collections.Map(stream.BaseTables, func(s string) string {
 				id, err := sdk.ParseSchemaObjectIdentifier(s)
 				if err != nil {
 					log.Printf("[DEBUG] could not parse base table ID: %v", err)
