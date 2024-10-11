@@ -20,21 +20,21 @@ type TagShowOutputAssert struct {
 func TagShowOutput(t *testing.T, name string) *TagShowOutputAssert {
 	t.Helper()
 
-	t := TagShowOutputAssert{
+	tt := TagShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	t.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &t
+	tt.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &tt
 }
 
 func ImportedTagShowOutput(t *testing.T, id string) *TagShowOutputAssert {
 	t.Helper()
 
-	t := TagShowOutputAssert{
+	tt := TagShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	t.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &t
+	tt.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &tt
 }
 
 ////////////////////////////
@@ -71,10 +71,10 @@ func (t *TagShowOutputAssert) HasComment(expected string) *TagShowOutputAssert {
 	return t
 }
 
-func (t *TagShowOutputAssert) HasAllowedValues(expected []string) *TagShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputValueSet("allowed_values", expected))
-	return t
-}
+// func (t *TagShowOutputAssert) HasAllowedValues(expected []string) *TagShowOutputAssert {
+// 	t.AddAssertion(assert.ResourceShowOutputValueSet("allowed_values", expected))
+// 	return t
+// }
 
 func (t *TagShowOutputAssert) HasOwnerRoleType(expected string) *TagShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", expected))
