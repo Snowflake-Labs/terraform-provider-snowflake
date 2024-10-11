@@ -124,7 +124,7 @@ var viewSchema = map[string]*schema.Schema{
 				"minutes": {
 					Type:             schema.TypeInt,
 					Optional:         true,
-					Description:      fmt.Sprintf("Specifies an interval (in minutes) of wait time inserted between runs of the data metric function. Conflicts with `using_cron`. Valid values are: %s. Due to Snowflake limitations, changes in this field is not managed by the provider. Please consider using [taint](https://developer.hashicorp.com/terraform/cli/commands/taint) command, `using_cron` field, or [replace_triggered_by](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) metadata argument.", possibleValuesListed(sdk.AllViewDataMetricScheduleMinutes)),
+					Description:      fmt.Sprintf("Specifies an interval (in minutes) of wait time inserted between runs of the data metric function. Conflicts with `using_cron`. Valid values are: %s. Due to Snowflake limitations, changes in this field are not managed by the provider. Please consider using [taint](https://developer.hashicorp.com/terraform/cli/commands/taint) command, `using_cron` field, or [replace_triggered_by](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) metadata argument.", possibleValuesListed(sdk.AllViewDataMetricScheduleMinutes)),
 					ValidateDiagFunc: IntInSlice(sdk.AllViewDataMetricScheduleMinutes),
 					ConflictsWith:    []string{"data_metric_schedule.using_cron"},
 				},
@@ -390,7 +390,10 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			req.WithComment(v)
 		}
 
-		if v := d.Get("column"); len(v.([]any)) > 0 {
+		// Read directly from the config. Otherwise, when recreating the resource with columns already in the state,
+		// the column would get populated with old values. This could cause errors when columns are not set in the config,
+		// but are changed in `statement`.
+		if v := d.Get("column"); len(d.GetRawConfig().AsValueMap()["column"].AsValueSlice()) > 0 {
 			columns, err := extractColumns(v)
 			if err != nil {
 				return diag.FromErr(err)
@@ -844,7 +847,7 @@ func extractDataMetricFunctions(v any) (dmfs []ViewDataMetricFunctionConfig, err
 	return
 }
 
-func changedKeys(d *schema.ResourceData, keys []string) []string {
+func changedKeys(d *schema.ResourceData, keys ...string) []string {
 	changed := make([]string, 0, len(keys))
 	for _, key := range keys {
 		if d.HasChange(key) {
@@ -862,8 +865,8 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 
 	// change on these fields can not be ForceNew because then view is dropped explicitly and copying grants does not have effect
-	if d.HasChange("statement") || d.HasChange("is_temporary") || d.HasChange("is_recursive") || d.HasChange("copy_grant") || d.HasChange("column") {
-		log.Printf("[DEBUG] Detected change on %q, recreating...", changedKeys(d, []string{"statement", "is_temporary", "is_recursive", "copy_grant", "column"}))
+	if keys := changedKeys(d, "statement", "is_temporary", "is_recursive", "copy_grant", "column"); len(keys) > 0 {
+		log.Printf("[DEBUG] Detected change on %q, recreating...", keys)
 		return CreateView(true)(ctx, d, meta)
 	}
 

@@ -122,6 +122,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Function: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Functions.ShowByID)
 	},
+	resources.LegacyServiceUser: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Users.ShowByID)
+	},
 	resources.ManagedAccount: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.ManagedAccounts.ShowByID)
 	},
@@ -179,6 +182,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Sequence: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Sequences.ShowByID)
 	},
+	resources.ServiceUser: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Users.ShowByID)
+	},
 	resources.Share: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Shares.ShowByID)
 	},
@@ -192,6 +198,12 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 		return runShowById(ctx, id, client.StorageIntegrations.ShowByID)
 	},
 	resources.Stream: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Streams.ShowByID)
+	},
+	resources.StreamOnExternalTable: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Streams.ShowByID)
+	},
+	resources.StreamOnTable: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Streams.ShowByID)
 	},
 	resources.Streamlit: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {

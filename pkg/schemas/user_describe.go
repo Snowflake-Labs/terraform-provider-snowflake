@@ -19,6 +19,10 @@ var UserDescribeSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	},
+	"type": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
 	"login_name": {
 		Type:     schema.TypeString,
 		Computed: true,
@@ -145,6 +149,9 @@ func UserDescriptionToSchema(userDetails sdk.UserDetails) []map[string]any {
 	}
 	if userDetails.DisplayName != nil {
 		userDetailsSchema["display_name"] = userDetails.DisplayName.Value
+	}
+	if userDetails.Type != nil {
+		userDetailsSchema["type"] = userDetails.Type.Value
 	}
 	if userDetails.LoginName != nil {
 		userDetailsSchema["login_name"] = userDetails.LoginName.Value

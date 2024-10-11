@@ -30,6 +30,14 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.User().Schema,
 	},
 	{
+		name:   "ServiceUser",
+		schema: resources.ServiceUser().Schema,
+	},
+	{
+		name:   "LegacyServiceUser",
+		schema: resources.LegacyServiceUser().Schema,
+	},
+	{
 		name:   "View",
 		schema: resources.View().Schema,
 	},
@@ -48,6 +56,14 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 	{
 		name:   "MaskingPolicy",
 		schema: resources.MaskingPolicy().Schema,
+	},
+	{
+		name:   "StreamOnTable",
+		schema: resources.StreamOnTable().Schema,
+	},
+	{
+		name:   "StreamOnExternalTable",
+		schema: resources.StreamOnExternalTable().Schema,
 	},
 	{
 		name:   "Task",

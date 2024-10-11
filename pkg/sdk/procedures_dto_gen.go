@@ -32,7 +32,7 @@ type CreateForJavaProcedureRequest struct {
 	Imports                    []ProcedureImportRequest
 	Handler                    string // required
 	ExternalAccessIntegrations []AccountObjectIdentifier
-	Secrets                    []Secret
+	Secrets                    []SecretReference
 	TargetPath                 *string
 	NullInputBehavior          *NullInputBehavior
 	Comment                    *string
@@ -100,7 +100,7 @@ type CreateForPythonProcedureRequest struct {
 	Imports                    []ProcedureImportRequest
 	Handler                    string // required
 	ExternalAccessIntegrations []AccountObjectIdentifier
-	Secrets                    []Secret
+	Secrets                    []SecretReference
 	NullInputBehavior          *NullInputBehavior
 	Comment                    *string
 	ExecuteAs                  *ExecuteAs

@@ -134,7 +134,7 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 			if !slices.Contains(protectedWarehouses, wh.Name) && wh.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
 				if wh.Owner != "ACCOUNTADMIN" {
 					log.Printf("[DEBUG] Granting ownership on warehouse %s, to ACCOUNTADMIN", wh.ID().FullyQualifiedName())
-					if err := client.Grants.GrantOwnership(
+					err := client.Grants.GrantOwnership(
 						ctx,
 						OwnershipGrantOn{Object: &Object{
 							ObjectType: ObjectTypeWarehouse,
@@ -144,10 +144,11 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 							AccountRoleName: Pointer(NewAccountObjectIdentifier("ACCOUNTADMIN")),
 						},
 						nil,
-					); err != nil {
+					)
+					if err != nil {
 						errs = append(errs, fmt.Errorf("granting ownership on warehouse %s ended with error, err = %w", wh.ID().FullyQualifiedName(), err))
+						continue
 					}
-					continue
 				}
 
 				log.Printf("[DEBUG] Dropping warehouse %s, created at: %s\n", wh.ID().FullyQualifiedName(), wh.CreatedOn.String())
@@ -186,7 +187,7 @@ func nukeDatabases(client *Client, prefix string) func() error {
 		for idx, db := range dbs {
 			if db.Owner != "ACCOUNTADMIN" {
 				log.Printf("[DEBUG] Granting ownership on database %s, to ACCOUNTADMIN", db.ID().FullyQualifiedName())
-				if err := client.Grants.GrantOwnership(
+				err := client.Grants.GrantOwnership(
 					ctx,
 					OwnershipGrantOn{Object: &Object{
 						ObjectType: ObjectTypeDatabase,
@@ -196,10 +197,11 @@ func nukeDatabases(client *Client, prefix string) func() error {
 						AccountRoleName: Pointer(NewAccountObjectIdentifier("ACCOUNTADMIN")),
 					},
 					nil,
-				); err != nil {
+				)
+				if err != nil {
 					errs = append(errs, fmt.Errorf("granting ownership on database %s ended with error, err = %w", db.ID().FullyQualifiedName(), err))
+					continue
 				}
-				continue
 			}
 
 			log.Printf("[DEBUG] Processing database [%d/%d]: %s...\n", idx+1, len(dbs), db.ID().FullyQualifiedName())

@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
@@ -59,19 +60,21 @@ func (v *streams) Show(ctx context.Context, request *ShowStreamRequest) ([]Strea
 
 func (v *streams) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error) {
 	streams, err := v.Show(ctx, NewShowStreamRequest().
-		WithIn(&In{
-			Schema: id.SchemaId(),
+		WithIn(ExtendedIn{
+			In: In{
+				Schema: id.SchemaId(),
+			},
 		}).
-		WithLike(&Like{Pattern: String(id.Name())}))
+		WithLike(Like{Pattern: String(id.Name())}))
 	if err != nil {
 		return nil, err
 	}
 	return collections.FindFirst(streams, func(r Stream) bool { return r.Name == id.Name() })
 }
 
-func (v *streams) Describe(ctx context.Context, request *DescribeStreamRequest) (*Stream, error) {
+func (v *streams) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error) {
 	opts := &DescribeStreamOptions{
-		name: request.name,
+		name: id,
 	}
 	result, err := validateAndQueryOne[showStreamsDbRow](v.client, ctx, opts)
 	if err != nil {
@@ -85,6 +88,7 @@ func (r *CreateOnTableStreamRequest) toOpts() *CreateOnTableStreamOptions {
 		OrReplace:   r.OrReplace,
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
+		Tag:         r.Tag,
 		CopyGrants:  r.CopyGrants,
 		TableId:     r.TableId,
 
@@ -96,12 +100,13 @@ func (r *CreateOnTableStreamRequest) toOpts() *CreateOnTableStreamOptions {
 		opts.On = &OnStream{
 			At:     r.On.At,
 			Before: r.On.Before,
-			Statement: OnStreamStatement{
-				Timestamp: r.On.Statement.Timestamp,
-				Offset:    r.On.Statement.Offset,
-				Statement: r.On.Statement.Statement,
-				Stream:    r.On.Statement.Stream,
-			},
+		}
+
+		opts.On.Statement = OnStreamStatement{
+			Timestamp: r.On.Statement.Timestamp,
+			Offset:    r.On.Statement.Offset,
+			Statement: r.On.Statement.Statement,
+			Stream:    r.On.Statement.Stream,
 		}
 	}
 	return opts
@@ -112,6 +117,7 @@ func (r *CreateOnExternalTableStreamRequest) toOpts() *CreateOnExternalTableStre
 		OrReplace:       r.OrReplace,
 		IfNotExists:     r.IfNotExists,
 		name:            r.name,
+		Tag:             r.Tag,
 		CopyGrants:      r.CopyGrants,
 		ExternalTableId: r.ExternalTableId,
 
@@ -122,12 +128,13 @@ func (r *CreateOnExternalTableStreamRequest) toOpts() *CreateOnExternalTableStre
 		opts.On = &OnStream{
 			At:     r.On.At,
 			Before: r.On.Before,
-			Statement: OnStreamStatement{
-				Timestamp: r.On.Statement.Timestamp,
-				Offset:    r.On.Statement.Offset,
-				Statement: r.On.Statement.Statement,
-				Stream:    r.On.Statement.Stream,
-			},
+		}
+
+		opts.On.Statement = OnStreamStatement{
+			Timestamp: r.On.Statement.Timestamp,
+			Offset:    r.On.Statement.Offset,
+			Statement: r.On.Statement.Statement,
+			Stream:    r.On.Statement.Stream,
 		}
 	}
 	return opts
@@ -138,6 +145,7 @@ func (r *CreateOnDirectoryTableStreamRequest) toOpts() *CreateOnDirectoryTableSt
 		OrReplace:   r.OrReplace,
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
+		Tag:         r.Tag,
 		CopyGrants:  r.CopyGrants,
 		StageId:     r.StageId,
 		Comment:     r.Comment,
@@ -150,6 +158,7 @@ func (r *CreateOnViewStreamRequest) toOpts() *CreateOnViewStreamOptions {
 		OrReplace:   r.OrReplace,
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
+		Tag:         r.Tag,
 		CopyGrants:  r.CopyGrants,
 		ViewId:      r.ViewId,
 
@@ -161,12 +170,13 @@ func (r *CreateOnViewStreamRequest) toOpts() *CreateOnViewStreamOptions {
 		opts.On = &OnStream{
 			At:     r.On.At,
 			Before: r.On.Before,
-			Statement: OnStreamStatement{
-				Timestamp: r.On.Statement.Timestamp,
-				Offset:    r.On.Statement.Offset,
-				Statement: r.On.Statement.Statement,
-				Stream:    r.On.Statement.Stream,
-			},
+		}
+
+		opts.On.Statement = OnStreamStatement{
+			Timestamp: r.On.Statement.Timestamp,
+			Offset:    r.On.Statement.Offset,
+			Statement: r.On.Statement.Statement,
+			Stream:    r.On.Statement.Stream,
 		}
 	}
 	return opts
@@ -223,9 +233,6 @@ func (r showStreamsDbRow) convert() *Stream {
 	if r.StaleAfter.Valid {
 		s.StaleAfter = &r.StaleAfter.Time
 	}
-	if r.TableOn.Valid {
-		s.TableOn = &r.TableOn.String
-	}
 	if r.Owner.Valid {
 		s.Owner = &r.Owner.String
 	}
@@ -236,10 +243,20 @@ func (r showStreamsDbRow) convert() *Stream {
 		s.TableName = &r.TableName.String
 	}
 	if r.SourceType.Valid {
-		s.SourceType = &r.SourceType.String
+		sourceType, err := ToStreamSourceType(r.SourceType.String)
+		if err != nil {
+			log.Printf("[DEBUG] error converting show stream: %v", err)
+		} else {
+			s.SourceType = &sourceType
+		}
 	}
 	if r.BaseTables.Valid {
-		s.BaseTables = &r.BaseTables.String
+		baseTables, err := ParseCommaSeparatedSchemaObjectIdentifierArray(r.BaseTables.String)
+		if err != nil {
+			log.Printf("[DEBUG] error converting show stream: %v", err)
+		} else {
+			s.BaseTables = baseTables
+		}
 	}
 	if r.Type.Valid {
 		s.Type = &r.Type.String
@@ -248,7 +265,12 @@ func (r showStreamsDbRow) convert() *Stream {
 		s.Stale = &r.Stale.String
 	}
 	if r.Mode.Valid {
-		s.Mode = &r.Mode.String
+		mode, err := ToStreamMode(r.Mode.String)
+		if err != nil {
+			log.Printf("[DEBUG] error converting show stream: %v", err)
+		} else {
+			s.Mode = &mode
+		}
 	}
 	if r.InvalidReason.Valid {
 		s.InvalidReason = &r.InvalidReason.String

@@ -335,7 +335,7 @@ func TestInt_Warehouses(t *testing.T) {
 		returnedWarehouse, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
 		require.NoError(t, err)
 		assert.Equal(t, sdk.WarehouseTypeStandard, returnedWarehouse.Type)
-		assert.Equal(t, sdk.WarehouseStateStarted, returnedWarehouse.State)
+		require.Eventually(t, func() bool { return sdk.WarehouseStateStarted == returnedWarehouse.State }, 5*time.Second, time.Second)
 
 		alterOptions := &sdk.AlterWarehouseOptions{
 			Set: &sdk.WarehouseSet{WarehouseType: sdk.Pointer(sdk.WarehouseTypeSnowparkOptimized)},

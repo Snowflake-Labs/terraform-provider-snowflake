@@ -61,3 +61,13 @@ func attributeDirectValueCreate[T any](d *schema.ResourceData, key string, creat
 	}
 	return nil
 }
+
+func copyGrantsAttributeCreate(d *schema.ResourceData, isOrReplace bool, orReplaceField, copyGrantsField **bool) error {
+	if isOrReplace {
+		*orReplaceField = sdk.Bool(true)
+		if d.Get("copy_grants").(bool) {
+			*copyGrantsField = sdk.Bool(true)
+		}
+	}
+	return nil
+}

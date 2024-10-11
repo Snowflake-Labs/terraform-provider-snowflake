@@ -158,7 +158,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on schema object", func(t *testing.T) {
 		roleTest, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
-		tableTest, tableTestCleanup := testClientHelper().Table.CreateTable(t)
+		tableTest, tableTestCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableTestCleanup)
 		privileges := &sdk.AccountRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeSelect},
@@ -198,7 +198,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on schema object: cortex search service", func(t *testing.T) {
 		roleTest, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
-		table, tableTestCleanup := testClientHelper().Table.CreateTableWithPredefinedColumns(t)
+		table, tableTestCleanup := testClientHelper().Table.CreateWithPredefinedColumns(t)
 		t.Cleanup(tableTestCleanup)
 		cortex, cortexCleanup := testClientHelper().CortexSearchService.CreateCortexSearchService(t, table.ID())
 		t.Cleanup(cortexCleanup)
@@ -241,7 +241,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	t.Run("on all: cortex search service", func(t *testing.T) {
 		roleTest, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
-		table, tableTestCleanup := testClientHelper().Table.CreateTableWithPredefinedColumns(t)
+		table, tableTestCleanup := testClientHelper().Table.CreateWithPredefinedColumns(t)
 		t.Cleanup(tableTestCleanup)
 		cortex, cortexCleanup := testClientHelper().CortexSearchService.CreateCortexSearchService(t, table.ID())
 		t.Cleanup(cortexCleanup)
@@ -324,7 +324,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 
 		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -381,7 +381,7 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes with multiple errors", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 
 		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -573,7 +573,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		t.Cleanup(databaseRoleCleanup)
 
 		databaseRoleId := testClientHelper().Ids.NewDatabaseObjectIdentifier(databaseRole.Name)
-		table, _ := testClientHelper().Table.CreateTable(t)
+		table, _ := testClientHelper().Table.Create(t)
 
 		privileges := &sdk.DatabaseRoleGrantPrivileges{
 			SchemaObjectPrivileges: []sdk.SchemaObjectPrivilege{sdk.SchemaObjectPrivilegeSelect},
@@ -626,7 +626,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 		databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
 		t.Cleanup(databaseRoleCleanup)
 		databaseRoleId := testClientHelper().Ids.NewDatabaseObjectIdentifier(databaseRole.Name)
-		table, tableTestCleanup := testClientHelper().Table.CreateTableWithPredefinedColumns(t)
+		table, tableTestCleanup := testClientHelper().Table.CreateWithPredefinedColumns(t)
 		t.Cleanup(tableTestCleanup)
 		cortex, cortexCleanup := testClientHelper().CortexSearchService.CreateCortexSearchService(t, table.ID())
 		t.Cleanup(cortexCleanup)
@@ -723,7 +723,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 
 		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -780,7 +780,7 @@ func TestInt_GrantAndRevokePrivilegesToDatabaseRole(t *testing.T) {
 	})
 
 	t.Run("grant and revoke on all pipes with multiple errors", func(t *testing.T) {
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 
 		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -874,7 +874,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 
 	t.Run("with options", func(t *testing.T) {
 		grantShareOnDatabase(t, shareTest)
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
@@ -958,7 +958,7 @@ func TestInt_GrantPrivilegeToShare(t *testing.T) {
 		shareTest, shareCleanup := testClientHelper().Share.CreateShareWithIdentifier(t, testClientHelper().Ids.RandomAccountObjectIdentifierContaining(".foo.bar"))
 		t.Cleanup(shareCleanup)
 		grantShareOnDatabase(t, shareTest)
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 
 		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeSelect}, &sdk.ShareGrantOn{
@@ -1015,7 +1015,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
@@ -1221,7 +1221,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 		t.Cleanup(databaseRoleCleanup)
 
 		databaseRoleId := testClientHelper().Ids.NewDatabaseObjectIdentifier(databaseRole.Name)
-		table, _ := testClientHelper().Table.CreateTable(t)
+		table, _ := testClientHelper().Table.Create(t)
 
 		on := sdk.OwnershipGrantOn{
 			Object: &sdk.Object{
@@ -1362,7 +1362,7 @@ func TestInt_GrantOwnership(t *testing.T) {
 	t.Run("on cortex - with ownership", func(t *testing.T) {
 		role, roleCleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(roleCleanup)
-		table, tableTestCleanup := testClientHelper().Table.CreateTableWithPredefinedColumns(t)
+		table, tableTestCleanup := testClientHelper().Table.CreateWithPredefinedColumns(t)
 		t.Cleanup(tableTestCleanup)
 		testClientHelper().Schema.UseDefaultSchema(t)
 		cortex, cortexCleanup := testClientHelper().CortexSearchService.CreateCortexSearchService(t, table.ID())
@@ -2015,7 +2015,7 @@ func TestInt_ShowGrants(t *testing.T) {
 	t.Run("handles unquoted granted object names", func(t *testing.T) {
 		// This name is returned as unquoted from Snowflake
 		name := "G6TM2"
-		table, tableCleanup := testClientHelper().Table.CreateTableWithName(t, name)
+		table, tableCleanup := testClientHelper().Table.CreateWithName(t, name)
 		t.Cleanup(tableCleanup)
 
 		role, roleCleanup := testClientHelper().Role.CreateRole(t)
