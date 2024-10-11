@@ -2,6 +2,11 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+	"testing"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
@@ -11,10 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"regexp"
-	"strconv"
-	"strings"
-	"testing"
 )
 
 /*
@@ -23,107 +24,108 @@ like database or schema are renamed when the objects lower in the hierarchy are 
 For more information check TODO(SNOW-1672319): link public document.
 
 Shallow hierarchy (database + schema)
-- is in config - renamed internally - with implicit dependency
+- is in config - renamed internally - with implicit dependency (works)
 
-- is in config - renamed internally - without dependency - after rename schema referencing old database name
-- is in config - renamed internally - without dependency - after rename schema referencing new database name
+- is in config - renamed internally - without dependency - after rename schema referencing old database name (fails in Read and then it's failing to remove itself in Delete)
+- is in config - renamed internally - without dependency - after rename schema referencing new database name (fails in Read and then it's failing to remove itself in Delete)
 
-- is in config - renamed internally - with depends_on - after rename schema referencing old database name
-- is in config - renamed internally - with depends_on - after rename schema referencing new database name
+- is in config - renamed internally - with depends_on - after rename schema referencing old database name (fails in Read and then it's failing to remove itself in Delete)
+- is in config - renamed internally - with depends_on - after rename schema referencing new database name (works)
 
-- is in config - renamed externally - with implicit dependency - database holding the same name in config
-- is in config - renamed externally - with implicit dependency - database holding the new name in config
+- is in config - renamed externally - with implicit dependency - database holding the same name in config (works; creates a new database with a schema next to the already existing renamed database and schema)
+- is in config - renamed externally - with implicit dependency - database holding the new name in config  (fails to create database, because it already exists)
 
-- is in config - renamed externally - without dependency - after rename database referencing old name and schema referencing old database name
-- is in config - renamed externally - without dependency - after rename database referencing old name and schema referencing old database name - check impact of the resource order on the plan
-- is in config - renamed externally - without dependency - after rename database referencing old name and schema referencing new database name
-- is in config - renamed externally - without dependency - after rename database referencing new name and schema referencing old database name
-- is in config - renamed externally - without dependency - after rename database referencing new name and schema referencing new database name
+- is in config - renamed externally - without dependency - after rename database referencing old name and schema referencing old database name (non-deterministic results depending on the Terraform execution order that seems to be different with every run)
+- is in config - renamed externally - without dependency - after rename database referencing old name and schema referencing old database name - check impact of the resource order on the plan (seems to fail pretty consistently in Delete because database is dropped before schema)
+- is in config - renamed externally - without dependency - after rename database referencing old name and schema referencing new database name (fails because schema resource tries to create a new schema that already exists in renamed database)
+- is in config - renamed externally - without dependency - after rename database referencing new name and schema referencing old database name (fails because database resource tried to create database that already exists)
+- is in config - renamed externally - without dependency - after rename database referencing new name and schema referencing new database name (fails because database resource tried to create database that already exists)
 
-- is in config - renamed externally - with depends_on - after rename database referencing old name and schema referencing old database name
-- is in config - renamed externally - with depends_on - after rename database referencing old name and schema referencing new database name
-- is in config - renamed externally - with depends_on - after rename database referencing new name and schema referencing old database name
-- is in config - renamed externally - with depends_on - after rename database referencing new name and schema referencing new database name
+- is in config - renamed externally - with depends_on - after rename database referencing old name and schema referencing old database name (works; creates a new database with a schema next to the already existing renamed database and schema)
+- is in config - renamed externally - with depends_on - after rename database referencing old name and schema referencing new database name (fails because schema resource tries to create a new schema that already exists in renamed database)
+- is in config - renamed externally - with depends_on - after rename database referencing new name and schema referencing old database name (fails because database resource tried to create database that already exists)
+- is in config - renamed externally - with depends_on - after rename database referencing new name and schema referencing new database name (fails because database resource tried to create database that already exists)
 
-- is not in config - renamed externally - referencing old database name
-- is not in config - renamed externally - referencing new database name
+- is not in config - renamed externally - referencing old database name (fails because it tries to create a new schema on non-existing database)
+- is not in config - renamed externally - referencing new database name (fails because schema resource tries to create a new schema that already exists in renamed database)
 
 Deep hierarchy (database + schema + table)
-- TODO: More test cases could be added where there's no dependency, because there could be either old or new database/schema name referenced in the table resource config
 
-- are in config - database renamed internally - with database implicit dependency - with no schema dependency 		- with database to schema implicit dependency
-- are in config - database renamed internally - with database implicit dependency - with implicit schema dependency - with database to schema implicit dependency
-- are in config - database renamed internally - with database implicit dependency - with schema depends_on 			- with database to schema implicit dependency
+- are in config - database renamed internally - with database implicit dependency - with no schema dependency 		- with database to schema implicit dependency (fails because table is created before schema)
+- are in config - database renamed internally - with database implicit dependency - with implicit schema dependency - with database to schema implicit dependency (works)
+- are in config - database renamed internally - with database implicit dependency - with schema depends_on 			- with database to schema implicit dependency (works)
 
-- are in config - database renamed internally - with database implicit dependency - with no schema dependency 		- with database to schema depends_on dependency
-- are in config - database renamed internally - with database implicit dependency - with implicit schema dependency - with database to schema depends_on dependency
-- are in config - database renamed internally - with database implicit dependency - with schema depends_on 			- with database to schema depends_on dependency
+- are in config - database renamed internally - with database implicit dependency - with no schema dependency 		- with database to schema depends_on dependency (fails because table is created before schema)
+- are in config - database renamed internally - with database implicit dependency - with implicit schema dependency - with database to schema depends_on dependency (works)
+- are in config - database renamed internally - with database implicit dependency - with schema depends_on 			- with database to schema depends_on dependency (works)
 
-- are in config - database renamed internally - with database implicit dependency - with no schema dependency 		- with database to schema no dependency
-- are in config - database renamed internally - with database implicit dependency - with implicit schema dependency - with database to schema no dependency
-- are in config - database renamed internally - with database implicit dependency - with schema depends_on 			- with database to schema no dependency
+- are in config - database renamed internally - with database implicit dependency - with no schema dependency 		- with database to schema no dependency (fails during delete because database is deleted before schema)
+- are in config - database renamed internally - with database implicit dependency - with implicit schema dependency - with database to schema no dependency (fails to drop schema after database rename)
+- are in config - database renamed internally - with database implicit dependency - with schema depends_on 			- with database to schema no dependency (fails to drop schema after database rename)
 
-- are in config - database renamed internally - with no database dependency - with no schema dependency
-- are in config - database renamed internally - with no database dependency - with implicit schema dependency
-- are in config - database renamed internally - with no database dependency - with schema depends_on
+- are in config - database renamed internally - with no database dependency - with no schema dependency 	  (fails because table is created before schema)
+- are in config - database renamed internally - with no database dependency - with implicit schema dependency (works)
+- are in config - database renamed internally - with no database dependency - with schema depends_on 		  (works)
 
-- are in config - database renamed internally - with database depends_on - with no schema dependency
-- are in config - database renamed internally - with database depends_on - with implicit schema dependency
-- are in config - database renamed internally - with database depends_on - with schema depends_on
-
-------------------------------------------------------------------------------------------------------------------------
-
-- are in config - schema renamed internally - with database implicit dependency - with no schema dependency
-- are in config - schema renamed internally - with database implicit dependency - with implicit schema dependency
-- are in config - schema renamed internally - with database implicit dependency - with schema depends_on
-
-- are in config - schema renamed internally - with no database dependency - with no schema dependency
-- are in config - schema renamed internally - with no database dependency - with implicit schema dependency
-- are in config - schema renamed internally - with no database dependency - with schema depends_on
-
-- are in config - schema renamed internally - with database depends_on - with no schema dependency
-- are in config - schema renamed internally - with database depends_on - with implicit schema dependency
-- are in config - schema renamed internally - with database depends_on - with schema depends_on
+- are in config - database renamed internally - with database depends_on - with no schema dependency 	   (fails because table is created before schema)
+- are in config - database renamed internally - with database depends_on - with implicit schema dependency (works)
+- are in config - database renamed internally - with database depends_on - with schema depends_on 		   (works)
 
 ------------------------------------------------------------------------------------------------------------------------
 
-- are in config - database renamed externally - with database implicit dependency - with no schema dependency
-- are in config - database renamed externally - with database implicit dependency - with implicit schema dependency
-- are in config - database renamed externally - with database implicit dependency - with schema depends_on
+- are in config - schema renamed internally - with database implicit dependency - with no schema dependency 	  (fails because table is created before schema)
+- are in config - schema renamed internally - with database implicit dependency - with implicit schema dependency (works)
+- are in config - schema renamed internally - with database implicit dependency - with schema depends_on 		  (works)
 
-- are in config - database renamed externally - with no database dependency - with no schema dependency
-- are in config - database renamed externally - with no database dependency - with implicit schema dependency
-- are in config - database renamed externally - with no database dependency - with schema depends_on
+- are in config - schema renamed internally - with no database dependency - with no schema dependency 		(fails because table is created before schema)
+- are in config - schema renamed internally - with no database dependency - with implicit schema dependency (works)
+- are in config - schema renamed internally - with no database dependency - with schema depends_on 			(works)
 
-- are in config - database renamed externally - with database depends_on - with no schema dependency
-- are in config - database renamed externally - with database depends_on - with implicit schema dependency
-- are in config - database renamed externally - with database depends_on - with schema depends_on
-
-------------------------------------------------------------------------------------------------------------------------
-
-- are in config - schema renamed externally - with database implicit dependency - with no schema dependency
-- are in config - schema renamed externally - with database implicit dependency - with implicit schema dependency
-- are in config - schema renamed externally - with database implicit dependency - with schema depends_on
-
-- are in config - schema renamed externally - with no database dependency - with no schema dependency
-- are in config - schema renamed externally - with no database dependency - with implicit schema dependency
-- are in config - schema renamed externally - with no database dependency - with schema depends_on
-
-- are in config - schema renamed externally - with database depends_on - with no schema dependency
-- are in config - schema renamed externally - with database depends_on - with implicit schema dependency
-- are in config - schema renamed externally - with database depends_on - with schema depends_on
-
-- TODO: More test cases could be added when database and schema are renamed at the same time
+- are in config - schema renamed internally - with database depends_on - with no schema dependency 		 (fails because table is created before schema)
+- are in config - schema renamed internally - with database depends_on - with implicit schema dependency (works)
+- are in config - schema renamed internally - with database depends_on - with schema depends_on 		 (works)
 
 ------------------------------------------------------------------------------------------------------------------------
 
-- are not in config - database renamed externally - referencing old database name
-- are not in config - database renamed externally - referencing new database name
+- are in config - database renamed externally - with database implicit dependency - with no schema dependency 		(fails because table is created before schema)
+- are in config - database renamed externally - with database implicit dependency - with implicit schema dependency (fails because tries to create database when it's already there after rename)
+- are in config - database renamed externally - with database implicit dependency - with schema depends_on 			(fails because tries to create database when it's already there after rename)
 
-- are not in config - schema renamed externally - referencing old schema name
-- are not in config - schema renamed externally - referencing new schema name
+- are in config - database renamed externally - with no database dependency - with no schema dependency 	  (fails because table is created before schema)
+- are in config - database renamed externally - with no database dependency - with implicit schema dependency (fails because tries to create database when it's already there after rename)
+- are in config - database renamed externally - with no database dependency - with schema depends_on 		  (fails because tries to create database when it's already there after rename)
 
-- TODO: More test cases could be added when either database or schema are in the config
+- are in config - database renamed externally - with database depends_on - with no schema dependency 	   (fails because table is created before schema)
+- are in config - database renamed externally - with database depends_on - with implicit schema dependency (fails because tries to create database when it's already there after rename)
+- are in config - database renamed externally - with database depends_on - with schema depends_on 		   (fails because tries to create database when it's already there after rename)
+
+------------------------------------------------------------------------------------------------------------------------
+
+- are in config - schema renamed externally - with database implicit dependency - with no schema dependency 	  (fails because table is created before schema)
+- are in config - schema renamed externally - with database implicit dependency - with implicit schema dependency (fails because tries to create database when it's already there after rename)
+- are in config - schema renamed externally - with database implicit dependency - with schema depends_on 		  (fails because tries to create database when it's already there after rename)
+
+- are in config - schema renamed externally - with no database dependency - with no schema dependency 		(fails because table is created before schema)
+- are in config - schema renamed externally - with no database dependency - with implicit schema dependency (fails because tries to create database when it's already there after rename)
+- are in config - schema renamed externally - with no database dependency - with schema depends_on 			(fails because tries to create database when it's already there after rename)
+
+- are in config - schema renamed externally - with database depends_on - with no schema dependency 		 (fails because table is created before schema)
+- are in config - schema renamed externally - with database depends_on - with implicit schema dependency (fails because tries to create database when it's already there after rename)
+- are in config - schema renamed externally - with database depends_on - with schema depends_on 		 (fails because tries to create database when it's already there after rename)
+
+------------------------------------------------------------------------------------------------------------------------
+
+- are not in config - database renamed externally - referencing old database name (fails because tries to create table on non-existing database)
+- are not in config - database renamed externally - referencing new database name (fails because tries to create table that already exists in the renamed database)
+
+- are not in config - schema renamed externally - referencing old schema name (fails because tries to create table on non-existing schema)
+- are not in config - schema renamed externally - referencing new schema name (fails because tries to create table that already exists in the renamed schema)
+
+# The list of test cases that were not added:
+- (Deep hierarchy) More test cases with varying dependencies between resources
+- (Deep hierarchy) Add test cases where old database is referenced to see if hierarchy recreation is possible
+- (Deep hierarchy) More test cases could be added when database and schema are renamed at the same time
+- (Deep hierarchy) More test cases could be added when either database or schema are in the config
 */
 
 type DependencyType string
@@ -135,6 +137,7 @@ const (
 )
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithImplicitDependency(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -171,6 +174,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithImplicitDependenc
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithoutDependency_AfterRenameSchemaReferencingOldDatabaseName(t *testing.T) {
 	// Error happens during schema's Read operation and then Delete operation (schema cannot be removed).
 	t.Skip("Not able to handle the error produced by Delete operation that results in test always failing")
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -210,6 +214,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithoutDependency_Aft
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithoutDependency_AfterRenameSchemaReferencingNewDatabaseName(t *testing.T) {
 	// Error happens during schema's Read operation and then Delete operation (schema cannot be removed).
 	t.Skip("Not able to handle the error produced by Delete operation that results in test always failing")
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -250,6 +255,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithoutDependency_Aft
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithDependsOn_AfterRenameSchemaReferencingOldDatabaseName(t *testing.T) {
 	// Error happens during schema's Read operation and then Delete operation (schema cannot be removed).
 	t.Skip("Not able to handle the error produced by Delete operation that results in test always failing")
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -288,6 +294,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithDependsOn_AfterRe
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithDependsOn_AfterRenameSchemaReferencingNewDatabaseName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -327,6 +334,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithDependsOn_AfterRe
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithImplicitDependency_DatabaseHoldingTheOldNameInConfig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -366,6 +374,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithImplicitDependenc
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithImplicitDependency_DatabaseHoldingTheNewNameInConfig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -395,7 +404,6 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithImplicitDependenc
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						// TODO: Why Create? This case could be handled in a way that it shouldn't require any action (implicit import)
 						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
 					},
@@ -409,7 +417,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithImplicitDependenc
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_AfterRenameDatabaseReferencingOldNameAndSchemaReferencingOldDatabaseName(t *testing.T) {
 	t.Skip("Test results are inconsistent because Terraform execution order is non-deterministic")
-	// Although the above applies, it seems to be consistently failing on delete operation after the test (because the database is dropped before schema).
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -430,6 +438,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
 			},
 			{
+				// This step has inconsistent results, and it depends on the Terraform execution order which seems to be non-deterministic in this case
 				PreConfig: func() {
 					newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
@@ -441,9 +450,8 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
 					},
 				},
-				// TODO: This test may have inconsistent result (depending on Terraform execution order which is not deterministic).
-				Config:      config.FromModels(t, databaseConfigModel, schemaModelConfig),
-				ExpectError: regexp.MustCompile("does not exist or not authorized"),
+				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
+				// ExpectError: regexp.MustCompile("does not exist or not authorized"),
 			},
 		},
 	})
@@ -453,6 +461,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_AfterRenameDatabaseReferencingOldNameAndSchemaReferencingOldDatabaseName_ConfigOrderSwap(t *testing.T) {
 	t.Skip("Test results are inconsistent because Terraform execution order is non-deterministic")
 	// Although the above applies, it seems to be consistently failing on delete operation after the test (because the database is dropped before schema).
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -484,7 +493,6 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
 					},
 				},
-				// TODO: This test may have inconsistent result (depending on Terraform execution order which is not deterministic).
 				Config:      config.FromModels(t, schemaModelConfig, databaseConfigModel),
 				ExpectError: regexp.MustCompile("does not exist or not authorized"),
 			},
@@ -493,6 +501,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_AfterRenameDatabaseReferencingOldNameAndSchemaReferencingNewDatabaseName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -533,6 +542,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_AfterRenameDatabaseReferencingNewNameAndSchemaReferencingOldDatabaseName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -573,6 +583,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_AfterRenameDatabaseReferencingNewNameAndSchemaReferencingNewDatabaseName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -614,6 +625,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRenameDatabaseReferencingOldNameAndSchemaReferencingOldDatabaseName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -653,6 +665,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRe
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRenameDatabaseReferencingOldNameAndSchemaReferencingNewDatabaseName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -695,6 +708,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRe
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRenameDatabaseReferencingNewNameAndSchemaReferencingOldDatabaseName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -736,6 +750,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRe
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRenameDatabaseReferencingNewNameAndSchemaReferencingNewDatabaseName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -779,6 +794,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRe
 }
 
 func TestAcc_ShallowHierarchy_IsNotInConfig_RenamedExternally_ReferencingOldName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -819,6 +835,7 @@ func TestAcc_ShallowHierarchy_IsNotInConfig_RenamedExternally_ReferencingOldName
 }
 
 func TestAcc_ShallowHierarchy_IsNotInConfig_RenamedExternally_ReferencingNewName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -869,6 +886,7 @@ resource "snowflake_schema" "test" {
 }
 
 func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedInternally(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -948,6 +966,7 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedInternally(t *testing.T) {
 }
 
 func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedInternally(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -1017,6 +1036,7 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedInternally(t *testing.T) {
 }
 
 func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedExternally(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -1028,16 +1048,16 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedExternally(t *testing.T) {
 		ExpectedSecondStepError    *regexp.Regexp
 	}{
 		{DatabaseDependency: ImplicitDependency, SchemaDependency: NoDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedFirstStepError: regexp.MustCompile("error creating table")},   // tries to create table before schema
-		{DatabaseDependency: ImplicitDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a table when it's already there
-		{DatabaseDependency: ImplicitDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a table when it's already there
+		{DatabaseDependency: ImplicitDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a database when it's already there
+		{DatabaseDependency: ImplicitDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a database when it's already there
 
 		{DatabaseDependency: DependsOnDependency, SchemaDependency: NoDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedFirstStepError: regexp.MustCompile("error creating table")},   // tries to create table before schema
-		{DatabaseDependency: DependsOnDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a table when it's already there
-		{DatabaseDependency: DependsOnDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a table when it's already there
+		{DatabaseDependency: DependsOnDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a database when it's already there
+		{DatabaseDependency: DependsOnDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a database when it's already there
 
 		{DatabaseDependency: NoDependency, SchemaDependency: NoDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedFirstStepError: regexp.MustCompile("error creating table")},   // tries to create table before schema
-		{DatabaseDependency: NoDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a table when it's already there
-		{DatabaseDependency: NoDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a table when it's already there
+		{DatabaseDependency: NoDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a database when it's already there
+		{DatabaseDependency: NoDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a database when it's already there
 	}
 
 	for _, testCase := range testCases {
@@ -1087,6 +1107,7 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedExternally(t *testing.T) {
 }
 
 func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedExternally(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -1098,16 +1119,16 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedExternally(t *testing.T) {
 		ExpectedSecondStepError    *regexp.Regexp
 	}{
 		{DatabaseDependency: ImplicitDependency, SchemaDependency: NoDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedFirstStepError: regexp.MustCompile("error creating table")},   // tries to create table before schema
-		{DatabaseDependency: ImplicitDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a table when it's already there
-		{DatabaseDependency: ImplicitDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a table when it's already there
+		{DatabaseDependency: ImplicitDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a database when it's already there
+		{DatabaseDependency: ImplicitDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a database when it's already there
 
 		{DatabaseDependency: DependsOnDependency, SchemaDependency: NoDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedFirstStepError: regexp.MustCompile("error creating table")},   // tries to create table before schema
-		{DatabaseDependency: DependsOnDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a table when it's already there
-		{DatabaseDependency: DependsOnDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a table when it's already there
+		{DatabaseDependency: DependsOnDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a database when it's already there
+		{DatabaseDependency: DependsOnDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a database when it's already there
 
 		{DatabaseDependency: NoDependency, SchemaDependency: NoDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedFirstStepError: regexp.MustCompile("error creating table")},   // tries to create table before schema
-		{DatabaseDependency: NoDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a table when it's already there
-		{DatabaseDependency: NoDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a table when it's already there
+		{DatabaseDependency: NoDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")},  // tries to create a database when it's already there
+		{DatabaseDependency: NoDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: ImplicitDependency, ExpectedSecondStepError: regexp.MustCompile("already exists")}, // tries to create a database when it's already there
 	}
 
 	for _, testCase := range testCases {
@@ -1156,6 +1177,7 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedExternally(t *testing.T) {
 }
 
 func TestAcc_DeepHierarchy_AreNotInConfig_DatabaseRenamedExternally(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -1212,6 +1234,7 @@ func TestAcc_DeepHierarchy_AreNotInConfig_DatabaseRenamedExternally(t *testing.T
 }
 
 func TestAcc_DeepHierarchy_AreNotInConfig_SchemaRenamedExternally(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
