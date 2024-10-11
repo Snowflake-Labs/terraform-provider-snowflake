@@ -40,7 +40,7 @@ var streamCommonSchema = map[string]*schema.Schema{
 		Optional:         true,
 		Default:          false,
 		Description:      "Retains the access permissions from the original stream when a stream is recreated using the OR REPLACE clause. That is sometimes used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect when creating a new stream.",
-		DiffSuppressFunc: copyGrantsDiffSuppress,
+		DiffSuppressFunc: IgnoreAlways,
 	},
 	"comment": {
 		Type:        schema.TypeString,

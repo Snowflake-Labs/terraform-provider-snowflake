@@ -13,7 +13,7 @@ across different versions.
 
 To enhance clarity and functionality, the new resources `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table` have been introduced to replace the previous `snowflake_stream`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into more specialized resources.
 The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes).
-This segregation was based on the object on which the stream is created. The old `snowflake_stream` is now deprecated. The mapping between SQL statements and the resources is the following:
+This segregation was based on the object on which the stream is created. The mapping between SQL statements and the resources is the following:
 - `ON TABLE <table_name>` -> `snowflake_stream_on_table`
 - `ON EXTERNAL TABLE <external_table_name>` -> `snowflake_stream_on_external_table` (this was previously not supported)
 - `ON STAGE <stage_name>` -> `snowflake_stream_on_directory_table`
@@ -77,35 +77,6 @@ resource "snowflake_stream_on_directory_table" "stream" {
 }
 ```
 
-
-To use the new `stream_on_view`, change the old `stream` from
-```terraform
-resource "snowflake_stream" "stream" {
-  name     = "stream"
-  schema   = "schema"
-  database = "database"
-
-  on_view    = snowflake_view.view.fully_qualified_name
-  append_only = true
-
-  comment = "A stream."
-}
-```
-
-to
-
-```terraform
-resource "snowflake_stream_on_view" "stream" {
-  name     = "stream"
-  schema   = "schema"
-  database = "database"
-
-  view             = snowflake_view.view.fully_qualified_name
-  append_only       = "true"
-
-  comment = "A stream."
-}
-```
 
 Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
 

@@ -44,13 +44,11 @@ var viewSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"copy_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.",
-		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return oldValue != "" && oldValue != newValue
-		},
+		Type:             schema.TypeBool,
+		Optional:         true,
+		Default:          false,
+		Description:      "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.",
+		DiffSuppressFunc: IgnoreAlways,
 	},
 	"is_secure": {
 		Type:             schema.TypeString,

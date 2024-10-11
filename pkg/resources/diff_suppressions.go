@@ -255,6 +255,7 @@ func IgnoreNewEmptyListOrSubfields(ignoredSubfields ...string) schema.SchemaDiff
 	}
 }
 
-func copyGrantsDiffSuppress(k, oldValue, newValue string, d *schema.ResourceData) bool {
-	return oldValue != "" && oldValue != newValue
+// IgnoreAlways should be used to ignore changes in every case.
+func IgnoreAlways(k, oldValue, newValue string, d *schema.ResourceData) bool {
+	return true
 }
