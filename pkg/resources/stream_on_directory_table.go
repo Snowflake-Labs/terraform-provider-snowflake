@@ -104,7 +104,7 @@ func ReadStreamOnDirectoryTable(withDirectoryChangesMarking bool) schema.ReadCon
 			}
 			return diag.FromErr(err)
 		}
-		// TODO (SNOW-): the returned value is not a fully qualified name
+		// TODO (SNOW-1733130): the returned value is not a fully qualified name
 		if stream.TableName == nil {
 			return diag.Diagnostics{
 				diag.Diagnostic{
