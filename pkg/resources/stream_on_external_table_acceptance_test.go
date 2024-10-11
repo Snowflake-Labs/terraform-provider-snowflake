@@ -644,7 +644,7 @@ func TestAcc_StreamOnExternalTable_InvalidConfiguration(t *testing.T) {
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithAt),
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
-			// invalid table id
+			// invalid external table id
 			{
 				Config:      config.FromModel(t, modelWithInvalidExternalTableId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),

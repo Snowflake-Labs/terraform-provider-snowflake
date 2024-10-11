@@ -80,13 +80,7 @@ func ImportStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err != nil {
 		return nil, err
 	}
-	if err := d.Set("name", id.Name()); err != nil {
-		return nil, err
-	}
-	if err := d.Set("database", id.DatabaseName()); err != nil {
-		return nil, err
-	}
-	if err := d.Set("schema", id.SchemaName()); err != nil {
+	if _, err := ImportName[sdk.SchemaObjectIdentifier](context.Background(), d, nil); err != nil {
 		return nil, err
 	}
 	if err := d.Set("append_only", booleanStringFromBool(v.IsAppendOnly())); err != nil {
@@ -207,7 +201,7 @@ func UpdateStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	// change on these fields can not be ForceNew because then the object is dropped explicitly and copying grants does not have effect
-	if keys := changedKeys(d, "table", "append_only", "at", "before", "show_initial_rows"); len(keys) > 0 {
+	if keys := changedKeys(d, "table", "append_only", "at", "before", "show_initial_rows"); len(keys) > 0 || isStale(d) {
 		log.Printf("[DEBUG] Detected change on %q, recreating...", keys)
 		return CreateStreamOnTable(true)(ctx, d, meta)
 	}

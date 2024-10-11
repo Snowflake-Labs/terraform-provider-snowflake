@@ -251,12 +251,7 @@ func (r showStreamsDbRow) convert() *Stream {
 		}
 	}
 	if r.BaseTables.Valid {
-		baseTables, err := ParseCommaSeparatedSchemaObjectIdentifierArray(r.BaseTables.String)
-		if err != nil {
-			log.Printf("[DEBUG] error converting show stream: %v", err)
-		} else {
-			s.BaseTables = baseTables
-		}
+		s.BaseTables = ParseCommaSeparatedStringArray(r.BaseTables.String, false)
 	}
 	if r.Type.Valid {
 		s.Type = &r.Type.String

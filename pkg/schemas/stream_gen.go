@@ -5,9 +5,9 @@ package schemas
 import (
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 // ShowStreamSchema represents output of SHOW query for the single Stream.
@@ -93,18 +93,33 @@ func StreamToSchema(stream *sdk.Stream) map[string]any {
 		streamSchema["comment"] = stream.Comment
 	}
 	if stream.TableName != nil {
-		tableId, err := sdk.ParseSchemaObjectIdentifier(*stream.TableName)
-		if err != nil {
-			log.Printf("[DEBUG] could not parse table ID: %v", err)
+		if stream.SourceType != nil && *stream.SourceType == sdk.StreamSourceTypeStage {
+			streamSchema["table_name"] = *stream.TableName
 		} else {
-			streamSchema["table_name"] = tableId.FullyQualifiedName()
+			tableId, err := sdk.ParseSchemaObjectIdentifier(*stream.TableName)
+			if err != nil {
+				log.Printf("[DEBUG] could not parse table ID: %v", err)
+			} else {
+				streamSchema["table_name"] = tableId.FullyQualifiedName()
+			}
 		}
 	}
 	if stream.SourceType != nil {
 		streamSchema["source_type"] = stream.SourceType
 	}
 	if stream.BaseTables != nil {
-		streamSchema["base_tables"] = collections.Map(stream.BaseTables, sdk.SchemaObjectIdentifier.FullyQualifiedName)
+		if stream.SourceType != nil && *stream.SourceType == sdk.StreamSourceTypeStage {
+			streamSchema["table_name"] = *stream.TableName
+		} else {
+			streamSchema["base_tables"] = collections.Map(stream.BaseTables, func(s string) string{
+				id, err := sdk.ParseSchemaObjectIdentifier(s)
+				if err != nil {
+					log.Printf("[DEBUG] could not parse base table ID: %v", err)
+					return ""
+				}
+				return id.FullyQualifiedName()
+			})
+		}
 	}
 	if stream.Type != nil {
 		streamSchema["type"] = stream.Type

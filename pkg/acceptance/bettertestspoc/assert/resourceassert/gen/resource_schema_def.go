@@ -65,4 +65,12 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "StreamOnExternalTable",
 		schema: resources.StreamOnExternalTable().Schema,
 	},
+	{
+		name:   "StreamOnDirectoryTable",
+		schema: resources.StreamOnDirectoryTable().Schema,
+	},
+	{
+		name:   "StreamOnView",
+		schema: resources.StreamOnView().Schema,
+	},
 }

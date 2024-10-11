@@ -923,6 +923,7 @@ func TestAcc_View_Issue3073(t *testing.T) {
 	})
 }
 
+// fixes https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3073#issuecomment-2392250469
 func TestAcc_View_IncorrectColumnsWithOrReplace(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	statement := `SELECT ROLE_NAME as "role_name", ROLE_OWNER as "role_owner" FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`

@@ -2,7 +2,9 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -34,13 +36,11 @@ var streamCommonSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"copy_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Retains the access permissions from the original stream when a stream is recreated using the OR REPLACE clause. That is sometimes used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect when creating a new stream.",
-		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return oldValue != "" && oldValue != newValue
-		},
+		Type:             schema.TypeBool,
+		Optional:         true,
+		Default:          false,
+		Description:      "Retains the access permissions from the original stream when a stream is recreated using the OR REPLACE clause. That is sometimes used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect when creating a new stream.",
+		DiffSuppressFunc: copyGrantsDiffSuppress,
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -196,19 +196,24 @@ func handleStreamRead(d *schema.ResourceData,
 	stream *sdk.Stream,
 	streamDescription *sdk.Stream,
 ) error {
-	if err := d.Set("comment", stream.Comment); err != nil {
-		return err
-	}
+	return errors.Join(
+		d.Set("comment", stream.Comment),
+		d.Set(ShowOutputAttributeName, []map[string]any{schemas.StreamToSchema(stream)}),
+		d.Set(DescribeOutputAttributeName, []map[string]any{schemas.StreamDescriptionToSchema(*streamDescription)}),
+		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+	)
+}
 
-	if err := d.Set(ShowOutputAttributeName, []map[string]any{schemas.StreamToSchema(stream)}); err != nil {
-		return err
+func isStale(d *schema.ResourceData) bool {
+	isStale := false
+	var err error
+	if showOutput := d.Get(ShowOutputAttributeName).([]any); len(showOutput) == 1 {
+		isStale, err = booleanStringToBool(showOutput[0].(map[string]any)["stale"].(string))
+		if err != nil {
+			log.Printf("[DEBUG] can not read `stale` field from `show_output`: %v, recreating...", err)
+		}
+	} else {
+		log.Printf("[DEBUG] can not read `show_output`: expected list length 1, got %d", len(showOutput))
 	}
-	if err := d.Set(DescribeOutputAttributeName, []map[string]any{schemas.StreamDescriptionToSchema(*streamDescription)}); err != nil {
-		return err
-	}
-	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
-	}
-
-	return nil
+	return isStale
 }

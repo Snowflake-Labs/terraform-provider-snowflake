@@ -91,7 +91,7 @@ var (
 				Field("Comment", "*string").
 				Field("TableName", "*string").
 				Field("SourceType", "*StreamSourceType").
-				Field("BaseTables", "[]SchemaObjectIdentifier").
+				Field("BaseTables", "[]string").
 				Field("Type", "*string").
 				Field("Stale", "*string").
 				Field("Mode", "*StreamMode").

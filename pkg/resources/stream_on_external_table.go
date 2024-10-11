@@ -73,13 +73,7 @@ func ImportStreamOnExternalTable(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return nil, err
 	}
-	if err := d.Set("name", id.Name()); err != nil {
-		return nil, err
-	}
-	if err := d.Set("database", id.DatabaseName()); err != nil {
-		return nil, err
-	}
-	if err := d.Set("schema", id.SchemaName()); err != nil {
+	if _, err := ImportName[sdk.SchemaObjectIdentifier](context.Background(), d, nil); err != nil {
 		return nil, err
 	}
 	if err := d.Set("insert_only", booleanStringFromBool(v.IsInsertOnly())); err != nil {
@@ -154,7 +148,7 @@ func ReadStreamOnExternalTable(withExternalChangesMarking bool) schema.ReadConte
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Error,
-					Summary:  "Failed to parse table ID in Read.",
+					Summary:  "Failed to parse external table ID in Read.",
 					Detail:   fmt.Sprintf("stream name: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}
@@ -199,7 +193,7 @@ func UpdateStreamOnExternalTable(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// change on these fields can not be ForceNew because then the object is dropped explicitly and copying grants does not have effect
-	if keys := changedKeys(d, "external_table", "insert_only", "at", "before"); len(keys) > 0 {
+	if keys := changedKeys(d, "external_table", "insert_only", "at", "before"); len(keys) > 0 || isStale(d) {
 		log.Printf("[DEBUG] Detected change on %q, recreating...", keys)
 		return CreateStreamOnExternalTable(true)(ctx, d, meta)
 	}

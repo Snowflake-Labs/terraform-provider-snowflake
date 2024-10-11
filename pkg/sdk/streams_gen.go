@@ -164,7 +164,7 @@ type Stream struct {
 	Comment       *string
 	TableName     *string
 	SourceType    *StreamSourceType
-	BaseTables    []SchemaObjectIdentifier
+	BaseTables    []string
 	Type          *string
 	Stale         *string
 	Mode          *StreamMode
