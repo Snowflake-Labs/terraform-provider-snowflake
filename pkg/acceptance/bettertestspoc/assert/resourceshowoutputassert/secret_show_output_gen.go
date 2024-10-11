@@ -76,13 +76,6 @@ func (s *SecretShowOutputAssert) HasSecretType(expected string) *SecretShowOutpu
 	return s
 }
 
-func (s *SecretShowOutputAssert) HasOauthScopes(expected []string) *SecretShowOutputAssert {
-	for _, v := range expected {
-		s.AddAssertion(assert.ValueSet("oauth_scopes.*", v))
-	}
-	return s
-}
-
 func (s *SecretShowOutputAssert) HasOwnerRoleType(expected string) *SecretShowOutputAssert {
 	s.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", expected))
 	return s

@@ -3,9 +3,10 @@ package resources
 import (
 	"context"
 	"errors"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -62,19 +63,15 @@ func handleSecretImport(d *schema.ResourceData) error {
 	return nil
 }
 
-func handleSecretCreate(d *schema.ResourceData) (database, schema, name string) {
-	return d.Get("database").(string), d.Get("schema").(string), d.Get("name").(string)
-}
-
 func handleSecretRead(d *schema.ResourceData, id sdk.SchemaObjectIdentifier, secret *sdk.Secret, secretDescription *sdk.SecretDetails) error {
-	err := errors.Join(
+	errs := errors.Join(
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 		d.Set("comment", secret.Comment),
 		d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecretToSchema(secret)}),
 		d.Set(DescribeOutputAttributeName, []map[string]any{schemas.SecretDescriptionToSchema(*secretDescription)}),
 	)
-	if err != nil {
-		return err
+	if errs != nil {
+		return errs
 	}
 	return nil
 }
@@ -87,4 +84,19 @@ func handleSecretUpdate(d *schema.ResourceData, set *sdk.SecretSetRequest, unset
 			unset.WithComment(true)
 		}
 	}
+}
+
+func DeleteContextSecret(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(true)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+	return nil
 }

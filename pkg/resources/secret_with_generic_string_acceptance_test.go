@@ -54,7 +54,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType("GENERIC_STRING").
+							HasSecretType(sdk.SecretTypeGenericString).
 							HasSchemaName(id.SchemaName()).
 							HasComment(""),
 					),
@@ -64,8 +64,9 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.name", name),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.database_name", id.DatabaseName()),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.schema_name", id.SchemaName()),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", "GENERIC_STRING"),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", sdk.SecretTypeGenericString),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.username", ""),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.comment", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_access_token_expiry_time", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_refresh_token_expiry_time", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.integration_name", ""),
@@ -78,19 +79,32 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 					WithSecretString("bar").
 					WithComment(comment),
 				),
-				Check: assert.AssertThat(t,
-					resourceassert.SecretWithGenericStringResource(t, secretName).
-						HasNameString(name).
-						HasDatabaseString(id.DatabaseName()).
-						HasSchemaString(id.SchemaName()).
-						HasSecretStringString("bar").
-						HasCommentString(comment),
+
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithGenericStringResource(t, secretName).
+							HasNameString(name).
+							HasDatabaseString(id.DatabaseName()).
+							HasSchemaString(id.SchemaName()).
+							HasSecretStringString("bar").
+							HasCommentString(comment),
+
+						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
+							HasSecretType(sdk.SecretTypeGenericString).
+							HasComment(comment),
+					),
+
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.comment", comment),
 				),
 			},
 			// set comment externally, external changes for secret_string are not being detected
 			{
 				PreConfig: func() {
-					acc.TestClient().Secret.Alter(t, sdk.NewAlterSecretRequest(id).WithSet(*sdk.NewSecretSetRequest().WithComment("test_comment")))
+					acc.TestClient().Secret.Alter(t, sdk.NewAlterSecretRequest(id).
+						WithSet(*sdk.NewSecretSetRequest().
+							WithComment("test_comment"),
+						),
+					)
 				},
 				Config: config.FromModel(t, secretModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

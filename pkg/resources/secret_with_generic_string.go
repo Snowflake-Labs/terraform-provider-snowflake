@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -31,8 +32,14 @@ func SecretWithGenericString() *schema.Resource {
 		CreateContext: CreateContextSecretWithGenericString,
 		ReadContext:   ReadContextSecretWithGenericString,
 		UpdateContext: UpdateContextSecretWithGenericString,
-		DeleteContext: DeleteContextSecretWithGenericString,
+		DeleteContext: DeleteContextSecret,
 		Description:   "Resource used to manage secret objects with Generic String. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(secretGenericStringSchema, DescribeOutputAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(secretGenericStringSchema, ShowOutputAttributeName, "name", "comment"),
+			ComputedIfAnyAttributeChanged(secretGenericStringSchema, FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: secretGenericStringSchema,
 		Importer: &schema.ResourceImporter{
@@ -58,7 +65,7 @@ func ImportSecretWithGenericString(ctx context.Context, d *schema.ResourceData, 
 
 func CreateContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	databaseName, schemaName, name := handleSecretCreate(d)
+	databaseName, schemaName, name := d.Get("database").(string), d.Get("schema").(string), d.Get("name").(string)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
 	secretSting := d.Get("secret_string").(string)
@@ -126,11 +133,15 @@ func UpdateContextSecretWithGenericString(ctx context.Context, d *schema.Resourc
 	set := &sdk.SecretSetRequest{}
 	unset := &sdk.SecretUnsetRequest{}
 	handleSecretUpdate(d, set, unset)
+	setForGenericString := &sdk.SetForGenericStringRequest{}
 
 	if d.HasChange("secret_string") {
 		secretString := d.Get("secret_string").(string)
-		req := sdk.NewSetForFlowRequest().WithSetForGenericString(*sdk.NewSetForGenericStringRequest().WithSecretString(secretString))
-		set.WithSetForFlow(*req)
+		setForGenericString.WithSecretString(secretString)
+	}
+
+	if !reflect.DeepEqual(setForGenericString, sdk.SetForGenericStringRequest{}) {
+		set.WithSetForFlow(sdk.SetForFlowRequest{SetForGenericString: setForGenericString})
 	}
 
 	if !reflect.DeepEqual(*set, sdk.SecretSetRequest{}) {
@@ -146,19 +157,4 @@ func UpdateContextSecretWithGenericString(ctx context.Context, d *schema.Resourc
 	}
 
 	return ReadContextSecretWithGenericString(ctx, d, meta)
-}
-
-func DeleteContextSecretWithGenericString(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(true)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId("")
-	return nil
 }
