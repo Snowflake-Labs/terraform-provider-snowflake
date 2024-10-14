@@ -31,13 +31,14 @@ var externalVolumeSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Required:    true,
 		MinItems:    1,
-		Description: "List of named cloud storage locations in different regions and, optionally, cloud platforms. Minimum 1 required. Note that not all parameter combinations are valid as they depend on the given storage_provider. Consult [the docs](https://docs.snowflake.com/en/sql-reference/sql/create-external-volume#cloud-provider-parameters-cloudproviderparams) for more details on this.",
+		Description: "List of named cloud storage locations in different regions and, optionally, cloud platforms. Minimum 1 required. The order of the list is important as it impacts the active storage location, and updates will be triggered if it changes. Note that not all parameter combinations are valid as they depend on the given storage_provider. Consult [the docs](https://docs.snowflake.com/en/sql-reference/sql/create-external-volume#cloud-provider-parameters-cloudproviderparams) for more details on this.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"storage_location_name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "Name of the storage location. Must be unique for the external volume.",
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      blocklistedCharactersFieldDescription("Name of the storage location. Must be unique for the external volume."),
+					DiffSuppressFunc: suppressIdentifierQuoting,
 				},
 				"storage_provider": {
 					Type:             schema.TypeString,
@@ -130,7 +131,6 @@ func ExternalVolume() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(externalVolumeSchema, ShowOutputAttributeName, "name", "allow_writes", "comment"),
-			ComputedIfAnyAttributeChanged(externalVolumeSchema, FullyQualifiedNameAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(externalVolumeSchema, DescribeOutputAttributeName, "name", "allow_writes", "comment", "storage_location"),
 		),
 	}
@@ -139,7 +139,10 @@ func ExternalVolume() *schema.Resource {
 func ImportExternalVolume(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	logging.DebugLogger.Printf("[DEBUG] Starting external volume import")
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
 
 	if err := d.Set("name", id.Name()); err != nil {
 		return nil, err
@@ -151,10 +154,6 @@ func ImportExternalVolume(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if err = d.Set("allow_writes", booleanStringFromBool(externalVolume.AllowWrites)); err != nil {
-		return nil, err
-	}
-
-	if err = d.Set("comment", externalVolume.Comment); err != nil {
 		return nil, err
 	}
 
@@ -189,9 +188,264 @@ func ImportExternalVolume(ctx context.Context, d *schema.ResourceData, meta any)
 	return []*schema.ResourceData{d}, nil
 }
 
+func CreateContextExternalVolume(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+
+	name := d.Get("name").(string)
+	id := sdk.NewAccountObjectIdentifier(name)
+
+	storageLocations, err := extractStorageLocations(d.Get("storage_location"), true)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating external volume %v err = %w", id.Name(), err))
+	}
+
+	req := sdk.NewCreateExternalVolumeRequest(id, storageLocations)
+
+	if v, ok := d.GetOk("comment"); ok {
+		req.WithComment(v.(string))
+	}
+
+	if v := d.Get("allow_writes").(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		req.WithAllowWrites(parsed)
+	}
+
+	createErr := client.ExternalVolumes.Create(ctx, req)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error creating external volume %v err = %w", id.Name(), createErr))
+	}
+
+	d.SetId(helpers.EncodeResourceIdentifier(id))
+	return ReadContextExternalVolume(false)(ctx, d, meta)
+}
+
+func ReadContextExternalVolume(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		externalVolume, err := client.ExternalVolumes.ShowByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query external volume. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("External Volume: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
+			}
+
+			return diag.FromErr(err)
+		}
+
+		if withExternalChangesMarking {
+			if err = handleExternalChangesToObjectInShow(d,
+				showMapping{"allow_writes", "allow_writes", externalVolume.AllowWrites, booleanStringFromBool(externalVolume.AllowWrites), nil},
+			); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if err = setStateToValuesFromConfig(d, externalVolumeSchema, []string{
+			"allow_writes",
+		}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err = d.Set("comment", externalVolume.Comment); err != nil {
+			return diag.FromErr(err)
+		}
+
+		externalVolumeDescribe, err := client.ExternalVolumes.Describe(ctx, id)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		parsedExternalVolumeDescribed, err := helpers.ParseExternalVolumeDescribed(externalVolumeDescribe)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		storageLocations := make([]map[string]any, len(parsedExternalVolumeDescribed.StorageLocations))
+		for i, storageLocation := range parsedExternalVolumeDescribed.StorageLocations {
+			storageLocations[i] = map[string]any{
+				"storage_location_name":   storageLocation.Name,
+				"storage_provider":        storageLocation.StorageProvider,
+				"storage_base_url":        storageLocation.StorageBaseUrl,
+				"storage_aws_role_arn":    storageLocation.StorageAwsRoleArn,
+				"storage_aws_external_id": storageLocation.StorageAwsExternalId,
+				"encryption_type":         storageLocation.EncryptionType,
+				"encryption_kms_key_id":   storageLocation.EncryptionKmsKeyId,
+				"azure_tenant_id":         storageLocation.AzureTenantId,
+			}
+		}
+
+		if err = d.Set("storage_location", storageLocations); err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set(DescribeOutputAttributeName, schemas.ExternalVolumeDescriptionToSchema(externalVolumeDescribe)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.ExternalVolumeToSchema(externalVolume)}); err != nil {
+			return diag.FromErr(err)
+		}
+
+		return nil
+	}
+}
+
+func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	set := sdk.NewAlterExternalVolumeSetRequest()
+
+	if d.HasChange("comment") {
+		// not using d.GetOk as that doesn't let comments be reset to the empty string
+		set.WithComment(d.Get("comment").(string))
+	}
+
+	if d.HasChange("allow_writes") {
+		if v := d.Get("allow_writes").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			set.WithAllowWrites(parsed)
+		} else {
+			// no way to unset allow writes - set to false as a default
+			set.WithAllowWrites(false)
+		}
+	}
+
+	if (*set != sdk.AlterExternalVolumeSetRequest{}) {
+		if err := client.ExternalVolumes.Alter(ctx, sdk.NewAlterExternalVolumeRequest(id).WithSet(*set)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("storage_location") {
+		old, new := d.GetChange("storage_location")
+		oldLocations, err := extractStorageLocations(old, true)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		newLocations, err := extractStorageLocations(new, false)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		// Storage locations can only be added to the tail of the list, but can be
+		// removed at any position. Given this limitation, to keep the configuration order
+		// matching that on Snowflake the list needs to be partially recreated. For example, if a location
+		// is added in the configuration at index 5 in the list, all existing storage locations from index 5
+		// need to be removed, then the new location can be added, and then the removed locations
+		// can be added back. The storage locations lower than index 5 don't need to be modified.
+		// The removal process could be done without the above recreation, but it handles this case
+		// too so it's used for both actions.
+		longestCommonPrefix, err := LongestCommonPrefix(newLocations, oldLocations)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		var removedLocations []sdk.ExternalVolumeStorageLocation
+		var addedLocations []sdk.ExternalVolumeStorageLocation
+		if longestCommonPrefix == -1 {
+			removedLocations = oldLocations
+			addedLocations = newLocations
+		} else {
+			// Could +1 on the prefix here as the lists until and including this index
+			// are identical, would need to add some more checks for list length to avoid
+			// an array index out of bounds error
+			removedLocations = oldLocations[longestCommonPrefix:]
+			addedLocations = newLocations[longestCommonPrefix:]
+		}
+
+		if len(removedLocations) == len(oldLocations) {
+			// Create a temporary storage location, which is a copy of a storage location currently existing
+			// except with a different name. This is done to avoid recreating the external volume, which
+			// would otherwise be necessary as a minimum of 1 storage location per external volume is required.
+			// The alternative solution of adding volumes before removing them isn't possible as
+			// name must be unique for storage locations
+			if len(removedLocations) > 1 {
+				// To ensure the name of the temporary storage location is unique,
+				// first remove all but 1 storage locations from the list
+				for _, removedStorageLocation := range removedLocations[1:] {
+					err = removeStorageLocation(removedStorageLocation, client, ctx, id)
+					if err != nil {
+						return diag.FromErr(err)
+					}
+				}
+			}
+
+			temp_storage_location, err := CopyStorageLocationWithTempName(removedLocations[0])
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			addTempErr := addStorageLocation(temp_storage_location, client, ctx, id)
+			if addTempErr != nil {
+				return diag.FromErr(addTempErr)
+			}
+
+			updateErr := updateStorageLocations([]sdk.ExternalVolumeStorageLocation{removedLocations[0]}, addedLocations, client, ctx, id)
+			if updateErr != nil {
+				// Try to remove the temp location and then return with error
+				removeErr := removeStorageLocation(temp_storage_location, client, ctx, id)
+				if removeErr != nil {
+					return diag.FromErr(errors.Join(updateErr, removeErr))
+				}
+
+				return diag.FromErr(updateErr)
+			}
+
+			removeErr := removeStorageLocation(temp_storage_location, client, ctx, id)
+			if removeErr != nil {
+				return diag.FromErr(removeErr)
+			}
+		} else {
+			updateErr := updateStorageLocations(removedLocations, addedLocations, client, ctx, id)
+			if updateErr != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+	}
+
+	return ReadContextExternalVolume(false)(ctx, d, meta)
+}
+
+func DeleteContextExternalVolume(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id, idErr := sdk.ParseAccountObjectIdentifier(d.Id())
+	if idErr != nil {
+		return diag.FromErr(idErr)
+	}
+
+	err := client.ExternalVolumes.Drop(ctx, sdk.NewDropExternalVolumeRequest(id).WithIfExists(true))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+	return nil
+}
+
 func extractStorageLocations(v any, withAzureEncryptionTypeCheck bool) ([]sdk.ExternalVolumeStorageLocation, error) {
 	_, ok := v.([]any)
-	if v == nil || !ok {
+	if !ok {
 		return nil, fmt.Errorf("unable to extract storage locations, input is either nil or non expected type (%T): %v", v, v)
 	}
 
@@ -356,110 +610,6 @@ func extractStorageLocations(v any, withAzureEncryptionTypeCheck bool) ([]sdk.Ex
 	return storageLocations, nil
 }
 
-func CreateContextExternalVolume(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-
-	name := d.Get("name").(string)
-	id := sdk.NewAccountObjectIdentifier(name)
-
-	storageLocations, err := extractStorageLocations(d.Get("storage_location"), true)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating external volume %v err = %w", id.Name(), err))
-	}
-
-	req := sdk.NewCreateExternalVolumeRequest(id, storageLocations)
-
-	if v, ok := d.GetOk("comment"); ok {
-		req.WithComment(v.(string))
-	}
-
-	if v := d.Get("allow_writes").(string); v != BooleanDefault {
-		parsed, err := booleanStringToBool(v)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		req.WithAllowWrites(parsed)
-	}
-
-	createErr := client.ExternalVolumes.Create(ctx, req)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating external volume %v err = %w", id.Name(), createErr))
-	}
-
-	d.SetId(helpers.EncodeResourceIdentifier(id))
-	return ReadContextExternalVolume(false)(ctx, d, meta)
-}
-
-func ReadContextExternalVolume(withExternalChangesMarking bool) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-
-		if err := d.Set("name", id.Name()); err != nil {
-			return diag.FromErr(err)
-		}
-
-		externalVolume, err := client.ExternalVolumes.ShowByID(ctx, id)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if withExternalChangesMarking {
-			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"allow_writes", "allow_writes", externalVolume.AllowWrites, booleanStringFromBool(externalVolume.AllowWrites), nil},
-			); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-
-		if err = setStateToValuesFromConfig(d, externalVolumeSchema, []string{
-			"allow_writes",
-		}); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err = d.Set("comment", externalVolume.Comment); err != nil {
-			return diag.FromErr(err)
-		}
-
-		externalVolumeDescribe, err := client.ExternalVolumes.Describe(ctx, id)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		parsedExternalVolumeDescribed, err := helpers.ParseExternalVolumeDescribed(externalVolumeDescribe)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		storageLocations := make([]map[string]any, len(parsedExternalVolumeDescribed.StorageLocations))
-		for i, storageLocation := range parsedExternalVolumeDescribed.StorageLocations {
-			storageLocations[i] = map[string]any{
-				"storage_location_name":   storageLocation.Name,
-				"storage_provider":        storageLocation.StorageProvider,
-				"storage_base_url":        storageLocation.StorageBaseUrl,
-				"storage_aws_role_arn":    storageLocation.StorageAwsRoleArn,
-				"storage_aws_external_id": storageLocation.StorageAwsExternalId,
-				"encryption_type":         storageLocation.EncryptionType,
-				"encryption_kms_key_id":   storageLocation.EncryptionKmsKeyId,
-				"azure_tenant_id":         storageLocation.AzureTenantId,
-			}
-		}
-
-		if err = d.Set("storage_location", storageLocations); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set(DescribeOutputAttributeName, schemas.ExternalVolumeDescriptionToSchema(externalVolumeDescribe)); err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.ExternalVolumeToSchema(externalVolume)}); err != nil {
-			return diag.FromErr(err)
-		}
-
-		return nil
-	}
-}
-
 func addStorageLocation(
 	addedLocation sdk.ExternalVolumeStorageLocation,
 	client *sdk.Client,
@@ -575,143 +725,5 @@ func updateStorageLocations(
 		}
 	}
 
-	return nil
-}
-
-func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	set := sdk.NewAlterExternalVolumeSetRequest()
-
-	if d.HasChange("comment") {
-		// not using d.GetOk as that doesn't let comments be reset to the empty string
-		set.WithComment(d.Get("comment").(string))
-	}
-
-	if d.HasChange("allow_writes") {
-		if v := d.Get("allow_writes").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			set.WithAllowWrites(parsed)
-		} else {
-			// no way to unset allow writes - set to false as a default
-			set.WithAllowWrites(false)
-		}
-	}
-
-	if (*set != sdk.AlterExternalVolumeSetRequest{}) {
-		if err := client.ExternalVolumes.Alter(ctx, sdk.NewAlterExternalVolumeRequest(id).WithSet(*set)); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if d.HasChange("storage_location") {
-		old, new := d.GetChange("storage_location")
-		oldLocations, err := extractStorageLocations(old, true)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		newLocations, err := extractStorageLocations(new, false)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		// Storage locations can only be added to the tail of the list, but can be
-		// removed at any position. Given this limitation, to keep the configuration order
-		// matching that on Snowflake the list needs to be partially recreated. For example, if a location
-		// is added in the configuration at index 5 in the list, all existing storage locations from index 5
-		// need to be removed, then the new location can be added, and then the removed locations
-		// can be added back. The storage locations lower than index 5 don't need to be modified.
-		// The removal process could be done without the above recreation, but it handles this case
-		// too so it's used for both actions.
-		longestCommonPrefix, err := LongestCommonPrefix(newLocations, oldLocations)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		var removedLocations []sdk.ExternalVolumeStorageLocation
-		var addedLocations []sdk.ExternalVolumeStorageLocation
-		if longestCommonPrefix == -1 {
-			removedLocations = oldLocations
-			addedLocations = newLocations
-		} else {
-			// Could +1 on the prefix here as the lists until and including this index
-			// are identical, would need to add some more checks for list length to avoid
-			// an array index out of bounds error
-			removedLocations = oldLocations[longestCommonPrefix:]
-			addedLocations = newLocations[longestCommonPrefix:]
-		}
-
-		if len(removedLocations) == len(oldLocations) {
-			// Create a temporary storage location, which is a copy of a storage location currently existing
-			// except with a different name. This is done to avoid recreating the external volume, which
-			// would otherwise be necessary as a minimum of 1 storage location per external volume is required.
-			// The alternative solution of adding volumes before removing them isn't possible as
-			// name must be unique for storage locations
-			if len(removedLocations) > 1 {
-				// To ensure the name of the temporary storage location is unique,
-				// first remove all but 1 storage locations from the list
-				for _, removedStorageLocation := range removedLocations[1:] {
-					err = removeStorageLocation(removedStorageLocation, client, ctx, id)
-					if err != nil {
-						return diag.FromErr(err)
-					}
-				}
-			}
-
-			temp_storage_location, err := CopyStorageLocationWithTempName(removedLocations[0])
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			addTempErr := addStorageLocation(temp_storage_location, client, ctx, id)
-			if addTempErr != nil {
-				return diag.FromErr(addTempErr)
-			}
-
-			updateErr := updateStorageLocations([]sdk.ExternalVolumeStorageLocation{removedLocations[0]}, addedLocations, client, ctx, id)
-			if updateErr != nil {
-				// Try to remove the temp location and then return with error
-				removeErr := removeStorageLocation(temp_storage_location, client, ctx, id)
-				if removeErr != nil {
-					return diag.FromErr(errors.Join(updateErr, removeErr))
-				}
-
-				return diag.FromErr(updateErr)
-			}
-
-			removeErr := removeStorageLocation(temp_storage_location, client, ctx, id)
-			if removeErr != nil {
-				return diag.FromErr(removeErr)
-			}
-		} else {
-			updateErr := updateStorageLocations(removedLocations, addedLocations, client, ctx, id)
-			if updateErr != nil {
-				return diag.FromErr(err)
-			}
-		}
-
-	}
-
-	return ReadContextExternalVolume(false)(ctx, d, meta)
-}
-
-func DeleteContextExternalVolume(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-
-	err := client.ExternalVolumes.Drop(ctx, sdk.NewDropExternalVolumeRequest(id).WithIfExists(true))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId("")
 	return nil
 }

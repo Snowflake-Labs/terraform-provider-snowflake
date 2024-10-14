@@ -8,6 +8,8 @@ resource "snowflake_external_volume" "complete" {
       storage_location_name = storage_location.value["storage_location_name"]
       storage_provider      = storage_location.value["storage_provider"]
       storage_base_url      = storage_location.value["storage_base_url"]
+      encryption_type       = try(storage_location.value["encryption_type"], null)
+      encryption_kms_key_id = try(storage_location.value["encryption_kms_key_id"], null)
     }
   }
 }

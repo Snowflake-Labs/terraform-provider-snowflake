@@ -406,77 +406,54 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 
 // External volume helper tests
 
-var s3StorageLocationA = sdk.S3StorageLocationParams{
-	Name:                 s3StorageLocationName,
-	StorageProvider:      sdk.S3StorageProviderS3,
-	StorageBaseUrl:       s3StorageBaseUrl,
-	StorageAwsRoleArn:    s3StorageAwsRoleArn,
-	StorageAwsExternalId: &s3StorageAwsExternalId,
-	Encryption: &sdk.ExternalVolumeS3Encryption{
-		Type:     sdk.S3EncryptionTypeSseKms,
-		KmsKeyId: &s3EncryptionKmsKeyId,
-	},
-}
-
-var s3StorageLocationB = sdk.S3StorageLocationParams{
-	Name:                 s3StorageLocationName2,
-	StorageProvider:      sdk.S3StorageProviderS3,
-	StorageBaseUrl:       s3StorageBaseUrl,
-	StorageAwsRoleArn:    s3StorageAwsRoleArn,
-	StorageAwsExternalId: &s3StorageAwsExternalId,
-	Encryption: &sdk.ExternalVolumeS3Encryption{
-		Type:     sdk.S3EncryptionTypeSseKms,
-		KmsKeyId: &s3EncryptionKmsKeyId,
-	},
-}
-
-var azureStorageLocationA = sdk.AzureStorageLocationParams{
-	Name:           azureStorageLocationName,
-	StorageBaseUrl: azureStorageBaseUrl,
-	AzureTenantId:  azureTenantId,
-}
-
-var azureStorageLocationB = sdk.AzureStorageLocationParams{
-	Name:           azureStorageLocationName2,
-	StorageBaseUrl: azureStorageBaseUrl,
-	AzureTenantId:  azureTenantId,
-}
-
-var gcsStorageLocationA = sdk.GCSStorageLocationParams{
-	Name:           gcsStorageLocationName,
-	StorageBaseUrl: gcsStorageBaseUrl,
-	Encryption: &sdk.ExternalVolumeGCSEncryption{
-		Type:     sdk.GCSEncryptionTypeSseKms,
-		KmsKeyId: &gcsEncryptionKmsKeyId,
-	},
-}
-
-var gcsStorageLocationB = sdk.GCSStorageLocationParams{
-	Name:           gcsStorageLocationName2,
-	StorageBaseUrl: gcsStorageBaseUrl,
-	Encryption: &sdk.ExternalVolumeGCSEncryption{
-		Type:     sdk.GCSEncryptionTypeSseKms,
-		KmsKeyId: &gcsEncryptionKmsKeyId,
-	},
-}
-
-var gcsStorageLocationC = sdk.GCSStorageLocationParams{
-	Name:           "test",
-	StorageBaseUrl: gcsStorageBaseUrl,
-	Encryption: &sdk.ExternalVolumeGCSEncryption{
-		Type:     sdk.GCSEncryptionTypeSseKms,
-		KmsKeyId: &gcsEncryptionKmsKeyId,
-	},
-}
-
-var s3GovStorageLocationA = sdk.S3StorageLocationParams{
-	Name:              s3StorageLocationName,
-	StorageProvider:   sdk.S3StorageProviderS3GOV,
-	StorageBaseUrl:    s3StorageBaseUrl,
-	StorageAwsRoleArn: s3StorageAwsRoleArn,
-}
-
 func Test_GetStorageLocationName(t *testing.T) {
+	s3StorageLocationName := "s3Test"
+	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
+	s3EncryptionKmsKeyId := "123456789"
+
+	gcsStorageLocationName := "gcsTest"
+	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsEncryptionKmsKeyId := "123456789"
+
+	azureStorageLocationName := "azureTest"
+	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
+	azureTenantId := "123456789"
+
+	s3StorageLocationA := sdk.S3StorageLocationParams{
+		Name:                 s3StorageLocationName,
+		StorageProvider:      sdk.S3StorageProviderS3,
+		StorageBaseUrl:       s3StorageBaseUrl,
+		StorageAwsRoleArn:    s3StorageAwsRoleArn,
+		StorageAwsExternalId: &s3StorageAwsExternalId,
+		Encryption: &sdk.ExternalVolumeS3Encryption{
+			Type:     sdk.S3EncryptionTypeSseKms,
+			KmsKeyId: &s3EncryptionKmsKeyId,
+		},
+	}
+
+	azureStorageLocationA := sdk.AzureStorageLocationParams{
+		Name:           azureStorageLocationName,
+		StorageBaseUrl: azureStorageBaseUrl,
+		AzureTenantId:  azureTenantId,
+	}
+
+	gcsStorageLocationA := sdk.GCSStorageLocationParams{
+		Name:           gcsStorageLocationName,
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &sdk.ExternalVolumeGCSEncryption{
+			Type:     sdk.GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	s3GovStorageLocationA := sdk.S3StorageLocationParams{
+		Name:              s3StorageLocationName,
+		StorageProvider:   sdk.S3StorageProviderS3GOV,
+		StorageBaseUrl:    s3StorageBaseUrl,
+		StorageAwsRoleArn: s3StorageAwsRoleArn,
+	}
+
 	testCases := []struct {
 		Name            string
 		StorageLocation sdk.ExternalVolumeStorageLocation
@@ -542,6 +519,52 @@ func Test_GetStorageLocationName(t *testing.T) {
 }
 
 func Test_GetStorageLocationStorageProvider(t *testing.T) {
+	s3StorageLocationName := "s3Test"
+	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
+	s3EncryptionKmsKeyId := "123456789"
+
+	gcsStorageLocationName := "gcsTest"
+	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsEncryptionKmsKeyId := "123456789"
+
+	azureStorageLocationName := "azureTest"
+	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
+	azureTenantId := "123456789"
+
+	s3StorageLocationA := sdk.S3StorageLocationParams{
+		Name:                 s3StorageLocationName,
+		StorageProvider:      sdk.S3StorageProviderS3,
+		StorageBaseUrl:       s3StorageBaseUrl,
+		StorageAwsRoleArn:    s3StorageAwsRoleArn,
+		StorageAwsExternalId: &s3StorageAwsExternalId,
+		Encryption: &sdk.ExternalVolumeS3Encryption{
+			Type:     sdk.S3EncryptionTypeSseKms,
+			KmsKeyId: &s3EncryptionKmsKeyId,
+		},
+	}
+
+	azureStorageLocationA := sdk.AzureStorageLocationParams{
+		Name:           azureStorageLocationName,
+		StorageBaseUrl: azureStorageBaseUrl,
+		AzureTenantId:  azureTenantId,
+	}
+
+	gcsStorageLocationA := sdk.GCSStorageLocationParams{
+		Name:           gcsStorageLocationName,
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &sdk.ExternalVolumeGCSEncryption{
+			Type:     sdk.GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	s3GovStorageLocationA := sdk.S3StorageLocationParams{
+		Name:              s3StorageLocationName,
+		StorageProvider:   sdk.S3StorageProviderS3GOV,
+		StorageBaseUrl:    s3StorageBaseUrl,
+		StorageAwsRoleArn: s3StorageAwsRoleArn,
+	}
 	testCases := []struct {
 		Name                    string
 		StorageLocation         sdk.ExternalVolumeStorageLocation
@@ -609,6 +632,46 @@ func Test_GetStorageLocationStorageProvider(t *testing.T) {
 var s3StorageAwsExternalId = "1234567890"
 
 func Test_CopyStorageLocationWithTempName(t *testing.T) {
+	s3StorageLocationName := "s3Test"
+	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
+	s3EncryptionKmsKeyId := "123456789"
+
+	gcsStorageLocationName := "gcsTest"
+	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsEncryptionKmsKeyId := "123456789"
+
+	azureStorageLocationName := "azureTest"
+	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
+	azureTenantId := "123456789"
+
+	s3StorageLocationA := sdk.S3StorageLocationParams{
+		Name:                 s3StorageLocationName,
+		StorageProvider:      sdk.S3StorageProviderS3,
+		StorageBaseUrl:       s3StorageBaseUrl,
+		StorageAwsRoleArn:    s3StorageAwsRoleArn,
+		StorageAwsExternalId: &s3StorageAwsExternalId,
+		Encryption: &sdk.ExternalVolumeS3Encryption{
+			Type:     sdk.S3EncryptionTypeSseKms,
+			KmsKeyId: &s3EncryptionKmsKeyId,
+		},
+	}
+
+	azureStorageLocationA := sdk.AzureStorageLocationParams{
+		Name:           azureStorageLocationName,
+		StorageBaseUrl: azureStorageBaseUrl,
+		AzureTenantId:  azureTenantId,
+	}
+
+	gcsStorageLocationA := sdk.GCSStorageLocationParams{
+		Name:           gcsStorageLocationName,
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &sdk.ExternalVolumeGCSEncryption{
+			Type:     sdk.GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
 	t.Run("S3 storage location", func(t *testing.T) {
 		storageLocationInput := sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &s3StorageLocationA}
 		copiedStorageLocation, err := resources.CopyStorageLocationWithTempName(storageLocationInput)
@@ -672,6 +735,92 @@ func Test_CopyStorageLocationWithTempName(t *testing.T) {
 }
 
 func Test_LongestCommonPrefix(t *testing.T) {
+	s3StorageLocationName := "s3Test"
+	s3StorageLocationName2 := "s3Test2"
+	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
+	s3EncryptionKmsKeyId := "123456789"
+
+	gcsStorageLocationName := "gcsTest"
+	gcsStorageLocationName2 := "gcsTest2"
+	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsEncryptionKmsKeyId := "123456789"
+
+	azureStorageLocationName := "azureTest"
+	azureStorageLocationName2 := "azureTest2"
+	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
+	azureTenantId := "123456789"
+
+	s3StorageLocationA := sdk.S3StorageLocationParams{
+		Name:                 s3StorageLocationName,
+		StorageProvider:      sdk.S3StorageProviderS3,
+		StorageBaseUrl:       s3StorageBaseUrl,
+		StorageAwsRoleArn:    s3StorageAwsRoleArn,
+		StorageAwsExternalId: &s3StorageAwsExternalId,
+		Encryption: &sdk.ExternalVolumeS3Encryption{
+			Type:     sdk.S3EncryptionTypeSseKms,
+			KmsKeyId: &s3EncryptionKmsKeyId,
+		},
+	}
+
+	s3StorageLocationB := sdk.S3StorageLocationParams{
+		Name:                 s3StorageLocationName2,
+		StorageProvider:      sdk.S3StorageProviderS3,
+		StorageBaseUrl:       s3StorageBaseUrl,
+		StorageAwsRoleArn:    s3StorageAwsRoleArn,
+		StorageAwsExternalId: &s3StorageAwsExternalId,
+		Encryption: &sdk.ExternalVolumeS3Encryption{
+			Type:     sdk.S3EncryptionTypeSseKms,
+			KmsKeyId: &s3EncryptionKmsKeyId,
+		},
+	}
+
+	azureStorageLocationA := sdk.AzureStorageLocationParams{
+		Name:           azureStorageLocationName,
+		StorageBaseUrl: azureStorageBaseUrl,
+		AzureTenantId:  azureTenantId,
+	}
+
+	azureStorageLocationB := sdk.AzureStorageLocationParams{
+		Name:           azureStorageLocationName2,
+		StorageBaseUrl: azureStorageBaseUrl,
+		AzureTenantId:  azureTenantId,
+	}
+
+	gcsStorageLocationA := sdk.GCSStorageLocationParams{
+		Name:           gcsStorageLocationName,
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &sdk.ExternalVolumeGCSEncryption{
+			Type:     sdk.GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	gcsStorageLocationB := sdk.GCSStorageLocationParams{
+		Name:           gcsStorageLocationName2,
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &sdk.ExternalVolumeGCSEncryption{
+			Type:     sdk.GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	gcsStorageLocationC := sdk.GCSStorageLocationParams{
+		Name:           "test",
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &sdk.ExternalVolumeGCSEncryption{
+			Type:     sdk.GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	s3GovStorageLocationA := sdk.S3StorageLocationParams{
+		Name:              s3StorageLocationName,
+		StorageProvider:   sdk.S3StorageProviderS3GOV,
+		StorageBaseUrl:    s3StorageBaseUrl,
+		StorageAwsRoleArn: s3StorageAwsRoleArn,
+	}
+
 	testCases := []struct {
 		Name           string
 		ListA          []sdk.ExternalVolumeStorageLocation
@@ -858,6 +1007,19 @@ func Test_LongestCommonPrefix(t *testing.T) {
 }
 
 func Test_StorageLocationsEqual(t *testing.T) {
+	s3StorageLocationName := "s3Test"
+	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
+	s3EncryptionKmsKeyId := "123456789"
+
+	gcsStorageLocationName := "gcsTest"
+	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsEncryptionKmsKeyId := "123456789"
+
+	azureStorageLocationName := "azureTest"
+	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
+	azureTenantId := "123456789"
+
 	equalCases := []struct {
 		Name             string
 		StorageLocationA sdk.ExternalVolumeStorageLocation
