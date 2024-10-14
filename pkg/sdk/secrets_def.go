@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"fmt"
+
 	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 )
 
