@@ -27,10 +27,8 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
 	comment := random.Comment()
-	newComment := random.Comment()
 	refreshTokenExpiryDateTime := time.Now().Add(24 * time.Hour).Format(time.DateTime)
 	newRefreshTokenExpiryDateOnly := time.Now().Add(4 * 24 * time.Hour).Format(time.DateOnly)
-	externallyChangedRefreshTokenExpiryTime := time.Now().Add(10 * 24 * time.Hour).Format(time.DateOnly)
 	refreshToken := "test_token"
 	newRefreshToken := "new_test_token"
 
@@ -42,7 +40,6 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 
 	secretModel := model.SecretWithAuthorizationCodeGrant("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, refreshToken, refreshTokenExpiryDateTime)
 	secretModelAllSet := model.SecretWithAuthorizationCodeGrant("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, newRefreshToken, newRefreshTokenExpiryDateOnly).WithComment(comment)
-	secretModelExternalChanges := model.SecretWithAuthorizationCodeGrant("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, newRefreshToken, externallyChangedRefreshTokenExpiryTime).WithComment(newComment)
 
 	secretName := secretModel.ResourceReference()
 
@@ -131,11 +128,11 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 						),
 					))
 				},
-				Config: config.FromModel(t, secretModelExternalChanges),
+				Config: config.FromModel(t, secretModelAllSet),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretName, plancheck.ResourceActionUpdate),
-						planchecks.ExpectChange(secretName, "comment", tfjson.ActionUpdate, sdk.String("secret resource - changed comment"), sdk.String(newComment)),
+						planchecks.ExpectChange(secretName, "comment", tfjson.ActionUpdate, sdk.String("secret resource - changed comment"), sdk.String(comment)),
 						planchecks.ExpectComputed(secretName, r.DescribeOutputAttributeName, true),
 					},
 				},
@@ -147,8 +144,8 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 							HasSchemaString(id.SchemaName()).
 							HasApiAuthenticationString(integrationId.Name()).
 							HasOauthRefreshTokenString(newRefreshToken).
-							HasOauthRefreshTokenExpiryTimeString(externallyChangedRefreshTokenExpiryTime).
-							HasCommentString(newComment),
+							HasOauthRefreshTokenExpiryTimeString(newRefreshTokenExpiryDateOnly).
+							HasCommentString(comment),
 						assert.Check(resource.TestCheckResourceAttrSet(secretName, "describe_output.0.oauth_refresh_token_expiry_time")),
 					),
 				),
@@ -165,7 +162,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasApiAuthenticationString(integrationId.Name()).
-						HasCommentString(newComment).
+						HasCommentString(comment).
 						HasOauthRefreshTokenExpiryTimeNotEmpty(),
 				),
 			},

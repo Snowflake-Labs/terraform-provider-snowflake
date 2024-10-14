@@ -230,6 +230,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 	t.Cleanup(apiIntegrationCleanup)
 
 	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{})
+	secretModelEmptyScopes := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{})
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -277,9 +278,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 			},
 			// Set empty oauth_scopes
 			{
-				Config: config.FromModel(t, secretModel.
-					WithOauthScopes([]string{}),
-				),
+				Config: config.FromModel(t, secretModelEmptyScopes),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),

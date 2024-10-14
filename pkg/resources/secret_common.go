@@ -64,16 +64,12 @@ func handleSecretImport(d *schema.ResourceData) error {
 }
 
 func handleSecretRead(d *schema.ResourceData, id sdk.SchemaObjectIdentifier, secret *sdk.Secret, secretDescription *sdk.SecretDetails) error {
-	errs := errors.Join(
+	return errors.Join(
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 		d.Set("comment", secret.Comment),
 		d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecretToSchema(secret)}),
 		d.Set(DescribeOutputAttributeName, []map[string]any{schemas.SecretDescriptionToSchema(*secretDescription)}),
 	)
-	if errs != nil {
-		return errs
-	}
-	return nil
 }
 
 func handleSecretUpdate(d *schema.ResourceData, set *sdk.SecretSetRequest, unset *sdk.SecretUnsetRequest) {
