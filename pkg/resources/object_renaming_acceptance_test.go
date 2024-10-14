@@ -904,7 +904,7 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedInternally(t *testing.T) {
 		{DatabaseDependency: ImplicitDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: DependsOnDependency},
 		{DatabaseDependency: ImplicitDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: DependsOnDependency},
 
-		//{DatabaseDependency: ImplicitDependency, SchemaDependency: NoDependency, DatabaseInSchemaDependency: NoDependency}, // fails after incorrect execution order (tries to drop schema after database was dropped); cannot assert
+		// {DatabaseDependency: ImplicitDependency, SchemaDependency: NoDependency, DatabaseInSchemaDependency: NoDependency}, // fails after incorrect execution order (tries to drop schema after database was dropped); cannot assert
 		// {DatabaseDependency: ImplicitDependency, SchemaDependency: ImplicitDependency, DatabaseInSchemaDependency: NoDependency}, // tries to drop schema after database name was changed; cannot assert
 		// {DatabaseDependency: ImplicitDependency, SchemaDependency: DependsOnDependency, DatabaseInSchemaDependency: NoDependency}, // tries to drop schema after database name was changed; cannot assert
 
@@ -918,7 +918,7 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedInternally(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		t.Run(fmt.Sprintf("database dependency: %s, schema dependency: %s, database in schema dependency: %s", testCase.DatabaseDependency, testCase.SchemaDependency, testCase.DatabaseInSchemaDependency), func(t *testing.T) {
+		t.Run(fmt.Sprintf("TestAcc_ database dependency: %s, schema dependency: %s, database in schema dependency: %s", testCase.DatabaseDependency, testCase.SchemaDependency, testCase.DatabaseInSchemaDependency), func(t *testing.T) {
 			databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			schemaName := acc.TestClient().Ids.Alpha()
@@ -989,7 +989,7 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedInternally(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		t.Run(fmt.Sprintf("database dependency: %s, schema dependency: %s", testCase.DatabaseDependency, testCase.SchemaDependency), func(t *testing.T) {
+		t.Run(fmt.Sprintf("TestAcc_ database dependency: %s, schema dependency: %s", testCase.DatabaseDependency, testCase.SchemaDependency), func(t *testing.T) {
 			databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			schemaName := acc.TestClient().Ids.Alpha()
 			newSchemaName := acc.TestClient().Ids.Alpha()
@@ -1061,7 +1061,7 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedExternally(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		t.Run(fmt.Sprintf("database dependency: %s, schema dependency: %s, database in schema dependency: %s", testCase.DatabaseDependency, testCase.SchemaDependency, testCase.DatabaseInSchemaDependency), func(t *testing.T) {
+		t.Run(fmt.Sprintf("TestAcc_ database dependency: %s, schema dependency: %s, database in schema dependency: %s", testCase.DatabaseDependency, testCase.SchemaDependency, testCase.DatabaseInSchemaDependency), func(t *testing.T) {
 			databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			schemaName := acc.TestClient().Ids.Alpha()
@@ -1132,7 +1132,7 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedExternally(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		t.Run(fmt.Sprintf("database dependency: %s, schema dependency: %s, database in schema dependency: %s", testCase.DatabaseDependency, testCase.SchemaDependency, testCase.DatabaseInSchemaDependency), func(t *testing.T) {
+		t.Run(fmt.Sprintf("TestAcc_ database dependency: %s, schema dependency: %s, database in schema dependency: %s", testCase.DatabaseDependency, testCase.SchemaDependency, testCase.DatabaseInSchemaDependency), func(t *testing.T) {
 			databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 			newSchemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
@@ -1190,7 +1190,7 @@ func TestAcc_DeepHierarchy_AreNotInConfig_DatabaseRenamedExternally(t *testing.T
 	}
 
 	for _, testCase := range testCases {
-		t.Run(fmt.Sprintf("use new database after rename: %t", testCase.UseNewDatabaseNameAfterRename), func(t *testing.T) {
+		t.Run(fmt.Sprintf("TestAcc_ use new database after rename: %t", testCase.UseNewDatabaseNameAfterRename), func(t *testing.T) {
 			newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			tableName := acc.TestClient().Ids.Alpha()
 
@@ -1247,7 +1247,7 @@ func TestAcc_DeepHierarchy_AreNotInConfig_SchemaRenamedExternally(t *testing.T) 
 	}
 
 	for _, testCase := range testCases {
-		t.Run(fmt.Sprintf("use new database after rename: %t", testCase.UseNewSchemaNameAfterRename), func(t *testing.T) {
+		t.Run(fmt.Sprintf("TestAcc_ use new database after rename: %t", testCase.UseNewSchemaNameAfterRename), func(t *testing.T) {
 			database, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
 			t.Cleanup(databaseCleanup)
 

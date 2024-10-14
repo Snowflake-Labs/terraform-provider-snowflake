@@ -2,9 +2,10 @@ package testint
 
 import (
 	"context"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func schemaObjectShowByIDWrapper[T any](showByIdFn func(context.Context, sdk.SchemaObjectIdentifier) (*T, error)) func(context.Context, sdk.SchemaObjectIdentifier) error {
