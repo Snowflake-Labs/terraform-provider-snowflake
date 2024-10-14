@@ -62,6 +62,11 @@ var allStructs = []SdkObjectDef{
 		ObjectType:   sdk.ObjectTypeTask,
 		ObjectStruct: sdk.Task{},
 	},
+	{
+		IdType:       "sdk.ExternalVolumeObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeExternalVolume,
+		ObjectStruct: sdk.ExternalVolume{},
+	},
 }
 
 func GetSdkObjectDetails() []genhelpers.SdkObjectDetails {

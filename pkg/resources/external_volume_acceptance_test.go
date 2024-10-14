@@ -15,6 +15,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -158,16 +159,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString("").
 						HasAllowWritesString(r.BooleanDefault).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment("").
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", "")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -192,16 +193,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -223,6 +224,10 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(2),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -235,10 +240,6 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -260,16 +261,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -283,16 +284,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -306,16 +307,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -329,16 +330,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeSseS3)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -352,16 +353,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeSseKms)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", s3EncryptionKmsKeyId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -375,16 +376,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeSseKms)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", s3EncryptionKmsKeyId2)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -406,6 +407,10 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(2),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -418,10 +423,6 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_type", s3EncryptionTypeSseKms)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_kms_key_id", s3EncryptionKmsKeyId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -443,16 +444,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeSseS3)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -466,16 +467,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -489,16 +490,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -512,16 +513,16 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 						HasCommentString("").
 						HasAllowWritesString(r.BooleanDefault).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment("").
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", "")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -571,15 +572,15 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString("").
 						HasAllowWritesString(r.BooleanDefault).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment("").
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", gcsEncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", "")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -604,15 +605,15 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", gcsEncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -634,6 +635,10 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(2),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
@@ -644,10 +649,6 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_type", gcsEncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -669,15 +670,15 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", gcsEncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -691,15 +692,15 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", gcsEncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -713,15 +714,15 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", gcsEncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -735,15 +736,15 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", gcsEncryptionTypeSseKms)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", gcsEncryptionKmsKeyId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -757,15 +758,15 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", gcsEncryptionTypeSseKms)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", gcsEncryptionKmsKeyId2)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -787,6 +788,10 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(2),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
@@ -797,10 +802,6 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_type", gcsEncryptionTypeSseKms)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_kms_key_id", gcsEncryptionKmsKeyId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -822,15 +823,15 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", gcsEncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -844,15 +845,15 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", gcsEncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -866,15 +867,15 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 						HasCommentString("").
 						HasAllowWritesString(r.BooleanDefault).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment("").
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", gcsStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", gcsStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", gcsStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_type", gcsEncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", "")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -918,14 +919,14 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 						HasCommentString("").
 						HasAllowWritesString(r.BooleanDefault).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment("").
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", azureStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", "")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -950,14 +951,14 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", azureStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -979,6 +980,10 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(2),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", azureStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", azureStorageBaseUrl)),
@@ -987,10 +992,6 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -1012,14 +1013,14 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", azureStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -1033,14 +1034,14 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 						HasCommentString(comment2).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment2).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", azureStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -1054,14 +1055,14 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 						HasCommentString("").
 						HasAllowWritesString(r.BooleanDefault).
 						HasStorageLocationLength(1),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment("").
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", azureStorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", "")),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -1116,6 +1117,10 @@ func TestAcc_External_Volume_All_Options(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1131,10 +1136,6 @@ func TestAcc_External_Volume_All_Options(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1206,6 +1207,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1220,10 +1225,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1245,6 +1246,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl2)),
@@ -1259,10 +1264,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1276,6 +1277,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1290,10 +1295,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1307,6 +1308,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(4),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName2)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1327,10 +1332,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "7")),
 				),
 			},
@@ -1344,6 +1345,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1358,10 +1363,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1375,6 +1376,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1389,10 +1394,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1406,6 +1407,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1420,10 +1425,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1437,6 +1438,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(4),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1457,10 +1462,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "7")),
 				),
 			},
@@ -1474,6 +1475,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1488,10 +1493,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1505,6 +1506,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1519,10 +1524,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId2)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1536,6 +1537,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1550,10 +1555,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1567,6 +1568,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(4),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1586,10 +1591,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "7")),
 				),
 			},
@@ -1603,6 +1604,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1617,10 +1622,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1634,6 +1635,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(4),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1653,10 +1658,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.3.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "7")),
 				),
 			},
@@ -1670,6 +1671,10 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesTrue).
 						HasStorageLocationLength(3),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesTrue),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1684,10 +1689,6 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_provider", azureStorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.storage_base_url", azureStorageBaseUrl)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.2.azure_tenant_id", azureTenantId)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesTrue)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1730,6 +1731,10 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(2),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1742,10 +1747,6 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -1774,10 +1775,6 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -1806,6 +1803,10 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(2),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1818,10 +1819,6 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -1838,6 +1835,10 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(2),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1850,10 +1851,6 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -1872,6 +1869,10 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(2),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1884,10 +1885,6 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -1906,6 +1903,10 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 						HasCommentString(comment).
 						HasAllowWritesString(allowWritesFalse).
 						HasStorageLocationLength(2),
+					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
+						HasName(externalVolumeName).
+						HasComment(comment).
+						HasAllowWrites(allowWritesFalse),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", s3StorageLocationName)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", s3StorageProvider)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", s3StorageBaseUrl)),
@@ -1918,10 +1919,6 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.storage_aws_role_arn", s3StorageAwsRoleArn)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_type", s3EncryptionTypeNone)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.1.encryption_kms_key_id", "")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.name", externalVolumeName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.allow_writes", allowWritesFalse)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "show_output.0.comment", comment)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
