@@ -20,6 +20,7 @@ var secretBasicAuthenticationSchema = func() map[string]*schema.Schema {
 		"username": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Specifies the username value to store in the secret.",
 		},
 		"password": {

@@ -5,7 +5,7 @@ description: |-
   Resource used to manage secret objects with Basic Authentication. For more information, check secret documentation https://docs.snowflake.com/en/sql-reference/sql/create-secret.
 ---
 
-!> **V1 release candidate** This resource is a release candidate for the V1. It is on the list of remaining GA objects for V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0960--v0970) to use it.
+!> **V1 release candidate** This resource is a release candidate for the V1. It is on the list of remaining GA objects for V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0970--v0980) to use it.
 
 # snowflake_secret_with_basic_authentication (Resource)
 
@@ -45,7 +45,7 @@ resource "snowflake_secret_with_basic_authentication" "test" {
 - `name` (String) String that specifies the identifier (i.e. name) for the secret, must be unique in your schema. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 - `password` (String, Sensitive) Specifies the password value to store in the secret. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `schema` (String) The schema in which to create the secret. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
-- `username` (String) Specifies the username value to store in the secret.
+- `username` (String, Sensitive) Specifies the username value to store in the secret.
 
 ### Optional
 
