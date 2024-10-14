@@ -44,7 +44,7 @@ var taskSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 		Description:      blocklistedCharactersFieldDescription("Specifies the identifier for the task; must be unique for the database and schema in which the task is created."),
 	},
-	"enabled": {
+	"started": {
 		Type:     schema.TypeBool,
 		Required: true,
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShowWithMapping("state", func(state any) any {
@@ -129,7 +129,7 @@ var taskSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: SuppressIfAny(DiffSuppressStatement, IgnoreChangeToCurrentSnowflakeValueInShow("condition")),
-		Description:      "Specifies a Boolean SQL expression; multiple conditions joined with AND/OR are supported.",
+		Description:      "Specifies a Boolean SQL expression; multiple conditions joined with AND/OR are supported. When a task is triggered (based on its SCHEDULE or AFTER setting), it validates the conditions of the expression to determine whether to execute. If the conditions of the expression are not met, then the task skips the current run. Any tasks that identify this task as a predecessor also don’t run.",
 	},
 	"sql_statement": {
 		Type:             schema.TypeString,
@@ -171,7 +171,7 @@ func Task() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(taskSchema, ShowOutputAttributeName, "name", "enabled", "warehouse", "user_task_managed_initial_warehouse_size", "schedule", "config", "allow_overlapping_execution", "error_integration", "comment", "finalize", "after", "when"),
+			ComputedIfAnyAttributeChanged(taskSchema, ShowOutputAttributeName, "name", "started", "warehouse", "user_task_managed_initial_warehouse_size", "schedule", "config", "allow_overlapping_execution", "error_integration", "comment", "finalize", "after", "when"),
 			ComputedIfAnyAttributeChanged(taskParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllTaskParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(taskSchema, FullyQualifiedNameAttributeName, "name"),
 			taskParametersCustomDiff,
@@ -305,7 +305,7 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	// TODO(SNOW-1348116 - next pr): State upgrader for "id" (and potentially other fields)
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	if d.Get("enabled").(bool) {
+	if d.Get("started").(bool) {
 		if err := waitForTaskStart(ctx, client, id); err != nil {
 			return diag.Diagnostics{
 				{
@@ -492,7 +492,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		}
 	}
 
-	if d.Get("enabled").(bool) {
+	if d.Get("started").(bool) {
 		log.Printf("Resuming the task in handled update")
 		if err := waitForTaskStart(ctx, client, id); err != nil {
 			return diag.FromErr(fmt.Errorf("failed to resume task %s, err = %w", id.FullyQualifiedName(), err))
@@ -566,7 +566,7 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 
 		if errs := errors.Join(
-			d.Set("enabled", task.State == sdk.TaskStateStarted),
+			d.Set("started", task.State == sdk.TaskStateStarted),
 			d.Set("warehouse", warehouseId),
 			d.Set("schedule", task.Schedule),
 			d.Set("when", task.Condition),

@@ -155,6 +155,7 @@ func GetRootTasks(v Tasks, ctx context.Context, id SchemaObjectIdentifier) ([]Ta
 
 		if task.TaskRelations.FinalizedRootTask != nil {
 			tasksToExamine.Push(*task.TaskRelations.FinalizedRootTask)
+			alreadyExaminedTasksNames = append(alreadyExaminedTasksNames, current.Name())
 			continue
 		}
 

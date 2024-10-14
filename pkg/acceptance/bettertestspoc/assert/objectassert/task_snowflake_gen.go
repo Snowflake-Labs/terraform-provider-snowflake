@@ -107,23 +107,6 @@ func (t *TaskAssert) HasComment(expected string) *TaskAssert {
 	return t
 }
 
-func (t *TaskAssert) HasWarehouse(expected *sdk.AccountObjectIdentifier) *TaskAssert {
-	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
-		t.Helper()
-		if o.Warehouse == nil && expected != nil {
-			return fmt.Errorf("expected warehouse to have value; got: nil")
-		}
-		if o.Warehouse != nil && expected == nil {
-			return fmt.Errorf("expected warehouse to no have value; got: %s", o.Warehouse.Name())
-		}
-		if o.Warehouse != nil && expected != nil && o.Warehouse.Name() != expected.Name() {
-			return fmt.Errorf("expected warehouse: %v; got: %v", expected.Name(), o.Warehouse.Name())
-		}
-		return nil
-	})
-	return t
-}
-
 func (t *TaskAssert) HasSchedule(expected string) *TaskAssert {
 	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
 		t.Helper()
@@ -173,23 +156,6 @@ func (t *TaskAssert) HasAllowOverlappingExecution(expected bool) *TaskAssert {
 		t.Helper()
 		if o.AllowOverlappingExecution != expected {
 			return fmt.Errorf("expected allow overlapping execution: %v; got: %v", expected, o.AllowOverlappingExecution)
-		}
-		return nil
-	})
-	return t
-}
-
-func (t *TaskAssert) HasErrorIntegration(expected *sdk.AccountObjectIdentifier) *TaskAssert {
-	t.AddAssertion(func(t *testing.T, o *sdk.Task) error {
-		t.Helper()
-		if o.ErrorIntegration == nil && expected != nil {
-			return fmt.Errorf("expected error integration to have value; got: nil")
-		}
-		if o.ErrorIntegration != nil && expected == nil {
-			return fmt.Errorf("expected error integration to have no value; got: %s", o.ErrorIntegration.Name())
-		}
-		if o.ErrorIntegration != nil && expected != nil && o.ErrorIntegration.Name() != expected.Name() {
-			return fmt.Errorf("expected error integration: %v; got: %v", expected.Name(), o.ErrorIntegration.Name())
 		}
 		return nil
 	})

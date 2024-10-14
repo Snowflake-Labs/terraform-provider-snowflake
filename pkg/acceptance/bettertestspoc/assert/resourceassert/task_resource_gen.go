@@ -132,11 +132,6 @@ func (t *TaskResourceAssert) HasEnableUnloadPhysicalTypeOptimizationString(expec
 	return t
 }
 
-func (t *TaskResourceAssert) HasEnabledString(expected string) *TaskResourceAssert {
-	t.AddAssertion(assert.ValueSet("enabled", expected))
-	return t
-}
-
 func (t *TaskResourceAssert) HasErrorIntegrationString(expected string) *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("error_integration", expected))
 	return t
@@ -254,6 +249,11 @@ func (t *TaskResourceAssert) HasSearchPathString(expected string) *TaskResourceA
 
 func (t *TaskResourceAssert) HasSqlStatementString(expected string) *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("sql_statement", expected))
+	return t
+}
+
+func (t *TaskResourceAssert) HasStartedString(expected string) *TaskResourceAssert {
+	t.AddAssertion(assert.ValueSet("started", expected))
 	return t
 }
 
@@ -501,11 +501,6 @@ func (t *TaskResourceAssert) HasNoEnableUnloadPhysicalTypeOptimization() *TaskRe
 	return t
 }
 
-func (t *TaskResourceAssert) HasNoEnabled() *TaskResourceAssert {
-	t.AddAssertion(assert.ValueNotSet("enabled"))
-	return t
-}
-
 func (t *TaskResourceAssert) HasNoErrorIntegration() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueNotSet("error_integration"))
 	return t
@@ -623,6 +618,11 @@ func (t *TaskResourceAssert) HasNoSearchPath() *TaskResourceAssert {
 
 func (t *TaskResourceAssert) HasNoSqlStatement() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueNotSet("sql_statement"))
+	return t
+}
+
+func (t *TaskResourceAssert) HasNoStarted() *TaskResourceAssert {
+	t.AddAssertion(assert.ValueNotSet("started"))
 	return t
 }
 

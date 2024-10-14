@@ -3,8 +3,6 @@
 package resourceshowoutputassert
 
 import (
-	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
@@ -77,8 +75,8 @@ func (t *TaskShowOutputAssert) HasComment(expected string) *TaskShowOutputAssert
 	return t
 }
 
-func (t *TaskShowOutputAssert) HasWarehouse(expected string) *TaskShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("warehouse", expected))
+func (t *TaskShowOutputAssert) HasWarehouse(expected sdk.AccountObjectIdentifier) *TaskShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("warehouse", expected.Name()))
 	return t
 }
 
@@ -107,8 +105,8 @@ func (t *TaskShowOutputAssert) HasAllowOverlappingExecution(expected bool) *Task
 	return t
 }
 
-func (t *TaskShowOutputAssert) HasErrorIntegration(expected string) *TaskShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("error_integration", expected))
+func (t *TaskShowOutputAssert) HasErrorIntegration(expected sdk.AccountObjectIdentifier) *TaskShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("error_integration", expected.Name()))
 	return t
 }
 
@@ -134,21 +132,6 @@ func (t *TaskShowOutputAssert) HasConfig(expected string) *TaskShowOutputAssert 
 
 func (t *TaskShowOutputAssert) HasBudget(expected string) *TaskShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputValueSet("budget", expected))
-	return t
-}
-
-func (t *TaskShowOutputAssert) HasTaskRelations(expected sdk.TaskRelations) *TaskShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.#", "1"))
-	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.0.predecessors.#", strconv.Itoa(len(expected.Predecessors))))
-	for i, predecessor := range expected.Predecessors {
-		t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet(fmt.Sprintf("task_relations.0.predecessors.%d", i), predecessor.FullyQualifiedName()))
-	}
-	if expected.FinalizerTask != nil && len(expected.FinalizerTask.Name()) > 0 {
-		t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.0.finalizer", expected.FinalizerTask.FullyQualifiedName()))
-	}
-	if expected.FinalizedRootTask != nil && len(expected.FinalizedRootTask.Name()) > 0 {
-		t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.0.finalized_root_task", expected.FinalizedRootTask.FullyQualifiedName()))
-	}
 	return t
 }
 

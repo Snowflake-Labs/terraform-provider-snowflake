@@ -30,7 +30,6 @@ type TaskModel struct {
 	DateInputFormat                          tfconfig.Variable `json:"date_input_format,omitempty"`
 	DateOutputFormat                         tfconfig.Variable `json:"date_output_format,omitempty"`
 	EnableUnloadPhysicalTypeOptimization     tfconfig.Variable `json:"enable_unload_physical_type_optimization,omitempty"`
-	Enabled                                  tfconfig.Variable `json:"enabled,omitempty"`
 	ErrorIntegration                         tfconfig.Variable `json:"error_integration,omitempty"`
 	ErrorOnNondeterministicMerge             tfconfig.Variable `json:"error_on_nondeterministic_merge,omitempty"`
 	ErrorOnNondeterministicUpdate            tfconfig.Variable `json:"error_on_nondeterministic_update,omitempty"`
@@ -55,6 +54,7 @@ type TaskModel struct {
 	Schema                                   tfconfig.Variable `json:"schema,omitempty"`
 	SearchPath                               tfconfig.Variable `json:"search_path,omitempty"`
 	SqlStatement                             tfconfig.Variable `json:"sql_statement,omitempty"`
+	Started                                  tfconfig.Variable `json:"started,omitempty"`
 	StatementQueuedTimeoutInSeconds          tfconfig.Variable `json:"statement_queued_timeout_in_seconds,omitempty"`
 	StatementTimeoutInSeconds                tfconfig.Variable `json:"statement_timeout_in_seconds,omitempty"`
 	StrictJsonOutput                         tfconfig.Variable `json:"strict_json_output,omitempty"`
@@ -94,33 +94,33 @@ type TaskModel struct {
 func Task(
 	resourceName string,
 	database string,
-	enabled bool,
 	name string,
 	schema string,
 	sqlStatement string,
+	started bool,
 ) *TaskModel {
 	t := &TaskModel{ResourceModelMeta: config.Meta(resourceName, resources.Task)}
 	t.WithDatabase(database)
-	t.WithEnabled(enabled)
 	t.WithName(name)
 	t.WithSchema(schema)
 	t.WithSqlStatement(sqlStatement)
+	t.WithStarted(started)
 	return t
 }
 
 func TaskWithDefaultMeta(
 	database string,
-	enabled bool,
 	name string,
 	schema string,
 	sqlStatement string,
+	started bool,
 ) *TaskModel {
 	t := &TaskModel{ResourceModelMeta: config.DefaultMeta(resources.Task)}
 	t.WithDatabase(database)
-	t.WithEnabled(enabled)
 	t.WithName(name)
 	t.WithSchema(schema)
 	t.WithSqlStatement(sqlStatement)
+	t.WithStarted(started)
 	return t
 }
 
@@ -222,11 +222,6 @@ func (t *TaskModel) WithDateOutputFormat(dateOutputFormat string) *TaskModel {
 
 func (t *TaskModel) WithEnableUnloadPhysicalTypeOptimization(enableUnloadPhysicalTypeOptimization bool) *TaskModel {
 	t.EnableUnloadPhysicalTypeOptimization = tfconfig.BoolVariable(enableUnloadPhysicalTypeOptimization)
-	return t
-}
-
-func (t *TaskModel) WithEnabled(enabled bool) *TaskModel {
-	t.Enabled = tfconfig.BoolVariable(enabled)
 	return t
 }
 
@@ -347,6 +342,11 @@ func (t *TaskModel) WithSearchPath(searchPath string) *TaskModel {
 
 func (t *TaskModel) WithSqlStatement(sqlStatement string) *TaskModel {
 	t.SqlStatement = tfconfig.StringVariable(sqlStatement)
+	return t
+}
+
+func (t *TaskModel) WithStarted(started bool) *TaskModel {
+	t.Started = tfconfig.BoolVariable(started)
 	return t
 }
 
@@ -594,11 +594,6 @@ func (t *TaskModel) WithEnableUnloadPhysicalTypeOptimizationValue(value tfconfig
 	return t
 }
 
-func (t *TaskModel) WithEnabledValue(value tfconfig.Variable) *TaskModel {
-	t.Enabled = value
-	return t
-}
-
 func (t *TaskModel) WithErrorIntegrationValue(value tfconfig.Variable) *TaskModel {
 	t.ErrorIntegration = value
 	return t
@@ -716,6 +711,11 @@ func (t *TaskModel) WithSearchPathValue(value tfconfig.Variable) *TaskModel {
 
 func (t *TaskModel) WithSqlStatementValue(value tfconfig.Variable) *TaskModel {
 	t.SqlStatement = value
+	return t
+}
+
+func (t *TaskModel) WithStartedValue(value tfconfig.Variable) *TaskModel {
+	t.Started = value
 	return t
 }
 

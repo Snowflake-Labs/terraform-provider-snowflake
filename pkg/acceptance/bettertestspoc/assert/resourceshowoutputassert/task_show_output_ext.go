@@ -35,3 +35,18 @@ func (t *TaskShowOutputAssert) HasPredecessors(predecessors ...sdk.SchemaObjectI
 	}
 	return t
 }
+
+func (t *TaskShowOutputAssert) HasTaskRelations(expected sdk.TaskRelations) *TaskShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.#", "1"))
+	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.0.predecessors.#", strconv.Itoa(len(expected.Predecessors))))
+	for i, predecessor := range expected.Predecessors {
+		t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet(fmt.Sprintf("task_relations.0.predecessors.%d", i), predecessor.FullyQualifiedName()))
+	}
+	if expected.FinalizerTask != nil && len(expected.FinalizerTask.Name()) > 0 {
+		t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.0.finalizer", expected.FinalizerTask.FullyQualifiedName()))
+	}
+	if expected.FinalizedRootTask != nil && len(expected.FinalizedRootTask.Name()) > 0 {
+		t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.0.finalized_root_task", expected.FinalizedRootTask.FullyQualifiedName()))
+	}
+	return t
+}
