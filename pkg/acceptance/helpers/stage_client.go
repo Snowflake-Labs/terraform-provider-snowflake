@@ -136,3 +136,10 @@ func (c *StageClient) Rename(t *testing.T, id sdk.SchemaObjectIdentifier, newId 
 	err := c.client().Alter(ctx, sdk.NewAlterStageRequest(id).WithRenameTo(&newId))
 	require.NoError(t, err)
 }
+
+func (c *StageClient) Describe(t *testing.T, id sdk.SchemaObjectIdentifier) ([]sdk.StageProperty, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().Describe(ctx, id)
+}

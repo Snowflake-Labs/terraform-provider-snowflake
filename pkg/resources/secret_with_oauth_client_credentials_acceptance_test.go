@@ -64,7 +64,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType("OAUTH2").
+							HasSecretType(sdk.SecretTypeOAuth2).
 							HasSchemaName(id.SchemaName()),
 					),
 					resource.TestCheckResourceAttr(secretName, "oauth_scopes.#", "2"),
@@ -94,27 +94,39 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						planchecks.ExpectChange(secretName, "oauth_scopes", tfjson.ActionUpdate, sdk.String("[bar foo]"), sdk.String("[test]")),
 					},
 				},
-				Check: assert.AssertThat(t,
-					resourceassert.SecretWithClientCredentialsResource(t, "snowflake_secret_with_client_credentials.s").
-						HasNameString(name).
-						HasDatabaseString(id.DatabaseName()).
-						HasSchemaString(id.SchemaName()).
-						HasApiAuthenticationString(integrationId.Name()).
-						HasOauthScopesLength(len([]string{"test"})).
-						HasCommentString(newComment),
-					assert.Check(resource.TestCheckResourceAttr(secretName, "oauth_scopes.#", "1")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(secretName, "oauth_scopes.*", "test")),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithClientCredentialsResource(t, "snowflake_secret_with_client_credentials.s").
+							HasNameString(name).
+							HasDatabaseString(id.DatabaseName()).
+							HasSchemaString(id.SchemaName()).
+							HasApiAuthenticationString(integrationId.Name()).
+							HasOauthScopesLength(len([]string{"test"})).
+							HasCommentString(newComment),
+						assert.Check(resource.TestCheckResourceAttr(secretName, "oauth_scopes.#", "1")),
+						assert.Check(resource.TestCheckTypeSetElemAttr(secretName, "oauth_scopes.*", "test")),
+
+						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
+							HasSecretType(sdk.SecretTypeOAuth2).
+							HasComment(newComment),
+					),
+
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.comment", newComment),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_scopes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(secretName, "describe_output.0.oauth_scopes.*", "test"),
 				),
 			},
 			// set oauth_scopes and comment externally
 			{
 				PreConfig: func() {
 					req := sdk.NewAlterSecretRequest(id).WithSet(*sdk.NewSecretSetRequest().
-						WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthClientCredentials(
-							*sdk.NewSetForOAuthClientCredentialsRequest().WithOauthScopes(
-								*sdk.NewOauthScopesListRequest([]sdk.ApiIntegrationScope{{Scope: "bar"}}),
+						WithSetForFlow(*sdk.NewSetForFlowRequest().
+							WithSetForOAuthClientCredentials(
+								*sdk.NewSetForOAuthClientCredentialsRequest().WithOauthScopes(
+									*sdk.NewOauthScopesListRequest([]sdk.ApiIntegrationScope{{Scope: "bar"}}),
+								),
 							),
-						)),
+						),
 					)
 					acc.TestClient().Secret.Alter(t, req)
 				},
@@ -152,7 +164,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						HasCommentString(""),
 				),
 			},
-			// unset comment externally
+			// set comment externally
 			{
 				PreConfig: func() {
 					req := sdk.NewAlterSecretRequest(id).WithSet(*sdk.NewSecretSetRequest().WithComment(comment))
@@ -218,6 +230,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 	t.Cleanup(apiIntegrationCleanup)
 
 	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{})
+	secretModelEmptyScopes := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{})
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -265,9 +278,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 			},
 			// Set empty oauth_scopes
 			{
-				Config: config.FromModel(t, secretModel.
-					WithOauthScopes([]string{}),
-				),
+				Config: config.FromModel(t, secretModelEmptyScopes),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),

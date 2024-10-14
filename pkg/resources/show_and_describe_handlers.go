@@ -43,6 +43,28 @@ type showMapping struct {
 	normalizeFunc  func(any) any
 }
 
+// handleExternalValueChangesToObjectInDescribe assumes that describe output is kept in DescribeOutputAttributeName attribute
+func handleExternalValueChangesToObjectInDescribe(d *schema.ResourceData, mappings ...describeMapping) error {
+	if descOutput, ok := d.GetOk(DescribeOutputAttributeName); ok {
+		descOutputList := descOutput.([]any)
+		if len(descOutputList) == 1 {
+			result := descOutputList[0].(map[string]any)
+			for _, mapping := range mappings {
+				valueToCompareFrom := result[mapping.nameInDescribe]
+				if mapping.normalizeFunc != nil {
+					valueToCompareFrom = mapping.normalizeFunc(valueToCompareFrom)
+				}
+				if valueToCompareFrom != mapping.valueToCompare {
+					if err := d.Set(mapping.nameInConfig, mapping.valueToSet); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // handleExternalChangesToObjectInDescribe assumes that show output is kept in DescribeOutputAttributeName attribute
 func handleExternalChangesToObjectInDescribe(d *schema.ResourceData, mappings ...describeMapping) error {
 	if describeOutput, ok := d.GetOk(DescribeOutputAttributeName); ok {

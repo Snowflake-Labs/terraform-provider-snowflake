@@ -41,7 +41,7 @@ resource "snowflake_stage" "example_stage" {
 - `credentials` (String, Sensitive) Specifies the credentials for the stage.
 - `directory` (String) Specifies the directory settings for the stage.
 - `encryption` (String) Specifies the encryption settings for the stage.
-- `file_format` (String) Specifies the file format for the stage.
+- `file_format` (String) Specifies the file format for the stage. Specifying the default Snowflake value (e.g. TYPE = CSV) will currently result in a permadiff (check [#2679](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2679)). For now, omit the default values; it will be fixed in the upcoming provider versions.
 - `snowflake_iam_user` (String) An AWS IAM user created for your Snowflake account. This user is the same for every external S3 stage created in your account.
 - `storage_integration` (String) Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.
 - `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))

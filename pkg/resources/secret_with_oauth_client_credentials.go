@@ -11,6 +11,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -38,8 +39,14 @@ func SecretWithClientCredentials() *schema.Resource {
 		CreateContext: CreateContextSecretWithClientCredentials,
 		ReadContext:   ReadContextSecretWithClientCredentials,
 		UpdateContext: UpdateContextSecretWithClientCredentials,
-		DeleteContext: DeleteContextSecretWithClientCredentials,
+		DeleteContext: DeleteContextSecret,
 		Description:   "Resource used to manage secret objects with OAuth Client Credentials. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, DescribeOutputAttributeName, "name", "oauth_scopes", "api_authentication"),
+			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, ShowOutputAttributeName, "name", "comment"),
+			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: secretClientCredentialsSchema,
 		Importer: &schema.ResourceImporter{
@@ -78,7 +85,7 @@ func ImportSecretWithClientCredentials(ctx context.Context, d *schema.ResourceDa
 
 func CreateContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	databaseName, schemaName, name := handleSecretCreate(d)
+	databaseName, schemaName, name := d.Get("database").(string), d.Get("schema").(string), d.Get("name").(string)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
 	apiIntegrationString := d.Get("api_authentication").(string)
@@ -167,6 +174,7 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 	set := &sdk.SecretSetRequest{}
 	unset := &sdk.SecretUnsetRequest{}
 	handleSecretUpdate(d, set, unset)
+	setForClientCredentials := &sdk.SetForOAuthClientCredentialsRequest{}
 
 	if d.HasChange("oauth_scopes") {
 		stringScopes := expandStringList(d.Get("oauth_scopes").(*schema.Set).List())
@@ -174,8 +182,11 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 		for i, scope := range stringScopes {
 			oauthScopes[i] = sdk.ApiIntegrationScope{Scope: scope}
 		}
-		req := sdk.NewSetForOAuthClientCredentialsRequest().WithOauthScopes(*sdk.NewOauthScopesListRequest(oauthScopes))
-		set.WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForOAuthClientCredentials(*req))
+		setForClientCredentials.WithOauthScopes(sdk.OauthScopesListRequest{OauthScopesList: oauthScopes})
+	}
+
+	if !reflect.DeepEqual(*setForClientCredentials, sdk.SetForOAuthClientCredentialsRequest{}) {
+		set.WithSetForFlow(sdk.SetForFlowRequest{SetForOAuthClientCredentials: setForClientCredentials})
 	}
 
 	if !reflect.DeepEqual(*set, sdk.SecretSetRequest{}) {
@@ -191,19 +202,4 @@ func UpdateContextSecretWithClientCredentials(ctx context.Context, d *schema.Res
 	}
 
 	return ReadContextSecretWithClientCredentials(ctx, d, meta)
-}
-
-func DeleteContextSecretWithClientCredentials(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(true)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId("")
-	return nil
 }

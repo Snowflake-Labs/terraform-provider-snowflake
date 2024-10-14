@@ -57,7 +57,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretName).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType("PASSWORD").
+							HasSecretType(sdk.SecretTypePassword).
 							HasSchemaName(id.SchemaName()).
 							HasComment(""),
 					),
@@ -67,8 +67,9 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.name", name),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.database_name", id.DatabaseName()),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.schema_name", id.SchemaName()),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", "PASSWORD"),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", sdk.SecretTypePassword),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.username", "foo"),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.comment", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_access_token_expiry_time", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_refresh_token_expiry_time", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.integration_name", ""),
@@ -78,23 +79,39 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 			// set username, password and comment
 			{
 				Config: config.FromModel(t, secretModelDifferentCredentialsWithComment),
-				Check: assert.AssertThat(t,
-					resourceassert.SecretWithBasicAuthenticationResource(t, secretName).
-						HasNameString(name).
-						HasDatabaseString(id.DatabaseName()).
-						HasSchemaString(id.SchemaName()).
-						HasUsernameString("bar").
-						HasPasswordString("bar").
-						HasCommentString(comment),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+
+						resourceassert.SecretWithBasicAuthenticationResource(t, secretName).
+							HasNameString(name).
+							HasDatabaseString(id.DatabaseName()).
+							HasSchemaString(id.SchemaName()).
+							HasUsernameString("bar").
+							HasPasswordString("bar").
+							HasCommentString(comment),
+
+						resourceshowoutputassert.SecretShowOutput(t, secretName).
+							HasSecretType(sdk.SecretTypePassword).
+							HasComment(comment),
+					),
+
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.username", "bar"),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.comment", comment),
 				),
 			},
 			// set username and comment externally
 			{
 				PreConfig: func() {
-					acc.TestClient().Secret.Alter(t, sdk.NewAlterSecretRequest(id).WithSet(*sdk.NewSecretSetRequest().
-						WithComment("test_comment").
-						WithSetForFlow(*sdk.NewSetForFlowRequest().WithSetForBasicAuthentication(*sdk.NewSetForBasicAuthenticationRequest().WithUsername("test_username"))),
-					))
+					acc.TestClient().Secret.Alter(t, sdk.NewAlterSecretRequest(id).
+						WithSet(*sdk.NewSecretSetRequest().
+							WithComment("test_comment").
+							WithSetForFlow(*sdk.NewSetForFlowRequest().
+								WithSetForBasicAuthentication(*sdk.NewSetForBasicAuthenticationRequest().
+									WithUsername("test_username"),
+								),
+							),
+						),
+					)
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -159,7 +176,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", ""),
 				),
 			},
-			// create with empty username and password
+			// set empty username and password
 			{
 				Config: config.FromModel(t, secretModelEmptyCredentials),
 				Check: resource.ComposeTestCheckFunc(

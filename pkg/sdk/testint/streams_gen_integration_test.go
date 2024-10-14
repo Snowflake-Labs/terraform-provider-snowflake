@@ -116,7 +116,7 @@ func TestInt_Streams(t *testing.T) {
 
 		externalTableId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		externalTableReq := sdk.NewCreateExternalTableRequest(externalTableId, stageLocation).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON))
-		_, externalTableCleanup := testClientHelper().ExternalTable.CreateOnTableWithRequest(t, externalTableReq)
+		_, externalTableCleanup := testClientHelper().ExternalTable.CreateWithRequest(t, externalTableReq)
 		t.Cleanup(externalTableCleanup)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()

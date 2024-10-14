@@ -7,14 +7,31 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v0.97.0 ➞ v0.98.0
+
+### *(new feature)* Secret resources
+Added a new secrets resources for managing secrets.
+We decided to split each secret flow into individual resources. 
+This segregation was based on the secret flows in CREATE SECRET. i.e.:
+- `snowflake_secret_with_client_credentials`
+- `snowflake_secret_with_authorization_code_grant`
+- `snowflake_secret_with_basic_authentication`
+- `snowflake_secret_with_generic_string`
+ 
+
+See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secret).
+
 ## v0.96.0 ➞ v0.97.0
 
-### *(new feature)* snowflake_stream_on_table resource
+### *(new feature)* snowflake_stream_on_table, snowflake_stream_on_external_table resource
 
-To enhance clarity and functionality, the new resource `snowflake_stream_on_table` has been introduced to replace the previous `snowflake_stream`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into more specialized resources.
+To enhance clarity and functionality, the new resources `snowflake_stream_on_table` and `snowflake_stream_on_external_table` have been introduced to replace the previous `snowflake_stream`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into more specialized resources.
 The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes).
 This segregation was based on the object on which the stream is created. The mapping between SQL statements and the resources is the following:
 - `ON TABLE <table_name>` -> `snowflake_stream_on_table`
+- `ON EXTERNAL TABLE <external_table_name>` -> `snowflake_stream_on_external_table` (this was previously not supported)
+
+The resources for streams on directory tables and streams on views will be implemented in the future releases.
 
 To use the new `stream_on_table`, change the old `stream` from
 ```terraform
@@ -46,16 +63,6 @@ resource "snowflake_stream_on_table" "stream" {
 ```
 
 Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
-
-### *(new feature)* Secret resources
-Added a new secrets resources for managing secrets.
-We decided to split each secret flow into individual resources, i.e.:
-- `snowflake_secret_with_client_credentials`
-- `snowflake_secret_with_authorization_code_grant`
-- `snowflake_secret_with_basic_authentication`
-- `snowflake_secret_with_generic_string`
-
-See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secret). 
 
 ### *(new feature)* new snowflake_service_user and snowflake_legacy_service_user resources
 

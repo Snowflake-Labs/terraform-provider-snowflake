@@ -24,33 +24,43 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_StreamOnTable_Basic(t *testing.T) {
+func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceId := helpers.EncodeResourceIdentifier(id)
-	resourceName := "snowflake_stream_on_table.test"
+	resourceName := "snowflake_stream_on_external_table.test"
 
-	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
-	t.Cleanup(cleanupTable)
+	stageID := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
+	_, stageCleanup := acc.TestClient().Stage.CreateStageWithURL(t, stageID)
+	t.Cleanup(stageCleanup)
 
-	baseModel := model.StreamOnTableBase("test", id, table.ID())
+	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stageLocation)
+	t.Cleanup(externalTableCleanup)
 
-	modelWithExtraFields := model.StreamOnTableBase("test", id, table.ID()).
-		WithCopyGrants(false).
+	var createdOn string
+
+	baseModel := model.StreamOnExternalTableBase("test", id, externalTable.ID())
+
+	modelWithExtraFields := model.StreamOnExternalTableBase("test", id, externalTable.ID()).
+		WithCopyGrants(true).
 		WithComment("foo").
-		WithAppendOnly(r.BooleanTrue).
-		WithShowInitialRows(r.BooleanTrue).
 		WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 			"offset": pluginconfig.StringVariable("0"),
 		}))
 
-	modelWithExtraFieldsDefaultMode := model.StreamOnTableBase("test", id, table.ID()).
-		WithCopyGrants(false).
-		WithComment("foo").
-		WithAppendOnly(r.BooleanFalse).
-		WithShowInitialRows(r.BooleanTrue).
+	modelWithExtraFieldsModified := model.StreamOnExternalTableBase("test", id, externalTable.ID()).
+		WithCopyGrants(true).
+		WithComment("bar").
 		WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+			"offset": pluginconfig.StringVariable("0"),
+		}))
+
+	modelWithExtraFieldsModifiedCauseRecreation := model.StreamOnExternalTableBase("test", id, externalTable.ID()).
+		WithCopyGrants(true).
+		WithComment("bar").
+		WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 			"offset": pluginconfig.StringVariable("0"),
 		}))
 
@@ -59,30 +69,30 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnExternalTable),
 		Steps: []resource.TestStep{
 			// without optionals
 			{
 				Config: config.FromModel(t, baseModel),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasAppendOnlyString(r.BooleanDefault).
-					HasTableString(table.ID().FullyQualifiedName()),
+					HasInsertOnlyString(r.BooleanTrue).
+					HasExternalTableString(externalTable.ID().FullyQualifiedName()),
 					resourceshowoutputassert.StreamShowOutput(t, resourceName).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasTableName(externalTable.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeExternalTable).
+						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
 						HasType("DELTA").
 						HasStale("false").
-						HasMode(sdk.StreamModeDefault).
+						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
 						HasOwnerRoleType("ROLE"),
@@ -92,15 +102,19 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", externalTable.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeExternalTable))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", externalTable.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.stale", "false")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeDefault))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeInsertOnly))),
 					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.stale_after")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner_role_type", "ROLE")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						createdOn = value
+						return nil
+					})),
 				),
 			},
 			// import without optionals
@@ -109,38 +123,38 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					resourceassert.ImportedStreamOnTableResource(t, resourceId).
+					resourceassert.ImportedStreamOnExternalTableResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
-						HasAppendOnlyString(r.BooleanFalse).
-						HasTableString(table.ID().FullyQualifiedName()),
+						HasInsertOnlyString(r.BooleanTrue).
+						HasExternalTableString(externalTable.ID().FullyQualifiedName()),
 				),
 			},
 			// set all fields
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFields),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasAppendOnlyString(r.BooleanTrue).
-					HasTableString(table.ID().FullyQualifiedName()),
+					HasInsertOnlyString(r.BooleanTrue).
+					HasExternalTableString(externalTable.ID().FullyQualifiedName()),
 					resourceshowoutputassert.StreamShowOutput(t, resourceName).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasTableName(externalTable.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeExternalTable).
+						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
 						HasType("DELTA").
 						HasStale("false").
-						HasMode(sdk.StreamModeAppendOnly).
+						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
 						HasComment("foo").
@@ -151,13 +165,13 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", externalTable.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeExternalTable))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", externalTable.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.stale", "false")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeAppendOnly))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeInsertOnly))),
 					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.stale_after")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner_role_type", "ROLE")),
 				),
@@ -167,32 +181,32 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().Stream.Alter(t, sdk.NewAlterStreamRequest(id).WithSetComment("bar"))
 				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFields),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasAppendOnlyString(r.BooleanTrue).
-					HasTableString(table.ID().FullyQualifiedName()),
+					HasInsertOnlyString(r.BooleanTrue).
+					HasExternalTableString(externalTable.ID().FullyQualifiedName()),
 					resourceshowoutputassert.StreamShowOutput(t, resourceName).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasTableName(externalTable.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeExternalTable).
+						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
 						HasType("DELTA").
 						HasStale("false").
-						HasMode(sdk.StreamModeAppendOnly).
+						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
 						HasComment("foo").
@@ -203,96 +217,158 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", externalTable.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeExternalTable))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", externalTable.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.stale", "false")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeAppendOnly))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeInsertOnly))),
 					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.stale_after")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner_role_type", "ROLE")),
 				),
 			},
-			// update fields that recreate the object
+			// update fields
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFieldsDefaultMode),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/at"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFieldsModified),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasAppendOnlyString(r.BooleanFalse).
-					HasTableString(table.ID().FullyQualifiedName()),
+					HasInsertOnlyString(r.BooleanTrue).
+					HasExternalTableString(externalTable.ID().FullyQualifiedName()),
 					resourceshowoutputassert.StreamShowOutput(t, resourceName).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasTableName(externalTable.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeExternalTable).
+						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
 						HasType("DELTA").
 						HasStale("false").
-						HasMode(sdk.StreamModeDefault).
+						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
-						HasComment("foo").
+						HasComment("bar").
 						HasOwnerRoleType("ROLE"),
 					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.created_on")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.name", id.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.database_name", id.DatabaseName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "bar")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", externalTable.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeExternalTable))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", externalTable.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.stale", "false")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeDefault))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeInsertOnly))),
 					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.stale_after")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner_role_type", "ROLE")),
 				),
 			},
+			// update fields to force recreation
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/before"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFieldsModifiedCauseRecreation),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasDatabaseString(id.DatabaseName()).
+					HasSchemaString(id.SchemaName()).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()).
+					HasInsertOnlyString(r.BooleanTrue).
+					HasExternalTableString(externalTable.ID().FullyQualifiedName()),
+					resourceshowoutputassert.StreamShowOutput(t, resourceName).
+						HasCreatedOnNotEmpty().
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner(snowflakeroles.Accountadmin.Name()).
+						HasTableName(externalTable.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeExternalTable).
+						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasType("DELTA").
+						HasStale("false").
+						HasMode(sdk.StreamModeInsertOnly).
+						HasStaleAfterNotEmpty().
+						HasInvalidReason("N/A").
+						HasComment("bar").
+						HasOwnerRoleType("ROLE"),
+					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.created_on")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "bar")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", externalTable.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeExternalTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", externalTable.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeInsertOnly))),
+					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.stale_after")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner_role_type", "ROLE")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						if value == createdOn {
+							return fmt.Errorf("view was not recreated")
+						}
+						return nil
+					})),
+				),
+			},
 			// import
 			{
-				Config:       config.FromModel(t, modelWithExtraFieldsDefaultMode),
+				Config:       config.FromModel(t, modelWithExtraFieldsModified),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					resourceassert.ImportedStreamOnTableResource(t, resourceId).
+					resourceassert.ImportedStreamOnExternalTableResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
-						HasAppendOnlyString(r.BooleanFalse).
-						HasTableString(table.ID().FullyQualifiedName()),
+						HasInsertOnlyString(r.BooleanTrue).
+						HasExternalTableString(externalTable.ID().FullyQualifiedName()).
+						HasCommentString("bar"),
 				),
 			},
 		},
 	})
 }
 
-func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
+func TestAcc_StreamOnExternalTable_CopyGrants(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_stream_on_table.test"
+	resourceName := "snowflake_stream_on_external_table.test"
 
 	var createdOn string
 
-	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
-	t.Cleanup(cleanupTable)
-	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
+	stageID := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
+	_, stageCleanup := acc.TestClient().Stage.CreateStageWithURL(t, stageID)
+	t.Cleanup(stageCleanup)
+
+	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stageLocation)
+	t.Cleanup(externalTableCleanup)
+
+	model := model.StreamOnExternalTable("test", id.DatabaseName(), externalTable.ID().FullyQualifiedName(), id.Name(), id.SchemaName()).WithInsertOnly(r.BooleanTrue)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -301,11 +377,23 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model.WithCopyGrants(false)),
+				Config: config.FromModel(t, model.WithCopyGrants(true)),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						createdOn = value
+						return nil
+					})),
+				),
+			},
+			{
+				Config: config.FromModel(t, model.WithCopyGrants(false)),
+				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+					HasNameString(id.Name()),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						if value != createdOn {
+							return fmt.Errorf("view was recreated")
+						}
 						return nil
 					})),
 				),
@@ -322,41 +410,29 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 					})),
 				),
 			},
-			{
-				Config: config.FromModel(t, model.WithCopyGrants(false)),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
-					HasNameString(id.Name()),
-					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
-						if value != createdOn {
-							return fmt.Errorf("view was recreated")
-						}
-						return nil
-					})),
-				),
-			},
 		},
 	})
 }
 
 // There is no way to check at/before fields in show and describe. That's why we try creating with these values, but do not assert them.
-func TestAcc_StreamOnTable_At(t *testing.T) {
+func TestAcc_StreamOnExternalTable_At(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceId := helpers.EncodeResourceIdentifier(id)
-	resourceName := "snowflake_stream_on_table.test"
+	resourceName := "snowflake_stream_on_external_table.test"
 
-	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
-	t.Cleanup(cleanupTable)
-	acc.TestClient().Table.InsertInt(t, table.ID())
+	stageID := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
+	_, stageCleanup := acc.TestClient().Stage.CreateStageWithURL(t, stageID)
+	t.Cleanup(stageCleanup)
 
-	lastQueryId := acc.TestClient().Context.LastQueryId(t)
+	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stageLocation)
+	t.Cleanup(externalTableCleanup)
 
-	commonModel := func() *model.StreamOnTableModel {
-		return model.StreamOnTableBase("test", id, table.ID()).
+	commonModel := func() *model.StreamOnExternalTableModel {
+		return model.StreamOnExternalTableBase("test", id, externalTable.ID()).
 			WithComment("foo").
-			WithAppendOnly(r.BooleanTrue).
-			WithShowInitialRows(r.BooleanTrue).
+			WithInsertOnly(r.BooleanTrue).
 			WithCopyGrants(false)
 	}
 
@@ -366,28 +442,24 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 	modelWithStream := commonModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
 	}))
-	modelWithStatement := commonModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-		"statement": pluginconfig.StringVariable(lastQueryId),
-	}))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnExternalTable),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasTableString(table.ID().FullyQualifiedName()).
-					HasAppendOnlyString(r.BooleanTrue).
-					HasShowInitialRowsString(r.BooleanTrue).
+					HasExternalTableString(externalTable.ID().FullyQualifiedName()).
+					HasInsertOnlyString(r.BooleanTrue).
 					HasCommentString("foo"),
 					resourceshowoutputassert.StreamShowOutput(t, resourceName).
 						HasCreatedOnNotEmpty().
@@ -396,12 +468,12 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasComment("foo").
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasTableName(externalTable.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeExternalTable).
+						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
 						HasType("DELTA").
 						HasStale("false").
-						HasMode(sdk.StreamModeAppendOnly).
+						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
 						HasOwnerRoleType("ROLE"),
@@ -411,69 +483,48 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", externalTable.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeExternalTable))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", externalTable.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.stale", "false")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", "APPEND_ONLY")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeInsertOnly))),
 					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.stale_after")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner_role_type", "ROLE")),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStream),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
 			},
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStatement),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
-					HasNameString(id.Name()),
-				),
-			},
-			// TODO(SNOW-1689111): test timestamps
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateCheck: assert.AssertThatImport(t,
-					resourceassert.ImportedStreamOnTableResource(t, resourceId).
-						HasNameString(id.Name()).
-						HasDatabaseString(id.DatabaseName()).
-						HasSchemaString(id.SchemaName()).
-						HasFullyQualifiedNameString(id.FullyQualifiedName()).
-						HasAppendOnlyString(r.BooleanTrue).
-						HasTableString(table.ID().FullyQualifiedName()),
-				),
-			},
+			// TODO(SNOW-1689111): test timestamps and statements
 		},
 	})
 }
 
 // There is no way to check at/before fields in show and describe. That's why we try creating with these values, but do not assert them.
-func TestAcc_StreamOnTable_Before(t *testing.T) {
+func TestAcc_StreamOnExternalTable_Before(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_stream_on_table.test"
+	resourceName := "snowflake_stream_on_external_table.test"
 
-	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
-	t.Cleanup(cleanupTable)
-	acc.TestClient().Table.InsertInt(t, table.ID())
+	stageID := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
+	_, stageCleanup := acc.TestClient().Stage.CreateStageWithURL(t, stageID)
+	t.Cleanup(stageCleanup)
 
-	lastQueryId := acc.TestClient().Context.LastQueryId(t)
+	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stageLocation)
+	t.Cleanup(externalTableCleanup)
 
-	commonModel := func() *model.StreamOnTableModel {
-		return model.StreamOnTableBase("test", id, table.ID()).
+	commonModel := func() *model.StreamOnExternalTableModel {
+		return model.StreamOnExternalTableBase("test", id, externalTable.ID()).
 			WithComment("foo").
-			WithAppendOnly(r.BooleanTrue).
-			WithShowInitialRows(r.BooleanTrue).
+			WithInsertOnly(r.BooleanTrue).
 			WithCopyGrants(false)
 	}
 
@@ -483,28 +534,24 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 	modelWithStream := commonModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
 	}))
-	modelWithStatement := commonModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
-		"statement": pluginconfig.StringVariable(lastQueryId),
-	}))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnExternalTable),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/before"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasTableString(table.ID().FullyQualifiedName()).
-					HasAppendOnlyString(r.BooleanTrue).
-					HasShowInitialRowsString(r.BooleanTrue).
+					HasExternalTableString(externalTable.ID().FullyQualifiedName()).
+					HasInsertOnlyString(r.BooleanTrue).
 					HasCommentString("foo"),
 					resourceshowoutputassert.StreamShowOutput(t, resourceName).
 						HasCreatedOnNotEmpty().
@@ -513,12 +560,12 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasComment("foo").
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasTableName(externalTable.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeExternalTable).
+						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
 						HasType("DELTA").
 						HasStale("false").
-						HasMode(sdk.StreamModeAppendOnly).
+						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
 						HasOwnerRoleType("ROLE"),
@@ -528,46 +575,38 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", externalTable.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeExternalTable))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", externalTable.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.stale", "false")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", "APPEND_ONLY")),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.mode", string(sdk.StreamModeInsertOnly))),
 					assert.Check(resource.TestCheckResourceAttrSet(resourceName, "describe_output.0.stale_after")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner_role_type", "ROLE")),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/before"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStream),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
 			},
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStatement),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
-					HasNameString(id.Name()),
-				),
-			},
-			// TODO(SNOW-1689111): test timestamps
+			// TODO(SNOW-1689111): test timestamps and statements
 		},
 	})
 }
 
-func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
+func TestAcc_StreamOnExternalTable_InvalidConfiguration(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	modelWithInvalidTableId := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "invalid")
+	modelWithInvalidExternalTableId := model.StreamOnExternalTable("test", id.DatabaseName(), "invalid", id.Name(), id.SchemaName())
 
-	modelWithBefore := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").
+	modelWithBefore := model.StreamOnExternalTable("test", id.DatabaseName(), "foo.bar.hoge", id.Name(), id.SchemaName()).
 		WithComment("foo").
 		WithCopyGrants(false).
-		WithAppendOnly(r.BooleanFalse).
-		WithShowInitialRows(r.BooleanFalse).
+		WithInsertOnly(r.BooleanTrue).
 		WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 			"offset":    pluginconfig.StringVariable("0"),
 			"timestamp": pluginconfig.StringVariable("0"),
@@ -575,11 +614,10 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 			"stream":    pluginconfig.StringVariable("0"),
 		}))
 
-	modelWithAt := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").
+	modelWithAt := model.StreamOnExternalTable("test", id.DatabaseName(), "foo.bar.hoge", id.Name(), id.SchemaName()).
 		WithComment("foo").
 		WithCopyGrants(false).
-		WithAppendOnly(r.BooleanFalse).
-		WithShowInitialRows(r.BooleanFalse).
+		WithInsertOnly(r.BooleanTrue).
 		WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 			"offset":    pluginconfig.StringVariable("0"),
 			"timestamp": pluginconfig.StringVariable("0"),
@@ -596,19 +634,19 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 		Steps: []resource.TestStep{
 			// multiple excluding options - before
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/before"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithBefore),
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
 			// multiple excluding options - at
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithAt),
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
 			// invalid table id
 			{
-				Config:      config.FromModel(t, modelWithInvalidTableId),
+				Config:      config.FromModel(t, modelWithInvalidExternalTableId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
 			},
 		},

@@ -43,9 +43,9 @@ var secretAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 func SecretWithAuthorizationCodeGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateContextSecretWithAuthorizationCodeGrant,
-		ReadContext:   ReadContextSecretWithAuthorizationCodeGrant,
+		ReadContext:   ReadContextSecretWithAuthorizationCodeGrant(true),
 		UpdateContext: UpdateContextSecretWithAuthorizationCodeGrant,
-		DeleteContext: DeleteContextSecretWithAuthorizationCodeGrant,
+		DeleteContext: DeleteContextSecret,
 		Description:   "Resource used to manage secret objects with OAuth Authorization Code Grant. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
 		Schema: secretAuthorizationCodeGrantSchema,
@@ -54,7 +54,9 @@ func SecretWithAuthorizationCodeGrant() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "oauth_refresh_token_expiry_time", "api_authentication"),
+			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "name", "oauth_refresh_token_expiry_time", "api_authentication"),
+			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, ShowOutputAttributeName, "name", "comment"),
+			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 	}
 }
@@ -84,7 +86,7 @@ func ImportSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.Resou
 
 func CreateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	databaseName, schemaName, name := handleSecretCreate(d)
+	databaseName, schemaName, name := d.Get("database").(string), d.Get("schema").(string), d.Get("name").(string)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
 	apiIntegrationString := d.Get("api_authentication").(string)
@@ -108,54 +110,64 @@ func CreateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schem
 
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	return ReadContextSecretWithAuthorizationCodeGrant(ctx, d, meta)
+	return ReadContextSecretWithAuthorizationCodeGrant(false)(ctx, d, meta)
 }
 
-func ReadContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
+func ReadContextSecretWithAuthorizationCodeGrant(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
-	secret, err := client.Secrets.ShowByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, sdk.ErrObjectNotFound) {
-			d.SetId("")
+		secret, err := client.Secrets.ShowByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to retrieve secret with authorization code grant. Target object not found. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("Secret with authorization code grant name: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
+			}
 			return diag.Diagnostics{
 				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Failed to retrieve secret with authorization code grant. Target object not found. Marking the resource as removed.",
+					Severity: diag.Error,
+					Summary:  "Failed to retrieve secret with authorization code grant.",
 					Detail:   fmt.Sprintf("Secret with authorization code grant name: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}
 		}
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Failed to retrieve secret with authorization code grant.",
-				Detail:   fmt.Sprintf("Secret with authorization code grant name: %s, Err: %s", id.FullyQualifiedName(), err),
-			},
+		secretDescription, err := client.Secrets.Describe(ctx, id)
+		if err != nil {
+			return diag.FromErr(err)
 		}
-	}
-	secretDescription, err := client.Secrets.Describe(ctx, id)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 
-	if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
-		return diag.FromErr(err)
-	}
+		if withExternalChangesMarking {
+			if err = handleExternalValueChangesToObjectInDescribe(d,
+				describeMapping{"oauth_refresh_token_expiry_time", "oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.String(), secretDescription.OauthRefreshTokenExpiryTime.String(), nil},
+			); err != nil {
+				return diag.FromErr(err)
+			}
+		}
 
-	if err = setStateToValuesFromConfig(d, secretAuthorizationCodeGrantSchema, []string{"oauth_refresh_token_expiry_time"}); err != nil {
-		return diag.FromErr(err)
-	}
+		if err = setStateToValuesFromConfig(d, secretAuthorizationCodeGrantSchema, []string{"oauth_refresh_token_expiry_time"}); err != nil {
+			return diag.FromErr(err)
+		}
 
-	if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
-		return diag.FromErr(err)
-	}
+		if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
+			return diag.FromErr(err)
+		}
 
-	return nil
+		if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
+			return diag.FromErr(err)
+		}
+
+		return nil
+	}
 }
 
 func UpdateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -168,21 +180,19 @@ func UpdateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schem
 	set := &sdk.SecretSetRequest{}
 	unset := &sdk.SecretUnsetRequest{}
 	handleSecretUpdate(d, set, unset)
-
-	setForFlow := &sdk.SetForFlowRequest{
-		SetForOAuthAuthorization: &sdk.SetForOAuthAuthorizationRequest{},
-	}
+	setForOAuthAuthorization := &sdk.SetForOAuthAuthorizationRequest{}
 
 	if d.HasChange("oauth_refresh_token") {
 		refreshToken := d.Get("oauth_refresh_token").(string)
-		setForFlow.SetForOAuthAuthorization.WithOauthRefreshToken(refreshToken)
-		set.WithSetForFlow(*setForFlow)
+		setForOAuthAuthorization.WithOauthRefreshToken(refreshToken)
 	}
 
 	if d.HasChange("oauth_refresh_token_expiry_time") {
 		refreshTokenExpiryTime := d.Get("oauth_refresh_token_expiry_time").(string)
-		setForFlow.SetForOAuthAuthorization.WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime)
-		set.WithSetForFlow(*setForFlow)
+		setForOAuthAuthorization.WithOauthRefreshTokenExpiryTime(refreshTokenExpiryTime)
+	}
+	if !reflect.DeepEqual(setForOAuthAuthorization, sdk.SetForOAuthAuthorizationRequest{}) {
+		set.WithSetForFlow(sdk.SetForFlowRequest{SetForOAuthAuthorization: setForOAuthAuthorization})
 	}
 
 	if !reflect.DeepEqual(*set, sdk.SecretSetRequest{}) {
@@ -197,20 +207,5 @@ func UpdateContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schem
 		}
 	}
 
-	return ReadContextSecretWithAuthorizationCodeGrant(ctx, d, meta)
-}
-
-func DeleteContextSecretWithAuthorizationCodeGrant(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := client.Secrets.Drop(ctx, sdk.NewDropSecretRequest(id).WithIfExists(true)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId("")
-	return nil
+	return ReadContextSecretWithAuthorizationCodeGrant(false)(ctx, d, meta)
 }
