@@ -5,6 +5,8 @@ description: |-
   Resource used to manage external volume objects. For more information, check external volume documentation https://docs.snowflake.com/en/sql-reference/commands-data-loading#external-volume.
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release.
+
 # snowflake_external_volume (Resource)
 
 Resource used to manage external volume objects. For more information, check [external volume documentation](https://docs.snowflake.com/en/sql-reference/commands-data-loading#external-volume).
