@@ -1,6 +1,9 @@
 package resources_test
 
 import (
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -15,12 +18,10 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -1160,133 +1161,6 @@ func TestAcc_Task_WithFinalizer(t *testing.T) {
 	})
 }
 
-func TestAcc_Task_issue2207(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	statement := "SELECT 1"
-	schedule := "5 MINUTES"
-
-	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
-		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule(schedule).
-		WithSqlStatement(statement)
-
-	childTaskConfigModel := model.TaskWithId("child", childId, true, statement).
-		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
-		WithComment("abc").
-		WithSqlStatement(statement)
-	childTaskConfigModel.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
-
-	childTaskConfigModelWithDifferentComment := model.TaskWithId("child", childId, true, statement).
-		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
-		WithComment("def").
-		WithSqlStatement(statement)
-	childTaskConfigModelWithDifferentComment.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Task),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModel),
-				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
-						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule),
-					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
-						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId).
-						HasCommentString("abc"),
-				),
-			},
-			// change comment
-			{
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(childTaskConfigModelWithDifferentComment.ResourceReference(), plancheck.ResourceActionUpdate),
-					},
-				},
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithDifferentComment),
-				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
-						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule),
-					resourceassert.TaskResource(t, childTaskConfigModelWithDifferentComment.ResourceReference()).
-						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId).
-						HasCommentString("def"),
-				),
-			},
-		},
-	})
-}
-
-func TestAcc_Task_issue2036(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	statement := "SELECT 1"
-	schedule := "5 MINUTES"
-	when := "TRUE"
-
-	taskConfigModelWithoutWhen := model.TaskWithId("test", id, true, statement).
-		WithSchedule(schedule).
-		WithSqlStatement(statement)
-
-	taskConfigModelWithWhen := model.TaskWithId("test", id, true, statement).
-		WithSchedule(schedule).
-		WithSqlStatement(statement).
-		WithWhen(when)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Task),
-		Steps: []resource.TestStep{
-			// create without when
-			{
-				Config: config.FromModel(t, taskConfigModelWithoutWhen),
-				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, taskConfigModelWithoutWhen.ResourceReference()).
-						HasStartedString(r.BooleanTrue).
-						HasWhenString(""),
-				),
-			},
-			// add when
-			{
-				Config: config.FromModel(t, taskConfigModelWithWhen),
-				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, taskConfigModelWithWhen.ResourceReference()).
-						HasStartedString(r.BooleanTrue).
-						HasWhenString("TRUE"),
-				),
-			},
-			// remove when
-			{
-				Config: config.FromModel(t, taskConfigModelWithoutWhen),
-				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, taskConfigModelWithoutWhen.ResourceReference()).
-						HasStartedString(r.BooleanTrue).
-						HasWhenString(""),
-				),
-			},
-		},
-	})
-}
-
 func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -1507,4 +1381,192 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_Task_issue2207(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	schedule := "5 MINUTES"
+
+	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithSchedule(schedule).
+		WithSqlStatement(statement)
+
+	childTaskConfigModel := model.TaskWithId("child", childId, true, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
+		WithComment("abc").
+		WithSqlStatement(statement)
+	childTaskConfigModel.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+
+	childTaskConfigModelWithDifferentComment := model.TaskWithId("child", childId, true, statement).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
+		WithComment("def").
+		WithSqlStatement(statement)
+	childTaskConfigModelWithDifferentComment.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
+						HasStartedString(r.BooleanTrue).
+						HasScheduleString(schedule),
+					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
+						HasStartedString(r.BooleanTrue).
+						HasAfterIds(rootId).
+						HasCommentString("abc"),
+				),
+			},
+			// change comment
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(childTaskConfigModelWithDifferentComment.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithDifferentComment),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
+						HasStartedString(r.BooleanTrue).
+						HasScheduleString(schedule),
+					resourceassert.TaskResource(t, childTaskConfigModelWithDifferentComment.ResourceReference()).
+						HasStartedString(r.BooleanTrue).
+						HasAfterIds(rootId).
+						HasCommentString("def"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_issue2036(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	schedule := "5 MINUTES"
+	when := "TRUE"
+
+	taskConfigModelWithoutWhen := model.TaskWithId("test", id, true, statement).
+		WithSchedule(schedule).
+		WithSqlStatement(statement)
+
+	taskConfigModelWithWhen := model.TaskWithId("test", id, true, statement).
+		WithSchedule(schedule).
+		WithSqlStatement(statement).
+		WithWhen(when)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			// create without when
+			{
+				Config: config.FromModel(t, taskConfigModelWithoutWhen),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, taskConfigModelWithoutWhen.ResourceReference()).
+						HasStartedString(r.BooleanTrue).
+						HasWhenString(""),
+				),
+			},
+			// add when
+			{
+				Config: config.FromModel(t, taskConfigModelWithWhen),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, taskConfigModelWithWhen.ResourceReference()).
+						HasStartedString(r.BooleanTrue).
+						HasWhenString("TRUE"),
+				),
+			},
+			// remove when
+			{
+				Config: config.FromModel(t, taskConfigModelWithoutWhen),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, taskConfigModelWithoutWhen.ResourceReference()).
+						HasStartedString(r.BooleanTrue).
+						HasWhenString(""),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_issue3113(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
+	t.Cleanup(errorNotificationIntegrationCleanup)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	schedule := "5 MINUTES"
+	configModel := model.TaskWithId("test", id, true, statement).
+		WithSchedule(schedule).
+		WithSqlStatement(statement).
+		WithErrorIntegration(errorNotificationIntegration.ID().Name())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.97.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config:      taskConfigWithErrorIntegration(id, errorNotificationIntegration.ID()),
+				ExpectError: regexp.MustCompile("error_integration: '' expected type 'string', got unconvertible type 'sdk.AccountObjectIdentifier'"),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().Task.DropFunc(t, id)()
+				},
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModel.ResourceReference()).
+						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()),
+				),
+			},
+		},
+	})
+}
+
+func taskConfigWithErrorIntegration(id sdk.SchemaObjectIdentifier, errorIntegrationId sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_task" "test" {
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	schedule = "5 MINUTES"
+	sql_statement = "SELECT 1"
+	enabled = true
+	error_integration = "%[4]s"
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name(), errorIntegrationId.Name())
 }
