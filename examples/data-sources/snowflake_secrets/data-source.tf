@@ -23,3 +23,24 @@ data "snowflake_secrets" "like_prefix" {
 output "like_prefix_output" {
   value = data.snowflake_secrets.like_prefix.secrets
 }
+
+# Filtering (in)
+data "snowflake_secrets" "in" {
+  in {
+    schema = "schema_fully_qualified_name"
+  }
+}
+
+output "in_output" {
+  value = data.snowflake_secrets.in.secrets
+}
+
+# Without additional data (to limit the number of calls make for every found secret)
+data "snowflake_secrets" "only_show" {
+  # with_describe is turned on by default and it calls DESCRIBE SECRET for every secret found and attaches its output to secrets.*.describe_output field
+  with_describe = false
+}
+
+output "only_show_output" {
+  value = data.snowflake_secrets.only_show.secrets
+}
