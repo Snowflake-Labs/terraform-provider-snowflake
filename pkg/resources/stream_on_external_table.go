@@ -51,6 +51,7 @@ func StreamOnExternalTable() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, ShowOutputAttributeName, "external_table", "insert_only", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, DescribeOutputAttributeName, "external_table", "insert_only", "comment"),
+			RecreateWhenStreamIsStale(),
 		),
 
 		Schema: streamOnExternalTableSchema,
@@ -193,7 +194,8 @@ func UpdateStreamOnExternalTable(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// change on these fields can not be ForceNew because then the object is dropped explicitly and copying grants does not have effect
-	if keys := changedKeys(d, "external_table", "insert_only", "at", "before"); len(keys) > 0 || isStale(d) {
+	// recreate when the stream is stale - see https://community.snowflake.com/s/article/using-tasks-to-avoid-stale-streams-when-incoming-data-is-empty
+	if keys := changedKeys(d, "external_table", "insert_only", "at", "before", "stale"); len(keys) > 0 {
 		log.Printf("[DEBUG] Detected change on %q, recreating...", keys)
 		return CreateStreamOnExternalTable(true)(ctx, d, meta)
 	}

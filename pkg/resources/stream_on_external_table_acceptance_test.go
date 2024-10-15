@@ -12,12 +12,14 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	tfjson "github.com/hashicorp/terraform-json"
 	pluginconfig "github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -408,6 +410,108 @@ func TestAcc_StreamOnExternalTable_CopyGrants(t *testing.T) {
 						}
 						return nil
 					})),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_StreamOnExternalTable_RecreateWhenStale(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	resourceName := "snowflake_stream_on_external_table.test"
+
+	schema, cleanupSchema := acc.TestClient().Schema.CreateSchemaWithOpts(t,
+		acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(acc.TestClient().Ids.DatabaseId()),
+		&sdk.CreateSchemaOptions{
+			DataRetentionTimeInDays:    sdk.Pointer(0),
+			MaxDataExtensionTimeInDays: sdk.Pointer(0),
+		},
+	)
+	t.Cleanup(cleanupSchema)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+
+	stageID := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
+	_, stageCleanup := acc.TestClient().Stage.CreateStageWithURL(t, stageID)
+	t.Cleanup(stageCleanup)
+
+	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateInSchemaWithLocation(t, stageLocation, schema.ID())
+	t.Cleanup(externalTableCleanup)
+
+	var createdOn string
+
+	model := model.StreamOnExternalTable("test", id.DatabaseName(), externalTable.ID().FullyQualifiedName(), id.Name(), id.SchemaName()).WithInsertOnly(r.BooleanTrue)
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnExternalTable),
+		Steps: []resource.TestStep{
+			// check that stale state is marked properly and forces an update
+			{
+				Config: config.FromModel(t, model),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(resourceName, "stale", tfjson.ActionUpdate, sdk.String(r.BooleanTrue), sdk.String(r.BooleanFalse)),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasStaleString(r.BooleanTrue),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						createdOn = value
+						return nil
+					})),
+				),
+			},
+			// check that the resource was recreated
+			// note that it is stale again because we still have schema parameters set to 0
+			{
+				Config: config.FromModel(t, model),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(resourceName, "stale", tfjson.ActionUpdate, sdk.String(r.BooleanTrue), sdk.String(r.BooleanFalse)),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasStaleString(r.BooleanTrue),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						if value == createdOn {
+							return fmt.Errorf("view was not recreated")
+						}
+						return nil
+					})),
+				),
+			},
+			// set schema parameters to bigger values ensuring that the stream is not stale
+			{
+				PreConfig: func() {
+					acc.TestClient().Schema.Alter(t, schema.ID(), &sdk.AlterSchemaOptions{
+						Set: &sdk.SchemaSet{
+							DataRetentionTimeInDays:    sdk.Int(1),
+							MaxDataExtensionTimeInDays: sdk.Int(1),
+						},
+					})
+				},
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasStaleString(r.BooleanFalse),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
 				),
 			},
 		},

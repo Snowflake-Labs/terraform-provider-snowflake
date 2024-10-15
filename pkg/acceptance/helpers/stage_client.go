@@ -44,9 +44,9 @@ func (c *StageClient) CreateStageWithURL(t *testing.T, id sdk.SchemaObjectIdenti
 	return stage, c.DropStageFunc(t, id)
 }
 
-func (c *StageClient) CreateStageWithDirectory(t *testing.T) (*sdk.Stage, func()) {
+func (c *StageClient) CreateStageWithDirectory(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Stage, func()) {
 	t.Helper()
-	id := c.ids.RandomSchemaObjectIdentifier()
+	id := c.ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	return c.CreateStageWithRequest(t, sdk.NewCreateInternalStageRequest(id).WithDirectoryTableOptions(sdk.NewInternalDirectoryTableOptionsRequest().WithEnable(sdk.Bool(true))))
 }
 

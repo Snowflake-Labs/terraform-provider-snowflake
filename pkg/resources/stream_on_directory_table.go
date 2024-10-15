@@ -18,9 +18,10 @@ import (
 var streamOnDirectoryTableSchema = func() map[string]*schema.Schema {
 	streamOnDirectoryTable := map[string]*schema.Schema{
 		"stage": {
-			Type:             schema.TypeString,
-			Required:         true,
-			Description:      blocklistedCharactersFieldDescription("Specifies an identifier for the stage the stream will monitor. Due to Snowflake limitations, the provider can not read the stage's database and schema. For stages, Snowflake returns only partially qualified name instead of fully qualified name. Please use stages located in the same schema as the stream."),
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: blocklistedCharactersFieldDescription("Specifies an identifier for the stage the stream will monitor. Due to Snowflake limitations, the provider can not read the stage's database and schema. For stages, Snowflake returns only partially qualified name instead of fully qualified name. Please use stages located in the same schema as the stream."),
+			// TODO (SNOW-1733130): the returned value is not a fully qualified name
 			DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuotingPartiallyQualifiedName, IgnoreChangeToCurrentSnowflakeValueInShow("stage")),
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},
@@ -39,12 +40,13 @@ func StreamOnDirectoryTable() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(streamOnDirectoryTableSchema, ShowOutputAttributeName, "stage", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnDirectoryTableSchema, DescribeOutputAttributeName, "stage", "comment"),
+			RecreateWhenStreamIsStale(),
 		),
 
 		Schema: streamOnDirectoryTableSchema,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: ImportName[sdk.SchemaObjectIdentifier],
 		},
 	}
 }
@@ -137,7 +139,8 @@ func UpdateStreamOnDirectoryTable(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// change on these fields can not be ForceNew because then the object is dropped explicitly and copying grants does not have effect
-	if keys := changedKeys(d, "stage"); len(keys) > 0 || isStale(d) {
+	// recreate when the stream is stale - see https://community.snowflake.com/s/article/using-tasks-to-avoid-stale-streams-when-incoming-data-is-empty
+	if keys := changedKeys(d, "stage", "stale"); len(keys) > 0 {
 		log.Printf("[DEBUG] Detected change on %q, recreating...", keys)
 		return CreateStreamOnDirectoryTable(true)(ctx, d, meta)
 	}

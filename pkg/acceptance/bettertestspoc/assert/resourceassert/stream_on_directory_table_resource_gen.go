@@ -67,6 +67,11 @@ func (s *StreamOnDirectoryTableResourceAssert) HasStageString(expected string) *
 	return s
 }
 
+func (s *StreamOnDirectoryTableResourceAssert) HasStaleString(expected string) *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValueSet("stale", expected))
+	return s
+}
+
 ////////////////////////////
 // Attribute empty checks //
 ////////////////////////////
@@ -103,5 +108,10 @@ func (s *StreamOnDirectoryTableResourceAssert) HasNoSchema() *StreamOnDirectoryT
 
 func (s *StreamOnDirectoryTableResourceAssert) HasNoStage() *StreamOnDirectoryTableResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("stage"))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasNoStale() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValueNotSet("stale"))
 	return s
 }

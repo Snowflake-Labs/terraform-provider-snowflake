@@ -51,7 +51,6 @@ const (
 	StreamOnDirectoryTable                                 resource = "snowflake_stream_on_directory_table"
 	StreamOnExternalTable                                  resource = "snowflake_stream_on_external_table"
 	StreamOnTable                                          resource = "snowflake_stream_on_table"
-	StreamOnView                                           resource = "snowflake_stream_on_view"
 	Streamlit                                              resource = "snowflake_streamlit"
 	Table                                                  resource = "snowflake_table"
 	Tag                                                    resource = "snowflake_tag"

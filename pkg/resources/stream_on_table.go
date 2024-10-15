@@ -58,6 +58,7 @@ func StreamOnTable() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(streamOnTableSchema, ShowOutputAttributeName, "table", "append_only", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnTableSchema, DescribeOutputAttributeName, "table", "append_only", "comment"),
+			RecreateWhenStreamIsStale(),
 		),
 
 		Schema: streamOnTableSchema,
@@ -201,7 +202,8 @@ func UpdateStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	// change on these fields can not be ForceNew because then the object is dropped explicitly and copying grants does not have effect
-	if keys := changedKeys(d, "table", "append_only", "at", "before", "show_initial_rows"); len(keys) > 0 || isStale(d) {
+	// recreate when the stream is stale - see https://community.snowflake.com/s/article/using-tasks-to-avoid-stale-streams-when-incoming-data-is-empty
+	if keys := changedKeys(d, "table", "append_only", "at", "before", "show_initial_rows", "stale"); len(keys) > 0 {
 		log.Printf("[DEBUG] Detected change on %q, recreating...", keys)
 		return CreateStreamOnTable(true)(ctx, d, meta)
 	}

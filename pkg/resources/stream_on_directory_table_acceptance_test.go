@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -28,7 +29,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 	resourceId := helpers.EncodeResourceIdentifier(id)
 	resourceName := "snowflake_stream_on_directory_table.test"
 
-	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
+	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t, acc.TestClient().Ids.SchemaId())
 	t.Cleanup(cleanupStage)
 
 	baseModel := func() *model.StreamOnDirectoryTableModel {
@@ -271,7 +272,7 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 
 	var createdOn string
 
-	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
+	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t, acc.TestClient().Ids.SchemaId())
 	t.Cleanup(cleanupStage)
 
 	model := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
@@ -280,7 +281,7 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, model.WithCopyGrants(true)),
@@ -314,6 +315,46 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 						}
 						return nil
 					})),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_StreamOnDirectoryTable_RecreateWhenStale(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	resourceName := "snowflake_stream_on_directory_table.test"
+
+	schema, cleanupSchema := acc.TestClient().Schema.CreateSchemaWithOpts(t,
+		acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(acc.TestClient().Ids.DatabaseId()),
+		&sdk.CreateSchemaOptions{
+			DataRetentionTimeInDays:    sdk.Pointer(0),
+			MaxDataExtensionTimeInDays: sdk.Pointer(0),
+		},
+	)
+	t.Cleanup(cleanupSchema)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+
+	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t, acc.TestClient().Ids.SchemaId())
+	t.Cleanup(cleanupStage)
+
+	model := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
+		Steps: []resource.TestStep{
+			// TODO (SNOW-1737932): Setting schema parameters related to retention time seems to have no affect on streams on directory tables.
+			// Adjust this test after this is fixed on Snowflake side.
+			{
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.StreamOnDirectoryTableResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasStaleString(r.BooleanFalse),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
 				),
 			},
 		},

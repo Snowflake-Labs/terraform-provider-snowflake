@@ -195,3 +195,12 @@ func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.Customi
 		return nil
 	}
 }
+
+func RecreateWhenStreamIsStale() schema.CustomizeDiffFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		if old, _ := diff.GetChange("stale"); old.(bool) {
+			return diff.SetNew("stale", false)
+		}
+		return nil
+	}
+}
