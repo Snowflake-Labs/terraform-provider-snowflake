@@ -7,7 +7,7 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
-## v0.96.0 ➞ v0.97.0
+## v0.97.0 ➞ v0.98.0
 
 ### *(new feature)* snowflake_stream_on_directory_table resource
 Continuing changes made in v0.96, to enhance clarity and functionality, the new resource `snowflake_stream_on_directory_table` has been introduced to replace the previous `snowflake_stream`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into more specialized resources.

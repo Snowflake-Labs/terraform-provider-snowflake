@@ -45,7 +45,7 @@ var streamCommonSchema = map[string]*schema.Schema{
 	"stale": {
 		Type:        schema.TypeBool,
 		Computed:    true,
-		Description: "Indicated if the stream is stale. When Terraform detects that the stream is stale, the stream is recreated with `CREATE OR REPLACE`.",
+		Description: "Indicated if the stream is stale. When Terraform detects that the stream is stale, the stream is recreated with `CREATE OR REPLACE`. Read more on stream staleness in Snowflake [docs](https://docs.snowflake.com/en/user-guide/streams-intro#data-retention-period-and-staleness).",
 	},
 	"comment": {
 		Type:        schema.TypeString,

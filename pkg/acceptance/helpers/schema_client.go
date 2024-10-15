@@ -85,14 +85,6 @@ func (c *SchemaClient) UpdateDataRetentionTime(t *testing.T, id sdk.DatabaseObje
 	})
 }
 
-func (c *SchemaClient) Alter(t *testing.T, id sdk.DatabaseObjectIdentifier, opts *sdk.AlterSchemaOptions) {
-	t.Helper()
-	ctx := context.Background()
-
-	err := c.client().Alter(ctx, id, opts)
-	require.NoError(t, err)
-}
-
 func (c *SchemaClient) Show(t *testing.T, id sdk.DatabaseObjectIdentifier) (*sdk.Schema, error) {
 	t.Helper()
 	ctx := context.Background()
