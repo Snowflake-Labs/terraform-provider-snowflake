@@ -57,7 +57,7 @@ func TestAcc_Secrets_WithClientCredentials(t *testing.T) {
 				Config: dataSecretsClientCredentials,
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.#", "1")),
-					resourceshowoutputassert.SecretsDatasourceShowOutput(t, dsName).
+					resourceshowoutputassert.SecretsDatasourceShowOutput(t, "snowflake_secrets.test").
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
@@ -112,7 +112,7 @@ func TestAcc_Secrets_WithAuthorizationCodeGrant(t *testing.T) {
 				Config: dataSecretsAuthorizationCode,
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.#", "1")),
-					resourceshowoutputassert.SecretsDatasourceShowOutput(t, dsName).
+					resourceshowoutputassert.SecretsDatasourceShowOutput(t, "snowflake_secrets.test").
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
@@ -153,7 +153,7 @@ func TestAcc_Secrets_WithBasicAuthentication(t *testing.T) {
 				Config: dataSecretsAuthorizationCode,
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.#", "1")),
-					resourceshowoutputassert.SecretsDatasourceShowOutput(t, dsName).
+					resourceshowoutputassert.SecretsDatasourceShowOutput(t, "snowflake_secrets.test").
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
@@ -194,7 +194,7 @@ func TestAcc_Secrets_WithGenericString(t *testing.T) {
 				Config: dataSecretsAuthorizationCode,
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "secrets.#", "1")),
-					resourceshowoutputassert.SecretsDatasourceShowOutput(t, dsName).
+					resourceshowoutputassert.SecretsDatasourceShowOutput(t, "snowflake_secrets.test").
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
