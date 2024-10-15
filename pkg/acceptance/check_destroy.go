@@ -22,7 +22,7 @@ func ComposeCheckDestroy(t *testing.T, resources ...resources.Resource) func(*te
 		for _, resource := range resources {
 			checkFunc := CheckDestroy(t, resource)
 			if err := checkFunc(s); err != nil {
-				return fmt.Errorf("error checking destruction for resource %s: %s", resource, err)
+				return fmt.Errorf("error checking destruction for resource %s: %w", resource, err)
 			}
 		}
 		return nil
