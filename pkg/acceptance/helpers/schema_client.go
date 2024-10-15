@@ -104,3 +104,11 @@ func (c *SchemaClient) ShowWithOptions(t *testing.T, opts *sdk.ShowSchemaOptions
 	require.NoError(t, err)
 	return schemas
 }
+
+func (c *SchemaClient) Alter(t *testing.T, id sdk.DatabaseObjectIdentifier, opts *sdk.AlterSchemaOptions) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, opts)
+	require.NoError(t, err)
+}
