@@ -254,8 +254,3 @@ func IgnoreNewEmptyListOrSubfields(ignoredSubfields ...string) schema.SchemaDiff
 		return len(parts) == 3 && slices.Contains(ignoredSubfields, parts[2]) && new == ""
 	}
 }
-
-// IgnoreAlways should be used to ignore changes in every case.
-func IgnoreAlways(k, oldValue, newValue string, d *schema.ResourceData) bool {
-	return true
-}
