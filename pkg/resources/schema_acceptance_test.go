@@ -765,7 +765,9 @@ func TestAcc_Schema_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T)
 				),
 			},
 			{
-				PreConfig:       acc.TestClient().Schema.UpdateDataRetentionTime(t, id, 20),
+				PreConfig: func() {
+					acc.TestClient().Schema.UpdateDataRetentionTime(t, id, 20)
+				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schema_DefaultDataRetentionTime/WithoutDataRetentionSet"),
 				ConfigVariables: configVariablesWithoutSchemaDataRetentionTime(),
 				Check: resource.ComposeTestCheckFunc(

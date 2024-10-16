@@ -229,6 +229,7 @@ func (r showStreamsDbRow) convert() *Stream {
 		Name:         r.Name,
 		DatabaseName: r.DatabaseName,
 		SchemaName:   r.SchemaName,
+		Stale:        r.Stale == "true",
 	}
 	if r.StaleAfter.Valid {
 		s.StaleAfter = &r.StaleAfter.Time
@@ -251,18 +252,10 @@ func (r showStreamsDbRow) convert() *Stream {
 		}
 	}
 	if r.BaseTables.Valid {
-		baseTables, err := ParseCommaSeparatedSchemaObjectIdentifierArray(r.BaseTables.String)
-		if err != nil {
-			log.Printf("[DEBUG] error converting show stream: %v", err)
-		} else {
-			s.BaseTables = baseTables
-		}
+		s.BaseTables = ParseCommaSeparatedStringArray(r.BaseTables.String, false)
 	}
 	if r.Type.Valid {
 		s.Type = &r.Type.String
-	}
-	if r.Stale.Valid {
-		s.Stale = &r.Stale.String
 	}
 	if r.Mode.Valid {
 		mode, err := ToStreamMode(r.Mode.String)

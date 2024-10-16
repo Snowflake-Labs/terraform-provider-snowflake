@@ -82,6 +82,11 @@ func (s *StreamOnTableResourceAssert) HasShowInitialRowsString(expected string) 
 	return s
 }
 
+func (s *StreamOnTableResourceAssert) HasStaleString(expected string) *StreamOnTableResourceAssert {
+	s.AddAssertion(assert.ValueSet("stale", expected))
+	return s
+}
+
 func (s *StreamOnTableResourceAssert) HasTableString(expected string) *StreamOnTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("table", expected))
 	return s
@@ -138,6 +143,11 @@ func (s *StreamOnTableResourceAssert) HasNoSchema() *StreamOnTableResourceAssert
 
 func (s *StreamOnTableResourceAssert) HasNoShowInitialRows() *StreamOnTableResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("show_initial_rows"))
+	return s
+}
+
+func (s *StreamOnTableResourceAssert) HasNoStale() *StreamOnTableResourceAssert {
+	s.AddAssertion(assert.ValueNotSet("stale"))
 	return s
 }
 

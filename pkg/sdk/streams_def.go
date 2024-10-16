@@ -76,7 +76,7 @@ var (
 				Field("source_type", "sql.NullString").
 				Field("base_tables", "sql.NullString").
 				Field("type", "sql.NullString").
-				Field("stale", "sql.NullString").
+				Field("stale", "string").
 				Field("mode", "sql.NullString").
 				Field("stale_after", "sql.NullTime").
 				Field("invalid_reason", "sql.NullString").
@@ -91,9 +91,9 @@ var (
 				Field("Comment", "*string").
 				Field("TableName", "*string").
 				Field("SourceType", "*StreamSourceType").
-				Field("BaseTables", "[]SchemaObjectIdentifier").
+				Field("BaseTables", "[]string").
 				Field("Type", "*string").
-				Field("Stale", "*string").
+				Field("Stale", "bool").
 				Field("Mode", "*StreamMode").
 				Field("StaleAfter", "*time.Time").
 				Field("InvalidReason", "*string").

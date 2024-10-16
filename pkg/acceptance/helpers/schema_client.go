@@ -75,18 +75,14 @@ func (c *SchemaClient) UseDefaultSchema(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func (c *SchemaClient) UpdateDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier, days int) func() {
+func (c *SchemaClient) UpdateDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier, days int) {
 	t.Helper()
-	ctx := context.Background()
 
-	return func() {
-		err := c.client().Alter(ctx, id, &sdk.AlterSchemaOptions{
-			Set: &sdk.SchemaSet{
-				DataRetentionTimeInDays: sdk.Int(days),
-			},
-		})
-		require.NoError(t, err)
-	}
+	c.Alter(t, id, &sdk.AlterSchemaOptions{
+		Set: &sdk.SchemaSet{
+			DataRetentionTimeInDays: sdk.Int(days),
+		},
+	})
 }
 
 func (c *SchemaClient) Show(t *testing.T, id sdk.DatabaseObjectIdentifier) (*sdk.Schema, error) {

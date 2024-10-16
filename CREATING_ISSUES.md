@@ -202,7 +202,20 @@ resource "snowflake_grant_privileges_to_account_role" "grant_on_procedure" {
   account_role_name = snowflake_account_role.name
   on_schema_object {
     object_type = "PROCEDURE"
-    object_name = "\"${snowflake_database.database.name}\".\"${snowflake_schema.schema.name}\".\"${snowflake_procedure.procedure.name}(NUMBER, VARCHAR)\""
+    object_name = "\"${snowflake_database.database.name}\".\"${snowflake_schema.schema.name}\".\"${snowflake_procedure.procedure.name}\"(NUMBER, VARCHAR)"
+  }
+}
+```
+
+If you manage the procedure in Terraform, you can use `fully_qualified_name` field:
+
+```terraform
+resource "snowflake_grant_privileges_to_account_role" "grant_on_procedure" {
+  privileges        = ["USAGE"]
+  account_role_name = snowflake_account_role.name
+  on_schema_object {
+    object_type = "PROCEDURE"
+    object_name = snowflake_procedure.procedure_name.fully_qualified_name
   }
 }
 ```

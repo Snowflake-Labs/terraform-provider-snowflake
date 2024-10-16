@@ -56,7 +56,7 @@ var ShowStreamSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"stale": {
-		Type:     schema.TypeString,
+		Type:     schema.TypeBool,
 		Computed: true,
 	},
 	"mode": {
@@ -80,6 +80,7 @@ var ShowStreamSchema = map[string]*schema.Schema{
 var _ = ShowStreamSchema
 
 // Adjusted manually.
+// TODO(SNOW-1733130): Remove the logic for stage handling. Use schema object identifiers in the schema.
 func StreamToSchema(stream *sdk.Stream) map[string]any {
 	streamSchema := make(map[string]any)
 	streamSchema["created_on"] = stream.CreatedOn.String()
@@ -93,25 +94,38 @@ func StreamToSchema(stream *sdk.Stream) map[string]any {
 		streamSchema["comment"] = stream.Comment
 	}
 	if stream.TableName != nil {
-		tableId, err := sdk.ParseSchemaObjectIdentifier(*stream.TableName)
-		if err != nil {
-			log.Printf("[DEBUG] could not parse table ID: %v", err)
+		if stream.SourceType != nil && *stream.SourceType == sdk.StreamSourceTypeStage {
+			streamSchema["table_name"] = *stream.TableName
 		} else {
-			streamSchema["table_name"] = tableId.FullyQualifiedName()
+			tableId, err := sdk.ParseSchemaObjectIdentifier(*stream.TableName)
+			if err != nil {
+				log.Printf("[DEBUG] could not parse table ID: %v", err)
+			} else {
+				streamSchema["table_name"] = tableId.FullyQualifiedName()
+			}
 		}
 	}
 	if stream.SourceType != nil {
 		streamSchema["source_type"] = stream.SourceType
 	}
 	if stream.BaseTables != nil {
-		streamSchema["base_tables"] = collections.Map(stream.BaseTables, sdk.SchemaObjectIdentifier.FullyQualifiedName)
+		if stream.SourceType != nil && *stream.SourceType == sdk.StreamSourceTypeStage {
+			streamSchema["base_tables"] = stream.BaseTables
+		} else {
+			streamSchema["base_tables"] = collections.Map(stream.BaseTables, func(s string) string {
+				id, err := sdk.ParseSchemaObjectIdentifier(s)
+				if err != nil {
+					log.Printf("[DEBUG] could not parse base table ID: %v", err)
+					return ""
+				}
+				return id.FullyQualifiedName()
+			})
+		}
 	}
 	if stream.Type != nil {
 		streamSchema["type"] = stream.Type
 	}
-	if stream.Stale != nil {
-		streamSchema["stale"] = stream.Stale
-	}
+	streamSchema["stale"] = stream.Stale
 	if stream.Mode != nil {
 		streamSchema["mode"] = stream.Mode
 	}

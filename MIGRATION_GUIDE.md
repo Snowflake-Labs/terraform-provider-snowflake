@@ -7,11 +7,52 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v0.97.0 ➞ v0.98.0
+
+#### *(behavior change)* handling copy_grants
+Currently, resources like `snowflake_view`, `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table`  support `copy_grants` field corresponding with `COPY GRANTS` during `CREATE`. The current behavior is that, when a change leading for recreation is detected (meaning a change that can not be handled by ALTER, but only by `CREATE OR REPLACE`), `COPY GRANTS` are used during recreation when `copy_grants` is set to `true`. Changing this field without changes in other field results in a noop because in this case there is no need to recreate a resource.
+
+### *(new feature)* recovering stale streams
+Starting from this version, the provider detects stale streams for `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table` and recreates them (optionally with `copy_grants`) to recover them. To handle this correctly, a new computed-only field `stale` has been added to these resource, indicating whether a stream is stale.
+
+### *(new feature)* snowflake_stream_on_directory_table resource
+Continuing changes made in [v0.97](#v0960--v0970), the new resource `snowflake_stream_on_directory_table` has been introduced to replace the previous `snowflake_stream` for streams on directory tables.
+
+To use the new `stream_on_directory_table`, change the old `stream` from
+```terraform
+resource "snowflake_stream" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  on_stage    = snowflake_stage.stage.fully_qualified_name
+
+  comment = "A stream."
+}
+```
+
+to
+
+```terraform
+resource "snowflake_stream_on_directory_table" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  stage             = snowflake_stage.stage.fully_qualified_name
+
+  comment = "A stream."
+}
+```
+
+Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+
+
 ## v0.96.0 ➞ v0.97.0
 
 ### *(new feature)* snowflake_stream_on_table, snowflake_stream_on_external_table resource
 
-To enhance clarity and functionality, the new resources `snowflake_stream_on_table` and `snowflake_stream_on_external_table` have been introduced to replace the previous `snowflake_stream`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into more specialized resources.
+To enhance clarity and functionality, the new resources `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table` have been introduced to replace the previous `snowflake_stream`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into more specialized resources.
 The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes).
 This segregation was based on the object on which the stream is created. The mapping between SQL statements and the resources is the following:
 - `ON TABLE <table_name>` -> `snowflake_stream_on_table`
@@ -35,7 +76,7 @@ resource "snowflake_stream" "stream" {
 
 to
 
-```
+```terraform
 resource "snowflake_stream_on_table" "stream" {
   name     = "stream"
   schema   = "schema"
@@ -47,6 +88,7 @@ resource "snowflake_stream_on_table" "stream" {
   comment = "A stream."
 }
 ```
+
 
 Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
 
@@ -83,7 +125,7 @@ resource "snowflake_user" "service_user" {
   lifecycle {
     ignore_changes = [user_type]
   }
-  
+
   name         = "Snowflake Service User"
   login_name   = "service_user"
   email        = "service_user@snowflake.example"

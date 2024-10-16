@@ -923,6 +923,7 @@ func TestAcc_View_Issue3073(t *testing.T) {
 	})
 }
 
+// fixes https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3073#issuecomment-2392250469
 func TestAcc_View_IncorrectColumnsWithOrReplace(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	statement := `SELECT ROLE_NAME as "role_name", ROLE_OWNER as "role_owner" FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
@@ -1113,11 +1114,17 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 	})
 }
 
-func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
+func TestAcc_View_CheckGrantsAfterRecreation(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	acc.TestAccPreCheck(t)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	table, cleanupTable := acc.TestClient().Table.Create(t)
+	t.Cleanup(cleanupTable)
+
+	role, cleanupRole := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(cleanupRole)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1128,7 +1135,7 @@ func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: viewConfigWithGrants(viewId, tableId, `\"name\"`),
+				Config: viewConfigWithGrants(id, table.ID(), "id", role.ID(), true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
@@ -1136,10 +1143,23 @@ func TestAcc_ViewCopyGrantsStatementUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: viewConfigWithGrants(viewId, tableId, "*"),
+				Config: viewConfigWithGrants(id, table.ID(), "*", role.ID(), true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
+				),
+			},
+			// Recreate without copy grants. Now we expect changes because the grants are still in the config.
+			{
+				Config:             viewConfigWithGrants(id, table.ID(), "id", role.ID(), false),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_account_role.grant", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "1"),
 				),
 			},
 		},
@@ -1281,26 +1301,15 @@ resource "snowflake_view" "test" {
 	return fmt.Sprintf(s, id.Name(), id.DatabaseName(), tagSchema, tagName, tagValue, id.SchemaName(), statement)
 }
 
-func viewConfigWithGrants(viewId, tableId sdk.SchemaObjectIdentifier, selectStatement string) string {
+func viewConfigWithGrants(viewId, tableId sdk.SchemaObjectIdentifier, selectStatement string, roleId sdk.AccountObjectIdentifier, copyGrants bool) string {
 	return fmt.Sprintf(`
-resource "snowflake_table" "table" {
-  database = "%[1]s"
-  schema = "%[2]s"
-  name     = "%[3]s"
-
-  column {
-    name = "name"
-    type = "text"
-  }
-}
-
 resource "snowflake_view" "test" {
   name = "%[4]s"
   comment = "created by terraform"
   database = "%[1]s"
   schema = "%[2]s"
-  statement = "select %[5]s from \"%[1]s\".\"%[2]s\".\"${snowflake_table.table.name}\""
-  copy_grants = true
+  statement = "select %[5]s from \"%[1]s\".\"%[2]s\".\"%[3]s\""
+  copy_grants = %[7]t
   is_secure = true
 
   column {
@@ -1308,27 +1317,23 @@ resource "snowflake_view" "test" {
   }
 }
 
-resource "snowflake_account_role" "test" {
-  name = "test"
-}
-
 resource "snowflake_grant_privileges_to_account_role" "grant" {
   privileges        = ["SELECT"]
-  account_role_name = snowflake_account_role.test.name
+  account_role_name = %[6]s
   on_schema_object {
     object_type = "VIEW"
-    object_name = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""
+    object_name = snowflake_view.test.fully_qualified_name
   }
 }
 
 data "snowflake_grants" "grants" {
   depends_on = [snowflake_grant_privileges_to_account_role.grant, snowflake_view.test]
   grants_on {
-    object_name = "\"%[1]s\".\"%[2]s\".\"${snowflake_view.test.name}\""
     object_type = "VIEW"
+    object_name = snowflake_view.test.fully_qualified_name
   }
 }
-	`, viewId.DatabaseName(), viewId.SchemaName(), tableId.Name(), viewId.Name(), selectStatement)
+	`, viewId.DatabaseName(), viewId.SchemaName(), tableId.Name(), viewId.Name(), selectStatement, roleId.FullyQualifiedName(), copyGrants)
 }
 
 func viewConfigWithMultilineUnionStatement(id sdk.SchemaObjectIdentifier, part1 string, part2 string) string {
