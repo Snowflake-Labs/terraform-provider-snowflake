@@ -500,6 +500,8 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_user_public_keys":                                             resources.UserPublicKeys(),
 		"snowflake_view":                                                         resources.View(),
 		"snowflake_warehouse":                                                    resources.Warehouse(),
+		// TODO: Remove or comment
+		"snowflake_object_renaming": resources.ObjectRenamingListsAndSets(),
 	}
 }
 

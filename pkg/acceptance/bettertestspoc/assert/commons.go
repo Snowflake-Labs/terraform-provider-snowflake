@@ -3,6 +3,8 @@ package assert
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -100,4 +102,60 @@ type InPlaceAssertionVerifier interface {
 func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier) {
 	t.Helper()
 	objectAssert.VerifyAll(t)
+}
+
+func HasListItemsOrderIndependent(resourceKey string, attributePath string, items []map[string]string) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		for key, value := range state.RootModule().Resources {
+			if resourceKey == key {
+				for attrKey, attrValue := range value.Primary.Attributes {
+					if strings.HasPrefix(attrKey, attributePath) {
+						attr := strings.TrimPrefix(attrKey, attributePath+".")
+
+						if strings.HasSuffix(attr, "%") {
+							continue
+						}
+
+						if attr == "#" {
+							attrValueLen, err := strconv.Atoi(attrValue)
+							if err != nil {
+								return fmt.Errorf("failed to convert length of the attribute %s: %s", attrKey, err)
+							}
+							if len(items) != attrValueLen {
+								return fmt.Errorf("expected to find %d items in %s, but found %d", attrValueLen, attributePath, len(items))
+							}
+						}
+
+						attrParts := strings.Split(attr, ".")
+						_, indexErr := strconv.Atoi(attrParts[0])
+						isIndex := indexErr == nil
+
+						if len(attrParts) > 1 && isIndex {
+							itemKey := attrParts[1]
+
+							found := false
+							valueEquals := false
+
+							for _, item := range items {
+								if v, ok := item[itemKey]; ok {
+									found = true
+
+									if v == attrValue {
+										valueEquals = true
+									}
+								}
+							}
+
+							if !found {
+								return fmt.Errorf("%s found in attributes, but was not expected", attrKey)
+							} else if !valueEquals {
+								return fmt.Errorf("expected to find subpath %s that is equal to %s", attrKey, attrValue)
+							}
+						}
+					}
+				}
+			}
+		}
+		return nil
+	}
 }

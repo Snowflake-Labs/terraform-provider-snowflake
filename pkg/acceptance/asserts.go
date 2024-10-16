@@ -2,9 +2,8 @@ package acceptance
 
 import (
 	"fmt"
-	"strconv"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"strconv"
 )
 
 func IsGreaterOrEqualTo(greaterOrEqualValue int) resource.CheckResourceAttrWithFunc {
