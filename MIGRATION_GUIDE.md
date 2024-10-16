@@ -9,13 +9,14 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
+#### *(behavior change)* handling copy_grants
+Currently, resources like `snowflake_view`, `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table`  support `copy_grants` field corresponding with `COPY GRANTS` during `CREATE`. The current behavior is that, when a change leading for recreation is detected (meaning a change that can not be handled by ALTER, but only by `CREATE OR REPLACE`), `COPY GRANTS` are used during recreation when `copy_grants` is set to `true`. Changing this field without changes in other field results in a noop because in this case there is no need to recreate a resource.
+
+### *(new feature)* recovering stale streams
+Starting from this version, the provider detects stale streams for `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table` and recreates them (optionally with `copy_grants`) to recover them. To handle this correctly, a new computed-only field `stale` has been added to these resource, indicating whether a stream is stale.
+
 ### *(new feature)* snowflake_stream_on_directory_table resource
-Continuing changes made in v0.96, to enhance clarity and functionality, the new resource `snowflake_stream_on_directory_table` has been introduced to replace the previous `snowflake_stream`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into more specialized resources.
-The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes).
-This segregation was based on the object on which the stream is created. The mapping between SQL statements and the resources is the following:
-- `ON TABLE <table_name>` -> `snowflake_stream_on_table` (added in v0.96)
-- `ON EXTERNAL TABLE <external_table_name>` -> `snowflake_stream_on_external_table` (this was previously not supported, added in v0.96)
-- `ON STAGE <stage_name>` -> `snowflake_stream_on_directory_table`
+Continuing changes made in [v0.97](#v0960--v0970), the new resource `snowflake_stream_on_directory_table` has been introduced to replace the previous `snowflake_stream` for streams on directory tables.
 
 To use the new `stream_on_directory_table`, change the old `stream` from
 ```terraform
@@ -56,7 +57,6 @@ The newly introduced resources are aligned with the latest Snowflake documentati
 This segregation was based on the object on which the stream is created. The mapping between SQL statements and the resources is the following:
 - `ON TABLE <table_name>` -> `snowflake_stream_on_table`
 - `ON EXTERNAL TABLE <external_table_name>` -> `snowflake_stream_on_external_table` (this was previously not supported)
-- `ON STAGE <stage_name>` -> `snowflake_stream_on_directory_table`
 
 The resources for streams on directory tables and streams on views will be implemented in the future releases.
 

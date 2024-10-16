@@ -54,7 +54,7 @@ var DescribeStreamSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"stale": {
-		Type:     schema.TypeString,
+		Type:     schema.TypeBool,
 		Computed: true,
 	},
 	"mode": {
@@ -122,9 +122,7 @@ func StreamDescriptionToSchema(stream sdk.Stream) map[string]any {
 	if stream.Type != nil {
 		streamSchema["type"] = stream.Type
 	}
-	if stream.Stale != nil {
-		streamSchema["stale"] = stream.Stale
-	}
+	streamSchema["stale"] = stream.Stale
 	if stream.Mode != nil {
 		streamSchema["mode"] = stream.Mode
 	}

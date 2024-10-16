@@ -29,7 +29,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 	resourceId := helpers.EncodeResourceIdentifier(id)
 	resourceName := "snowflake_stream_on_directory_table.test"
 
-	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t, acc.TestClient().Ids.SchemaId())
+	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
 	t.Cleanup(cleanupStage)
 
 	baseModel := func() *model.StreamOnDirectoryTableModel {
@@ -272,7 +272,7 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 
 	var createdOn string
 
-	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t, acc.TestClient().Ids.SchemaId())
+	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
 	t.Cleanup(cleanupStage)
 
 	model := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
@@ -299,7 +299,7 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						if value != createdOn {
-							return fmt.Errorf("view was recreated")
+							return fmt.Errorf("stream was recreated")
 						}
 						return nil
 					})),
@@ -311,7 +311,7 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						if value != createdOn {
-							return fmt.Errorf("view was recreated")
+							return fmt.Errorf("stream was recreated")
 						}
 						return nil
 					})),
@@ -321,6 +321,86 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 	})
 }
 
+func TestAcc_StreamOnDirectoryTable_CheckGrantsAfterRecreation(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	resourceName := "snowflake_stream_on_directory_table.test"
+
+	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
+	t.Cleanup(cleanupStage)
+
+	stage2, cleanupStage2 := acc.TestClient().Stage.CreateStageWithDirectory(t)
+	t.Cleanup(cleanupStage2)
+
+	role, cleanupRole := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(cleanupRole)
+
+	model1 := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName()).WithCopyGrants(true)
+	model1WithoutCopyGrants := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
+	model2 := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage2.ID().FullyQualifiedName()).WithCopyGrants(true)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model1) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
+				),
+			},
+			{
+				Config: config.FromModel(t, model2) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
+				),
+			},
+			{
+				Config:             config.FromModel(t, model1WithoutCopyGrants) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_account_role.grant", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func grantStreamPrivilegesConfig(resourceName string, roleId sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_grant_privileges_to_account_role" "grant" {
+  privileges        = ["SELECT"]
+  account_role_name = %[1]s
+  on_schema_object {
+    object_type = "STREAM"
+    object_name = %[2]s.fully_qualified_name
+  }
+}
+
+data "snowflake_grants" "grants" {
+  depends_on = [snowflake_grant_privileges_to_account_role.grant, %[2]s]
+  grants_on {
+    object_type = "STREAM"
+    object_name = %[2]s.fully_qualified_name
+  }
+}`, roleId.FullyQualifiedName(), resourceName)
+}
+
+// TODO (SNOW-1737932): Setting schema parameters related to retention time seems to have no affect on streams on directory tables.
+// Adjust this test after this is fixed on Snowflake side.
 func TestAcc_StreamOnDirectoryTable_RecreateWhenStale(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -336,7 +416,7 @@ func TestAcc_StreamOnDirectoryTable_RecreateWhenStale(t *testing.T) {
 	t.Cleanup(cleanupSchema)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
-	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t, acc.TestClient().Ids.SchemaId())
+	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
 	t.Cleanup(cleanupStage)
 
 	model := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
@@ -347,8 +427,6 @@ func TestAcc_StreamOnDirectoryTable_RecreateWhenStale(t *testing.T) {
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
-			// TODO (SNOW-1737932): Setting schema parameters related to retention time seems to have no affect on streams on directory tables.
-			// Adjust this test after this is fixed on Snowflake side.
 			{
 				Config: config.FromModel(t, model),
 				Check: assert.AssertThat(t, resourceassert.StreamOnDirectoryTableResource(t, resourceName).

@@ -196,6 +196,8 @@ func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.Customi
 	}
 }
 
+// RecreateWhenStreamIsStale detects when the stream is stale, and sets a `false` value for `stale` field.
+// This means that the provider can detect that change in `stale` from `true` to `false`, where `false` is our desired state.
 func RecreateWhenStreamIsStale() schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if old, _ := diff.GetChange("stale"); old.(bool) {
