@@ -25,7 +25,7 @@ type ResourceModel interface {
 	SetResourceName(name string)
 	ResourceReference() string
 	DependsOn() []string
-	SetDependsOn(values []string)
+	SetDependsOn(values ...string)
 }
 
 type ResourceModelMeta struct {
@@ -54,7 +54,7 @@ func (m *ResourceModelMeta) DependsOn() []string {
 	return m.dependsOn
 }
 
-func (m *ResourceModelMeta) SetDependsOn(values []string) {
+func (m *ResourceModelMeta) SetDependsOn(values ...string) {
 	m.dependsOn = values
 }
 
@@ -97,6 +97,15 @@ func FromModel(t *testing.T, model ResourceModel) string {
 	s := sb.String()
 	t.Logf("Generated config:\n%s", s)
 	return s
+}
+
+func FromModels(t *testing.T, models ...ResourceModel) string {
+	t.Helper()
+	var sb strings.Builder
+	for _, model := range models {
+		sb.WriteString(FromModel(t, model) + "\n")
+	}
+	return sb.String()
 }
 
 // ConfigVariablesFromModel constructs config.Variables needed in acceptance tests that are using ConfigVariables in

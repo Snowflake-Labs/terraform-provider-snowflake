@@ -55,6 +55,14 @@ func (c *SchemaClient) CreateSchemaWithOpts(t *testing.T, id sdk.DatabaseObjectI
 	return schema, c.DropSchemaFunc(t, id)
 }
 
+func (c *SchemaClient) Alter(t *testing.T, id sdk.DatabaseObjectIdentifier, opts *sdk.AlterSchemaOptions) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, opts)
+	require.NoError(t, err)
+}
+
 func (c *SchemaClient) DropSchemaFunc(t *testing.T, id sdk.DatabaseObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
