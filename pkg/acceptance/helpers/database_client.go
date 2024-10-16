@@ -184,3 +184,11 @@ func (c *DatabaseClient) ShowAllReplicationDatabases(t *testing.T) ([]sdk.Replic
 
 	return c.context.client.ReplicationFunctions.ShowReplicationDatabases(ctx, nil)
 }
+
+func (c *DatabaseClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.AlterDatabaseOptions) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, opts)
+	require.NoError(t, err)
+}

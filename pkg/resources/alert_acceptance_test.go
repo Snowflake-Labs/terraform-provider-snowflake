@@ -9,6 +9,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -222,14 +223,14 @@ func TestAcc_Alert_Issue3117(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: alertIssue3117Config(id, acc.TestClient().Ids.WarehouseId()),
+				Config: alertIssue3117Config(id, acc.TestClient().Ids.WarehouseId(), "test_alert"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   alertIssue3117Config(id, acc.TestClient().Ids.WarehouseId()),
+				Config:                   alertIssue3117Config(id, acc.TestClient().Ids.WarehouseId(), "test_alert"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
 				),
@@ -238,9 +239,78 @@ func TestAcc_Alert_Issue3117(t *testing.T) {
 	})
 }
 
-func alertIssue3117Config(alertId sdk.SchemaObjectIdentifier, warehouseId sdk.AccountObjectIdentifier) string {
+// Can't reproduce the issue, leaving the test for now.
+func TestAcc_Alert_Issue3117_PatternMatching(t *testing.T) {
+	suffix := acc.TestClient().Ids.Alpha()
+	id1 := acc.TestClient().Ids.NewSchemaObjectIdentifier("prefix1" + suffix)
+	id2 := acc.TestClient().Ids.NewSchemaObjectIdentifier("prefix_" + suffix)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Alert),
+		Steps: []resource.TestStep{
+			{
+				Config: alertIssue3117Config(id1, acc.TestClient().Ids.WarehouseId(), "test_alert_1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert_1", "name", id1.Name()),
+				),
+			},
+			{
+				Config: alertIssue3117Config(id1, acc.TestClient().Ids.WarehouseId(), "test_alert_1") + alertIssue3117Config(id2, acc.TestClient().Ids.WarehouseId(), "test_alert_2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert_1", "name", id1.Name()),
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert_2", "name", id2.Name()),
+				),
+			},
+		},
+	})
+}
+
+// Can't reproduce the issue, leaving the test for now.
+func TestAcc_Alert_Issue3117_IgnoreQuotedIdentifierCase(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
+	t.Cleanup(databaseCleanup)
+
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
+	t.Cleanup(schemaCleanup)
+
+	id := acc.TestClient().Ids.NewSchemaObjectIdentifierInSchema("small_"+acc.TestClient().Ids.Alpha(), schema.ID())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Alert),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					acc.TestClient().Database.Alter(t, database.ID(), &sdk.AlterDatabaseOptions{
+						Set: &sdk.DatabaseSet{
+							QuotedIdentifiersIgnoreCase: sdk.Bool(true),
+						},
+					})
+				},
+				Config: alertIssue3117Config(id, acc.TestClient().Ids.WarehouseId(), "test_alert"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
+				),
+			},
+		},
+	})
+}
+
+func alertIssue3117Config(alertId sdk.SchemaObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, resourceName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_alert" "test_alert" {
+resource "snowflake_alert" "%[5]s" {
   database  = "%[1]s"
   schema    = "%[2]s"
   name      = "%[3]s"
@@ -256,5 +326,5 @@ resource "snowflake_alert" "test_alert" {
   enabled   = true
   comment   = "Alert config for GH issue 3117"
 }
-`, alertId.DatabaseName(), alertId.SchemaName(), alertId.Name(), warehouseId.Name())
+`, alertId.DatabaseName(), alertId.SchemaName(), alertId.Name(), warehouseId.Name(), resourceName)
 }
