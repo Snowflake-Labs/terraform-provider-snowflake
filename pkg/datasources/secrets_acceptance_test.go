@@ -240,15 +240,6 @@ func TestAcc_Secrets_Filtering(t *testing.T) {
 	)
 	t.Cleanup(apiIntegrationCleanup)
 
-	// ERROR Insufficient privileges to operate on account ... for role BASIC_PRIVILEGES
-	/*
-		appPkg, appPkgCleanup := acc.TestClient().ApplicationPackage.CreateApplicationPackage(t)
-		t.Cleanup(appPkgCleanup)
-
-		_, appCleanup := acc.TestClient().Application.CreateApplication(t, appPkg.ID(), "1")
-		t.Cleanup(appCleanup)
-	*/
-
 	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, acc.TestClient().Ids.DatabaseId())
 	t.Cleanup(schemaCleanup)
 
@@ -307,32 +298,13 @@ func TestAcc_Secrets_Filtering(t *testing.T) {
 					resource.TestCheckResourceAttr("data.snowflake_secrets.test", "secrets.#", "5"),
 				),
 			},
-			/*
-				// In Application Package
-				// ERROR Insufficient privileges to operate on account ... for role BASIC_PRIVILEGES
-				{
-					Config: multipleSecretModels + secretDatasourceWithIn("application_package", idFive.DatabaseId().FullyQualifiedName()),
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr("data.snowflake_secrets.test", "secrets.#", "5"),
-					),
-				},
-				// In Application
-				// ERROR Insufficient privileges to operate on account ... for role BASIC_PRIVILEGES
-				{
-					Config: multipleSecretModels + secretDatasourceWithIn("application", idFive.DatabaseId().FullyQualifiedName()),
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr("data.snowflake_secrets.test", "secrets.#", "5"),
-					),
-				},
-				// In Account
-				// ERROR Insufficient privileges to operate on 'SYSTEM' for role BASIC_PRIVILEGES
-					{
-						Config: multipleSecretModels + secretDatasourceWithIn("account", acc.TestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()),
-						Check: resource.ComposeTestCheckFunc(
-							resource.TestCheckResourceAttr("data.snowflake_secrets.test", "secrets.#", "5"),
-						),
-					},
-			*/
+			// In Account
+			{
+				Config: multipleSecretModels + secretDatasourceInAccountWithLike(prefix + "%"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_secrets.test", "secrets.#", "3"),
+				),
+			},
 		},
 	})
 }
@@ -354,6 +326,18 @@ func secretDatasourceWithIn(objectName, objectFullyQualifiedName string) string 
         }
     }
 `, objectName, strings.ReplaceAll(objectFullyQualifiedName, `"`, ""))
+}
+
+func secretDatasourceInAccountWithLike(prefix string) string {
+	return fmt.Sprintf(`
+    data "snowflake_secrets" "test" {
+        depends_on = [snowflake_secret_with_basic_authentication.s, snowflake_secret_with_generic_string.s2, snowflake_secret_with_client_credentials.s3, snowflake_secret_with_authorization_code_grant.s4]
+        in {
+            account = true
+        }
+        like = "%s"
+    }
+`, prefix)
 }
 
 func TestAcc_Secrets_EmptyIn(t *testing.T) {

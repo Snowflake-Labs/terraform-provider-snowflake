@@ -104,7 +104,7 @@ func Secrets() *schema.Resource {
 
 func ReadSecrets(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	req := *sdk.NewShowSecretRequest()
+	req := sdk.NewShowSecretRequest()
 
 	handleLike(d, &req.Like)
 	err := handleExtendedIn(d, &req.In)
@@ -112,7 +112,7 @@ func ReadSecrets(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 		return diag.FromErr(err)
 	}
 
-	secrets, err := client.Secrets.Show(ctx, &req)
+	secrets, err := client.Secrets.Show(ctx, req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
