@@ -192,7 +192,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithoutDependency_Aft
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(),
+		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
@@ -404,8 +404,8 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithImplicitDependenc
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate), // Create is expected, because in refresh Read before apply the database is removing the unknown database from the state using d.SetId("") after failed ShowByID
+						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),   // Create is expected, because in refresh Read before apply the schema is removing the unknown schema from the state using d.SetId("") after failed ShowByID
 					},
 				},
 				Config:      config.FromModel(t, databaseConfigModelWithNewId) + configSchemaWithDatabaseReference(databaseConfigModelWithNewId.ResourceReference(), schemaName),
@@ -535,7 +535,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 					},
 				},
 				Config:      config.FromModels(t, databaseConfigModel, schemaModelConfigWithNewDatabaseId),
-				ExpectError: regexp.MustCompile("Failed to create schema"), // already exists
+				ExpectError: regexp.MustCompile("Failed to create schema"), // already exists (because we try to create a schema on the renamed database that already has the schema that was previously created by terraform and wasn't removed)
 			},
 		},
 	})
