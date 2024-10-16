@@ -300,7 +300,7 @@ func TestAcc_Secrets_Filtering(t *testing.T) {
 			},
 			// In Account
 			{
-				Config: multipleSecretModels + secretDatasourceInAccountWithLike(prefix + "%"),
+				Config: multipleSecretModels + secretDatasourceInAccountWithLike(prefix+"%"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_secrets.test", "secrets.#", "3"),
 				),
