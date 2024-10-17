@@ -251,7 +251,7 @@ func TestInt_Applications(t *testing.T) {
 		require.NoError(t, err)
 		assertApplication(t, id, applicationPackage.Name, version, patch, "")
 
-		// TODO: adjust after this is fixed on Snowflake side
+		// TODO(SNOW-1746420): adjust after this is fixed on Snowflake side
 		_, err = client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeApplication)
 		require.ErrorContains(t, err, "391801 (0A000): SQL compilation error: Object tagging not supported for object type APPLICATION")
 

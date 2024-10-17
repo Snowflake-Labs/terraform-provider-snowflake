@@ -609,6 +609,9 @@ func TestInt_DatabasesAlter(t *testing.T) {
 				},
 			})
 			require.NoError(t, err)
+
+			_, err = client.SystemFunctions.GetTag(ctx, tagTest.ID(), databaseTest.ID(), sdk.ObjectTypeDatabase)
+			require.Error(t, err)
 		})
 
 		t.Run(fmt.Sprintf("Database: %s - swap with another database", testCase.DatabaseType), func(t *testing.T) {
