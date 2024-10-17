@@ -485,7 +485,7 @@ func TestAcc_StreamOnExternalTable_CheckGrantsAfterRecreation(t *testing.T) {
 	})
 }
 
-func TestAcc_StreamOnExternalTable_RecreateWhenStale(t *testing.T) {
+func TestAcc_StreamOnExternalTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	resourceName := "snowflake_stream_on_external_table.test"
@@ -539,7 +539,7 @@ func TestAcc_StreamOnExternalTable_RecreateWhenStale(t *testing.T) {
 				),
 			},
 			// check that the resource was recreated
-			// note that it is stale again because we still have schema parameters set to 0
+			// note that it is stale again because we still have schema parameters set to 0, this results in a permadiff
 			{
 				Config: config.FromModel(t, model),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -559,28 +559,6 @@ func TestAcc_StreamOnExternalTable_RecreateWhenStale(t *testing.T) {
 						}
 						return nil
 					})),
-				),
-			},
-			// set schema parameters to bigger values ensuring that the stream is not stale
-			{
-				PreConfig: func() {
-					acc.TestClient().Schema.Alter(t, schema.ID(), &sdk.AlterSchemaOptions{
-						Set: &sdk.SchemaSet{
-							DataRetentionTimeInDays:    sdk.Int(1),
-							MaxDataExtensionTimeInDays: sdk.Int(1),
-						},
-					})
-				},
-				RefreshState: true,
-				RefreshPlanChecks: resource.RefreshPlanChecks{
-					PostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
-					HasNameString(id.Name()).
-					HasStaleString(r.BooleanFalse),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
 				),
 			},
 		},
@@ -610,6 +588,8 @@ func TestAcc_StreamOnExternalTable_RecreateWhenStaleWithExternalChanges(t *testi
 	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateInSchemaWithLocation(t, stageLocation, schema.ID())
 	t.Cleanup(externalTableCleanup)
 
+	var createdOn string
+
 	model := model.StreamOnExternalTable("test", id.DatabaseName(), externalTable.ID().FullyQualifiedName(), id.Name(), id.SchemaName()).WithInsertOnly(r.BooleanTrue)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -625,6 +605,10 @@ func TestAcc_StreamOnExternalTable_RecreateWhenStaleWithExternalChanges(t *testi
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						createdOn = value
+						return nil
+					})),
 				),
 			},
 			// changing the value externally on schema and checking manually that stream is stale
@@ -653,6 +637,14 @@ func TestAcc_StreamOnExternalTable_RecreateWhenStaleWithExternalChanges(t *testi
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanTrue),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						if value == createdOn {
+							return fmt.Errorf("stream was not recreated")
+						}
+						// the stream was recreated - update creation time for later comparison
+						createdOn = value
+						return nil
+					})),
 				),
 			},
 			// changing schema parameters back to non-zero values
@@ -674,6 +666,10 @@ func TestAcc_StreamOnExternalTable_RecreateWhenStaleWithExternalChanges(t *testi
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						createdOn = value
+						return nil
+					})),
 				),
 			},
 		},
