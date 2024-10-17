@@ -179,6 +179,18 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.SecondaryDatabase: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Databases.ShowByID)
 	},
+	resources.SecretWithAuthorizationCodeGrant: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Secrets.ShowByID)
+	},
+	resources.SecretWithBasicAuthentication: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Secrets.ShowByID)
+	},
+	resources.SecretWithClientCredentials: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Secrets.ShowByID)
+	},
+	resources.SecretWithGenericString: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Secrets.ShowByID)
+	},
 	resources.Sequence: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Sequences.ShowByID)
 	},

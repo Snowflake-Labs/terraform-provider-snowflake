@@ -325,6 +325,7 @@ it will result in:
 - Add support for datasource tests (assertions and config builders).
 - Consider overriding the assertions when invoking same check multiple times with different params (e.g. `Warehouse(...).HasType(X).HasType(Y)`; it could use the last-check-wins approach, to more easily reuse complex checks between the test steps).
 - Consider not adding the check for `show_output` presence on creation (same with `parameters`). The majority of the use cases need it to be present but there are a few others (like conditional presence in the datasources). Currently, it seems that they should be always present in the resources, so no change is made. Later, with adding the support for the datasource tests, consider simple destructive implementation like:
+- Add support for `set` so that assertions like e.g. `oauth_scopes.*` could be done.
 ```go
 func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
     w.assertions = make([]resourceAssertion, 0)
