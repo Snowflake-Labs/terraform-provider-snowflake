@@ -3,6 +3,7 @@ package assert
 import (
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"strconv"
 	"strings"
 	"testing"
@@ -104,6 +105,7 @@ func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier) {
 	objectAssert.VerifyAll(t)
 }
 
+// TODO: This function should iterate over items and look for list item in attributes that matches ALL items' entries AT ONCE (currently it's a pretty dumb assert running through all attributes)
 func HasListItemsOrderIndependent(resourceKey string, attributePath string, items []map[string]string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		for key, value := range state.RootModule().Resources {
@@ -122,7 +124,7 @@ func HasListItemsOrderIndependent(resourceKey string, attributePath string, item
 								return fmt.Errorf("failed to convert length of the attribute %s: %s", attrKey, err)
 							}
 							if len(items) != attrValueLen {
-								return fmt.Errorf("expected to find %d items in %s, but found %d", attrValueLen, attributePath, len(items))
+								return fmt.Errorf("expected to find %d items in %s, but found %d", len(items), attributePath, attrValueLen)
 							}
 						}
 
@@ -149,7 +151,9 @@ func HasListItemsOrderIndependent(resourceKey string, attributePath string, item
 							if !found {
 								return fmt.Errorf("%s found in attributes, but was not expected", attrKey)
 							} else if !valueEquals {
-								return fmt.Errorf("expected to find subpath %s that is equal to %s", attrKey, attrValue)
+								return fmt.Errorf("expected to find subpath %s that is equal to one of the values in %v", attrKey, collections.Map(items, func(item map[string]string) string {
+									return item[itemKey]
+								}))
 							}
 						}
 					}
