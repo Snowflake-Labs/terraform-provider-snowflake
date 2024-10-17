@@ -65,4 +65,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "StreamOnExternalTable",
 		schema: resources.StreamOnExternalTable().Schema,
 	},
+	{
+		name:   "Task",
+		schema: resources.Task().Schema,
+	},
 }
