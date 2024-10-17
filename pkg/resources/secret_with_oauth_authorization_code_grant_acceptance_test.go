@@ -68,7 +68,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType(sdk.SecretTypeOAuth2).
+							HasSecretType(string(sdk.SecretTypeOAuth2)).
 							HasSchemaName(id.SchemaName()).
 							HasComment(""),
 					),
@@ -78,7 +78,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.name", name),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.database_name", id.DatabaseName()),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.schema_name", id.SchemaName()),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", sdk.SecretTypeOAuth2),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", string(sdk.SecretTypeOAuth2)),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.integration_name", integrationId.Name()),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.username", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_access_token_expiry_time", ""),
@@ -109,7 +109,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 							HasCommentString(comment),
 
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeOAuth2).
+							HasSecretType(string(sdk.SecretTypeOAuth2)).
 							HasComment(comment),
 					),
 					resource.TestCheckResourceAttrSet(secretName, "describe_output.0.oauth_refresh_token_expiry_time"),
@@ -287,7 +287,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalChange(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType(sdk.SecretTypeOAuth2).
+							HasSecretType(string(sdk.SecretTypeOAuth2)).
 							HasSchemaName(id.SchemaName()).
 							HasComment(comment),
 					),
@@ -320,6 +320,9 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalChange(t *testing.T) {
 					),
 				),
 			},
+            {
+                RefreshState: true,
+            },
 		},
 	})
 }

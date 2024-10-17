@@ -57,6 +57,11 @@ func (s *SecretWithAuthorizationCodeResourceAssert) HasNameString(expected strin
 	return s
 }
 
+func (s *SecretWithAuthorizationCodeResourceAssert) HasSecretTypeString(expected string) *SecretWithAuthorizationCodeResourceAssert {
+	s.AddAssertion(assert.ValueSet("secret_type", expected))
+	return s
+}
+
 func (s *SecretWithAuthorizationCodeResourceAssert) HasOauthRefreshTokenString(expected string) *SecretWithAuthorizationCodeResourceAssert {
 	s.AddAssertion(assert.ValueSet("oauth_refresh_token", expected))
 	return s

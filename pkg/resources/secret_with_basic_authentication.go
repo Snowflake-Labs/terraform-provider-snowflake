@@ -42,9 +42,9 @@ func SecretWithBasicAuthentication() *schema.Resource {
 		Description:   "Resource used to manage secret objects with Basic Authentication. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, ShowOutputAttributeName, "name", "comment"),
-			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, DescribeOutputAttributeName, "name", "username"),
-			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, ShowOutputAttributeName, "comment", "secret_type"),
+			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, DescribeOutputAttributeName, "username"),
+			RecreateWhenSecretTypeChangedExternally(string(sdk.SecretTypePassword)),
 		),
 
 		Schema: secretBasicAuthenticationSchema,
@@ -128,6 +128,7 @@ func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.Res
 			},
 		}
 	}
+
 	secretDescription, err := client.Secrets.Describe(ctx, id)
 	if err != nil {
 		return diag.FromErr(err)
@@ -138,6 +139,7 @@ func ReadContextSecretWithBasicAuthentication(ctx context.Context, d *schema.Res
 	if err = d.Set("username", secretDescription.Username); err != nil {
 		return diag.FromErr(err)
 	}
+
 	return nil
 }
 

@@ -62,6 +62,11 @@ func (s *SecretWithBasicAuthenticationResourceAssert) HasSchemaString(expected s
 	return s
 }
 
+func (s *SecretWithBasicAuthenticationResourceAssert) HasSecretTypeString(expected string) *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValueSet("secret_type", expected))
+	return s
+}
+
 func (s *SecretWithBasicAuthenticationResourceAssert) HasUsernameString(expected string) *SecretWithBasicAuthenticationResourceAssert {
 	s.AddAssertion(assert.ValueSet("username", expected))
 	return s

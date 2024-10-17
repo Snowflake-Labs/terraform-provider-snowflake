@@ -64,7 +64,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType(sdk.SecretTypeOAuth2).
+							HasSecretType(string(sdk.SecretTypeOAuth2)).
 							HasSchemaName(id.SchemaName()),
 					),
 					resource.TestCheckResourceAttr(secretName, "oauth_scopes.#", "2"),
@@ -107,7 +107,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						assert.Check(resource.TestCheckTypeSetElemAttr(secretName, "oauth_scopes.*", "test")),
 
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeOAuth2).
+							HasSecretType(string(sdk.SecretTypeOAuth2)).
 							HasComment(newComment),
 					),
 

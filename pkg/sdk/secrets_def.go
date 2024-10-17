@@ -7,11 +7,20 @@ import (
 )
 
 //go:generate go run ./poc/main.go
+
+type SecretType string
+
 const (
-	SecretTypePassword      = "PASSWORD"
-	SecretTypeOAuth2        = "OAUTH2"
-	SecretTypeGenericString = "GENERIC_STRING"
+	SecretTypePassword      SecretType = "PASSWORD"
+	SecretTypeOAuth2        SecretType = "OAUTH2"
+	SecretTypeGenericString SecretType = "GENERIC_STRING"
 )
+
+var AcceptableSecretTypes = map[SecretType]string{
+	SecretTypePassword:      string(SecretTypePassword),
+	SecretTypeOAuth2:        string(SecretTypeOAuth2),
+	SecretTypeGenericString: string(SecretTypeGenericString),
+}
 
 var secretDbRow = g.DbStruct("secretDBRow").
 	Field("created_on", "time.Time").
