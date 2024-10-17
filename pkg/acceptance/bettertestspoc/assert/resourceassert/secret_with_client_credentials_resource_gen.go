@@ -67,6 +67,11 @@ func (s *SecretWithClientCredentialsResourceAssert) HasSchemaString(expected str
 	return s
 }
 
+func (s *SecretWithClientCredentialsResourceAssert) HasSecretTypeString(expected string) *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValueSet("secret_type", expected))
+	return s
+}
+
 ////////////////////////////
 // Attribute empty checks //
 ////////////////////////////
@@ -103,5 +108,10 @@ func (s *SecretWithClientCredentialsResourceAssert) HasNoOauthScopes() *SecretWi
 
 func (s *SecretWithClientCredentialsResourceAssert) HasNoSchema() *SecretWithClientCredentialsResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("schema"))
+	return s
+}
+
+func (s *SecretWithClientCredentialsResourceAssert) HasNoSecretType() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValueNotSet("secret_type"))
 	return s
 }

@@ -106,6 +106,11 @@ func (s *SecretWithBasicAuthenticationResourceAssert) HasNoSchema() *SecretWithB
 	return s
 }
 
+func (s *SecretWithBasicAuthenticationResourceAssert) HasNoSecretType() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValueNotSet("secret_type"))
+	return s
+}
+
 func (s *SecretWithBasicAuthenticationResourceAssert) HasNoUsername() *SecretWithBasicAuthenticationResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("username"))
 	return s

@@ -186,7 +186,6 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 	})
 }
 
-/*
 func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
@@ -206,9 +205,9 @@ func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(string(sdk.SecretTypePassword)),
+							HasSecretTypeString(string(sdk.SecretTypeGenericString)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(string(sdk.SecretTypePassword)),
+							HasSecretType(string(sdk.SecretTypeGenericString)),
 					),
 				),
 			},
@@ -216,7 +215,7 @@ func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
 			{
 				PreConfig: func() {
 					acc.TestClient().Secret.DropFunc(t, id)()
-					_, cleanup := acc.TestClient().Secret.CreateWithGenericString(t, id, "test_secret_string")
+					_, cleanup := acc.TestClient().Secret.CreateWithBasicAuthenticationFlow(t, id, "test_pswd", "test_usr")
 					t.Cleanup(cleanup)
 				},
 				Config: config.FromModel(t, secretModel),
@@ -227,14 +226,13 @@ func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.SecretWithBasicAuthenticationResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(string(sdk.SecretTypePassword)),
+						resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
+							HasSecretTypeString(string(sdk.SecretTypeGenericString)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(string(sdk.SecretTypePassword)),
+							HasSecretType(string(sdk.SecretTypeGenericString)),
 					),
 				),
 			},
 		},
 	})
 }
-*/
