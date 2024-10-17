@@ -19,13 +19,12 @@ func ComposeCheckDestroy(t *testing.T, resources ...resources.Resource) func(*te
 	t.Helper()
 
 	return func(s *terraform.State) error {
+		errs := make([]error, 0)
 		for _, resource := range resources {
 			checkFunc := CheckDestroy(t, resource)
-			if err := checkFunc(s); err != nil {
-				return fmt.Errorf("error checking destruction for resource %s: %w", resource, err)
-			}
+			errs = append(errs, checkFunc(s))
 		}
-		return nil
+		return errors.Join(errs...)
 	}
 }
 
