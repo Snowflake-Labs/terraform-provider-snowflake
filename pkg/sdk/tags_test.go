@@ -15,7 +15,6 @@ func TestTagCreate(t *testing.T) {
 	t.Run("create with all optional", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
-		opts.OrReplace = Bool(false)
 		opts.Comment = String("comment")
 		opts.AllowedValues = &AllowedValues{
 			Values: []AllowedValue{
@@ -104,7 +103,7 @@ func TestTagUndrop(t *testing.T) {
 		}
 	}
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *dropTagOptions = nil
+		var opts *undropTagOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -138,7 +137,7 @@ func TestTagShow(t *testing.T) {
 
 	t.Run("validation: empty in", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.In = &In{}
+		opts.In = &ExtendedIn{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("showTagOptions.In", "Account", "Database", "Schema"))
 	})
 
@@ -155,8 +154,10 @@ func TestTagShow(t *testing.T) {
 
 	t.Run("show with in", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.In = &In{
-			Account: Bool(true),
+		opts.In = &ExtendedIn{
+			In: In{
+				Account: Bool(true),
+			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW TAGS IN ACCOUNT`)
 	})
@@ -194,10 +195,11 @@ func TestTagAlter(t *testing.T) {
 		}
 	}
 
-	t.Run("alter with rename to", func(t *testing.T) {
+	t.Run("alter with rename to and if exists", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Rename = &TagRename{Name: randomSchemaObjectIdentifierInSchema(id.SchemaId())}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG %s RENAME TO %s`, id.FullyQualifiedName(), opts.Rename.Name.FullyQualifiedName())
+		opts.ifExists = Pointer(true)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER TAG IF EXISTS %s RENAME TO %s`, id.FullyQualifiedName(), opts.Rename.Name.FullyQualifiedName())
 	})
 
 	t.Run("alter with add", func(t *testing.T) {
@@ -252,7 +254,7 @@ func TestTagAlter(t *testing.T) {
 	})
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		opts := (*createTagOptions)(nil)
+		opts := (*alterTagOptions)(nil)
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
@@ -276,6 +278,31 @@ func TestTagAlter(t *testing.T) {
 			AllowedValues: Bool(true),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("alterTagOptions", "Add", "Drop", "Set", "Unset", "Rename"))
+	})
+
+	t.Run("validation: multiple fields in set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &TagSet{
+			Comment:         String("comment"),
+			MaskingPolicies: &TagSetMaskingPolicies{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errOneOf("TagSet", "MaskingPolicies", "Comment"))
+	})
+
+	t.Run("validation: empty masking policies in set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &TagSet{
+			MaskingPolicies: &TagSetMaskingPolicies{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errIntValue("TagSet.MaskingPolicies", "MaskingPolicies", IntErrGreater, 0))
+	})
+
+	t.Run("validation: empty masking policies in unset", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &TagUnset{
+			MaskingPolicies: &TagUnsetMaskingPolicies{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errIntValue("TagUnset.MaskingPolicies", "MaskingPolicies", IntErrGreater, 0))
 	})
 
 	t.Run("validation: invalid new name", func(t *testing.T) {
@@ -302,9 +329,19 @@ func TestTagAlter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("TagUnset", "MaskingPolicies", "AllowedValues", "Comment"))
 	})
 
-	t.Run("validation: allowed values count", func(t *testing.T) {
+	t.Run("validation: add allowed values count", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Add = &TagAdd{
+			AllowedValues: &AllowedValues{
+				Values: []AllowedValue{},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("AllowedValues", "Values", 1, 300))
+	})
+
+	t.Run("validation: drop allowed values count", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Drop = &TagDrop{
 			AllowedValues: &AllowedValues{
 				Values: []AllowedValue{},
 			},

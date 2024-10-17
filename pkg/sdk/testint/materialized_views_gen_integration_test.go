@@ -326,7 +326,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 		err := client.Views.Alter(ctx, alterRequestSetTags)
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTable)
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeMaterializedView)
 		require.NoError(t, err)
 
 		assert.Equal(t, tagValue, returnedTagValue)
@@ -339,7 +339,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequestUnsetTags)
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTable)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeMaterializedView)
 		require.Error(t, err)
 	})
 

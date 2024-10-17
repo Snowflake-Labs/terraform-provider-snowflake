@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -26,6 +27,8 @@ type systemFunctions struct {
 }
 
 func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (string, error) {
+	objectType = normalizeGetTagObjectType(objectType)
+
 	s := &struct {
 		Tag string `db:"TAG"`
 	}{}
@@ -35,6 +38,20 @@ func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, ob
 		return "", err
 	}
 	return s.Tag, nil
+}
+
+// normalize object types for some values because of errors like below
+// SQL compilation error: Invalid value VIEW for argument OBJECT_TYPE. Please use object type TABLE for all kinds of table-like objects.
+// TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
+func normalizeGetTagObjectType(objectType ObjectType) ObjectType {
+	if slices.Contains([]ObjectType{ObjectTypeView, ObjectTypeMaterializedView, ObjectTypeExternalTable}, objectType) {
+		return ObjectTypeTable
+	}
+
+	if slices.Contains([]ObjectType{ObjectTypeExternalFunction}, objectType) {
+		return ObjectTypeFunction
+	}
+	return objectType
 }
 
 type PipeExecutionState string

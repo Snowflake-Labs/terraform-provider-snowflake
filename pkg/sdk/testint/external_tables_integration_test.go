@@ -239,50 +239,49 @@ func TestInt_ExternalTables(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// TODO: (SNOW-919981) Uncomment when the problem with alter external table set / unset tags is solved
-	// t.Run("Alter: set tags", func(t *testing.T) {
-	//	externalTableID := randomAccountObjectIdentifier(t)
-	//	err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
-	//	require.NoError(t, err)
-	//
-	//	tagValue := "tag-value"
-	//	err = client.ExternalTables.Alter(
-	//		ctx,
-	//		NewAlterExternalTableRequest(externalTableID).
-	//			WithIfExists(Bool(true)).
-	//			WithSetTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), tagValue)}))
-	//	require.NoError(t, err)
-	//
-	//	tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, ObjectTypeExternalTable)
-	//	require.NoError(t, err)
-	//	assert.Equal(t, tagValue, tv)
-	// })
-	//
-	// t.Run("Alter: unset tags", func(t *testing.T) {
-	//	externalTableID := randomAccountObjectIdentifier(t)
-	//	err := client.ExternalTables.Create(
-	//		ctx,
-	//		minimalCreateExternalTableReq(externalTableID).
-	//			WithTag([]*TagAssociationRequest{NewTagAssociationRequest(tag.ID(), "tag-value")}),
-	//	)
-	//	require.NoError(t, err)
-	//	tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, ObjectTypeExternalTable)
-	//	require.NoError(t, err)
-	//	assert.Equal(t, "tag-value", tv)
-	//
-	//	err = client.ExternalTables.Alter(
-	//		ctx,
-	//		NewAlterExternalTableRequest(externalTableID).
-	//			WithIfExists(Bool(true)).
-	//			WithUnsetTag([]ObjectIdentifier{
-	//				NewAccountObjectIdentifier(tag.ID().Name()),
-	//			}),
-	//	)
-	//	require.NoError(t, err)
-	//
-	//	_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, ObjectTypeExternalTable)
-	//	require.Error(t, err)
-	// })
+	t.Run("Alter: set tags", func(t *testing.T) {
+		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		err := client.ExternalTables.Create(ctx, minimalCreateExternalTableReq(externalTableID))
+		require.NoError(t, err)
+
+		tagValue := "tag-value"
+		err = client.Tables.Alter(
+			ctx,
+			sdk.NewAlterTableRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithSetTags([]sdk.TagAssociationRequest{*sdk.NewTagAssociationRequest(tag.ID(), tagValue)}))
+		require.NoError(t, err)
+
+		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, sdk.ObjectTypeExternalTable)
+		require.NoError(t, err)
+		assert.Equal(t, tagValue, tv)
+	})
+
+	t.Run("Alter: unset tags", func(t *testing.T) {
+		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		err := client.ExternalTables.Create(
+			ctx,
+			minimalCreateExternalTableReq(externalTableID).
+				WithTag([]*sdk.TagAssociationRequest{sdk.NewTagAssociationRequest(tag.ID(), "tag-value")}),
+		)
+		require.NoError(t, err)
+		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, sdk.ObjectTypeExternalTable)
+		require.NoError(t, err)
+		assert.Equal(t, "tag-value", tv)
+
+		err = client.Tables.Alter(
+			ctx,
+			sdk.NewAlterTableRequest(externalTableID).
+				WithIfExists(sdk.Bool(true)).
+				WithUnsetTags([]sdk.ObjectIdentifier{
+					tag.ID(),
+				}),
+		)
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), externalTableID, sdk.ObjectTypeExternalTable)
+		require.Error(t, err)
+	})
 
 	t.Run("Alter: add partitions", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()

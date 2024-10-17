@@ -3,21 +3,33 @@ package sdk
 var (
 	// based on https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects
 	TagAssociationAllowedObjectTypes = []ObjectType{
+		// organization level
 		ObjectTypeAccount,
+
+		// account level
 		ObjectTypeApplication,
 		ObjectTypeApplicationPackage,
 		ObjectTypeDatabase,
+		ObjectTypeFailoverGroup,
 		ObjectTypeIntegration,
 		ObjectTypeNetworkPolicy,
+		ObjectTypeReplicationGroup,
 		ObjectTypeRole,
 		ObjectTypeShare,
 		ObjectTypeUser,
 		ObjectTypeWarehouse,
+
+		// database level
 		ObjectTypeDatabaseRole,
 		ObjectTypeSchema,
+
+		// schema level
 		ObjectTypeAlert,
+		ObjectTypeBudget,
+		ObjectTypeClassification,
 		ObjectTypeExternalFunction,
 		ObjectTypeExternalTable,
+		ObjectTypeFunction,
 		ObjectTypeGitRepository,
 		ObjectTypeIcebergTable,
 		ObjectTypeMaterializedView,
@@ -26,12 +38,15 @@ var (
 		ObjectTypePasswordPolicy,
 		ObjectTypeRowAccessPolicy,
 		ObjectTypeSessionPolicy,
+		ObjectTypePrivacyPolicy,
 		ObjectTypeProcedure,
 		ObjectTypeStage,
 		ObjectTypeStream,
 		ObjectTypeTable,
 		ObjectTypeTask,
 		ObjectTypeView,
+
+		// table or column level
 		ObjectTypeColumn,
 		ObjectTypeEventTable,
 	}

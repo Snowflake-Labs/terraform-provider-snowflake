@@ -33,8 +33,10 @@ func (v *tags) Show(ctx context.Context, request *ShowTagRequest) ([]Tag, error)
 }
 
 func (v *tags) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error) {
-	request := NewShowTagRequest().WithIn(&In{
-		Schema: id.SchemaId(),
+	request := NewShowTagRequest().WithIn(&ExtendedIn{
+		In: In{
+			Schema: id.SchemaId(),
+		},
 	}).WithLike(id.Name())
 
 	tags, err := v.Show(ctx, request)
@@ -55,19 +57,21 @@ func (v *tags) Undrop(ctx context.Context, request *UndropTagRequest) error {
 }
 
 func (v *tags) Set(ctx context.Context, request *SetTagRequest) error {
+	// TODO [SNOW-1022645]: use query from resource sdk - similarly to https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/0e88e082282adf35f605c323569908a99bd406f9/pkg/acceptance/check_destroy.go#L67
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *tags) Unset(ctx context.Context, request *UnsetTagRequest) error {
+	// TODO [SNOW-1022645]: use query from resource sdk - similarly to https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/0e88e082282adf35f605c323569908a99bd406f9/pkg/acceptance/check_destroy.go#L67
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
 func (s *CreateTagRequest) toOpts() *createTagOptions {
 	return &createTagOptions{
-		OrReplace:     Bool(s.orReplace),
-		IfNotExists:   Bool(s.ifNotExists),
+		OrReplace:     s.orReplace,
+		IfNotExists:   s.ifNotExists,
 		name:          s.name,
 		Comment:       s.comment,
 		AllowedValues: s.allowedValues,
@@ -76,12 +80,13 @@ func (s *CreateTagRequest) toOpts() *createTagOptions {
 
 func (s *AlterTagRequest) toOpts() *alterTagOptions {
 	return &alterTagOptions{
-		name:   s.name,
-		Add:    s.add,
-		Drop:   s.drop,
-		Set:    s.set,
-		Unset:  s.unset,
-		Rename: s.rename,
+		name:     s.name,
+		ifExists: s.ifExists,
+		Add:      s.add,
+		Drop:     s.drop,
+		Set:      s.set,
+		Unset:    s.unset,
+		Rename:   s.rename,
 	}
 }
 
@@ -111,6 +116,7 @@ func (s *SetTagRequest) toOpts() *setTagOptions {
 		objectName: s.objectName,
 		SetTags:    s.SetTags,
 	}
+	// TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
 	if o.objectType == ObjectTypeColumn {
 		id, ok := o.objectName.(TableColumnIdentifier)
 		if ok {
@@ -128,6 +134,7 @@ func (s *UnsetTagRequest) toOpts() *unsetTagOptions {
 		objectName: s.objectName,
 		UnsetTags:  s.UnsetTags,
 	}
+	// TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
 	if o.objectType == ObjectTypeColumn {
 		id, ok := o.objectName.(TableColumnIdentifier)
 		if ok {

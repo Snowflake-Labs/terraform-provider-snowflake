@@ -23,7 +23,7 @@ func (opts *createTagOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if everyValueSet(opts.OrReplace, opts.IfNotExists) && *opts.OrReplace && *opts.IfNotExists {
+	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("createTagOptions", "OrReplace", "IfNotExists"))
 	}
 	if valueSet(opts.AllowedValues) {
