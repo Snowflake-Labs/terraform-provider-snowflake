@@ -54,8 +54,8 @@ func SecretWithAuthorizationCodeGrant() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "name", "oauth_refresh_token_expiry_time", "api_authentication"),
 			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, ShowOutputAttributeName, "name", "comment"),
+			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "name", "oauth_refresh_token_expiry_time", "api_authentication"),
 			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, FullyQualifiedNameAttributeName, "name"),
 			RecreateWhenSecretTypeChangedExternally(string(sdk.SecretTypeOAuth2)),
 		),

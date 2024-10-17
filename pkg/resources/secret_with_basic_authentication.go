@@ -42,8 +42,9 @@ func SecretWithBasicAuthentication() *schema.Resource {
 		Description:   "Resource used to manage secret objects with Basic Authentication. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, ShowOutputAttributeName, "comment", "secret_type"),
+			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, ShowOutputAttributeName, "name", "comment"),
 			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, DescribeOutputAttributeName, "username"),
+			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, FullyQualifiedNameAttributeName, "name"),
 			RecreateWhenSecretTypeChangedExternally(string(sdk.SecretTypePassword)),
 		),
 
