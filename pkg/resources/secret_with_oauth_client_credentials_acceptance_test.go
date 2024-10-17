@@ -331,7 +331,7 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) 
 					),
 				),
 			},
-			// create or replace with different secret type 
+			// create or replace with different secret type
 			{
 				PreConfig: func() {
 					acc.TestClient().Secret.DropFunc(t, id)()
