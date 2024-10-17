@@ -619,14 +619,14 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"is_secure", "is_secure", view.IsSecure, booleanStringFromBool(view.IsSecure), nil},
-				showMapping{"text", "is_recursive", view.IsRecursive(), booleanStringFromBool(view.IsRecursive()), func(x any) any {
+				outputMapping{"is_secure", "is_secure", view.IsSecure, booleanStringFromBool(view.IsSecure), nil},
+				outputMapping{"text", "is_recursive", view.IsRecursive(), booleanStringFromBool(view.IsRecursive()), func(x any) any {
 					return strings.Contains(x.(string), "RECURSIVE")
 				}},
-				showMapping{"text", "is_temporary", view.IsTemporary(), booleanStringFromBool(view.IsTemporary()), func(x any) any {
+				outputMapping{"text", "is_temporary", view.IsTemporary(), booleanStringFromBool(view.IsTemporary()), func(x any) any {
 					return strings.Contains(x.(string), "TEMPORARY")
 				}},
-				showMapping{"change_tracking", "change_tracking", view.IsChangeTracking(), booleanStringFromBool(view.IsChangeTracking()), func(x any) any {
+				outputMapping{"change_tracking", "change_tracking", view.IsChangeTracking(), booleanStringFromBool(view.IsChangeTracking()), func(x any) any {
 					return x.(string) == "ON"
 				}},
 			); err != nil {
