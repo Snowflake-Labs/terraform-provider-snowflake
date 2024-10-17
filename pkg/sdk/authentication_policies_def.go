@@ -1,6 +1,10 @@
 package sdk
 
-import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+import (
+	"fmt"
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+	"strings"
+)
 
 //go:generate go run ./poc/main.go
 
@@ -185,3 +189,49 @@ var AuthenticationPoliciesDef = g.NewInterface(
 			Name().
 			WithValidation(g.ValidIdentifier, "name"),
 	)
+
+func ToAuthenticationMethodsOption(s string) (*AuthenticationMethodsOption, error) {
+	switch authenticationMethodsOption := AuthenticationMethodsOption(strings.ToUpper(s)); authenticationMethodsOption {
+	case AuthenticationMethodsAll,
+		AuthenticationMethodsSaml,
+		AuthenticationMethodsPassword,
+		AuthenticationMethodsOauth,
+		AuthenticationMethodsKeyPair:
+		return &authenticationMethodsOption, nil
+	default:
+		return nil, fmt.Errorf("invalid frequency type: %s", s)
+	}
+}
+
+func ToMfaAuthenticationMethodsOption(s string) (*MfaAuthenticationMethodsOption, error) {
+	switch mfaAuthenticationMethodsOption := MfaAuthenticationMethodsOption(strings.ToUpper(s)); mfaAuthenticationMethodsOption {
+	case MfaAuthenticationMethodsAll,
+		MfaAuthenticationMethodsSaml,
+		MfaAuthenticationMethodsPassword:
+		return &mfaAuthenticationMethodsOption, nil
+	default:
+		return nil, fmt.Errorf("invalid frequency type: %s", s)
+	}
+}
+
+func ToMfaEnrollmentOption(s string) (*MfaEnrollmentOption, error) {
+	switch mfaEnrollmentOption := MfaEnrollmentOption(strings.ToUpper(s)); mfaEnrollmentOption {
+	case MfaEnrollmentRequired,
+		MfaEnrollmentOptional:
+		return &mfaEnrollmentOption, nil
+	default:
+		return nil, fmt.Errorf("invalid frequency type: %s", s)
+	}
+}
+
+func ToClientTypesOption(s string) (*ClientTypesOption, error) {
+	switch clientTypesOption := ClientTypesOption(strings.ToUpper(s)); clientTypesOption {
+	case ClientTypesAll,
+		ClientTypesSnowflakeUi,
+		ClientTypesDrivers,
+		ClientTypesSnowSql:
+		return &clientTypesOption, nil
+	default:
+		return nil, fmt.Errorf("invalid frequency type: %s", s)
+	}
+}
