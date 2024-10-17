@@ -54,9 +54,10 @@ func SecretWithAuthorizationCodeGrant() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "name", "oauth_refresh_token_expiry_time", "api_authentication"),
 			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, ShowOutputAttributeName, "name", "comment"),
+			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "name", "oauth_refresh_token_expiry_time", "api_authentication"),
 			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, FullyQualifiedNameAttributeName, "name"),
+			RecreateWhenSecretTypeChangedExternally(string(sdk.SecretTypeOAuth2)),
 		),
 	}
 }
@@ -146,9 +147,11 @@ func ReadContextSecretWithAuthorizationCodeGrant(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		if withExternalChangesMarking {
-			if err = handleExternalValueChangesToObjectInDescribe(d,
-				describeMapping{"oauth_refresh_token_expiry_time", "oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.String(), secretDescription.OauthRefreshTokenExpiryTime.String(), nil},
+		// if secret type is changed externally, we wont be able to read oauth_refresh_token_expiry_time value (since it will not be provided)
+		// in any other case, there should be oauth_refresh_token_expiry_time value since it is required
+		if withExternalChangesMarking && secretDescription.OauthRefreshTokenExpiryTime != nil {
+			if err = handleExternalChangesToObjectInFlatDescribe(d,
+				outputMapping{"oauth_refresh_token_expiry_time", "oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.String(), secretDescription.OauthRefreshTokenExpiryTime.String(), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}

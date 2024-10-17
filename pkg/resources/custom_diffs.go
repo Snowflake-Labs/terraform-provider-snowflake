@@ -195,3 +195,15 @@ func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.Customi
 		return nil
 	}
 }
+
+func RecreateWhenSecretTypeChangedExternally(secretType string) schema.CustomizeDiffFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		if n := diff.Get("secret_type"); n != nil {
+			logging.DebugLogger.Printf("[DEBUG] new external value for secret type %s\n", n.(string))
+			if secretType != strings.ToUpper(n.(string)) {
+				return errors.Join(diff.SetNew("secret_type", "<changed externally>"), diff.ForceNew("secret_type"))
+			}
+		}
+		return nil
+	}
+}

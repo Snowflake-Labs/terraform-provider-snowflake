@@ -57,7 +57,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretName).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType(sdk.SecretTypePassword).
+							HasSecretType(string(sdk.SecretTypePassword)).
 							HasSchemaName(id.SchemaName()).
 							HasComment(""),
 					),
@@ -67,7 +67,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.name", name),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.database_name", id.DatabaseName()),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.schema_name", id.SchemaName()),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", sdk.SecretTypePassword),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", string(sdk.SecretTypePassword)),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.username", "foo"),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.comment", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_access_token_expiry_time", ""),
@@ -91,7 +91,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 							HasCommentString(comment),
 
 						resourceshowoutputassert.SecretShowOutput(t, secretName).
-							HasSecretType(sdk.SecretTypePassword).
+							HasSecretType(string(sdk.SecretTypePassword)).
 							HasComment(comment),
 					),
 
@@ -219,6 +219,57 @@ func TestAcc_SecretWithBasicAuthentication_CreateWithEmptyCredentials(t *testing
 							HasUsernameString("").
 							HasPasswordString("").
 							HasCommentString(""),
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_SecretWithBasicAuthentication_ExternalSecretTypeChange(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
+	secretModel := model.SecretWithBasicAuthentication("s", id.DatabaseName(), name, "test_pswd", id.SchemaName(), "test_usr")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithBasicAuthentication),
+		Steps: []resource.TestStep{
+			// create
+			{
+				Config: config.FromModel(t, secretModel),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithBasicAuthenticationResource(t, secretModel.ResourceReference()).
+							HasSecretTypeString(string(sdk.SecretTypePassword)),
+						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
+							HasSecretType(string(sdk.SecretTypePassword)),
+					),
+				),
+			},
+			// create or replace with different secret type
+			{
+				PreConfig: func() {
+					acc.TestClient().Secret.DropFunc(t, id)()
+					_, cleanup := acc.TestClient().Secret.CreateWithGenericString(t, id, "test_secret_string")
+					t.Cleanup(cleanup)
+				},
+				Config: config.FromModel(t, secretModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithBasicAuthenticationResource(t, secretModel.ResourceReference()).
+							HasSecretTypeString(string(sdk.SecretTypePassword)),
+						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
+							HasSecretType(string(sdk.SecretTypePassword)),
 					),
 				),
 			},
