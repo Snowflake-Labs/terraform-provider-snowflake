@@ -147,7 +147,11 @@ func CreateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 		authenticationMethodsRawList := expandStringList(v.(*schema.Set).List())
 		authenticationMethods := make([]sdk.AuthenticationMethods, len(authenticationMethodsRawList))
 		for i, v := range authenticationMethodsRawList {
-			authenticationMethods[i] = sdk.AuthenticationMethods{Method: sdk.AuthenticationMethodsOption(v)}
+			option, err := sdk.ToAuthenticationMethodsOption(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			authenticationMethods[i] = sdk.AuthenticationMethods{Method: *option}
 		}
 		req.WithAuthenticationMethods(authenticationMethods)
 	}
@@ -156,20 +160,32 @@ func CreateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 		mfaAuthenticationMethodsRawList := expandStringList(v.(*schema.Set).List())
 		mfaAuthenticationMethods := make([]sdk.MfaAuthenticationMethods, len(mfaAuthenticationMethodsRawList))
 		for i, v := range mfaAuthenticationMethodsRawList {
-			mfaAuthenticationMethods[i] = sdk.MfaAuthenticationMethods{Method: sdk.MfaAuthenticationMethodsOption(v)}
+			option, err := sdk.ToMfaAuthenticationMethodsOption(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			mfaAuthenticationMethods[i] = sdk.MfaAuthenticationMethods{Method: *option}
 		}
 		req.WithMfaAuthenticationMethods(mfaAuthenticationMethods)
 	}
 
 	if v, ok := d.GetOk("mfa_enrollment"); ok {
-		req = req.WithMfaEnrollment(sdk.MfaEnrollmentOption(v.(string)))
+		option, err := sdk.ToMfaEnrollmentOption(v.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		req = req.WithMfaEnrollment(*option)
 	}
 
 	if v, ok := d.GetOk("client_types"); ok {
 		clientTypesRawList := expandStringList(v.(*schema.Set).List())
 		clientTypes := make([]sdk.ClientTypes, len(clientTypesRawList))
 		for i, v := range clientTypesRawList {
-			clientTypes[i] = sdk.ClientTypes{ClientType: sdk.ClientTypesOption(v)}
+			option, err := sdk.ToClientTypesOption(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			clientTypes[i] = sdk.ClientTypes{ClientType: *option}
 		}
 		req.WithClientTypes(clientTypes)
 	}
@@ -306,13 +322,16 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 			authenticationMethods := expandStringList(v.(*schema.Set).List())
 			authenticationMethodsValues := make([]sdk.AuthenticationMethods, len(authenticationMethods))
 			for i, v := range authenticationMethods {
-				authenticationMethodsValues[i] = sdk.AuthenticationMethods{Method: sdk.AuthenticationMethodsOption(v)}
+				option, err := sdk.ToAuthenticationMethodsOption(v)
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				authenticationMethodsValues[i] = sdk.AuthenticationMethods{Method: *option}
 			}
-			if len(authenticationMethodsValues) == 0 {
-				unset.WithAuthenticationMethods(true)
-			} else {
-				set.AuthenticationMethods = authenticationMethodsValues
-			}
+
+			set.WithAuthenticationMethods(authenticationMethodsValues)
+		} else {
+			unset.WithAuthenticationMethods(true)
 		}
 	}
 
@@ -322,21 +341,23 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 			mfaAuthenticationMethods := expandStringList(v.(*schema.Set).List())
 			mfaAuthenticationMethodsValues := make([]sdk.MfaAuthenticationMethods, len(mfaAuthenticationMethods))
 			for i, v := range mfaAuthenticationMethods {
-				mfaAuthenticationMethodsValues[i] = sdk.MfaAuthenticationMethods{Method: sdk.MfaAuthenticationMethodsOption(v)}
+				option, err := sdk.ToMfaAuthenticationMethodsOption(v)
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				mfaAuthenticationMethodsValues[i] = sdk.MfaAuthenticationMethods{Method: *option}
 			}
 
-			if len(mfaAuthenticationMethodsValues) == 0 {
-				unset.WithMfaAuthenticationMethods(true)
-			} else {
-				set.MfaAuthenticationMethods = mfaAuthenticationMethodsValues
-			}
+			set.WithMfaAuthenticationMethods(mfaAuthenticationMethodsValues)
+		} else {
+			unset.WithMfaAuthenticationMethods(true)
 		}
 	}
 
 	// change to mfa enrollment
 	if d.HasChange("mfa_enrollment") {
-		if v, ok := d.GetOk("mfa_enrollment"); ok {
-			set.MfaEnrollment = sdk.Pointer(sdk.MfaEnrollmentOption(v.(string)))
+		if mfaEnrollmentOption, err := sdk.ToMfaEnrollmentOption(d.Get("mfa_enrollment").(string)); err == nil {
+			set.WithMfaEnrollment(*mfaEnrollmentOption)
 		} else {
 			unset.WithMfaEnrollment(true)
 		}
@@ -348,14 +369,16 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 			clientTypes := expandStringList(v.(*schema.Set).List())
 			clientTypesValues := make([]sdk.ClientTypes, len(clientTypes))
 			for i, v := range clientTypes {
-				clientTypesValues[i] = sdk.ClientTypes{ClientType: sdk.ClientTypesOption(v)}
+				option, err := sdk.ToClientTypesOption(v)
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				clientTypesValues[i] = sdk.ClientTypes{ClientType: *option}
 			}
 
-			if len(clientTypesValues) == 0 {
-				unset.WithClientTypes(true)
-			} else {
-				set.ClientTypes = clientTypesValues
-			}
+			set.WithClientTypes(clientTypesValues)
+		} else {
+			unset.WithClientTypes(true)
 		}
 	}
 
@@ -368,11 +391,9 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 				securityIntegrationsValues[i] = sdk.SecurityIntegrationsOption{Name: sdk.NewAccountObjectIdentifier(v)}
 			}
 
-			if len(securityIntegrationsValues) == 0 {
-				unset.WithSecurityIntegrations(true)
-			} else {
-				set.SecurityIntegrations = securityIntegrationsValues
-			}
+			set.WithSecurityIntegrations(securityIntegrationsValues)
+		} else {
+			unset.WithSecurityIntegrations(true)
 		}
 	}
 
