@@ -306,7 +306,7 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 				authenticationMethodsValues[i] = sdk.AuthenticationMethods{Method: sdk.AuthenticationMethodsOption(v)}
 			}
 			if len(authenticationMethodsValues) == 0 {
-				unset.AuthenticationMethods = sdk.Bool(true)
+				unset.WithAuthenticationMethods(true)
 			} else {
 				set.AuthenticationMethods = authenticationMethodsValues
 			}
@@ -323,7 +323,7 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 			}
 
 			if len(mfaAuthenticationMethodsValues) == 0 {
-				unset.MfaAuthenticationMethods = sdk.Bool(true)
+				unset.WithMfaAuthenticationMethods(true)
 			} else {
 				set.MfaAuthenticationMethods = mfaAuthenticationMethodsValues
 			}
@@ -335,7 +335,7 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 		if v, ok := d.GetOk("mfa_enrollment"); ok {
 			set.MfaEnrollment = sdk.Pointer(sdk.MfaEnrollmentOption(v.(string)))
 		} else {
-			unset.MfaEnrollment = sdk.Bool(true)
+			unset.WithMfaEnrollment(true)
 		}
 	}
 
@@ -349,7 +349,7 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 			}
 
 			if len(clientTypesValues) == 0 {
-				unset.ClientTypes = sdk.Bool(true)
+				unset.WithClientTypes(true)
 			} else {
 				set.ClientTypes = clientTypesValues
 			}
@@ -366,7 +366,7 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 			}
 
 			if len(securityIntegrationsValues) == 0 {
-				unset.SecurityIntegrations = sdk.Bool(true)
+				unset.WithSecurityIntegrations(true)
 			} else {
 				set.SecurityIntegrations = securityIntegrationsValues
 			}
@@ -378,7 +378,7 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 		if v, ok := d.GetOk("comment"); ok {
 			set.Comment = sdk.String(v.(string))
 		} else {
-			unset.Comment = sdk.Bool(true)
+			unset.WithComment(true)
 		}
 	}
 
@@ -403,10 +403,16 @@ func DeleteContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Error deleting authentication policy",
+				Detail:   fmt.Sprintf("id %v err = %v", id.Name(), err),
+			},
+		}
 	}
 
-	if err := client.AuthenticationPolicies.Drop(ctx, sdk.NewDropAuthenticationPolicyRequest(id).WithIfExists(*sdk.Bool(true))); err != nil {
+	if err := client.AuthenticationPolicies.Drop(ctx, sdk.NewDropAuthenticationPolicyRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}
 

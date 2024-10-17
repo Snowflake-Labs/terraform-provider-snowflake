@@ -15,4 +15,5 @@ resource "snowflake_authentication_policy" "complete" {
   mfa_enrollment             = "OPTIONAL"
   client_types               = ["ALL"]
   security_integrations      = ["ALL"]
+  comment                    = "My authentication policy."
 }
