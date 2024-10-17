@@ -7,6 +7,20 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v0.97.0 ➞ v0.98.0
+
+### *(new feature)* Secret resources
+Added a new secrets resources for managing secrets.
+We decided to split each secret flow into individual resources. 
+This segregation was based on the secret flows in CREATE SECRET. i.e.:
+- `snowflake_secret_with_client_credentials`
+- `snowflake_secret_with_authorization_code_grant`
+- `snowflake_secret_with_basic_authentication`
+- `snowflake_secret_with_generic_string`
+ 
+
+See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secret).
+
 ## v0.96.0 ➞ v0.97.0
 
 ### *(new feature)* snowflake_stream_on_table, snowflake_stream_on_external_table resource

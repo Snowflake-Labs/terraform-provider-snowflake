@@ -82,6 +82,13 @@ func (c *SecretClient) CreateWithGenericString(t *testing.T, id sdk.SchemaObject
 	return secret, c.DropFunc(t, id)
 }
 
+func (c *SecretClient) Alter(t *testing.T, req *sdk.AlterSecretRequest) {
+	t.Helper()
+	ctx := context.Background()
+	err := c.client().Alter(ctx, req)
+	require.NoError(t, err)
+}
+
 func (c *SecretClient) DropFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()
