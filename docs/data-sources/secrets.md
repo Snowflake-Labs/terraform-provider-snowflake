@@ -43,7 +43,7 @@ output "like_prefix_output" {
 # Filtering (in)
 data "snowflake_secrets" "in" {
   in {
-    schema = "snowflake_schema.test.fully_qualified_name"
+    schema = snowflake_schema.test.fully_qualified_name
   }
 }
 
