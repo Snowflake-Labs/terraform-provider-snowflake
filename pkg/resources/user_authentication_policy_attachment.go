@@ -11,88 +11,88 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var userPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
+var userAuthenticationPolicyAttachmentSchema = map[string]*schema.Schema{
 	"user_name": {
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "User name of the user you want to attach the password policy to",
+		Description:      "User name of the user you want to attach the authentication policy to",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
-	"password_policy_name": {
+	"authentication_policy_name": {
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "Fully qualified name of the password policy",
+		Description:      "Fully qualified name of the authentication policy",
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 	},
 }
 
-// UserPasswordPolicyAttachment returns a pointer to the resource representing a user password policy attachment.
-func UserPasswordPolicyAttachment() *schema.Resource {
+// UserAuthenticationPolicyAttachment returns a pointer to the resource representing a user authentication policy attachment.
+func UserAuthenticationPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "Specifies the password policy to use for a certain user.",
-		Create:      CreateUserPasswordPolicyAttachment,
-		Read:        ReadUserPasswordPolicyAttachment,
-		Delete:      DeleteUserPasswordPolicyAttachment,
-		Schema:      userPasswordPolicyAttachmentSchema,
+		Description: "Specifies the authentication policy to use for a certain user.",
+		Create:      CreateUserAuthenticationPolicyAttachment,
+		Read:        ReadUserAuthenticationPolicyAttachment,
+		Delete:      DeleteUserAuthenticationPolicyAttachment,
+		Schema:      userAuthenticationPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
+func CreateUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
-	passwordPolicy := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Get("password_policy_name").(string))
+	authenticationPolicy := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Get("authentication_policy_name").(string))
 
 	err := client.Users.Alter(ctx, userName, &sdk.AlterUserOptions{
 		Set: &sdk.UserSet{
-			PasswordPolicy: &passwordPolicy,
+			AuthenticationPolicy: &authenticationPolicy,
 		},
 	})
 	if err != nil {
 		return err
 	}
 
-	d.SetId(helpers.EncodeResourceIdentifier(userName.FullyQualifiedName(), passwordPolicy.FullyQualifiedName()))
+	d.SetId(helpers.EncodeResourceIdentifier(userName.FullyQualifiedName(), authenticationPolicy.FullyQualifiedName()))
 
-	return ReadUserPasswordPolicyAttachment(d, meta)
+	return ReadUserAuthenticationPolicyAttachment(d, meta)
 }
 
-func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
+func ReadUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
 	parts := helpers.ParseResourceIdentifier(d.Id())
 	if len(parts) != 2 {
-		return fmt.Errorf("required id format 'user_name|password_policy_name', but got: '%s'", d.Id())
+		return fmt.Errorf("required id format 'user_name|authentication_policy_name', but got: '%s'", d.Id())
 	}
 
-	// Note: there is no alphanumeric id for an attachment, so we retrieve the password policies attached to a certain user.
+	// Note: there is no alphanumeric id for an attachment, so we retrieve the authentication policies attached to a certain user.
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[0])
 	policyReferences, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(userName, sdk.PolicyEntityDomainUser))
 	if err != nil {
 		return err
 	}
 
-	passwordPolicyReferences := make([]sdk.PolicyReference, 0)
+	authenticationPolicyReferences := make([]sdk.PolicyReference, 0)
 	for _, policyReference := range policyReferences {
-		if policyReference.PolicyKind == sdk.PolicyKindPasswordPolicy {
-			passwordPolicyReferences = append(passwordPolicyReferences, policyReference)
+		if policyReference.PolicyKind == sdk.PolicyKindAuthenticationPolicy {
+			authenticationPolicyReferences = append(authenticationPolicyReferences, policyReference)
 		}
 	}
 
-	// Note: this should never happen, but just in case: so far, Snowflake only allows one Password Policy per user.
-	if len(passwordPolicyReferences) > 1 {
+	// Note: this should never happen, but just in case: so far, Snowflake only allows one Authentication Policy per user.
+	if len(authenticationPolicyReferences) > 1 {
 		return fmt.Errorf("internal error: multiple policy references attached to a user. This should never happen")
 	}
 
 	// Note: this means the resource has been deleted outside of Terraform.
-	if len(passwordPolicyReferences) == 0 {
+	if len(authenticationPolicyReferences) == 0 {
 		d.SetId("")
 		return nil
 	}
@@ -101,11 +101,11 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 		return err
 	}
 	if err := d.Set(
-		"password_policy_name",
+		"authentication_policy_name",
 		sdk.NewSchemaObjectIdentifier(
-			*passwordPolicyReferences[0].PolicyDb,
-			*passwordPolicyReferences[0].PolicySchema,
-			passwordPolicyReferences[0].PolicyName,
+			*authenticationPolicyReferences[0].PolicyDb,
+			*authenticationPolicyReferences[0].PolicySchema,
+			authenticationPolicyReferences[0].PolicyName,
 		).FullyQualifiedName()); err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 	return err
 }
 
-func DeleteUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
+func DeleteUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) error {
 	client := meta.(*provider.Context).Client
 	ctx := context.Background()
 
@@ -121,7 +121,7 @@ func DeleteUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error 
 
 	err := client.Users.Alter(ctx, userName, &sdk.AlterUserOptions{
 		Unset: &sdk.UserUnset{
-			PasswordPolicy: sdk.Bool(true),
+			AuthenticationPolicy: sdk.Bool(true),
 		},
 	})
 	if err != nil {
