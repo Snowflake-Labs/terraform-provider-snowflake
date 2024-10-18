@@ -16,6 +16,7 @@ type SecretWithGenericStringModel struct {
 	Name               tfconfig.Variable `json:"name,omitempty"`
 	Schema             tfconfig.Variable `json:"schema,omitempty"`
 	SecretString       tfconfig.Variable `json:"secret_string,omitempty"`
+	SecretType         tfconfig.Variable `json:"secret_type,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -87,6 +88,11 @@ func (s *SecretWithGenericStringModel) WithSecretString(secretString string) *Se
 	return s
 }
 
+func (s *SecretWithGenericStringModel) WithSecretType(secretType string) *SecretWithGenericStringModel {
+	s.SecretType = tfconfig.StringVariable(secretType)
+	return s
+}
+
 //////////////////////////////////////////
 // below it's possible to set any value //
 //////////////////////////////////////////
@@ -118,5 +124,10 @@ func (s *SecretWithGenericStringModel) WithSchemaValue(value tfconfig.Variable) 
 
 func (s *SecretWithGenericStringModel) WithSecretStringValue(value tfconfig.Variable) *SecretWithGenericStringModel {
 	s.SecretString = value
+	return s
+}
+
+func (s *SecretWithGenericStringModel) WithSecretTypeValue(value tfconfig.Variable) *SecretWithGenericStringModel {
+	s.SecretType = value
 	return s
 }
