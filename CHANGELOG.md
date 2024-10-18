@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.98.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.97.0...v0.98.0) (2024-10-18)
+
+
+### 🎉 **What's new:**
+
+* Secret resource ([#3110](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3110)) ([16a812d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/16a812dae20d59f31457790dcd99db03db697051))
+* Secrets datasource ([#3131](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3131)) ([8110138](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/811013887cdf1a6624c93481f18e12a183865463))
+
+
+### 🔧 **Misc**
+
+* Add tests to 3117 and bump build time ([#3133](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3133)) ([ca90fde](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ca90fdefc18f6c77627e602df46650e17cb54eaa))
+
 ## [0.97.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.96.0...v0.97.0) (2024-10-10)
 
 
