@@ -146,6 +146,28 @@ func ImportAuthenticationPolicy(ctx context.Context, d *schema.ResourceData, met
 	if err = d.Set("schema", authenticationPolicy.SchemaName); err != nil {
 		return nil, err
 	}
+	if err = d.Set("comment", authenticationPolicy.Comment); err != nil {
+		return nil, err
+	}
+
+	// needed as otherwise the resource will be incorrectly imported when a list-parameter value equals a default value
+	authenticationPolicyDescriptions, err := client.AuthenticationPolicies.Describe(ctx, id)
+	authenticationMethods := getListParameterFromDescribe(authenticationPolicyDescriptions, "AUTHENTICATION_METHODS")
+	if err = d.Set("authentication_methods", authenticationMethods); err != nil {
+		return nil, err
+	}
+	mfaAuthenticationMethods := getListParameterFromDescribe(authenticationPolicyDescriptions, "MFA_AUTHENTICATION_METHODS")
+	if err = d.Set("mfa_authentication_methods", mfaAuthenticationMethods); err != nil {
+		return nil, err
+	}
+	clientTypes := getListParameterFromDescribe(authenticationPolicyDescriptions, "CLIENT_TYPES")
+	if err = d.Set("client_types", clientTypes); err != nil {
+		return nil, err
+	}
+	securityIntegrations := getListParameterFromDescribe(authenticationPolicyDescriptions, "SECURITY_INTEGRATIONS")
+	if err = d.Set("security_integrations", securityIntegrations); err != nil {
+		return nil, err
+	}
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -256,29 +278,13 @@ func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	authenticationMethodsIs := make([]string, 0)
-	if authenticationMethodsProperty, err := collections.FindFirst(authenticationPolicyDescriptions, func(prop sdk.AuthenticationPolicyDescription) bool { return prop.Property == "AUTHENTICATION_METHODS" }); err == nil {
-		authenticationMethodsIs = append(authenticationMethodsIs, sdk.ParseCommaSeparatedStringArray(authenticationMethodsProperty.Value, false)...)
-	}
-	authenticationMethodsShould := d.Get("authentication_methods").(*schema.Set).List()
-	if stringSlicesEqual(authenticationMethodsIs, []string{"ALL"}) && len(authenticationMethodsShould) == 0 {
-		authenticationMethodsIs = []string{}
-	}
-	if err = d.Set("authentication_methods", authenticationMethodsIs); err != nil {
+	authenticationMethods := getListArgumentWithDefaults(d, "authentication_methods", getListParameterFromDescribe(authenticationPolicyDescriptions, "AUTHENTICATION_METHODS"), []string{"ALL"})
+	if err = d.Set("authentication_methods", authenticationMethods); err != nil {
 		return diag.FromErr(err)
 	}
 
-	mfaAuthenticationMethodsIs := make([]string, 0)
-	if mfaAuthenticationMethodsProperty, err := collections.FindFirst(authenticationPolicyDescriptions, func(prop sdk.AuthenticationPolicyDescription) bool {
-		return prop.Property == "MFA_AUTHENTICATION_METHODS"
-	}); err == nil {
-		mfaAuthenticationMethodsIs = append(mfaAuthenticationMethodsIs, sdk.ParseCommaSeparatedStringArray(mfaAuthenticationMethodsProperty.Value, false)...)
-	}
-	mfaAuthenticationMethodsShould := d.Get("mfa_authentication_methods").(*schema.Set).List()
-	if stringSlicesEqual(mfaAuthenticationMethodsIs, []string{"PASSWORD", "SAML"}) && len(mfaAuthenticationMethodsShould) == 0 {
-		mfaAuthenticationMethodsIs = []string{}
-	}
-	if err = d.Set("mfa_authentication_methods", mfaAuthenticationMethodsIs); err != nil {
+	mfaAuthenticationMethods := getListArgumentWithDefaults(d, "mfa_authentication_methods", getListParameterFromDescribe(authenticationPolicyDescriptions, "MFA_AUTHENTICATION_METHODS"), []string{"PASSWORD", "SAML"})
+	if err = d.Set("mfa_authentication_methods", mfaAuthenticationMethods); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -289,27 +295,13 @@ func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	clientTypesIs := make([]string, 0)
-	if clientTypesProperty, err := collections.FindFirst(authenticationPolicyDescriptions, func(prop sdk.AuthenticationPolicyDescription) bool { return prop.Property == "CLIENT_TYPES" }); err == nil {
-		clientTypesIs = append(clientTypesIs, sdk.ParseCommaSeparatedStringArray(clientTypesProperty.Value, false)...)
-	}
-	clientTypesShould := d.Get("client_types").(*schema.Set).List()
-	if stringSlicesEqual(clientTypesIs, []string{"ALL"}) && len(clientTypesShould) == 0 {
-		clientTypesIs = []string{}
-	}
-	if err = d.Set("client_types", clientTypesIs); err != nil {
+	clientTypes := getListArgumentWithDefaults(d, "client_types", getListParameterFromDescribe(authenticationPolicyDescriptions, "CLIENT_TYPES"), []string{"ALL"})
+	if err = d.Set("client_types", clientTypes); err != nil {
 		return diag.FromErr(err)
 	}
 
-	securityIntegrationsIs := make([]string, 0)
-	if securityIntegrationsProperty, err := collections.FindFirst(authenticationPolicyDescriptions, func(prop sdk.AuthenticationPolicyDescription) bool { return prop.Property == "SECURITY_INTEGRATIONS" }); err == nil {
-		securityIntegrationsIs = append(securityIntegrationsIs, sdk.ParseCommaSeparatedStringArray(securityIntegrationsProperty.Value, false)...)
-	}
-	securityIntegrationsIsShould := d.Get("security_integrations").(*schema.Set).List()
-	if stringSlicesEqual(securityIntegrationsIs, []string{"ALL"}) && len(securityIntegrationsIsShould) == 0 {
-		securityIntegrationsIs = []string{}
-	}
-	if err = d.Set("security_integrations", securityIntegrationsIs); err != nil {
+	securityIntegrations := getListArgumentWithDefaults(d, "security_integrations", getListParameterFromDescribe(authenticationPolicyDescriptions, "SECURITY_INTEGRATIONS"), []string{"ALL"})
+	if err = d.Set("security_integrations", securityIntegrations); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -329,6 +321,26 @@ func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData
 	}
 
 	return diags
+}
+
+func getListParameterFromDescribe(authenticationPolicyDescriptions []sdk.AuthenticationPolicyDescription, parameterName string) []string {
+	parameterList := make([]string, 0)
+	if parameterProperty, err := collections.FindFirst(authenticationPolicyDescriptions, func(prop sdk.AuthenticationPolicyDescription) bool {
+		return prop.Property == parameterName
+	}); err == nil {
+		parameterList = append(parameterList, sdk.ParseCommaSeparatedStringArray(parameterProperty.Value, false)...)
+	}
+	return parameterList
+}
+
+// getListArgumentWithDefaults returns the list of values for a given argument, with the defaults applied, if necessary. Otherwise, tf plan will always show a diff with a list parameter with defaults when no value is set.
+func getListArgumentWithDefaults(d *schema.ResourceData, argumentName string, argumentIs []string, argumentDefaults []string) []string {
+	// in case nothing is set in the tf resource and the is equals the default, we set the is to empty
+	argumentShould := d.Get(argumentName).(*schema.Set).List()
+	if stringSlicesEqual(argumentIs, argumentDefaults) && len(argumentShould) == 0 {
+		argumentIs = []string{}
+	}
+	return argumentIs
 }
 
 func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
