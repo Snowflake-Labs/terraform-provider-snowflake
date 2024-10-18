@@ -88,6 +88,22 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the authentication policy.",
 	},
+	ShowOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW AUTHENTICATION POLICIES` for the given integration.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowAuthenticationPolicySchema,
+		},
+	},
+	DescribeOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `DESCRIBE AUTHENTICATION POLICY` for the given integration.",
+		Elem: &schema.Resource{
+			Schema: schemas.AuthenticationPolicyDescribeSchema,
+		},
+	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
@@ -240,21 +256,29 @@ func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	authenticationMethods := make([]string, 0)
+	authenticationMethodsIs := make([]string, 0)
 	if authenticationMethodsProperty, err := collections.FindFirst(authenticationPolicyDescriptions, func(prop sdk.AuthenticationPolicyDescription) bool { return prop.Property == "AUTHENTICATION_METHODS" }); err == nil {
-		authenticationMethods = append(authenticationMethods, sdk.ParseCommaSeparatedStringArray(authenticationMethodsProperty.Value, false)...)
+		authenticationMethodsIs = append(authenticationMethodsIs, sdk.ParseCommaSeparatedStringArray(authenticationMethodsProperty.Value, false)...)
 	}
-	if err = d.Set("authentication_methods", authenticationMethods); err != nil {
+	authenticationMethodsShould := d.Get("authentication_methods").(*schema.Set).List()
+	if stringSlicesEqual(authenticationMethodsIs, []string{"ALL"}) && len(authenticationMethodsShould) == 0 {
+		authenticationMethodsIs = []string{}
+	}
+	if err = d.Set("authentication_methods", authenticationMethodsIs); err != nil {
 		return diag.FromErr(err)
 	}
 
-	mfaAuthenticationMethods := make([]string, 0)
+	mfaAuthenticationMethodsIs := make([]string, 0)
 	if mfaAuthenticationMethodsProperty, err := collections.FindFirst(authenticationPolicyDescriptions, func(prop sdk.AuthenticationPolicyDescription) bool {
 		return prop.Property == "MFA_AUTHENTICATION_METHODS"
 	}); err == nil {
-		mfaAuthenticationMethods = append(mfaAuthenticationMethods, sdk.ParseCommaSeparatedStringArray(mfaAuthenticationMethodsProperty.Value, false)...)
+		mfaAuthenticationMethodsIs = append(mfaAuthenticationMethodsIs, sdk.ParseCommaSeparatedStringArray(mfaAuthenticationMethodsProperty.Value, false)...)
 	}
-	if err = d.Set("mfa_authentication_methods", mfaAuthenticationMethods); err != nil {
+	mfaAuthenticationMethodsShould := d.Get("mfa_authentication_methods").(*schema.Set).List()
+	if stringSlicesEqual(mfaAuthenticationMethodsIs, []string{"PASSWORD", "SAML"}) && len(mfaAuthenticationMethodsShould) == 0 {
+		mfaAuthenticationMethodsIs = []string{}
+	}
+	if err = d.Set("mfa_authentication_methods", mfaAuthenticationMethodsIs); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -265,19 +289,27 @@ func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	clientTypes := make([]string, 0)
+	clientTypesIs := make([]string, 0)
 	if clientTypesProperty, err := collections.FindFirst(authenticationPolicyDescriptions, func(prop sdk.AuthenticationPolicyDescription) bool { return prop.Property == "CLIENT_TYPES" }); err == nil {
-		clientTypes = append(clientTypes, sdk.ParseCommaSeparatedStringArray(clientTypesProperty.Value, false)...)
+		clientTypesIs = append(clientTypesIs, sdk.ParseCommaSeparatedStringArray(clientTypesProperty.Value, false)...)
 	}
-	if err = d.Set("client_types", clientTypes); err != nil {
+	clientTypesShould := d.Get("client_types").(*schema.Set).List()
+	if stringSlicesEqual(clientTypesIs, []string{"ALL"}) && len(clientTypesShould) == 0 {
+		clientTypesIs = []string{}
+	}
+	if err = d.Set("client_types", clientTypesIs); err != nil {
 		return diag.FromErr(err)
 	}
 
-	securityIntegrations := make([]string, 0)
+	securityIntegrationsIs := make([]string, 0)
 	if securityIntegrationsProperty, err := collections.FindFirst(authenticationPolicyDescriptions, func(prop sdk.AuthenticationPolicyDescription) bool { return prop.Property == "SECURITY_INTEGRATIONS" }); err == nil {
-		securityIntegrations = append(securityIntegrations, sdk.ParseCommaSeparatedStringArray(securityIntegrationsProperty.Value, false)...)
+		securityIntegrationsIs = append(securityIntegrationsIs, sdk.ParseCommaSeparatedStringArray(securityIntegrationsProperty.Value, false)...)
 	}
-	if err = d.Set("security_integrations", securityIntegrations); err != nil {
+	securityIntegrationsIsShould := d.Get("security_integrations").(*schema.Set).List()
+	if stringSlicesEqual(securityIntegrationsIs, []string{"ALL"}) && len(securityIntegrationsIsShould) == 0 {
+		securityIntegrationsIs = []string{}
+	}
+	if err = d.Set("security_integrations", securityIntegrationsIs); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -285,6 +317,14 @@ func ReadContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set(ShowOutputAttributeName, []map[string]any{schemas.AuthenticationPolicyToSchema(authenticationPolicy)}); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.AuthenticationPolicyDescriptionToSchema(authenticationPolicyDescriptions)}); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -320,6 +360,9 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 	if d.HasChange("authentication_methods") {
 		if v, ok := d.GetOk("authentication_methods"); ok {
 			authenticationMethods := expandStringList(v.(*schema.Set).List())
+			for _, v := range authenticationMethods {
+				fmt.Println(v)
+			}
 			authenticationMethodsValues := make([]sdk.AuthenticationMethods, len(authenticationMethods))
 			for i, v := range authenticationMethods {
 				option, err := sdk.ToAuthenticationMethodsOption(v)
@@ -442,4 +485,28 @@ func DeleteContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId("")
 	return nil
+}
+
+func stringSlicesEqual(s1 []string, s2 []string) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+
+	// convert slices to maps for easy comparison
+	set1 := make(map[string]bool)
+	for _, v := range s1 {
+		set1[v] = true
+	}
+
+	set2 := make(map[string]bool)
+	for _, v := range s2 {
+		set2[v] = true
+	}
+
+	for k, _ := range set1 {
+		if _, ok := set2[k]; !ok {
+			return false
+		}
+	}
+	return true
 }

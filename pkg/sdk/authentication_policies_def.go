@@ -199,7 +199,7 @@ func ToAuthenticationMethodsOption(s string) (*AuthenticationMethodsOption, erro
 		AuthenticationMethodsKeyPair:
 		return &authenticationMethodsOption, nil
 	default:
-		return nil, fmt.Errorf("invalid frequency type: %s", s)
+		return nil, fmt.Errorf("invalid authentication method type: %s", s)
 	}
 }
 
@@ -210,7 +210,7 @@ func ToMfaAuthenticationMethodsOption(s string) (*MfaAuthenticationMethodsOption
 		MfaAuthenticationMethodsPassword:
 		return &mfaAuthenticationMethodsOption, nil
 	default:
-		return nil, fmt.Errorf("invalid frequency type: %s", s)
+		return nil, fmt.Errorf("invalid MFA authentication method type: %s", s)
 	}
 }
 
@@ -220,7 +220,7 @@ func ToMfaEnrollmentOption(s string) (*MfaEnrollmentOption, error) {
 		MfaEnrollmentOptional:
 		return &mfaEnrollmentOption, nil
 	default:
-		return nil, fmt.Errorf("invalid frequency type: %s", s)
+		return nil, fmt.Errorf("invalid enrollment option type: %s", s)
 	}
 }
 
@@ -232,6 +232,6 @@ func ToClientTypesOption(s string) (*ClientTypesOption, error) {
 		ClientTypesSnowSql:
 		return &clientTypesOption, nil
 	default:
-		return nil, fmt.Errorf("invalid frequency type: %s", s)
+		return nil, fmt.Errorf("invalid client type: %s", s)
 	}
 }
