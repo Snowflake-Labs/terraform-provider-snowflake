@@ -64,7 +64,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType(sdk.SecretTypeOAuth2).
+							HasSecretType(string(sdk.SecretTypeOAuth2)).
 							HasSchemaName(id.SchemaName()),
 					),
 					resource.TestCheckResourceAttr(secretName, "oauth_scopes.#", "2"),
@@ -107,7 +107,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						assert.Check(resource.TestCheckTypeSetElemAttr(secretName, "oauth_scopes.*", "test")),
 
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeOAuth2).
+							HasSecretType(string(sdk.SecretTypeOAuth2)).
 							HasComment(newComment),
 					),
 
@@ -292,6 +292,65 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 						HasSchemaString(id.SchemaName()).
 						HasApiAuthenticationString(integrationId.Name()),
 					assert.Check(resource.TestCheckResourceAttr(secretModel.ResourceReference(), "oauth_scopes.#", "0")),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
+
+	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_, apiIntegrationCleanup := acc.TestClient().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
+		sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(integrationId, true, "test_client_id", "test_client_secret").
+			WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "foo"}, {Scope: "bar"}, {Scope: "test"}}),
+	)
+	t.Cleanup(apiIntegrationCleanup)
+
+	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo", "bar"})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithClientCredentials),
+		Steps: []resource.TestStep{
+			// create
+			{
+				Config: config.FromModel(t, secretModel),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
+							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
+						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
+							HasSecretType(string(sdk.SecretTypeOAuth2)),
+					),
+				),
+			},
+			// create or replace with different secret type
+			{
+				PreConfig: func() {
+					acc.TestClient().Secret.DropFunc(t, id)()
+					_, cleanup := acc.TestClient().Secret.CreateWithGenericString(t, id, "test_secret_string")
+					t.Cleanup(cleanup)
+				},
+				Config: config.FromModel(t, secretModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
+							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
+						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
+							HasSecretType(string(sdk.SecretTypeOAuth2)),
+					),
 				),
 			},
 		},

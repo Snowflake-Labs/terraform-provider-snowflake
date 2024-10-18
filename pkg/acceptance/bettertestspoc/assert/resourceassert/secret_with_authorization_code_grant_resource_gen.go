@@ -8,22 +8,22 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 )
 
-type SecretWithAuthorizationCodeResourceAssert struct {
+type SecretWithAuthorizationCodeGrantResourceAssert struct {
 	*assert.ResourceAssert
 }
 
-func SecretWithAuthorizationCodeResource(t *testing.T, name string) *SecretWithAuthorizationCodeResourceAssert {
+func SecretWithAuthorizationCodeGrantResource(t *testing.T, name string) *SecretWithAuthorizationCodeGrantResourceAssert {
 	t.Helper()
 
-	return &SecretWithAuthorizationCodeResourceAssert{
+	return &SecretWithAuthorizationCodeGrantResourceAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "resource"),
 	}
 }
 
-func ImportedSecretWithAuthorizationCodeResource(t *testing.T, id string) *SecretWithAuthorizationCodeResourceAssert {
+func ImportedSecretWithAuthorizationCodeGrantResource(t *testing.T, id string) *SecretWithAuthorizationCodeGrantResourceAssert {
 	t.Helper()
 
-	return &SecretWithAuthorizationCodeResourceAssert{
+	return &SecretWithAuthorizationCodeGrantResourceAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "imported resource"),
 	}
 }
@@ -32,43 +32,48 @@ func ImportedSecretWithAuthorizationCodeResource(t *testing.T, id string) *Secre
 // Attribute value string checks //
 ///////////////////////////////////
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasApiAuthenticationString(expected string) *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasApiAuthenticationString(expected string) *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueSet("api_authentication", expected))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasCommentString(expected string) *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasCommentString(expected string) *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueSet("comment", expected))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasDatabaseString(expected string) *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasDatabaseString(expected string) *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueSet("database", expected))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasFullyQualifiedNameString(expected string) *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasFullyQualifiedNameString(expected string) *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueSet("fully_qualified_name", expected))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasNameString(expected string) *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasNameString(expected string) *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueSet("name", expected))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasOauthRefreshTokenString(expected string) *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasOauthRefreshTokenString(expected string) *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueSet("oauth_refresh_token", expected))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasOauthRefreshTokenExpiryTimeString(expected string) *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasOauthRefreshTokenExpiryTimeString(expected string) *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueSet("oauth_refresh_token_expiry_time", expected))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasSchemaString(expected string) *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasSchemaString(expected string) *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueSet("schema", expected))
+	return s
+}
+
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasSecretTypeString(expected string) *SecretWithAuthorizationCodeGrantResourceAssert {
+	s.AddAssertion(assert.ValueSet("secret_type", expected))
 	return s
 }
 
@@ -76,42 +81,47 @@ func (s *SecretWithAuthorizationCodeResourceAssert) HasSchemaString(expected str
 // Attribute empty checks //
 ////////////////////////////
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasNoApiAuthentication() *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasNoApiAuthentication() *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("api_authentication"))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasNoComment() *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasNoComment() *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("comment"))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasNoDatabase() *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasNoDatabase() *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("database"))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasNoFullyQualifiedName() *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasNoFullyQualifiedName() *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("fully_qualified_name"))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasNoName() *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasNoName() *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("name"))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasNoOauthRefreshToken() *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasNoOauthRefreshToken() *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("oauth_refresh_token"))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasNoOauthRefreshTokenExpiryTime() *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasNoOauthRefreshTokenExpiryTime() *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("oauth_refresh_token_expiry_time"))
 	return s
 }
 
-func (s *SecretWithAuthorizationCodeResourceAssert) HasNoSchema() *SecretWithAuthorizationCodeResourceAssert {
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasNoSchema() *SecretWithAuthorizationCodeGrantResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("schema"))
+	return s
+}
+
+func (s *SecretWithAuthorizationCodeGrantResourceAssert) HasNoSecretType() *SecretWithAuthorizationCodeGrantResourceAssert {
+	s.AddAssertion(assert.ValueNotSet("secret_type"))
 	return s
 }

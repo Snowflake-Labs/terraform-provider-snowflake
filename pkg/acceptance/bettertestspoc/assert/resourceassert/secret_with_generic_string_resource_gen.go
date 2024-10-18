@@ -62,6 +62,11 @@ func (s *SecretWithGenericStringResourceAssert) HasSecretStringString(expected s
 	return s
 }
 
+func (s *SecretWithGenericStringResourceAssert) HasSecretTypeString(expected string) *SecretWithGenericStringResourceAssert {
+	s.AddAssertion(assert.ValueSet("secret_type", expected))
+	return s
+}
+
 ////////////////////////////
 // Attribute empty checks //
 ////////////////////////////
@@ -93,5 +98,10 @@ func (s *SecretWithGenericStringResourceAssert) HasNoSchema() *SecretWithGeneric
 
 func (s *SecretWithGenericStringResourceAssert) HasNoSecretString() *SecretWithGenericStringResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("secret_string"))
+	return s
+}
+
+func (s *SecretWithGenericStringResourceAssert) HasNoSecretType() *SecretWithGenericStringResourceAssert {
+	s.AddAssertion(assert.ValueNotSet("secret_type"))
 	return s
 }

@@ -267,13 +267,13 @@ func ReadResourceMonitor(withExternalChangesMarking bool) schema.ReadContextFunc
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"credit_quota", "credit_quota", resourceMonitor.CreditQuota, resourceMonitor.CreditQuota, nil},
-				showMapping{"frequency", "frequency", string(resourceMonitor.Frequency), resourceMonitor.Frequency, nil},
-				showMapping{"start_time", "start_timestamp", resourceMonitor.StartTime, resourceMonitor.StartTime, nil},
-				showMapping{"end_time", "end_timestamp", resourceMonitor.EndTime, resourceMonitor.EndTime, nil},
-				showMapping{"notify_at", "notify_triggers", resourceMonitor.NotifyAt, resourceMonitor.NotifyAt, nil},
-				showMapping{"suspend_at", "suspend_trigger", resourceMonitor.SuspendAt, resourceMonitor.SuspendAt, nil},
-				showMapping{"suspend_immediately_at", "suspend_immediate_trigger", resourceMonitor.SuspendImmediateAt, resourceMonitor.SuspendImmediateAt, nil},
+				outputMapping{"credit_quota", "credit_quota", resourceMonitor.CreditQuota, resourceMonitor.CreditQuota, nil},
+				outputMapping{"frequency", "frequency", string(resourceMonitor.Frequency), resourceMonitor.Frequency, nil},
+				outputMapping{"start_time", "start_timestamp", resourceMonitor.StartTime, resourceMonitor.StartTime, nil},
+				outputMapping{"end_time", "end_timestamp", resourceMonitor.EndTime, resourceMonitor.EndTime, nil},
+				outputMapping{"notify_at", "notify_triggers", resourceMonitor.NotifyAt, resourceMonitor.NotifyAt, nil},
+				outputMapping{"suspend_at", "suspend_trigger", resourceMonitor.SuspendAt, resourceMonitor.SuspendAt, nil},
+				outputMapping{"suspend_immediately_at", "suspend_immediate_trigger", resourceMonitor.SuspendImmediateAt, resourceMonitor.SuspendImmediateAt, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
