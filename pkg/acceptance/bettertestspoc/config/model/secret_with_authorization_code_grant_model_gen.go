@@ -31,10 +31,10 @@ func SecretWithAuthorizationCodeGrant(
 	resourceName string,
 	apiAuthentication string,
 	database string,
+	schema string,
 	name string,
 	oauthRefreshToken string,
 	oauthRefreshTokenExpiryTime string,
-	schema string,
 ) *SecretWithAuthorizationCodeGrantModel {
 	s := &SecretWithAuthorizationCodeGrantModel{ResourceModelMeta: config.Meta(resourceName, resources.SecretWithAuthorizationCodeGrant)}
 	s.WithApiAuthentication(apiAuthentication)
@@ -50,9 +50,9 @@ func SecretWithAuthorizationCodeGrantWithDefaultMeta(
 	apiAuthentication string,
 	database string,
 	name string,
+	schema string,
 	oauthRefreshToken string,
 	oauthRefreshTokenExpiryTime string,
-	schema string,
 ) *SecretWithAuthorizationCodeGrantModel {
 	s := &SecretWithAuthorizationCodeGrantModel{ResourceModelMeta: config.DefaultMeta(resources.SecretWithAuthorizationCodeGrant)}
 	s.WithApiAuthentication(apiAuthentication)
