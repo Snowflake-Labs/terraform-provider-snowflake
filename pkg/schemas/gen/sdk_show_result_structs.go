@@ -15,6 +15,7 @@ var SdkShowResultStructs = []any{
 	sdk.EventTable{},
 	sdk.ExternalFunction{},
 	sdk.ExternalTable{},
+	sdk.ExternalVolume{},
 	sdk.FailoverGroup{},
 	sdk.FileFormat{},
 	sdk.Function{},
@@ -51,7 +52,6 @@ var SdkShowResultStructs = []any{
 	sdk.User{},
 	sdk.View{},
 	sdk.Warehouse{},
-	sdk.ExternalVolume{},
 }
 
 // TODO [SNOW-1501905]: currently all this structs have the "Show" added to the schema, while these are not show outputs
