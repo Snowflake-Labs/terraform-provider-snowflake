@@ -354,22 +354,22 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 		// can be added back. The storage locations lower than index 5 don't need to be modified.
 		// The removal process could be done without the above recreation, but it handles this case
 		// too so it's used for both actions.
-		longestCommonPrefix, err := LongestCommonPrefix(newLocations, oldLocations)
+		commonPrefixLastIndex, err := CommonPrefixLastIndex(newLocations, oldLocations)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
 		var removedLocations []sdk.ExternalVolumeStorageLocation
 		var addedLocations []sdk.ExternalVolumeStorageLocation
-		if longestCommonPrefix == -1 {
+		if commonPrefixLastIndex == -1 {
 			removedLocations = oldLocations
 			addedLocations = newLocations
 		} else {
 			// Could +1 on the prefix here as the lists until and including this index
 			// are identical, would need to add some more checks for list length to avoid
 			// an array index out of bounds error
-			removedLocations = oldLocations[longestCommonPrefix:]
-			addedLocations = newLocations[longestCommonPrefix:]
+			removedLocations = oldLocations[commonPrefixLastIndex:]
+			addedLocations = newLocations[commonPrefixLastIndex:]
 		}
 
 		if len(removedLocations) == len(oldLocations) {

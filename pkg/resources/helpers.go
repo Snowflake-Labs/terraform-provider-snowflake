@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -331,66 +332,6 @@ func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed [
 	return added, removed
 }
 
-func StorageLocationsEqual(s1 sdk.ExternalVolumeStorageLocation, s2 sdk.ExternalVolumeStorageLocation) (bool, error) {
-	s1StorageProvider, err := GetStorageLocationStorageProvider(s1)
-	if err != nil {
-		return false, err
-	}
-
-	s2StorageProvider, err := GetStorageLocationStorageProvider(s2)
-	if err != nil {
-		return false, err
-	}
-
-	if s1StorageProvider != s2StorageProvider {
-		return false, nil
-	}
-
-	switch s1StorageProvider {
-	case sdk.StorageProviderS3, sdk.StorageProviderS3GOV:
-		externalIdsEqual := s1.S3StorageLocationParams.StorageAwsExternalId == nil && s2.S3StorageLocationParams.StorageAwsExternalId == nil ||
-			(s1.S3StorageLocationParams.StorageAwsExternalId != nil && s2.S3StorageLocationParams.StorageAwsExternalId != nil &&
-				*s1.S3StorageLocationParams.StorageAwsExternalId == *s2.S3StorageLocationParams.StorageAwsExternalId)
-
-		if externalIdsEqual &&
-			s1.S3StorageLocationParams.Name == s2.S3StorageLocationParams.Name &&
-			s1.S3StorageLocationParams.StorageProvider == s2.S3StorageLocationParams.StorageProvider &&
-			s1.S3StorageLocationParams.StorageAwsRoleArn == s2.S3StorageLocationParams.StorageAwsRoleArn &&
-			s1.S3StorageLocationParams.StorageBaseUrl == s2.S3StorageLocationParams.StorageBaseUrl {
-
-			if s1.S3StorageLocationParams.Encryption == nil && s2.S3StorageLocationParams.Encryption == nil {
-				return true, nil
-			} else if s1.S3StorageLocationParams.Encryption != nil && s2.S3StorageLocationParams.Encryption != nil {
-				typeEqual := s1.S3StorageLocationParams.Encryption.Type == s2.S3StorageLocationParams.Encryption.Type
-				kmsKeyIdEqual := s1.S3StorageLocationParams.Encryption.KmsKeyId == nil && s2.S3StorageLocationParams.Encryption.KmsKeyId == nil ||
-					(s1.S3StorageLocationParams.Encryption.KmsKeyId != nil && s2.S3StorageLocationParams.Encryption.KmsKeyId != nil &&
-						*s1.S3StorageLocationParams.Encryption.KmsKeyId == *s2.S3StorageLocationParams.Encryption.KmsKeyId)
-				return typeEqual && kmsKeyIdEqual, nil
-			}
-		}
-	case sdk.StorageProviderGCS:
-		if s1.GCSStorageLocationParams.Name == s2.GCSStorageLocationParams.Name &&
-			s1.GCSStorageLocationParams.StorageBaseUrl == s2.GCSStorageLocationParams.StorageBaseUrl {
-
-			if s1.GCSStorageLocationParams.Encryption == nil && s2.GCSStorageLocationParams.Encryption == nil {
-				return true, nil
-			} else if s1.GCSStorageLocationParams.Encryption != nil && s2.GCSStorageLocationParams.Encryption != nil {
-				typeEqual := s1.GCSStorageLocationParams.Encryption.Type == s2.GCSStorageLocationParams.Encryption.Type
-				kmsKeyIdEqual := s1.GCSStorageLocationParams.Encryption.KmsKeyId == nil && s2.GCSStorageLocationParams.Encryption.KmsKeyId == nil ||
-					(s1.GCSStorageLocationParams.Encryption.KmsKeyId != nil && s2.GCSStorageLocationParams.Encryption.KmsKeyId != nil &&
-						*s1.GCSStorageLocationParams.Encryption.KmsKeyId == *s2.GCSStorageLocationParams.Encryption.KmsKeyId)
-				return typeEqual && kmsKeyIdEqual, nil
-			}
-		}
-	case sdk.StorageProviderAzure:
-		return s1.AzureStorageLocationParams.Name == s2.AzureStorageLocationParams.Name &&
-			s1.AzureStorageLocationParams.AzureTenantId == s2.AzureStorageLocationParams.AzureTenantId &&
-			s1.AzureStorageLocationParams.StorageBaseUrl == s2.AzureStorageLocationParams.StorageBaseUrl, nil
-	}
-
-	return false, nil
-}
-
 // Returns a copy of the given storage location with a 'temp_' prefix on the Name field
 func CopyStorageLocationWithTempName(
 	storageLocation sdk.ExternalVolumeStorageLocation,
@@ -479,34 +420,24 @@ func GetStorageLocationStorageProvider(s sdk.ExternalVolumeStorageLocation) (sdk
 // Returns the index of the last matching elements in the list
 // e.g. [1,2,3] [1,3,2] -> 0, [1,2,3] [1,2,4] -> 1
 // -1 is returned if there are no common prefixes in the list
-func LongestCommonPrefix(a []sdk.ExternalVolumeStorageLocation, b []sdk.ExternalVolumeStorageLocation) (int, error) {
-	longestCommonPrefix := 0
+func CommonPrefixLastIndex(a []sdk.ExternalVolumeStorageLocation, b []sdk.ExternalVolumeStorageLocation) (int, error) {
+	commonPrefixLastIndex := 0
 
 	if len(a) == 0 || len(b) == 0 {
 		return -1, nil
 	}
 
-	first_elements_equal, err := StorageLocationsEqual(a[0], b[0])
-	if err != nil {
-		return -1, err
-	}
-
-	if !first_elements_equal {
+	if !reflect.DeepEqual(a[0], b[0]) {
 		return -1, nil
 	}
 
 	for i := 1; i < min(len(a), len(b)); i++ {
-		storageLocationsAreEqual, err := StorageLocationsEqual(a[i], b[i])
-		if err != nil {
-			return -1, err
-		}
-
-		if !storageLocationsAreEqual {
+		if !reflect.DeepEqual(a[i], b[i]) {
 			break
 		}
 
-		longestCommonPrefix = i
+		commonPrefixLastIndex = i
 	}
 
-	return longestCommonPrefix, nil
+	return commonPrefixLastIndex, nil
 }
