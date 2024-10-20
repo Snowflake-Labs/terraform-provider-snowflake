@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -116,8 +117,6 @@ var externalVolumeSchema = map[string]*schema.Schema{
 // ExternalVolume returns a pointer to the resource representing an external volume.
 func ExternalVolume() *schema.Resource {
 	return &schema.Resource{
-		SchemaVersion: 1,
-
 		CreateContext: CreateContextExternalVolume,
 		UpdateContext: UpdateContextExternalVolume,
 		ReadContext:   ReadContextExternalVolume(true),
@@ -400,14 +399,14 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 				return diag.FromErr(addTempErr)
 			}
 
+			defer func() {
+				if err := removeStorageLocation(temp_storage_location, client, ctx, id); err != nil {
+					log.Printf("[ERROR] failed to remove temp storage location: %s", err)
+				}
+			}()
+
 			updateErr := updateStorageLocations([]sdk.ExternalVolumeStorageLocation{removedLocations[0]}, addedLocations, client, ctx, id)
 			if updateErr != nil {
-				// Try to remove the temp location and then return with error
-				removeErr := removeStorageLocation(temp_storage_location, client, ctx, id)
-				if removeErr != nil {
-					return diag.FromErr(errors.Join(updateErr, removeErr))
-				}
-
 				return diag.FromErr(updateErr)
 			}
 
@@ -418,7 +417,7 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 		} else {
 			updateErr := updateStorageLocations(removedLocations, addedLocations, client, ctx, id)
 			if updateErr != nil {
-				return diag.FromErr(err)
+				return diag.FromErr(updateErr)
 			}
 		}
 
@@ -622,16 +621,12 @@ func addStorageLocation(
 			addedLocation.StorageBaseUrl,
 		)
 		if addedLocation.Encryption != nil {
+			encryptionRequest := sdk.NewExternalVolumeS3EncryptionRequest(addedLocation.Encryption.Type)
 			if addedLocation.Encryption.KmsKeyId != nil {
-				s3ParamsRequest = s3ParamsRequest.WithEncryption(
-					*sdk.NewExternalVolumeS3EncryptionRequest(addedLocation.Encryption.Type).
-						WithKmsKeyId(*addedLocation.Encryption.KmsKeyId),
-				)
-			} else {
-				s3ParamsRequest = s3ParamsRequest.WithEncryption(
-					*sdk.NewExternalVolumeS3EncryptionRequest(addedLocation.Encryption.Type),
-				)
+				encryptionRequest = encryptionRequest.WithKmsKeyId(*addedLocation.Encryption.KmsKeyId)
 			}
+
+			s3ParamsRequest = s3ParamsRequest.WithEncryption(*encryptionRequest)
 		}
 
 		newStorageLocationreq = sdk.NewExternalVolumeStorageLocationRequest().WithS3StorageLocationParams(*s3ParamsRequest)
@@ -643,16 +638,12 @@ func addStorageLocation(
 		)
 
 		if addedLocation.Encryption != nil {
+			encryptionRequest := sdk.NewExternalVolumeGCSEncryptionRequest(addedLocation.Encryption.Type)
 			if addedLocation.Encryption.KmsKeyId != nil {
-				gcsParamsRequest = gcsParamsRequest.WithEncryption(
-					*sdk.NewExternalVolumeGCSEncryptionRequest(addedLocation.Encryption.Type).
-						WithKmsKeyId(*addedLocation.Encryption.KmsKeyId),
-				)
-			} else {
-				gcsParamsRequest = gcsParamsRequest.WithEncryption(
-					*sdk.NewExternalVolumeGCSEncryptionRequest(addedLocation.Encryption.Type),
-				)
+				encryptionRequest = encryptionRequest.WithKmsKeyId(*addedLocation.Encryption.KmsKeyId)
 			}
+
+			gcsParamsRequest = gcsParamsRequest.WithEncryption(*encryptionRequest)
 		}
 
 		newStorageLocationreq = sdk.NewExternalVolumeStorageLocationRequest().WithGCSStorageLocationParams(*gcsParamsRequest)
@@ -666,11 +657,7 @@ func addStorageLocation(
 		newStorageLocationreq = sdk.NewExternalVolumeStorageLocationRequest().WithAzureStorageLocationParams(*azureParamsRequest)
 	}
 
-	if err := client.ExternalVolumes.Alter(ctx, sdk.NewAlterExternalVolumeRequest(id).WithAddStorageLocation(*newStorageLocationreq)); err != nil {
-		return err
-	} else {
-		return nil
-	}
+	return client.ExternalVolumes.Alter(ctx, sdk.NewAlterExternalVolumeRequest(id).WithAddStorageLocation(*newStorageLocationreq))
 }
 
 func removeStorageLocation(
@@ -684,11 +671,7 @@ func removeStorageLocation(
 		return err
 	}
 
-	if err := client.ExternalVolumes.Alter(ctx, sdk.NewAlterExternalVolumeRequest(id).WithRemoveStorageLocation(removedName)); err != nil {
-		return err
-	}
-
-	return nil
+	return client.ExternalVolumes.Alter(ctx, sdk.NewAlterExternalVolumeRequest(id).WithRemoveStorageLocation(removedName))
 }
 
 // Process the removal / addition storage location requests.
