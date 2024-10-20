@@ -45,7 +45,7 @@ var externalVolumeSchema = map[string]*schema.Schema{
 					Required:         true,
 					ValidateDiagFunc: sdkValidation(sdk.ToStorageProvider),
 					DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToStorageProvider)),
-					Description:      fmt.Sprintf("Specifies the cloud storage provider that stores your data files. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidStorageProviderString)),
+					Description:      fmt.Sprintf("Specifies the cloud storage provider that stores your data files. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllStorageProviderValues)),
 				},
 				"storage_base_url": {
 					Type:        schema.TypeString,

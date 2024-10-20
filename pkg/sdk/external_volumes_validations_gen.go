@@ -10,13 +10,6 @@ var (
 	_ validatable = new(ShowExternalVolumeOptions)
 )
 
-var ValidStorageProviderString = []string{
-	string(StorageProviderGCS),
-	string(StorageProviderAzure),
-	string(StorageProviderS3),
-	string(StorageProviderS3GOV),
-}
-
 func (opts *CreateExternalVolumeOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions

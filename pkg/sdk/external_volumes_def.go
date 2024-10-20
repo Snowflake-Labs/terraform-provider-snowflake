@@ -30,6 +30,13 @@ var (
 	StorageProviderS3GOV    StorageProvider   = "S3GOV"
 )
 
+var AllStorageProviderValues = []StorageProvider{
+	StorageProviderGCS,
+	StorageProviderAzure,
+	StorageProviderS3,
+	StorageProviderS3GOV,
+}
+
 func ToS3EncryptionType(s string) (S3EncryptionType, error) {
 	switch strings.ToUpper(s) {
 	case string(S3EncryptionTypeSseS3):
