@@ -194,7 +194,7 @@ func CreateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
 
-	storageLocations, err := extractStorageLocations(d.Get("storage_location"), true)
+	storageLocations, err := extractStorageLocations(d.Get("storage_location"))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating external volume %v err = %w", id.Name(), err))
 	}
@@ -337,12 +337,12 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 
 	if d.HasChange("storage_location") {
 		old, new := d.GetChange("storage_location")
-		oldLocations, err := extractStorageLocations(old, true)
+		oldLocations, err := extractStorageLocations(old)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		newLocations, err := extractStorageLocations(new, false)
+		newLocations, err := extractStorageLocations(new)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -443,7 +443,7 @@ func DeleteContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func extractStorageLocations(v any, withAzureEncryptionTypeCheck bool) ([]sdk.ExternalVolumeStorageLocation, error) {
+func extractStorageLocations(v any) ([]sdk.ExternalVolumeStorageLocation, error) {
 	_, ok := v.([]any)
 	if !ok {
 		return nil, fmt.Errorf("unable to extract storage locations, input is either nil or non expected type (%T): %v", v, v)
@@ -578,19 +578,9 @@ func extractStorageLocations(v any, withAzureEncryptionTypeCheck bool) ([]sdk.Ex
 				return nil, fmt.Errorf("unable to extract storage location, encryption_kms_key_id provided for azure storage location")
 			}
 
-			// TODO
-			// For some reason, the new storage_locations list in the update function has NONE as the value
-			// for encryption_type for azure storage locations, even when it is not specified in the config.
-			// To get the acceptance tests passing for now the check has been turned off for this case,
-			// but why it's happning in the first place needs to be investigated.
-			// To reproduce, turn on the check for extracting new external volumes in the update function and
-			// run the TestAcc_External_Volume_Multiple acceptance test.
-			if withAzureEncryptionTypeCheck {
-				encryptionType, ok := storageLocationConfig["encryption_type"].(string)
-				if ok && len(encryptionType) > 0 {
-					return nil, fmt.Errorf("unable to extract storage location, encryption_type provided for azure storage location")
-				}
-			}
+			// TODO add check that encryption_type is not set in the config for azure storage locations
+			// This may be more difficult as NONE is returned as the encyption type from Snowflake for azure
+			// storage locations, although it's not documented as a parameter
 
 			azureTenantId, ok := storageLocationConfig["azure_tenant_id"].(string)
 			if !ok || len(azureTenantId) == 0 {

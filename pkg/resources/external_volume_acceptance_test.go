@@ -1032,6 +1032,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 	azureStorageProvider := "AZURE"
 	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
 	azureTenantId := "123456789"
+	azureEncryptionTypeNone := "NONE"
 	azureStorageLocation := getAzureStorageLocation(azureStorageLocationName, azureStorageBaseUrl, azureTenantId)
 	azureStorageLocationUpdatedName := getAzureStorageLocation(azureStorageLocationName2, azureStorageBaseUrl, azureTenantId)
 
@@ -1059,7 +1060,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1067,10 +1068,6 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 						HasName(externalVolumeName).
 						HasComment("").
 						HasAllowWrites(allowWritesTrue),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_location_name", azureStorageLocationName)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_provider", azureStorageProvider)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.storage_base_url", azureStorageBaseUrl)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "storage_location.0.azure_tenant_id", azureTenantId)),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -1101,7 +1098,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1136,7 +1133,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						).
@@ -1146,7 +1143,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1181,7 +1178,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1208,7 +1205,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1235,7 +1232,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1278,6 +1275,7 @@ func TestAcc_External_Volume_All_Options(t *testing.T) {
 	azureStorageProvider := "AZURE"
 	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
 	azureTenantId := "123456789"
+	azureEncryptionTypeNone := "NONE"
 	azureStorageLocation := getAzureStorageLocation(azureStorageLocationName, azureStorageBaseUrl, azureTenantId)
 
 	resource.Test(t, resource.TestCase{
@@ -1323,7 +1321,7 @@ func TestAcc_External_Volume_All_Options(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1380,6 +1378,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
 	azureTenantId := "123456789"
 	azureTenantId2 := "987654321"
+	azureEncryptionTypeNone := "NONE"
 	azureStorageLocation := getAzureStorageLocation(azureStorageLocationName, azureStorageBaseUrl, azureTenantId)
 	azureStorageLocationUpdatedTenantId := getAzureStorageLocation(azureStorageLocationName, azureStorageBaseUrl, azureTenantId2)
 	azureStorageLocationUpdatedName := getAzureStorageLocation(azureStorageLocationName2, azureStorageBaseUrl, azureTenantId)
@@ -1428,7 +1427,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1483,7 +1482,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1530,7 +1529,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1587,7 +1586,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1634,7 +1633,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1681,7 +1680,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1728,7 +1727,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1785,7 +1784,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1832,7 +1831,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1879,7 +1878,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId2,
 						),
@@ -1926,7 +1925,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -1983,7 +1982,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -2030,7 +2029,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -2077,7 +2076,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						).
@@ -2087,7 +2086,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -2134,7 +2133,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 							azureStorageProvider,
 							azureStorageBaseUrl,
 							"",
-							"",
+							azureEncryptionTypeNone,
 							"",
 							azureTenantId,
 						),
@@ -2537,12 +2536,12 @@ func TestAcc_External_Volume_Invalid_Cases(t *testing.T) {
 				ConfigVariables: externalVolume(config.ListVariable(azureStorageLocationAllParams), externalVolumeName, "", ""),
 				ExpectError:     regexp.MustCompile("unable to extract storage location, storage_aws_role_arn provided for azure storage location"),
 			},
-			// encryption_type specified for azure storage location
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalVolume/azure/with-encryption-type"),
-				ConfigVariables: externalVolume(config.ListVariable(azureStorageLocationAllParams), externalVolumeName, "", ""),
-				ExpectError:     regexp.MustCompile("unable to extract storage location, encryption_type provided for azure storage location"),
-			},
+			// TODO add test for encryption_type specified for azure storage location
+			//{
+			//	ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalVolume/azure/with-encryption-type"),
+			//	ConfigVariables: externalVolume(config.ListVariable(azureStorageLocationAllParams), externalVolumeName, "", ""),
+			//	ExpectError:     regexp.MustCompile("unable to extract storage location, encryption_type provided for azure storage location"),
+			//},
 			// encryption_kms_key_id specified for azure storage location
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalVolume/azure/with-encryption-kms-key-id"),

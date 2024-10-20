@@ -8,6 +8,7 @@ import (
 	"path"
 	"reflect"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -164,61 +165,15 @@ func ConcatSlices[T any](slices ...[]T) []T {
 	return tmp
 }
 
-// Structs for parsing external volume desribe output
-type S3StorageLocation struct {
-	Name                    string   `json:"NAME"`
-	StorageProvider         string   `json:"STORAGE_PROVIDER"`
-	StorageBaseUrl          string   `json:"STORAGE_BASE_URL"`
-	StorageAllowedLocations []string `json:"-"`
-	StorageAwsRoleArn       string   `json:"STORAGE_AWS_ROLE_ARN"`
-	StroageAwsIamUserArn    string   `json:"-"`
-	StorageAwsExternalId    string   `json:"STORAGE_AWS_EXTERNAL_ID"`
-	EncryptionType          string   `json:"ENCRYPTION_TYPE,omitempty"`
-	EncryptionKmsId         string   `json:"ENCRYPTION_KMS_KEY_ID,omitempty"`
-}
-
-type GCSStorageLocation struct {
-	Name                     string   `json:"NAME"`
-	StorageProvider          string   `json:"STORAGE_PROVIDER"`
-	StorageBaseUrl           string   `json:"STORAGE_BASE_URL"`
-	StorageAllowedLocations  []string `json:"-"`
-	StorageGcpServiceAccount string   `json:"-"`
-	EncryptionType           string   `json:"ENCRYPTION_TYPE,omitempty"`
-	EncryptionKmsId          string   `json:"ENCRYPTION_KMS_KEY_ID,omitempty"`
-}
-
-type AzureStorageLocation struct {
-	Name                    string   `json:"NAME"`
-	StorageProvider         string   `json:"STORAGE_PROVIDER"`
-	StorageBaseUrl          string   `json:"STORAGE_BASE_URL"`
-	StorageAllowedLocations []string `json:"-"`
-	AzureTenantId           string   `json:"AZURE_TENANT_ID"`
-	AzureMultiTenantAppName string   `json:"-"`
-	AzureConsentUrl         string   `json:"-"`
-	EncryptionType          string   `json:"-"`
-	EncryptionKmsId         string   `json:"-"`
-}
-
 type StorageLocation struct {
 	Name                 string `json:"NAME"`
 	StorageProvider      string `json:"STORAGE_PROVIDER"`
 	StorageBaseUrl       string `json:"STORAGE_BASE_URL"`
-	StorageAwsRoleArn    string `json:"STORAGE_AWS_ROLE_ARN,omitempty"`
-	StorageAwsExternalId string `json:"STORAGE_AWS_EXTERNAL_ID,omitempty"`
-	EncryptionType       string `json:"ENCRYPTION_TYPE,omitempty"`
-	EncryptionKmsKeyId   string `json:"ENCRYPTION_KMS_KEY_ID,omitempty"`
-	AzureTenantId        string `json:"AZURE_TENANT_ID,omitempty"`
-}
-
-func storageLocationsEqual(s1 StorageLocation, s2 StorageLocation) bool {
-	return s1.Name == s2.Name &&
-		s1.StorageProvider == s2.StorageProvider &&
-		s1.StorageBaseUrl == s2.StorageBaseUrl &&
-		s1.StorageAwsRoleArn == s2.StorageAwsRoleArn &&
-		s1.StorageAwsExternalId == s2.StorageAwsExternalId &&
-		s1.EncryptionType == s2.EncryptionType &&
-		s1.EncryptionKmsKeyId == s2.EncryptionKmsKeyId &&
-		s1.AzureTenantId == s2.AzureTenantId
+	StorageAwsRoleArn    string `json:"STORAGE_AWS_ROLE_ARN"`
+	StorageAwsExternalId string `json:"STORAGE_AWS_EXTERNAL_ID"`
+	EncryptionType       string `json:"ENCRYPTION_TYPE"`
+	EncryptionKmsKeyId   string `json:"ENCRYPTION_KMS_KEY_ID"`
+	AzureTenantId        string `json:"AZURE_TENANT_ID"`
 }
 
 func validateParsedExternalVolumeDescribed(p ParsedExternalVolumeDescribed) error {
@@ -233,8 +188,8 @@ func validateParsedExternalVolumeDescribed(p ParsedExternalVolumeDescribed) erro
 		if len(s.Name) == 0 {
 			return fmt.Errorf("A storage location's Name in this volume could not be parsed.")
 		}
-		if len(s.StorageProvider) == 0 {
-			return fmt.Errorf("A storage location's StorageProvider in this volume could not be parsed.")
+		if !slices.Contains(sdk.ValidStorageProviderString, s.StorageProvider) {
+			return fmt.Errorf("invalid storage provider parsed: %s", s)
 		}
 		if len(s.StorageBaseUrl) == 0 {
 			return fmt.Errorf("A storage location's StorageBaseUrl in this volume could not be parsed.")
@@ -267,20 +222,6 @@ type ParsedExternalVolumeDescribed struct {
 	AllowWrites      string
 }
 
-func ParsedExternalVolumesDescribedEqual(p1 ParsedExternalVolumeDescribed, p2 ParsedExternalVolumeDescribed) bool {
-	attributesEqual := p1.Active == p2.Active && p1.Comment == p2.Comment && p1.AllowWrites == p2.AllowWrites
-	if attributesEqual && (len(p1.StorageLocations) == len(p2.StorageLocations)) {
-		for i := range p1.StorageLocations {
-			if !storageLocationsEqual(p1.StorageLocations[i], p2.StorageLocations[i]) {
-				return false
-			}
-		}
-
-		return true
-	}
-	return false
-}
-
 func ParseExternalVolumeDescribed(props []sdk.ExternalVolumeProperty) (ParsedExternalVolumeDescribed, error) {
 	parsedExternalVolumeDescribed := ParsedExternalVolumeDescribed{}
 	var storageLocations []StorageLocation
@@ -293,116 +234,27 @@ func ParseExternalVolumeDescribed(props []sdk.ExternalVolumeProperty) (ParsedExt
 		case p.Name == "ALLOW_WRITES":
 			parsedExternalVolumeDescribed.AllowWrites = p.Value
 		case strings.Contains(p.Name, "STORAGE_LOCATION_"):
-			switch {
-			case strings.Contains(p.Value, `"STORAGE_PROVIDER":"S3"`):
-				s3StorageLocation := S3StorageLocation{}
-				err := json.Unmarshal([]byte(p.Value), &s3StorageLocation)
-				if err != nil {
-					return ParsedExternalVolumeDescribed{}, err
-				}
-				storageLocation := StorageLocation{
-					Name:                 s3StorageLocation.Name,
-					StorageProvider:      s3StorageLocation.StorageProvider,
-					StorageBaseUrl:       s3StorageLocation.StorageBaseUrl,
-					StorageAwsRoleArn:    s3StorageLocation.StorageAwsRoleArn,
-					StorageAwsExternalId: s3StorageLocation.StorageAwsExternalId,
-					EncryptionType:       s3StorageLocation.EncryptionType,
-					EncryptionKmsKeyId:   s3StorageLocation.EncryptionKmsId,
-				}
-				storageLocations = append(
-					storageLocations,
-					storageLocation,
-				)
-			case strings.Contains(p.Value, `"STORAGE_PROVIDER":"GCS"`):
-				gcsStorageLocation := GCSStorageLocation{}
-				err := json.Unmarshal([]byte(p.Value), &gcsStorageLocation)
-				if err != nil {
-					return ParsedExternalVolumeDescribed{}, err
-				}
-
-				storageLocation := StorageLocation{
-					Name:               gcsStorageLocation.Name,
-					StorageProvider:    gcsStorageLocation.StorageProvider,
-					StorageBaseUrl:     gcsStorageLocation.StorageBaseUrl,
-					EncryptionType:     gcsStorageLocation.EncryptionType,
-					EncryptionKmsKeyId: gcsStorageLocation.EncryptionKmsId,
-				}
-				storageLocations = append(
-					storageLocations,
-					storageLocation,
-				)
-			case strings.Contains(p.Value, `"STORAGE_PROVIDER":"AZURE"`):
-				azureStorageLocation := AzureStorageLocation{}
-				err := json.Unmarshal([]byte(p.Value), &azureStorageLocation)
-				if err != nil {
-					return ParsedExternalVolumeDescribed{}, err
-				}
-
-				storageLocation := StorageLocation{
-					Name:            azureStorageLocation.Name,
-					StorageProvider: azureStorageLocation.StorageProvider,
-					StorageBaseUrl:  azureStorageLocation.StorageBaseUrl,
-					AzureTenantId:   azureStorageLocation.AzureTenantId,
-				}
-				storageLocations = append(
-					storageLocations,
-					storageLocation,
-				)
-			default:
-				return ParsedExternalVolumeDescribed{}, fmt.Errorf("Unrecognized storage provider in storage location property: %s", p.Value)
+			storageLocation := StorageLocation{}
+			err := json.Unmarshal([]byte(p.Value), &storageLocation)
+			if err != nil {
+				return ParsedExternalVolumeDescribed{}, err
 			}
+			storageLocations = append(
+				storageLocations,
+				storageLocation,
+			)
 		default:
 			return ParsedExternalVolumeDescribed{}, fmt.Errorf("Unrecognized external volume property: %s", p.Name)
 		}
 	}
 
 	parsedExternalVolumeDescribed.StorageLocations = storageLocations
-	validated := validateParsedExternalVolumeDescribed(parsedExternalVolumeDescribed)
-	if validated != nil {
-		return ParsedExternalVolumeDescribed{}, validated
+	err := validateParsedExternalVolumeDescribed(parsedExternalVolumeDescribed)
+	if err != nil {
+		return ParsedExternalVolumeDescribed{}, err
 	}
 
 	return parsedExternalVolumeDescribed, nil
-}
-
-// Generate input to the ParseExternalVolumeDescribedInput, useful for testing purposes
-func GenerateParseExternalVolumeDescribedInput(comment string, allowWrites string, storageLocations []string, active string) []sdk.ExternalVolumeProperty {
-	storageLocationProperties := make([]sdk.ExternalVolumeProperty, len(storageLocations))
-	allowWritesProperty := sdk.ExternalVolumeProperty{
-		Parent:  "",
-		Name:    "ALLOW_WRITES",
-		Type:    "Boolean",
-		Value:   allowWrites,
-		Default: "true",
-	}
-
-	commentProperty := sdk.ExternalVolumeProperty{
-		Parent:  "",
-		Name:    "COMMENT",
-		Type:    "String",
-		Value:   comment,
-		Default: "",
-	}
-
-	activeProperty := sdk.ExternalVolumeProperty{
-		Parent:  "STORAGE_LOCATIONS",
-		Name:    "ACTIVE",
-		Type:    "String",
-		Value:   active,
-		Default: "",
-	}
-
-	for i, property := range storageLocations {
-		storageLocationProperties[i] = sdk.ExternalVolumeProperty{
-			Parent:  "STORAGE_LOCATIONS",
-			Name:    fmt.Sprintf("STORAGE_LOCATION_%s", strconv.Itoa(i+1)),
-			Type:    "String",
-			Value:   property,
-			Default: "",
-		}
-	}
-
-	return append(append([]sdk.ExternalVolumeProperty{allowWritesProperty, commentProperty}, storageLocationProperties...), activeProperty)
 }
 
 // TODO(SNOW-1569530): address during identifiers rework follow-up
