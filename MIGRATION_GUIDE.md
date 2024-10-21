@@ -9,7 +9,7 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
-#### *(behavior change)* handling copy_grants
+### *(behavior change)* handling copy_grants
 Currently, resources like `snowflake_view`, `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table`  support `copy_grants` field corresponding with `COPY GRANTS` during `CREATE`. The current behavior is that, when a change leading for recreation is detected (meaning a change that can not be handled by ALTER, but only by `CREATE OR REPLACE`), `COPY GRANTS` are used during recreation when `copy_grants` is set to `true`. Changing this field without changes in other field results in a noop because in this case there is no need to recreate a resource.
 
 ### *(new feature)* recovering stale streams
@@ -47,6 +47,17 @@ resource "snowflake_stream_on_directory_table" "stream" {
 
 Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
 
+### *(new feature)* Secret resources
+Added a new secrets resources for managing secrets.
+We decided to split each secret flow into individual resources.
+This segregation was based on the secret flows in CREATE SECRET. i.e.:
+- `snowflake_secret_with_client_credentials`
+- `snowflake_secret_with_authorization_code_grant`
+- `snowflake_secret_with_basic_authentication`
+- `snowflake_secret_with_generic_string`
+
+
+See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secret).
 
 ## v0.96.0 ➞ v0.97.0
 
