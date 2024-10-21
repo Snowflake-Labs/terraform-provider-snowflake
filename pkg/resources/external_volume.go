@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -378,7 +377,6 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 			// would otherwise be necessary as a minimum of 1 storage location per external volume is required.
 			// The alternative solution of adding volumes before removing them isn't possible as
 			// name must be unique for storage locations
-
 			temp_storage_location, err := CopyStorageLocationWithTempName(removedLocations[0])
 			if err != nil {
 				return diag.FromErr(err)
@@ -389,17 +387,12 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 				return diag.FromErr(addTempErr)
 			}
 
-			defer func() {
-				if err := removeStorageLocation(temp_storage_location, client, ctx, id); err != nil {
-					log.Printf("[ERROR] failed to remove temp storage location: %s", err)
-				}
-			}()
-
 			updateErr := updateStorageLocations(removedLocations, addedLocations, client, ctx, id)
 			if updateErr != nil {
 				return diag.FromErr(updateErr)
 			}
 
+			// TODO use defer
 			removeErr := removeStorageLocation(temp_storage_location, client, ctx, id)
 			if removeErr != nil {
 				return diag.FromErr(removeErr)
