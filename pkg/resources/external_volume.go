@@ -38,7 +38,7 @@ var externalVolumeSchema = map[string]*schema.Schema{
 				"storage_location_name": {
 					Type:             schema.TypeString,
 					Required:         true,
-					Description:      blocklistedCharactersFieldDescription("Name of the storage location. Must be unique for the external volume."),
+					Description:      blocklistedCharactersFieldDescription("Name of the storage location. Must be unique for the external volume. Do not use the name `terraform_provider_sentinel_storage_location` - this is reserved for the provider for performing update operations."),
 					DiffSuppressFunc: suppressIdentifierQuoting,
 				},
 				"storage_provider": {
@@ -378,16 +378,6 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 			// would otherwise be necessary as a minimum of 1 storage location per external volume is required.
 			// The alternative solution of adding volumes before removing them isn't possible as
 			// name must be unique for storage locations
-			if len(removedLocations) > 1 {
-				// To ensure the name of the temporary storage location is unique,
-				// first remove all but 1 storage locations from the list
-				for _, removedStorageLocation := range removedLocations[1:] {
-					err = removeStorageLocation(removedStorageLocation, client, ctx, id)
-					if err != nil {
-						return diag.FromErr(err)
-					}
-				}
-			}
 
 			temp_storage_location, err := CopyStorageLocationWithTempName(removedLocations[0])
 			if err != nil {
@@ -405,7 +395,7 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 				}
 			}()
 
-			updateErr := updateStorageLocations([]sdk.ExternalVolumeStorageLocation{removedLocations[0]}, addedLocations, client, ctx, id)
+			updateErr := updateStorageLocations(removedLocations, addedLocations, client, ctx, id)
 			if updateErr != nil {
 				return diag.FromErr(updateErr)
 			}

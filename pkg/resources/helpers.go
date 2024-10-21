@@ -341,12 +341,7 @@ func CopyStorageLocationWithTempName(
 		return sdk.ExternalVolumeStorageLocation{}, err
 	}
 
-	currName, err := GetStorageLocationName(storageLocation)
-	if err != nil {
-		return sdk.ExternalVolumeStorageLocation{}, err
-	}
-
-	newName := fmt.Sprintf("temp_%s", currName)
+	newName := "terraform_provider_sentinel_storage_location"
 	var tempNameStorageLocation sdk.ExternalVolumeStorageLocation
 	switch storageProvider {
 	case sdk.StorageProviderS3, sdk.StorageProviderS3GOV:

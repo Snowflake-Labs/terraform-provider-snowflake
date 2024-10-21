@@ -632,6 +632,7 @@ func Test_GetStorageLocationStorageProvider(t *testing.T) {
 var s3StorageAwsExternalId = "1234567890"
 
 func Test_CopyStorageLocationWithTempName(t *testing.T) {
+	tempStorageLocationName := "terraform_provider_sentinel_storage_location"
 	s3StorageLocationName := "s3Test"
 	s3StorageBaseUrl := "s3://my_example_bucket"
 	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
@@ -676,7 +677,7 @@ func Test_CopyStorageLocationWithTempName(t *testing.T) {
 		storageLocationInput := sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &s3StorageLocationA}
 		copiedStorageLocation, err := resources.CopyStorageLocationWithTempName(storageLocationInput)
 		require.NoError(t, err)
-		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.Name, fmt.Sprintf("temp_%s", s3StorageLocationA.Name))
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.Name, tempStorageLocationName)
 		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageProvider, s3StorageLocationA.StorageProvider)
 		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageBaseUrl, s3StorageLocationA.StorageBaseUrl)
 		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageAwsRoleArn, s3StorageLocationA.StorageAwsRoleArn)
@@ -689,7 +690,7 @@ func Test_CopyStorageLocationWithTempName(t *testing.T) {
 		storageLocationInput := sdk.ExternalVolumeStorageLocation{GCSStorageLocationParams: &gcsStorageLocationA}
 		copiedStorageLocation, err := resources.CopyStorageLocationWithTempName(storageLocationInput)
 		require.NoError(t, err)
-		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.Name, fmt.Sprintf("temp_%s", gcsStorageLocationA.Name))
+		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.Name, tempStorageLocationName)
 		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.StorageBaseUrl, gcsStorageLocationA.StorageBaseUrl)
 		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.Encryption.Type, gcsStorageLocationA.Encryption.Type)
 		assert.Equal(t, *copiedStorageLocation.GCSStorageLocationParams.Encryption.KmsKeyId, *gcsStorageLocationA.Encryption.KmsKeyId)
@@ -699,7 +700,7 @@ func Test_CopyStorageLocationWithTempName(t *testing.T) {
 		storageLocationInput := sdk.ExternalVolumeStorageLocation{AzureStorageLocationParams: &azureStorageLocationA}
 		copiedStorageLocation, err := resources.CopyStorageLocationWithTempName(storageLocationInput)
 		require.NoError(t, err)
-		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.Name, fmt.Sprintf("temp_%s", azureStorageLocationA.Name))
+		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.Name, tempStorageLocationName)
 		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.StorageBaseUrl, azureStorageLocationA.StorageBaseUrl)
 		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.AzureTenantId, azureStorageLocationA.AzureTenantId)
 	})
