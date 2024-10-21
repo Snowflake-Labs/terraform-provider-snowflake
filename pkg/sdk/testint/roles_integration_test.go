@@ -119,6 +119,9 @@ func TestInt_Roles(t *testing.T) {
 		addedTag, err := client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), sdk.ObjectTypeRole)
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, addedTag)
+
+		err = client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithUnsetTags([]sdk.ObjectIdentifier{tag.ID()}))
+		require.NoError(t, err)
 	})
 
 	t.Run("alter unset tags", func(t *testing.T) {
