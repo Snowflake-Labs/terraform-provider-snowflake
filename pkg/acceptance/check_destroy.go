@@ -15,6 +15,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
+func ComposeCheckDestroy(t *testing.T, resources ...resources.Resource) func(*terraform.State) error {
+	t.Helper()
+
+	return func(s *terraform.State) error {
+		errs := make([]error, 0)
+		for _, resource := range resources {
+			checkFunc := CheckDestroy(t, resource)
+			errs = append(errs, checkFunc(s))
+		}
+		return errors.Join(errs...)
+	}
+}
+
 func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.State) error {
 	t.Helper()
 	// TODO [SNOW-1653619]: use TestClient() here
