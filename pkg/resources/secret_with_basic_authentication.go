@@ -45,7 +45,7 @@ func SecretWithBasicAuthentication() *schema.Resource {
 			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, ShowOutputAttributeName, "name", "comment"),
 			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, DescribeOutputAttributeName, "username"),
 			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, FullyQualifiedNameAttributeName, "name"),
-			RecreateWhenSecretTypeChangedExternally(string(sdk.SecretTypePassword)),
+			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypePassword, nil),
 		),
 
 		Schema: secretBasicAuthenticationSchema,

@@ -196,12 +196,29 @@ func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.Customi
 	}
 }
 
-func RecreateWhenSecretTypeChangedExternally(secretType string) schema.CustomizeDiffFunc {
+func RecreateWhenSecretTypeChangedExternally(secretType string, oauthType *sdk.OauthSecretType) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get("secret_type"); n != nil {
 			logging.DebugLogger.Printf("[DEBUG] new external value for secret type %s\n", n.(string))
 			if secretType != strings.ToUpper(n.(string)) {
 				return errors.Join(diff.SetNew("secret_type", "<changed externally>"), diff.ForceNew("secret_type"))
+			}
+			// both client_credentials and authorization_code_grant secrets have the same type: "OAUTH2"
+			// to detect the external type change we need to check fields that are required in one, but should be absent in the other
+			// we will check if the 'oauth_refresh_token_expiry_time' is present in the describe_output
+			// since it is required in authorization_code_grant flow and should be empty in client_credentials flow
+			if strings.ToUpper(n.(string)) == string(sdk.SecretTypeOAuth2) && oauthType != nil {
+				var forceNew bool
+				rt := diff.Get("describe_output.0.oauth_refresh_token_expiry_time").(string)
+				switch *oauthType {
+				case sdk.OAuth2AuthorizationCodeGrantFlow:
+					forceNew = rt == ""
+				case sdk.OAuth2ClientCredentialsFlow:
+					forceNew = rt != ""
+				}
+				if forceNew {
+					return errors.Join(diff.SetNew("secret_type", "<changed externally>"), diff.ForceNew("secret_type"))
+				}
 			}
 		}
 		return nil

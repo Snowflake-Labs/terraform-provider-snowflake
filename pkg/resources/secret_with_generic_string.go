@@ -39,7 +39,7 @@ func SecretWithGenericString() *schema.Resource {
 			ComputedIfAnyAttributeChanged(secretGenericStringSchema, ShowOutputAttributeName, "name", "comment"),
 			ComputedIfAnyAttributeChanged(secretGenericStringSchema, DescribeOutputAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(secretGenericStringSchema, FullyQualifiedNameAttributeName, "name"),
-			RecreateWhenSecretTypeChangedExternally(string(sdk.SecretTypeGenericString)),
+			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypeGenericString, nil),
 		),
 
 		Schema: secretGenericStringSchema,

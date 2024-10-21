@@ -57,7 +57,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretName).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType(string(sdk.SecretTypePassword)).
+							HasSecretType(sdk.SecretTypePassword).
 							HasSchemaName(id.SchemaName()).
 							HasComment(""),
 					),
@@ -67,7 +67,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.name", name),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.database_name", id.DatabaseName()),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.schema_name", id.SchemaName()),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", string(sdk.SecretTypePassword)),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", sdk.SecretTypePassword),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.username", "foo"),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.comment", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_access_token_expiry_time", ""),
@@ -91,7 +91,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 							HasCommentString(comment),
 
 						resourceshowoutputassert.SecretShowOutput(t, secretName).
-							HasSecretType(string(sdk.SecretTypePassword)).
+							HasSecretType(sdk.SecretTypePassword).
 							HasComment(comment),
 					),
 
@@ -245,9 +245,9 @@ func TestAcc_SecretWithBasicAuthentication_ExternalSecretTypeChange(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithBasicAuthenticationResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(string(sdk.SecretTypePassword)),
+							HasSecretTypeString(sdk.SecretTypePassword),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(string(sdk.SecretTypePassword)),
+							HasSecretType(sdk.SecretTypePassword),
 					),
 				),
 			},
@@ -267,9 +267,9 @@ func TestAcc_SecretWithBasicAuthentication_ExternalSecretTypeChange(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithBasicAuthenticationResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(string(sdk.SecretTypePassword)),
+							HasSecretTypeString(sdk.SecretTypePassword),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(string(sdk.SecretTypePassword)),
+							HasSecretType(sdk.SecretTypePassword),
 					),
 				),
 			},

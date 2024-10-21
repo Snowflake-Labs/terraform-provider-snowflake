@@ -46,7 +46,7 @@ func SecretWithClientCredentials() *schema.Resource {
 			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, DescribeOutputAttributeName, "name", "oauth_scopes", "api_authentication"),
 			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, ShowOutputAttributeName, "name", "comment"),
 			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, FullyQualifiedNameAttributeName, "name"),
-			RecreateWhenSecretTypeChangedExternally(string(sdk.SecretTypeOAuth2)),
+			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypeOAuth2, sdk.NewOauthSecretType(sdk.OAuth2ClientCredentialsFlow)),
 		),
 
 		Schema: secretClientCredentialsSchema,

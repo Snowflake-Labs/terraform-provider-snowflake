@@ -68,7 +68,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType(string(sdk.SecretTypeOAuth2)).
+							HasSecretType(sdk.SecretTypeOAuth2).
 							HasSchemaName(id.SchemaName()).
 							HasComment(""),
 					),
@@ -78,7 +78,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.name", name),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.database_name", id.DatabaseName()),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.schema_name", id.SchemaName()),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", string(sdk.SecretTypeOAuth2)),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", sdk.SecretTypeOAuth2),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.integration_name", integrationId.Name()),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.username", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_access_token_expiry_time", ""),
@@ -109,7 +109,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 							HasCommentString(comment),
 
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(string(sdk.SecretTypeOAuth2)).
+							HasSecretType(sdk.SecretTypeOAuth2).
 							HasComment(comment),
 					),
 					resource.TestCheckResourceAttrSet(secretName, "describe_output.0.oauth_refresh_token_expiry_time"),
@@ -287,7 +287,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalChange(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType(string(sdk.SecretTypeOAuth2)).
+							HasSecretType(sdk.SecretTypeOAuth2).
 							HasSchemaName(id.SchemaName()).
 							HasComment(comment),
 					),
@@ -353,9 +353,9 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChange(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
+							HasSecretTypeString(sdk.SecretTypeOAuth2),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(string(sdk.SecretTypeOAuth2)),
+							HasSecretType(sdk.SecretTypeOAuth2),
 					),
 				),
 			},
@@ -375,10 +375,72 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChange(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
+							HasSecretTypeString(sdk.SecretTypeOAuth2),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(string(sdk.SecretTypeOAuth2)),
+							HasSecretType(sdk.SecretTypeOAuth2),
 					),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChangeToOAuthClientCredentials(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
+
+	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_, apiIntegrationCleanup := acc.TestClient().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
+		sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(integrationId, true, "test_client_id", "test_client_secret").
+			WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "foo"}, {Scope: "bar"}, {Scope: "test"}}),
+	)
+	t.Cleanup(apiIntegrationCleanup)
+
+	secretModel := model.SecretWithAuthorizationCodeGrant("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, "test_refresh_token", time.Now().Add(24*time.Hour).Format(time.DateOnly))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithClientCredentials),
+		Steps: []resource.TestStep{
+			// create
+			{
+				Config: config.FromModel(t, secretModel),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
+							HasSecretTypeString(sdk.SecretTypeOAuth2),
+						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
+							HasSecretType(sdk.SecretTypeOAuth2),
+					),
+					resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time"),
+				),
+			},
+			// create or replace with same secret type, but different create flow
+			{
+				PreConfig: func() {
+					acc.TestClient().Secret.DropFunc(t, id)()
+					_, cleanup := acc.TestClient().Secret.CreateWithOAuthClientCredentialsFlow(t, id, integrationId, []sdk.ApiIntegrationScope{})
+					t.Cleanup(cleanup)
+				},
+				Config: config.FromModel(t, secretModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
+							HasSecretTypeString(sdk.SecretTypeOAuth2),
+						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
+							HasSecretType(sdk.SecretTypeOAuth2),
+					),
+					resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time"),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.#", "0"),
 				),
 			},
 		},
