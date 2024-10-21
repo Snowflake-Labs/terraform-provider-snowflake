@@ -165,7 +165,6 @@ func TestConntections_AlterConnection(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterConnectionConnectionOptions.Unset", "Comment"))
 	})
 
-
 	t.Run("set comment", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &Set{Comment: String("test comment")}
@@ -176,5 +175,59 @@ func TestConntections_AlterConnection(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &Unset{Comment: Bool(true)}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s UNSET COMMENT", id.FullyQualifiedName())
+	})
+}
+
+func TestConnections_Drop(t *testing.T) {
+	id := randomAccountObjectIdentifier()
+	defaultOpts := func() *DropConnectionOptions {
+		return &DropConnectionOptions{
+			name: id,
+		}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *DropConnectionOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = emptyAccountObjectIdentifier
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, "DROP CONNECTION %s", id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "DROP CONNECTION IF EXISTS %s", id.FullyQualifiedName())
+	})
+}
+
+func TestConnections_Show(t *testing.T) {
+	defaultOpts := func() *ShowConnectionOptions {
+		return &ShowConnectionOptions{}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		var opts *ShowConnectionOptions = nil
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, "SHOW CONNECTIONS")
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Like = &Like{
+			String("test_connection_name"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW CONNECTIONS LIKE 'test_connection_name'")
 	})
 }

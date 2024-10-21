@@ -137,3 +137,25 @@ func (s *UnsetRequest) WithComment(Comment bool) *UnsetRequest {
 	s.Comment = &Comment
 	return s
 }
+
+func NewDropConnectionRequest(
+	name AccountObjectIdentifier,
+) *DropConnectionRequest {
+	s := DropConnectionRequest{}
+	s.name = name
+	return &s
+}
+
+func (s *DropConnectionRequest) WithIfExists(IfExists bool) *DropConnectionRequest {
+	s.IfExists = &IfExists
+	return s
+}
+
+func NewShowConnectionRequest() *ShowConnectionRequest {
+	return &ShowConnectionRequest{}
+}
+
+func (s *ShowConnectionRequest) WithLike(Like Like) *ShowConnectionRequest {
+	s.Like = &Like
+	return s
+}

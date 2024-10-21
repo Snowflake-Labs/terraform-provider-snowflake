@@ -5,6 +5,8 @@ var (
 	_ validatable = new(CreateReplicatedConnectionConnectionOptions)
 	_ validatable = new(AlterConnectionFailoverConnectionOptions)
 	_ validatable = new(AlterConnectionConnectionOptions)
+	_ validatable = new(DropConnectionOptions)
+	_ validatable = new(ShowConnectionOptions)
 )
 
 func (opts *CreateConnectionConnectionOptions) validate() error {
@@ -61,5 +63,24 @@ func (opts *AlterConnectionConnectionOptions) validate() error {
 			errs = append(errs, errAtLeastOneOf("AlterConnectionConnectionOptions.Unset", "Comment"))
 		}
 	}
+	return JoinErrors(errs...)
+}
+
+func (opts *DropConnectionOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
+	if !ValidObjectIdentifier(opts.name) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
+	}
+	return JoinErrors(errs...)
+}
+
+func (opts *ShowConnectionOptions) validate() error {
+	if opts == nil {
+		return ErrNilOptions
+	}
+	var errs []error
 	return JoinErrors(errs...)
 }

@@ -7,6 +7,8 @@ var (
 	_ optionsProvider[CreateReplicatedConnectionConnectionOptions] = new(CreateReplicatedConnectionConnectionRequest)
 	_ optionsProvider[AlterConnectionFailoverConnectionOptions]    = new(AlterConnectionFailoverConnectionRequest)
 	_ optionsProvider[AlterConnectionConnectionOptions]            = new(AlterConnectionConnectionRequest)
+	_ optionsProvider[DropConnectionOptions]                       = new(DropConnectionRequest)
+	_ optionsProvider[ShowConnectionOptions]                       = new(ShowConnectionRequest)
 )
 
 type CreateConnectionConnectionRequest struct {
@@ -55,4 +57,13 @@ type SetRequest struct {
 
 type UnsetRequest struct {
 	Comment *bool
+}
+
+type DropConnectionRequest struct {
+	IfExists *bool
+	name     AccountObjectIdentifier // required
+}
+
+type ShowConnectionRequest struct {
+	Like *Like
 }

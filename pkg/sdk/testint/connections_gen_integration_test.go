@@ -1,12 +1,16 @@
-package sdk
+package testint
 
 import "testing"
 
-func TestInt_Connections(t *testing.T) {
-	// TODO: prepare common resources
+func TestInt_Conntections(t *testing.T) {
+	client := testClient(t)
+	_ = client
+	ctx := testContext(t)
+	_ = ctx
 
 	t.Run("CreateConnection", func(t *testing.T) {
-		// TODO: fill me
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		_ = id
 	})
 
 	t.Run("CreateReplicatedConnection", func(t *testing.T) {
@@ -18,18 +22,6 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("AlterConnection", func(t *testing.T) {
-		// TODO: fill me
-	})
-
-	t.Run("Drop", func(t *testing.T) {
-		// TODO: fill me
-	})
-
-	t.Run("Show", func(t *testing.T) {
-		// TODO: fill me
-	})
-
-	t.Run("ShowByID", func(t *testing.T) {
 		// TODO: fill me
 	})
 }

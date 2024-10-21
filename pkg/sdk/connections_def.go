@@ -9,7 +9,7 @@ var enabledFailoverAccounts = g.NewQueryStruct("EnabledFailoverAccounts").
 	Text("Account", g.KeywordOptions().NoQuotes())
 
 var ConnectionDef = g.NewInterface(
-	"Conntections",
+	"Connections",
 	"Connection",
 	g.KindOfT[AccountObjectIdentifier](),
 ).CustomOperation(
@@ -89,4 +89,42 @@ var ConnectionDef = g.NewInterface(
 			g.KeywordOptions().SQL("UNSET"),
 		).
 		WithValidation(g.ExactlyOneValueSet, "Set", "Unset"),
-)
+).DropOperation(
+	"https://docs.snowflake.com/en/sql-reference/sql/drop-connection",
+	g.NewQueryStruct("DropConnection").
+		Drop().
+		SQL("CONNECTION").
+		IfExists().
+		Name().
+		WithValidation(g.ValidIdentifier, "name"),
+).ShowOperation(
+	"https://docs.snowflake.com/en/sql-reference/sql/show-connections",
+	g.DbStruct("connectionRow").
+		Field("snowflake_region", "string").
+		Field("created_on", "time.Time").
+		Field("account_name", "string").
+		Field("name", "string").
+		Field("comment", "sql.NullString").
+		Field("is_primary", "string").
+		Field("primary", "string").
+		Field("failover_allowed_to_accounts", "string").
+		Field("connection_url", "string").
+		Field("orgnization_name", "string").
+		Field("account_locator", "string"),
+	g.PlainStruct("Connection").
+		Field("SnowflakeRegion", "string").
+		Field("CreatedOn", "time.Time").
+		Field("AccountName", "string").
+		Field("Name", "string").
+		Field("Comment", "*string").
+		Field("IsPrimary", "bool").
+		Field("Primary", "string").
+		Field("FailoverAllowedToAccounts", "[]string").
+		Field("ConnectionUrl", "string").
+		Field("OrgnizationName", "string").
+		Field("AccountLocator", "string"),
+	g.NewQueryStruct("ShowConnections").
+		Show().
+		SQL("CONNECTIONS").
+		OptionalLike(),
+).ShowByIdOperation()
