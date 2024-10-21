@@ -401,7 +401,7 @@ func TestAcc_StreamOnTable_CheckGrantsAfterRecreation(t *testing.T) {
 	})
 }
 
-func TestAcc_StreamOnTable_RecreateWhenStale(t *testing.T) {
+func TestAcc_StreamOnTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	resourceName := "snowflake_stream_on_table.test"
@@ -476,33 +476,11 @@ func TestAcc_StreamOnTable_RecreateWhenStale(t *testing.T) {
 					})),
 				),
 			},
-			// set schema parameters to bigger values ensuring that the stream is not stale
-			{
-				PreConfig: func() {
-					acc.TestClient().Schema.Alter(t, schema.ID(), &sdk.AlterSchemaOptions{
-						Set: &sdk.SchemaSet{
-							DataRetentionTimeInDays:    sdk.Int(1),
-							MaxDataExtensionTimeInDays: sdk.Int(1),
-						},
-					})
-				},
-				RefreshState: true,
-				RefreshPlanChecks: resource.RefreshPlanChecks{
-					PostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
-					HasNameString(id.Name()).
-					HasStaleString(r.BooleanFalse),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
-				),
-			},
 		},
 	})
 }
 
-func TestAcc_StreamOnTable_RecreateWhenStaleWithExternalChanges(t *testing.T) {
+func TestAcc_StreamOnTable_StaleWithExternalChanges(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	resourceName := "snowflake_stream_on_table.test"
@@ -524,6 +502,8 @@ func TestAcc_StreamOnTable_RecreateWhenStaleWithExternalChanges(t *testing.T) {
 	table, cleanupTable := acc.TestClient().Table.CreateWithRequest(t, sdk.NewCreateTableRequest(acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID()), columns).WithChangeTracking(sdk.Pointer(true)))
 	t.Cleanup(cleanupTable)
 
+	var createdOn string
+
 	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -539,9 +519,13 @@ func TestAcc_StreamOnTable_RecreateWhenStaleWithExternalChanges(t *testing.T) {
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						createdOn = value
+						return nil
+					})),
 				),
 			},
-			// changing the value externally on schema and checking manually that stream is stale
+			// changing the value externally on schema
 			{
 				PreConfig: func() {
 					acc.TestClient().Schema.Alter(t, schema.ID(), &sdk.AlterSchemaOptions{
@@ -554,24 +538,7 @@ func TestAcc_StreamOnTable_RecreateWhenStaleWithExternalChanges(t *testing.T) {
 						HasName(id.Name()).
 						HasStale(true),
 					)
-				},
-				Config: config.FromModel(t, model),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						planchecks.ExpectChange(resourceName, "stale", tfjson.ActionUpdate, sdk.String(r.BooleanTrue), sdk.String(r.BooleanFalse)),
-					},
-				},
-				ExpectNonEmptyPlan: true,
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
-					HasNameString(id.Name()).
-					HasStaleString(r.BooleanTrue),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
-				),
-			},
-			// changing schema parameters back to non-zero values
-			{
-				PreConfig: func() {
+
 					acc.TestClient().Schema.Alter(t, schema.ID(), &sdk.AlterSchemaOptions{
 						Set: &sdk.SchemaSet{
 							DataRetentionTimeInDays:    sdk.Int(1),
@@ -588,6 +555,12 @@ func TestAcc_StreamOnTable_RecreateWhenStaleWithExternalChanges(t *testing.T) {
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						if value != createdOn {
+							return fmt.Errorf("stream was recreated")
+						}
+						return nil
+					})),
 				),
 			},
 		},

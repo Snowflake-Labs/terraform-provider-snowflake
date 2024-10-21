@@ -565,7 +565,7 @@ func TestAcc_StreamOnExternalTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *
 	})
 }
 
-func TestAcc_StreamOnExternalTable_RecreateWhenStaleWithExternalChanges(t *testing.T) {
+func TestAcc_StreamOnExternalTable_StaleWithExternalChanges(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	resourceName := "snowflake_stream_on_external_table.test"
@@ -611,7 +611,7 @@ func TestAcc_StreamOnExternalTable_RecreateWhenStaleWithExternalChanges(t *testi
 					})),
 				),
 			},
-			// changing the value externally on schema and checking manually that stream is stale
+			// changing the value externally on schema
 			{
 				PreConfig: func() {
 					acc.TestClient().Schema.Alter(t, schema.ID(), &sdk.AlterSchemaOptions{
@@ -624,32 +624,6 @@ func TestAcc_StreamOnExternalTable_RecreateWhenStaleWithExternalChanges(t *testi
 						HasName(id.Name()).
 						HasStale(true),
 					)
-				},
-				Config: config.FromModel(t, model),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						planchecks.ExpectChange(resourceName, "stale", tfjson.ActionUpdate, sdk.String(r.BooleanTrue), sdk.String(r.BooleanFalse)),
-					},
-				},
-				ExpectNonEmptyPlan: true,
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
-					HasNameString(id.Name()).
-					HasStaleString(r.BooleanTrue),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
-					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
-						if value == createdOn {
-							return fmt.Errorf("stream was not recreated")
-						}
-						// the stream was recreated - update creation time for later comparison
-						createdOn = value
-						return nil
-					})),
-				),
-			},
-			// changing schema parameters back to non-zero values
-			{
-				PreConfig: func() {
 					acc.TestClient().Schema.Alter(t, schema.ID(), &sdk.AlterSchemaOptions{
 						Set: &sdk.SchemaSet{
 							DataRetentionTimeInDays:    sdk.Int(1),
@@ -667,7 +641,9 @@ func TestAcc_StreamOnExternalTable_RecreateWhenStaleWithExternalChanges(t *testi
 					HasStaleString(r.BooleanFalse),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
-						createdOn = value
+						if value != createdOn {
+							return fmt.Errorf("stream was recreated")
+						}
 						return nil
 					})),
 				),
