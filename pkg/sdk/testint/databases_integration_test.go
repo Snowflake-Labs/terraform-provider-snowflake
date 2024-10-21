@@ -586,6 +586,9 @@ func TestInt_DatabasesAlter(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("Database: %s - setting and unsetting tags", testCase.DatabaseType), func(t *testing.T) {
+			if testCase.DatabaseType == "Replica" {
+				t.Skipf("Skipping database test because secondary databases cannot be modified")
+			}
 			databaseTest, databaseTestCleanup := testCase.CreateFn(t)
 			t.Cleanup(databaseTestCleanup)
 
