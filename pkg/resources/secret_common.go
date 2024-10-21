@@ -36,7 +36,7 @@ var secretCommonSchema = map[string]*schema.Schema{
 	"secret_type": {
 		Type:        schema.TypeString,
 		Computed:    true,
-		Description: "Specifies the secret flow type for the secret.",
+		Description: "Specifies a type for the secret.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
