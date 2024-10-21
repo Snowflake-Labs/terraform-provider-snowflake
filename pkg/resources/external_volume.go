@@ -388,11 +388,17 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			updateErr := updateStorageLocations(removedLocations, addedLocations, client, ctx, id)
+			// TODO use defer for the removal of the temp storage location
 			if updateErr != nil {
+				// Try to remove the temp location and then return with error
+				removeErr := removeStorageLocation(temp_storage_location, client, ctx, id)
+				if removeErr != nil {
+					return diag.FromErr(errors.Join(updateErr, removeErr))
+				}
+
 				return diag.FromErr(updateErr)
 			}
 
-			// TODO use defer
 			removeErr := removeStorageLocation(temp_storage_location, client, ctx, id)
 			if removeErr != nil {
 				return diag.FromErr(removeErr)
