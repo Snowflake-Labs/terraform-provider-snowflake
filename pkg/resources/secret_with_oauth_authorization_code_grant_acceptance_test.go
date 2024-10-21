@@ -320,9 +320,6 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalChange(t *testing.T) {
 					),
 				),
 			},
-			{
-				RefreshState: true,
-			},
 		},
 	})
 }
@@ -417,6 +414,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChangeToOAuthCli
 							HasSecretType(sdk.SecretTypeOAuth2),
 					),
 					resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time"),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.#", "0"),
 				),
 			},
 			// create or replace with same secret type, but different create flow

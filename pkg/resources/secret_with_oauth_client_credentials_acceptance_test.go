@@ -389,9 +389,13 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChangeToOAuthAuthCode
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasSecretType(sdk.SecretTypeOAuth2),
 					),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.#", "2"),
+					resource.TestCheckTypeSetElemAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.*", "foo"),
+					resource.TestCheckTypeSetElemAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.*", "bar"),
+					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time", ""),
 				),
 			},
-			// create or replace with different secret type
+			// create or replace with the same secret type but different flow
 			{
 				PreConfig: func() {
 					acc.TestClient().Secret.DropFunc(t, id)()
