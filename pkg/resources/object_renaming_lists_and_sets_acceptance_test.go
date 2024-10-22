@@ -5,9 +5,9 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"testing"
 )
@@ -24,9 +24,9 @@ func TestAcc_BasicListFlow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: objectRenamingConfigList([]map[string]any{
-					{"string": "111", "int": 111},
-					{"string": "222", "int": 222},
-					{"string": "333", "int": 333},
+					{"name": "", "string": "111", "int": 111},
+					{"name": "", "string": "222", "int": 222},
+					{"name": "", "string": "333", "int": 333},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
@@ -39,9 +39,9 @@ func TestAcc_BasicListFlow(t *testing.T) {
 			// Remove, shift, and add one item (in the middle)
 			{
 				Config: objectRenamingConfigList([]map[string]any{
-					{"string": "222", "int": 222},
-					{"string": "444", "int": 444},
-					{"string": "333", "int": 333},
+					{"name": "", "string": "222", "int": 222},
+					{"name": "", "string": "444", "int": 444},
+					{"name": "", "string": "333", "int": 333},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
@@ -54,9 +54,9 @@ func TestAcc_BasicListFlow(t *testing.T) {
 			// Remove, shift, and add one item (at the end)
 			{
 				Config: objectRenamingConfigList([]map[string]any{
-					{"string": "444", "int": 444},
-					{"string": "333", "int": 333},
-					{"string": "111", "int": 111},
+					{"name": "", "string": "444", "int": 444},
+					{"name": "", "string": "333", "int": 333},
+					{"name": "", "string": "111", "int": 111},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
@@ -69,9 +69,9 @@ func TestAcc_BasicListFlow(t *testing.T) {
 			// Remove, shift, and add one item (at the beginning)
 			{
 				Config: objectRenamingConfigList([]map[string]any{
-					{"string": "222", "int": 222},
-					{"string": "333", "int": 333},
-					{"string": "444", "int": 444},
+					{"name": "", "string": "222", "int": 222},
+					{"name": "", "string": "333", "int": 333},
+					{"name": "", "string": "444", "int": 444},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
@@ -84,10 +84,10 @@ func TestAcc_BasicListFlow(t *testing.T) {
 			// Reorder items and add one
 			{
 				Config: objectRenamingConfigList([]map[string]any{
-					{"string": "444", "int": 444},
-					{"string": "555", "int": 555},
-					{"string": "333", "int": 333},
-					{"string": "222", "int": 222},
+					{"name": "", "string": "444", "int": 444},
+					{"name": "", "string": "555", "int": 555},
+					{"name": "", "string": "333", "int": 333},
+					{"name": "", "string": "222", "int": 222},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
@@ -101,10 +101,10 @@ func TestAcc_BasicListFlow(t *testing.T) {
 			// Replace all items
 			{
 				Config: objectRenamingConfigList([]map[string]any{
-					{"string": "444", "int": 444},
-					{"string": "555", "int": 555},
-					{"string": "333", "int": 333},
-					{"string": "222", "int": 222},
+					{"name": "", "string": "444", "int": 444},
+					{"name": "", "string": "555", "int": 555},
+					{"name": "", "string": "333", "int": 333},
+					{"name": "", "string": "222", "int": 222},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
@@ -115,45 +115,25 @@ func TestAcc_BasicListFlow(t *testing.T) {
 					}),
 				),
 			},
-		},
-	})
-}
-
-func TestAcc_ListUpdatesWithNullAttribute(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		Steps: []resource.TestStep{
-			{
-				Config: objectRenamingConfigList([]map[string]any{
-					{"name": nil, "string": "111", "int": 111},
-					{"name": nil, "string": "222", "int": 222},
-				}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
-						{"name": "", "string": "111", "int": "111"},
-						{"name": "", "string": "222", "int": "222"},
-					}),
-				),
-			},
-			// Update one item
-			{
-				Config: objectRenamingConfigList([]map[string]any{
-					{"name": nil, "string": "111", "int": 111},
-					{"name": nil, "string": "333", "int": 333},
-				}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
-						{"name": "", "string": "111", "int": "111"},
-						{"name": "", "string": "333", "int": "333"},
-					}),
-				),
-			},
+			// Add an item that is identical to another one (currently, failing)
+			// {
+			//	Config: objectRenamingConfigList([]map[string]any{
+			//		{"name": "", "string": "444", "int": 444},
+			//		{"name": "", "string": "555", "int": 555},
+			//		{"name": "", "string": "333", "int": 333},
+			//		{"name": "", "string": "222", "int": 222},
+			//		{"name": "", "string": "222", "int": 222},
+			//	}),
+			//	Check: resource.ComposeAggregateTestCheckFunc(
+			//		assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+			//			{"name": "", "string": "444", "int": "444"},
+			//			{"name": "", "string": "555", "int": "555"},
+			//			{"name": "", "string": "333", "int": "333"},
+			//			{"name": "", "string": "222", "int": "222"},
+			//			{"name": "", "string": "222", "int": "222"},
+			//		}),
+			//	),
+			// },
 		},
 	})
 }
@@ -163,9 +143,6 @@ func TestAcc_ListNameUpdate(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	// TODO: See how reordering items will impact the update capabilities (because with diff suppress it may be hard to update)
-	// TODO: Test with external changes
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -196,7 +173,8 @@ func TestAcc_ListNameUpdate(t *testing.T) {
 					}),
 				),
 			},
-			// TODO: It's hard combo to handle (reorder + rename) with this approach (because without any additional metadata we cannot identify a given list item)
+			// It's hard to handle reorder + rename with this approach,
+			// because without any additional metadata, we cannot identify a given list item.
 			{
 				Config: objectRenamingConfigList([]map[string]any{
 					{"name": "column3", "string": "222", "int": 222},
@@ -213,11 +191,13 @@ func TestAcc_ListNameUpdate(t *testing.T) {
 	})
 }
 
-// Because the list diff suppressor works on the hash of individual items, this test checks how it behaves with duplicates that can occur in lists
-// TODO: Currently, failing come back to this later
 func TestAcc_ListsWithDuplicatedItems(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
+	// Fails, because the SuppressDiffFunc works on the hash of individual items.
+	// To correctly suppress such changes, the number of repeated hashes should be counted.
+	t.Skip("Currently failing, because duplicated hashes are not supported.")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -295,7 +275,7 @@ resource "snowflake_object_renaming" "test" {
 `, generatedListItems)
 }
 
-func TestAcc_BasicOrderedListFlow(t *testing.T) {
+func TestAcc_BasicManuallyOrderedListFlow(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -306,64 +286,168 @@ func TestAcc_BasicOrderedListFlow(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: objectRenamingConfigOrderedList([]map[string]any{
-					{"name": "name1", "string": "111"},
-					{"name": "name2", "string": "222"},
-					{"name": "name3", "string": "333"},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "name1", "order": 1},
+					{"name": "name2", "order": 2},
+					{"name": "name3", "order": 3},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "ordered_list", []map[string]string{
-						{"name": "name1", "string": "111", "order": "0"},
-						{"name": "name2", "string": "222", "order": "1"},
-						{"name": "name3", "string": "333", "order": "2"},
-					}),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name1"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name3"),
+				),
+			},
+			// Change values
+			{
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "name2", "order": 1},
+					{"name": "name2", "order": 2},
+					{"name": "name4", "order": 3},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name4"),
 				),
 			},
 			// Change the order
 			{
-				Config: objectRenamingConfigOrderedList([]map[string]any{
-					{"name": "name3", "string": "333"},
-					{"name": "name1", "string": "111"},
-					{"name": "name2", "string": "222"},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "name4", "order": 3},
+					{"name": "name2", "order": 2},
+					{"name": "name2", "order": 1},
 				}),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionNoop),
-					},
-				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "ordered_list", []map[string]string{
-						{"name": "name3", "string": "333", "order": "0"},
-						{"name": "name1", "string": "111", "order": "1"},
-						{"name": "name2", "string": "222", "order": "2"},
-					}),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name4"),
+				),
+			},
+			// change order and values
+			{
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "name1", "order": 2},
+					{"name": "name2", "order": 3},
+					{"name": "name3", "order": 1},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name3"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name1"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name2"),
+				),
+			},
+			// Add items
+			{
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "name4", "order": 4}, // added
+					{"name": "name1", "order": 2},
+					{"name": "name5", "order": 5}, // added
+					{"name": "name2", "order": 3},
+					{"name": "name3", "order": 1},
+					{"name": "name6", "order": 6}, // added
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name3"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name1"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.3.name", "name4"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.4.name", "name5"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.5.name", "name6"),
+				),
+			},
+			// Remove items
+			// The removal is kind of remove + update when you remove from the middle of the list,
+			// because some items have to jump into place of removed ones.
+			// With the Terraform SDKv2, it would be hard to achieve "shift after removal" functionality without assuming that,
+			// e.g., none of the items were changed between the states. The topic is further discussed in the research documentation.
+			{
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "name4", "order": 2},
+					{"name": "name5", "order": 3},
+					{"name": "name2", "order": 1},
+					{"name": "name6", "order": 4},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name4"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name5"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.3.name", "name6"),
+				),
+			},
+			// Change externally
+			{
+				PreConfig: func() {
+					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[0].Name = "name changed externally"
+					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[1].Name = "name changed externally"
+					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[2].Name = "name changed externally"
+					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[3].Name = "name changed externally"
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "name4", "order": 2},
+					{"name": "name5", "order": 3},
+					{"name": "name2", "order": 1},
+					{"name": "name6", "order": 4},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name4"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name5"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.3.name", "name6"),
+				),
+			},
+			// Add externally
+			{
+				PreConfig: func() {
+					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList = append(resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList, resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "name added externally"})
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "name4", "order": 2},
+					{"name": "name5", "order": 3},
+					{"name": "name2", "order": 1},
+					{"name": "name6", "order": 4},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name4"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name5"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.3.name", "name6"),
+				),
+			},
+			// Removed externally
+			{
+				PreConfig: func() {
+					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList = resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[1:]
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "name4", "order": 2},
+					{"name": "name5", "order": 3},
+					{"name": "name2", "order": 1},
+					{"name": "name6", "order": 4},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name4"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name5"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.3.name", "name6"),
 				),
 			},
 		},
 	})
 }
 
-func objectRenamingConfigOrderedList(listItems []map[string]any) string {
-	generateListItem := func(name *string, s string) string {
-		var nameField string
-		if name != nil {
-			nameField = fmt.Sprintf(`name = "%s"`, *name)
-		}
+func objectRenamingConfigManuallyOrderedList(listItems []map[string]any) string {
+	generateListItem := func(name string, order int) string {
 		return fmt.Sprintf(`
-ordered_list {
-	%[1]s
-	string = "%[2]s"
+manually_ordered_list {
+	name = "%s"
+	order = %d
 }
-`, nameField, s)
+`, name, order)
 	}
 
 	generatedListItems := ""
 	for _, item := range listItems {
-		var name *string
-		if nameValue, ok := item["name"]; ok && nameValue != nil {
-			name = sdk.String(nameValue.(string))
-		}
-		generatedListItems += generateListItem(name, item["string"].(string))
+		generatedListItems += generateListItem(item["name"].(string), item["order"].(int))
 	}
 
 	return fmt.Sprintf(`

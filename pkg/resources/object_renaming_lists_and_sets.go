@@ -2,6 +2,8 @@ package resources
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -12,11 +14,101 @@ import (
 	"strings"
 )
 
+type objectRenamingDatabaseListItem struct {
+	Name   string
+	String string
+	Int    int
+}
+
+func mapObjectRenamingDatabaseListItemFromValue(items []cty.Value) []objectRenamingDatabaseListItem {
+	return collections.Map(items, func(item cty.Value) objectRenamingDatabaseListItem {
+		intValue, _ := item.AsValueMap()["int"].AsBigFloat().Int64()
+		var name string
+		if nameValue, ok := item.AsValueMap()["name"]; ok && !nameValue.IsNull() {
+			name = nameValue.AsString()
+		}
+		return objectRenamingDatabaseListItem{
+			Name:   name,
+			String: item.AsValueMap()["string"].AsString(),
+			Int:    int(intValue),
+		}
+	})
+}
+
+type objectRenamingDatabaseOrderedListItem struct {
+	Name  string
+	Order string
+}
+
+func mapObjectRenamingDatabaseOrderedListItemFromValue(items []cty.Value) []objectRenamingDatabaseOrderedListItem {
+	return collections.Map(items, func(item cty.Value) objectRenamingDatabaseOrderedListItem {
+		var order string
+		if orderValue, ok := item.AsValueMap()["order"]; ok && !orderValue.IsNull() {
+			order = orderValue.AsString()
+		}
+		var name string
+		if nameValue, ok := item.AsValueMap()["name"]; ok && !nameValue.IsNull() {
+			name = nameValue.AsString()
+		}
+		return objectRenamingDatabaseOrderedListItem{
+			Name:  name,
+			Order: order,
+		}
+	})
+}
+
+func objectRenamingDatabaseOrderedListFromSchema(list []any) []objectRenamingDatabaseOrderedListItem {
+	objectRenamingDatabaseOrderedListItems := make([]objectRenamingDatabaseOrderedListItem, len(list))
+	for index, item := range list {
+		var name string
+		if nameValue, ok := item.(map[string]any)["name"]; ok {
+			name = nameValue.(string)
+		}
+		objectRenamingDatabaseOrderedListItems[index] = objectRenamingDatabaseOrderedListItem{
+			Name:  name,
+			Order: strconv.Itoa(index),
+		}
+	}
+	return objectRenamingDatabaseOrderedListItems
+}
+
+type ObjectRenamingDatabaseManuallyOrderedListItem struct {
+	Name string
+}
+
+func objectRenamingDatabaseManuallyOrderedListFromSchema(list []any) []ObjectRenamingDatabaseManuallyOrderedListItem {
+	objectRenamingDatabaseOrderedListItems := make([]ObjectRenamingDatabaseManuallyOrderedListItem, len(list))
+	for index, item := range list {
+		var name string
+		if nameValue, ok := item.(map[string]any)["name"]; ok {
+			name = nameValue.(string)
+		}
+		objectRenamingDatabaseOrderedListItems[index] = ObjectRenamingDatabaseManuallyOrderedListItem{
+			Name: name,
+		}
+	}
+	return objectRenamingDatabaseOrderedListItems
+}
+
+type objectRenamingDatabase struct {
+	List                []objectRenamingDatabaseListItem
+	OrderedList         []objectRenamingDatabaseOrderedListItem
+	ManuallyOrderedList []ObjectRenamingDatabaseManuallyOrderedListItem
+}
+
+var ObjectRenamingDatabaseInstance = new(objectRenamingDatabase)
+
 var objectRenamingListsAndSetsSchema = map[string]*schema.Schema{
+	// The list field was tested to be used in places where the order of the items should be ignored.
+	// It was ignored by comparing hashes of the items to see if any changes were made on the items themselves
+	// (if the hashes before and after were the same, we know that nothing was changed, only the order).
+	// Also, it doesn't fully support repeating items. This is because they have the same hash and to fully support it,
+	// hash counting could be added (counting if the same hash occurs in state and config the number of times, otherwise cause update).
+	// Modifications of the items will still cause remove/add behavior.
 	"list": {
 		Optional:         true,
 		Type:             schema.TypeList,
-		DiffSuppressFunc: ignoreOrderAfterFirstApply("list"),
+		DiffSuppressFunc: ignoreListOrderAfterFirstApply("list"),
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
@@ -31,12 +123,38 @@ var objectRenamingListsAndSetsSchema = map[string]*schema.Schema{
 					Type:     schema.TypeInt,
 					Optional: true,
 				},
-				// TODO: Add more if needed (e.g. with hashing or smth)
 			},
 		},
 	},
+	// The manually_ordered_list focuses on providing both aspects:
+	//  - Immunity to item reordering after create.
+	//  - Handling updates for changed items instead of removing the old item and adding a new one.
+	// It does it by providing the required order field that represents what should be the actual order of items
+	// on the Snowflake side. The order is ignored on the DiffSuppressFunc level, and the item update (renaming the item)
+	// is handled in the resource update function. It is assumed the order starts from 1 (list index + 1) and there are no gaps in order,
+	// meaning max_order == len(list).
+	"manually_ordered_list": {
+		Optional:         true,
+		Type:             schema.TypeList,
+		DiffSuppressFunc: ignoreOrderAfterFirstApplyWithManuallyOrderedList("manually_ordered_list"),
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"order": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			},
+		},
+	},
+	// The ordered_list field was an attempt of making manual work done in manually_ordered_list automatic by making the order field computed.
+	// It didn't work because in DiffSuppressFunc it's hard to get the computed value in the "after" state to compare against.
+	// Possibly (but with very low probability), the solution could work by introducing a Computed + Optional list that would be managed by a custom diff function.
+	// Due to increased complexity, it was left as is and more research was dedicated to manually_ordered_list.
 	"ordered_list": {
-		Computed:         true,
 		Optional:         true,
 		Type:             schema.TypeList,
 		DiffSuppressFunc: ignoreOrderAfterFirstApplyWithOrderedList("ordered_list"),
@@ -46,31 +164,196 @@ var objectRenamingListsAndSetsSchema = map[string]*schema.Schema{
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"string": {
-					Type:     schema.TypeString,
-					Optional: true,
-				},
 				"order": {
-					Type:     schema.TypeString, // because 0 is a valid index
+					Type:     schema.TypeString,
 					Computed: true,
 				},
 			},
 		},
 	},
-	//"set": {},
 }
 
-// TODO: This may fail for lists where items with the same values are allowed
-//   - This could be potentially solved by comparing the number of hash repetitions in state vs config
-func ignoreOrderAfterFirstApply(parentKey string) schema.SchemaDiffSuppressFunc {
+func ObjectRenamingListsAndSets() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: CreateObjectRenamingListsAndSets,
+		UpdateContext: UpdateObjectRenamingListsAndSets,
+		ReadContext:   ReadObjectRenamingListsAndSets,
+		DeleteContext: DeleteObjectRenamingListsAndSets,
+
+		Schema: objectRenamingListsAndSetsSchema,
+	}
+}
+
+func CreateObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	ObjectRenamingDatabaseInstance.List = collections.Map(d.Get("list").([]any), func(item any) objectRenamingDatabaseListItem {
+		var name string
+		if nameValue, ok := item.(map[string]any)["name"]; ok {
+			name = nameValue.(string)
+		}
+		return objectRenamingDatabaseListItem{
+			Name:   name,
+			String: item.(map[string]any)["string"].(string),
+			Int:    item.(map[string]any)["int"].(int),
+		}
+	})
+
+	ObjectRenamingDatabaseInstance.OrderedList = objectRenamingDatabaseOrderedListFromSchema(d.Get("ordered_list").([]any))
+	ObjectRenamingDatabaseInstance.ManuallyOrderedList = objectRenamingDatabaseManuallyOrderedListFromSchema(d.Get("manually_ordered_list").([]any))
+
+	d.SetId("identifier")
+
+	return ReadObjectRenamingListsAndSets(ctx, d, meta)
+}
+
+func UpdateObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	if d.HasChange("list") {
+		// It wasn't working with d.getChange(). It was returning null elements in one of the test case's steps.
+		oldList := d.GetRawState().AsValueMap()["list"].AsValueSlice()
+		newList := d.GetRawConfig().AsValueMap()["list"].AsValueSlice()
+
+		oldListMapped := mapObjectRenamingDatabaseListItemFromValue(oldList)
+		newListMapped := mapObjectRenamingDatabaseListItemFromValue(newList)
+
+		addedItems, removedItems := ListDiff(oldListMapped, newListMapped)
+
+		for _, removedItem := range removedItems {
+			ObjectRenamingDatabaseInstance.List = slices.DeleteFunc(ObjectRenamingDatabaseInstance.List, func(item objectRenamingDatabaseListItem) bool {
+				return item == removedItem
+			})
+		}
+
+		for _, addedItem := range addedItems {
+			ObjectRenamingDatabaseInstance.List = append(ObjectRenamingDatabaseInstance.List, addedItem)
+		}
+	}
+
+	if d.HasChange("ordered_list") {
+		oldOrderedList := d.GetRawState().AsValueMap()["ordered_list"].AsValueSlice()
+		newOrderedList := d.GetRawConfig().AsValueMap()["ordered_list"].AsValueSlice()
+		oldOrderedListMapped := mapObjectRenamingDatabaseOrderedListItemFromValue(oldOrderedList)
+		newOrderedListMapped := mapObjectRenamingDatabaseOrderedListItemFromValue(newOrderedList)
+
+		itemsToAdd, itemsToRemove := ListDiff(oldOrderedListMapped, newOrderedListMapped)
+		for _, removedItem := range itemsToRemove {
+			ObjectRenamingDatabaseInstance.OrderedList = slices.DeleteFunc(ObjectRenamingDatabaseInstance.OrderedList, func(item objectRenamingDatabaseOrderedListItem) bool {
+				return item == removedItem
+			})
+		}
+
+		for _, addedItem := range itemsToAdd {
+			addedItem.Order = ""
+			ObjectRenamingDatabaseInstance.OrderedList = append(ObjectRenamingDatabaseInstance.OrderedList, addedItem)
+		}
+
+		// The implementation is not complete due to mentioned issues with computed order in DiffSuppressFunc
+	}
+
+	if d.HasChange("manually_ordered_list") {
+		_, newManuallyOrderedList := d.GetChange("manually_ordered_list")
+		hasNewItems := len(newManuallyOrderedList.([]any)) > len(ObjectRenamingDatabaseInstance.ManuallyOrderedList)
+
+		// Copy the value from external source and compare with the new state to create the final state that will be saved
+		finalState := ObjectRenamingDatabaseInstance.ManuallyOrderedList
+
+		for index, item := range ObjectRenamingDatabaseInstance.ManuallyOrderedList {
+			order := index + 1
+			newValue, err := collections.FindFirst(newManuallyOrderedList.([]any), func(item any) bool {
+				return item.(map[string]any)["order"].(int) == order
+			})
+
+			// Items were removed
+			if errors.Is(err, collections.ErrObjectNotFound) {
+				finalState = finalState[:index]
+				break
+			}
+
+			newValueName := (*newValue).(map[string]any)["name"].(string)
+			// Rename item (handle item change)
+			if newValueName != item.Name {
+				log.Printf("[DEBUG] Renaming item at order %d from name %s to %s", order, item.Name, newValueName)
+				ObjectRenamingDatabaseInstance.ManuallyOrderedList[index].Name = newValueName
+			}
+		}
+
+		// Add remaining items
+		if hasNewItems {
+			maxOrder := len(finalState)
+			newMaxOrder := len(newManuallyOrderedList.([]any))
+			for order := maxOrder + 1; order <= newMaxOrder; order++ {
+				item, err := collections.FindFirst(newManuallyOrderedList.([]any), func(item any) bool {
+					return item.(map[string]any)["order"].(int) == order
+				})
+				if err != nil {
+					return diag.FromErr(fmt.Errorf("couldn't find item to add with order %d", order))
+				}
+
+				finalState = append(finalState, ObjectRenamingDatabaseManuallyOrderedListItem{
+					Name: (*item).(map[string]any)["name"].(string),
+				})
+			}
+		}
+
+		ObjectRenamingDatabaseInstance.ManuallyOrderedList = finalState
+	}
+
+	return ReadObjectRenamingListsAndSets(ctx, d, meta)
+}
+
+func ReadObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	list := collections.Map(ObjectRenamingDatabaseInstance.List, func(t objectRenamingDatabaseListItem) map[string]any {
+		return map[string]any{
+			"name":   t.Name,
+			"string": t.String,
+			"int":    t.Int,
+		}
+	})
+	if err := d.Set("list", list); err != nil {
+		return diag.FromErr(err)
+	}
+
+	orderedList := make([]map[string]any, len(ObjectRenamingDatabaseInstance.OrderedList))
+	for index, item := range ObjectRenamingDatabaseInstance.OrderedList {
+		orderedList[index] = map[string]any{
+			"name":  item.Name,
+			"order": strconv.Itoa(index),
+		}
+	}
+	if err := d.Set("ordered_list", orderedList); err != nil {
+		return diag.FromErr(err)
+	}
+
+	manuallyOrderedList := make([]map[string]any, len(ObjectRenamingDatabaseInstance.ManuallyOrderedList))
+	for index, item := range ObjectRenamingDatabaseInstance.ManuallyOrderedList {
+		manuallyOrderedList[index] = map[string]any{
+			"name":  item.Name,
+			"order": index + 1, // We start from 1, because there may be some implications with 0 and the fact it's treated as unset value in Terraform
+		}
+	}
+	if err := d.Set("manually_ordered_list", manuallyOrderedList); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
+}
+
+func DeleteObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	ObjectRenamingDatabaseInstance.List = nil
+	ObjectRenamingDatabaseInstance.OrderedList = nil
+	ObjectRenamingDatabaseInstance.ManuallyOrderedList = nil
+	d.SetId("")
+
+	return nil
+}
+
+func ignoreListOrderAfterFirstApply(parentKey string) schema.SchemaDiffSuppressFunc {
 	return func(key string, oldValue string, newValue string, d *schema.ResourceData) bool {
 		if strings.HasSuffix(key, ".#") {
 			return false
 		}
 
-		// raw state is not null after first apply
+		// Raw state is not null after first apply
 		if !d.GetRawState().IsNull() && oldValue != newValue {
-			// parse item index from the key
+			// Parse item index from the key
 			keyParts := strings.Split(strings.TrimLeft(key, parentKey+"."), ".")
 			if len(keyParts) >= 2 {
 				index, err := strconv.Atoi(keyParts[0])
@@ -79,14 +362,14 @@ func ignoreOrderAfterFirstApply(parentKey string) schema.SchemaDiffSuppressFunc 
 					return false
 				}
 
-				// get the hash of the whole item from config (because it represents new value)
+				// Get the hash of the whole item from config (because it represents new value)
 				newItemHash := d.GetRawConfig().AsValueMap()[parentKey].AsValueSlice()[index].Hash()
 
 				newItemWasAlreadyPresent := false
 
-				// try to find the same hash in the state; if found, the new item was already present, and it only changed place in the list
+				// Try to find the same hash in the state; if found, the new item was already present, and it only changed place in the list
 				for _, oldItem := range d.GetRawState().AsValueMap()[parentKey].AsValueSlice() {
-					// matching hashes indicate the order changed, but the item stayed in the config, so suppress the change
+					// Matching hashes indicate the order changed, but the item stayed in the config, so suppress the change
 					if oldItem.Hash() == newItemHash {
 						newItemWasAlreadyPresent = true
 					}
@@ -94,19 +377,19 @@ func ignoreOrderAfterFirstApply(parentKey string) schema.SchemaDiffSuppressFunc 
 
 				oldItemIsStillPresent := false
 
-				// sizes of config and state may not be the same
+				// Sizes of config and state may not be the same
 				if len(d.GetRawState().AsValueMap()[parentKey].AsValueSlice()) > index {
-					// get the hash of the whole item from state (because it represents old value)
+					// Get the hash of the whole item from state (because it represents old value)
 					oldItemHash := d.GetRawState().AsValueMap()[parentKey].AsValueSlice()[index].Hash()
 
-					// try to find the same hash in the config; if found, the old item still exists, but changed its place in the list
+					// Try to find the same hash in the config; if found, the old item still exists, but changed its place in the list
 					for _, newItem := range d.GetRawConfig().AsValueMap()[parentKey].AsValueSlice() {
 						if newItem.Hash() == oldItemHash {
 							oldItemIsStillPresent = true
 						}
 					}
 				} else if newItemWasAlreadyPresent {
-					// happens in cases where there's a new item at the end of the list, but it was already present, so do nothing
+					// Happens in cases where there's a new item at the end of the list, but it was already present, so do nothing
 					return true
 				}
 
@@ -126,9 +409,9 @@ func ignoreOrderAfterFirstApplyWithOrderedList(parentKey string) schema.SchemaDi
 			return false
 		}
 
-		// raw state is not null after first apply
+		// Raw state is not null after first apply
 		if !d.GetRawState().IsNull() && oldValue != newValue {
-			// parse item index from the key
+			// Parse item index from the key
 			keyParts := strings.Split(strings.TrimLeft(key, parentKey+"."), ".")
 			if len(keyParts) >= 2 {
 				index, err := strconv.Atoi(keyParts[0])
@@ -139,29 +422,65 @@ func ignoreOrderAfterFirstApplyWithOrderedList(parentKey string) schema.SchemaDi
 
 				newItem := d.GetRawConfig().AsValueMap()[parentKey].AsValueSlice()[index]
 
-				//// TODO: (?) item is being removed
-				//if newItem.AsValueMap()["order"].IsNull() {
-				//
-				//}
-
-				itemWasAlreadyPresent := false
-				itemIsStillPresent := false
-
 				newItemOrder := -1
+				// The new order value cannot be retrieved because it's not set on config level.
+				// There's also no other way (most likely) to get the newly computed order value for a given item,
+				// making this approach not possible.
 				newItemOrderValue := newItem.AsValueMap()["order"]
 				if !newItemOrderValue.IsNull() {
 					newItemOrder, _ = strconv.Atoi(newItemOrderValue.AsString())
 				}
 
-				// that's a new item
+				_ = newItemOrder
+			}
+		}
+
+		return false
+	}
+}
+
+func ignoreOrderAfterFirstApplyWithManuallyOrderedList(parentKey string) schema.SchemaDiffSuppressFunc {
+	return func(key string, oldValue string, newValue string, d *schema.ResourceData) bool {
+		if strings.HasSuffix(key, ".#") {
+			return false
+		}
+
+		// Waw state is not null after first apply
+		if !d.GetRawState().IsNull() && oldValue != newValue {
+			// Parse item index from the key
+			keyParts := strings.Split(strings.TrimLeft(key, parentKey+"."), ".")
+			if len(keyParts) >= 2 {
+				index, err := strconv.Atoi(keyParts[0])
+				if err != nil {
+					log.Println("[DEBUG] Failed to convert list item index: ", err)
+					return false
+				}
+
+				newItems := d.GetRawConfig().AsValueMap()[parentKey].AsValueSlice()
+				if len(newItems) <= index {
+					// item was removed
+					return false
+				}
+
+				newItem := newItems[index]
+				itemWasAlreadyPresent := false
+				itemIsStillPresent := false
+
+				var newItemOrder int64 = -1
+				newItemOrderValue := newItem.AsValueMap()["order"]
+				if !newItemOrderValue.IsNull() {
+					newItemOrder, _ = newItemOrderValue.AsBigFloat().Int64()
+				}
+
+				// That's a new item
 				if newItemOrder == -1 {
 					return false
-				} else { // else it was already present, but we need to check the hash
+				} else { // Else it was already present, but we need to check the hash
 					for _, oldItem := range d.GetRawState().AsValueMap()[parentKey].AsValueSlice() {
-						oldItemOrder, _ := strconv.Atoi(oldItem.AsValueMap()["order"].AsString())
+						oldItemOrder, _ := oldItem.AsValueMap()["order"].AsBigFloat().Int64()
 						if oldItemOrder == newItemOrder {
 							if oldItem.Hash() != newItem.Hash() {
-								// the item has the same order, but the values in other fields changed (different hash)
+								// The item has the same order, but the values in other fields changed (different hash)
 								return false
 							} else {
 								itemWasAlreadyPresent = true
@@ -170,26 +489,26 @@ func ignoreOrderAfterFirstApplyWithOrderedList(parentKey string) schema.SchemaDi
 					}
 				}
 
-				// check if a new item is indexable (with new items added at the end, it's not possible to index state value for them, because it doesn't exist yet)
+				// Check if a new item is indexable (with new items added at the end, it's not possible to index state value for them, because it doesn't exist yet)
 				if len(d.GetRawState().AsValueMap()[parentKey].AsValueSlice()) > index {
 					oldItem := d.GetRawState().AsValueMap()[parentKey].AsValueSlice()[index]
-					oldItemOrder, _ := strconv.Atoi(oldItem.AsValueMap()["order"].AsString())
+					oldItemOrder, _ := oldItem.AsValueMap()["order"].AsBigFloat().Int64()
 
-					// check if this order is still present
+					// Check if this order is still present
 					for _, newItem := range d.GetRawConfig().AsValueMap()[parentKey].AsValueSlice() {
-						newItemOrder, _ := strconv.Atoi(newItem.AsValueMap()["order"].AsString())
+						newItemOrder, _ := newItem.AsValueMap()["order"].AsBigFloat().Int64()
 						if oldItemOrder == newItemOrder {
 							if oldItem.Hash() != newItem.Hash() {
-								// the order is still present, but the values in other fields changed (different hash)
+								// The order is still present, but the values in other fields changed (different hash)
 								return false
 							} else {
 								itemIsStillPresent = true
 							}
 						}
 					}
-				} // this else should be handled by newItemOrder == -1 earlier
+				}
 
-				if itemWasAlreadyPresent && itemIsStillPresent { // and items are with the same hashes
+				if itemWasAlreadyPresent && itemIsStillPresent {
 					return true
 				}
 			}
@@ -197,229 +516,4 @@ func ignoreOrderAfterFirstApplyWithOrderedList(parentKey string) schema.SchemaDi
 
 		return false
 	}
-}
-
-func ObjectRenamingListsAndSets() *schema.Resource {
-	return &schema.Resource{
-		Description:   "TODO",
-		CreateContext: CreateObjectRenamingListsAndSets,
-		UpdateContext: UpdateObjectRenamingListsAndSets,
-		ReadContext:   ReadObjectRenamingListsAndSets,
-		DeleteContext: DeleteObjectRenamingListsAndSets,
-
-		Schema: objectRenamingListsAndSetsSchema,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-			if d.GetRawState().IsNull() {
-				return nil
-			}
-
-			//if _, ok := d.GetOk("ordered_list.0.order"); ok {
-			//	if err := d.SetNew("ordered_list.0.order", 123); err != nil {
-			//		return err
-			//	}
-			//}
-			if d.HasChange("ordered_list") {
-				oldL, newL := d.GetChange("ordered_list")
-				_, _ = oldL, newL
-			}
-
-			return nil
-		},
-	}
-}
-
-type objectRenamingDatabaseListItem struct {
-	Name   string
-	String string
-	Int    int
-}
-
-type objectRenamingDatabaseOrderedListItem struct {
-	Name   string
-	String string
-	Order  string
-}
-
-type objectRenamingDatabase struct {
-	List        []objectRenamingDatabaseListItem
-	OrderedList []objectRenamingDatabaseOrderedListItem
-}
-
-var objectRenamingDatabaseInstance = new(objectRenamingDatabase)
-
-func CreateObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	objectRenamingDatabaseInstance.List = collections.Map(d.Get("list").([]any), func(item any) objectRenamingDatabaseListItem {
-		var name string
-		if nameValue, ok := item.(map[string]any)["name"]; ok {
-			name = nameValue.(string)
-		}
-		return objectRenamingDatabaseListItem{
-			Name:   name,
-			String: item.(map[string]any)["string"].(string),
-			Int:    item.(map[string]any)["int"].(int),
-		}
-	})
-
-	orderedList := d.Get("ordered_list").([]any)
-	objectRenamingDatabaseOrderedListItems := make([]objectRenamingDatabaseOrderedListItem, len(orderedList))
-
-	for index, item := range d.Get("ordered_list").([]any) {
-		var name string
-		if nameValue, ok := item.(map[string]any)["name"]; ok {
-			name = nameValue.(string)
-		}
-		objectRenamingDatabaseOrderedListItems[index] = objectRenamingDatabaseOrderedListItem{
-			Name:   name,
-			String: item.(map[string]any)["string"].(string),
-			Order:  strconv.Itoa(index),
-		}
-	}
-	objectRenamingDatabaseInstance.OrderedList = objectRenamingDatabaseOrderedListItems
-
-	d.SetId("identifier")
-
-	return ReadObjectRenamingListsAndSets(ctx, d, meta)
-}
-
-// TODO: For now, replicating columns from table
-func UpdateObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	if d.HasChange("list") {
-		// TODO: It wasn't working with d.getChange()
-		oldList := d.GetRawState().AsValueMap()["list"].AsValueSlice()
-		newList := d.GetRawConfig().AsValueMap()["list"].AsValueSlice()
-		oldListMapped := collections.Map(oldList, func(item cty.Value) objectRenamingDatabaseListItem {
-			intValue, _ := item.AsValueMap()["int"].AsBigFloat().Int64()
-			var name string
-			if nameValue, ok := item.AsValueMap()["name"]; ok && !nameValue.IsNull() {
-				name = nameValue.AsString()
-			}
-			return objectRenamingDatabaseListItem{
-				Name:   name,
-				String: item.AsValueMap()["string"].AsString(),
-				Int:    int(intValue),
-			}
-		})
-		newListMapped := collections.Map(newList, func(item cty.Value) objectRenamingDatabaseListItem {
-			intValue, _ := item.AsValueMap()["int"].AsBigFloat().Int64()
-			var name string
-			if nameValue, ok := item.AsValueMap()["name"]; ok && !nameValue.IsNull() {
-				name = nameValue.AsString()
-			}
-			return objectRenamingDatabaseListItem{
-				Name:   name,
-				String: item.AsValueMap()["string"].AsString(),
-				Int:    int(intValue),
-			}
-		})
-
-		addedItems, removedItems := ListDiff(oldListMapped, newListMapped)
-
-		for _, removedItem := range removedItems {
-			objectRenamingDatabaseInstance.List = slices.DeleteFunc(objectRenamingDatabaseInstance.List, func(item objectRenamingDatabaseListItem) bool {
-				return item == removedItem
-			})
-		}
-
-		for _, addedItem := range addedItems {
-			objectRenamingDatabaseInstance.List = append(objectRenamingDatabaseInstance.List, addedItem)
-		}
-	}
-
-	if d.HasChange("ordered_list") {
-		// TODO: try with d.GetChange()
-		//oldOrderedList, newOrderedList := d.GetChange("ordered_list")
-		oldOrderedList := d.GetRawState().AsValueMap()["ordered_list"].AsValueSlice()
-		newOrderedList := d.GetRawConfig().AsValueMap()["ordered_list"].AsValueSlice()
-		oldOrderedListMapped := collections.Map(oldOrderedList, func(item cty.Value) objectRenamingDatabaseOrderedListItem {
-			var order string
-			if orderValue, ok := item.AsValueMap()["order"]; ok && !orderValue.IsNull() {
-				order = orderValue.AsString()
-			}
-			var name string
-			if nameValue, ok := item.AsValueMap()["name"]; ok && !nameValue.IsNull() {
-				name = nameValue.AsString()
-			}
-			return objectRenamingDatabaseOrderedListItem{
-				Name:   name,
-				String: item.AsValueMap()["string"].AsString(),
-				Order:  order,
-			}
-		})
-		newOrderedListMapped := collections.Map(newOrderedList, func(item cty.Value) objectRenamingDatabaseOrderedListItem {
-			var order string
-			if orderValue, ok := item.AsValueMap()["order"]; ok && !orderValue.IsNull() {
-				order = orderValue.AsString()
-			}
-			var name string
-			if nameValue, ok := item.AsValueMap()["name"]; ok && !nameValue.IsNull() {
-				name = nameValue.AsString()
-			}
-			return objectRenamingDatabaseOrderedListItem{
-				Name:   name,
-				String: item.AsValueMap()["string"].AsString(),
-				Order:  order,
-			}
-		})
-
-		itemsToAdd, itemsToRemove := ListDiff(oldOrderedListMapped, newOrderedListMapped)
-		for _, removedItem := range itemsToRemove {
-			objectRenamingDatabaseInstance.OrderedList = slices.DeleteFunc(objectRenamingDatabaseInstance.OrderedList, func(item objectRenamingDatabaseOrderedListItem) bool {
-				return item == removedItem
-			})
-		}
-
-		for _, addedItem := range itemsToAdd {
-			addedItem.Order = ""
-			objectRenamingDatabaseInstance.OrderedList = append(objectRenamingDatabaseInstance.OrderedList, addedItem)
-		}
-
-		// TODO: Can this be done? (what about reordering)
-		// After changes, recompute order
-		//for i := range d.Get("ordered_list").([]any) {
-		//	if err := d.Set(fmt.Sprintf("ordered_list.%d.order", i), i); err != nil {
-		//
-		//	}
-		//}
-	}
-
-	return ReadObjectRenamingListsAndSets(ctx, d, meta)
-}
-
-func ReadObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	list := collections.Map(objectRenamingDatabaseInstance.List, func(t objectRenamingDatabaseListItem) map[string]any {
-		return map[string]any{
-			"name":   t.Name,
-			"string": t.String,
-			"int":    t.Int,
-		}
-	})
-	if err := d.Set("list", list); err != nil {
-		return diag.FromErr(err)
-	}
-
-	orderedList := make([]map[string]any, len(objectRenamingDatabaseInstance.OrderedList))
-	for index, item := range objectRenamingDatabaseInstance.OrderedList {
-		orderedList[index] = map[string]any{
-			"name":   item.Name,
-			"string": item.String,
-			"order":  strconv.Itoa(index),
-		}
-	}
-	if err := d.Set("ordered_list", orderedList); err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
-}
-
-func DeleteObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	objectRenamingDatabaseInstance.List = nil
-	objectRenamingDatabaseInstance.OrderedList = nil
-	d.SetId("")
-
-	return nil
 }
