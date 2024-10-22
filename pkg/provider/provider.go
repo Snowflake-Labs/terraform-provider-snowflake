@@ -3,12 +3,13 @@ package provider
 import (
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"net"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"

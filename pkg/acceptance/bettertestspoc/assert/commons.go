@@ -3,10 +3,11 @@ package assert
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/exp/maps"
 	"strconv"
 	"strings"
 	"testing"
+
+	"golang.org/x/exp/maps"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -105,7 +106,6 @@ func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier) {
 	objectAssert.VerifyAll(t)
 }
 
-// TODO: This function should iterate over items and look for list item in attributes that matches ALL items' entries AT ONCE (currently it's a pretty dumb assert running through all attributes)
 func HasListItemsOrderIndependent(resourceKey string, attributePath string, expectedItems []map[string]string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		var actualItems []map[string]string
@@ -120,7 +120,7 @@ func HasListItemsOrderIndependent(resourceKey string, attributePath string, expe
 						if attr == "#" {
 							attrValueLen, err := strconv.Atoi(attrValue)
 							if err != nil {
-								return fmt.Errorf("failed to convert length of the attribute %s: %s", attrKey, err)
+								return fmt.Errorf("failed to convert length of the attribute %s: %w", attrKey, err)
 							}
 							if len(expectedItems) != attrValueLen {
 								return fmt.Errorf("expected to find %d items in %s, but found %d", len(expectedItems), attributePath, attrValueLen)

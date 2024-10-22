@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"golang.org/x/exp/slices"
-	"log"
-	"strconv"
-	"strings"
 )
 
 type objectRenamingDatabaseListItem struct {
@@ -222,9 +223,7 @@ func UpdateObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceDat
 			})
 		}
 
-		for _, addedItem := range addedItems {
-			ObjectRenamingDatabaseInstance.List = append(ObjectRenamingDatabaseInstance.List, addedItem)
-		}
+		ObjectRenamingDatabaseInstance.List = append(ObjectRenamingDatabaseInstance.List, addedItems...)
 	}
 
 	if d.HasChange("ordered_list") {
