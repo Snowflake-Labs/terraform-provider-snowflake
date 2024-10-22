@@ -77,4 +77,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "StreamOnDirectoryTable",
 		schema: resources.StreamOnDirectoryTable().Schema,
 	},
+	{
+		name:   "StreamOnView",
+		schema: resources.StreamOnView().Schema,
+	},
 }

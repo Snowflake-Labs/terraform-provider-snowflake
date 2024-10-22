@@ -6,10 +6,11 @@ import (
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
+	providerresources "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -103,6 +104,12 @@ func Stream() *schema.Resource {
 		Read:   ReadStream,
 		Update: UpdateStream,
 		Delete: DeleteStream,
+		DeprecationMessage: deprecatedResourceDescription(
+			// string(providerresources.StreamOnDirectoryTable),
+			string(providerresources.StreamOnExternalTable),
+			string(providerresources.StreamOnTable),
+			string(providerresources.StreamOnView),
+		),
 
 		Schema: streamSchema,
 		Importer: &schema.ResourceImporter{
