@@ -9,6 +9,22 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
+### snowflake_masking_policies data source changes
+New filtering options:
+- `in`
+- `limit`
+- `with_describe`
+
+New output fields
+- `show_output`
+- `describe_output`
+
+Breaking changes:
+- `database` and `schema` are right now under `in` field
+- `streams` field now organizes output of show under `show_output` field and the output of describe under `describe_output` field.
+
+Please adjust your Terraform configuration files.
+
 ### *(behavior change)* handling copy_grants
 Currently, resources like `snowflake_view`, `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table`  support `copy_grants` field corresponding with `COPY GRANTS` during `CREATE`. The current behavior is that, when a change leading for recreation is detected (meaning a change that can not be handled by ALTER, but only by `CREATE OR REPLACE`), `COPY GRANTS` are used during recreation when `copy_grants` is set to `true`. Changing this field without changes in other field results in a noop because in this case there is no need to recreate a resource.
 
