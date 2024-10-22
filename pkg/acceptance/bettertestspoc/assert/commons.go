@@ -3,7 +3,7 @@ package assert
 import (
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"golang.org/x/exp/maps"
 	"strconv"
 	"strings"
 	"testing"
@@ -106,60 +106,84 @@ func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier) {
 }
 
 // TODO: This function should iterate over items and look for list item in attributes that matches ALL items' entries AT ONCE (currently it's a pretty dumb assert running through all attributes)
-func HasListItemsOrderIndependent(resourceKey string, attributePath string, items []map[string]string) resource.TestCheckFunc {
+func HasListItemsOrderIndependent(resourceKey string, attributePath string, expectedItems []map[string]string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
+		var actualItems []map[string]string
+
+		// Allocate space for actualItems and assert length
 		for key, value := range state.RootModule().Resources {
 			if resourceKey == key {
 				for attrKey, attrValue := range value.Primary.Attributes {
 					if strings.HasPrefix(attrKey, attributePath) {
 						attr := strings.TrimPrefix(attrKey, attributePath+".")
 
-						if strings.HasSuffix(attr, "%") {
-							continue
-						}
-
 						if attr == "#" {
 							attrValueLen, err := strconv.Atoi(attrValue)
 							if err != nil {
 								return fmt.Errorf("failed to convert length of the attribute %s: %s", attrKey, err)
 							}
-							if len(items) != attrValueLen {
-								return fmt.Errorf("expected to find %d items in %s, but found %d", len(items), attributePath, attrValueLen)
-							}
-						}
-
-						attrParts := strings.Split(attr, ".")
-						_, indexErr := strconv.Atoi(attrParts[0])
-						isIndex := indexErr == nil
-
-						if len(attrParts) > 1 && isIndex {
-							itemKey := attrParts[1]
-
-							found := false
-							valueEquals := false
-
-							for _, item := range items {
-								if v, ok := item[itemKey]; ok {
-									found = true
-
-									if v == attrValue {
-										valueEquals = true
-									}
-								}
+							if len(expectedItems) != attrValueLen {
+								return fmt.Errorf("expected to find %d items in %s, but found %d", len(expectedItems), attributePath, attrValueLen)
 							}
 
-							if !found {
-								return fmt.Errorf("%s found in attributes, but was not expected", attrKey)
-							} else if !valueEquals {
-								return fmt.Errorf("expected to find subpath %s that is equal to one of the values in %v", attrKey, collections.Map(items, func(item map[string]string) string {
-									return item[itemKey]
-								}))
+							actualItems = make([]map[string]string, attrValueLen)
+							for i := range actualItems {
+								actualItems[i] = make(map[string]string)
 							}
 						}
 					}
 				}
 			}
 		}
-		return nil
+
+		// Gather all actual items
+		for key, value := range state.RootModule().Resources {
+			if resourceKey == key {
+				for attrKey, attrValue := range value.Primary.Attributes {
+					if strings.HasPrefix(attrKey, attributePath) {
+						attr := strings.TrimPrefix(attrKey, attributePath+".")
+
+						if strings.HasSuffix(attr, "%") || strings.HasSuffix(attr, "#") {
+							continue
+						}
+
+						attrParts := strings.SplitN(attr, ".", 2)
+						index, indexErr := strconv.Atoi(attrParts[0])
+						isIndex := indexErr == nil
+
+						if len(attrParts) > 1 && isIndex {
+							itemKey := attrParts[1]
+							actualItems[index][itemKey] = attrValue
+						}
+					}
+				}
+			}
+		}
+
+		errs := make([]error, 0)
+		for _, actualItem := range actualItems {
+			found := false
+			for _, expectedItem := range expectedItems {
+				if maps.Equal(actualItem, expectedItem) {
+					found = true
+				}
+			}
+			if !found {
+				errs = append(errs, fmt.Errorf("unexpected item found: %s", actualItem))
+			}
+		}
+
+		for _, expectedItem := range expectedItems {
+			found := false
+			for _, actualItem := range actualItems {
+				if maps.Equal(actualItem, expectedItem) {
+					found = true
+				}
+			}
+			if !found {
+				errs = append(errs, fmt.Errorf("expected item to be found, but it wasn't: %s", expectedItem))
+			}
+		}
+		return errors.Join(errs...)
 	}
 }

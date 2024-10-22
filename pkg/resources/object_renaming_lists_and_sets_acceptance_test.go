@@ -14,6 +14,7 @@ import (
 
 func TestAcc_BasicListFlow(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	acc.TestAccPreCheck(t)
 
 	resource.Test(t, resource.TestCase{
@@ -141,6 +142,7 @@ func TestAcc_BasicListFlow(t *testing.T) {
 // This test researches the possibility of performing update instead of remove + add item
 func TestAcc_ListNameUpdate(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	acc.TestAccPreCheck(t)
 
 	resource.Test(t, resource.TestCase{
@@ -193,6 +195,7 @@ func TestAcc_ListNameUpdate(t *testing.T) {
 
 func TestAcc_ListsWithDuplicatedItems(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	acc.TestAccPreCheck(t)
 
 	// Fails, because the SuppressDiffFunc works on the hash of individual items.
@@ -277,6 +280,7 @@ resource "snowflake_object_renaming" "test" {
 
 func TestAcc_BasicManuallyOrderedListFlow(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	acc.TestAccPreCheck(t)
 
 	resource.Test(t, resource.TestCase{

@@ -3,6 +3,7 @@ package provider
 import (
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"net"
 	"net/url"
 	"os"
@@ -420,7 +421,7 @@ func Provider() *schema.Provider {
 }
 
 func getResources() map[string]*schema.Resource {
-	return map[string]*schema.Resource{
+	resourceList := map[string]*schema.Resource{
 		"snowflake_account":                            resources.Account(),
 		"snowflake_account_role":                       resources.AccountRole(),
 		"snowflake_account_password_policy_attachment": resources.AccountPasswordPolicyAttachment(),
@@ -500,9 +501,13 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_user_public_keys":                                             resources.UserPublicKeys(),
 		"snowflake_view":                                                         resources.View(),
 		"snowflake_warehouse":                                                    resources.Warehouse(),
-		// TODO: Remove or comment
-		"snowflake_object_renaming": resources.ObjectRenamingListsAndSets(),
 	}
+
+	if os.Getenv(string(testenvs.EnableObjectRenamingTest)) != "" {
+		resourceList["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
+	}
+
+	return resourceList
 }
 
 func getDataSources() map[string]*schema.Resource {
