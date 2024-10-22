@@ -631,7 +631,7 @@ func Test_GetStorageLocationStorageProvider(t *testing.T) {
 
 var s3StorageAwsExternalId = "1234567890"
 
-func Test_CopyStorageLocationWithTempName(t *testing.T) {
+func Test_CopySentinelStorageLocation(t *testing.T) {
 	tempStorageLocationName := "terraform_provider_sentinel_storage_location"
 	s3StorageLocationName := "s3Test"
 	s3StorageBaseUrl := "s3://my_example_bucket"
@@ -675,7 +675,7 @@ func Test_CopyStorageLocationWithTempName(t *testing.T) {
 
 	t.Run("S3 storage location", func(t *testing.T) {
 		storageLocationInput := sdk.ExternalVolumeStorageLocation{S3StorageLocationParams: &s3StorageLocationA}
-		copiedStorageLocation, err := resources.CopyStorageLocationWithTempName(storageLocationInput)
+		copiedStorageLocation, err := resources.CopySentinelStorageLocation(storageLocationInput)
 		require.NoError(t, err)
 		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.Name, tempStorageLocationName)
 		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageProvider, s3StorageLocationA.StorageProvider)
@@ -688,7 +688,7 @@ func Test_CopyStorageLocationWithTempName(t *testing.T) {
 
 	t.Run("GCS storage location", func(t *testing.T) {
 		storageLocationInput := sdk.ExternalVolumeStorageLocation{GCSStorageLocationParams: &gcsStorageLocationA}
-		copiedStorageLocation, err := resources.CopyStorageLocationWithTempName(storageLocationInput)
+		copiedStorageLocation, err := resources.CopySentinelStorageLocation(storageLocationInput)
 		require.NoError(t, err)
 		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.Name, tempStorageLocationName)
 		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.StorageBaseUrl, gcsStorageLocationA.StorageBaseUrl)
@@ -698,7 +698,7 @@ func Test_CopyStorageLocationWithTempName(t *testing.T) {
 
 	t.Run("Azure storage location", func(t *testing.T) {
 		storageLocationInput := sdk.ExternalVolumeStorageLocation{AzureStorageLocationParams: &azureStorageLocationA}
-		copiedStorageLocation, err := resources.CopyStorageLocationWithTempName(storageLocationInput)
+		copiedStorageLocation, err := resources.CopySentinelStorageLocation(storageLocationInput)
 		require.NoError(t, err)
 		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.Name, tempStorageLocationName)
 		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.StorageBaseUrl, azureStorageLocationA.StorageBaseUrl)
@@ -729,7 +729,7 @@ func Test_CopyStorageLocationWithTempName(t *testing.T) {
 
 	for _, tc := range invalidTestCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			_, err := resources.CopyStorageLocationWithTempName(tc.StorageLocation)
+			_, err := resources.CopySentinelStorageLocation(tc.StorageLocation)
 			require.Error(t, err)
 		})
 	}

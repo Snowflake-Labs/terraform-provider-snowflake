@@ -332,8 +332,8 @@ func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed [
 	return added, removed
 }
 
-// Returns a copy of the given storage location with a 'temp_' prefix on the Name field
-func CopyStorageLocationWithTempName(
+// Returns a copy of the given storage location with a set name
+func CopySentinelStorageLocation(
 	storageLocation sdk.ExternalVolumeStorageLocation,
 ) (sdk.ExternalVolumeStorageLocation, error) {
 	storageProvider, err := GetStorageLocationStorageProvider(storageLocation)

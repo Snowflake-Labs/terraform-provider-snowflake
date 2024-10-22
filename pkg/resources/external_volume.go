@@ -377,12 +377,12 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 			// would otherwise be necessary as a minimum of 1 storage location per external volume is required.
 			// The alternative solution of adding volumes before removing them isn't possible as
 			// name must be unique for storage locations
-			temp_storage_location, err := CopyStorageLocationWithTempName(removedLocations[0])
+			tempStorageLocation, err := CopySentinelStorageLocation(removedLocations[0])
 			if err != nil {
 				return diag.FromErr(err)
 			}
 
-			addTempErr := addStorageLocation(temp_storage_location, client, ctx, id)
+			addTempErr := addStorageLocation(tempStorageLocation, client, ctx, id)
 			if addTempErr != nil {
 				return diag.FromErr(addTempErr)
 			}
@@ -391,7 +391,7 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 			// TODO use defer for the removal of the temp storage location
 			if updateErr != nil {
 				// Try to remove the temp location and then return with error
-				removeErr := removeStorageLocation(temp_storage_location, client, ctx, id)
+				removeErr := removeStorageLocation(tempStorageLocation, client, ctx, id)
 				if removeErr != nil {
 					return diag.FromErr(errors.Join(updateErr, removeErr))
 				}
@@ -399,7 +399,7 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 				return diag.FromErr(updateErr)
 			}
 
-			removeErr := removeStorageLocation(temp_storage_location, client, ctx, id)
+			removeErr := removeStorageLocation(tempStorageLocation, client, ctx, id)
 			if removeErr != nil {
 				return diag.FromErr(removeErr)
 			}

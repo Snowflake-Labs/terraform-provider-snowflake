@@ -24,8 +24,7 @@ func (c *ExternalVolumeClient) client() sdk.ExternalVolumes {
 	return c.context.client.ExternalVolumes
 }
 
-// TODO switch to returning *sdk.ExternalVolume
-// need to update existing acceptance tests for this
+// TODO(SNOW-999142): Switch to returning *sdk.ExternalVolume. Need to update existing acceptance tests for this.
 func (c *ExternalVolumeClient) Create(t *testing.T) (sdk.AccountObjectIdentifier, func()) {
 	t.Helper()
 	ctx := context.Background()
