@@ -244,6 +244,10 @@ func ReadContextExternalVolume(withExternalChangesMarking bool) schema.ReadConte
 			return diag.FromErr(err)
 		}
 
+		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+			return diag.FromErr(err)
+		}
+
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
 				showMapping{"allow_writes", "allow_writes", externalVolume.AllowWrites, booleanStringFromBool(externalVolume.AllowWrites), nil},
@@ -353,7 +357,7 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 		// can be added back. The storage locations lower than index 5 don't need to be modified.
 		// The removal process could be done without the above recreation, but it handles this case
 		// too so it's used for both actions.
-		commonPrefixLastIndex, err := CommonPrefixLastIndex(newLocations, oldLocations)
+		commonPrefixLastIndex, err := sdk.CommonPrefixLastIndex(newLocations, oldLocations)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -377,7 +381,7 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 			// would otherwise be necessary as a minimum of 1 storage location per external volume is required.
 			// The alternative solution of adding volumes before removing them isn't possible as
 			// name must be unique for storage locations
-			tempStorageLocation, err := CopySentinelStorageLocation(removedLocations[0])
+			tempStorageLocation, err := sdk.CopySentinelStorageLocation(removedLocations[0])
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -594,7 +598,7 @@ func addStorageLocation(
 	ctx context.Context,
 	id sdk.AccountObjectIdentifier,
 ) error {
-	storageProvider, err := GetStorageLocationStorageProvider(addedLocation)
+	storageProvider, err := sdk.GetStorageLocationStorageProvider(addedLocation)
 	if err != nil {
 		return err
 	}
@@ -655,7 +659,7 @@ func removeStorageLocation(
 	ctx context.Context,
 	id sdk.AccountObjectIdentifier,
 ) error {
-	removedName, err := GetStorageLocationName(removedLocation)
+	removedName, err := sdk.GetStorageLocationName(removedLocation)
 	if err != nil {
 		return err
 	}

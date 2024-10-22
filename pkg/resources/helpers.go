@@ -2,7 +2,6 @@ package resources
 
 import (
 	"fmt"
-	"reflect"
 	"slices"
 	"strings"
 
@@ -330,109 +329,4 @@ func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed [
 	}
 
 	return added, removed
-}
-
-// Returns a copy of the given storage location with a set name
-func CopySentinelStorageLocation(
-	storageLocation sdk.ExternalVolumeStorageLocation,
-) (sdk.ExternalVolumeStorageLocation, error) {
-	storageProvider, err := GetStorageLocationStorageProvider(storageLocation)
-	if err != nil {
-		return sdk.ExternalVolumeStorageLocation{}, err
-	}
-
-	newName := "terraform_provider_sentinel_storage_location"
-	var tempNameStorageLocation sdk.ExternalVolumeStorageLocation
-	switch storageProvider {
-	case sdk.StorageProviderS3, sdk.StorageProviderS3GOV:
-		tempNameStorageLocation = sdk.ExternalVolumeStorageLocation{
-			S3StorageLocationParams: &sdk.S3StorageLocationParams{
-				Name:                 newName,
-				StorageProvider:      storageLocation.S3StorageLocationParams.StorageProvider,
-				StorageBaseUrl:       storageLocation.S3StorageLocationParams.StorageBaseUrl,
-				StorageAwsRoleArn:    storageLocation.S3StorageLocationParams.StorageAwsRoleArn,
-				StorageAwsExternalId: storageLocation.S3StorageLocationParams.StorageAwsExternalId,
-				Encryption:           storageLocation.S3StorageLocationParams.Encryption,
-			},
-		}
-	case sdk.StorageProviderGCS:
-		tempNameStorageLocation = sdk.ExternalVolumeStorageLocation{
-			GCSStorageLocationParams: &sdk.GCSStorageLocationParams{
-				Name:           newName,
-				StorageBaseUrl: storageLocation.GCSStorageLocationParams.StorageBaseUrl,
-				Encryption:     storageLocation.GCSStorageLocationParams.Encryption,
-			},
-		}
-	case sdk.StorageProviderAzure:
-		tempNameStorageLocation = sdk.ExternalVolumeStorageLocation{
-			AzureStorageLocationParams: &sdk.AzureStorageLocationParams{
-				Name:           newName,
-				StorageBaseUrl: storageLocation.AzureStorageLocationParams.StorageBaseUrl,
-				AzureTenantId:  storageLocation.AzureStorageLocationParams.AzureTenantId,
-			},
-		}
-	}
-
-	return tempNameStorageLocation, nil
-}
-
-func GetStorageLocationName(s sdk.ExternalVolumeStorageLocation) (string, error) {
-	if s.S3StorageLocationParams != nil && (*s.S3StorageLocationParams != sdk.S3StorageLocationParams{}) {
-		if len(s.S3StorageLocationParams.Name) == 0 {
-			return "", fmt.Errorf("Invalid S3 storage location - no name set")
-		}
-
-		return s.S3StorageLocationParams.Name, nil
-	} else if s.GCSStorageLocationParams != nil && (*s.GCSStorageLocationParams != sdk.GCSStorageLocationParams{}) {
-		if len(s.GCSStorageLocationParams.Name) == 0 {
-			return "", fmt.Errorf("Invalid GCS storage location - no name set")
-		}
-
-		return s.GCSStorageLocationParams.Name, nil
-	} else if s.AzureStorageLocationParams != nil && (*s.AzureStorageLocationParams != sdk.AzureStorageLocationParams{}) {
-		if len(s.AzureStorageLocationParams.Name) == 0 {
-			return "", fmt.Errorf("Invalid Azure storage location - no name set")
-		}
-
-		return s.AzureStorageLocationParams.Name, nil
-	} else {
-		return "", fmt.Errorf("Invalid storage location")
-	}
-}
-
-func GetStorageLocationStorageProvider(s sdk.ExternalVolumeStorageLocation) (sdk.StorageProvider, error) {
-	if s.S3StorageLocationParams != nil && (*s.S3StorageLocationParams != sdk.S3StorageLocationParams{}) {
-		return sdk.ToStorageProvider(string(s.S3StorageLocationParams.StorageProvider))
-	} else if s.GCSStorageLocationParams != nil && (*s.GCSStorageLocationParams != sdk.GCSStorageLocationParams{}) {
-		return sdk.StorageProviderGCS, nil
-	} else if s.AzureStorageLocationParams != nil && (*s.AzureStorageLocationParams != sdk.AzureStorageLocationParams{}) {
-		return sdk.StorageProviderAzure, nil
-	} else {
-		return "", fmt.Errorf("Invalid storage location")
-	}
-}
-
-// Returns the index of the last matching elements in the list
-// e.g. [1,2,3] [1,3,2] -> 0, [1,2,3] [1,2,4] -> 1
-// -1 is returned if there are no common prefixes in the list
-func CommonPrefixLastIndex(a []sdk.ExternalVolumeStorageLocation, b []sdk.ExternalVolumeStorageLocation) (int, error) {
-	commonPrefixLastIndex := 0
-
-	if len(a) == 0 || len(b) == 0 {
-		return -1, nil
-	}
-
-	if !reflect.DeepEqual(a[0], b[0]) {
-		return -1, nil
-	}
-
-	for i := 1; i < min(len(a), len(b)); i++ {
-		if !reflect.DeepEqual(a[i], b[i]) {
-			break
-		}
-
-		commonPrefixLastIndex = i
-	}
-
-	return commonPrefixLastIndex, nil
 }
