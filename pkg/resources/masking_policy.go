@@ -217,7 +217,7 @@ func CreateMaskingPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		opts.Comment = sdk.String(comment)
 	}
 	if v := d.Get("exempt_other_policies").(string); v != BooleanDefault {
-		parsed, err := booleanStringToBool(v)
+		parsed, err := BooleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}

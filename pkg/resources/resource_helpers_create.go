@@ -28,7 +28,7 @@ func intAttributeWithSpecialDefaultCreate(d *schema.ResourceData, key string, cr
 
 func booleanStringAttributeCreate(d *schema.ResourceData, key string, createField **bool) error {
 	if v := d.Get(key).(string); v != BooleanDefault {
-		parsed, err := booleanStringToBool(v)
+		parsed, err := BooleanStringToBool(v)
 		if err != nil {
 			return err
 		}

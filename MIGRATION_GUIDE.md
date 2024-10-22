@@ -9,6 +9,20 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
+### *(behavior change)* Provider configuration rework
+On our road to v1, we have decided to rework configuration to address the most common issues. We have created a list of topics we wanted to address before v1. We will prepare an announcement soon. The following subsections describe the things addressed in the v0.98.0.
+
+#### *(behavior change)* changed behavior of some fields
+For the fields that are not deprecated, we focused on improving validations and documentation. Also, we adjusted some fields to match our [driver's](https://github.com/snowflakedb/gosnowflake) defaults. Specifically:
+- Relaxed validations for enum fields like `protocol` and `authenticator`. Now, the case on such fields is ignored.
+- `user`, `warehouse`, `role` - added a validation for an account object identifier
+- `validate_default_parameters`, `client_request_mfa_token`, `client_store_temporary_credential`, `ocsp_fail_open`,  - to easily handle three-value logic (true, false, unknown) in provider's config, type of these fields was changed from boolean to string. For more details about default values, please refer to the [changes before v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#default-values) document.
+- `client_ip` - added a validation for an IP address
+- `port` - added a validation for a port number
+- `okta_url`, `token_accessor.token_endpoint`, `client_store_temporary_credential` - added a validation for a URL address
+- `login_timeout`, `request_timeout`, `jwt_expire_timeout`, `client_timeout`, `jwt_client_timeout`, `external_browser_timeout` - added a validation for setting this value to at least `0`
+- `authenticator` - added a possibility to configure JWT flow with `SNOWFLAKE_JWT`; the previous value `JWT` was left for compatibility
+
 ### *(behavior change)* handling copy_grants
 Currently, resources like `snowflake_view`, `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table`  support `copy_grants` field corresponding with `COPY GRANTS` during `CREATE`. The current behavior is that, when a change leading for recreation is detected (meaning a change that can not be handled by ALTER, but only by `CREATE OR REPLACE`), `COPY GRANTS` are used during recreation when `copy_grants` is set to `true`. Changing this field without changes in other field results in a noop because in this case there is no need to recreate a resource.
 

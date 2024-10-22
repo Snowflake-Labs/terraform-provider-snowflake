@@ -23,7 +23,7 @@ func booleanStringFromBool(value bool) string {
 	}
 }
 
-func booleanStringToBool(value string) (bool, error) {
+func BooleanStringToBool(value string) (bool, error) {
 	switch value {
 	case BooleanTrue:
 		return true, nil

@@ -394,7 +394,7 @@ func GetCreateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schem
 		if userType == sdk.UserTypePerson {
 			// disable mfa cannot be set in create, we need to alter if set in config
 			if disableMfa := d.Get("disable_mfa").(string); disableMfa != BooleanDefault {
-				parsed, err := booleanStringToBool(disableMfa)
+				parsed, err := BooleanStringToBool(disableMfa)
 				if err != nil {
 					diags = append(diags, diag.Diagnostic{
 						Severity: diag.Warning,

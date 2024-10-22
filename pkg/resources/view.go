@@ -423,7 +423,7 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 		d.SetId(helpers.EncodeResourceIdentifier(id))
 
 		if v := d.Get("change_tracking").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
+			parsed, err := BooleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -889,7 +889,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 
 	if d.HasChange("is_secure") {
 		if v := d.Get("is_secure").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
+			parsed, err := BooleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -906,7 +906,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 	if d.HasChange("change_tracking") {
 		if v := d.Get("change_tracking").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
+			parsed, err := BooleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
