@@ -15,7 +15,7 @@ For example, instead of writing
 ```
 object_name = “\”${snowflake_table.database}\”.\”${snowflake_table.schema}\”.\”${snowflake_table.name}\””
 # for procedures
-object_name = “\”${snowflake_procedure.database}\”.\”${snowflake_procedure.schema}\”.\”${snowflake_procedure.name}(NUMBER, VARCHAR)\””
+object_name = “\”${snowflake_procedure.database}\”.\”${snowflake_procedure.schema}\”.\”${snowflake_procedure.name}\"(NUMBER, VARCHAR)”
 ```
 
 now we can write

@@ -148,7 +148,7 @@ type showStreamsDbRow struct {
 	SourceType    sql.NullString `db:"source_type"`
 	BaseTables    sql.NullString `db:"base_tables"`
 	Type          sql.NullString `db:"type"`
-	Stale         sql.NullString `db:"stale"`
+	Stale         string         `db:"stale"`
 	Mode          sql.NullString `db:"mode"`
 	StaleAfter    sql.NullTime   `db:"stale_after"`
 	InvalidReason sql.NullString `db:"invalid_reason"`
@@ -164,9 +164,9 @@ type Stream struct {
 	Comment       *string
 	TableName     *string
 	SourceType    *StreamSourceType
-	BaseTables    []SchemaObjectIdentifier
+	BaseTables    []string
 	Type          *string
-	Stale         *string
+	Stale         bool
 	Mode          *StreamMode
 	StaleAfter    *time.Time
 	InvalidReason *string

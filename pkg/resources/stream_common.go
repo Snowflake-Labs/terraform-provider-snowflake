@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -38,9 +39,13 @@ var streamCommonSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Default:     false,
 		Description: "Retains the access permissions from the original stream when a stream is recreated using the OR REPLACE clause. That is sometimes used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect when creating a new stream.",
-		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return oldValue != "" && oldValue != newValue
-		},
+		// Changing ONLY copy grants should have no effect. It is only used as an "option" during CREATE OR REPLACE - when other attributes change, it's not an object state. There is no point in recreating the object when only this field is changed.
+		DiffSuppressFunc: IgnoreAfterCreation,
+	},
+	"stale": {
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Description: "Indicated if the stream is stale. When Terraform detects that the stream is stale, the stream is recreated with `CREATE OR REPLACE`. Read more on stream staleness in Snowflake [docs](https://docs.snowflake.com/en/user-guide/streams-intro#data-retention-period-and-staleness).",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -196,19 +201,11 @@ func handleStreamRead(d *schema.ResourceData,
 	stream *sdk.Stream,
 	streamDescription *sdk.Stream,
 ) error {
-	if err := d.Set("comment", stream.Comment); err != nil {
-		return err
-	}
-
-	if err := d.Set(ShowOutputAttributeName, []map[string]any{schemas.StreamToSchema(stream)}); err != nil {
-		return err
-	}
-	if err := d.Set(DescribeOutputAttributeName, []map[string]any{schemas.StreamDescriptionToSchema(*streamDescription)}); err != nil {
-		return err
-	}
-	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
-	}
-
-	return nil
+	return errors.Join(
+		d.Set("comment", stream.Comment),
+		d.Set(ShowOutputAttributeName, []map[string]any{schemas.StreamToSchema(stream)}),
+		d.Set(DescribeOutputAttributeName, []map[string]any{schemas.StreamDescriptionToSchema(*streamDescription)}),
+		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+		d.Set("stale", stream.Stale),
+	)
 }
