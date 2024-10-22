@@ -54,7 +54,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType(sdk.SecretTypeGenericString).
+							HasSecretType(string(sdk.SecretTypeGenericString)).
 							HasSchemaName(id.SchemaName()).
 							HasComment(""),
 					),
@@ -64,7 +64,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.name", name),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.database_name", id.DatabaseName()),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.schema_name", id.SchemaName()),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", sdk.SecretTypeGenericString),
+					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", string(sdk.SecretTypeGenericString)),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.username", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.comment", ""),
 					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_access_token_expiry_time", ""),
@@ -90,7 +90,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 							HasCommentString(comment),
 
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeGenericString).
+							HasSecretType(string(sdk.SecretTypeGenericString)).
 							HasComment(comment),
 					),
 
@@ -205,9 +205,9 @@ func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(sdk.SecretTypeGenericString),
+							HasSecretTypeString(string(sdk.SecretTypeGenericString)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeGenericString),
+							HasSecretType(string(sdk.SecretTypeGenericString)),
 					),
 				),
 			},
@@ -227,9 +227,9 @@ func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(sdk.SecretTypeGenericString),
+							HasSecretTypeString(string(sdk.SecretTypeGenericString)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeGenericString),
+							HasSecretType(string(sdk.SecretTypeGenericString)),
 					),
 				),
 			},

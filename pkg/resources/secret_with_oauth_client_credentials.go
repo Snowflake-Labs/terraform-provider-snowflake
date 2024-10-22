@@ -43,10 +43,9 @@ func SecretWithClientCredentials() *schema.Resource {
 		Description:   "Resource used to manage secret objects with OAuth Client Credentials. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, DescribeOutputAttributeName, "name", "oauth_scopes", "api_authentication"),
-			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, ShowOutputAttributeName, "name", "comment"),
-			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, FullyQualifiedNameAttributeName, "name"),
-			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypeOAuth2, sdk.NewOauthSecretType(sdk.OAuth2ClientCredentialsFlow)),
+			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, DescribeOutputAttributeName, "oauth_scopes", "api_authentication"),
+			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, ShowOutputAttributeName, "comment"),
+			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypeOAuth2ClientCredentials),
 		),
 
 		Schema: secretClientCredentialsSchema,

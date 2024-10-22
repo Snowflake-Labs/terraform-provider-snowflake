@@ -59,7 +59,7 @@ resource "snowflake_secret_with_authorization_code_grant" "test" {
 - `describe_output` (List of Object) Outputs the result of `DESCRIBE SECRET` for the given secret. (see [below for nested schema](#nestedatt--describe_output))
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
-- `secret_type` (String) Specifies a type for the secret.
+- `secret_type` (String) Specifies a type for the secret. This field is used for checking external changes and recreating the resources if needed.
 - `show_output` (List of Object) Outputs the result of `SHOW SECRETS` for the given secret. (see [below for nested schema](#nestedatt--show_output))
 
 <a id="nestedatt--describe_output"></a>

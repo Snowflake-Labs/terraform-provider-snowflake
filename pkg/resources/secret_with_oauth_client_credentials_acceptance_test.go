@@ -65,7 +65,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
 							HasName(name).
 							HasDatabaseName(id.DatabaseName()).
-							HasSecretType(sdk.SecretTypeOAuth2).
+							HasSecretType(string(sdk.SecretTypeOAuth2)).
 							HasSchemaName(id.SchemaName()),
 					),
 					resource.TestCheckResourceAttr(secretName, "oauth_scopes.#", "2"),
@@ -108,7 +108,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						assert.Check(resource.TestCheckTypeSetElemAttr(secretName, "oauth_scopes.*", "test")),
 
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeOAuth2).
+							HasSecretType(string(sdk.SecretTypeOAuth2)).
 							HasComment(newComment),
 					),
 
@@ -326,9 +326,9 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(sdk.SecretTypeOAuth2),
+							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeOAuth2),
+							HasSecretType(string(sdk.SecretTypeOAuth2)),
 					),
 				),
 			},
@@ -348,9 +348,9 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(sdk.SecretTypeOAuth2),
+							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeOAuth2),
+							HasSecretType(string(sdk.SecretTypeOAuth2)),
 					),
 				),
 			},
@@ -385,9 +385,9 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChangeToOAuthAuthCode
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(sdk.SecretTypeOAuth2),
+							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeOAuth2),
+							HasSecretType(string(sdk.SecretTypeOAuth2)),
 					),
 					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.*", "foo"),
@@ -411,9 +411,9 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChangeToOAuthAuthCode
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
-							HasSecretTypeString(sdk.SecretTypeOAuth2),
+							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
-							HasSecretType(sdk.SecretTypeOAuth2),
+							HasSecretType(string(sdk.SecretTypeOAuth2)),
 					),
 					resource.TestCheckResourceAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(secretModel.ResourceReference(), "describe_output.0.oauth_scopes.*", "foo"),

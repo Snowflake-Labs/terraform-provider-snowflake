@@ -36,7 +36,7 @@ var secretCommonSchema = map[string]*schema.Schema{
 	"secret_type": {
 		Type:        schema.TypeString,
 		Computed:    true,
-		Description: "Specifies a type for the secret.",
+		Description: "Specifies a type for the secret. This field is used for checking external changes and recreating the resources if needed.",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -75,9 +75,9 @@ func handleSecretRead(d *schema.ResourceData,
 	secretDescription *sdk.SecretDetails,
 ) error {
 	return errors.Join(
+		d.Set("secret_type", secret.SecretType),
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 		d.Set("comment", secret.Comment),
-		d.Set("secret_type", secret.SecretType),
 		d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecretToSchema(secret)}),
 		d.Set(DescribeOutputAttributeName, []map[string]any{schemas.SecretDescriptionToSchema(*secretDescription)}),
 	)
