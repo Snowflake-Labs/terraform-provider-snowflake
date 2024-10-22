@@ -4,14 +4,14 @@ import "testing"
 
 func TestConntections_CreateConnection(t *testing.T) {
 	id := randomAccountObjectIdentifier()
-	defaultOpts := func() *CreateConnectionConnectionOptions {
-		return &CreateConnectionConnectionOptions{
+	defaultOpts := func() *CreateConnectionOptions {
+		return &CreateConnectionOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateConnectionConnectionOptions = nil
+		var opts *CreateConnectionOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
@@ -38,14 +38,14 @@ func TestConntections_CreateConnection(t *testing.T) {
 func TestConntections_CreateReplicatedConnection(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 	externalId := randomExternalObjectIdentifier()
-	defaultOpts := func() *CreateReplicatedConnectionConnectionOptions {
-		return &CreateReplicatedConnectionConnectionOptions{
+	defaultOpts := func() *CreateReplicatedConnectionOptions {
+		return &CreateReplicatedConnectionOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateReplicatedConnectionConnectionOptions = nil
+		var opts *CreateReplicatedConnectionOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
@@ -83,14 +83,14 @@ func TestConntections_AlterConnectionFailover(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 	externalId := randomExternalObjectIdentifier()
 	externalIdTwo := randomExternalObjectIdentifier()
-	defaultOpts := func() *AlterConnectionFailoverConnectionOptions {
-		return &AlterConnectionFailoverConnectionOptions{
+	defaultOpts := func() *AlterFailoverConnectionOptions {
+		return &AlterFailoverConnectionOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterConnectionFailoverConnectionOptions = nil
+		var opts *AlterFailoverConnectionOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 	t.Run("validation: exactly one field from [opts.EnableConnectionFailover opts.DisableConnectionFailover opts.Primary] should be present", func(t *testing.T) {
@@ -136,14 +136,14 @@ func TestConntections_AlterConnectionFailover(t *testing.T) {
 
 func TestConntections_AlterConnection(t *testing.T) {
 	id := randomAccountObjectIdentifier()
-	defaultOpts := func() *AlterConnectionConnectionOptions {
-		return &AlterConnectionConnectionOptions{
+	defaultOpts := func() *AlterConnectionOptions {
+		return &AlterConnectionOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterConnectionConnectionOptions = nil
+		var opts *AlterConnectionOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 	t.Run("validation: exactly one field from [opts.Set opts.Unset] should be present", func(t *testing.T) {

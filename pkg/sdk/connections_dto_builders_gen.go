@@ -2,65 +2,63 @@
 
 package sdk
 
-import ()
-
-func NewCreateConnectionConnectionRequest(
+func NewCreateConnectionRequest(
 	name AccountObjectIdentifier,
-) *CreateConnectionConnectionRequest {
-	s := CreateConnectionConnectionRequest{}
+) *CreateConnectionRequest {
+	s := CreateConnectionRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *CreateConnectionConnectionRequest) WithIfNotExists(IfNotExists bool) *CreateConnectionConnectionRequest {
+func (s *CreateConnectionRequest) WithIfNotExists(IfNotExists bool) *CreateConnectionRequest {
 	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateConnectionConnectionRequest) WithComment(Comment string) *CreateConnectionConnectionRequest {
+func (s *CreateConnectionRequest) WithComment(Comment string) *CreateConnectionRequest {
 	s.Comment = &Comment
 	return s
 }
 
-func NewCreateReplicatedConnectionConnectionRequest(
+func NewCreateReplicatedConnectionRequest(
 	name AccountObjectIdentifier,
 	ReplicaOf ExternalObjectIdentifier,
-) *CreateReplicatedConnectionConnectionRequest {
-	s := CreateReplicatedConnectionConnectionRequest{}
+) *CreateReplicatedConnectionRequest {
+	s := CreateReplicatedConnectionRequest{}
 	s.name = name
 	s.ReplicaOf = ReplicaOf
 	return &s
 }
 
-func (s *CreateReplicatedConnectionConnectionRequest) WithIfNotExists(IfNotExists bool) *CreateReplicatedConnectionConnectionRequest {
+func (s *CreateReplicatedConnectionRequest) WithIfNotExists(IfNotExists bool) *CreateReplicatedConnectionRequest {
 	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateReplicatedConnectionConnectionRequest) WithComment(Comment string) *CreateReplicatedConnectionConnectionRequest {
+func (s *CreateReplicatedConnectionRequest) WithComment(Comment string) *CreateReplicatedConnectionRequest {
 	s.Comment = &Comment
 	return s
 }
 
-func NewAlterConnectionFailoverConnectionRequest(
+func NewAlterConnectionFailoverRequest(
 	name AccountObjectIdentifier,
-) *AlterConnectionFailoverConnectionRequest {
-	s := AlterConnectionFailoverConnectionRequest{}
+) *AlterConnectionFailoverRequest {
+	s := AlterConnectionFailoverRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterConnectionFailoverConnectionRequest) WithEnableConnectionFailover(EnableConnectionFailover EnableConnectionFailoverRequest) *AlterConnectionFailoverConnectionRequest {
+func (s *AlterConnectionFailoverRequest) WithEnableConnectionFailover(EnableConnectionFailover EnableConnectionFailoverRequest) *AlterConnectionFailoverRequest {
 	s.EnableConnectionFailover = &EnableConnectionFailover
 	return s
 }
 
-func (s *AlterConnectionFailoverConnectionRequest) WithDisableConnectionFailover(DisableConnectionFailover DisableConnectionFailoverRequest) *AlterConnectionFailoverConnectionRequest {
+func (s *AlterConnectionFailoverRequest) WithDisableConnectionFailover(DisableConnectionFailover DisableConnectionFailoverRequest) *AlterConnectionFailoverRequest {
 	s.DisableConnectionFailover = &DisableConnectionFailover
 	return s
 }
 
-func (s *AlterConnectionFailoverConnectionRequest) WithPrimary(Primary PrimaryRequest) *AlterConnectionFailoverConnectionRequest {
+func (s *AlterConnectionFailoverRequest) WithPrimary(Primary PrimaryRequest) *AlterConnectionFailoverRequest {
 	s.Primary = &Primary
 	return s
 }
@@ -97,25 +95,25 @@ func NewPrimaryRequest() *PrimaryRequest {
 	return &PrimaryRequest{}
 }
 
-func NewAlterConnectionConnectionRequest(
+func NewAlterConnectionRequest(
 	name AccountObjectIdentifier,
-) *AlterConnectionConnectionRequest {
-	s := AlterConnectionConnectionRequest{}
+) *AlterConnectionRequest {
+	s := AlterConnectionRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterConnectionConnectionRequest) WithIfExists(IfExists bool) *AlterConnectionConnectionRequest {
+func (s *AlterConnectionRequest) WithIfExists(IfExists bool) *AlterConnectionRequest {
 	s.IfExists = &IfExists
 	return s
 }
 
-func (s *AlterConnectionConnectionRequest) WithSet(Set SetRequest) *AlterConnectionConnectionRequest {
+func (s *AlterConnectionRequest) WithSet(Set SetRequest) *AlterConnectionRequest {
 	s.Set = &Set
 	return s
 }
 
-func (s *AlterConnectionConnectionRequest) WithUnset(Unset UnsetRequest) *AlterConnectionConnectionRequest {
+func (s *AlterConnectionRequest) WithUnset(Unset UnsetRequest) *AlterConnectionRequest {
 	s.Unset = &Unset
 	return s
 }

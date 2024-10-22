@@ -7,17 +7,17 @@ import (
 )
 
 type Connections interface {
-	CreateConnection(ctx context.Context, request *CreateConnectionConnectionRequest) error
-	CreateReplicatedConnection(ctx context.Context, request *CreateReplicatedConnectionConnectionRequest) error
-	AlterConnectionFailover(ctx context.Context, request *AlterConnectionFailoverConnectionRequest) error
-	AlterConnection(ctx context.Context, request *AlterConnectionConnectionRequest) error
+	Create(ctx context.Context, request *CreateConnectionRequest) error
+	CreateReplicated(ctx context.Context, request *CreateReplicatedConnectionRequest) error
+	AlterFailover(ctx context.Context, request *AlterConnectionFailoverRequest) error
+	Alter(ctx context.Context, request *AlterConnectionRequest) error
 	Drop(ctx context.Context, request *DropConnectionRequest) error
 	Show(ctx context.Context, request *ShowConnectionRequest) ([]Connection, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Connection, error)
 }
 
-// CreateConnectionConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-connection.
-type CreateConnectionConnectionOptions struct {
+// CreateConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-connection.
+type CreateConnectionOptions struct {
 	create      bool                    `ddl:"static" sql:"CREATE"`
 	connection  bool                    `ddl:"static" sql:"CONNECTION"`
 	IfNotExists *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
@@ -25,8 +25,8 @@ type CreateConnectionConnectionOptions struct {
 	Comment     *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-// CreateReplicatedConnectionConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-connection.
-type CreateReplicatedConnectionConnectionOptions struct {
+// CreateReplicatedConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-connection.
+type CreateReplicatedConnectionOptions struct {
 	create      bool                     `ddl:"static" sql:"CREATE"`
 	connection  bool                     `ddl:"static" sql:"CONNECTION"`
 	IfNotExists *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
@@ -36,8 +36,8 @@ type CreateReplicatedConnectionConnectionOptions struct {
 	Comment     *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-// AlterConnectionFailoverConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-connection.
-type AlterConnectionFailoverConnectionOptions struct {
+// AlterFailoverConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-connection.
+type AlterFailoverConnectionOptions struct {
 	alter                     bool                       `ddl:"static" sql:"ALTER"`
 	connection                bool                       `ddl:"static" sql:"CONNECTION"`
 	name                      AccountObjectIdentifier    `ddl:"identifier"`
@@ -57,8 +57,8 @@ type Primary struct {
 	primary bool `ddl:"static" sql:"PRIMARY"`
 }
 
-// AlterConnectionConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-connection.
-type AlterConnectionConnectionOptions struct {
+// AlterConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-connection.
+type AlterConnectionOptions struct {
 	alter      bool                    `ddl:"static" sql:"ALTER"`
 	connection bool                    `ddl:"static" sql:"CONNECTION"`
 	IfExists   *bool                   `ddl:"keyword" sql:"IF EXISTS"`
@@ -112,4 +112,12 @@ type Connection struct {
 	ConnectionUrl             string
 	OrgnizationName           string
 	AccountLocator            string
+}
+
+func (v *Connection) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(v.Name)
+}
+
+func (v *Connection) ObjectType() ObjectType {
+	return ObjectTypeConnection
 }

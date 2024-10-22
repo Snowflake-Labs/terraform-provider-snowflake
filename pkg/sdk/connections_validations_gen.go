@@ -1,15 +1,15 @@
 package sdk
 
 var (
-	_ validatable = new(CreateConnectionConnectionOptions)
-	_ validatable = new(CreateReplicatedConnectionConnectionOptions)
-	_ validatable = new(AlterConnectionFailoverConnectionOptions)
-	_ validatable = new(AlterConnectionConnectionOptions)
+	_ validatable = new(CreateConnectionOptions)
+	_ validatable = new(CreateReplicatedConnectionOptions)
+	_ validatable = new(AlterFailoverConnectionOptions)
+	_ validatable = new(AlterConnectionOptions)
 	_ validatable = new(DropConnectionOptions)
 	_ validatable = new(ShowConnectionOptions)
 )
 
-func (opts *CreateConnectionConnectionOptions) validate() error {
+func (opts *CreateConnectionOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -20,7 +20,7 @@ func (opts *CreateConnectionConnectionOptions) validate() error {
 	return JoinErrors(errs...)
 }
 
-func (opts *CreateReplicatedConnectionConnectionOptions) validate() error {
+func (opts *CreateReplicatedConnectionOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
@@ -34,33 +34,33 @@ func (opts *CreateReplicatedConnectionConnectionOptions) validate() error {
 	return JoinErrors(errs...)
 }
 
-func (opts *AlterConnectionFailoverConnectionOptions) validate() error {
+func (opts *AlterFailoverConnectionOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
 	var errs []error
 	if !exactlyOneValueSet(opts.EnableConnectionFailover, opts.DisableConnectionFailover, opts.Primary) {
-		errs = append(errs, errExactlyOneOf("AlterConnectionFailoverConnectionOptions", "EnableConnectionFailover", "DisableConnectionFailover", "Primary"))
+		errs = append(errs, errExactlyOneOf("AlterFailoverConnectionOptions", "EnableConnectionFailover", "DisableConnectionFailover", "Primary"))
 	}
 	return JoinErrors(errs...)
 }
 
-func (opts *AlterConnectionConnectionOptions) validate() error {
+func (opts *AlterConnectionOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}
 	var errs []error
 	if !exactlyOneValueSet(opts.Set, opts.Unset) {
-		errs = append(errs, errExactlyOneOf("AlterConnectionConnectionOptions", "Set", "Unset"))
+		errs = append(errs, errExactlyOneOf("AlterConnectionOptions", "Set", "Unset"))
 	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterConnectionConnectionOptions.Set", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterConnectionOptions.Set", "Comment"))
 		}
 	}
 	if valueSet(opts.Unset) {
 		if !anyValueSet(opts.Unset.Comment) {
-			errs = append(errs, errAtLeastOneOf("AlterConnectionConnectionOptions.Unset", "Comment"))
+			errs = append(errs, errAtLeastOneOf("AlterConnectionOptions.Unset", "Comment"))
 		}
 	}
 	return JoinErrors(errs...)

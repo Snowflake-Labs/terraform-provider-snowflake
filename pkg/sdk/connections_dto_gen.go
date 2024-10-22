@@ -3,28 +3,28 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateConnectionConnectionOptions]           = new(CreateConnectionConnectionRequest)
-	_ optionsProvider[CreateReplicatedConnectionConnectionOptions] = new(CreateReplicatedConnectionConnectionRequest)
-	_ optionsProvider[AlterConnectionFailoverConnectionOptions]    = new(AlterConnectionFailoverConnectionRequest)
-	_ optionsProvider[AlterConnectionConnectionOptions]            = new(AlterConnectionConnectionRequest)
-	_ optionsProvider[DropConnectionOptions]                       = new(DropConnectionRequest)
-	_ optionsProvider[ShowConnectionOptions]                       = new(ShowConnectionRequest)
+	_ optionsProvider[CreateConnectionOptions]           = new(CreateConnectionRequest)
+	_ optionsProvider[CreateReplicatedConnectionOptions] = new(CreateReplicatedConnectionRequest)
+	_ optionsProvider[AlterFailoverConnectionOptions]    = new(AlterConnectionFailoverRequest)
+	_ optionsProvider[AlterConnectionOptions]            = new(AlterConnectionRequest)
+	_ optionsProvider[DropConnectionOptions]             = new(DropConnectionRequest)
+	_ optionsProvider[ShowConnectionOptions]             = new(ShowConnectionRequest)
 )
 
-type CreateConnectionConnectionRequest struct {
+type CreateConnectionRequest struct {
 	IfNotExists *bool
 	name        AccountObjectIdentifier // required
 	Comment     *string
 }
 
-type CreateReplicatedConnectionConnectionRequest struct {
+type CreateReplicatedConnectionRequest struct {
 	IfNotExists *bool
 	name        AccountObjectIdentifier  // required
 	ReplicaOf   ExternalObjectIdentifier // required
 	Comment     *string
 }
 
-type AlterConnectionFailoverConnectionRequest struct {
+type AlterConnectionFailoverRequest struct {
 	name                      AccountObjectIdentifier // required
 	EnableConnectionFailover  *EnableConnectionFailoverRequest
 	DisableConnectionFailover *DisableConnectionFailoverRequest
@@ -44,7 +44,7 @@ type DisableConnectionFailoverRequest struct {
 type PrimaryRequest struct {
 }
 
-type AlterConnectionConnectionRequest struct {
+type AlterConnectionRequest struct {
 	IfExists *bool
 	name     AccountObjectIdentifier // required
 	Set      *SetRequest

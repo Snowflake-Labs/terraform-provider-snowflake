@@ -12,22 +12,22 @@ type connections struct {
 	client *Client
 }
 
-func (v *connections) CreateConnection(ctx context.Context, request *CreateConnectionConnectionRequest) error {
+func (v *connections) Create(ctx context.Context, request *CreateConnectionRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *connections) CreateReplicatedConnection(ctx context.Context, request *CreateReplicatedConnectionConnectionRequest) error {
+func (v *connections) CreateReplicated(ctx context.Context, request *CreateReplicatedConnectionRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *connections) AlterConnectionFailover(ctx context.Context, request *AlterConnectionFailoverConnectionRequest) error {
+func (v *connections) AlterFailover(ctx context.Context, request *AlterConnectionFailoverRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *connections) AlterConnection(ctx context.Context, request *AlterConnectionConnectionRequest) error {
+func (v *connections) Alter(ctx context.Context, request *AlterConnectionRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -48,15 +48,16 @@ func (v *connections) Show(ctx context.Context, request *ShowConnectionRequest) 
 }
 
 func (v *connections) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Connection, error) {
-	connections, err := v.Show(ctx, NewShowConnectionRequest().WithLike(Like{String(id.Name())}))
+	// TODO: adjust request if e.g. LIKE is supported for the resource
+	connections, err := v.Show(ctx, NewShowConnectionRequest())
 	if err != nil {
 		return nil, err
 	}
 	return collections.FindFirst(connections, func(r Connection) bool { return r.Name == id.Name() })
 }
 
-func (r *CreateConnectionConnectionRequest) toOpts() *CreateConnectionConnectionOptions {
-	opts := &CreateConnectionConnectionOptions{
+func (r *CreateConnectionRequest) toOpts() *CreateConnectionOptions {
+	opts := &CreateConnectionOptions{
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
 		Comment:     r.Comment,
@@ -64,8 +65,8 @@ func (r *CreateConnectionConnectionRequest) toOpts() *CreateConnectionConnection
 	return opts
 }
 
-func (r *CreateReplicatedConnectionConnectionRequest) toOpts() *CreateReplicatedConnectionConnectionOptions {
-	opts := &CreateReplicatedConnectionConnectionOptions{
+func (r *CreateReplicatedConnectionRequest) toOpts() *CreateReplicatedConnectionOptions {
+	opts := &CreateReplicatedConnectionOptions{
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
 		ReplicaOf:   r.ReplicaOf,
@@ -74,48 +75,58 @@ func (r *CreateReplicatedConnectionConnectionRequest) toOpts() *CreateReplicated
 	return opts
 }
 
-func (r *AlterConnectionFailoverConnectionRequest) toOpts() *AlterConnectionFailoverConnectionOptions {
-	opts := &AlterConnectionFailoverConnectionOptions{
+func (r *AlterConnectionFailoverRequest) toOpts() *AlterFailoverConnectionOptions {
+	opts := &AlterFailoverConnectionOptions{
 		name: r.name,
 	}
 
 	if r.EnableConnectionFailover != nil {
+
 		opts.EnableConnectionFailover = &EnableConnectionFailover{
 			Accounts:           r.EnableConnectionFailover.Accounts,
 			IgnoreEditionCheck: r.EnableConnectionFailover.IgnoreEditionCheck,
 		}
+
 	}
 
 	if r.DisableConnectionFailover != nil {
+
 		opts.DisableConnectionFailover = &DisableConnectionFailover{
 			ToAccounts: r.DisableConnectionFailover.ToAccounts,
 			Accounts:   r.DisableConnectionFailover.Accounts,
 		}
+
 	}
 
 	if r.Primary != nil {
+
 		opts.Primary = &Primary{}
+
 	}
 
 	return opts
 }
 
-func (r *AlterConnectionConnectionRequest) toOpts() *AlterConnectionConnectionOptions {
-	opts := &AlterConnectionConnectionOptions{
+func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
+	opts := &AlterConnectionOptions{
 		IfExists: r.IfExists,
 		name:     r.name,
 	}
 
 	if r.Set != nil {
+
 		opts.Set = &Set{
 			Comment: r.Set.Comment,
 		}
+
 	}
 
 	if r.Unset != nil {
+
 		opts.Unset = &Unset{
 			Comment: r.Unset.Comment,
 		}
+
 	}
 
 	return opts
@@ -137,25 +148,6 @@ func (r *ShowConnectionRequest) toOpts() *ShowConnectionOptions {
 }
 
 func (r connectionRow) convert() *Connection {
-	c := &Connection{
-		SnowflakeRegion:           r.SnowflakeRegion,
-		CreatedOn:                 r.CreatedOn,
-		AccountName:               r.AccountName,
-		Name:                      r.Name,
-		Primary:                   r.Primary,
-		FailoverAllowedToAccounts: ParseCommaSeparatedStringArray(r.FailoverAllowedToAccounts, false),
-		ConnectionUrl:             r.ConnectionUrl,
-		OrgnizationName:           r.OrgnizationName,
-		AccountLocator:            r.AccountLocator,
-	}
-	b, err := parseBooleanParameter("IsPrimary", r.IsPrimary)
-	if err != nil {
-		return nil
-	}
-	c.IsPrimary = *b
-	if r.Comment.Valid {
-		c.Comment = String(r.Comment.String)
-	}
-
-	return c
+	// TODO: Mapping
+	return &Connection{}
 }

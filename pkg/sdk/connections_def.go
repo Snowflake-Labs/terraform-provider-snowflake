@@ -1,6 +1,7 @@
 package sdk
 
 //go:generate go run ./poc/main.go
+
 import (
 	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 )
@@ -13,7 +14,7 @@ var ConnectionDef = g.NewInterface(
 	"Connection",
 	g.KindOfT[AccountObjectIdentifier](),
 ).CustomOperation(
-	"CreateConnection",
+	"Create",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-connection",
 	g.NewQueryStruct("CreateConnection").
 		Create().
@@ -23,9 +24,9 @@ var ConnectionDef = g.NewInterface(
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
-	"CreateReplicatedConnection",
+	"CreateReplicated",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-connection",
-	g.NewQueryStruct("CreateReplicatedConnection").
+	g.NewQueryStruct("CreateReplicated").
 		Create().
 		SQL("CONNECTION").
 		IfNotExists().
@@ -67,9 +68,9 @@ var ConnectionDef = g.NewInterface(
 		).
 		WithValidation(g.ExactlyOneValueSet, "EnableConnectionFailover", "DisableConnectionFailover", "Primary"),
 ).CustomOperation(
-	"AlterConnection",
+	"Alter",
 	"https://docs.snowflake.com/en/sql-reference/sql/alter-connection",
-	g.NewQueryStruct("AlterConnection").
+	g.NewQueryStruct("Alter").
 		Alter().
 		SQL("CONNECTION").
 		IfExists().

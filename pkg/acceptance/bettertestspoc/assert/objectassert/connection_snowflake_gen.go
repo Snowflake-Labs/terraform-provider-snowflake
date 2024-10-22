@@ -111,6 +111,7 @@ func (c *ConnectionAssert) HasPrimary(expected string) *ConnectionAssert {
 	return c
 }
 
+/*
 func (c *ConnectionAssert) HasFailoverAllowedToAccounts(expected []string) *ConnectionAssert {
 	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
 		t.Helper()
@@ -121,6 +122,7 @@ func (c *ConnectionAssert) HasFailoverAllowedToAccounts(expected []string) *Conn
 	})
 	return c
 }
+*/
 
 func (c *ConnectionAssert) HasConnectionUrl(expected string) *ConnectionAssert {
 	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
