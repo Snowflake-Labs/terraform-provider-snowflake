@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_stream (Resource)
 
-
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use one of the new resources instead: `snowflake_stream_on_directory_table` | `snowflake_stream_on_external_table` | `snowflake_stream_on_table` | `snowflake_stream_on_view` <deprecation>
 
 ## Example Usage
 

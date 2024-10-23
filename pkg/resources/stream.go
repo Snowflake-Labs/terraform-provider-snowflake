@@ -105,7 +105,7 @@ func Stream() *schema.Resource {
 		Update: UpdateStream,
 		Delete: DeleteStream,
 		DeprecationMessage: deprecatedResourceDescription(
-			// string(providerresources.StreamOnDirectoryTable),
+			string(providerresources.StreamOnDirectoryTable),
 			string(providerresources.StreamOnExternalTable),
 			string(providerresources.StreamOnTable),
 			string(providerresources.StreamOnView),
