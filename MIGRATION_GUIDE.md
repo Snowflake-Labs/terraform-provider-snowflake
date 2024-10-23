@@ -11,7 +11,9 @@ across different versions.
 
 ### snowflake_masking_policies data source changes
 New filtering options:
+- `like`
 - `in`
+- `starts_with`
 - `limit`
 - `with_describe`
 
