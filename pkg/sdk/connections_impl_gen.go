@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
@@ -48,8 +49,10 @@ func (v *connections) Show(ctx context.Context, request *ShowConnectionRequest) 
 }
 
 func (v *connections) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Connection, error) {
-	// TODO: adjust request if e.g. LIKE is supported for the resource
-	connections, err := v.Show(ctx, NewShowConnectionRequest())
+	connections, err := v.Show(ctx, NewShowConnectionRequest().WithLike(
+		Like{
+			Pattern: String(id.Name()),
+		}))
 	if err != nil {
 		return nil, err
 	}
@@ -81,27 +84,21 @@ func (r *AlterConnectionFailoverRequest) toOpts() *AlterFailoverConnectionOption
 	}
 
 	if r.EnableConnectionFailover != nil {
-
 		opts.EnableConnectionFailover = &EnableConnectionFailover{
 			Accounts:           r.EnableConnectionFailover.Accounts,
 			IgnoreEditionCheck: r.EnableConnectionFailover.IgnoreEditionCheck,
 		}
-
 	}
 
 	if r.DisableConnectionFailover != nil {
-
 		opts.DisableConnectionFailover = &DisableConnectionFailover{
 			ToAccounts: r.DisableConnectionFailover.ToAccounts,
 			Accounts:   r.DisableConnectionFailover.Accounts,
 		}
-
 	}
 
 	if r.Primary != nil {
-
 		opts.Primary = &Primary{}
-
 	}
 
 	return opts
@@ -114,19 +111,15 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 	}
 
 	if r.Set != nil {
-
 		opts.Set = &Set{
 			Comment: r.Set.Comment,
 		}
-
 	}
 
 	if r.Unset != nil {
-
 		opts.Unset = &Unset{
 			Comment: r.Unset.Comment,
 		}
-
 	}
 
 	return opts
@@ -148,6 +141,22 @@ func (r *ShowConnectionRequest) toOpts() *ShowConnectionOptions {
 }
 
 func (r connectionRow) convert() *Connection {
-	// TODO: Mapping
-	return &Connection{}
+	c := &Connection{
+		SnowflakeRegion:           r.SnowflakeRegion,
+		CreatedOn:                 r.CreatedOn,
+		AccountName:               r.AccountName,
+		Name:                      r.Name,
+		Primary:                   r.Primary,
+		FailoverAllowedToAccounts: ParseCommaSeparatedStringArray(r.FailoverAllowedToAccounts, false),
+		ConnectionUrl:             r.ConnectionUrl,
+		OrganizationName:          r.OrganizationName,
+		AccountLocator:            r.AccountLocator,
+	}
+	b, _ := strconv.ParseBool(r.IsPrimary)
+	c.IsPrimary = b
+	if r.Comment.Valid {
+		c.Comment = String(r.Comment.String)
+	}
+
+	return c
 }

@@ -1,27 +1,66 @@
 package testint
 
-import "testing"
+import (
+	"fmt"
+	"testing"
 
-func TestInt_Conntections(t *testing.T) {
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/stretchr/testify/require"
+
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+)
+
+func TestInt_Connections(t *testing.T) {
 	client := testClient(t)
-	_ = client
 	ctx := testContext(t)
-	_ = ctx
 
-	t.Run("CreateConnection", func(t *testing.T) {
+	t.Run("Create minimal", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		_ = id
+		err := client.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Connection.DropFunc(t, id))
+
+		orgName, err := client.ContextFunctions.CurrentOrganizationName(ctx)
+		require.NoError(t, err)
+
+		accountName, err := client.ContextFunctions.CurrentAccountName(ctx)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.Connection(t, id).
+			HasName(id.Name()).
+			HasNoComment().
+			HasAccountLocator(client.GetAccountLocator()).
+			HasFailoverAllowedToAccounts(
+				[]string{
+					fmt.Sprintf("%s.%s", orgName, accountName),
+				},
+			).
+			HasIsPrimary(true),
+		)
 	})
 
-	t.Run("CreateReplicatedConnection", func(t *testing.T) {
+	t.Run("CreateReplicated", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("AlterConnectionFailover", func(t *testing.T) {
+	t.Run("AlterFailover", func(t *testing.T) {
 		// TODO: fill me
 	})
 
-	t.Run("AlterConnection", func(t *testing.T) {
+	t.Run("Alter", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("Drop", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("Show", func(t *testing.T) {
+		// TODO: fill me
+	})
+
+	t.Run("ShowByID", func(t *testing.T) {
 		// TODO: fill me
 	})
 }

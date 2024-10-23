@@ -111,19 +111,6 @@ func (c *ConnectionAssert) HasPrimary(expected string) *ConnectionAssert {
 	return c
 }
 
-/*
-func (c *ConnectionAssert) HasFailoverAllowedToAccounts(expected []string) *ConnectionAssert {
-	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
-		t.Helper()
-		if o.FailoverAllowedToAccounts != expected {
-			return fmt.Errorf("expected failover allowed to accounts: %v; got: %v", expected, o.FailoverAllowedToAccounts)
-		}
-		return nil
-	})
-	return c
-}
-*/
-
 func (c *ConnectionAssert) HasConnectionUrl(expected string) *ConnectionAssert {
 	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
 		t.Helper()
@@ -135,11 +122,11 @@ func (c *ConnectionAssert) HasConnectionUrl(expected string) *ConnectionAssert {
 	return c
 }
 
-func (c *ConnectionAssert) HasOrgnizationName(expected string) *ConnectionAssert {
+func (c *ConnectionAssert) HasOrganizationName(expected string) *ConnectionAssert {
 	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
 		t.Helper()
-		if o.OrgnizationName != expected {
-			return fmt.Errorf("expected orgnization name: %v; got: %v", expected, o.OrgnizationName)
+		if o.OrganizationName != expected {
+			return fmt.Errorf("expected organization name: %v; got: %v", expected, o.OrganizationName)
 		}
 		return nil
 	})

@@ -97,7 +97,7 @@ type connectionRow struct {
 	Primary                   string         `db:"primary"`
 	FailoverAllowedToAccounts string         `db:"failover_allowed_to_accounts"`
 	ConnectionUrl             string         `db:"connection_url"`
-	OrgnizationName           string         `db:"orgnization_name"`
+	OrganizationName          string         `db:"organization_name"`
 	AccountLocator            string         `db:"account_locator"`
 }
 type Connection struct {
@@ -110,14 +110,14 @@ type Connection struct {
 	Primary                   string
 	FailoverAllowedToAccounts []string
 	ConnectionUrl             string
-	OrgnizationName           string
+	OrganizationName          string
 	AccountLocator            string
 }
 
-func (v *Connection) ID() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(v.Name)
+func (c *Connection) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(c.Name)
 }
 
-func (v *Connection) ObjectType() ObjectType {
+func (c *Connection) ObjectType() ObjectType {
 	return ObjectTypeConnection
 }

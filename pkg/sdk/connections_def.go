@@ -13,8 +13,7 @@ var ConnectionDef = g.NewInterface(
 	"Connections",
 	"Connection",
 	g.KindOfT[AccountObjectIdentifier](),
-).CustomOperation(
-	"Create",
+).CreateOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/create-connection",
 	g.NewQueryStruct("CreateConnection").
 		Create().
@@ -47,7 +46,6 @@ var ConnectionDef = g.NewInterface(
 		OptionalQueryStructField(
 			"EnableConnectionFailover",
 			g.NewQueryStruct("EnableConnectionFailover").
-				// ListQueryStructField("Accounts", enabledFailoverAccounts, g.ListOptions().NoParentheses()).
 				List("Accounts", "ExternalObjectIdentifier", g.ListOptions().NoParentheses()).
 				OptionalSQL("IGNORE EDITION CHECK"),
 			g.KeywordOptions().SQL("ENABLE FAILOVER TO ACCOUNTS"),
@@ -56,7 +54,6 @@ var ConnectionDef = g.NewInterface(
 			"DisableConnectionFailover",
 			g.NewQueryStruct("DisableConnectionFailover").
 				OptionalSQL("TO ACCOUNTS").
-				//		ListQueryStructField("Accounts", enabledFailoverAccounts, g.ListOptions().NoParentheses()),
 				List("Accounts", "ExternalObjectIdentifier", g.ListOptions().NoParentheses()),
 			g.KeywordOptions().SQL("DISABLE FAILOVER"),
 		).
@@ -122,7 +119,7 @@ var ConnectionDef = g.NewInterface(
 		Field("Primary", "string").
 		Field("FailoverAllowedToAccounts", "[]string").
 		Field("ConnectionUrl", "string").
-		Field("OrgnizationName", "string").
+		Field("OrganizationName", "string").
 		Field("AccountLocator", "string"),
 	g.NewQueryStruct("ShowConnections").
 		Show().

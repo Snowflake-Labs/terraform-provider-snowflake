@@ -2,7 +2,7 @@ package sdk
 
 import "testing"
 
-func TestConntections_CreateConnection(t *testing.T) {
+func TestConnections_CreateConnection(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 	defaultOpts := func() *CreateConnectionOptions {
 		return &CreateConnectionOptions{
@@ -35,7 +35,7 @@ func TestConntections_CreateConnection(t *testing.T) {
 	})
 }
 
-func TestConntections_CreateReplicatedConnection(t *testing.T) {
+func TestConnections_CreateReplicatedConnection(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 	externalId := randomExternalObjectIdentifier()
 	defaultOpts := func() *CreateReplicatedConnectionOptions {
@@ -79,7 +79,7 @@ func TestConntections_CreateReplicatedConnection(t *testing.T) {
 	})
 }
 
-func TestConntections_AlterConnectionFailover(t *testing.T) {
+func TestConnections_AlterConnectionFailover(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 	externalId := randomExternalObjectIdentifier()
 	externalIdTwo := randomExternalObjectIdentifier()
@@ -98,7 +98,7 @@ func TestConntections_AlterConnectionFailover(t *testing.T) {
 		opts.EnableConnectionFailover = &EnableConnectionFailover{}
 		opts.DisableConnectionFailover = &DisableConnectionFailover{}
 		opts.Primary = &Primary{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterConnectionFailoverConnectionOptions", "EnableConnectionFailover", "DisableConnectionFailover", "Primary"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterFailoverConnectionOptions", "EnableConnectionFailover", "DisableConnectionFailover", "Primary"))
 	})
 
 	t.Run("enable connection failover", func(t *testing.T) {
@@ -134,7 +134,7 @@ func TestConntections_AlterConnectionFailover(t *testing.T) {
 	})
 }
 
-func TestConntections_AlterConnection(t *testing.T) {
+func TestConnections_AlterConnection(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 	defaultOpts := func() *AlterConnectionOptions {
 		return &AlterConnectionOptions{
@@ -148,21 +148,19 @@ func TestConntections_AlterConnection(t *testing.T) {
 	})
 	t.Run("validation: exactly one field from [opts.Set opts.Unset] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &Set{}
-		opts.Unset = &Unset{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterConnectionConnectionOptions", "Set", "Unset"))
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterConnectionOptions", "Set", "Unset"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set = &Set{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterConnectionConnectionOptions.Set", "Comment"))
+        opts.Set = &Set{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterConnectionOptions.Set", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset = &Unset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterConnectionConnectionOptions.Unset", "Comment"))
+        opts.Unset = &Unset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterConnectionOptions.Unset", "Comment"))
 	})
 
 	t.Run("set comment", func(t *testing.T) {
