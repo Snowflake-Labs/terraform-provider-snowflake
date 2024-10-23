@@ -159,6 +159,10 @@ func TestInt_ApplicationPackages(t *testing.T) {
 		require.NoError(t, err)
 		assertApplicationPackage(t, id)
 
+		value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeApplicationPackage)
+		require.NoError(t, err)
+		assert.Equal(t, "v1", value)
+
 		unsetTags := []sdk.ObjectIdentifier{
 			tagTest.ID(),
 		}

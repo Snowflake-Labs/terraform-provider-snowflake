@@ -340,6 +340,9 @@ func TestInt_DatabasesAlter(t *testing.T) {
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
+	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
+
 	assertDatabaseParameterEquals := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.AccountParameter, expected string) {
 		t.Helper()
 		assert.Equal(t, expected, helpers.FindParameter(t, params, parameterName).Value)
@@ -580,6 +583,38 @@ func TestInt_DatabasesAlter(t *testing.T) {
 			database, err = client.Databases.ShowByID(ctx, databaseTest.ID())
 			require.NoError(t, err)
 			assert.Equal(t, "", database.Comment)
+		})
+
+		t.Run(fmt.Sprintf("Database: %s - setting and unsetting tags", testCase.DatabaseType), func(t *testing.T) {
+			if testCase.DatabaseType == "Replica" {
+				t.Skipf("Skipping database test because secondary databases cannot be modified")
+			}
+			databaseTest, databaseTestCleanup := testCase.CreateFn(t)
+			t.Cleanup(databaseTestCleanup)
+
+			err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
+				SetTag: []sdk.TagAssociation{
+					{
+						Name:  tagTest.ID(),
+						Value: "v1",
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), databaseTest.ID(), sdk.ObjectTypeDatabase)
+			require.NoError(t, err)
+			assert.Equal(t, "v1", value)
+
+			err = client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
+				UnsetTag: []sdk.ObjectIdentifier{
+					tagTest.ID(),
+				},
+			})
+			require.NoError(t, err)
+
+			_, err = client.SystemFunctions.GetTag(ctx, tagTest.ID(), databaseTest.ID(), sdk.ObjectTypeDatabase)
+			require.Error(t, err)
 		})
 
 		t.Run(fmt.Sprintf("Database: %s - swap with another database", testCase.DatabaseType), func(t *testing.T) {
