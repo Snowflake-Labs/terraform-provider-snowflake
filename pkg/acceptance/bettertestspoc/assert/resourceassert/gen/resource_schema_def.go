@@ -88,7 +88,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 	{
 		name:   "SecretWithGenericString",
 		schema: resources.SecretWithGenericString().Schema,
-  },
+	},
+	{
 		name:   "StreamOnDirectoryTable",
 		schema: resources.StreamOnDirectoryTable().Schema,
 	},

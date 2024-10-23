@@ -221,7 +221,7 @@ func RecreateWhenSecretTypeChangedExternally(secretType sdk.SecretType) schema.C
 				}
 				if isRefreshTokenExpiryTimeEmpty {
 					return errors.Join(diff.SetNew("secret_type", "<changed externally>"), diff.ForceNew("secret_type"))
-	      }
+				}
 			}
 		}
 		return nil
