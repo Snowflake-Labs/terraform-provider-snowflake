@@ -42,7 +42,6 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: sdkValidation(sdk.ToAuthenticationMethodsOption),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToAuthenticationMethodsOption)),
 		},
 		Optional:    true,
 		Description: fmt.Sprintf("A list of authentication methods that are allowed during login. This parameter accepts one or more of the following values: %s", possibleValuesListed(sdk.AllAuthenticationMethods)),
@@ -52,7 +51,6 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: sdkValidation(sdk.ToMfaAuthenticationMethodsOption),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToMfaAuthenticationMethodsOption)),
 		},
 		Optional:    true,
 		Description: fmt.Sprintf("A list of authentication methods that enforce multi-factor authentication (MFA) during login. Authentication methods not listed in this parameter do not prompt for multi-factor authentication. Allowed values are %s.", possibleValuesListed(sdk.AllMfaAuthenticationMethods)),
@@ -62,7 +60,6 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 		Optional:         true,
 		Description:      "Determines whether a user must enroll in multi-factor authentication. Allowed values are REQUIRED and OPTIONAL. When REQUIRED is specified, Enforces users to enroll in MFA. If this value is used, then the CLIENT_TYPES parameter must include SNOWFLAKE_UI, because Snowsight is the only place users can enroll in multi-factor authentication (MFA).",
 		ValidateDiagFunc: sdkValidation(sdk.ToMfaEnrollmentOption),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToMfaEnrollmentOption)),
 		Default:          "OPTIONAL",
 	},
 	"client_types": {
@@ -70,7 +67,6 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: sdkValidation(sdk.ToClientTypesOption),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToClientTypesOption)),
 		},
 		Optional:    true,
 		Description: fmt.Sprintf("A list of clients that can authenticate with Snowflake. If a client tries to connect, and the client is not one of the valid CLIENT_TYPES, then the login attempt fails. Allowed values are %s. The CLIENT_TYPES property of an authentication policy is a best effort method to block user logins based on specific clients. It should not be used as the sole control to establish a security boundary.", possibleValuesListed(sdk.AllClientTypes)),
@@ -78,7 +74,8 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 	"security_integrations": {
 		Type: schema.TypeSet,
 		Elem: &schema.Schema{
-			Type: schema.TypeString,
+			Type:             schema.TypeString,
+			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		},
 		Optional:    true,
 		Description: "A list of security integrations the authentication policy is associated with. This parameter has no effect when SAML or OAUTH are not in the AUTHENTICATION_METHODS list. All values in the SECURITY_INTEGRATIONS list must be compatible with the values in the AUTHENTICATION_METHODS list. For example, if SECURITY_INTEGRATIONS contains a SAML security integration, and AUTHENTICATION_METHODS contains OAUTH, then you cannot create the authentication policy. To allow all security integrations use ALL as parameter.",
@@ -91,7 +88,7 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `SHOW AUTHENTICATION POLICIES` for the given integration.",
+		Description: "Outputs the result of `SHOW AUTHENTICATION POLICIES` for the given policy.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowAuthenticationPolicySchema,
 		},
@@ -99,7 +96,7 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 	DescribeOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `DESCRIBE AUTHENTICATION POLICY` for the given integration.",
+		Description: "Outputs the result of `DESCRIBE AUTHENTICATION POLICY` for the given policy.",
 		Elem: &schema.Resource{
 			Schema: schemas.AuthenticationPolicyDescribeSchema,
 		},
@@ -372,9 +369,6 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 	if d.HasChange("authentication_methods") {
 		if v, ok := d.GetOk("authentication_methods"); ok {
 			authenticationMethods := expandStringList(v.(*schema.Set).List())
-			for _, v := range authenticationMethods {
-				fmt.Println(v)
-			}
 			authenticationMethodsValues := make([]sdk.AuthenticationMethods, len(authenticationMethods))
 			for i, v := range authenticationMethods {
 				option, err := sdk.ToAuthenticationMethodsOption(v)

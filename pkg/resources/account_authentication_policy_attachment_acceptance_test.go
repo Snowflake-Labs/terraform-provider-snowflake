@@ -31,14 +31,6 @@ func TestAcc_AccountAuthenticationPolicyAttachment(t *testing.T) {
 				ResourceName:      "snowflake_account_authentication_policy_attachment.att",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"initially_suspended",
-					"wait_for_provisioning",
-					"query_acceleration_max_scale_factor",
-					"max_concurrency_level",
-					"statement_queued_timeout_in_seconds",
-					"statement_timeout_in_seconds",
-				},
 			},
 		},
 	})
