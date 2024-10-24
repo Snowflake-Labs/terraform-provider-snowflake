@@ -271,7 +271,7 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 	req := sdk.NewCreateOauthForCustomClientsSecurityIntegrationRequest(id, oauthClientType, d.Get("oauth_redirect_uri").(string))
 
 	if v := d.Get("enabled").(string); v != BooleanDefault {
-		parsedBool, err := booleanStringToBool(v)
+		parsedBool, err := BooleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -279,7 +279,7 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 	}
 
 	if v := d.Get("oauth_allow_non_tls_redirect_uri").(string); v != BooleanDefault {
-		parsedBool, err := booleanStringToBool(v)
+		parsedBool, err := BooleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -287,7 +287,7 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 	}
 
 	if v := d.Get("oauth_enforce_pkce").(string); v != BooleanDefault {
-		parsedBool, err := booleanStringToBool(v)
+		parsedBool, err := BooleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -321,7 +321,7 @@ func CreateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 	}
 
 	if v := d.Get("oauth_issue_refresh_tokens").(string); v != BooleanDefault {
-		parsedBool, err := booleanStringToBool(v)
+		parsedBool, err := BooleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -545,7 +545,7 @@ func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 
 	if d.HasChange("enabled") {
 		if v := d.Get("enabled").(string); v != BooleanDefault {
-			parsedBool, err := booleanStringToBool(v)
+			parsedBool, err := BooleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -557,7 +557,7 @@ func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 
 	if d.HasChange("oauth_allow_non_tls_redirect_uri") {
 		if v := d.Get("oauth_allow_non_tls_redirect_uri").(string); v != BooleanDefault {
-			parsedBool, err := booleanStringToBool(v)
+			parsedBool, err := BooleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -570,7 +570,7 @@ func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 
 	if d.HasChange("oauth_enforce_pkce") {
 		if v := d.Get("oauth_enforce_pkce").(string); v != BooleanDefault {
-			parsedBool, err := booleanStringToBool(v)
+			parsedBool, err := BooleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -613,7 +613,7 @@ func UpdateContextOauthIntegrationForCustomClients(ctx context.Context, d *schem
 
 	if d.HasChange("oauth_issue_refresh_tokens") {
 		if v := d.Get("oauth_issue_refresh_tokens").(string); v != BooleanDefault {
-			parsedBool, err := booleanStringToBool(v)
+			parsedBool, err := BooleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
