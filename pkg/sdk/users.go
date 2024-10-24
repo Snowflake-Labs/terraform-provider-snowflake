@@ -95,12 +95,12 @@ type userDBRow struct {
 	MustChangePassword    sql.NullString `db:"must_change_password"`
 	SnowflakeLock         sql.NullString `db:"snowflake_lock"`
 	DefaultWarehouse      sql.NullString `db:"default_warehouse"`
-	DefaultNamespace      string         `db:"default_namespace"`
-	DefaultRole           string         `db:"default_role"`
-	DefaultSecondaryRoles string         `db:"default_secondary_roles"`
+	DefaultNamespace      sql.NullString `db:"default_namespace"`
+	DefaultRole           sql.NullString `db:"default_role"`
+	DefaultSecondaryRoles sql.NullString `db:"default_secondary_roles"`
 	ExtAuthnDuo           sql.NullString `db:"ext_authn_duo"`
-	ExtAuthnUid           string         `db:"ext_authn_uid"`
-	MinsToBypassMfa       string         `db:"mins_to_bypass_mfa"`
+	ExtAuthnUid           sql.NullString `db:"ext_authn_uid"`
+	MinsToBypassMfa       sql.NullString `db:"mins_to_bypass_mfa"`
 	Owner                 string         `db:"owner"`
 	LastSuccessLogin      sql.NullTime   `db:"last_success_login"`
 	ExpiresAtTime         sql.NullTime   `db:"expires_at_time"`
@@ -113,18 +113,13 @@ type userDBRow struct {
 
 func (row userDBRow) convert() *User {
 	user := &User{
-		Name:                  row.Name,
-		CreatedOn:             row.CreatedOn,
-		LoginName:             row.LoginName,
-		DefaultNamespace:      row.DefaultNamespace,
-		DefaultRole:           row.DefaultRole,
-		DefaultSecondaryRoles: row.DefaultSecondaryRoles,
-		ExtAuthnUid:           row.ExtAuthnUid,
-		MinsToBypassMfa:       row.MinsToBypassMfa,
-		Owner:                 row.Owner,
-		HasPassword:           row.HasPassword,
-		HasRsaPublicKey:       row.HasRsaPublicKey,
-		HasMfa:                row.HasMfa,
+		Name:            row.Name,
+		CreatedOn:       row.CreatedOn,
+		LoginName:       row.LoginName,
+		Owner:           row.Owner,
+		HasPassword:     row.HasPassword,
+		HasRsaPublicKey: row.HasRsaPublicKey,
+		HasMfa:          row.HasMfa,
 	}
 	if row.DisplayName.Valid {
 		user.DisplayName = row.DisplayName.String
@@ -151,8 +146,23 @@ func (row userDBRow) convert() *User {
 	handleNullableBoolString(row.MustChangePassword, &user.MustChangePassword)
 	handleNullableBoolString(row.SnowflakeLock, &user.SnowflakeLock)
 	handleNullableBoolString(row.ExtAuthnDuo, &user.ExtAuthnDuo)
+	if row.MinsToBypassMfa.Valid {
+		user.MinsToBypassMfa = row.MinsToBypassMfa.String
+	}
+	if row.ExtAuthnUid.Valid {
+		user.ExtAuthnUid = row.ExtAuthnUid.String
+	}
 	if row.DefaultWarehouse.Valid {
 		user.DefaultWarehouse = row.DefaultWarehouse.String
+	}
+	if row.DefaultNamespace.Valid {
+		user.DefaultNamespace = row.DefaultNamespace.String
+	}
+	if row.DefaultRole.Valid {
+		user.DefaultRole = row.DefaultRole.String
+	}
+	if row.DefaultSecondaryRoles.Valid {
+		user.DefaultSecondaryRoles = row.DefaultSecondaryRoles.String
 	}
 	if row.LastSuccessLogin.Valid {
 		user.LastSuccessLogin = row.LastSuccessLogin.Time
