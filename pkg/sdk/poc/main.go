@@ -46,6 +46,7 @@ var definitionMapping = map[string]*generator.Interface{
 	"external_volumes_def.go":                sdk.ExternalVolumesDef,
 	"authentication_policies_def.go":         sdk.AuthenticationPoliciesDef,
 	"secrets_def.go":                         sdk.SecretsDef,
+	"connections_def.go":                     sdk.ConnectionDef,
 }
 
 func main() {
