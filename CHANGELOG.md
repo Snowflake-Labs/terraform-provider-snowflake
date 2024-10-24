@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.98.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.97.0...v0.98.0) (2024-10-24)
+
+
+### 🎉 **What's new:**
+
+* Add stream on directory table ([#3129](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3129)) ([4391473](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/439147392436b9427e31ea578cc5bb971189a932))
+* Secret resource ([#3110](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3110)) ([16a812d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/16a812dae20d59f31457790dcd99db03db697051))
+* Secrets datasource ([#3131](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3131)) ([8110138](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/811013887cdf1a6624c93481f18e12a183865463))
+* Upgrade tag SDK ([#3126](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3126)) ([893b288](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/893b288f91ee3d31c875f2e38c7346fe362632e6))
+
+
+### 🔧 **Misc**
+
+* Add tests to 3117 and bump build time ([#3133](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3133)) ([ca90fde](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ca90fdefc18f6c77627e602df46650e17cb54eaa))
+* Test support for object renaming ([#3130](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3130)) ([d665419](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d6654195c099b81969bb8043e98771cf199ee0f4))
+
+
+### 🐛 **Bug fixes:**
+
+* handle external change of secret type ([#3141](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3141)) ([649b839](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/649b8397987d13fa53c67729a81dc7fceef218a7))
+* merge diffs on test clients ([#3149](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3149)) ([0f06b4a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0f06b4a063c9a9f9922aa4d83c47935d09757571))
+
 ## [0.97.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.96.0...v0.97.0) (2024-10-10)
 
 
