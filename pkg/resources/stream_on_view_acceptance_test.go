@@ -27,19 +27,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_StreamOnTable_Basic(t *testing.T) {
+func TestAcc_StreamOnView_Basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceId := helpers.EncodeResourceIdentifier(id)
-	resourceName := "snowflake_stream_on_table.test"
+	resourceName := "snowflake_stream_on_view.test"
 
 	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
 	t.Cleanup(cleanupTable)
+	statement := fmt.Sprintf("SELECT * FROM %s", table.ID().FullyQualifiedName())
+	view, cleanupView := acc.TestClient().View.CreateView(t, statement)
+	t.Cleanup(cleanupView)
 
-	baseModel := model.StreamOnTableBase("test", id, table.ID())
+	baseModel := func() *model.StreamOnViewModel {
+		return model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), view.ID().FullyQualifiedName())
+	}
 
-	modelWithExtraFields := model.StreamOnTableBase("test", id, table.ID()).
+	modelWithExtraFields := baseModel().
 		WithCopyGrants(false).
 		WithComment("foo").
 		WithAppendOnly(r.BooleanTrue).
@@ -48,7 +53,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			"offset": pluginconfig.StringVariable("0"),
 		}))
 
-	modelWithExtraFieldsDefaultMode := model.StreamOnTableBase("test", id, table.ID()).
+	modelWithExtraFieldsDefaultMode := baseModel().
 		WithCopyGrants(false).
 		WithComment("foo").
 		WithAppendOnly(r.BooleanFalse).
@@ -62,26 +67,26 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnView),
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				Config: config.FromModel(t, baseModel),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Config: config.FromModel(t, baseModel()),
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasAppendOnlyString(r.BooleanDefault).
-					HasTableString(table.ID().FullyQualifiedName()),
+					HasViewString(view.ID().FullyQualifiedName()),
 					resourceshowoutputassert.StreamShowOutput(t, resourceName).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
+						HasTableName(view.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeView).
 						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
 						HasType("DELTA").
 						HasStale("false").
@@ -95,8 +100,8 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", view.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeView))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
@@ -108,38 +113,38 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			},
 			// import without optionals
 			{
-				Config:       config.FromModel(t, baseModel),
+				Config:       config.FromModel(t, baseModel()),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					resourceassert.ImportedStreamOnTableResource(t, resourceId).
+					resourceassert.ImportedStreamOnViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasAppendOnlyString(r.BooleanFalse).
-						HasTableString(table.ID().FullyQualifiedName()),
+						HasViewString(view.ID().FullyQualifiedName()),
 				),
 			},
 			// set all fields
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFields),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasAppendOnlyString(r.BooleanTrue).
-					HasTableString(table.ID().FullyQualifiedName()),
+					HasViewString(view.ID().FullyQualifiedName()),
 					resourceshowoutputassert.StreamShowOutput(t, resourceName).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
+						HasTableName(view.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeView).
 						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
 						HasType("DELTA").
 						HasStale("false").
@@ -154,8 +159,8 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", view.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeView))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
@@ -170,28 +175,28 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().Stream.Alter(t, sdk.NewAlterStreamRequest(id).WithSetComment("bar"))
 				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFields),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasAppendOnlyString(r.BooleanTrue).
-					HasTableString(table.ID().FullyQualifiedName()),
+					HasViewString(view.ID().FullyQualifiedName()),
 					resourceshowoutputassert.StreamShowOutput(t, resourceName).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
+						HasTableName(view.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeView).
 						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
 						HasType("DELTA").
 						HasStale("false").
@@ -206,8 +211,8 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", view.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeView))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
@@ -219,28 +224,28 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			},
 			// update fields that recreate the object
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFieldsDefaultMode),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasAppendOnlyString(r.BooleanFalse).
-					HasTableString(table.ID().FullyQualifiedName()),
+					HasViewString(view.ID().FullyQualifiedName()),
 					resourceshowoutputassert.StreamShowOutput(t, resourceName).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
+						HasTableName(view.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeView).
 						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
 						HasType("DELTA").
 						HasStale("false").
@@ -255,8 +260,8 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", view.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeView))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
@@ -272,40 +277,44 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					resourceassert.ImportedStreamOnTableResource(t, resourceId).
+					resourceassert.ImportedStreamOnViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasAppendOnlyString(r.BooleanFalse).
-						HasTableString(table.ID().FullyQualifiedName()),
+						HasViewString(view.ID().FullyQualifiedName()),
 				),
 			},
 		},
 	})
 }
 
-func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
+func TestAcc_StreamOnView_CopyGrants(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_stream_on_table.test"
-
-	var createdOn string
+	resourceName := "snowflake_stream_on_view.test"
 
 	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
 	t.Cleanup(cleanupTable)
-	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
+	statement := fmt.Sprintf("SELECT * FROM %s", table.ID().FullyQualifiedName())
+	view, cleanupView := acc.TestClient().View.CreateView(t, statement)
+	t.Cleanup(cleanupView)
+
+	var createdOn string
+
+	model := model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), view.ID().FullyQualifiedName())
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnView),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, model.WithCopyGrants(false)),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						createdOn = value
@@ -315,11 +324,11 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 			},
 			{
 				Config: config.FromModel(t, model.WithCopyGrants(true)),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						if value != createdOn {
-							return fmt.Errorf("stream was recreated")
+							return fmt.Errorf("view was recreated")
 						}
 						return nil
 					})),
@@ -327,11 +336,11 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 			},
 			{
 				Config: config.FromModel(t, model.WithCopyGrants(false)),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						if value != createdOn {
-							return fmt.Errorf("stream was recreated")
+							return fmt.Errorf("view was recreated")
 						}
 						return nil
 					})),
@@ -341,25 +350,28 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 	})
 }
 
-func TestAcc_StreamOnTable_CheckGrantsAfterRecreation(t *testing.T) {
+func TestAcc_StreamOnView_CheckGrantsAfterRecreation(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_stream_on_table.test"
+	resourceName := "snowflake_stream_on_view.test"
 
 	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
 	t.Cleanup(cleanupTable)
 
-	table2, cleanupTable2 := acc.TestClient().Table.CreateWithChangeTracking(t)
-	t.Cleanup(cleanupTable2)
+	statement := fmt.Sprintf("SELECT * FROM %s", table.ID().FullyQualifiedName())
+	view, cleanupView := acc.TestClient().View.CreateView(t, statement)
+	t.Cleanup(cleanupView)
+	view2, cleanupView2 := acc.TestClient().View.CreateView(t, statement)
+	t.Cleanup(cleanupView2)
 
 	role, cleanupRole := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(cleanupRole)
 
-	model1 := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName()).
+	model1 := model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), view.ID().FullyQualifiedName()).
 		WithCopyGrants(true)
-	model1WithoutCopyGrants := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
-	model2 := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table2.ID().FullyQualifiedName()).
+	model1WithoutCopyGrants := model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), view.ID().FullyQualifiedName())
+	model2 := model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), view2.ID().FullyQualifiedName()).
 		WithCopyGrants(true)
 
 	resource.Test(t, resource.TestCase{
@@ -401,10 +413,10 @@ func TestAcc_StreamOnTable_CheckGrantsAfterRecreation(t *testing.T) {
 	})
 }
 
-func TestAcc_StreamOnTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.T) {
+func TestAcc_StreamOnView_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	resourceName := "snowflake_stream_on_table.test"
+	resourceName := "snowflake_stream_on_view.test"
 
 	schema, cleanupSchema := acc.TestClient().Schema.CreateSchemaWithOpts(t,
 		acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(acc.TestClient().Ids.DatabaseId()),
@@ -419,15 +431,19 @@ func TestAcc_StreamOnTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.
 	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTrackingInSchema(t, schema.ID())
 	t.Cleanup(cleanupTable)
 
+	statement := fmt.Sprintf("SELECT * FROM %s", table.ID().FullyQualifiedName())
+	view, cleanupView := acc.TestClient().View.CreateView(t, statement)
+	t.Cleanup(cleanupView)
+
 	var createdOn string
 
-	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
+	model := model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), view.ID().FullyQualifiedName())
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnView),
 		Steps: []resource.TestStep{
 			// check that stale state is marked properly and forces an update
 			{
@@ -439,7 +455,7 @@ func TestAcc_StreamOnTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanTrue),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
@@ -460,7 +476,7 @@ func TestAcc_StreamOnTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanTrue),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
@@ -476,10 +492,10 @@ func TestAcc_StreamOnTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.
 	})
 }
 
-func TestAcc_StreamOnTable_StaleWithExternalChanges(t *testing.T) {
+func TestAcc_StreamOnView_StaleWithExternalChanges(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	resourceName := "snowflake_stream_on_table.test"
+	resourceName := "snowflake_stream_on_view.test"
 
 	schema, cleanupSchema := acc.TestClient().Schema.CreateSchemaWithOpts(t,
 		acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(acc.TestClient().Ids.DatabaseId()),
@@ -494,20 +510,24 @@ func TestAcc_StreamOnTable_StaleWithExternalChanges(t *testing.T) {
 	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTrackingInSchema(t, schema.ID())
 	t.Cleanup(cleanupTable)
 
+	statement := fmt.Sprintf("SELECT * FROM %s", table.ID().FullyQualifiedName())
+	view, cleanupView := acc.TestClient().View.CreateViewInSchema(t, statement, schema.ID())
+	t.Cleanup(cleanupView)
+
 	var createdOn string
 
-	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
+	model := model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), view.ID().FullyQualifiedName())
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnView),
 		Steps: []resource.TestStep{
 			// initial creation does not lead to stale stream
 			{
 				Config: config.FromModel(t, model),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
@@ -543,7 +563,7 @@ func TestAcc_StreamOnTable_StaleWithExternalChanges(t *testing.T) {
 					)
 				},
 				Config: config.FromModel(t, model),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
@@ -560,34 +580,37 @@ func TestAcc_StreamOnTable_StaleWithExternalChanges(t *testing.T) {
 }
 
 // There is no way to check at/before fields in show and describe. That's why we try creating with these values, but do not assert them.
-func TestAcc_StreamOnTable_At(t *testing.T) {
+func TestAcc_StreamOnView_At(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceId := helpers.EncodeResourceIdentifier(id)
-	resourceName := "snowflake_stream_on_table.test"
+	resourceName := "snowflake_stream_on_view.test"
 
 	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
 	t.Cleanup(cleanupTable)
-	acc.TestClient().Table.InsertInt(t, table.ID())
+	statement := fmt.Sprintf("SELECT * FROM %s", table.ID().FullyQualifiedName())
+	view, cleanupView := acc.TestClient().View.CreateView(t, statement)
+	t.Cleanup(cleanupView)
 
+	acc.TestClient().Table.InsertInt(t, table.ID())
 	lastQueryId := acc.TestClient().Context.LastQueryId(t)
 
-	commonModel := func() *model.StreamOnTableModel {
-		return model.StreamOnTableBase("test", id, table.ID()).
+	baseModel := func() *model.StreamOnViewModel {
+		return model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), view.ID().FullyQualifiedName()).
 			WithComment("foo").
 			WithAppendOnly(r.BooleanTrue).
 			WithShowInitialRows(r.BooleanTrue).
 			WithCopyGrants(false)
 	}
 
-	modelWithOffset := commonModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithOffset := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"offset": pluginconfig.StringVariable("0"),
 	}))
-	modelWithStream := commonModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithStream := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
 	}))
-	modelWithStatement := commonModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithStatement := baseModel().WithAtValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"statement": pluginconfig.StringVariable(lastQueryId),
 	}))
 
@@ -596,17 +619,17 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnView),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasTableString(table.ID().FullyQualifiedName()).
+					HasViewString(view.ID().FullyQualifiedName()).
 					HasAppendOnlyString(r.BooleanTrue).
 					HasShowInitialRowsString(r.BooleanTrue).
 					HasCommentString("foo"),
@@ -617,8 +640,8 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasComment("foo").
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
+						HasTableName(view.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeView).
 						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
 						HasType("DELTA").
 						HasStale("false").
@@ -632,8 +655,8 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", view.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeView))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
@@ -644,33 +667,33 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStream),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStatement),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
 			},
 			// TODO(SNOW-1689111): test timestamps
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
 				ResourceName:    resourceName,
 				ImportState:     true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					resourceassert.ImportedStreamOnTableResource(t, resourceId).
+					resourceassert.ImportedStreamOnViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasAppendOnlyString(r.BooleanTrue).
-						HasTableString(table.ID().FullyQualifiedName()),
+						HasViewString(view.ID().FullyQualifiedName()),
 				),
 			},
 		},
@@ -678,33 +701,36 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 }
 
 // There is no way to check at/before fields in show and describe. That's why we try creating with these values, but do not assert them.
-func TestAcc_StreamOnTable_Before(t *testing.T) {
+func TestAcc_StreamOnView_Before(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_stream_on_table.test"
+	resourceName := "snowflake_stream_on_view.test"
 
 	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
 	t.Cleanup(cleanupTable)
-	acc.TestClient().Table.InsertInt(t, table.ID())
+	statement := fmt.Sprintf("SELECT * FROM %s", table.ID().FullyQualifiedName())
+	view, cleanupView := acc.TestClient().View.CreateView(t, statement)
+	t.Cleanup(cleanupView)
 
+	acc.TestClient().Table.InsertInt(t, table.ID())
 	lastQueryId := acc.TestClient().Context.LastQueryId(t)
 
-	commonModel := func() *model.StreamOnTableModel {
-		return model.StreamOnTableBase("test", id, table.ID()).
+	baseModel := func() *model.StreamOnViewModel {
+		return model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), view.ID().FullyQualifiedName()).
 			WithComment("foo").
 			WithAppendOnly(r.BooleanTrue).
 			WithShowInitialRows(r.BooleanTrue).
 			WithCopyGrants(false)
 	}
 
-	modelWithOffset := commonModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithOffset := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"offset": pluginconfig.StringVariable("0"),
 	}))
-	modelWithStream := commonModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithStream := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"stream": pluginconfig.StringVariable(id.FullyQualifiedName()),
 	}))
-	modelWithStatement := commonModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
+	modelWithStatement := baseModel().WithBeforeValue(pluginconfig.MapVariable(map[string]pluginconfig.Variable{
 		"statement": pluginconfig.StringVariable(lastQueryId),
 	}))
 
@@ -713,17 +739,17 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnView),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/before"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasTableString(table.ID().FullyQualifiedName()).
+					HasViewString(view.ID().FullyQualifiedName()).
 					HasAppendOnlyString(r.BooleanTrue).
 					HasShowInitialRowsString(r.BooleanTrue).
 					HasCommentString("foo"),
@@ -734,8 +760,8 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 						HasSchemaName(id.SchemaName()).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasComment("foo").
-						HasTableName(table.ID().FullyQualifiedName()).
-						HasSourceType(sdk.StreamSourceTypeTable).
+						HasTableName(view.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeView).
 						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
 						HasType("DELTA").
 						HasStale("false").
@@ -749,8 +775,8 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.schema_name", id.SchemaName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.table_name", view.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.source_type", string(sdk.StreamSourceTypeView))),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.#", "1")),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.type", "DELTA")),
@@ -761,16 +787,16 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/before"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStream),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/before"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStatement),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assert.AssertThat(t, resourceassert.StreamOnViewResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
 			},
@@ -779,12 +805,12 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 	})
 }
 
-func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
+func TestAcc_StreamOnView_InvalidConfiguration(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	modelWithInvalidTableId := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "invalid")
+	modelWithInvalidTableId := model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), "invalid")
 
-	modelWithBefore := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").
+	modelWithBefore := model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").
 		WithComment("foo").
 		WithCopyGrants(false).
 		WithAppendOnly(r.BooleanFalse).
@@ -796,7 +822,7 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 			"stream":    pluginconfig.StringVariable("0"),
 		}))
 
-	modelWithAt := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").
+	modelWithAt := model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), "foo.bar.hoge").
 		WithComment("foo").
 		WithCopyGrants(false).
 		WithAppendOnly(r.BooleanFalse).
@@ -817,17 +843,17 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 		Steps: []resource.TestStep{
 			// multiple excluding options - before
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/before"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/before"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithBefore),
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
 			// multiple excluding options - at
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnTable/at"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnView/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithAt),
 				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
-			// invalid table id
+			// invalid view id
 			{
 				Config:      config.FromModel(t, modelWithInvalidTableId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),

@@ -16,7 +16,7 @@ Currently, resources like `snowflake_view`, `snowflake_stream_on_table`, `snowfl
 Starting from this version, the provider detects stale streams for `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table` and recreates them (optionally with `copy_grants`) to recover them. To handle this correctly, a new computed-only field `stale` has been added to these resource, indicating whether a stream is stale.
 
 ### *(new feature)* snowflake_stream_on_directory_table resource
-Continuing changes made in [v0.97](#v0960--v0970), the new resource `snowflake_stream_on_directory_table` has been introduced to replace the previous `snowflake_stream` for streams on directory tables.
+Continuing changes made in [v0.97](#v0960--v0970), the new resource `snowflake_stream_on_directory_table` and `snowflake_stream_on_view` have been introduced to replace the previous `snowflake_stream` for streams on directory tables and streams on views.
 
 To use the new `stream_on_directory_table`, change the old `stream` from
 ```terraform
@@ -40,6 +40,33 @@ resource "snowflake_stream_on_directory_table" "stream" {
   database = "database"
 
   stage             = snowflake_stage.stage.fully_qualified_name
+
+  comment = "A stream."
+}
+```
+
+To use the new `stream_on_view`, change the old `stream` from
+```terraform
+resource "snowflake_stream" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  on_view    = snowflake_view.view.fully_qualified_name
+
+  comment = "A stream."
+}
+```
+
+to
+
+```terraform
+resource "snowflake_stream_on_view" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  view             = snowflake_view.view.fully_qualified_name
 
   comment = "A stream."
 }

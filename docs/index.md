@@ -240,6 +240,7 @@ The Snowflake provider will use the following order of precedence when determini
 - [snowflake_oauth_integration](./docs/resources/oauth_integration)
 - [snowflake_role](./docs/resources/role) - use [snowflake_account_role](./docs/resources/account_role) instead
 - [snowflake_saml_integration](./docs/resources/saml_integration) - use [snowflake_saml2_integration](./docs/resources/saml2_integration) instead
+- [snowflake_stream](./docs/resources/stream)
 
 ## Currently deprecated datasources
 
