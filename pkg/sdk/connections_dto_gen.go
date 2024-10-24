@@ -5,7 +5,7 @@ package sdk
 var (
 	_ optionsProvider[CreateConnectionOptions]           = new(CreateConnectionRequest)
 	_ optionsProvider[CreateReplicatedConnectionOptions] = new(CreateReplicatedConnectionRequest)
-	_ optionsProvider[AlterFailoverConnectionOptions]    = new(AlterConnectionFailoverRequest)
+	_ optionsProvider[AlterFailoverConnectionOptions]    = new(AlterFailoverConnectionRequest)
 	_ optionsProvider[AlterConnectionOptions]            = new(AlterConnectionRequest)
 	_ optionsProvider[DropConnectionOptions]             = new(DropConnectionRequest)
 	_ optionsProvider[ShowConnectionOptions]             = new(ShowConnectionRequest)
@@ -24,24 +24,21 @@ type CreateReplicatedConnectionRequest struct {
 	Comment     *string
 }
 
-type AlterConnectionFailoverRequest struct {
+type AlterFailoverConnectionRequest struct {
 	name                      AccountObjectIdentifier // required
 	EnableConnectionFailover  *EnableConnectionFailoverRequest
 	DisableConnectionFailover *DisableConnectionFailoverRequest
-	Primary                   *PrimaryRequest
+	Primary                   *bool
 }
 
 type EnableConnectionFailoverRequest struct {
-	Accounts           []ExternalObjectIdentifier
+	ToAccounts         []AccountIdentifier
 	IgnoreEditionCheck *bool
 }
 
 type DisableConnectionFailoverRequest struct {
 	ToAccounts *bool
-	Accounts   []ExternalObjectIdentifier
-}
-
-type PrimaryRequest struct {
+	Accounts   []AccountIdentifier
 }
 
 type AlterConnectionRequest struct {

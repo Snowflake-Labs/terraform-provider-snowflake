@@ -2,6 +2,8 @@
 
 package sdk
 
+import ()
+
 func NewCreateConnectionRequest(
 	name AccountObjectIdentifier,
 ) *CreateConnectionRequest {
@@ -40,25 +42,25 @@ func (s *CreateReplicatedConnectionRequest) WithComment(Comment string) *CreateR
 	return s
 }
 
-func NewAlterConnectionFailoverRequest(
+func NewAlterFailoverConnectionRequest(
 	name AccountObjectIdentifier,
-) *AlterConnectionFailoverRequest {
-	s := AlterConnectionFailoverRequest{}
+) *AlterFailoverConnectionRequest {
+	s := AlterFailoverConnectionRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterConnectionFailoverRequest) WithEnableConnectionFailover(EnableConnectionFailover EnableConnectionFailoverRequest) *AlterConnectionFailoverRequest {
+func (s *AlterFailoverConnectionRequest) WithEnableConnectionFailover(EnableConnectionFailover EnableConnectionFailoverRequest) *AlterFailoverConnectionRequest {
 	s.EnableConnectionFailover = &EnableConnectionFailover
 	return s
 }
 
-func (s *AlterConnectionFailoverRequest) WithDisableConnectionFailover(DisableConnectionFailover DisableConnectionFailoverRequest) *AlterConnectionFailoverRequest {
+func (s *AlterFailoverConnectionRequest) WithDisableConnectionFailover(DisableConnectionFailover DisableConnectionFailoverRequest) *AlterFailoverConnectionRequest {
 	s.DisableConnectionFailover = &DisableConnectionFailover
 	return s
 }
 
-func (s *AlterConnectionFailoverRequest) WithPrimary(Primary PrimaryRequest) *AlterConnectionFailoverRequest {
+func (s *AlterFailoverConnectionRequest) WithPrimary(Primary bool) *AlterFailoverConnectionRequest {
 	s.Primary = &Primary
 	return s
 }
@@ -67,8 +69,8 @@ func NewEnableConnectionFailoverRequest() *EnableConnectionFailoverRequest {
 	return &EnableConnectionFailoverRequest{}
 }
 
-func (s *EnableConnectionFailoverRequest) WithAccounts(Accounts []ExternalObjectIdentifier) *EnableConnectionFailoverRequest {
-	s.Accounts = Accounts
+func (s *EnableConnectionFailoverRequest) WithToAccounts(ToAccounts []AccountIdentifier) *EnableConnectionFailoverRequest {
+	s.ToAccounts = ToAccounts
 	return s
 }
 
@@ -86,13 +88,9 @@ func (s *DisableConnectionFailoverRequest) WithToAccounts(ToAccounts bool) *Disa
 	return s
 }
 
-func (s *DisableConnectionFailoverRequest) WithAccounts(Accounts []ExternalObjectIdentifier) *DisableConnectionFailoverRequest {
+func (s *DisableConnectionFailoverRequest) WithAccounts(Accounts []AccountIdentifier) *DisableConnectionFailoverRequest {
 	s.Accounts = Accounts
 	return s
-}
-
-func NewPrimaryRequest() *PrimaryRequest {
-	return &PrimaryRequest{}
 }
 
 func NewAlterConnectionRequest(

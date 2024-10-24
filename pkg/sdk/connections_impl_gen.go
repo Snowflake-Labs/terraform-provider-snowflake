@@ -23,7 +23,7 @@ func (v *connections) CreateReplicated(ctx context.Context, request *CreateRepli
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *connections) AlterFailover(ctx context.Context, request *AlterConnectionFailoverRequest) error {
+func (v *connections) AlterFailover(ctx context.Context, request *AlterFailoverConnectionRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
@@ -78,14 +78,16 @@ func (r *CreateReplicatedConnectionRequest) toOpts() *CreateReplicatedConnection
 	return opts
 }
 
-func (r *AlterConnectionFailoverRequest) toOpts() *AlterFailoverConnectionOptions {
+func (r *AlterFailoverConnectionRequest) toOpts() *AlterFailoverConnectionOptions {
 	opts := &AlterFailoverConnectionOptions{
 		name: r.name,
+
+		Primary: r.Primary,
 	}
 
 	if r.EnableConnectionFailover != nil {
 		opts.EnableConnectionFailover = &EnableConnectionFailover{
-			Accounts:           r.EnableConnectionFailover.Accounts,
+			ToAccounts:         r.EnableConnectionFailover.ToAccounts,
 			IgnoreEditionCheck: r.EnableConnectionFailover.IgnoreEditionCheck,
 		}
 	}
@@ -95,10 +97,6 @@ func (r *AlterConnectionFailoverRequest) toOpts() *AlterFailoverConnectionOption
 			ToAccounts: r.DisableConnectionFailover.ToAccounts,
 			Accounts:   r.DisableConnectionFailover.Accounts,
 		}
-	}
-
-	if r.Primary != nil {
-		opts.Primary = &Primary{}
 	}
 
 	return opts
@@ -157,6 +155,5 @@ func (r connectionRow) convert() *Connection {
 	if r.Comment.Valid {
 		c.Comment = String(r.Comment.String)
 	}
-
 	return c
 }

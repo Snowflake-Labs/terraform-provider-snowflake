@@ -6,9 +6,6 @@ import (
 	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 )
 
-var enabledFailoverAccounts = g.NewQueryStruct("EnabledFailoverAccounts").
-	Text("Account", g.KeywordOptions().NoQuotes())
-
 var ConnectionDef = g.NewInterface(
 	"Connections",
 	"Connection",
@@ -30,23 +27,23 @@ var ConnectionDef = g.NewInterface(
 		SQL("CONNECTION").
 		IfNotExists().
 		Name().
-		SQL("AS REPLICA OF").
+		//SQL("AS REPLICA OF").
 		// external reference to connection: <orgnization_name>.<account_name>.<name>
-		Identifier("ReplicaOf", g.KindOfT[ExternalObjectIdentifier](), g.IdentifierOptions().Required()).
+		Identifier("ReplicaOf", g.KindOfT[ExternalObjectIdentifier](), g.IdentifierOptions().Required().SQL("AS REPLICA OF")).
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidIdentifier, "ReplicaOf"),
 ).CustomOperation(
-	"AlterConnectionFailover",
+	"AlterFailover",
 	"https://docs.snowflake.com/en/sql-reference/sql/alter-connection",
-	g.NewQueryStruct("AlterConnectionFailover").
+	g.NewQueryStruct("AlterFailover").
 		Alter().
 		SQL("CONNECTION").
 		Name().
 		OptionalQueryStructField(
 			"EnableConnectionFailover",
 			g.NewQueryStruct("EnableConnectionFailover").
-				List("Accounts", "ExternalObjectIdentifier", g.ListOptions().NoParentheses()).
+				List("ToAccounts", "AccountIdentifier", g.ListOptions().NoParentheses()).
 				OptionalSQL("IGNORE EDITION CHECK"),
 			g.KeywordOptions().SQL("ENABLE FAILOVER TO ACCOUNTS"),
 		).
@@ -54,18 +51,12 @@ var ConnectionDef = g.NewInterface(
 			"DisableConnectionFailover",
 			g.NewQueryStruct("DisableConnectionFailover").
 				OptionalSQL("TO ACCOUNTS").
-				List("Accounts", "ExternalObjectIdentifier", g.ListOptions().NoParentheses()),
+				List("Accounts", "AccountIdentifier", g.ListOptions().NoParentheses()),
 			g.KeywordOptions().SQL("DISABLE FAILOVER"),
 		).
-		OptionalQueryStructField(
-			"Primary",
-			g.NewQueryStruct("Primary").
-				SQL("PRIMARY"),
-			g.KeywordOptions(),
-		).
+		OptionalSQL("PRIMARY").
 		WithValidation(g.ExactlyOneValueSet, "EnableConnectionFailover", "DisableConnectionFailover", "Primary"),
-).CustomOperation(
-	"Alter",
+).AlterOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/alter-connection",
 	g.NewQueryStruct("Alter").
 		Alter().
@@ -107,7 +98,7 @@ var ConnectionDef = g.NewInterface(
 		Field("primary", "string").
 		Field("failover_allowed_to_accounts", "string").
 		Field("connection_url", "string").
-		Field("orgnization_name", "string").
+		Field("organization_name", "string").
 		Field("account_locator", "string"),
 	g.PlainStruct("Connection").
 		Field("SnowflakeRegion", "string").

@@ -9,7 +9,7 @@ import (
 type Connections interface {
 	Create(ctx context.Context, request *CreateConnectionRequest) error
 	CreateReplicated(ctx context.Context, request *CreateReplicatedConnectionRequest) error
-	AlterFailover(ctx context.Context, request *AlterConnectionFailoverRequest) error
+	AlterFailover(ctx context.Context, request *AlterFailoverConnectionRequest) error
 	Alter(ctx context.Context, request *AlterConnectionRequest) error
 	Drop(ctx context.Context, request *DropConnectionRequest) error
 	Show(ctx context.Context, request *ShowConnectionRequest) ([]Connection, error)
@@ -43,18 +43,15 @@ type AlterFailoverConnectionOptions struct {
 	name                      AccountObjectIdentifier    `ddl:"identifier"`
 	EnableConnectionFailover  *EnableConnectionFailover  `ddl:"keyword" sql:"ENABLE FAILOVER TO ACCOUNTS"`
 	DisableConnectionFailover *DisableConnectionFailover `ddl:"keyword" sql:"DISABLE FAILOVER"`
-	Primary                   *Primary                   `ddl:"keyword"`
+	Primary                   *bool                      `ddl:"keyword" sql:"PRIMARY"`
 }
 type EnableConnectionFailover struct {
-	Accounts           []ExternalObjectIdentifier `ddl:"list,no_parentheses"`
-	IgnoreEditionCheck *bool                      `ddl:"keyword" sql:"IGNORE EDITION CHECK"`
+	ToAccounts         []AccountIdentifier `ddl:"list,no_parentheses"`
+	IgnoreEditionCheck *bool               `ddl:"keyword" sql:"IGNORE EDITION CHECK"`
 }
 type DisableConnectionFailover struct {
-	ToAccounts *bool                      `ddl:"keyword" sql:"TO ACCOUNTS"`
-	Accounts   []ExternalObjectIdentifier `ddl:"list,no_parentheses"`
-}
-type Primary struct {
-	primary bool `ddl:"static" sql:"PRIMARY"`
+	ToAccounts *bool               `ddl:"keyword" sql:"TO ACCOUNTS"`
+	Accounts   []AccountIdentifier `ddl:"list,no_parentheses"`
 }
 
 // AlterConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-connection.
@@ -119,5 +116,5 @@ func (c *Connection) ID() AccountObjectIdentifier {
 }
 
 func (c *Connection) ObjectType() ObjectType {
-	return ObjectTypeConnection
+	return ObjectTypeDatabase
 }
