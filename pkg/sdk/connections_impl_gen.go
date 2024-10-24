@@ -155,5 +155,6 @@ func (r connectionRow) convert() *Connection {
 	if r.Comment.Valid {
 		c.Comment = String(r.Comment.String)
 	}
+
 	return c
 }

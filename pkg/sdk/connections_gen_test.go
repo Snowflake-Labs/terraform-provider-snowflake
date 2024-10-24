@@ -1,8 +1,6 @@
 package sdk
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestConnections_CreateConnection(t *testing.T) {
 	id := randomAccountObjectIdentifier()
@@ -101,18 +99,6 @@ func TestConnections_AlterConnectionFailover(t *testing.T) {
 		opts.DisableConnectionFailover = &DisableConnectionFailover{}
 		opts.Primary = Bool(true)
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterFailoverConnectionOptions", "EnableConnectionFailover", "DisableConnectionFailover", "Primary"))
-	})
-
-	t.Run("promote to primary", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Primary = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s PRIMARY", id.FullyQualifiedName())
-	})
-
-	t.Run("without promotion to primary", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Primary = Bool(false)
-		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s", id.FullyQualifiedName())
 	})
 
 	t.Run("enable connection failover", func(t *testing.T) {

@@ -31,8 +31,7 @@ type CreateReplicatedConnectionOptions struct {
 	connection  bool                     `ddl:"static" sql:"CONNECTION"`
 	IfNotExists *bool                    `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        AccountObjectIdentifier  `ddl:"identifier"`
-	asReplicaOf bool                     `ddl:"static" sql:"AS REPLICA OF"`
-	ReplicaOf   ExternalObjectIdentifier `ddl:"identifier"`
+	ReplicaOf   ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
 	Comment     *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
@@ -112,7 +111,7 @@ type Connection struct {
 }
 
 func (c *Connection) ID() AccountObjectIdentifier {
-	return NewAccountObjectIdentifier(c.Name)
+    return NewAccountObjectIdentifier(c.Name)
 }
 
 func (c *Connection) ObjectType() ObjectType {

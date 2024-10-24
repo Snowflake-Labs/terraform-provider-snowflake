@@ -72,7 +72,7 @@ func TestInt_Connections(t *testing.T) {
 		)
 	})
 
-	// TODO: uncomment when able to set accounts to different regions
+	// TODO: uncomment when able to change accounts to different regions
 	// Snowflake error: The connection cannot be failed over to an account in the same region
 	/*
 		t.Run("AlterFailover EnableFailover", func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestInt_Connections(t *testing.T) {
 			primaryConn, connectionCleanup := testClientHelper().Connection.CreateConnection(t, id)
 			t.Cleanup(connectionCleanup)
 
-			err := client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(primaryConn.ID()).
+			err := client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(id).
 				WithEnableConnectionFailover(
 					*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
 						[]sdk.AccountIdentifier{
@@ -140,7 +140,7 @@ func TestInt_Connections(t *testing.T) {
 			)
 
 			// try to alter enable failover to accoutns list
-			err = client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(primaryConn.ID()).
+			err = client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(id).
 				WithEnableConnectionFailover(
 					*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
 						[]sdk.AccountIdentifier{},
