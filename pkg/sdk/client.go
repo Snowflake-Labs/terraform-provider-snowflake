@@ -206,7 +206,7 @@ func (c *Client) initialize() {
 	c.Applications = &applications{client: c}
 	c.AuthenticationPolicies = &authenticationPolicies{client: c}
 	c.Comments = &comments{client: c}
-    c.Connections = &connections{client: c}
+	c.Connections = &connections{client: c}
 	c.ContextFunctions = &contextFunctions{client: c}
 	c.ConversionFunctions = &conversionFunctions{client: c}
 	c.CortexSearchServices = &cortexSearchServices{client: c}

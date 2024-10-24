@@ -10,7 +10,7 @@ var (
 
 	// TODO: Add to the generator
 	emptyAccountObjectIdentifier             = NewAccountObjectIdentifier("")
-    emptyExtenalObjectIdentifier             = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), NewObjectIdentifierFromFullyQualifiedName(""))
+	emptyExternalObjectIdentifier            = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), NewObjectIdentifierFromFullyQualifiedName(""))
 	emptyDatabaseObjectIdentifier            = NewDatabaseObjectIdentifier("", "")
 	emptySchemaObjectIdentifier              = NewSchemaObjectIdentifier("", "", "")
 	emptySchemaObjectIdentifierWithArguments = NewSchemaObjectIdentifierWithArguments("", "", "")

@@ -49,8 +49,10 @@ type EnableConnectionFailover struct {
 	IgnoreEditionCheck *bool               `ddl:"keyword" sql:"IGNORE EDITION CHECK"`
 }
 type DisableConnectionFailover struct {
-	ToAccounts *bool               `ddl:"keyword" sql:"TO ACCOUNTS"`
-	Accounts   []AccountIdentifier `ddl:"list,no_parentheses"`
+	ToAccounts *ToAccounts `ddl:"keyword" sql:"TO ACCOUNTS"`
+}
+type ToAccounts struct {
+	Accounts []AccountIdentifier `ddl:"list,no_parentheses"`
 }
 
 // AlterConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-connection.
@@ -111,9 +113,9 @@ type Connection struct {
 }
 
 func (c *Connection) ID() AccountObjectIdentifier {
-    return NewAccountObjectIdentifier(c.Name)
+	return NewAccountObjectIdentifier(c.Name)
 }
 
 func (c *Connection) ObjectType() ObjectType {
-	return ObjectTypeDatabase
+	return ObjectTypeConnection
 }

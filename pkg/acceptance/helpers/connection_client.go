@@ -24,11 +24,22 @@ func (c *ConnectionClient) client() sdk.Connections {
 	return c.context.client.Connections
 }
 
-func (c *ConnectionClient) CreateConnection(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Connection, func()) {
+func (c *ConnectionClient) Create(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Connection, func()) {
 	t.Helper()
 	ctx := context.Background()
 	request := sdk.NewCreateConnectionRequest(id)
 	err := c.client().Create(ctx, request)
+	require.NoError(t, err)
+	connection, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+	return connection, c.DropFunc(t, id)
+}
+
+func (c *ConnectionClient) CreateReplication(t *testing.T, id sdk.AccountObjectIdentifier, replicaOf sdk.ExternalObjectIdentifier) (*sdk.Connection, func()) {
+	t.Helper()
+	ctx := context.Background()
+	request := sdk.NewCreateReplicatedConnectionRequest(id, replicaOf)
+	err := c.client().CreateReplicated(ctx, request)
 	require.NoError(t, err)
 	connection, err := c.client().ShowByID(ctx, id)
 	require.NoError(t, err)
@@ -40,6 +51,14 @@ func (c *ConnectionClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, r
 	ctx := context.Background()
 
 	err := c.client().Alter(ctx, req)
+	require.NoError(t, err)
+}
+
+func (c *ConnectionClient) AlterFailover(t *testing.T, id sdk.AccountObjectIdentifier, req *sdk.AlterFailoverConnectionRequest) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().AlterFailover(ctx, req)
 	require.NoError(t, err)
 }
 

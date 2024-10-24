@@ -58,7 +58,7 @@ func TestConnections_CreateReplicatedConnection(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.ReplicaOf]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = id
-		opts.ReplicaOf = emptyExtenalObjectIdentifier
+		opts.ReplicaOf = emptyExternalObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -127,8 +127,7 @@ func TestConnections_AlterConnectionFailover(t *testing.T) {
 	t.Run("disable connection failover to accounts", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.DisableConnectionFailover = &DisableConnectionFailover{
-			ToAccounts: Bool(true),
-			Accounts:   []AccountIdentifier{accountId, accountIdTwo},
+			ToAccounts: &ToAccounts{Accounts: []AccountIdentifier{accountId, accountIdTwo}},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s DISABLE FAILOVER TO ACCOUNTS %s, %s", id.FullyQualifiedName(), accountId.FullyQualifiedName(), accountIdTwo.FullyQualifiedName())
 	})

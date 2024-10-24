@@ -83,12 +83,16 @@ func NewDisableConnectionFailoverRequest() *DisableConnectionFailoverRequest {
 	return &DisableConnectionFailoverRequest{}
 }
 
-func (s *DisableConnectionFailoverRequest) WithToAccounts(ToAccounts bool) *DisableConnectionFailoverRequest {
+func (s *DisableConnectionFailoverRequest) WithToAccounts(ToAccounts ToAccountsRequest) *DisableConnectionFailoverRequest {
 	s.ToAccounts = &ToAccounts
 	return s
 }
 
-func (s *DisableConnectionFailoverRequest) WithAccounts(Accounts []AccountIdentifier) *DisableConnectionFailoverRequest {
+func NewToAccountsRequest() *ToAccountsRequest {
+	return &ToAccountsRequest{}
+}
+
+func (s *ToAccountsRequest) WithAccounts(Accounts []AccountIdentifier) *ToAccountsRequest {
 	s.Accounts = Accounts
 	return s
 }

@@ -80,8 +80,7 @@ func (r *CreateReplicatedConnectionRequest) toOpts() *CreateReplicatedConnection
 
 func (r *AlterFailoverConnectionRequest) toOpts() *AlterFailoverConnectionOptions {
 	opts := &AlterFailoverConnectionOptions{
-		name: r.name,
-
+		name:    r.name,
 		Primary: r.Primary,
 	}
 
@@ -93,12 +92,13 @@ func (r *AlterFailoverConnectionRequest) toOpts() *AlterFailoverConnectionOption
 	}
 
 	if r.DisableConnectionFailover != nil {
-		opts.DisableConnectionFailover = &DisableConnectionFailover{
-			ToAccounts: r.DisableConnectionFailover.ToAccounts,
-			Accounts:   r.DisableConnectionFailover.Accounts,
+		opts.DisableConnectionFailover = &DisableConnectionFailover{}
+		if r.DisableConnectionFailover.ToAccounts != nil {
+			opts.DisableConnectionFailover.ToAccounts = &ToAccounts{
+				Accounts: r.DisableConnectionFailover.ToAccounts.Accounts,
+			}
 		}
 	}
-
 	return opts
 }
 
@@ -119,7 +119,6 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 			Comment: r.Unset.Comment,
 		}
 	}
-
 	return opts
 }
 
@@ -155,6 +154,5 @@ func (r connectionRow) convert() *Connection {
 	if r.Comment.Valid {
 		c.Comment = String(r.Comment.String)
 	}
-
 	return c
 }
