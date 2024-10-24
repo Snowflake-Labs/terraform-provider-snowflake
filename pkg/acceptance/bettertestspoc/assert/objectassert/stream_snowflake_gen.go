@@ -131,14 +131,11 @@ func (s *StreamAssert) HasType(expected string) *StreamAssert {
 	return s
 }
 
-func (s *StreamAssert) HasStale(expected string) *StreamAssert {
+func (s *StreamAssert) HasStale(expected bool) *StreamAssert {
 	s.AddAssertion(func(t *testing.T, o *sdk.Stream) error {
 		t.Helper()
-		if o.Stale == nil {
-			return fmt.Errorf("expected stale to have value; got: nil")
-		}
-		if *o.Stale != expected {
-			return fmt.Errorf("expected stale: %v; got: %v", expected, *o.Stale)
+		if o.Stale != expected {
+			return fmt.Errorf("expected stale: %v; got: %v", expected, o.Stale)
 		}
 		return nil
 	})

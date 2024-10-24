@@ -82,6 +82,11 @@ func (s *StreamOnExternalTableResourceAssert) HasSchemaString(expected string) *
 	return s
 }
 
+func (s *StreamOnExternalTableResourceAssert) HasStaleString(expected string) *StreamOnExternalTableResourceAssert {
+	s.AddAssertion(assert.ValueSet("stale", expected))
+	return s
+}
+
 ////////////////////////////
 // Attribute empty checks //
 ////////////////////////////
@@ -133,5 +138,10 @@ func (s *StreamOnExternalTableResourceAssert) HasNoName() *StreamOnExternalTable
 
 func (s *StreamOnExternalTableResourceAssert) HasNoSchema() *StreamOnExternalTableResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("schema"))
+	return s
+}
+
+func (s *StreamOnExternalTableResourceAssert) HasNoStale() *StreamOnExternalTableResourceAssert {
+	s.AddAssertion(assert.ValueNotSet("stale"))
 	return s
 }

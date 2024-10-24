@@ -17,6 +17,7 @@ type SecretWithClientCredentialsModel struct {
 	Name               tfconfig.Variable `json:"name,omitempty"`
 	OauthScopes        tfconfig.Variable `json:"oauth_scopes,omitempty"`
 	Schema             tfconfig.Variable `json:"schema,omitempty"`
+	SecretType         tfconfig.Variable `json:"secret_type,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -94,6 +95,11 @@ func (s *SecretWithClientCredentialsModel) WithSchema(schema string) *SecretWith
 	return s
 }
 
+func (s *SecretWithClientCredentialsModel) WithSecretType(secretType string) *SecretWithClientCredentialsModel {
+	s.SecretType = tfconfig.StringVariable(secretType)
+	return s
+}
+
 //////////////////////////////////////////
 // below it's possible to set any value //
 //////////////////////////////////////////
@@ -132,12 +138,8 @@ func (s *SecretWithClientCredentialsModel) WithSchemaValue(value tfconfig.Variab
 	s.Schema = value
 	return s
 }
-func (s *SecretWithClientCredentialsModel) WithOauthScopes(oauthScopes []string) *SecretWithClientCredentialsModel {
-	oauthScopesStringVariables := make([]tfconfig.Variable, len(oauthScopes))
-	for i, v := range oauthScopes {
-		oauthScopesStringVariables[i] = tfconfig.StringVariable(v)
-	}
 
-	s.OauthScopes = tfconfig.SetVariable(oauthScopesStringVariables...)
+func (s *SecretWithClientCredentialsModel) WithSecretTypeValue(value tfconfig.Variable) *SecretWithClientCredentialsModel {
+	s.SecretType = value
 	return s
 }

@@ -42,6 +42,10 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.View().Schema,
 	},
 	{
+		name:   "Database",
+		schema: resources.Database().Schema,
+	},
+	{
 		name:   "DatabaseRole",
 		schema: resources.DatabaseRole().Schema,
 	},
@@ -54,6 +58,10 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.RowAccessPolicy().Schema,
 	},
 	{
+		name:   "Schema",
+		schema: resources.Schema().Schema,
+	},
+	{
 		name:   "MaskingPolicy",
 		schema: resources.MaskingPolicy().Schema,
 	},
@@ -64,5 +72,25 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 	{
 		name:   "StreamOnExternalTable",
 		schema: resources.StreamOnExternalTable().Schema,
+	},
+	{
+		name:   "SecretWithAuthorizationCodeGrant",
+		schema: resources.SecretWithAuthorizationCodeGrant().Schema,
+	},
+	{
+		name:   "SecretWithBasicAuthentication",
+		schema: resources.SecretWithBasicAuthentication().Schema,
+	},
+	{
+		name:   "SecretWithClientCredentials",
+		schema: resources.SecretWithClientCredentials().Schema,
+	},
+	{
+		name:   "SecretWithGenericString",
+		schema: resources.SecretWithGenericString().Schema,
+	},
+	{
+		name:   "StreamOnDirectoryTable",
+		schema: resources.StreamOnDirectoryTable().Schema,
 	},
 }

@@ -58,6 +58,7 @@ func StreamOnTable() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(streamOnTableSchema, ShowOutputAttributeName, "table", "append_only", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnTableSchema, DescribeOutputAttributeName, "table", "append_only", "comment"),
+			RecreateWhenStreamIsStale(),
 		),
 
 		Schema: streamOnTableSchema,
@@ -80,13 +81,7 @@ func ImportStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) 
 	if err != nil {
 		return nil, err
 	}
-	if err := d.Set("name", id.Name()); err != nil {
-		return nil, err
-	}
-	if err := d.Set("database", id.DatabaseName()); err != nil {
-		return nil, err
-	}
-	if err := d.Set("schema", id.SchemaName()); err != nil {
+	if _, err := ImportName[sdk.SchemaObjectIdentifier](context.Background(), d, nil); err != nil {
 		return nil, err
 	}
 	if err := d.Set("append_only", booleanStringFromBool(v.IsAppendOnly())); err != nil {
@@ -183,7 +178,7 @@ func ReadStreamOnTable(withExternalChangesMarking bool) schema.ReadContextFunc {
 				mode = *stream.Mode
 			}
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"mode", "append_only", string(mode), booleanStringFromBool(stream.IsAppendOnly()), nil},
+				outputMapping{"mode", "append_only", string(mode), booleanStringFromBool(stream.IsAppendOnly()), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
@@ -207,7 +202,8 @@ func UpdateStreamOnTable(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	// change on these fields can not be ForceNew because then the object is dropped explicitly and copying grants does not have effect
-	if keys := changedKeys(d, "table", "append_only", "at", "before", "show_initial_rows"); len(keys) > 0 {
+	// recreate when the stream is stale - see https://community.snowflake.com/s/article/using-tasks-to-avoid-stale-streams-when-incoming-data-is-empty
+	if keys := changedKeys(d, "table", "append_only", "at", "before", "show_initial_rows", "stale"); len(keys) > 0 {
 		log.Printf("[DEBUG] Detected change on %q, recreating...", keys)
 		return CreateStreamOnTable(true)(ctx, d, meta)
 	}

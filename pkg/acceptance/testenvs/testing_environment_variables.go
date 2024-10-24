@@ -26,8 +26,9 @@ const (
 	AzureExternalSasToken  env = "TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN" // #nosec G101
 	GcsExternalBuckerUrl   env = "TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL"
 
-	SkipManagedAccountTest  env = "TEST_SF_TF_SKIP_MANAGED_ACCOUNT_TEST"
-	SkipSamlIntegrationTest env = "TEST_SF_TF_SKIP_SAML_INTEGRATION_TEST"
+	EnableObjectRenamingTest env = "TEST_SF_TF_ENABLE_OBJECT_RENAMING"
+	SkipManagedAccountTest   env = "TEST_SF_TF_SKIP_MANAGED_ACCOUNT_TEST"
+	SkipSamlIntegrationTest  env = "TEST_SF_TF_SKIP_SAML_INTEGRATION_TEST"
 
 	EnableAcceptance         env = resource.EnvTfAcc
 	EnableSweep              env = "TEST_SF_TF_ENABLE_SWEEP"

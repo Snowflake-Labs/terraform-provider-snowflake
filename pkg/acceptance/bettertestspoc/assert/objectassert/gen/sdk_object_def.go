@@ -77,6 +77,11 @@ var allStructs = []SdkObjectDef{
 		ObjectType:   sdk.ObjectTypeStream,
 		ObjectStruct: sdk.Stream{},
 	},
+	{
+		IdType:       "sdk.SchemaObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeTag,
+		ObjectStruct: sdk.Tag{},
+	},
 }
 
 func GetSdkObjectDetails() []genhelpers.SdkObjectDetails {

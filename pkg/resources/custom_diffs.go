@@ -195,3 +195,46 @@ func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.Customi
 		return nil
 	}
 }
+
+func RecreateWhenSecretTypeChangedExternally(secretType sdk.SecretType) schema.CustomizeDiffFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		if n := diff.Get("secret_type"); n != nil {
+			logging.DebugLogger.Printf("[DEBUG] new external value for secret type %s\n", n.(string))
+
+			diffSecretType, _ := sdk.ToSecretType(n.(string))
+			if acceptableSecretTypes, ok := sdk.AcceptableSecretTypes[secretType]; ok && !slices.Contains(acceptableSecretTypes, diffSecretType) {
+				return errors.Join(diff.SetNew("secret_type", "<changed externally>"), diff.ForceNew("secret_type"))
+			}
+			// both client_credentials and authorization_code_grant secrets have the same type: "OAUTH2"
+			// to detect the external type change we need to check fields that are required in one, but should be absent in the other
+			// we will check if the 'oauth_refresh_token_expiry_time' is present in the describe_output
+			// since it is required in authorization_code_grant flow and should be empty in client_credentials flow
+			if diffSecretType == sdk.SecretTypeOAuth2 {
+				var isRefreshTokenExpiryTimeEmpty bool
+				rt := diff.Get("describe_output.0.oauth_refresh_token_expiry_time").(string)
+
+				switch secretType {
+				case sdk.SecretTypeOAuth2AuthorizationCodeGrant:
+					isRefreshTokenExpiryTimeEmpty = rt == ""
+				case sdk.SecretTypeOAuth2ClientCredentials:
+					isRefreshTokenExpiryTimeEmpty = rt != ""
+				}
+				if isRefreshTokenExpiryTimeEmpty {
+					return errors.Join(diff.SetNew("secret_type", "<changed externally>"), diff.ForceNew("secret_type"))
+				}
+			}
+		}
+		return nil
+	}
+}
+
+// RecreateWhenStreamIsStale detects when the stream is stale, and sets a `false` value for `stale` field.
+// This means that the provider can detect that change in `stale` from `true` to `false`, where `false` is our desired state.
+func RecreateWhenStreamIsStale() schema.CustomizeDiffFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		if old, _ := diff.GetChange("stale"); old.(bool) {
+			return diff.SetNew("stale", false)
+		}
+		return nil
+	}
+}

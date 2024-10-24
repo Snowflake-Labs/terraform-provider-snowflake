@@ -1,10 +1,8 @@
-//lint:file-ignore U1000 Ignore all unused code, it's generated
 package sdk
 
 import (
 	"context"
 	"database/sql"
-	"strings"
 	"time"
 )
 
@@ -56,10 +54,10 @@ type AllowedValue struct {
 
 // showTagOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-tags
 type showTagOptions struct {
-	show bool  `ddl:"static" sql:"SHOW"`
-	tag  bool  `ddl:"static" sql:"TAGS"`
-	Like *Like `ddl:"keyword" sql:"LIKE"`
-	In   *In   `ddl:"keyword" sql:"IN"`
+	show bool        `ddl:"static" sql:"SHOW"`
+	tag  bool        `ddl:"static" sql:"TAGS"`
+	Like *Like       `ddl:"keyword" sql:"LIKE"`
+	In   *ExtendedIn `ddl:"keyword" sql:"IN"`
 }
 
 type Tag struct {
@@ -99,15 +97,7 @@ func (tr tagRow) convert() *Tag {
 		OwnerRoleType: tr.OwnerRoleType,
 	}
 	if tr.AllowedValues.Valid {
-		// remove brackets
-		if s := strings.Trim(tr.AllowedValues.String, "[]"); s != "" {
-			items := strings.Split(s, ",")
-			values := make([]string, len(items))
-			for i, item := range items {
-				values[i] = strings.Trim(item, `"`) // remove quotes
-			}
-			t.AllowedValues = values
-		}
+		t.AllowedValues = ParseCommaSeparatedStringArray(tr.AllowedValues.String, true)
 	}
 	return t
 }
@@ -150,9 +140,10 @@ type TagRename struct {
 
 // alterTagOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-tag
 type alterTagOptions struct {
-	alter bool                   `ddl:"static" sql:"ALTER"`
-	tag   string                 `ddl:"static" sql:"TAG"`
-	name  SchemaObjectIdentifier `ddl:"identifier"`
+	alter    bool                   `ddl:"static" sql:"ALTER"`
+	tag      string                 `ddl:"static" sql:"TAG"`
+	ifExists *bool                  `ddl:"keyword" sql:"IF EXISTS"`
+	name     SchemaObjectIdentifier `ddl:"identifier"`
 
 	// One of
 	Add    *TagAdd    `ddl:"keyword" sql:"ADD"`

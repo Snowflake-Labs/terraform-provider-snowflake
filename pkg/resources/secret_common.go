@@ -33,6 +33,11 @@ var secretCommonSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
+	"secret_type": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Specifies a type for the secret. This field is used for checking external changes and recreating the resources if needed.",
+	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -64,8 +69,13 @@ func handleSecretImport(d *schema.ResourceData) error {
 	return nil
 }
 
-func handleSecretRead(d *schema.ResourceData, id sdk.SchemaObjectIdentifier, secret *sdk.Secret, secretDescription *sdk.SecretDetails) error {
+func handleSecretRead(d *schema.ResourceData,
+	id sdk.SchemaObjectIdentifier,
+	secret *sdk.Secret,
+	secretDescription *sdk.SecretDetails,
+) error {
 	return errors.Join(
+		d.Set("secret_type", secret.SecretType),
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 		d.Set("comment", secret.Comment),
 		d.Set(ShowOutputAttributeName, []map[string]any{schemas.SecretToSchema(secret)}),
