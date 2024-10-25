@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -530,7 +529,7 @@ func TestViews_Show(t *testing.T) {
 				Database: id,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, fmt.Sprintf("SHOW VIEWS IN DATABASE %s", id.FullyQualifiedName()))
+		assertOptsValidAndSQLEquals(t, opts, "SHOW VIEWS IN DATABASE %s", id.FullyQualifiedName())
 	})
 
 	t.Run("in schema", func(t *testing.T) {
@@ -541,7 +540,7 @@ func TestViews_Show(t *testing.T) {
 				Schema: id,
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, fmt.Sprintf("SHOW VIEWS IN SCHEMA %s", id.FullyQualifiedName()))
+		assertOptsValidAndSQLEquals(t, opts, "SHOW VIEWS IN SCHEMA %s", id.FullyQualifiedName())
 	})
 
 	t.Run("in application", func(t *testing.T) {
@@ -550,7 +549,7 @@ func TestViews_Show(t *testing.T) {
 		opts.In = &ExtendedIn{
 			Application: id,
 		}
-		assertOptsValidAndSQLEquals(t, opts, fmt.Sprintf("SHOW VIEWS IN APPLICATION %s", id.FullyQualifiedName()))
+		assertOptsValidAndSQLEquals(t, opts, "SHOW VIEWS IN APPLICATION %s", id.FullyQualifiedName())
 	})
 
 	t.Run("in application package", func(t *testing.T) {
@@ -559,7 +558,7 @@ func TestViews_Show(t *testing.T) {
 		opts.In = &ExtendedIn{
 			ApplicationPackage: id,
 		}
-		assertOptsValidAndSQLEquals(t, opts, fmt.Sprintf("SHOW VIEWS IN APPLICATION PACKAGE %s", id.FullyQualifiedName()))
+		assertOptsValidAndSQLEquals(t, opts, "SHOW VIEWS IN APPLICATION PACKAGE %s", id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {

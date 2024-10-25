@@ -68,6 +68,12 @@ func (t *TaskParametersAssert) HasDefaultParameterValueOnLevel(parameterName sdk
 // - have an expected level
 func (t *TaskParametersAssert) HasAllDefaults() *TaskParametersAssert {
 	return t.
+		HasDefaultParameterValueOnLevel(sdk.TaskParameterSuspendTaskAfterNumFailures, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.TaskParameterTaskAutoRetryAttempts, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.TaskParameterUserTaskManagedInitialWarehouseSize, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.TaskParameterUserTaskMinimumTriggerIntervalInSeconds, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.TaskParameterUserTaskTimeoutMs, sdk.ParameterTypeSnowflakeDefault).
+		HasDefaultParameterValueOnLevel(sdk.TaskParameterAbortDetachedQuery, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterAutocommit, sdk.ParameterTypeAccount).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterBinaryInputFormat, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterBinaryOutputFormat, sdk.ParameterTypeSnowflakeDefault).
@@ -117,7 +123,6 @@ func (t *TaskParametersAssert) HasAllDefaults() *TaskParametersAssert {
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterTransactionDefaultIsolationLevel, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterTwoDigitCenturyStart, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterUnsupportedDdlAction, sdk.ParameterTypeSnowflakeDefault).
-		HasDefaultParameterValueOnLevel(sdk.TaskParameterUserTaskManagedInitialWarehouseSize, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterUseCachedResult, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterWeekOfYearPolicy, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterWeekStart, sdk.ParameterTypeSnowflakeDefault)
@@ -125,6 +130,12 @@ func (t *TaskParametersAssert) HasAllDefaults() *TaskParametersAssert {
 
 func (t *TaskParametersAssert) HasAllDefaultsExplicit() *TaskParametersAssert {
 	return t.
+		HasDefaultSuspendTaskAfterNumFailuresValueExplicit().
+		HasDefaultTaskAutoRetryAttemptsValueExplicit().
+		HasDefaultUserTaskManagedInitialWarehouseSizeValueExplicit().
+		HasDefaultUserTaskMinimumTriggerIntervalInSecondsValueExplicit().
+		HasDefaultUserTaskTimeoutMsValueExplicit().
+		HasDefaultAbortDetachedQueryValueExplicit().
 		HasDefaultAutocommitValueExplicit().
 		HasDefaultBinaryInputFormatValueExplicit().
 		HasDefaultBinaryOutputFormatValueExplicit().
@@ -174,7 +185,6 @@ func (t *TaskParametersAssert) HasAllDefaultsExplicit() *TaskParametersAssert {
 		HasDefaultTransactionDefaultIsolationLevelValueExplicit().
 		HasDefaultTwoDigitCenturyStartValueExplicit().
 		HasDefaultUnsupportedDdlActionValueExplicit().
-		HasDefaultUserTaskManagedInitialWarehouseSizeValueExplicit().
 		HasDefaultUseCachedResultValueExplicit().
 		HasDefaultWeekOfYearPolicyValueExplicit().
 		HasDefaultWeekStartValueExplicit()
@@ -183,6 +193,36 @@ func (t *TaskParametersAssert) HasAllDefaultsExplicit() *TaskParametersAssert {
 ////////////////////////////
 // Parameter value checks //
 ////////////////////////////
+
+func (t *TaskParametersAssert) HasSuspendTaskAfterNumFailures(expected int) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterIntValueSet(sdk.TaskParameterSuspendTaskAfterNumFailures, expected))
+	return t
+}
+
+func (t *TaskParametersAssert) HasTaskAutoRetryAttempts(expected int) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterIntValueSet(sdk.TaskParameterTaskAutoRetryAttempts, expected))
+	return t
+}
+
+func (t *TaskParametersAssert) HasUserTaskManagedInitialWarehouseSize(expected sdk.WarehouseSize) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterStringUnderlyingValueSet(sdk.TaskParameterUserTaskManagedInitialWarehouseSize, expected))
+	return t
+}
+
+func (t *TaskParametersAssert) HasUserTaskMinimumTriggerIntervalInSeconds(expected int) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterIntValueSet(sdk.TaskParameterUserTaskMinimumTriggerIntervalInSeconds, expected))
+	return t
+}
+
+func (t *TaskParametersAssert) HasUserTaskTimeoutMs(expected int) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterIntValueSet(sdk.TaskParameterUserTaskTimeoutMs, expected))
+	return t
+}
+
+func (t *TaskParametersAssert) HasAbortDetachedQuery(expected bool) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterBoolValueSet(sdk.TaskParameterAbortDetachedQuery, expected))
+	return t
+}
 
 func (t *TaskParametersAssert) HasAutocommit(expected bool) *TaskParametersAssert {
 	t.AddAssertion(assert.SnowflakeParameterBoolValueSet(sdk.TaskParameterAutocommit, expected))
@@ -429,11 +469,6 @@ func (t *TaskParametersAssert) HasUnsupportedDdlAction(expected sdk.UnsupportedD
 	return t
 }
 
-func (t *TaskParametersAssert) HasUserTaskManagedInitialWarehouseSize(expected sdk.WarehouseSize) *TaskParametersAssert {
-	t.AddAssertion(assert.SnowflakeParameterStringUnderlyingValueSet(sdk.TaskParameterUserTaskManagedInitialWarehouseSize, expected))
-	return t
-}
-
 func (t *TaskParametersAssert) HasUseCachedResult(expected bool) *TaskParametersAssert {
 	t.AddAssertion(assert.SnowflakeParameterBoolValueSet(sdk.TaskParameterUseCachedResult, expected))
 	return t
@@ -452,6 +487,36 @@ func (t *TaskParametersAssert) HasWeekStart(expected int) *TaskParametersAssert 
 ////////////////////////////
 // Parameter level checks //
 ////////////////////////////
+
+func (t *TaskParametersAssert) HasSuspendTaskAfterNumFailuresLevel(expected sdk.ParameterType) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterLevelSet(sdk.TaskParameterSuspendTaskAfterNumFailures, expected))
+	return t
+}
+
+func (t *TaskParametersAssert) HasTaskAutoRetryAttemptsLevel(expected sdk.ParameterType) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterLevelSet(sdk.TaskParameterTaskAutoRetryAttempts, expected))
+	return t
+}
+
+func (t *TaskParametersAssert) HasUserTaskManagedInitialWarehouseSizeLevel(expected sdk.ParameterType) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterLevelSet(sdk.TaskParameterUserTaskManagedInitialWarehouseSize, expected))
+	return t
+}
+
+func (t *TaskParametersAssert) HasUserTaskMinimumTriggerIntervalInSecondsLevel(expected sdk.ParameterType) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterLevelSet(sdk.TaskParameterUserTaskMinimumTriggerIntervalInSeconds, expected))
+	return t
+}
+
+func (t *TaskParametersAssert) HasUserTaskTimeoutMsLevel(expected sdk.ParameterType) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterLevelSet(sdk.TaskParameterUserTaskTimeoutMs, expected))
+	return t
+}
+
+func (t *TaskParametersAssert) HasAbortDetachedQueryLevel(expected sdk.ParameterType) *TaskParametersAssert {
+	t.AddAssertion(assert.SnowflakeParameterLevelSet(sdk.TaskParameterAbortDetachedQuery, expected))
+	return t
+}
 
 func (t *TaskParametersAssert) HasAutocommitLevel(expected sdk.ParameterType) *TaskParametersAssert {
 	t.AddAssertion(assert.SnowflakeParameterLevelSet(sdk.TaskParameterAutocommit, expected))
@@ -698,11 +763,6 @@ func (t *TaskParametersAssert) HasUnsupportedDdlActionLevel(expected sdk.Paramet
 	return t
 }
 
-func (t *TaskParametersAssert) HasUserTaskManagedInitialWarehouseSizeLevel(expected sdk.ParameterType) *TaskParametersAssert {
-	t.AddAssertion(assert.SnowflakeParameterLevelSet(sdk.TaskParameterUserTaskManagedInitialWarehouseSize, expected))
-	return t
-}
-
 func (t *TaskParametersAssert) HasUseCachedResultLevel(expected sdk.ParameterType) *TaskParametersAssert {
 	t.AddAssertion(assert.SnowflakeParameterLevelSet(sdk.TaskParameterUseCachedResult, expected))
 	return t
@@ -721,6 +781,30 @@ func (t *TaskParametersAssert) HasWeekStartLevel(expected sdk.ParameterType) *Ta
 ////////////////////////////////////
 // Parameter default value checks //
 ////////////////////////////////////
+
+func (t *TaskParametersAssert) HasDefaultSuspendTaskAfterNumFailuresValue() *TaskParametersAssert {
+	return t.HasDefaultParameterValue(sdk.TaskParameterSuspendTaskAfterNumFailures)
+}
+
+func (t *TaskParametersAssert) HasDefaultTaskAutoRetryAttemptsValue() *TaskParametersAssert {
+	return t.HasDefaultParameterValue(sdk.TaskParameterTaskAutoRetryAttempts)
+}
+
+func (t *TaskParametersAssert) HasDefaultUserTaskManagedInitialWarehouseSizeValue() *TaskParametersAssert {
+	return t.HasDefaultParameterValue(sdk.TaskParameterUserTaskManagedInitialWarehouseSize)
+}
+
+func (t *TaskParametersAssert) HasDefaultUserTaskMinimumTriggerIntervalInSecondsValue() *TaskParametersAssert {
+	return t.HasDefaultParameterValue(sdk.TaskParameterUserTaskMinimumTriggerIntervalInSeconds)
+}
+
+func (t *TaskParametersAssert) HasDefaultUserTaskTimeoutMsValue() *TaskParametersAssert {
+	return t.HasDefaultParameterValue(sdk.TaskParameterUserTaskTimeoutMs)
+}
+
+func (t *TaskParametersAssert) HasDefaultAbortDetachedQueryValue() *TaskParametersAssert {
+	return t.HasDefaultParameterValue(sdk.TaskParameterAbortDetachedQuery)
+}
 
 func (t *TaskParametersAssert) HasDefaultAutocommitValue() *TaskParametersAssert {
 	return t.HasDefaultParameterValue(sdk.TaskParameterAutocommit)
@@ -918,10 +1002,6 @@ func (t *TaskParametersAssert) HasDefaultUnsupportedDdlActionValue() *TaskParame
 	return t.HasDefaultParameterValue(sdk.TaskParameterUnsupportedDdlAction)
 }
 
-func (t *TaskParametersAssert) HasDefaultUserTaskManagedInitialWarehouseSizeValue() *TaskParametersAssert {
-	return t.HasDefaultParameterValue(sdk.TaskParameterUserTaskManagedInitialWarehouseSize)
-}
-
 func (t *TaskParametersAssert) HasDefaultUseCachedResultValue() *TaskParametersAssert {
 	return t.HasDefaultParameterValue(sdk.TaskParameterUseCachedResult)
 }
@@ -937,6 +1017,30 @@ func (t *TaskParametersAssert) HasDefaultWeekStartValue() *TaskParametersAssert 
 /////////////////////////////////////////////
 // Parameter explicit default value checks //
 /////////////////////////////////////////////
+
+func (t *TaskParametersAssert) HasDefaultSuspendTaskAfterNumFailuresValueExplicit() *TaskParametersAssert {
+	return t.HasSuspendTaskAfterNumFailures(10)
+}
+
+func (t *TaskParametersAssert) HasDefaultTaskAutoRetryAttemptsValueExplicit() *TaskParametersAssert {
+	return t.HasTaskAutoRetryAttempts(0)
+}
+
+func (t *TaskParametersAssert) HasDefaultUserTaskManagedInitialWarehouseSizeValueExplicit() *TaskParametersAssert {
+	return t.HasUserTaskManagedInitialWarehouseSize("Medium")
+}
+
+func (t *TaskParametersAssert) HasDefaultUserTaskMinimumTriggerIntervalInSecondsValueExplicit() *TaskParametersAssert {
+	return t.HasUserTaskMinimumTriggerIntervalInSeconds(30)
+}
+
+func (t *TaskParametersAssert) HasDefaultUserTaskTimeoutMsValueExplicit() *TaskParametersAssert {
+	return t.HasUserTaskTimeoutMs(3600000)
+}
+
+func (t *TaskParametersAssert) HasDefaultAbortDetachedQueryValueExplicit() *TaskParametersAssert {
+	return t.HasAbortDetachedQuery(false)
+}
 
 func (t *TaskParametersAssert) HasDefaultAutocommitValueExplicit() *TaskParametersAssert {
 	return t.HasAutocommit(true)
@@ -1132,10 +1236,6 @@ func (t *TaskParametersAssert) HasDefaultTwoDigitCenturyStartValueExplicit() *Ta
 
 func (t *TaskParametersAssert) HasDefaultUnsupportedDdlActionValueExplicit() *TaskParametersAssert {
 	return t.HasUnsupportedDdlAction(sdk.UnsupportedDDLAction(strings.ToLower(string(sdk.UnsupportedDDLActionIgnore))))
-}
-
-func (t *TaskParametersAssert) HasDefaultUserTaskManagedInitialWarehouseSizeValueExplicit() *TaskParametersAssert {
-	return t.HasUserTaskManagedInitialWarehouseSize("Medium")
 }
 
 func (t *TaskParametersAssert) HasDefaultUseCachedResultValueExplicit() *TaskParametersAssert {

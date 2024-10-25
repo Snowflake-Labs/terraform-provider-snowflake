@@ -57,7 +57,17 @@ func TestUserCreate(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("SecondaryRoles", "All", "None"))
 	})
 
-	t.Run("with complete options", func(t *testing.T) {
+	t.Run("with type", func(t *testing.T) {
+		opts := &CreateUserOptions{
+			name: id,
+			ObjectProperties: &UserObjectProperties{
+				Type: Pointer(UserTypeLegacyService),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `CREATE USER %s TYPE = LEGACY_SERVICE`, id.FullyQualifiedName())
+	})
+
+	t.Run("with complete options - no type", func(t *testing.T) {
 		tagId := randomSchemaObjectIdentifier()
 		tags := []TagAssociation{
 			{
@@ -155,6 +165,16 @@ func TestUserAlter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR = true ABORT_DETACHED_QUERY = true", id.FullyQualifiedName())
 	})
 
+	t.Run("set type", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Set: &UserSet{
+				ObjectProperties: &UserAlterObjectProperties{UserObjectProperties: UserObjectProperties{Type: Pointer(UserTypeLegacyService)}},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s SET TYPE = LEGACY_SERVICE", id.FullyQualifiedName())
+	})
+
 	t.Run("validation: no unset", func(t *testing.T) {
 		opts := &AlterUserOptions{
 			name:  id,
@@ -172,6 +192,16 @@ func TestUserAlter(t *testing.T) {
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errors.New("policies cannot be unset with user properties or parameters at the same time"))
+	})
+
+	t.Run("alter: unset type", func(t *testing.T) {
+		opts := &AlterUserOptions{
+			name: id,
+			Unset: &UserUnset{
+				ObjectProperties: &UserObjectPropertiesUnset{Type: Bool(true)},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER USER %s UNSET TYPE", id.FullyQualifiedName())
 	})
 
 	t.Run("validation: unset two policies", func(t *testing.T) {
@@ -916,6 +946,45 @@ func Test_User_GetSecondaryRolesOptionFrom(t *testing.T) {
 			user := User{DefaultSecondaryRoles: tc.input}
 			got := user.GetSecondaryRolesOption()
 			require.Equal(t, tc.want, got)
+		})
+	}
+}
+
+func Test_User_ToUserType(t *testing.T) {
+	type test struct {
+		input string
+		want  UserType
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "person", want: UserTypePerson},
+
+		// Supported Values
+		{input: "PERSON", want: UserTypePerson},
+		{input: "SERVICE", want: UserTypeService},
+		{input: "LEGACY_SERVICE", want: UserTypeLegacyService},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+		{input: "legacyservice"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToUserType(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToUserType(tc.input)
+			require.Error(t, err)
 		})
 	}
 }

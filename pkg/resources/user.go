@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -186,33 +185,24 @@ func User() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 
-		CreateContext: CreateUser,
-		UpdateContext: UpdateUser,
-		ReadContext:   GetReadUserFunc(true),
+		CreateContext: GetCreateUserFunc(sdk.UserTypePerson),
+		UpdateContext: GetUpdateUserFunc(sdk.UserTypePerson),
+		ReadContext:   GetReadUserFunc(sdk.UserTypePerson, true),
 		DeleteContext: DeleteUser,
-		Description:   "Resource used to manage user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role).",
+		Description:   "Resource used to manage user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
 		Schema: helpers.MergeMaps(userSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportUser,
+			StateContext: GetImportUserFunc(sdk.UserTypePerson),
 		},
 
 		CustomizeDiff: customdiff.All(
 			// TODO [SNOW-1629468 - next pr]: test "default_role", "default_secondary_roles"
-			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, "password", "login_name", "display_name", "first_name", "last_name", "email", "must_change_password", "disabled", "days_to_expiry", "mins_to_unlock", "default_warehouse", "default_namespace", "default_role", "default_secondary_roles_option", "mins_to_bypass_mfa", "rsa_public_key", "rsa_public_key_2", "comment", "disable_mfa"),
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, userExternalChangesAttributes...),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
-			// TODO [SNOW-1645348]: revisit with service user work
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-				if n := diff.Get("user_type"); n != nil {
-					logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
-					if !slices.Contains([]string{"", "PERSON"}, strings.ToUpper(n.(string))) {
-						return errors.Join(diff.SetNewComputed("user_type"), diff.ForceNew("user_type"))
-					}
-				}
-				return nil
-			},
+			RecreateWhenUserTypeChangedExternally(sdk.UserTypePerson),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -226,126 +216,207 @@ func User() *schema.Resource {
 	}
 }
 
-func ImportUser(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	logging.DebugLogger.Printf("[DEBUG] Starting user import")
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
-	if err != nil {
-		return nil, err
-	}
+func ServiceUser() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: GetCreateUserFunc(sdk.UserTypeService),
+		UpdateContext: GetUpdateUserFunc(sdk.UserTypeService),
+		ReadContext:   GetReadUserFunc(sdk.UserTypeService, true),
+		DeleteContext: DeleteUser,
+		Description:   "Resource used to manage service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
-	userDetails, err := client.Users.Describe(ctx, id)
-	if err != nil {
-		return nil, err
-	}
+		Schema: helpers.MergeMaps(serviceUserSchema, userParametersSchema),
+		Importer: &schema.ResourceImporter{
+			StateContext: GetImportUserFunc(sdk.UserTypeService),
+		},
 
-	u, err := client.Users.ShowByID(ctx, id)
-	if err != nil {
-		return nil, err
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, serviceUserExternalChangesAttributes...),
+			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
+			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
+			userParametersCustomDiff,
+			RecreateWhenUserTypeChangedExternally(sdk.UserTypeService),
+		),
 	}
-
-	err = errors.Join(
-		d.Set("name", id.Name()),
-		setFromStringPropertyIfNotEmpty(d, "login_name", userDetails.LoginName),
-		setFromStringPropertyIfNotEmpty(d, "display_name", userDetails.DisplayName),
-		setFromStringPropertyIfNotEmpty(d, "default_namespace", userDetails.DefaultNamespace),
-		setBooleanStringFromBoolProperty(d, "must_change_password", userDetails.MustChangePassword),
-		setBooleanStringFromBoolProperty(d, "disabled", userDetails.Disabled),
-		d.Set("default_secondary_roles_option", u.GetSecondaryRolesOption()),
-		// all others are set in read
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return []*schema.ResourceData{d}, nil
 }
 
-func CreateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
+func LegacyServiceUser() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: GetCreateUserFunc(sdk.UserTypeLegacyService),
+		UpdateContext: GetUpdateUserFunc(sdk.UserTypeLegacyService),
+		ReadContext:   GetReadUserFunc(sdk.UserTypeLegacyService, true),
+		DeleteContext: DeleteUser,
+		Description:   "Resource used to manage legacy service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
-	opts := &sdk.CreateUserOptions{
-		ObjectProperties:  &sdk.UserObjectProperties{},
-		ObjectParameters:  &sdk.UserObjectParameters{},
-		SessionParameters: &sdk.SessionParameters{},
+		Schema: helpers.MergeMaps(legacyServiceUserSchema, userParametersSchema),
+		Importer: &schema.ResourceImporter{
+			StateContext: GetImportUserFunc(sdk.UserTypeLegacyService),
+		},
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, legacyServiceUserExternalChangesAttributes...),
+			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
+			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
+			userParametersCustomDiff,
+			RecreateWhenUserTypeChangedExternally(sdk.UserTypeLegacyService),
+		),
 	}
-	name := d.Get("name").(string)
-	id := sdk.NewAccountObjectIdentifier(name)
+}
 
-	errs := errors.Join(
-		stringAttributeCreate(d, "password", &opts.ObjectProperties.Password),
-		stringAttributeCreate(d, "login_name", &opts.ObjectProperties.LoginName),
-		stringAttributeCreate(d, "display_name", &opts.ObjectProperties.DisplayName),
-		stringAttributeCreate(d, "first_name", &opts.ObjectProperties.FirstName),
-		stringAttributeCreate(d, "middle_name", &opts.ObjectProperties.MiddleName),
-		stringAttributeCreate(d, "last_name", &opts.ObjectProperties.LastName),
-		stringAttributeCreate(d, "email", &opts.ObjectProperties.Email),
-		booleanStringAttributeCreate(d, "must_change_password", &opts.ObjectProperties.MustChangePassword),
-		booleanStringAttributeCreate(d, "disabled", &opts.ObjectProperties.Disable),
-		intAttributeCreate(d, "days_to_expiry", &opts.ObjectProperties.DaysToExpiry),
-		intAttributeWithSpecialDefaultCreate(d, "mins_to_unlock", &opts.ObjectProperties.MinsToUnlock),
-		accountObjectIdentifierAttributeCreate(d, "default_warehouse", &opts.ObjectProperties.DefaultWarehouse),
-		objectIdentifierAttributeCreate(d, "default_namespace", &opts.ObjectProperties.DefaultNamespace),
-		accountObjectIdentifierAttributeCreate(d, "default_role", &opts.ObjectProperties.DefaultRole),
-		func() error {
-			defaultSecondaryRolesOption, err := sdk.ToSecondaryRolesOption(d.Get("default_secondary_roles_option").(string))
+func GetImportUserFunc(userType sdk.UserType) func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+		logging.DebugLogger.Printf("[DEBUG] Starting user import")
+		client := meta.(*provider.Context).Client
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+		if err != nil {
+			return nil, err
+		}
+
+		userDetails, err := client.Users.Describe(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+
+		u, err := client.Users.ShowByID(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+
+		err = errors.Join(
+			d.Set("name", id.Name()),
+			setFromStringPropertyIfNotEmpty(d, "login_name", userDetails.LoginName),
+			setFromStringPropertyIfNotEmpty(d, "display_name", userDetails.DisplayName),
+			setFromStringPropertyIfNotEmpty(d, "default_namespace", userDetails.DefaultNamespace),
+			setBooleanStringFromBoolProperty(d, "disabled", userDetails.Disabled),
+			d.Set("default_secondary_roles_option", u.GetSecondaryRolesOption()),
+			// all others are set in read
+		)
+		if err != nil {
+			return nil, err
+		}
+		if userType == sdk.UserTypePerson || userType == sdk.UserTypeLegacyService {
+			err := setBooleanStringFromBoolProperty(d, "must_change_password", userDetails.MustChangePassword)
 			if err != nil {
-				return err
+				return nil, err
 			}
-			switch defaultSecondaryRolesOption {
-			case sdk.SecondaryRolesOptionDefault:
-				return nil
-			case sdk.SecondaryRolesOptionNone:
-				opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{None: sdk.Bool(true)}
-			case sdk.SecondaryRolesOptionAll:
-				opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{All: sdk.Bool(true)}
-			}
-			return nil
-		}(),
-		intAttributeWithSpecialDefaultCreate(d, "mins_to_bypass_mfa", &opts.ObjectProperties.MinsToBypassMFA),
-		stringAttributeCreate(d, "rsa_public_key", &opts.ObjectProperties.RSAPublicKey),
-		stringAttributeCreate(d, "rsa_public_key_2", &opts.ObjectProperties.RSAPublicKey2),
-		stringAttributeCreate(d, "comment", &opts.ObjectProperties.Comment),
-		// disable mfa cannot be set in create, alter is run after creation
-	)
-	if errs != nil {
-		return diag.FromErr(errs)
-	}
-
-	if parametersCreateDiags := handleUserParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
-		return parametersCreateDiags
-	}
-
-	err := client.Users.Create(ctx, id, opts)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(helpers.EncodeResourceIdentifier(id))
-
-	// disable mfa cannot be set in create, we need to alter if set in config
-	var diags diag.Diagnostics
-	if disableMfa := d.Get("disable_mfa").(string); disableMfa != BooleanDefault {
-		parsed, err := booleanStringToBool(disableMfa)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  fmt.Sprintf("Setting disable mfa failed after create for user %s, err: %v", id.FullyQualifiedName(), err),
-			})
 		}
-		alterDisableMfa := sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &sdk.UserAlterObjectProperties{DisableMfa: sdk.Bool(parsed)}}}
-		err = client.Users.Alter(ctx, id, &alterDisableMfa)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  fmt.Sprintf("Setting disable mfa failed after create for user %s, err: %v", id.FullyQualifiedName(), err),
-			})
-		}
-	}
 
-	return append(diags, GetReadUserFunc(false)(ctx, d, meta)...)
+		return []*schema.ResourceData{d}, nil
+	}
 }
 
-func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
+func GetCreateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+
+		opts := &sdk.CreateUserOptions{
+			ObjectProperties:  &sdk.UserObjectProperties{},
+			ObjectParameters:  &sdk.UserObjectParameters{},
+			SessionParameters: &sdk.SessionParameters{},
+		}
+		name := d.Get("name").(string)
+		id := sdk.NewAccountObjectIdentifier(name)
+
+		errs := errors.Join(
+			// password handled separately for proper user types,
+			stringAttributeCreate(d, "login_name", &opts.ObjectProperties.LoginName),
+			stringAttributeCreate(d, "display_name", &opts.ObjectProperties.DisplayName),
+			// first_name handled separately for proper user types,
+			// middle_name handled separately for proper user types,
+			// last_name handled separately for proper user types,
+			stringAttributeCreate(d, "email", &opts.ObjectProperties.Email),
+			// must_change_password handled separately for proper user types,
+			booleanStringAttributeCreate(d, "disabled", &opts.ObjectProperties.Disable),
+			intAttributeCreate(d, "days_to_expiry", &opts.ObjectProperties.DaysToExpiry),
+			intAttributeWithSpecialDefaultCreate(d, "mins_to_unlock", &opts.ObjectProperties.MinsToUnlock),
+			accountObjectIdentifierAttributeCreate(d, "default_warehouse", &opts.ObjectProperties.DefaultWarehouse),
+			objectIdentifierAttributeCreate(d, "default_namespace", &opts.ObjectProperties.DefaultNamespace),
+			accountObjectIdentifierAttributeCreate(d, "default_role", &opts.ObjectProperties.DefaultRole),
+			func() error {
+				defaultSecondaryRolesOption, err := sdk.ToSecondaryRolesOption(d.Get("default_secondary_roles_option").(string))
+				if err != nil {
+					return err
+				}
+				switch defaultSecondaryRolesOption {
+				case sdk.SecondaryRolesOptionDefault:
+					return nil
+				case sdk.SecondaryRolesOptionNone:
+					opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{None: sdk.Bool(true)}
+				case sdk.SecondaryRolesOptionAll:
+					opts.ObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{All: sdk.Bool(true)}
+				}
+				return nil
+			}(),
+			// mins_to_bypass_mfa handled separately for proper user types,
+			stringAttributeCreate(d, "rsa_public_key", &opts.ObjectProperties.RSAPublicKey),
+			stringAttributeCreate(d, "rsa_public_key_2", &opts.ObjectProperties.RSAPublicKey2),
+			stringAttributeCreate(d, "comment", &opts.ObjectProperties.Comment),
+			// disable mfa cannot be set in create, alter is run after creation
+		)
+		if errs != nil {
+			return diag.FromErr(errs)
+		}
+
+		var userTypeSpecificFieldsErrs error
+		switch userType {
+		case sdk.UserTypePerson:
+			userTypeSpecificFieldsErrs = errors.Join(
+				stringAttributeCreate(d, "password", &opts.ObjectProperties.Password),
+				stringAttributeCreate(d, "first_name", &opts.ObjectProperties.FirstName),
+				stringAttributeCreate(d, "middle_name", &opts.ObjectProperties.MiddleName),
+				stringAttributeCreate(d, "last_name", &opts.ObjectProperties.LastName),
+				booleanStringAttributeCreate(d, "must_change_password", &opts.ObjectProperties.MustChangePassword),
+				intAttributeWithSpecialDefaultCreate(d, "mins_to_bypass_mfa", &opts.ObjectProperties.MinsToBypassMFA),
+			)
+		case sdk.UserTypeLegacyService:
+			userTypeSpecificFieldsErrs = errors.Join(
+				stringAttributeCreate(d, "password", &opts.ObjectProperties.Password),
+				booleanStringAttributeCreate(d, "must_change_password", &opts.ObjectProperties.MustChangePassword),
+			)
+			opts.ObjectProperties.Type = sdk.Pointer(sdk.UserTypeLegacyService)
+		case sdk.UserTypeService:
+			opts.ObjectProperties.Type = sdk.Pointer(sdk.UserTypeService)
+		}
+		if userTypeSpecificFieldsErrs != nil {
+			return diag.FromErr(userTypeSpecificFieldsErrs)
+		}
+
+		if parametersCreateDiags := handleUserParametersCreate(d, opts); len(parametersCreateDiags) > 0 {
+			return parametersCreateDiags
+		}
+
+		err := client.Users.Create(ctx, id, opts)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId(helpers.EncodeResourceIdentifier(id))
+
+		var diags diag.Diagnostics
+		if userType == sdk.UserTypePerson {
+			// disable mfa cannot be set in create, we need to alter if set in config
+			if disableMfa := d.Get("disable_mfa").(string); disableMfa != BooleanDefault {
+				parsed, err := booleanStringToBool(disableMfa)
+				if err != nil {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  fmt.Sprintf("Setting disable mfa failed after create for user %s, err: %v", id.FullyQualifiedName(), err),
+					})
+				}
+				alterDisableMfa := sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &sdk.UserAlterObjectProperties{DisableMfa: sdk.Bool(parsed)}}}
+				err = client.Users.Alter(ctx, id, &alterDisableMfa)
+				if err != nil {
+					diags = append(diags, diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  fmt.Sprintf("Setting disable mfa failed after create for user %s, err: %v", id.FullyQualifiedName(), err),
+					})
+				}
+			}
+		}
+
+		return append(diags, GetReadUserFunc(userType, false)(ctx, d, meta)...)
+	}
+}
+
+func GetReadUserFunc(userType sdk.UserType, withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
 		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
@@ -389,25 +460,31 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 
 		if withExternalChangesMarking {
-			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"login_name", "login_name", u.LoginName, u.LoginName, nil},
-				showMapping{"display_name", "display_name", u.DisplayName, u.DisplayName, nil},
-				showMapping{"must_change_password", "must_change_password", u.MustChangePassword, fmt.Sprintf("%t", u.MustChangePassword), nil},
-				showMapping{"disabled", "disabled", u.Disabled, fmt.Sprintf("%t", u.Disabled), nil},
-				showMapping{"default_namespace", "default_namespace", u.DefaultNamespace, u.DefaultNamespace, nil},
-				showMapping{"default_secondary_roles", "default_secondary_roles_option", u.DefaultSecondaryRoles, u.GetSecondaryRolesOption(), nil},
-			); err != nil {
+			showMappings := []outputMapping{
+				{"login_name", "login_name", u.LoginName, u.LoginName, nil},
+				{"display_name", "display_name", u.DisplayName, u.DisplayName, nil},
+				{"disabled", "disabled", u.Disabled, fmt.Sprintf("%t", u.Disabled), nil},
+				{"default_namespace", "default_namespace", u.DefaultNamespace, u.DefaultNamespace, nil},
+				{"default_secondary_roles", "default_secondary_roles_option", u.DefaultSecondaryRoles, u.GetSecondaryRolesOption(), nil},
+			}
+			if userType == sdk.UserTypePerson || userType == sdk.UserTypeLegacyService {
+				showMappings = append(showMappings, outputMapping{"must_change_password", "must_change_password", u.MustChangePassword, fmt.Sprintf("%t", u.MustChangePassword), nil})
+			}
+			if err = handleExternalChangesToObjectInShow(d, showMappings...); err != nil {
 				return diag.FromErr(err)
 			}
 		}
 
-		if err = setStateToValuesFromConfig(d, userSchema, []string{
+		fieldsToSetStateToValueFromConfig := []string{
 			"login_name",
 			"display_name",
-			"must_change_password",
 			"disabled",
 			"default_namespace",
-		}); err != nil {
+		}
+		if userType == sdk.UserTypePerson {
+			fieldsToSetStateToValueFromConfig = append(fieldsToSetStateToValueFromConfig, "must_change_password")
+		}
+		if err = setStateToValuesFromConfig(d, userSchema, fieldsToSetStateToValueFromConfig); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -416,9 +493,9 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			// can't read password
 			// not reading login_name on purpose (handled as external change to show output)
 			// not reading display_name on purpose (handled as external change to show output)
-			setFromStringPropertyIfNotEmpty(d, "first_name", userDetails.FirstName),
-			setFromStringPropertyIfNotEmpty(d, "middle_name", userDetails.MiddleName),
-			setFromStringPropertyIfNotEmpty(d, "last_name", userDetails.LastName),
+			// first_name handled separately for proper user types,
+			// middle_name handled separately for proper user types,
+			// last_name handled separately for proper user types,
 			setFromStringPropertyIfNotEmpty(d, "email", userDetails.Email),
 			// not reading must_change_password on purpose (handled as external change to show output)
 			// not reading disabled on purpose (handled as external change to show output)
@@ -435,6 +512,18 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 			// can't read disable_mfa
 			d.Set("user_type", u.Type),
 
+			func() error {
+				var errs error
+				if userType == sdk.UserTypePerson {
+					errs = errors.Join(
+						setFromStringPropertyIfNotEmpty(d, "first_name", userDetails.FirstName),
+						setFromStringPropertyIfNotEmpty(d, "middle_name", userDetails.MiddleName),
+						setFromStringPropertyIfNotEmpty(d, "last_name", userDetails.LastName),
+					)
+				}
+				return errs
+			}(),
+
 			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 			handleUserParameterRead(d, userParameters),
 			d.Set(ShowOutputAttributeName, []map[string]any{schemas.UserToSchema(u)}),
@@ -448,120 +537,144 @@ func GetReadUserFunc(withExternalChangesMarking bool) schema.ReadContextFunc {
 	}
 }
 
-func UpdateUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if d.HasChange("name") {
-		newID := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
-
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
-			NewName: newID,
-		})
+func GetUpdateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		d.SetId(helpers.EncodeResourceIdentifier(newID))
-		id = newID
-	}
+		if d.HasChange("name") {
+			newID := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 
-	setObjectProperties := sdk.UserAlterObjectProperties{}
-	unsetObjectProperties := sdk.UserObjectPropertiesUnset{}
-	errs := errors.Join(
-		stringAttributeUpdate(d, "password", &setObjectProperties.Password, &unsetObjectProperties.Password),
-		stringAttributeUpdate(d, "login_name", &setObjectProperties.LoginName, &unsetObjectProperties.LoginName),
-		stringAttributeUpdate(d, "display_name", &setObjectProperties.DisplayName, &unsetObjectProperties.DisplayName),
-		stringAttributeUpdate(d, "first_name", &setObjectProperties.FirstName, &unsetObjectProperties.FirstName),
-		stringAttributeUpdate(d, "middle_name", &setObjectProperties.MiddleName, &unsetObjectProperties.MiddleName),
-		stringAttributeUpdate(d, "last_name", &setObjectProperties.LastName, &unsetObjectProperties.LastName),
-		stringAttributeUpdate(d, "email", &setObjectProperties.Email, &unsetObjectProperties.Email),
-		booleanStringAttributeUpdate(d, "must_change_password", &setObjectProperties.MustChangePassword, &unsetObjectProperties.MustChangePassword),
-		booleanStringAttributeUpdate(d, "disabled", &setObjectProperties.Disable, &unsetObjectProperties.Disable),
-		intAttributeUpdate(d, "days_to_expiry", &setObjectProperties.DaysToExpiry, &unsetObjectProperties.DaysToExpiry),
-		intAttributeWithSpecialDefaultUpdate(d, "mins_to_unlock", &setObjectProperties.MinsToUnlock, &unsetObjectProperties.MinsToUnlock),
-		accountObjectIdentifierAttributeUpdate(d, "default_warehouse", &setObjectProperties.DefaultWarehouse, &unsetObjectProperties.DefaultWarehouse),
-		objectIdentifierAttributeUpdate(d, "default_namespace", &setObjectProperties.DefaultNamespace, &unsetObjectProperties.DefaultNamespace),
-		accountObjectIdentifierAttributeUpdate(d, "default_role", &setObjectProperties.DefaultRole, &unsetObjectProperties.DefaultRole),
-		func() error {
-			if d.HasChange("default_secondary_roles_option") {
-				defaultSecondaryRolesOption, err := sdk.ToSecondaryRolesOption(d.Get("default_secondary_roles_option").(string))
-				if err != nil {
-					return err
-				}
-				switch defaultSecondaryRolesOption {
-				case sdk.SecondaryRolesOptionDefault:
-					unsetObjectProperties.DefaultSecondaryRoles = sdk.Bool(true)
-				case sdk.SecondaryRolesOptionNone:
-					setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{None: sdk.Bool(true)}
-				case sdk.SecondaryRolesOptionAll:
-					setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{All: sdk.Bool(true)}
-				}
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+				NewName: newID,
+			})
+			if err != nil {
+				return diag.FromErr(err)
 			}
-			return nil
-		}(),
-		intAttributeWithSpecialDefaultUpdate(d, "mins_to_bypass_mfa", &setObjectProperties.MinsToBypassMFA, &unsetObjectProperties.MinsToBypassMFA),
-		stringAttributeUpdate(d, "rsa_public_key", &setObjectProperties.RSAPublicKey, &unsetObjectProperties.RSAPublicKey),
-		stringAttributeUpdate(d, "rsa_public_key_2", &setObjectProperties.RSAPublicKey2, &unsetObjectProperties.RSAPublicKey2),
-		stringAttributeUpdate(d, "comment", &setObjectProperties.Comment, &unsetObjectProperties.Comment),
-		booleanStringAttributeUpdate(d, "disable_mfa", &setObjectProperties.DisableMfa, &unsetObjectProperties.DisableMfa),
-	)
-	if errs != nil {
-		return diag.FromErr(errs)
-	}
 
-	if (setObjectProperties != sdk.UserAlterObjectProperties{}) {
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &setObjectProperties}})
-		if err != nil {
-			d.Partial(true)
-			return diag.FromErr(err)
+			d.SetId(helpers.EncodeResourceIdentifier(newID))
+			id = newID
 		}
-	}
-	if (unsetObjectProperties != sdk.UserObjectPropertiesUnset{}) {
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Unset: &sdk.UserUnset{ObjectProperties: &unsetObjectProperties}})
-		if err != nil {
-			d.Partial(true)
-			return diag.FromErr(err)
+
+		setObjectProperties := sdk.UserAlterObjectProperties{}
+		unsetObjectProperties := sdk.UserObjectPropertiesUnset{}
+		errs := errors.Join(
+			// password handled separately for proper user types,
+			stringAttributeUpdate(d, "login_name", &setObjectProperties.LoginName, &unsetObjectProperties.LoginName),
+			stringAttributeUpdate(d, "display_name", &setObjectProperties.DisplayName, &unsetObjectProperties.DisplayName),
+			// first_name handled separately for proper user types,
+			// middle_name handled separately for proper user types,
+			// last_name handled separately for proper user types,
+			stringAttributeUpdate(d, "email", &setObjectProperties.Email, &unsetObjectProperties.Email),
+			// must_change_password handled separately for proper user types,
+			booleanStringAttributeUpdate(d, "disabled", &setObjectProperties.Disable, &unsetObjectProperties.Disable),
+			intAttributeUpdate(d, "days_to_expiry", &setObjectProperties.DaysToExpiry, &unsetObjectProperties.DaysToExpiry),
+			intAttributeWithSpecialDefaultUpdate(d, "mins_to_unlock", &setObjectProperties.MinsToUnlock, &unsetObjectProperties.MinsToUnlock),
+			accountObjectIdentifierAttributeUpdate(d, "default_warehouse", &setObjectProperties.DefaultWarehouse, &unsetObjectProperties.DefaultWarehouse),
+			objectIdentifierAttributeUpdate(d, "default_namespace", &setObjectProperties.DefaultNamespace, &unsetObjectProperties.DefaultNamespace),
+			accountObjectIdentifierAttributeUpdate(d, "default_role", &setObjectProperties.DefaultRole, &unsetObjectProperties.DefaultRole),
+			func() error {
+				if d.HasChange("default_secondary_roles_option") {
+					defaultSecondaryRolesOption, err := sdk.ToSecondaryRolesOption(d.Get("default_secondary_roles_option").(string))
+					if err != nil {
+						return err
+					}
+					switch defaultSecondaryRolesOption {
+					case sdk.SecondaryRolesOptionDefault:
+						unsetObjectProperties.DefaultSecondaryRoles = sdk.Bool(true)
+					case sdk.SecondaryRolesOptionNone:
+						setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{None: sdk.Bool(true)}
+					case sdk.SecondaryRolesOptionAll:
+						setObjectProperties.DefaultSecondaryRoles = &sdk.SecondaryRoles{All: sdk.Bool(true)}
+					}
+				}
+				return nil
+			}(),
+			// mins_to_bypass_mfa handled separately for proper user types,
+			stringAttributeUpdate(d, "rsa_public_key", &setObjectProperties.RSAPublicKey, &unsetObjectProperties.RSAPublicKey),
+			stringAttributeUpdate(d, "rsa_public_key_2", &setObjectProperties.RSAPublicKey2, &unsetObjectProperties.RSAPublicKey2),
+			stringAttributeUpdate(d, "comment", &setObjectProperties.Comment, &unsetObjectProperties.Comment),
+			// disable_mfa handled separately for proper user types,
+		)
+		if errs != nil {
+			return diag.FromErr(errs)
 		}
-	}
 
-	set := &sdk.UserSet{
-		SessionParameters: &sdk.SessionParameters{},
-		ObjectParameters:  &sdk.UserObjectParameters{},
-	}
-	unset := &sdk.UserUnset{
-		SessionParameters: &sdk.SessionParametersUnset{},
-		ObjectParameters:  &sdk.UserObjectParametersUnset{},
-	}
-	if updateParamDiags := handleUserParametersUpdate(d, set, unset); len(updateParamDiags) > 0 {
-		return updateParamDiags
-	}
-
-	if (*set.SessionParameters != sdk.SessionParameters{} || *set.ObjectParameters != sdk.UserObjectParameters{}) {
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
-			Set: set,
-		})
-		if err != nil {
-			return diag.FromErr(err)
+		var userTypeSpecificFieldsErrs error
+		switch userType {
+		case sdk.UserTypePerson:
+			userTypeSpecificFieldsErrs = errors.Join(
+				stringAttributeUpdate(d, "password", &setObjectProperties.Password, &unsetObjectProperties.Password),
+				stringAttributeUpdate(d, "first_name", &setObjectProperties.FirstName, &unsetObjectProperties.FirstName),
+				stringAttributeUpdate(d, "middle_name", &setObjectProperties.MiddleName, &unsetObjectProperties.MiddleName),
+				stringAttributeUpdate(d, "last_name", &setObjectProperties.LastName, &unsetObjectProperties.LastName),
+				booleanStringAttributeUpdate(d, "must_change_password", &setObjectProperties.MustChangePassword, &unsetObjectProperties.MustChangePassword),
+				intAttributeWithSpecialDefaultUpdate(d, "mins_to_bypass_mfa", &setObjectProperties.MinsToBypassMFA, &unsetObjectProperties.MinsToBypassMFA),
+				booleanStringAttributeUpdate(d, "disable_mfa", &setObjectProperties.DisableMfa, &unsetObjectProperties.DisableMfa),
+			)
+		case sdk.UserTypeLegacyService:
+			userTypeSpecificFieldsErrs = errors.Join(
+				stringAttributeUpdate(d, "password", &setObjectProperties.Password, &unsetObjectProperties.Password),
+				booleanStringAttributeUpdate(d, "must_change_password", &setObjectProperties.MustChangePassword, &unsetObjectProperties.MustChangePassword),
+			)
 		}
-	}
-
-	if (*unset.SessionParameters != sdk.SessionParametersUnset{}) || (*unset.ObjectParameters != sdk.UserObjectParametersUnset{}) {
-		err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
-			Unset: &sdk.UserUnset{
-				SessionParameters: unset.SessionParameters,
-				ObjectParameters:  unset.ObjectParameters,
-			},
-		})
-		if err != nil {
-			return diag.FromErr(err)
+		if userTypeSpecificFieldsErrs != nil {
+			return diag.FromErr(userTypeSpecificFieldsErrs)
 		}
-	}
 
-	return GetReadUserFunc(false)(ctx, d, meta)
+		if (setObjectProperties != sdk.UserAlterObjectProperties{}) {
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &setObjectProperties}})
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		}
+		if (unsetObjectProperties != sdk.UserObjectPropertiesUnset{}) {
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Unset: &sdk.UserUnset{ObjectProperties: &unsetObjectProperties}})
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		}
+
+		set := &sdk.UserSet{
+			SessionParameters: &sdk.SessionParameters{},
+			ObjectParameters:  &sdk.UserObjectParameters{},
+		}
+		unset := &sdk.UserUnset{
+			SessionParameters: &sdk.SessionParametersUnset{},
+			ObjectParameters:  &sdk.UserObjectParametersUnset{},
+		}
+		if updateParamDiags := handleUserParametersUpdate(d, set, unset); len(updateParamDiags) > 0 {
+			return updateParamDiags
+		}
+
+		if (*set.SessionParameters != sdk.SessionParameters{} || *set.ObjectParameters != sdk.UserObjectParameters{}) {
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+				Set: set,
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if (*unset.SessionParameters != sdk.SessionParametersUnset{}) || (*unset.ObjectParameters != sdk.UserObjectParametersUnset{}) {
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
+				Unset: &sdk.UserUnset{
+					SessionParameters: unset.SessionParameters,
+					ObjectParameters:  unset.ObjectParameters,
+				},
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		return GetReadUserFunc(userType, false)(ctx, d, meta)
+	}
 }
 
 func DeleteUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

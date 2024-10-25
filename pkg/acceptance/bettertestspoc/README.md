@@ -325,6 +325,7 @@ it will result in:
 - Add support for datasource tests (assertions and config builders).
 - Consider overriding the assertions when invoking same check multiple times with different params (e.g. `Warehouse(...).HasType(X).HasType(Y)`; it could use the last-check-wins approach, to more easily reuse complex checks between the test steps).
 - Consider not adding the check for `show_output` presence on creation (same with `parameters`). The majority of the use cases need it to be present but there are a few others (like conditional presence in the datasources). Currently, it seems that they should be always present in the resources, so no change is made. Later, with adding the support for the datasource tests, consider simple destructive implementation like:
+- Add support for `set` so that assertions like e.g. `oauth_scopes.*` could be done.
 ```go
 func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
     w.assertions = make([]resourceAssertion, 0)
@@ -344,8 +345,9 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - Omit computed fields in the model (like FullyQualifiedName), because it doesn't make sense to set them
 - There's an error when generating models, steps to reproduce:
   - Go to view resource code and change `data_metric_function` field to `testing` and make it required
-  - During the generation, the following error appears: mixed named and unnamed parameters. 
+  - During the generation, the following error appears: mixed named and unnamed parameters.
     It's a golang error indicating that the parameter has both unnamed and named parameters in function (e.g. `func(abc string, int)`).
     The error is a result of both things:
     1. Lists of objects are partially generated, and only parameter name is generated in some functions (the type has to be added manually).
     2. `testing` is a package name that makes Go think that we want to have unnamed parameter there, but we just didn't generate the type for that field in the function argument.
+- generate assertions checking that time is not empty - we often do not compare time fields by value, but check if they are set

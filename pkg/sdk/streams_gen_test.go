@@ -1,6 +1,10 @@
 package sdk
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func TestStreams_CreateOnTable(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
@@ -62,6 +66,65 @@ func TestStreams_CreateOnTable(t *testing.T) {
 		opts := defaultOpts()
 		opts.On = nil
 		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON TABLE %s", id.FullyQualifiedName(), tableId.FullyQualifiedName())
+	})
+
+	t.Run("at timestamp", func(t *testing.T) {
+		timestamp := "2024-09-25 06:16:10.359 -0700"
+		opts := defaultOpts()
+		opts.On = &OnStream{
+			At: Bool(true),
+			Statement: OnStreamStatement{
+				Timestamp: String(timestamp),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON TABLE %s AT (TIMESTAMP => '%s')", id.FullyQualifiedName(), tableId.FullyQualifiedName(), timestamp)
+	})
+
+	t.Run("at offset", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.On = &OnStream{
+			At: Bool(true),
+			Statement: OnStreamStatement{
+				Offset: String("-10"),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON TABLE %s AT (OFFSET => -10)", id.FullyQualifiedName(), tableId.FullyQualifiedName())
+	})
+
+	t.Run("at statement", func(t *testing.T) {
+		queryId := "0111447d-0905-8a5c-0062-f3820281547a"
+		opts := defaultOpts()
+		opts.On = &OnStream{
+			At: Bool(true),
+			Statement: OnStreamStatement{
+				Statement: String(queryId),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON TABLE %s AT (STATEMENT => '%s')", id.FullyQualifiedName(), tableId.FullyQualifiedName(), queryId)
+	})
+
+	t.Run("at stream", func(t *testing.T) {
+		streamId := randomSchemaObjectIdentifier()
+		opts := defaultOpts()
+		opts.On = &OnStream{
+			At: Bool(true),
+			Statement: OnStreamStatement{
+				Stream: String(streamId.FullyQualifiedName()),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON TABLE %s AT (STREAM => '%s')", id.FullyQualifiedName(), tableId.FullyQualifiedName(), temporaryReplace(streamId))
+	})
+
+	t.Run("before timestamp", func(t *testing.T) {
+		timestamp := "2024-09-25 06:16:10.359 -0700"
+		opts := defaultOpts()
+		opts.On = &OnStream{
+			Before: Bool(true),
+			Statement: OnStreamStatement{
+				Timestamp: String(timestamp),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "CREATE STREAM %s ON TABLE %s BEFORE (TIMESTAMP => '%s')", id.FullyQualifiedName(), tableId.FullyQualifiedName(), timestamp)
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -153,7 +216,7 @@ func TestStreams_CreateOnExternalTable(t *testing.T) {
 		}
 		opts.InsertOnly = Bool(true)
 		opts.Comment = String("some comment")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE STREAM IF NOT EXISTS %s COPY GRANTS ON EXTERNAL TABLE %s AT (STATEMENT => 123) INSERT_ONLY = true COMMENT = 'some comment'`, id.FullyQualifiedName(), externalTableId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE STREAM IF NOT EXISTS %s COPY GRANTS ON EXTERNAL TABLE %s AT (STATEMENT => '123') INSERT_ONLY = true COMMENT = 'some comment'`, id.FullyQualifiedName(), externalTableId.FullyQualifiedName())
 	})
 }
 
@@ -415,6 +478,11 @@ func TestStreams_Drop(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("basic", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsValidAndSQLEquals(t, opts, `DROP STREAM %s`, id.FullyQualifiedName())
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfExists = Bool(true)
@@ -443,7 +511,7 @@ func TestStreams_Show(t *testing.T) {
 		opts.Terse = Bool(true)
 		opts.Like = &Like{Pattern: String("pattern")}
 		schemaId := randomDatabaseObjectIdentifier()
-		opts.In = &In{Schema: schemaId}
+		opts.In = &ExtendedIn{In: In{Schema: schemaId}}
 		opts.StartsWith = String("starts with pattern")
 		opts.Limit = &LimitFrom{Rows: Int(123), From: String("from pattern")}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW TERSE STREAMS LIKE 'pattern' IN SCHEMA %s STARTS WITH 'starts with pattern' LIMIT 123 FROM 'from pattern'`, schemaId.FullyQualifiedName())
@@ -475,4 +543,116 @@ func TestStreams_Describe(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE STREAM %s`, id.FullyQualifiedName())
 	})
+}
+
+func TestToStreamSourceType(t *testing.T) {
+	tests := []struct {
+		input   string
+		want    StreamSourceType
+		wantErr string
+	}{
+		{
+			input: "TABLE",
+			want:  StreamSourceTypeTable,
+		},
+		{
+			input: "EXTERNAL TABLE",
+			want:  StreamSourceTypeExternalTable,
+		},
+		{
+			input: "VIEW",
+			want:  StreamSourceTypeView,
+		},
+		{
+			input: "STAGE",
+			want:  StreamSourceTypeStage,
+		},
+		{
+			input: "table",
+			want:  StreamSourceTypeTable,
+		},
+		{
+			input: "external table",
+			want:  StreamSourceTypeExternalTable,
+		},
+		{
+			input: "view",
+			want:  StreamSourceTypeView,
+		},
+		{
+			input: "stage",
+			want:  StreamSourceTypeStage,
+		},
+		{
+			input:   "",
+			wantErr: "invalid stream source type",
+		},
+		{
+			input:   "foo",
+			wantErr: "invalid stream source type",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got, err := ToStreamSourceType(tt.input)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestToStreamMode(t *testing.T) {
+	tests := []struct {
+		input   string
+		want    StreamMode
+		wantErr string
+	}{
+		{
+			input: "DEFAULT",
+			want:  StreamModeDefault,
+		},
+		{
+			input: "APPEND_ONLY",
+			want:  StreamModeAppendOnly,
+		},
+		{
+			input: "INSERT_ONLY",
+			want:  StreamModeInsertOnly,
+		},
+		{
+			input: "default",
+			want:  StreamModeDefault,
+		},
+		{
+			input: "append_only",
+			want:  StreamModeAppendOnly,
+		},
+		{
+			input: "insert_only",
+			want:  StreamModeInsertOnly,
+		},
+		{
+			input:   "",
+			wantErr: "invalid stream mode",
+		},
+		{
+			input:   "foo",
+			wantErr: "invalid stream mode",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got, err := ToStreamMode(tt.input)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
 }

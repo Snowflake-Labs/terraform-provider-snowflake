@@ -2,7 +2,9 @@
 
 package sdk
 
-func NewCreateStreamOnTableRequest(
+import ()
+
+func NewCreateOnTableStreamRequest(
 	name SchemaObjectIdentifier,
 	TableId SchemaObjectIdentifier,
 ) *CreateOnTableStreamRequest {
@@ -12,38 +14,43 @@ func NewCreateStreamOnTableRequest(
 	return &s
 }
 
-func (s *CreateOnTableStreamRequest) WithOrReplace(OrReplace *bool) *CreateOnTableStreamRequest {
-	s.OrReplace = OrReplace
+func (s *CreateOnTableStreamRequest) WithOrReplace(OrReplace bool) *CreateOnTableStreamRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateOnTableStreamRequest) WithIfNotExists(IfNotExists *bool) *CreateOnTableStreamRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateOnTableStreamRequest) WithIfNotExists(IfNotExists bool) *CreateOnTableStreamRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateOnTableStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnTableStreamRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateOnTableStreamRequest) WithTag(Tag []TagAssociation) *CreateOnTableStreamRequest {
+	s.Tag = Tag
 	return s
 }
 
-func (s *CreateOnTableStreamRequest) WithOn(On *OnStreamRequest) *CreateOnTableStreamRequest {
-	s.On = On
+func (s *CreateOnTableStreamRequest) WithCopyGrants(CopyGrants bool) *CreateOnTableStreamRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func (s *CreateOnTableStreamRequest) WithAppendOnly(AppendOnly *bool) *CreateOnTableStreamRequest {
-	s.AppendOnly = AppendOnly
+func (s *CreateOnTableStreamRequest) WithOn(On OnStreamRequest) *CreateOnTableStreamRequest {
+	s.On = &On
 	return s
 }
 
-func (s *CreateOnTableStreamRequest) WithShowInitialRows(ShowInitialRows *bool) *CreateOnTableStreamRequest {
-	s.ShowInitialRows = ShowInitialRows
+func (s *CreateOnTableStreamRequest) WithAppendOnly(AppendOnly bool) *CreateOnTableStreamRequest {
+	s.AppendOnly = &AppendOnly
 	return s
 }
 
-func (s *CreateOnTableStreamRequest) WithComment(Comment *string) *CreateOnTableStreamRequest {
-	s.Comment = Comment
+func (s *CreateOnTableStreamRequest) WithShowInitialRows(ShowInitialRows bool) *CreateOnTableStreamRequest {
+	s.ShowInitialRows = &ShowInitialRows
+	return s
+}
+
+func (s *CreateOnTableStreamRequest) WithComment(Comment string) *CreateOnTableStreamRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -51,13 +58,13 @@ func NewOnStreamRequest() *OnStreamRequest {
 	return &OnStreamRequest{}
 }
 
-func (s *OnStreamRequest) WithAt(At *bool) *OnStreamRequest {
-	s.At = At
+func (s *OnStreamRequest) WithAt(At bool) *OnStreamRequest {
+	s.At = &At
 	return s
 }
 
-func (s *OnStreamRequest) WithBefore(Before *bool) *OnStreamRequest {
-	s.Before = Before
+func (s *OnStreamRequest) WithBefore(Before bool) *OnStreamRequest {
+	s.Before = &Before
 	return s
 }
 
@@ -70,27 +77,27 @@ func NewOnStreamStatementRequest() *OnStreamStatementRequest {
 	return &OnStreamStatementRequest{}
 }
 
-func (s *OnStreamStatementRequest) WithTimestamp(Timestamp *string) *OnStreamStatementRequest {
-	s.Timestamp = Timestamp
+func (s *OnStreamStatementRequest) WithTimestamp(Timestamp string) *OnStreamStatementRequest {
+	s.Timestamp = &Timestamp
 	return s
 }
 
-func (s *OnStreamStatementRequest) WithOffset(Offset *string) *OnStreamStatementRequest {
-	s.Offset = Offset
+func (s *OnStreamStatementRequest) WithOffset(Offset string) *OnStreamStatementRequest {
+	s.Offset = &Offset
 	return s
 }
 
-func (s *OnStreamStatementRequest) WithStatement(Statement *string) *OnStreamStatementRequest {
-	s.Statement = Statement
+func (s *OnStreamStatementRequest) WithStatement(Statement string) *OnStreamStatementRequest {
+	s.Statement = &Statement
 	return s
 }
 
-func (s *OnStreamStatementRequest) WithStream(Stream *string) *OnStreamStatementRequest {
-	s.Stream = Stream
+func (s *OnStreamStatementRequest) WithStream(Stream string) *OnStreamStatementRequest {
+	s.Stream = &Stream
 	return s
 }
 
-func NewCreateStreamOnExternalTableRequest(
+func NewCreateOnExternalTableStreamRequest(
 	name SchemaObjectIdentifier,
 	ExternalTableId SchemaObjectIdentifier,
 ) *CreateOnExternalTableStreamRequest {
@@ -100,37 +107,42 @@ func NewCreateStreamOnExternalTableRequest(
 	return &s
 }
 
-func (s *CreateOnExternalTableStreamRequest) WithOrReplace(OrReplace *bool) *CreateOnExternalTableStreamRequest {
-	s.OrReplace = OrReplace
+func (s *CreateOnExternalTableStreamRequest) WithOrReplace(OrReplace bool) *CreateOnExternalTableStreamRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateOnExternalTableStreamRequest) WithIfNotExists(IfNotExists *bool) *CreateOnExternalTableStreamRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateOnExternalTableStreamRequest) WithIfNotExists(IfNotExists bool) *CreateOnExternalTableStreamRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateOnExternalTableStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnExternalTableStreamRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateOnExternalTableStreamRequest) WithTag(Tag []TagAssociation) *CreateOnExternalTableStreamRequest {
+	s.Tag = Tag
 	return s
 }
 
-func (s *CreateOnExternalTableStreamRequest) WithOn(On *OnStreamRequest) *CreateOnExternalTableStreamRequest {
-	s.On = On
+func (s *CreateOnExternalTableStreamRequest) WithCopyGrants(CopyGrants bool) *CreateOnExternalTableStreamRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func (s *CreateOnExternalTableStreamRequest) WithInsertOnly(InsertOnly *bool) *CreateOnExternalTableStreamRequest {
-	s.InsertOnly = InsertOnly
+func (s *CreateOnExternalTableStreamRequest) WithOn(On OnStreamRequest) *CreateOnExternalTableStreamRequest {
+	s.On = &On
 	return s
 }
 
-func (s *CreateOnExternalTableStreamRequest) WithComment(Comment *string) *CreateOnExternalTableStreamRequest {
-	s.Comment = Comment
+func (s *CreateOnExternalTableStreamRequest) WithInsertOnly(InsertOnly bool) *CreateOnExternalTableStreamRequest {
+	s.InsertOnly = &InsertOnly
 	return s
 }
 
-func NewCreateStreamOnDirectoryTableRequest(
+func (s *CreateOnExternalTableStreamRequest) WithComment(Comment string) *CreateOnExternalTableStreamRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewCreateOnDirectoryTableStreamRequest(
 	name SchemaObjectIdentifier,
 	StageId SchemaObjectIdentifier,
 ) *CreateOnDirectoryTableStreamRequest {
@@ -140,27 +152,32 @@ func NewCreateStreamOnDirectoryTableRequest(
 	return &s
 }
 
-func (s *CreateOnDirectoryTableStreamRequest) WithOrReplace(OrReplace *bool) *CreateOnDirectoryTableStreamRequest {
-	s.OrReplace = OrReplace
+func (s *CreateOnDirectoryTableStreamRequest) WithOrReplace(OrReplace bool) *CreateOnDirectoryTableStreamRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateOnDirectoryTableStreamRequest) WithIfNotExists(IfNotExists *bool) *CreateOnDirectoryTableStreamRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateOnDirectoryTableStreamRequest) WithIfNotExists(IfNotExists bool) *CreateOnDirectoryTableStreamRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateOnDirectoryTableStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnDirectoryTableStreamRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateOnDirectoryTableStreamRequest) WithTag(Tag []TagAssociation) *CreateOnDirectoryTableStreamRequest {
+	s.Tag = Tag
 	return s
 }
 
-func (s *CreateOnDirectoryTableStreamRequest) WithComment(Comment *string) *CreateOnDirectoryTableStreamRequest {
-	s.Comment = Comment
+func (s *CreateOnDirectoryTableStreamRequest) WithCopyGrants(CopyGrants bool) *CreateOnDirectoryTableStreamRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func NewCreateStreamOnViewRequest(
+func (s *CreateOnDirectoryTableStreamRequest) WithComment(Comment string) *CreateOnDirectoryTableStreamRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func NewCreateOnViewStreamRequest(
 	name SchemaObjectIdentifier,
 	ViewId SchemaObjectIdentifier,
 ) *CreateOnViewStreamRequest {
@@ -170,38 +187,43 @@ func NewCreateStreamOnViewRequest(
 	return &s
 }
 
-func (s *CreateOnViewStreamRequest) WithOrReplace(OrReplace *bool) *CreateOnViewStreamRequest {
-	s.OrReplace = OrReplace
+func (s *CreateOnViewStreamRequest) WithOrReplace(OrReplace bool) *CreateOnViewStreamRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateOnViewStreamRequest) WithIfNotExists(IfNotExists *bool) *CreateOnViewStreamRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateOnViewStreamRequest) WithIfNotExists(IfNotExists bool) *CreateOnViewStreamRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateOnViewStreamRequest) WithCopyGrants(CopyGrants *bool) *CreateOnViewStreamRequest {
-	s.CopyGrants = CopyGrants
+func (s *CreateOnViewStreamRequest) WithTag(Tag []TagAssociation) *CreateOnViewStreamRequest {
+	s.Tag = Tag
 	return s
 }
 
-func (s *CreateOnViewStreamRequest) WithOn(On *OnStreamRequest) *CreateOnViewStreamRequest {
-	s.On = On
+func (s *CreateOnViewStreamRequest) WithCopyGrants(CopyGrants bool) *CreateOnViewStreamRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
-func (s *CreateOnViewStreamRequest) WithAppendOnly(AppendOnly *bool) *CreateOnViewStreamRequest {
-	s.AppendOnly = AppendOnly
+func (s *CreateOnViewStreamRequest) WithOn(On OnStreamRequest) *CreateOnViewStreamRequest {
+	s.On = &On
 	return s
 }
 
-func (s *CreateOnViewStreamRequest) WithShowInitialRows(ShowInitialRows *bool) *CreateOnViewStreamRequest {
-	s.ShowInitialRows = ShowInitialRows
+func (s *CreateOnViewStreamRequest) WithAppendOnly(AppendOnly bool) *CreateOnViewStreamRequest {
+	s.AppendOnly = &AppendOnly
 	return s
 }
 
-func (s *CreateOnViewStreamRequest) WithComment(Comment *string) *CreateOnViewStreamRequest {
-	s.Comment = Comment
+func (s *CreateOnViewStreamRequest) WithShowInitialRows(ShowInitialRows bool) *CreateOnViewStreamRequest {
+	s.ShowInitialRows = &ShowInitialRows
+	return s
+}
+
+func (s *CreateOnViewStreamRequest) WithComment(Comment string) *CreateOnViewStreamRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -215,13 +237,13 @@ func NewCloneStreamRequest(
 	return &s
 }
 
-func (s *CloneStreamRequest) WithOrReplace(OrReplace *bool) *CloneStreamRequest {
-	s.OrReplace = OrReplace
+func (s *CloneStreamRequest) WithOrReplace(OrReplace bool) *CloneStreamRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CloneStreamRequest) WithCopyGrants(CopyGrants *bool) *CloneStreamRequest {
-	s.CopyGrants = CopyGrants
+func (s *CloneStreamRequest) WithCopyGrants(CopyGrants bool) *CloneStreamRequest {
+	s.CopyGrants = &CopyGrants
 	return s
 }
 
@@ -233,18 +255,18 @@ func NewAlterStreamRequest(
 	return &s
 }
 
-func (s *AlterStreamRequest) WithIfExists(IfExists *bool) *AlterStreamRequest {
-	s.IfExists = IfExists
+func (s *AlterStreamRequest) WithIfExists(IfExists bool) *AlterStreamRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
-func (s *AlterStreamRequest) WithSetComment(SetComment *string) *AlterStreamRequest {
-	s.SetComment = SetComment
+func (s *AlterStreamRequest) WithSetComment(SetComment string) *AlterStreamRequest {
+	s.SetComment = &SetComment
 	return s
 }
 
-func (s *AlterStreamRequest) WithUnsetComment(UnsetComment *bool) *AlterStreamRequest {
-	s.UnsetComment = UnsetComment
+func (s *AlterStreamRequest) WithUnsetComment(UnsetComment bool) *AlterStreamRequest {
+	s.UnsetComment = &UnsetComment
 	return s
 }
 
@@ -266,8 +288,8 @@ func NewDropStreamRequest(
 	return &s
 }
 
-func (s *DropStreamRequest) WithIfExists(IfExists *bool) *DropStreamRequest {
-	s.IfExists = IfExists
+func (s *DropStreamRequest) WithIfExists(IfExists bool) *DropStreamRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
@@ -275,28 +297,28 @@ func NewShowStreamRequest() *ShowStreamRequest {
 	return &ShowStreamRequest{}
 }
 
-func (s *ShowStreamRequest) WithTerse(Terse *bool) *ShowStreamRequest {
-	s.Terse = Terse
+func (s *ShowStreamRequest) WithTerse(Terse bool) *ShowStreamRequest {
+	s.Terse = &Terse
 	return s
 }
 
-func (s *ShowStreamRequest) WithLike(Like *Like) *ShowStreamRequest {
-	s.Like = Like
+func (s *ShowStreamRequest) WithLike(Like Like) *ShowStreamRequest {
+	s.Like = &Like
 	return s
 }
 
-func (s *ShowStreamRequest) WithIn(In *In) *ShowStreamRequest {
-	s.In = In
+func (s *ShowStreamRequest) WithIn(In ExtendedIn) *ShowStreamRequest {
+	s.In = &In
 	return s
 }
 
-func (s *ShowStreamRequest) WithStartsWith(StartsWith *string) *ShowStreamRequest {
-	s.StartsWith = StartsWith
+func (s *ShowStreamRequest) WithStartsWith(StartsWith string) *ShowStreamRequest {
+	s.StartsWith = &StartsWith
 	return s
 }
 
-func (s *ShowStreamRequest) WithLimit(Limit *LimitFrom) *ShowStreamRequest {
-	s.Limit = Limit
+func (s *ShowStreamRequest) WithLimit(Limit LimitFrom) *ShowStreamRequest {
+	s.Limit = &Limit
 	return s
 }
 

@@ -107,9 +107,8 @@ type userDBRow struct {
 	LockedUntilTime       sql.NullTime   `db:"locked_until_time"`
 	HasPassword           bool           `db:"has_password"`
 	HasRsaPublicKey       bool           `db:"has_rsa_public_key"`
-	// TODO [SNOW-1645348]: test type thoroughly
-	Type   sql.NullString `db:"type"`
-	HasMfa bool           `db:"has_mfa"`
+	Type                  sql.NullString `db:"type"`
+	HasMfa                bool           `db:"has_mfa"`
 }
 
 func (row userDBRow) convert() *User {
@@ -249,6 +248,7 @@ type UserObjectProperties struct {
 	RSAPublicKeyFp        *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_FP"`
 	RSAPublicKey2         *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_2"`
 	RSAPublicKey2Fp       *string                  `ddl:"parameter,single_quotes" sql:"RSA_PUBLIC_KEY_2_FP"`
+	Type                  *UserType                `ddl:"parameter,no_quotes" sql:"TYPE"`
 	Comment               *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
@@ -285,6 +285,7 @@ type UserObjectPropertiesUnset struct {
 	DisableMfa            *bool `ddl:"keyword" sql:"DISABLE_MFA"`
 	RSAPublicKey          *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY"`
 	RSAPublicKey2         *bool `ddl:"keyword" sql:"RSA_PUBLIC_KEY_2"`
+	Type                  *bool `ddl:"keyword" sql:"TYPE"`
 	Comment               *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
@@ -486,6 +487,7 @@ type UserDetails struct {
 	Name                                *StringProperty
 	Comment                             *StringProperty
 	DisplayName                         *StringProperty
+	Type                                *StringProperty
 	LoginName                           *StringProperty
 	FirstName                           *StringProperty
 	MiddleName                          *StringProperty
@@ -508,8 +510,10 @@ type UserDetails struct {
 	MinsToBypassNetworkPolicy           *IntProperty
 	RsaPublicKey                        *StringProperty
 	RsaPublicKeyFp                      *StringProperty
+	RsaPublicKeyLastSetTime             *StringProperty
 	RsaPublicKey2                       *StringProperty
 	RsaPublicKey2Fp                     *StringProperty
+	RsaPublicKey2LastSetTime            *StringProperty
 	PasswordLastSetTime                 *StringProperty
 	CustomLandingPageUrl                *StringProperty
 	CustomLandingPageUrlFlushNextUiLoad *BoolProperty
@@ -526,6 +530,8 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 			v.Comment = row.toStringProperty()
 		case "DISPLAY_NAME":
 			v.DisplayName = row.toStringProperty()
+		case "TYPE":
+			v.Type = row.toStringProperty()
 		case "LOGIN_NAME":
 			v.LoginName = row.toStringProperty()
 		case "FIRST_NAME":
@@ -562,6 +568,8 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 			v.ExtAuthnDuo = row.toBoolProperty()
 		case "EXT_AUTHN_UID":
 			v.ExtAuthnUid = row.toStringProperty()
+		case "HAS_MFA":
+			v.HasMfa = row.toBoolProperty()
 		case "MINS_TO_BYPASS_MFA":
 			v.MinsToBypassMfa = row.toIntProperty()
 		case "MINS_TO_BYPASS_NETWORK_POLICY":
@@ -570,18 +578,20 @@ func userDetailsFromRows(rows []propertyRow) *UserDetails {
 			v.RsaPublicKey = row.toStringProperty()
 		case "RSA_PUBLIC_KEY_FP":
 			v.RsaPublicKeyFp = row.toStringProperty()
+		case "RSA_PUBLIC_KEY_LAST_SET_TIME":
+			v.RsaPublicKeyLastSetTime = row.toStringProperty()
 		case "RSA_PUBLIC_KEY_2":
 			v.RsaPublicKey2 = row.toStringProperty()
 		case "RSA_PUBLIC_KEY_2_FP":
 			v.RsaPublicKey2Fp = row.toStringProperty()
+		case "RSA_PUBLIC_KEY_2_LAST_SET_TIME":
+			v.RsaPublicKey2LastSetTime = row.toStringProperty()
 		case "PASSWORD_LAST_SET_TIME":
 			v.PasswordLastSetTime = row.toStringProperty()
 		case "CUSTOM_LANDING_PAGE_URL":
 			v.CustomLandingPageUrl = row.toStringProperty()
 		case "CUSTOM_LANDING_PAGE_URL_FLUSH_NEXT_UI_LOAD":
 			v.CustomLandingPageUrlFlushNextUiLoad = row.toBoolProperty()
-		case "HAS_MFA":
-			v.HasMfa = row.toBoolProperty()
 		}
 	}
 	return v
@@ -704,4 +714,37 @@ var ValidSecondaryRolesOptionsString = []string{
 	string(SecondaryRolesOptionDefault),
 	string(SecondaryRolesOptionNone),
 	string(SecondaryRolesOptionAll),
+}
+
+type UserType string
+
+const (
+	UserTypePerson        UserType = "PERSON"
+	UserTypeService       UserType = "SERVICE"
+	UserTypeLegacyService UserType = "LEGACY_SERVICE"
+)
+
+func ToUserType(s string) (UserType, error) {
+	switch strings.ToUpper(s) {
+	case string(UserTypePerson):
+		return UserTypePerson, nil
+	case string(UserTypeService):
+		return UserTypeService, nil
+	case string(UserTypeLegacyService):
+		return UserTypeLegacyService, nil
+	default:
+		return "", fmt.Errorf("invalid user type: %s", s)
+	}
+}
+
+var AllUserTypes = []UserType{
+	UserTypePerson,
+	UserTypeService,
+	UserTypeLegacyService,
+}
+
+var AcceptableUserTypes = map[UserType][]string{
+	UserTypePerson:        {"", string(UserTypePerson)},
+	UserTypeService:       {string(UserTypeService)},
+	UserTypeLegacyService: {string(UserTypeLegacyService)},
 }

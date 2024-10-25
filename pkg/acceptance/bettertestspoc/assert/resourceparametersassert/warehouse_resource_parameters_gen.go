@@ -16,21 +16,21 @@ type WarehouseResourceParametersAssert struct {
 func WarehouseResourceParameters(t *testing.T, name string) *WarehouseResourceParametersAssert {
 	t.Helper()
 
-	w := WarehouseResourceParametersAssert{
+	resourceParameterAssert := WarehouseResourceParametersAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "parameters"),
 	}
-	w.AddAssertion(assert.ValueSet("parameters.#", "1"))
-	return &w
+	resourceParameterAssert.AddAssertion(assert.ValueSet("parameters.#", "1"))
+	return &resourceParameterAssert
 }
 
 func ImportedWarehouseResourceParameters(t *testing.T, id string) *WarehouseResourceParametersAssert {
 	t.Helper()
 
-	w := WarehouseResourceParametersAssert{
+	resourceParameterAssert := WarehouseResourceParametersAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "imported parameters"),
 	}
-	w.AddAssertion(assert.ValueSet("parameters.#", "1"))
-	return &w
+	resourceParameterAssert.AddAssertion(assert.ValueSet("parameters.#", "1"))
+	return &resourceParameterAssert
 }
 
 ////////////////////////////

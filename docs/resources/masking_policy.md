@@ -5,6 +5,8 @@ description: |-
   Resource used to manage masking policies. For more information, check masking policies documentation https://docs.snowflake.com/en/sql-reference/sql/create-masking-policy.
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0950--v0960) to use it.
+
 # snowflake_masking_policy (Resource)
 
 Resource used to manage masking policies. For more information, check [masking policies documentation](https://docs.snowflake.com/en/sql-reference/sql/create-masking-policy).
@@ -74,7 +76,6 @@ EOF
   comment               = "example masking policy"
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
@@ -100,7 +101,7 @@ EOF
 - `describe_output` (List of Object) Outputs the result of `DESCRIBE MASKING POLICY` for the given masking policy. (see [below for nested schema](#nestedatt--describe_output))
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
-- `show_output` (List of Object) Outputs the result of `SHOW MASKING POLICY` for the given masking policy. (see [below for nested schema](#nestedatt--show_output))
+- `show_output` (List of Object) Outputs the result of `SHOW MASKING POLICIES` for the given masking policy. (see [below for nested schema](#nestedatt--show_output))
 
 <a id="nestedblock--argument"></a>
 ### Nested Schema for `argument`

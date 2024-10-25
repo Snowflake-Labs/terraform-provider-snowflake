@@ -145,8 +145,10 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 						},
 						nil,
 					)
-					errs = append(errs, fmt.Errorf("granting ownership on warehouse %s ended with error, err = %w", wh.ID().FullyQualifiedName(), err))
-					continue
+					if err != nil {
+						errs = append(errs, fmt.Errorf("granting ownership on warehouse %s ended with error, err = %w", wh.ID().FullyQualifiedName(), err))
+						continue
+					}
 				}
 
 				log.Printf("[DEBUG] Dropping warehouse %s, created at: %s\n", wh.ID().FullyQualifiedName(), wh.CreatedOn.String())
@@ -196,8 +198,10 @@ func nukeDatabases(client *Client, prefix string) func() error {
 					},
 					nil,
 				)
-				errs = append(errs, fmt.Errorf("granting ownership on database %s ended with error, err = %w", db.ID().FullyQualifiedName(), err))
-				continue
+				if err != nil {
+					errs = append(errs, fmt.Errorf("granting ownership on database %s ended with error, err = %w", db.ID().FullyQualifiedName(), err))
+					continue
+				}
 			}
 
 			log.Printf("[DEBUG] Processing database [%d/%d]: %s...\n", idx+1, len(dbs), db.ID().FullyQualifiedName())

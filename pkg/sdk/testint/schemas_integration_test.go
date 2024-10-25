@@ -280,7 +280,7 @@ func TestInt_Schemas(t *testing.T) {
 		swapSchema, cleanupSwapSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSwapSchema)
 
-		table, _ := testClientHelper().Table.CreateTableInSchema(t, schema.ID())
+		table, _ := testClientHelper().Table.CreateInSchema(t, schema.ID())
 		t.Cleanup(func() {
 			newId := sdk.NewSchemaObjectIdentifierInSchema(swapSchema.ID(), table.Name)
 			err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(newId))
@@ -446,22 +446,14 @@ func TestInt_Schemas(t *testing.T) {
 	})
 
 	t.Run("alter: set tags", func(t *testing.T) {
-		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
-		err := client.Schemas.Create(ctx, schemaID, nil)
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Schemas.Drop(ctx, schemaID, nil)
-			require.NoError(t, err)
-		})
+		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(cleanupSchema)
 
-		s, err := client.Schemas.ShowByID(ctx, schemaID)
-		require.NoError(t, err)
-
-		tag, cleanupTag := testClientHelper().Tag.CreateTagInSchema(t, s.ID())
+		tag, cleanupTag := testClientHelper().Tag.CreateTagInSchema(t, schema.ID())
 		t.Cleanup(cleanupTag)
 
 		tagValue := "tag-value"
-		err = client.Schemas.Alter(ctx, schemaID, &sdk.AlterSchemaOptions{
+		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
 			SetTag: []sdk.TagAssociation{
 				{
 					Name:  tag.ID(),
@@ -471,7 +463,7 @@ func TestInt_Schemas(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), s.ID(), sdk.ObjectTypeSchema)
+		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), schema.ID(), sdk.ObjectTypeSchema)
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, tv)
 	})

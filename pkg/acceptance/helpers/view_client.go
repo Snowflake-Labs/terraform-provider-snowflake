@@ -26,9 +26,14 @@ func (c *ViewClient) client() sdk.Views {
 
 func (c *ViewClient) CreateView(t *testing.T, query string) (*sdk.View, func()) {
 	t.Helper()
+	return c.CreateViewInSchema(t, query, c.ids.SchemaId())
+}
+
+func (c *ViewClient) CreateViewInSchema(t *testing.T, query string, schemaId sdk.DatabaseObjectIdentifier) (*sdk.View, func()) {
+	t.Helper()
 	ctx := context.Background()
 
-	id := c.ids.RandomSchemaObjectIdentifier()
+	id := c.ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 
 	err := c.client().Create(ctx, sdk.NewCreateViewRequest(id, query))
 	require.NoError(t, err)

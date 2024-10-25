@@ -1,8 +1,53 @@
 package sdk
 
-import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+import (
+	"fmt"
+	"strings"
+
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+)
 
 //go:generate go run ./poc/main.go
+
+type StreamSourceType string
+
+const (
+	StreamSourceTypeTable         StreamSourceType = "TABLE"
+	StreamSourceTypeExternalTable StreamSourceType = "EXTERNAL TABLE"
+	StreamSourceTypeView          StreamSourceType = "VIEW"
+	StreamSourceTypeStage         StreamSourceType = "STAGE"
+)
+
+func ToStreamSourceType(s string) (StreamSourceType, error) {
+	switch streamSourceType := StreamSourceType(strings.ToUpper(s)); streamSourceType {
+	case StreamSourceTypeTable,
+		StreamSourceTypeExternalTable,
+		StreamSourceTypeView,
+		StreamSourceTypeStage:
+		return streamSourceType, nil
+	default:
+		return "", fmt.Errorf("invalid stream source type: %s", s)
+	}
+}
+
+type StreamMode string
+
+const (
+	StreamModeDefault    StreamMode = "DEFAULT"
+	StreamModeAppendOnly StreamMode = "APPEND_ONLY"
+	StreamModeInsertOnly StreamMode = "INSERT_ONLY"
+)
+
+func ToStreamMode(s string) (StreamMode, error) {
+	switch streamMode := StreamMode(strings.ToUpper(s)); streamMode {
+	case StreamModeDefault,
+		StreamModeAppendOnly,
+		StreamModeInsertOnly:
+		return streamMode, nil
+	default:
+		return "", fmt.Errorf("invalid stream mode: %s", s)
+	}
+}
 
 var (
 	onStreamDef = g.NewQueryStruct("OnStream").
@@ -11,9 +56,9 @@ var (
 			QueryStructField(
 			"Statement",
 			g.NewQueryStruct("OnStreamStatement").
-				OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals()).
+				OptionalTextAssignment("TIMESTAMP", g.ParameterOptions().ArrowEquals().SingleQuotes()).
 				OptionalTextAssignment("OFFSET", g.ParameterOptions().ArrowEquals()).
-				OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals()).
+				OptionalTextAssignment("STATEMENT", g.ParameterOptions().ArrowEquals().SingleQuotes()).
 				OptionalTextAssignment("STREAM", g.ParameterOptions().ArrowEquals().SingleQuotes()).
 				WithValidation(g.ExactlyOneValueSet, "Timestamp", "Offset", "Statement", "Stream"),
 			g.ListOptions().Parentheses(),
@@ -25,14 +70,13 @@ var (
 				Field("name", "string").
 				Field("database_name", "string").
 				Field("schema_name", "string").
-				Field("tableOn", "sql.NullString").
 				Field("owner", "sql.NullString").
 				Field("comment", "sql.NullString").
 				Field("table_name", "sql.NullString").
 				Field("source_type", "sql.NullString").
 				Field("base_tables", "sql.NullString").
 				Field("type", "sql.NullString").
-				Field("stale", "sql.NullString").
+				Field("stale", "string").
 				Field("mode", "sql.NullString").
 				Field("stale_after", "sql.NullTime").
 				Field("invalid_reason", "sql.NullString").
@@ -43,15 +87,14 @@ var (
 				Field("Name", "string").
 				Field("DatabaseName", "string").
 				Field("SchemaName", "string").
-				Field("TableOn", "*string").
 				Field("Owner", "*string").
 				Field("Comment", "*string").
 				Field("TableName", "*string").
-				Field("SourceType", "*string").
-				Field("BaseTables", "*string").
+				Field("SourceType", "*StreamSourceType").
+				Field("BaseTables", "[]string").
 				Field("Type", "*string").
-				Field("Stale", "*string").
-				Field("Mode", "*string").
+				Field("Stale", "bool").
+				Field("Mode", "*StreamMode").
 				Field("StaleAfter", "*time.Time").
 				Field("InvalidReason", "*string").
 				Field("OwnerRoleType", "*string")
@@ -70,6 +113,7 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
+				OptionalTags().
 				OptionalCopyGrants().
 				SQL("ON TABLE").
 				Identifier("TableId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -90,6 +134,7 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
+				OptionalTags().
 				OptionalCopyGrants().
 				SQL("ON EXTERNAL TABLE").
 				Identifier("ExternalTableId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -109,6 +154,7 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
+				OptionalTags().
 				OptionalCopyGrants().
 				SQL("ON STAGE").
 				Identifier("StageId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -126,6 +172,7 @@ var (
 				SQL("STREAM").
 				IfNotExists().
 				Name().
+				OptionalTags().
 				OptionalCopyGrants().
 				SQL("ON VIEW").
 				Identifier("ViewId", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -182,7 +229,7 @@ var (
 				Terse().
 				SQL("STREAMS").
 				OptionalLike().
-				OptionalIn().
+				OptionalExtendedIn().
 				OptionalStartsWith().
 				OptionalLimit(),
 		).

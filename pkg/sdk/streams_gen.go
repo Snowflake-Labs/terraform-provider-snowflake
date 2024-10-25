@@ -16,7 +16,7 @@ type Streams interface {
 	Drop(ctx context.Context, request *DropStreamRequest) error
 	Show(ctx context.Context, request *ShowStreamRequest) ([]Stream, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error)
-	Describe(ctx context.Context, request *DescribeStreamRequest) (*Stream, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error)
 }
 
 // CreateOnTableStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stream.
@@ -26,6 +26,7 @@ type CreateOnTableStreamOptions struct {
 	stream          bool                   `ddl:"static" sql:"STREAM"`
 	IfNotExists     *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name            SchemaObjectIdentifier `ddl:"identifier"`
+	Tag             []TagAssociation       `ddl:"keyword,parentheses" sql:"TAG"`
 	CopyGrants      *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	onTable         bool                   `ddl:"static" sql:"ON TABLE"`
 	TableId         SchemaObjectIdentifier `ddl:"identifier"`
@@ -42,9 +43,9 @@ type OnStream struct {
 }
 
 type OnStreamStatement struct {
-	Timestamp *string `ddl:"parameter,arrow_equals" sql:"TIMESTAMP"`
+	Timestamp *string `ddl:"parameter,single_quotes,arrow_equals" sql:"TIMESTAMP"`
 	Offset    *string `ddl:"parameter,arrow_equals" sql:"OFFSET"`
-	Statement *string `ddl:"parameter,arrow_equals" sql:"STATEMENT"`
+	Statement *string `ddl:"parameter,single_quotes,arrow_equals" sql:"STATEMENT"`
 	Stream    *string `ddl:"parameter,single_quotes,arrow_equals" sql:"STREAM"`
 }
 
@@ -55,6 +56,7 @@ type CreateOnExternalTableStreamOptions struct {
 	stream          bool                   `ddl:"static" sql:"STREAM"`
 	IfNotExists     *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name            SchemaObjectIdentifier `ddl:"identifier"`
+	Tag             []TagAssociation       `ddl:"keyword,parentheses" sql:"TAG"`
 	CopyGrants      *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	onExternalTable bool                   `ddl:"static" sql:"ON EXTERNAL TABLE"`
 	ExternalTableId SchemaObjectIdentifier `ddl:"identifier"`
@@ -70,6 +72,7 @@ type CreateOnDirectoryTableStreamOptions struct {
 	stream      bool                   `ddl:"static" sql:"STREAM"`
 	IfNotExists *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name        SchemaObjectIdentifier `ddl:"identifier"`
+	Tag         []TagAssociation       `ddl:"keyword,parentheses" sql:"TAG"`
 	CopyGrants  *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	onStage     bool                   `ddl:"static" sql:"ON STAGE"`
 	StageId     SchemaObjectIdentifier `ddl:"identifier"`
@@ -83,6 +86,7 @@ type CreateOnViewStreamOptions struct {
 	stream          bool                   `ddl:"static" sql:"STREAM"`
 	IfNotExists     *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name            SchemaObjectIdentifier `ddl:"identifier"`
+	Tag             []TagAssociation       `ddl:"keyword,parentheses" sql:"TAG"`
 	CopyGrants      *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	onView          bool                   `ddl:"static" sql:"ON VIEW"`
 	ViewId          SchemaObjectIdentifier `ddl:"identifier"`
@@ -124,13 +128,13 @@ type DropStreamOptions struct {
 
 // ShowStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-streams.
 type ShowStreamOptions struct {
-	show       bool       `ddl:"static" sql:"SHOW"`
-	Terse      *bool      `ddl:"keyword" sql:"TERSE"`
-	streams    bool       `ddl:"static" sql:"STREAMS"`
-	Like       *Like      `ddl:"keyword" sql:"LIKE"`
-	In         *In        `ddl:"keyword" sql:"IN"`
-	StartsWith *string    `ddl:"parameter,no_equals,single_quotes" sql:"STARTS WITH"`
-	Limit      *LimitFrom `ddl:"keyword" sql:"LIMIT"`
+	show       bool        `ddl:"static" sql:"SHOW"`
+	Terse      *bool       `ddl:"keyword" sql:"TERSE"`
+	streams    bool        `ddl:"static" sql:"STREAMS"`
+	Like       *Like       `ddl:"keyword" sql:"LIKE"`
+	In         *ExtendedIn `ddl:"keyword" sql:"IN"`
+	StartsWith *string     `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
+	Limit      *LimitFrom  `ddl:"keyword" sql:"LIMIT"`
 }
 
 type showStreamsDbRow struct {
@@ -138,14 +142,13 @@ type showStreamsDbRow struct {
 	Name          string         `db:"name"`
 	DatabaseName  string         `db:"database_name"`
 	SchemaName    string         `db:"schema_name"`
-	TableOn       sql.NullString `db:"tableOn"`
 	Owner         sql.NullString `db:"owner"`
 	Comment       sql.NullString `db:"comment"`
 	TableName     sql.NullString `db:"table_name"`
 	SourceType    sql.NullString `db:"source_type"`
 	BaseTables    sql.NullString `db:"base_tables"`
 	Type          sql.NullString `db:"type"`
-	Stale         sql.NullString `db:"stale"`
+	Stale         string         `db:"stale"`
 	Mode          sql.NullString `db:"mode"`
 	StaleAfter    sql.NullTime   `db:"stale_after"`
 	InvalidReason sql.NullString `db:"invalid_reason"`
@@ -157,15 +160,14 @@ type Stream struct {
 	Name          string
 	DatabaseName  string
 	SchemaName    string
-	TableOn       *string
 	Owner         *string
 	Comment       *string
 	TableName     *string
-	SourceType    *string
-	BaseTables    *string
+	SourceType    *StreamSourceType
+	BaseTables    []string
 	Type          *string
-	Stale         *string
-	Mode          *string
+	Stale         bool
+	Mode          *StreamMode
 	StaleAfter    *time.Time
 	InvalidReason *string
 	OwnerRoleType *string
@@ -173,6 +175,14 @@ type Stream struct {
 
 func (v *Stream) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
+}
+
+func (v *Stream) IsAppendOnly() bool {
+	return v != nil && v.Mode != nil && *v.Mode == StreamModeAppendOnly
+}
+
+func (v *Stream) IsInsertOnly() bool {
+	return v != nil && v.Mode != nil && *v.Mode == StreamModeInsertOnly
 }
 
 // DescribeStreamOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-stream.

@@ -30,8 +30,20 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.User().Schema,
 	},
 	{
+		name:   "ServiceUser",
+		schema: resources.ServiceUser().Schema,
+	},
+	{
+		name:   "LegacyServiceUser",
+		schema: resources.LegacyServiceUser().Schema,
+	},
+	{
 		name:   "View",
 		schema: resources.View().Schema,
+	},
+	{
+		name:   "Database",
+		schema: resources.Database().Schema,
 	},
 	{
 		name:   "DatabaseRole",
@@ -46,7 +58,43 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.RowAccessPolicy().Schema,
 	},
 	{
+		name:   "Schema",
+		schema: resources.Schema().Schema,
+	},
+	{
 		name:   "MaskingPolicy",
 		schema: resources.MaskingPolicy().Schema,
+	},
+	{
+		name:   "StreamOnTable",
+		schema: resources.StreamOnTable().Schema,
+	},
+	{
+		name:   "StreamOnExternalTable",
+		schema: resources.StreamOnExternalTable().Schema,
+	},
+	{
+		name:   "SecretWithAuthorizationCodeGrant",
+		schema: resources.SecretWithAuthorizationCodeGrant().Schema,
+	},
+	{
+		name:   "SecretWithBasicAuthentication",
+		schema: resources.SecretWithBasicAuthentication().Schema,
+	},
+	{
+		name:   "SecretWithClientCredentials",
+		schema: resources.SecretWithClientCredentials().Schema,
+	},
+	{
+		name:   "SecretWithGenericString",
+		schema: resources.SecretWithGenericString().Schema,
+	},
+	{
+		name:   "StreamOnDirectoryTable",
+		schema: resources.StreamOnDirectoryTable().Schema,
+	},
+	{
+		name:   "StreamOnView",
+		schema: resources.StreamOnView().Schema,
 	},
 }

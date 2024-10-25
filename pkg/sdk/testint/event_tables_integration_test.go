@@ -160,6 +160,10 @@ func TestInt_EventTables(t *testing.T) {
 		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSetTags(set))
 		require.NoError(t, err)
 
+		value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeEventTable)
+		require.NoError(t, err)
+		assert.Equal(t, "v1", value)
+
 		unset := []sdk.ObjectIdentifier{tagTest.ID()}
 		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithUnsetTags(unset))
 		require.NoError(t, err)
@@ -216,7 +220,7 @@ func TestInt_EventTables(t *testing.T) {
 		rowAccessPolicy2, rowAccessPolicy2Cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(rowAccessPolicy2Cleanup)
 
-		table, tableCleanup := testClientHelper().Table.CreateTable(t)
+		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
 
 		// add policy

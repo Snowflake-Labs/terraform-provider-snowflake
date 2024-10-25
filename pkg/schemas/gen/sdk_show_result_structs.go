@@ -38,6 +38,7 @@ var SdkShowResultStructs = []any{
 	sdk.Role{},
 	sdk.RowAccessPolicy{},
 	sdk.Schema{},
+	sdk.Secret{},
 	sdk.SecurityIntegration{},
 	sdk.Sequence{},
 	sdk.SessionPolicy{},

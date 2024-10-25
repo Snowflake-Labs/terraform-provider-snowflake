@@ -103,7 +103,7 @@ func TestFunctions_CreateForJava(t *testing.T) {
 		opts.ExternalAccessIntegrations = []AccountObjectIdentifier{
 			NewAccountObjectIdentifier("ext_integration"),
 		}
-		opts.Secrets = []Secret{
+		opts.Secrets = []SecretReference{
 			{
 				VariableName: "variable1",
 				Name:         "name1",
@@ -272,7 +272,7 @@ func TestFunctions_CreateForPython(t *testing.T) {
 		opts.ExternalAccessIntegrations = []AccountObjectIdentifier{
 			NewAccountObjectIdentifier("ext_integration"),
 		}
-		opts.Secrets = []Secret{
+		opts.Secrets = []SecretReference{
 			{
 				VariableName: "variable1",
 				Name:         "name1",

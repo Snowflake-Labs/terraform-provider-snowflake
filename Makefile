@@ -7,7 +7,7 @@ export TERRAFORM_PLUGIN_LOCAL_INSTALL=$(TERRAFORM_PLUGINS_DIR)/$(BASE_BINARY_NAM
 default: help
 
 dev-setup: ## setup development dependencies
-	@which ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.55.2
+	@which ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.61.0
 	cd tools && mkdir -p bin/
 	cd tools && env GOBIN=$$PWD/bin go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 	cd tools && env GOBIN=$$PWD/bin go install mvdan.cc/gofumpt
@@ -65,7 +65,7 @@ test: test-client ## run unit and integration tests
 	go test -v -cover -timeout=45m ./...
 
 test-acceptance: ## run acceptance tests
-	TF_ACC=1 SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX=1 go test -run "^TestAcc_" -v -cover -timeout=90m ./...
+	TF_ACC=1 SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX=1 go test -run "^TestAcc_" -v -cover -timeout=120m ./...
 
 test-integration: ## run SDK integration tests
 	TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX=1 go test -run "^TestInt_" -v -cover -timeout=45m ./...
@@ -75,6 +75,9 @@ test-architecture: ## check architecture constraints between packages
 
 test-client: ## runs test that checks sdk.Client without instrumentedsql
 	SF_TF_NO_INSTRUMENTED_SQL=1 SF_TF_GOSNOWFLAKE_LOG_LEVEL=debug go test ./pkg/sdk/internal/client/... -v
+
+test-object-renaming: ## runs tests in object_renaming_acceptance_test.go
+	TEST_SF_TF_ENABLE_OBJECT_RENAMING=1 go test ./pkg/resources/object_renaming_acceptace_test.go -v
 
 test-acceptance-%: ## run acceptance tests for the given resource only, e.g. test-acceptance-Warehouse
 	TF_ACC=1 TF_LOG=DEBUG SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true go test -run ^TestAcc_$*_ -v -timeout=20m ./pkg/resources

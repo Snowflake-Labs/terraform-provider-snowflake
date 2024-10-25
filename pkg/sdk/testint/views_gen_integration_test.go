@@ -21,7 +21,7 @@ func TestInt_Views(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
@@ -372,9 +372,7 @@ func TestInt_Views(t *testing.T) {
 		err := client.Views.Alter(ctx, alterRequestSetTags)
 		require.NoError(t, err)
 
-		// setting object type to view results in:
-		// SQL compilation error: Invalid value VIEW for argument OBJECT_TYPE. Please use object type TABLE for all kinds of table-like objects.
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTable)
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeView)
 		require.NoError(t, err)
 
 		assert.Equal(t, tagValue, returnedTagValue)
@@ -387,7 +385,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequestUnsetTags)
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeTable)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeView)
 		require.Error(t, err)
 	})
 
@@ -751,7 +749,7 @@ func TestInt_ViewsShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	table, tableCleanup := testClientHelper().Table.CreateTable(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
 	sql := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())

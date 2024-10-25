@@ -133,106 +133,46 @@ var allObjectsParameters = []SnowflakeObjectParameters{
 		IdType: "sdk.SchemaObjectIdentifier",
 		Level:  sdk.ParameterTypeTask,
 		Parameters: []SnowflakeParameter{
-			// ABORT_DETACHED_QUERY
-			// ACTIVE_PYTHON_PROFILER
+			{ParameterName: string(sdk.TaskParameterSuspendTaskAfterNumFailures), ParameterType: "int", DefaultValue: "10", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.TaskParameterTaskAutoRetryAttempts), ParameterType: "int", DefaultValue: "0", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.TaskParameterUserTaskManagedInitialWarehouseSize), ParameterType: "sdk.WarehouseSize", DefaultValue: `sdk.WarehouseSize("Medium")`, DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.TaskParameterUserTaskMinimumTriggerIntervalInSeconds), ParameterType: "int", DefaultValue: "30", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.TaskParameterUserTaskTimeoutMs), ParameterType: "int", DefaultValue: "3600000", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.TaskParameterAbortDetachedQuery), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterAutocommit), ParameterType: "bool", DefaultValue: "true", DefaultLevel: "sdk.ParameterTypeAccount"},
-			// AUTOCOMMIT_API_SUPPORTED
 			{ParameterName: string(sdk.TaskParameterBinaryInputFormat), ParameterType: "sdk.BinaryInputFormat", DefaultValue: "sdk.BinaryInputFormatHex", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterBinaryOutputFormat), ParameterType: "sdk.BinaryOutputFormat", DefaultValue: "sdk.BinaryOutputFormatHex", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// CLIENT_ENABLE_CONSERVATIVE_MEMORY_USAGE
-			// CLIENT_ENABLE_DEFAULT_OVERWRITE_IN_PUT
-			// CLIENT_ENABLE_LOG_INFO_STATEMENT_PARAMETERS
 			{ParameterName: string(sdk.TaskParameterClientMemoryLimit), ParameterType: "int", DefaultValue: "1536", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterClientMetadataRequestUseConnectionCtx), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// CLIENT_METADATA_USE_SESSION_DATABASE
 			{ParameterName: string(sdk.TaskParameterClientPrefetchThreads), ParameterType: "int", DefaultValue: "4", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterClientResultChunkSize), ParameterType: "int", DefaultValue: "160", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterClientResultColumnCaseInsensitive), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// CLIENT_SESSION_CLONE
 			{ParameterName: string(sdk.TaskParameterClientSessionKeepAlive), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterClientSessionKeepAliveHeartbeatFrequency), ParameterType: "int", DefaultValue: "3600", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterClientTimestampTypeMapping), ParameterType: "sdk.ClientTimestampTypeMapping", DefaultValue: "sdk.ClientTimestampTypeMappingLtz", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// CSV_TIMESTAMP_FORMAT
-			// C_API_QUERY_RESULT_FORMAT
 			{ParameterName: string(sdk.TaskParameterDateInputFormat), ParameterType: "string", DefaultValue: "AUTO", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterDateOutputFormat), ParameterType: "string", DefaultValue: "YYYY-MM-DD", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// DOTNET_QUERY_RESULT_FORMAT
-			// DYNAMIC_TABLES_VIEW_VERSION
-			// DYNAMIC_TABLE_GRAPH_HISTORY_VIEW_VERSION
-			// DYNAMIC_TABLE_REFRESH_HISTORY_VIEW_VERSION
-			// ENABLE_CONSOLE_OUTPUT
-			// ENABLE_PROVIDER_LISTING_PROGRAMMATIC_ACCESS_DESCRIBE_LISTING
-			// ENABLE_SNOW_API_FOR_COMPUTE_POOL
-			// ENABLE_SNOW_API_FOR_COPILOT
-			// ENABLE_SNOW_API_FOR_DATABASE
-			// ENABLE_SNOW_API_FOR_FUNCTION
-			// ENABLE_SNOW_API_FOR_GRANT
-			// ENABLE_SNOW_API_FOR_ICEBERG
-			// ENABLE_SNOW_API_FOR_IMAGE_REPOSITORY
-			// ENABLE_SNOW_API_FOR_RESULT
-			// ENABLE_SNOW_API_FOR_ROLE
-			// ENABLE_SNOW_API_FOR_SCHEMA
-			// ENABLE_SNOW_API_FOR_SERVICE
-			// ENABLE_SNOW_API_FOR_SESSION
-			// ENABLE_SNOW_API_FOR_STAGE
-			// ENABLE_SNOW_API_FOR_TABLE
-			// ENABLE_SNOW_API_FOR_TASK
-			// ENABLE_SNOW_API_FOR_USER
-			// ENABLE_SNOW_API_FOR_WAREHOUSE
 			{ParameterName: string(sdk.TaskParameterEnableUnloadPhysicalTypeOptimization), ParameterType: "bool", DefaultValue: "true", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterErrorOnNondeterministicMerge), ParameterType: "bool", DefaultValue: "true", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterErrorOnNondeterministicUpdate), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterGeographyOutputFormat), ParameterType: "sdk.GeographyOutputFormat", DefaultValue: "sdk.GeographyOutputFormatGeoJSON", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterGeometryOutputFormat), ParameterType: "sdk.GeometryOutputFormat", DefaultValue: "sdk.GeometryOutputFormatGeoJSON", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// GO_QUERY_RESULT_FORMAT
-			// HYBRID_TABLE_LOCK_TIMEOUT
-			// INCLUDE_DT_WITH_TABLE_KIND_IN_SHOW_OBJECTS
-			// INCLUDE_DYNAMIC_TABLES_WITH_TABLE_KIND
-			// JDBC_FORMAT_DATE_WITH_TIMEZONE
-			// JDBC_QUERY_RESULT_FORMAT
 			{ParameterName: string(sdk.TaskParameterJdbcTreatTimestampNtzAsUtc), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterJdbcUseSessionTimezone), ParameterType: "bool", DefaultValue: "true", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterJsonIndent), ParameterType: "int", DefaultValue: "2", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// LANGUAGE
 			{ParameterName: string(sdk.TaskParameterLockTimeout), ParameterType: "int", DefaultValue: "43200", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterLogLevel), ParameterType: "sdk.LogLevel", DefaultValue: "sdk.LogLevelOff", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// METRIC_LEVEL
 			{ParameterName: string(sdk.TaskParameterMultiStatementCount), ParameterType: "int", DefaultValue: "1", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterNoorderSequenceAsDefault), ParameterType: "bool", DefaultValue: "true", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// ODBC_QUERY_RESULT_FORMAT
 			{ParameterName: string(sdk.TaskParameterOdbcTreatDecimalAsInt), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// PYTHON_CONNECTOR_QUERY_RESULT_FORMAT
-			// PYTHON_CONNECTOR_USE_NANOARROW
-			// PYTHON_PROFILER_MODULES
-			// PYTHON_PROFILER_TARGET_STAGE
-			// PYTHON_SNOWPARK_AUTO_CLEAN_UP_TEMP_TABLE_ENABLED
-			// PYTHON_SNOWPARK_COMPILATION_STAGE_ENABLED
-			// PYTHON_SNOWPARK_ELIMINATE_NUMERIC_SQL_VALUE_CAST_ENABLED
-			// PYTHON_SNOWPARK_USE_CTE_OPTIMIZATION
-			// PYTHON_SNOWPARK_USE_LARGE_QUERY_BREAKDOWN_OPTIMIZATION
-			// PYTHON_SNOWPARK_USE_LOGICAL_TYPE_FOR_CREATE_DATAFRAME
-			// PYTHON_SNOWPARK_USE_SCOPED_TEMP_OBJECTS
-			// PYTHON_SNOWPARK_USE_SQL_SIMPLIFIER
-			// QA_TEST_NAME
-			// QUERY_RESULT_FORMAT
 			{ParameterName: string(sdk.TaskParameterQueryTag), ParameterType: "string", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterQuotedIdentifiersIgnoreCase), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeAccount"},
 			{ParameterName: string(sdk.TaskParameterRowsPerResultset), ParameterType: "int", DefaultValue: "0", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterS3StageVpceDnsName), ParameterType: "string", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterSearchPath), ParameterType: "string", DefaultValue: "$current, $public", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// SHOW_EXTERNAL_TABLE_KIND_AS_TABLE
-			// SNOWPARK_HIDE_INTERNAL_ALIAS
-			// SNOWPARK_LAZY_ANALYSIS
-			// SNOWPARK_REQUEST_TIMEOUT_IN_SECONDS
-			// SNOWPARK_STORED_PROC_IS_FINAL_TABLE_QUERY
-			// SNOWPARK_USE_SCOPED_TEMP_OBJECTS
-			// SQL_API_NULLABLE_IN_RESULT_SET
-			// SQL_API_QUERY_RESULT_FORMAT
 			{ParameterName: string(sdk.TaskParameterStatementQueuedTimeoutInSeconds), ParameterType: "int", DefaultValue: "0", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterStatementTimeoutInSeconds), ParameterType: "int", DefaultValue: "172800", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterStrictJsonOutput), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// TODO: SUSPEND_TASK_AFTER_NUM_FAILURES
-			// TODO: TASK_AUTO_RETRY_ATTEMPTS
 			{ParameterName: string(sdk.TaskParameterTimestampDayIsAlways24h), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterTimestampInputFormat), ParameterType: "string", DefaultValue: "AUTO", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterTimestampLtzOutputFormat), ParameterType: "string", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
@@ -247,12 +187,8 @@ var allObjectsParameters = []SnowflakeObjectParameters{
 			{ParameterName: string(sdk.TaskParameterTransactionAbortOnError), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeAccount"},
 			{ParameterName: string(sdk.TaskParameterTransactionDefaultIsolationLevel), ParameterType: "sdk.TransactionDefaultIsolationLevel", DefaultValue: "sdk.TransactionDefaultIsolationLevelReadCommitted", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterTwoDigitCenturyStart), ParameterType: "int", DefaultValue: "1970", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// TODO UI_QUERY_RESULT_FORMAT
 			// TODO [SNOW-1501905]: quick workaround for now: lowercase for ignore in snowflake by default but uppercase for FAIL
 			{ParameterName: string(sdk.TaskParameterUnsupportedDdlAction), ParameterType: "sdk.UnsupportedDDLAction", DefaultValue: "sdk.UnsupportedDDLAction(strings.ToLower(string(sdk.UnsupportedDDLActionIgnore)))", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			{ParameterName: string(sdk.TaskParameterUserTaskManagedInitialWarehouseSize), ParameterType: "sdk.WarehouseSize", DefaultValue: "Medium", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// {ParameterName: string(sdk.UserParameterUnsupportedUserTaskMinimumTriggerIntervalInSeconds), ParameterType: "int", DefaultValue: "30", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			// {ParameterName: string(sdk.UserParameterUnsupportedUserTaskTimeoutMs), ParameterType: "int", DefaultValue: "3600000", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterUseCachedResult), ParameterType: "bool", DefaultValue: "true", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterWeekOfYearPolicy), ParameterType: "int", DefaultValue: "0", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.TaskParameterWeekStart), ParameterType: "int", DefaultValue: "0", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
