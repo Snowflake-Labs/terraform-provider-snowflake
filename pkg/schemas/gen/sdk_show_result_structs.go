@@ -16,6 +16,7 @@ var SdkShowResultStructs = []any{
 	sdk.EventTable{},
 	sdk.ExternalFunction{},
 	sdk.ExternalTable{},
+	sdk.ExternalVolume{},
 	sdk.FailoverGroup{},
 	sdk.FileFormat{},
 	sdk.Function{},

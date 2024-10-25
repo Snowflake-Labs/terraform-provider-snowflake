@@ -2,6 +2,7 @@ package testint
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -11,39 +12,43 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 )
 
+const ConnectionFailoverToAccountInSameRegionErrorMessage = "The connection cannot be failed over to an account in the same region"
+
 func TestInt_Connections(t *testing.T) {
 	client := testClient(t)
+	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
 
-	orgName, err := client.ContextFunctions.CurrentOrganizationName(ctx)
-	require.NoError(t, err)
-
-	accountName, err := client.ContextFunctions.CurrentAccountName(ctx)
-	require.NoError(t, err)
-
-	region, err := client.ContextFunctions.CurrentRegion(ctx)
+	sessionDetails, err := client.ContextFunctions.CurrentSessionDetails(ctx)
 	require.NoError(t, err)
 
 	t.Run("Create minimal", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		err := client.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id))
+		require.NoError(t, err)
+
+		err = client.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id))
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Connection.DropFunc(t, id))
 
 		assertions.AssertThatObject(t, objectassert.Connection(t, id).
-			HasSnowflakeRegion(region).
-			HasAccountName(accountName).
+			HasSnowflakeRegion(sessionDetails.Region).
+			HasAccountName(sessionDetails.AccountName).
 			HasName(id.Name()).
 			HasNoComment().
 			HasIsPrimary(true).
-			HasPrimary(fmt.Sprintf("%s.%s.%s", orgName, accountName, id.Name())).
+			HasPrimary(fmt.Sprintf("%s.%s.%s", sessionDetails.OrganizationName, sessionDetails.AccountName, id.Name())).
 			HasFailoverAllowedToAccounts(
 				[]string{
-					fmt.Sprintf("%s.%s", orgName, accountName),
+					fmt.Sprintf("%s.%s", sessionDetails.OrganizationName, sessionDetails.AccountName),
 				},
 			).
-			HasOrganizationName(orgName).
-			HasAccountLocator(client.GetAccountLocator()),
+			HasOrganizationName(sessionDetails.OrganizationName).
+			HasAccountLocator(client.GetAccountLocator()).
+			HasConnectionUrl(
+				strings.ToLower(
+					fmt.Sprintf("%s-%s.snowflakecomputing.com", sessionDetails.OrganizationName, id.Name()),
+				),
+			),
 		)
 	})
 
@@ -56,209 +61,176 @@ func TestInt_Connections(t *testing.T) {
 		t.Cleanup(testClientHelper().Connection.DropFunc(t, id))
 
 		assertions.AssertThatObject(t, objectassert.Connection(t, id).
-			HasSnowflakeRegion(region).
-			HasAccountName(accountName).
+			HasSnowflakeRegion(sessionDetails.Region).
+			HasAccountName(sessionDetails.AccountName).
 			HasName(id.Name()).
 			HasComment("test comment for connection").
 			HasIsPrimary(true).
-			HasPrimary(fmt.Sprintf("%s.%s.%s", orgName, accountName, id.Name())).
+			HasPrimary(fmt.Sprintf("%s.%s.%s", sessionDetails.OrganizationName, sessionDetails.AccountName, id.Name())).
 			HasFailoverAllowedToAccounts(
 				[]string{
-					fmt.Sprintf("%s.%s", orgName, accountName),
+					fmt.Sprintf("%s.%s", sessionDetails.OrganizationName, sessionDetails.AccountName),
 				},
 			).
-			HasOrganizationName(orgName).
-			HasAccountLocator(client.GetAccountLocator()),
+			HasOrganizationName(sessionDetails.OrganizationName).
+			HasAccountLocator(client.GetAccountLocator()).
+			HasConnectionUrl(
+				strings.ToLower(
+					fmt.Sprintf("%s-%s.snowflakecomputing.com", sessionDetails.OrganizationName, id.Name()),
+				),
+			),
 		)
 	})
 
-	// TODO: uncomment when able to change accounts to different regions
-	// Snowflake error: The connection cannot be failed over to an account in the same region
-	/*
-			t.Run("AlterFailover EnableFailover", func(t *testing.T) {
-				id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-				secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
+	t.Run("Alter enable failover", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
 
-				_, connectionCleanup := testClientHelper().Connection.Create(t, id)
-				t.Cleanup(connectionCleanup)
+		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
+		t.Cleanup(connectionCleanup)
 
-				err := client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(id).
-					WithEnableConnectionFailover(
-						*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
-							[]sdk.AccountIdentifier{
-								secondaryAccountId,
-							},
-						),
-					),
-				)
-				require.NoError(t, err)
+		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
+			WithEnableConnectionFailover(
+				*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
+					[]sdk.AccountIdentifier{
+						secondaryAccountId,
+					},
+				),
+			),
+		)
+		require.ErrorContains(t, err, ConnectionFailoverToAccountInSameRegionErrorMessage)
 
-				assertions.AssertThatObject(t, objectassert.Connection(t, id).
-					HasSnowflakeRegion(region).
-					HasAccountName(accountName).
-					HasName(id.Name()).
-					HasNoComment().
-					HasIsPrimary(true).
-					HasPrimary(fmt.Sprintf("%s.%s.%s", orgName, accountName, id.Name())).
-					HasFailoverAllowedToAccounts(
-						[]string{
-							fmt.Sprintf("%s.%s", orgName, accountName),
-							fmt.Sprintf("%s.%s", orgName, secondaryAccountId.Name()),
-						},
-					).
-					HasOrganizationName(orgName).
-					HasAccountLocator(client.GetAccountLocator()),
-				)
-			})
+		// TODO: [SNOW-1763442]
+		/*
+		   require.NoError(t, err)
+		   assertions.AssertThatObject(t, objectassert.Connection(t, id).
+		       HasSnowflakeRegion(sessionDetails.Region).
+		       HasAccountName(sessionDetails.AccountName).
+		       HasName(id.Name()).
+		       HasNoComment().
+		       HasIsPrimary(true).
+		       HasPrimary(fmt.Sprintf("%s.%s.%s", sessionDetails.OrganizationName, sessionDetails.AccountName, id.Name())).
+		       HasFailoverAllowedToAccounts(
+		           []string{
+		               fmt.Sprintf("%s.%s", sessionDetails.OrganizationName, sessionDetails.AccountName),
+		               fmt.Sprintf("%s.%s", sessionDetails.OrganizationName, secondaryAccountId.Name()),
+		           },
+		       ).
+		       HasOrganizationName(sessionDetails.OrganizationName).
+		       HasAccountLocator(client.GetAccountLocator()),
+		       HasConnectionUrl(
+		           strings.ToLower(
+		               fmt.Sprintf("%s-%s.snowflakecomputing.com", sessionDetails.OrganizationName, id.Name()),
+		           ),
+		       ),
+		   )
+		*/
+	})
 
-			t.Run("AlterFailover EnableFailover With Ignore Edittion Check", func(t *testing.T) {
-				id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-				secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
+	t.Run("Create as replica of", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		accountId := testClientHelper().Ids.AccountIdentifierWithLocator()
+		_ = id
+		_ = accountId
+		secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
 
-				primaryConn, connectionCleanup := testClientHelper().Connection.Create(t, id)
-				t.Cleanup(connectionCleanup)
+		primaryConn, connectionCleanup := testClientHelper().Connection.Create(t, testClientHelper().Ids.RandomAccountObjectIdentifier())
+		t.Cleanup(connectionCleanup)
 
-				err := client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(primaryConn.ID()).
-					WithEnableConnectionFailover(
-						*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
-							[]sdk.AccountIdentifier{
-								secondaryAccountId,
-							},
-						).WithIgnoreEditionCheck(true),
-					),
-				)
-				require.NoError(t, err)
+		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(primaryConn.ID()).
+			WithEnableConnectionFailover(
+				*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
+					[]sdk.AccountIdentifier{
+						secondaryAccountId,
+					},
+				),
+			),
+		)
+		require.ErrorContains(t, err, ConnectionFailoverToAccountInSameRegionErrorMessage)
+		// TODO: [SNOW-1763442]
+		//
+		// require.NoError(t, err)
 
-				assertions.AssertThatObject(t, objectassert.Connection(t, id).
-					HasPrimary(fmt.Sprintf("%s.%s.%s", orgName, accountName, id.Name())).
-					HasFailoverAllowedToAccounts(
-						[]string{
-							fmt.Sprintf("%s.%s", orgName, accountName),
-							fmt.Sprintf("%s.%s", orgName, secondaryAccountId.Name()),
-						},
-					),
-				)
+		/*
+		   // create replica on secondary account
+		   err = secondaryClient.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id).
+		       WithAsReplicaOf(sdk.AsReplicaOfRequest{
+		           AsReplicaOf: sdk.NewExternalObjectIdentifier(accountId, id.Name()),
+		       }))
+		   t.Cleanup(testClientHelper().Connection.DropFunc(t, id))
+		   require.NoError(t, err)
 
-				// try to alter enable failover to accoutns list
-				err = client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(id).
-					WithEnableConnectionFailover(
-						*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
-							[]sdk.AccountIdentifier{},
-						),
-					),
-				)
-				require.NoError(t, err)
+		   assertions.AssertThatObject(t, objectassert.Connection(t, id).
+		       HasSnowflakeRegion(sessionDetails.Region).
+		       HasAccountName(sessionDetails.AccountName).
+		       HasName(id.Name()).
+		       HasNoComment().
+		       HasIsPrimary(false).
+		       HasPrimary(fmt.Sprintf("%s.%s.%s", sessionDetails.OrganizationName, sessionDetails.AccountName, id.Name())).
+		       HasFailoverAllowedToAccounts(
+		           []string{
+		               fmt.Sprintf("%s.%s", sessionDetails.OrganizationName, sessionDetails.AccountName),
+		               fmt.Sprintf("%s.%s", sessionDetails.OrganizationName, secondaryAccountId.Name()),
+		           },
+		       ).
+		       HasOrganizationName(sessionDetails.OrganizationName).
+		       HasAccountLocator(client.GetAccountLocator()).
+		       HasConnectionUrl(
+		           strings.ToLower(
+		               fmt.Sprintf("%s-%s.snowflakecomputing.com", sessionDetails.OrganizationName, id.Name()),
+		           ),
+		       ),
+		   )
+		*/
+	})
 
-				// assert that list has not been changed
-				assertions.AssertThatObject(t, objectassert.Connection(t, id).
-					HasPrimary(fmt.Sprintf("%s.%s.%s", orgName, accountName, id.Name())).
-					HasFailoverAllowedToAccounts(
-						[]string{
-							fmt.Sprintf("%s.%s", orgName, accountName),
-							fmt.Sprintf("%s.%s", orgName, secondaryAccountId.Name()),
-						},
-					),
-				)
-			})
+	t.Run("Alter disable failover", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		accountId := testClientHelper().Ids.AccountIdentifierWithLocator()
+		secondaryAccountId := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 
-			t.Run("AlterFailover DisableFailover", func(t *testing.T) {
-				id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-				accountId := testClientHelper().Ids.AccountIdentifierWithLocator()
-				secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
+		primaryConn, connectionCleanup := testClientHelper().Connection.Create(t, id)
+		t.Cleanup(connectionCleanup)
 
-				primaryConn, connectionCleanup := testClientHelper().Connection.Create(t, testClientHelper().Ids.RandomAccountObjectIdentifier())
-				t.Cleanup(connectionCleanup)
+		// Add secondary account to failover list
+		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
+			WithEnableConnectionFailover(
+				*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
+					[]sdk.AccountIdentifier{
+						secondaryAccountId,
+					},
+				),
+			),
+		)
+		require.ErrorContains(t, err, ConnectionFailoverToAccountInSameRegionErrorMessage)
+		// TODO: [SNOW-1763442]
+		//
+		// require.NoError(t, err)
 
-				// Add secondary account to failover list
-				err := client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(primaryConn.ID()).
-					WithEnableConnectionFailover(
-						*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
-							[]sdk.AccountIdentifier{
-								secondaryAccountId,
-							},
-						),
-					),
-				)
-				require.NoError(t, err)
+		// Disable promotion of this connection
+		err = client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
+			WithDisableConnectionFailover(*sdk.NewDisableConnectionFailoverRequest()))
+		require.NoError(t, err)
 
-		        // Disable promotion of this connection
-				err = client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(primaryConn.ID()).
-					WithDisableConnectionFailover(*sdk.NewDisableConnectionFailoverRequest()))
-				require.NoError(t, err)
+		// Assert that promotion for other account has been disabled
+		assertions.AssertThatObject(t, objectassert.Connection(t, primaryConn.ID()).
+			HasPrimary(fmt.Sprintf("%s.%s.%s", sessionDetails.OrganizationName, sessionDetails.AccountName, id.Name())).
+			HasFailoverAllowedToAccounts(
+				[]string{
+					fmt.Sprintf("%s.%s", sessionDetails.OrganizationName, sessionDetails.AccountName),
+				},
+			),
+		)
 
-				assertions.AssertThatObject(t, objectassert.Connection(t, primaryConn.ID()).
-					HasPrimary(fmt.Sprintf("%s.%s.%s", orgName, accountName, primaryConn.ID().Name())).
-					HasFailoverAllowedToAccounts(
-						[]string{
-							fmt.Sprintf("%s.%s", orgName, accountName),
-							fmt.Sprintf("%s.%s", orgName, secondaryAccountId.Name()),
-						},
-					),
-				)
+		// Try to create repllication on secondary account
+		err = secondaryClient.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id).
+			WithAsReplicaOf(sdk.AsReplicaOfRequest{
+				AsReplicaOf: sdk.NewExternalObjectIdentifier(accountId, id),
+			}))
+		require.ErrorContains(t, err, "This account is not authorized to create a secondary connection of this primary connection")
+	})
 
-				// Create repllication for secondary account
-				err = client.Connections.CreateReplicated(ctx, sdk.NewCreateReplicatedConnectionRequest(id, sdk.NewExternalObjectIdentifier(accountId, primaryConn.ID())))
-
-				// Assert that it is not a primary connection
-				assertions.AssertThatObject(t, objectassert.Connection(t, id).
-					HasPrimary(fmt.Sprintf("%s.%s.%s", orgName, secondaryAccountId.Name(), id.Name())).
-					HasIsPrimary(false),
-				)
-
-				// Try to promote to primary
-				err = client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(id).
-					WithPrimary(true))
-
-				// Assert tha promotion has been disabled
-				assertions.AssertThatObject(t, objectassert.Connection(t, id).
-					HasPrimary(fmt.Sprintf("%s.%s.%s", orgName, secondaryAccountId.Name(), id.Name())).
-					HasIsPrimary(false),
-				)
-			})
-
-			t.Run("CreateReplicated", func(t *testing.T) {
-				id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-				accountId := testClientHelper().Ids.AccountIdentifierWithLocator()
-				secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
-
-				primaryConn, connectionCleanup := testClientHelper().Connection.Create(t, testClientHelper().Ids.RandomAccountObjectIdentifier())
-				t.Cleanup(connectionCleanup)
-
-				err := client.Connections.AlterFailover(ctx, sdk.NewAlterFailoverConnectionRequest(primaryConn.ID()).
-					WithEnableConnectionFailover(
-						*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
-							[]sdk.AccountIdentifier{
-								secondaryAccountId,
-							},
-						),
-					),
-				)
-				require.NoError(t, err)
-
-				err = client.Connections.CreateReplicated(ctx, sdk.NewCreateReplicatedConnectionRequest(id, sdk.NewExternalObjectIdentifier(accountId, primaryConn.ID())))
-				require.NoError(t, err)
-				t.Cleanup(testClientHelper().Connection.DropFunc(t, id))
-
-				assertions.AssertThatObject(t, objectassert.Connection(t, id).
-					HasSnowflakeRegion(region).
-					HasAccountName(accountName).
-					HasName(id.Name()).
-					HasNoComment().
-					HasIsPrimary(false).
-					HasPrimary(fmt.Sprintf("%s.%s.%s", orgName, accountName, primaryConn.ID().Name())).
-					HasFailoverAllowedToAccounts(
-						[]string{
-							fmt.Sprintf("%s.%s", orgName, accountName),
-							fmt.Sprintf("%s.%s", orgName, secondaryAccountId.Name()),
-						},
-					).
-					HasOrganizationName(orgName).
-					HasAccountLocator(client.GetAccountLocator()),
-				)
-			})
-	*/
-
-	t.Run("AlterConnection", func(t *testing.T) {
+	t.Run("Alter", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
 		t.Cleanup(connectionCleanup)

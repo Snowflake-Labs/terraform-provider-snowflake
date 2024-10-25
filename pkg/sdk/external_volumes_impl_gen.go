@@ -160,9 +160,14 @@ func (r *ShowExternalVolumeRequest) toOpts() *ShowExternalVolumeOptions {
 }
 
 func (r externalVolumeShowRow) convert() *ExternalVolume {
-	return &ExternalVolume{
+	externalVolume := ExternalVolume{
 		Name:        r.Name,
 		AllowWrites: r.AllowWrites,
-		Comment:     r.Comment,
 	}
+
+	if r.Comment.Valid {
+		externalVolume.Comment = r.Comment.String
+	}
+
+	return &externalVolume
 }

@@ -126,6 +126,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.ExternalTable: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.ExternalTables.ShowByID)
 	},
+	resources.ExternalVolume: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.ExternalVolumes.ShowByID)
+	},
 	resources.FailoverGroup: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.FailoverGroups.ShowByID)
 	},
@@ -232,6 +235,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 		return runShowById(ctx, id, client.Streams.ShowByID)
 	},
 	resources.StreamOnTable: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Streams.ShowByID)
+	},
+	resources.StreamOnView: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Streams.ShowByID)
 	},
 	resources.Streamlit: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
