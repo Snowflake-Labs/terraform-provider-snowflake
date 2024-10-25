@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -59,7 +58,7 @@ func Provider() *schema.Provider {
 				Description:      envNameFieldDescription("Username. Required unless using `profile`.", snowflakeenvs.User),
 				Optional:         true,
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.User, nil),
-				ValidateDiagFunc: resources.IsValidIdentifier[sdk.AccountObjectIdentifier](),
+				ValidateDiagFunc: helpers.IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			},
 			"password": {
 				Type:          schema.TypeString,
@@ -74,21 +73,21 @@ func Provider() *schema.Provider {
 				Description:      envNameFieldDescription("Specifies the virtual warehouse to use by default for queries, loading, etc. in the client session.", snowflakeenvs.Warehouse),
 				Optional:         true,
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Warehouse, nil),
-				ValidateDiagFunc: resources.IsValidIdentifier[sdk.AccountObjectIdentifier](),
+				ValidateDiagFunc: helpers.IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			},
 			"role": {
 				Type:             schema.TypeString,
 				Description:      envNameFieldDescription("Specifies the role to use by default for accessing Snowflake objects in the client session.", snowflakeenvs.Role),
 				Optional:         true,
-				ValidateDiagFunc: resources.IsValidIdentifier[sdk.AccountObjectIdentifier](),
+				ValidateDiagFunc: helpers.IsValidIdentifier[sdk.AccountObjectIdentifier](),
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Role, nil),
 			},
 			"validate_default_parameters": {
 				Type:             schema.TypeString,
 				Description:      envNameFieldDescription("True by default. If false, disables the validation checks for Database, Schema, Warehouse and Role at the time a connection is established.", snowflakeenvs.ValidateDefaultParameters),
 				Optional:         true,
-				ValidateDiagFunc: validateBooleanString,
-				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ValidateDefaultParameters, resources.BooleanDefault),
+				ValidateDiagFunc: helpers.ValidateBooleanStringWithDefault,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ValidateDefaultParameters, helpers.BooleanDefault),
 			},
 			"params": {
 				Type:        schema.TypeMap,
@@ -104,10 +103,10 @@ func Provider() *schema.Provider {
 			},
 			"protocol": {
 				Type:             schema.TypeString,
-				Description:      envNameFieldDescription(fmt.Sprintf("A protocol used in the connection. Valid options are: %v.", possibleValuesListed(allProtocols)), snowflakeenvs.Protocol),
+				Description:      envNameFieldDescription(fmt.Sprintf("A protocol used in the connection. Valid options are: %v.", helpers.PossibleValuesListed(allProtocols)), snowflakeenvs.Protocol),
 				Optional:         true,
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Protocol, nil),
-				ValidateDiagFunc: normalizeValidation(toProtocol),
+				ValidateDiagFunc: helpers.NormalizeValidation(toProtocol),
 			},
 			"host": {
 				Type:        schema.TypeString,
@@ -127,7 +126,7 @@ func Provider() *schema.Provider {
 				Description:      envNameFieldDescription("Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid values include: Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor, UsernamePasswordMFA. It has to be set explicitly to JWT for private key authentication.", snowflakeenvs.Authenticator),
 				Optional:         true,
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Authenticator, string(authenticationTypeSnowflake)),
-				ValidateDiagFunc: normalizeValidation(toAuthenticatorType),
+				ValidateDiagFunc: helpers.NormalizeValidation(toAuthenticatorType),
 			},
 			"passcode": {
 				Type:          schema.TypeString,
@@ -202,8 +201,8 @@ func Provider() *schema.Provider {
 				Type:             schema.TypeString,
 				Description:      envNameFieldDescription("True represents OCSP fail open mode. False represents OCSP fail closed mode. Fail open true by default.", snowflakeenvs.OcspFailOpen),
 				Optional:         true,
-				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.OcspFailOpen, resources.BooleanDefault),
-				ValidateDiagFunc: validateBooleanString,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.OcspFailOpen, helpers.BooleanDefault),
+				ValidateDiagFunc: helpers.ValidateBooleanStringWithDefault,
 			},
 			"token": {
 				Type:        schema.TypeString,
@@ -289,14 +288,15 @@ func Provider() *schema.Provider {
 				Type:             schema.TypeString,
 				Description:      envNameFieldDescription("When true the MFA token is cached in the credential manager. True by default in Windows/OSX. False for Linux.", snowflakeenvs.ClientRequestMfaToken),
 				Optional:         true,
-				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ClientRequestMfaToken, resources.BooleanDefault),
-				ValidateDiagFunc: validateBooleanString,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ClientRequestMfaToken, helpers.BooleanDefault),
+				ValidateDiagFunc: helpers.ValidateBooleanStringWithDefault,
 			},
 			"client_store_temporary_credential": {
-				Type:        schema.TypeString,
-				Description: envNameFieldDescription("When true the ID token is cached in the credential manager. True by default in Windows/OSX. False for Linux.", snowflakeenvs.ClientStoreTemporaryCredential),
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.ClientStoreTemporaryCredential, resources.BooleanDefault),
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("When true the ID token is cached in the credential manager. True by default in Windows/OSX. False for Linux.", snowflakeenvs.ClientStoreTemporaryCredential),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ClientStoreTemporaryCredential, helpers.BooleanDefault),
+				ValidateDiagFunc: helpers.ValidateBooleanStringWithDefault,
 			},
 			"disable_query_context_cache": {
 				Type:        schema.TypeBool,
@@ -557,7 +557,7 @@ var (
 
 func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
 	// hacky way to speed up our acceptance tests
-	if os.Getenv(resource.EnvTfAcc) != "" && os.Getenv(string(testenvs.ConfigureClientOnce)) == "true" {
+	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
 		if configuredClient != nil {
 			return &provider.Context{Client: configuredClient}, nil
 		}
@@ -599,8 +599,8 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		config.Region = v.(string)
 	}
 
-	if v := s.Get("validate_default_parameters").(string); v != resources.BooleanDefault {
-		parsed, err := resources.BooleanStringToBool(v)
+	if v := s.Get("validate_default_parameters").(string); v != helpers.BooleanDefault {
+		parsed, err := helpers.BooleanStringToBool(v)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
@@ -700,8 +700,8 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		config.InsecureMode = v.(bool)
 	}
 
-	if v := s.Get("ocsp_fail_open").(string); v != resources.BooleanDefault {
-		parsed, err := resources.BooleanStringToBool(v)
+	if v := s.Get("ocsp_fail_open").(string); v != helpers.BooleanDefault {
+		parsed, err := helpers.BooleanStringToBool(v)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
@@ -753,8 +753,8 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		config.DisableTelemetry = v.(bool)
 	}
 
-	if v := s.Get("client_request_mfa_token").(string); v != resources.BooleanDefault {
-		parsed, err := resources.BooleanStringToBool(v)
+	if v := s.Get("client_request_mfa_token").(string); v != helpers.BooleanDefault {
+		parsed, err := helpers.BooleanStringToBool(v)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
@@ -765,8 +765,8 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		}
 	}
 
-	if v := s.Get("client_store_temporary_credential").(string); v != resources.BooleanDefault {
-		parsed, err := resources.BooleanStringToBool(v)
+	if v := s.Get("client_store_temporary_credential").(string); v != helpers.BooleanDefault {
+		parsed, err := helpers.BooleanStringToBool(v)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
@@ -802,7 +802,7 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 	client, clientErr := sdk.NewClient(config)
 
 	// needed for tests verifying different provider setups
-	if os.Getenv(resource.EnvTfAcc) != "" && os.Getenv(string(testenvs.ConfigureClientOnce)) == "true" {
+	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
 		configuredClient = client
 		configureClientError = clientErr
 	} else {

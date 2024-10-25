@@ -13,10 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/youmark/pkcs8"
@@ -205,25 +201,3 @@ func GetAccessTokenWithRefreshToken(
 func envNameFieldDescription(description, envName string) string {
 	return fmt.Sprintf("%s Can also be sourced from the `%s` environment variable.", description, envName)
 }
-
-// TODO(SNOW-1752043 - next pr): move to common with resources
-func possibleValuesListed[T ~string | ~int](values []T) string {
-	valuesWrapped := make([]string, len(values))
-	for i, value := range values {
-		valuesWrapped[i] = fmt.Sprintf("`%v`", value)
-	}
-	return strings.Join(valuesWrapped, " | ")
-}
-
-func normalizeValidation[T any](normalize func(string) (T, error)) schema.SchemaValidateDiagFunc {
-	return func(val interface{}, _ cty.Path) diag.Diagnostics {
-		_, err := normalize(val.(string))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
-	}
-}
-
-// validateBooleanString is similar to the one we use in resources, but in the provider config we also need to explicitly allow default value
-var validateBooleanString = resources.StringInSlice([]string{resources.BooleanTrue, resources.BooleanFalse, resources.BooleanDefault}, false)

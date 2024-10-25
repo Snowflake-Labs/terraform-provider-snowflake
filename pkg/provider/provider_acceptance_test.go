@@ -178,8 +178,44 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 				Config:      providerConfigWithWarehouse(testprofiles.Default, nonExisting),
 				ExpectError: regexp.MustCompile("The requested warehouse does not exist or not authorized."),
 			},
+			// check that using a non-existing warehouse with disabled verification succeeds
 			{
 				Config: providerConfigWithWarehouseAndDisabledValidation(testprofiles.Default, nonExisting),
+			},
+		},
+	})
+}
+
+// prove we can use tri-value booleans, similarly to the ones in resources
+func TestAcc_Provider_triValueBoolean(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+		},
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.97.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `"true"`),
 			},
 		},
 	})
@@ -257,6 +293,15 @@ provider "snowflake" {
 	warehouse    = "%[2]s"
 }
 `, profile, warehouse) + datasourceConfig()
+}
+
+func providerConfigWithClientStoreTemporaryCredential(profile, clientStoreTemporaryCredential string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	client_store_temporary_credential    = %[2]s
+}
+`, profile, clientStoreTemporaryCredential) + datasourceConfig()
 }
 
 func providerConfigWithWarehouseAndDisabledValidation(profile, warehouse string) string {

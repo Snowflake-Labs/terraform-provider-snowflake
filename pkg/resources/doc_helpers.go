@@ -3,14 +3,12 @@ package resources
 import (
 	"fmt"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 )
 
 func possibleValuesListed[T ~string | ~int](values []T) string {
-	valuesWrapped := make([]string, len(values))
-	for i, value := range values {
-		valuesWrapped[i] = fmt.Sprintf("`%v`", value)
-	}
-	return strings.Join(valuesWrapped, " | ")
+	return helpers.PossibleValuesListed(values)
 }
 
 func characterList(values []rune) string {
