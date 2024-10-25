@@ -2,8 +2,6 @@ package sdk
 
 var (
 	_ validatable = new(CreateConnectionOptions)
-	_ validatable = new(CreateReplicatedConnectionOptions)
-	_ validatable = new(AlterFailoverConnectionOptions)
 	_ validatable = new(AlterConnectionOptions)
 	_ validatable = new(DropConnectionOptions)
 	_ validatable = new(ShowConnectionOptions)
@@ -17,30 +15,10 @@ func (opts *CreateConnectionOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	return JoinErrors(errs...)
-}
-
-func (opts *CreateReplicatedConnectionOptions) validate() error {
-	if opts == nil {
-		return ErrNilOptions
-	}
-	var errs []error
-	if !ValidObjectIdentifier(opts.name) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
-	}
-	if !ValidObjectIdentifier(opts.ReplicaOf) {
-		errs = append(errs, ErrInvalidObjectIdentifier)
-	}
-	return JoinErrors(errs...)
-}
-
-func (opts *AlterFailoverConnectionOptions) validate() error {
-	if opts == nil {
-		return ErrNilOptions
-	}
-	var errs []error
-	if !exactlyOneValueSet(opts.EnableConnectionFailover, opts.DisableConnectionFailover, opts.Primary) {
-		errs = append(errs, errExactlyOneOf("AlterFailoverConnectionOptions", "EnableConnectionFailover", "DisableConnectionFailover", "Primary"))
+	if valueSet(opts.AsReplicaOf) {
+		if !ValidObjectIdentifier(opts.AsReplicaOf.AsReplicaOf) {
+			errs = append(errs, ErrInvalidObjectIdentifier)
+		}
 	}
 	return JoinErrors(errs...)
 }
@@ -50,8 +28,8 @@ func (opts *AlterConnectionOptions) validate() error {
 		return ErrNilOptions
 	}
 	var errs []error
-	if !exactlyOneValueSet(opts.Set, opts.Unset) {
-		errs = append(errs, errExactlyOneOf("AlterConnectionOptions", "Set", "Unset"))
+	if !exactlyOneValueSet(opts.EnableConnectionFailover, opts.DisableConnectionFailover, opts.Primary, opts.Set, opts.Unset) {
+		errs = append(errs, errExactlyOneOf("AlterConnectionOptions", "EnableConnectionFailover", "DisableConnectionFailover", "Primary", "Set", "Unset"))
 	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Comment) {

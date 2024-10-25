@@ -40,6 +40,10 @@ func randomDatabaseObjectIdentifierInDatabase(databaseId AccountObjectIdentifier
 	return NewDatabaseObjectIdentifier(databaseId.Name(), random.StringN(12))
 }
 
+func randomAccountIdentifier() AccountIdentifier {
+	return NewAccountIdentifier(random.StringN(12), random.StringN(12))
+}
+
 func randomAccountObjectIdentifier() AccountObjectIdentifier {
 	return NewAccountObjectIdentifier(random.StringN(12))
 }

@@ -2,8 +2,6 @@
 
 package sdk
 
-import ()
-
 func NewCreateConnectionRequest(
 	name AccountObjectIdentifier,
 ) *CreateConnectionRequest {
@@ -17,51 +15,59 @@ func (s *CreateConnectionRequest) WithIfNotExists(IfNotExists bool) *CreateConne
 	return s
 }
 
+func (s *CreateConnectionRequest) WithAsReplicaOf(AsReplicaOf AsReplicaOfRequest) *CreateConnectionRequest {
+	s.AsReplicaOf = &AsReplicaOf
+	return s
+}
+
 func (s *CreateConnectionRequest) WithComment(Comment string) *CreateConnectionRequest {
 	s.Comment = &Comment
 	return s
 }
 
-func NewCreateReplicatedConnectionRequest(
-	name AccountObjectIdentifier,
-	ReplicaOf ExternalObjectIdentifier,
-) *CreateReplicatedConnectionRequest {
-	s := CreateReplicatedConnectionRequest{}
-	s.name = name
-	s.ReplicaOf = ReplicaOf
+func NewAsReplicaOfRequest(
+	AsReplicaOf ExternalObjectIdentifier,
+) *AsReplicaOfRequest {
+	s := AsReplicaOfRequest{}
+	s.AsReplicaOf = AsReplicaOf
 	return &s
 }
 
-func (s *CreateReplicatedConnectionRequest) WithIfNotExists(IfNotExists bool) *CreateReplicatedConnectionRequest {
-	s.IfNotExists = &IfNotExists
-	return s
-}
-
-func (s *CreateReplicatedConnectionRequest) WithComment(Comment string) *CreateReplicatedConnectionRequest {
-	s.Comment = &Comment
-	return s
-}
-
-func NewAlterFailoverConnectionRequest(
+func NewAlterConnectionRequest(
 	name AccountObjectIdentifier,
-) *AlterFailoverConnectionRequest {
-	s := AlterFailoverConnectionRequest{}
+) *AlterConnectionRequest {
+	s := AlterConnectionRequest{}
 	s.name = name
 	return &s
 }
 
-func (s *AlterFailoverConnectionRequest) WithEnableConnectionFailover(EnableConnectionFailover EnableConnectionFailoverRequest) *AlterFailoverConnectionRequest {
+func (s *AlterConnectionRequest) WithIfExists(IfExists bool) *AlterConnectionRequest {
+	s.IfExists = &IfExists
+	return s
+}
+
+func (s *AlterConnectionRequest) WithEnableConnectionFailover(EnableConnectionFailover EnableConnectionFailoverRequest) *AlterConnectionRequest {
 	s.EnableConnectionFailover = &EnableConnectionFailover
 	return s
 }
 
-func (s *AlterFailoverConnectionRequest) WithDisableConnectionFailover(DisableConnectionFailover DisableConnectionFailoverRequest) *AlterFailoverConnectionRequest {
+func (s *AlterConnectionRequest) WithDisableConnectionFailover(DisableConnectionFailover DisableConnectionFailoverRequest) *AlterConnectionRequest {
 	s.DisableConnectionFailover = &DisableConnectionFailover
 	return s
 }
 
-func (s *AlterFailoverConnectionRequest) WithPrimary(Primary bool) *AlterFailoverConnectionRequest {
+func (s *AlterConnectionRequest) WithPrimary(Primary bool) *AlterConnectionRequest {
 	s.Primary = &Primary
+	return s
+}
+
+func (s *AlterConnectionRequest) WithSet(Set SetRequest) *AlterConnectionRequest {
+	s.Set = &Set
+	return s
+}
+
+func (s *AlterConnectionRequest) WithUnset(Unset UnsetRequest) *AlterConnectionRequest {
+	s.Unset = &Unset
 	return s
 }
 
@@ -71,11 +77,6 @@ func NewEnableConnectionFailoverRequest() *EnableConnectionFailoverRequest {
 
 func (s *EnableConnectionFailoverRequest) WithToAccounts(ToAccounts []AccountIdentifier) *EnableConnectionFailoverRequest {
 	s.ToAccounts = ToAccounts
-	return s
-}
-
-func (s *EnableConnectionFailoverRequest) WithIgnoreEditionCheck(IgnoreEditionCheck bool) *EnableConnectionFailoverRequest {
-	s.IgnoreEditionCheck = &IgnoreEditionCheck
 	return s
 }
 
@@ -94,29 +95,6 @@ func NewToAccountsRequest() *ToAccountsRequest {
 
 func (s *ToAccountsRequest) WithAccounts(Accounts []AccountIdentifier) *ToAccountsRequest {
 	s.Accounts = Accounts
-	return s
-}
-
-func NewAlterConnectionRequest(
-	name AccountObjectIdentifier,
-) *AlterConnectionRequest {
-	s := AlterConnectionRequest{}
-	s.name = name
-	return &s
-}
-
-func (s *AlterConnectionRequest) WithIfExists(IfExists bool) *AlterConnectionRequest {
-	s.IfExists = &IfExists
-	return s
-}
-
-func (s *AlterConnectionRequest) WithSet(Set SetRequest) *AlterConnectionRequest {
-	s.Set = &Set
-	return s
-}
-
-func (s *AlterConnectionRequest) WithUnset(Unset UnsetRequest) *AlterConnectionRequest {
-	s.Unset = &Unset
 	return s
 }
 

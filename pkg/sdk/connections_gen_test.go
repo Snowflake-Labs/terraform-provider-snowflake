@@ -2,7 +2,7 @@ package sdk
 
 import "testing"
 
-func TestConnections_CreateConnection(t *testing.T) {
+func TestConnections_Create(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 	defaultOpts := func() *CreateConnectionOptions {
 		return &CreateConnectionOptions{
@@ -14,9 +14,17 @@ func TestConnections_CreateConnection(t *testing.T) {
 		var opts *CreateConnectionOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
+
 	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = emptyAccountObjectIdentifier
+		opts.name = invalidAccountObjectIdentifier
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: valid identifier for [opts.ReplicaOf]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = id
+		opts.AsReplicaOf = &AsReplicaOf{emptyExternalObjectIdentifier}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -33,107 +41,27 @@ func TestConnections_CreateConnection(t *testing.T) {
 		opts.Comment = String("comment")
 		assertOptsValidAndSQLEquals(t, opts, "CREATE CONNECTION IF NOT EXISTS %s COMMENT = 'comment'", id.FullyQualifiedName())
 	})
-}
 
-func TestConnections_CreateReplicatedConnection(t *testing.T) {
-	id := randomAccountObjectIdentifier()
-	externalId := randomExternalObjectIdentifier()
-	defaultOpts := func() *CreateReplicatedConnectionOptions {
-		return &CreateReplicatedConnectionOptions{
-			name: id,
-		}
-	}
-
-	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *CreateReplicatedConnectionOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
-	})
-	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.name = emptyAccountObjectIdentifier
-		opts.ReplicaOf = externalId
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("validation: valid identifier for [opts.ReplicaOf]", func(t *testing.T) {
+	t.Run("as replica of", func(t *testing.T) {
+		externalId := randomExternalObjectIdentifier()
 		opts := defaultOpts()
 		opts.name = id
-		opts.ReplicaOf = emptyExternalObjectIdentifier
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("basic", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.name = id
-		opts.ReplicaOf = externalId
+		opts.AsReplicaOf = &AsReplicaOf{externalId}
 		assertOptsValidAndSQLEquals(t, opts, "CREATE CONNECTION %s AS REPLICA OF %s", id.FullyQualifiedName(), externalId.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	t.Run("as replica of - all options", func(t *testing.T) {
+		externalId := randomExternalObjectIdentifier()
 		opts := defaultOpts()
 		opts.name = id
 		opts.IfNotExists = Bool(true)
-		opts.ReplicaOf = externalId
+		opts.AsReplicaOf = &AsReplicaOf{externalId}
 		opts.Comment = String("comment")
 		assertOptsValidAndSQLEquals(t, opts, "CREATE CONNECTION IF NOT EXISTS %s AS REPLICA OF %s COMMENT = 'comment'", id.FullyQualifiedName(), externalId.FullyQualifiedName())
 	})
 }
 
-func TestConnections_AlterConnectionFailover(t *testing.T) {
-	id := randomAccountObjectIdentifier()
-	accountId := NewAccountIdentifier("test_org", "test_acc")
-	accountIdTwo := NewAccountIdentifier("test_org", "test_acc_two")
-	defaultOpts := func() *AlterFailoverConnectionOptions {
-		return &AlterFailoverConnectionOptions{
-			name: id,
-		}
-	}
-
-	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterFailoverConnectionOptions = nil
-		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
-	})
-	t.Run("validation: exactly one field from [opts.EnableConnectionFailover opts.DisableConnectionFailover opts.Primary] should be present", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.EnableConnectionFailover = &EnableConnectionFailover{}
-		opts.DisableConnectionFailover = &DisableConnectionFailover{}
-		opts.Primary = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterFailoverConnectionOptions", "EnableConnectionFailover", "DisableConnectionFailover", "Primary"))
-	})
-
-	t.Run("enable connection failover", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.EnableConnectionFailover = &EnableConnectionFailover{
-			ToAccounts: []AccountIdentifier{accountId, accountIdTwo},
-		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s ENABLE FAILOVER TO ACCOUNTS %s, %s", id.FullyQualifiedName(), accountId.FullyQualifiedName(), accountIdTwo.FullyQualifiedName())
-	})
-
-	t.Run("enable connection failover with ignore edition check", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.EnableConnectionFailover = &EnableConnectionFailover{
-			ToAccounts:         []AccountIdentifier{accountId, accountIdTwo},
-			IgnoreEditionCheck: Bool(true),
-		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s ENABLE FAILOVER TO ACCOUNTS %s, %s IGNORE EDITION CHECK", id.FullyQualifiedName(), accountId.FullyQualifiedName(), accountIdTwo.FullyQualifiedName())
-	})
-
-	t.Run("disable connection failover", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.DisableConnectionFailover = &DisableConnectionFailover{}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s DISABLE FAILOVER", id.FullyQualifiedName())
-	})
-
-	t.Run("disable connection failover to accounts", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.DisableConnectionFailover = &DisableConnectionFailover{
-			ToAccounts: &ToAccounts{Accounts: []AccountIdentifier{accountId, accountIdTwo}},
-		}
-		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s DISABLE FAILOVER TO ACCOUNTS %s, %s", id.FullyQualifiedName(), accountId.FullyQualifiedName(), accountIdTwo.FullyQualifiedName())
-	})
-}
-
-func TestConnections_AlterConnection(t *testing.T) {
+func TestConnections_Alter(t *testing.T) {
 	id := randomAccountObjectIdentifier()
 	defaultOpts := func() *AlterConnectionOptions {
 		return &AlterConnectionOptions{
@@ -145,9 +73,14 @@ func TestConnections_AlterConnection(t *testing.T) {
 		var opts *AlterConnectionOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
-	t.Run("validation: exactly one field from [opts.Set opts.Unset] should be present", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.EnableConnectionFailover opts.DisableConnectionFailover opts.Primary opts.Set opts.Unset] should be present", func(t *testing.T) {
 		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterConnectionOptions", "Set", "Unset"))
+		opts.EnableConnectionFailover = &EnableConnectionFailover{}
+		opts.DisableConnectionFailover = &DisableConnectionFailover{}
+		opts.Primary = Bool(true)
+		opts.Set = &Set{}
+		opts.Unset = &Unset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterConnectionOptions", "EnableConnectionFailover", "DisableConnectionFailover", "Primary", "Set", "Unset"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.Comment] should be set", func(t *testing.T) {
@@ -160,6 +93,37 @@ func TestConnections_AlterConnection(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &Unset{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterConnectionOptions.Unset", "Comment"))
+	})
+
+	t.Run("alter enable failover to accounts", func(t *testing.T) {
+		accountIdentifier := randomAccountIdentifier()
+		secondAccountIdentifier := randomAccountIdentifier()
+		opts := defaultOpts()
+		opts.EnableConnectionFailover = &EnableConnectionFailover{
+			ToAccounts: []AccountIdentifier{accountIdentifier, secondAccountIdentifier},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s ENABLE FAILOVER TO ACCOUNTS %s, %s", id.FullyQualifiedName(), accountIdentifier.FullyQualifiedName(), secondAccountIdentifier.FullyQualifiedName())
+	})
+
+	t.Run("alter disable failover to all accounts", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.DisableConnectionFailover = &DisableConnectionFailover{}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s DISABLE FAILOVER", id.FullyQualifiedName())
+	})
+
+	t.Run("alter disable failover to accounts", func(t *testing.T) {
+		accountIdentifier := randomAccountIdentifier()
+		opts := defaultOpts()
+		opts.DisableConnectionFailover = &DisableConnectionFailover{
+			ToAccounts: &ToAccounts{[]AccountIdentifier{accountIdentifier}},
+		}
+		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s DISABLE FAILOVER TO ACCOUNTS %s", id.FullyQualifiedName(), accountIdentifier.FullyQualifiedName())
+	})
+
+	t.Run("primary", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Primary = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s PRIMARY", id.FullyQualifiedName())
 	})
 
 	t.Run("set comment", func(t *testing.T) {

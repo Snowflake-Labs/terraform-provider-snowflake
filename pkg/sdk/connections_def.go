@@ -17,32 +17,26 @@ var ConnectionDef = g.NewInterface(
 		SQL("CONNECTION").
 		IfNotExists().
 		Name().
+		OptionalQueryStructField(
+			"AsReplicaOf",
+			g.NewQueryStruct("AsReplicaOf").
+				Identifier("AsReplicaOf", g.KindOfT[ExternalObjectIdentifier](), g.IdentifierOptions().Required().SQL("AS REPLICA OF")).
+				WithValidation(g.ValidIdentifier, "AsReplicaOf"),
+			g.IdentifierOptions(),
+		).
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name"),
-).CustomOperation(
-	"CreateReplicated",
-	"https://docs.snowflake.com/en/sql-reference/sql/create-connection",
-	g.NewQueryStruct("CreateReplicated").
-		Create().
-		SQL("CONNECTION").
-		IfNotExists().
-		Name().
-		Identifier("ReplicaOf", g.KindOfT[ExternalObjectIdentifier](), g.IdentifierOptions().Required().SQL("AS REPLICA OF")).
-		OptionalComment().
-		WithValidation(g.ValidIdentifier, "name").
-		WithValidation(g.ValidIdentifier, "ReplicaOf"),
-).CustomOperation(
-	"AlterFailover",
+).AlterOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/alter-connection",
-	g.NewQueryStruct("AlterFailover").
+	g.NewQueryStruct("Alter").
 		Alter().
 		SQL("CONNECTION").
+		IfExists().
 		Name().
 		OptionalQueryStructField(
 			"EnableConnectionFailover",
 			g.NewQueryStruct("EnableConnectionFailover").
-				List("ToAccounts", "AccountIdentifier", g.ListOptions().NoParentheses()).
-				OptionalSQL("IGNORE EDITION CHECK"),
+				List("ToAccounts", "AccountIdentifier", g.ListOptions().NoParentheses()),
 			g.KeywordOptions().SQL("ENABLE FAILOVER TO ACCOUNTS"),
 		).
 		OptionalQueryStructField(
@@ -57,14 +51,6 @@ var ConnectionDef = g.NewInterface(
 			g.KeywordOptions().SQL("DISABLE FAILOVER"),
 		).
 		OptionalSQL("PRIMARY").
-		WithValidation(g.ExactlyOneValueSet, "EnableConnectionFailover", "DisableConnectionFailover", "Primary"),
-).AlterOperation(
-	"https://docs.snowflake.com/en/sql-reference/sql/alter-connection",
-	g.NewQueryStruct("Alter").
-		Alter().
-		SQL("CONNECTION").
-		IfExists().
-		Name().
 		OptionalQueryStructField(
 			"Set",
 			g.NewQueryStruct("Set").
@@ -79,7 +65,7 @@ var ConnectionDef = g.NewInterface(
 				WithValidation(g.AtLeastOneValueSet, "Comment"),
 			g.KeywordOptions().SQL("UNSET"),
 		).
-		WithValidation(g.ExactlyOneValueSet, "Set", "Unset"),
+		WithValidation(g.ExactlyOneValueSet, "EnableConnectionFailover", "DisableConnectionFailover", "Primary", "Set", "Unset"),
 ).DropOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/drop-connection",
 	g.NewQueryStruct("DropConnection").
@@ -91,29 +77,31 @@ var ConnectionDef = g.NewInterface(
 ).ShowOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/show-connections",
 	g.DbStruct("connectionRow").
-		Field("snowflake_region", "string").
+		OptionalText("region_group").
+		Text("snowflake_region").
 		Field("created_on", "time.Time").
-		Field("account_name", "string").
-		Field("name", "string").
+		Text("account_name").
+		Text("name").
 		Field("comment", "sql.NullString").
-		Field("is_primary", "string").
-		Field("primary", "string").
-		Field("failover_allowed_to_accounts", "string").
-		Field("connection_url", "string").
-		Field("organization_name", "string").
-		Field("account_locator", "string"),
+		Text("is_primary").
+		Text("primary").
+		Text("failover_allowed_to_accounts").
+		Text("connection_url").
+		Text("organization_name").
+		Text("account_locator"),
 	g.PlainStruct("Connection").
-		Field("SnowflakeRegion", "string").
+		OptionalText("RegionGroup").
+		Text("SnowflakeRegion").
 		Field("CreatedOn", "time.Time").
-		Field("AccountName", "string").
-		Field("Name", "string").
-		Field("Comment", "*string").
-		Field("IsPrimary", "bool").
-		Field("Primary", "string").
+		Text("AccountName").
+		Text("Name").
+		OptionalText("Comment").
+		Bool("IsPrimary").
+		Text("Primary").
 		Field("FailoverAllowedToAccounts", "[]string").
-		Field("ConnectionUrl", "string").
-		Field("OrganizationName", "string").
-		Field("AccountLocator", "string"),
+		Text("ConnectionUrl").
+		Text("OrganizationName").
+		Text("AccountLocator"),
 	g.NewQueryStruct("ShowConnections").
 		Show().
 		SQL("CONNECTIONS").

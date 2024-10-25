@@ -18,16 +18,6 @@ func (v *connections) Create(ctx context.Context, request *CreateConnectionReque
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (v *connections) CreateReplicated(ctx context.Context, request *CreateReplicatedConnectionRequest) error {
-	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, opts)
-}
-
-func (v *connections) AlterFailover(ctx context.Context, request *AlterFailoverConnectionRequest) error {
-	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, opts)
-}
-
 func (v *connections) Alter(ctx context.Context, request *AlterConnectionRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
@@ -63,42 +53,16 @@ func (r *CreateConnectionRequest) toOpts() *CreateConnectionOptions {
 	opts := &CreateConnectionOptions{
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
-		Comment:     r.Comment,
-	}
-	return opts
-}
 
-func (r *CreateReplicatedConnectionRequest) toOpts() *CreateReplicatedConnectionOptions {
-	opts := &CreateReplicatedConnectionOptions{
-		IfNotExists: r.IfNotExists,
-		name:        r.name,
-		ReplicaOf:   r.ReplicaOf,
-		Comment:     r.Comment,
-	}
-	return opts
-}
-
-func (r *AlterFailoverConnectionRequest) toOpts() *AlterFailoverConnectionOptions {
-	opts := &AlterFailoverConnectionOptions{
-		name:    r.name,
-		Primary: r.Primary,
+		Comment: r.Comment,
 	}
 
-	if r.EnableConnectionFailover != nil {
-		opts.EnableConnectionFailover = &EnableConnectionFailover{
-			ToAccounts:         r.EnableConnectionFailover.ToAccounts,
-			IgnoreEditionCheck: r.EnableConnectionFailover.IgnoreEditionCheck,
+	if r.AsReplicaOf != nil {
+		opts.AsReplicaOf = &AsReplicaOf{
+			AsReplicaOf: r.AsReplicaOf.AsReplicaOf,
 		}
 	}
 
-	if r.DisableConnectionFailover != nil {
-		opts.DisableConnectionFailover = &DisableConnectionFailover{}
-		if r.DisableConnectionFailover.ToAccounts != nil {
-			opts.DisableConnectionFailover.ToAccounts = &ToAccounts{
-				Accounts: r.DisableConnectionFailover.ToAccounts.Accounts,
-			}
-		}
-	}
 	return opts
 }
 
@@ -106,6 +70,26 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 	opts := &AlterConnectionOptions{
 		IfExists: r.IfExists,
 		name:     r.name,
+
+		Primary: r.Primary,
+	}
+
+	if r.EnableConnectionFailover != nil {
+		opts.EnableConnectionFailover = &EnableConnectionFailover{
+			ToAccounts: r.EnableConnectionFailover.ToAccounts,
+		}
+	}
+
+	if r.DisableConnectionFailover != nil {
+
+		opts.DisableConnectionFailover = &DisableConnectionFailover{}
+
+		if r.DisableConnectionFailover.ToAccounts != nil {
+			opts.DisableConnectionFailover.ToAccounts = &ToAccounts{
+				Accounts: r.DisableConnectionFailover.ToAccounts.Accounts,
+			}
+		}
+
 	}
 
 	if r.Set != nil {
@@ -119,6 +103,7 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 			Comment: r.Unset.Comment,
 		}
 	}
+
 	return opts
 }
 
@@ -154,5 +139,6 @@ func (r connectionRow) convert() *Connection {
 	if r.Comment.Valid {
 		c.Comment = String(r.Comment.String)
 	}
+
 	return c
 }

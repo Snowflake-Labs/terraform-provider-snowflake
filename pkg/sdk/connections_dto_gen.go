@@ -3,37 +3,35 @@ package sdk
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
-	_ optionsProvider[CreateConnectionOptions]           = new(CreateConnectionRequest)
-	_ optionsProvider[CreateReplicatedConnectionOptions] = new(CreateReplicatedConnectionRequest)
-	_ optionsProvider[AlterFailoverConnectionOptions]    = new(AlterFailoverConnectionRequest)
-	_ optionsProvider[AlterConnectionOptions]            = new(AlterConnectionRequest)
-	_ optionsProvider[DropConnectionOptions]             = new(DropConnectionRequest)
-	_ optionsProvider[ShowConnectionOptions]             = new(ShowConnectionRequest)
+	_ optionsProvider[CreateConnectionOptions] = new(CreateConnectionRequest)
+	_ optionsProvider[AlterConnectionOptions]  = new(AlterConnectionRequest)
+	_ optionsProvider[DropConnectionOptions]   = new(DropConnectionRequest)
+	_ optionsProvider[ShowConnectionOptions]   = new(ShowConnectionRequest)
 )
 
 type CreateConnectionRequest struct {
 	IfNotExists *bool
 	name        AccountObjectIdentifier // required
+	AsReplicaOf *AsReplicaOfRequest
 	Comment     *string
 }
 
-type CreateReplicatedConnectionRequest struct {
-	IfNotExists *bool
-	name        AccountObjectIdentifier  // required
-	ReplicaOf   ExternalObjectIdentifier // required
-	Comment     *string
+type AsReplicaOfRequest struct {
+	AsReplicaOf ExternalObjectIdentifier // required
 }
 
-type AlterFailoverConnectionRequest struct {
+type AlterConnectionRequest struct {
+	IfExists                  *bool
 	name                      AccountObjectIdentifier // required
 	EnableConnectionFailover  *EnableConnectionFailoverRequest
 	DisableConnectionFailover *DisableConnectionFailoverRequest
 	Primary                   *bool
+	Set                       *SetRequest
+	Unset                     *UnsetRequest
 }
 
 type EnableConnectionFailoverRequest struct {
-	ToAccounts         []AccountIdentifier
-	IgnoreEditionCheck *bool
+	ToAccounts []AccountIdentifier
 }
 
 type DisableConnectionFailoverRequest struct {
@@ -42,13 +40,6 @@ type DisableConnectionFailoverRequest struct {
 
 type ToAccountsRequest struct {
 	Accounts []AccountIdentifier
-}
-
-type AlterConnectionRequest struct {
-	IfExists *bool
-	name     AccountObjectIdentifier // required
-	Set      *SetRequest
-	Unset    *UnsetRequest
 }
 
 type SetRequest struct {
