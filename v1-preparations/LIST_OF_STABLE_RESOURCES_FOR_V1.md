@@ -1,6 +1,6 @@
 We estimate the given list to be accurate, but it may be subject to small changes:
 
-* Account
+* Account (in progress)
     * [snowflake_account](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/account)
     * [snowflake_accounts](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/accounts)
 * Connection (in progress)
