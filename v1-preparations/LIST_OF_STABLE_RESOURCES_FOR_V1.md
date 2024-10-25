@@ -2,10 +2,10 @@ We estimate the given list to be accurate, but it may be subject to small change
 
 * Account (in progress)
     * [snowflake_account](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/account)
-    * [snowflake_accounts](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/accounts)
+    * [snowflake_accounts](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/accounts) (datasource)
 * Connection (in progress)
     * snowflake_connection
-    * snowflake_connections
+    * snowflake_connections (datasource)
 * Database
     * [snowflake_database](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/database)
     * [snowflake_secondary_database](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/secondary_database)
