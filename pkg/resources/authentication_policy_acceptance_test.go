@@ -1,8 +1,9 @@
 package resources_test
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/hashicorp/terraform-plugin-testing/config"
