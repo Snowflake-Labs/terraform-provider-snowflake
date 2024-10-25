@@ -1,6 +1,11 @@
 package sdk
 
-import "context"
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"reflect"
+)
 
 type ExternalVolumes interface {
 	Create(ctx context.Context, request *CreateExternalVolumeRequest) error
@@ -107,12 +112,117 @@ type ShowExternalVolumeOptions struct {
 	Like            *Like `ddl:"keyword" sql:"LIKE"`
 }
 type externalVolumeShowRow struct {
-	Name        string `db:"name"`
-	AllowWrites string `db:"allow_writes"`
-	Comment     string `db:"comment"`
+	Name        string         `db:"name"`
+	AllowWrites bool           `db:"allow_writes"`
+	Comment     sql.NullString `db:"comment"`
 }
 type ExternalVolume struct {
 	Name        string
-	AllowWrites string
+	AllowWrites bool
 	Comment     string
+}
+
+// Returns a copy of the given storage location with a set name
+func CopySentinelStorageLocation(
+	storageLocation ExternalVolumeStorageLocation,
+) (ExternalVolumeStorageLocation, error) {
+	storageProvider, err := GetStorageLocationStorageProvider(storageLocation)
+	if err != nil {
+		return ExternalVolumeStorageLocation{}, err
+	}
+
+	newName := "terraform_provider_sentinel_storage_location"
+	var tempNameStorageLocation ExternalVolumeStorageLocation
+	switch storageProvider {
+	case StorageProviderS3, StorageProviderS3GOV:
+		tempNameStorageLocation = ExternalVolumeStorageLocation{
+			S3StorageLocationParams: &S3StorageLocationParams{
+				Name:                 newName,
+				StorageProvider:      storageLocation.S3StorageLocationParams.StorageProvider,
+				StorageBaseUrl:       storageLocation.S3StorageLocationParams.StorageBaseUrl,
+				StorageAwsRoleArn:    storageLocation.S3StorageLocationParams.StorageAwsRoleArn,
+				StorageAwsExternalId: storageLocation.S3StorageLocationParams.StorageAwsExternalId,
+				Encryption:           storageLocation.S3StorageLocationParams.Encryption,
+			},
+		}
+	case StorageProviderGCS:
+		tempNameStorageLocation = ExternalVolumeStorageLocation{
+			GCSStorageLocationParams: &GCSStorageLocationParams{
+				Name:           newName,
+				StorageBaseUrl: storageLocation.GCSStorageLocationParams.StorageBaseUrl,
+				Encryption:     storageLocation.GCSStorageLocationParams.Encryption,
+			},
+		}
+	case StorageProviderAzure:
+		tempNameStorageLocation = ExternalVolumeStorageLocation{
+			AzureStorageLocationParams: &AzureStorageLocationParams{
+				Name:           newName,
+				StorageBaseUrl: storageLocation.AzureStorageLocationParams.StorageBaseUrl,
+				AzureTenantId:  storageLocation.AzureStorageLocationParams.AzureTenantId,
+			},
+		}
+	}
+
+	return tempNameStorageLocation, nil
+}
+
+func GetStorageLocationName(s ExternalVolumeStorageLocation) (string, error) {
+	if s.S3StorageLocationParams != nil && (*s.S3StorageLocationParams != S3StorageLocationParams{}) {
+		if len(s.S3StorageLocationParams.Name) == 0 {
+			return "", fmt.Errorf("Invalid S3 storage location - no name set")
+		}
+
+		return s.S3StorageLocationParams.Name, nil
+	} else if s.GCSStorageLocationParams != nil && (*s.GCSStorageLocationParams != GCSStorageLocationParams{}) {
+		if len(s.GCSStorageLocationParams.Name) == 0 {
+			return "", fmt.Errorf("Invalid GCS storage location - no name set")
+		}
+
+		return s.GCSStorageLocationParams.Name, nil
+	} else if s.AzureStorageLocationParams != nil && (*s.AzureStorageLocationParams != AzureStorageLocationParams{}) {
+		if len(s.AzureStorageLocationParams.Name) == 0 {
+			return "", fmt.Errorf("Invalid Azure storage location - no name set")
+		}
+
+		return s.AzureStorageLocationParams.Name, nil
+	} else {
+		return "", fmt.Errorf("Invalid storage location")
+	}
+}
+
+func GetStorageLocationStorageProvider(s ExternalVolumeStorageLocation) (StorageProvider, error) {
+	if s.S3StorageLocationParams != nil && (*s.S3StorageLocationParams != S3StorageLocationParams{}) {
+		return ToStorageProvider(string(s.S3StorageLocationParams.StorageProvider))
+	} else if s.GCSStorageLocationParams != nil && (*s.GCSStorageLocationParams != GCSStorageLocationParams{}) {
+		return StorageProviderGCS, nil
+	} else if s.AzureStorageLocationParams != nil && (*s.AzureStorageLocationParams != AzureStorageLocationParams{}) {
+		return StorageProviderAzure, nil
+	} else {
+		return "", fmt.Errorf("Invalid storage location")
+	}
+}
+
+// Returns the index of the last matching elements in the list
+// e.g. [1,2,3] [1,3,2] -> 0, [1,2,3] [1,2,4] -> 1
+// -1 is returned if there are no common prefixes in the list
+func CommonPrefixLastIndex(a []ExternalVolumeStorageLocation, b []ExternalVolumeStorageLocation) (int, error) {
+	commonPrefixLastIndex := 0
+
+	if len(a) == 0 || len(b) == 0 {
+		return -1, nil
+	}
+
+	if !reflect.DeepEqual(a[0], b[0]) {
+		return -1, nil
+	}
+
+	for i := 1; i < min(len(a), len(b)); i++ {
+		if !reflect.DeepEqual(a[i], b[i]) {
+			break
+		}
+
+		commonPrefixLastIndex = i
+	}
+
+	return commonPrefixLastIndex, nil
 }
