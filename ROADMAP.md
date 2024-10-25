@@ -7,7 +7,7 @@
 Since the last update we have focused on:
 
 * [reducing the feature gap](#reducing-the-feature-gap) (focusing on the Snowflake essential GA resources)
-* redesigning identifiers (check [\#3045](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/3045) and [identifiers\_rework\_design\_decisions](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md))
+* redesigning identifiers (check [\#3045](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/3045) and [identifiers_rework_design_decisions](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md))
 * reworking the provider's configuration (the doc/discussion will be shared when ready)
 * researching the object renaming in our provider (the doc will be shared when ready)
 
@@ -69,110 +69,110 @@ From the engineering point of view, the provider will be in the stable version, 
 We estimate the given list to be accurate, but it may be subject to small changes:
 
 * Account
-    * snowflake\_account
-    * snowflake\_accounts
+    * snowflake_account
+    * snowflake_accounts
 * Connection (in progress)
-    * snowflake\_connection
-    * snowflake\_connections
+    * snowflake_connection
+    * snowflake_connections
 * Database
-    * snowflake\_database
-    * snowflake\_secondary\_database
-    * snowflake\_shared\_database
-    * snowflake\_databases
+    * snowflake_database
+    * snowflake_secondary_database
+    * snowflake_shared_database
+    * snowflake_databases
 * Database Role
-    * snowflake\_database\_role
-    * snowflake\_database\_roles
+    * snowflake_database_role
+    * snowflake_database_roles
 * Function (in progress)
-    * snowflake\_function\_java
-    * snowflake\_function\_javascript
-    * snowflake\_function\_python
-    * snowflake\_function\_scala
-    * snowflake\_function\_sql
-    * snowflake\_functions
+    * snowflake_function_java
+    * snowflake_function_javascript
+    * snowflake_function_python
+    * snowflake_function_scala
+    * snowflake_function_sql
+    * snowflake_functions
 * Grants
-    * snowflake\_grant\_account\_role
-    * snowflake\_grant\_application\_role
-    * snowflake\_grant\_database\_role
-    * snowflake\_grant\_ownership
-    * snowflake\_grant\_privileges\_to\_account\_role
-    * snowflake\_grant\_privileges\_to\_database\_role
-    * snowflake\_grant\_privileges\_to\_share
-    * snowflake\_grants
+    * snowflake_grant_account_role
+    * snowflake_grant_application_role
+    * snowflake_grant_database_role
+    * snowflake_grant_ownership
+    * snowflake_grant_privileges_to_account_role
+    * snowflake_grant_privileges_to_database_role
+    * snowflake_grant_privileges_to_share
+    * snowflake_grants
 * Masking Policy
-    * snowflake\_masking\_policy
-    * snowflake\_masking\_policies
+    * snowflake_masking_policy
+    * snowflake_masking_policies
 * Network Policy
-    * snowflake\_network\_policy
-    * snowflake\_network\_policies
+    * snowflake_network_policy
+    * snowflake_network_policies
 * Procedure  (in progress)
-    * snowflake\_procedure\_java
-    * snowflake\_procedure\_javascript
-    * snowflake\_procedure\_python
-    * snowflake\_procedure\_scala
-    * snowflake\_procedure\_sql
-    * snowflake\_procedures
+    * snowflake_procedure_java
+    * snowflake_procedure_javascript
+    * snowflake_procedure_python
+    * snowflake_procedure_scala
+    * snowflake_procedure_sql
+    * snowflake_procedures
 * Resource Monitor
-    * snowflake\_resource\_monitor
-    * snowflake\_resource\_monitors
+    * snowflake_resource_monitor
+    * snowflake_resource_monitors
 * Role
-    * snowflake\_account\_role
-    * snowflake\_roles
+    * snowflake_account_role
+    * snowflake_roles
 * Row Access Policy
-    * snowflake\_row\_access\_policy
-    * snowflake\_row\_access\_policies
+    * snowflake_row_access_policy
+    * snowflake_row_access_policies
 * Schema
-    * snowflake\_schema
-    * snowflake\_schemas
+    * snowflake_schema
+    * snowflake_schemas
 * Secret (in progress)
-    * snowflake\_secret\_with\_client\_credentials
-    * snowflake\_secret\_with\_authorization\_code\_grant
-    * snowflake\_secret\_with\_basic\_authentication
-    * snowflake\_secret\_with\_generic\_string
-    * snowflake\_secrets
+    * snowflake_secret_with_client_credentials
+    * snowflake_secret_with_authorization_code_grant
+    * snowflake_secret_with_basic_authentication
+    * snowflake_secret_with_generic_string
+    * snowflake_secrets
 * Security Integration
-    * snowflake\_api\_authentication\_integration\_with\_authorization\_code\_ grant
-    * snowflake\_api\_authentication\_integration\_with\_client\_credentials
-    * snowflake\_api\_authentication\_integration\_with\_jwt\_bearer
-    * snowflake\_external\_oauth\_integration
-    * snowflake\_oauth\_integration\_for\_custom\_clients
-    * snowflake\_oauth\_integration\_for\_partner\_applications
-    * snowflake\_saml2\_integration
-    * snowflake\_scim\_integration
-    * snowflake\_security\_integrations
+    * snowflake_api_authentication_integration_with_authorization_code_ grant
+    * snowflake_api_authentication_integration_with_client_credentials
+    * snowflake_api_authentication_integration_with_jwt_bearer
+    * snowflake_external_oauth_integration
+    * snowflake_oauth_integration_for_custom_clients
+    * snowflake_oauth_integration_for_partner_applications
+    * snowflake_saml2_integration
+    * snowflake_scim_integration
+    * snowflake_security_integrations
 * Snowflake Parameters
-    * snowflake\_account\_parameter
+    * snowflake_account_parameter
 * SQL Execute (in progress)
     * \<new resource\> (no name yet)
 * Stream (in progress)
-    * snowflake\_stream\_on\_table
-    * snowflake\_stream\_on\_external\_table
-    * snowflake\_stream\_on\_directory\_table
-    * snowflake\_stream\_on\_view
-    * snowflake\_streams
+    * snowflake_stream_on_table
+    * snowflake_stream_on_external_table
+    * snowflake_stream_on_directory_table
+    * snowflake_stream_on_view
+    * snowflake_streams
 * Streamlit
-    * snowflake\_streamlit
-    * snowflake\_streamlits
+    * snowflake_streamlit
+    * snowflake_streamlits
 * Table (in progress)
-    * snowflake\_table
-    * snowflake\_tables
+    * snowflake_table
+    * snowflake_tables
 * Tag (in progress)
-    * snowflake\_tag
-    * snowflake\_tag\_association
-    * snowflake\_tags
+    * snowflake_tag
+    * snowflake_tag_association
+    * snowflake_tags
 * Task (in progress)
-    * snowflake\_task
-    * snowflake\_tasks
+    * snowflake_task
+    * snowflake_tasks
 * User
-    * snowflake\_user
-    * snowflake\_service\_user
-    * snowflake\_legacy\_service\_user
-    * snowflake\_users
+    * snowflake_user
+    * snowflake_service_user
+    * snowflake_legacy_service_user
+    * snowflake_users
 * View
-    * snowflake\_view
-    * snowflake\_views
+    * snowflake_view
+    * snowflake_views
 * Warehouse
-    * snowflake\_warehouse
-    * snowflake\_warehouse
+    * snowflake_warehouse
+    * snowflake_warehouse
 
 #### preview resources/datasources
 
@@ -184,76 +184,77 @@ After consideration, we decided to leave them as preview features that need to b
 
 #### “attachment” resources clarification
 
-During our road to V1 we tried to limit the number of resources needed to be configured in order to manage the given Snowflake object correctly. Because of that, we moved [Snowflake parameters](https://docs.snowflake.com/en/sql-reference/parameters) handling directly to the given object’s resource (check [this](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters)). We did that to other types of properties too (e.g. we changed the logic for public keys handling in the [snowflake\_user](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.95.0/docs/resources/user#rsa_public_key) resource, so that [snowflake\_user\_public\_keys](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.94.1/docs/resources/user_public_keys) is no longer compatible with it).
+During our road to V1 we tried to limit the number of resources needed to be configured in order to manage the given Snowflake object correctly. Because of that, we moved [Snowflake parameters](https://docs.snowflake.com/en/sql-reference/parameters) handling directly to the given object’s resource (check [this](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters)). We did that to other types of properties too (e.g. we changed the logic for public keys handling in the [snowflake_user](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.95.0/docs/resources/user#rsa_public_key) resource, so that [snowflake_user_public_keys](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.94.1/docs/resources/user_public_keys) is no longer compatible with it).
 
 Still, these “attachment” objects serve a specific use case (i.e. the main object is not managed by Terraform but part of the object may be). It opened a question for the future not only because of the aforementioned use case but also because of a wider perspective on the default resource behavior. For example, a resource monitor can be attached to a warehouse only by a user with an ACCOUNTADMIN role (check [\#3019](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3019)). Some of our users would like to provision warehouses separately from assigning resource monitors but the caveat here is that leaving the resource monitor empty in the resource config will currently remove any assigned resources. Handling this would require adding a separate attachment resource and allowing a conditional change in behavior for empty assignments in the main object.
 
-The topic is wide. For the V1, we decided to keep most of the attachment resources as [preview features](#preview-resources/datasources) and we will discuss the need for handling the use cases described in this section as a separate topic after V1.
+The topic is wide. For the V1, we decided to keep most of the attachment resources as [preview features](#preview-resourcesdatasources) and we will discuss the need for handling the use cases described in this section as a separate topic after V1.
 
 #### which resources will be left as preview features
 
-* snowflake\_current\_account (datasource)
-* snowflake\_account\_password\_policy\_attachment
-* snowflake\_alert
-* snowflake\_alerts (datasource)
-* snowflake\_api\_integration
-* snowflake\_cortex\_search\_service
-* snowflake\_cortex\_search\_services (datasource)
-* snowflake\_database (datasource)
-* snowflake\_database\_role (datasource)
-* snowflake\_dynamic\_table
-* snowflake\_dynamic\_tables (datasource)
-* snowflake\_external\_function
-* snowflake\_external\_functions
-* snowflake\_external\_table
-* snowflake\_external\_tables
-* snowflake\_failover\_group
-* snowflake\_failover\_groups
-* snowflake\_file\_format
-* snowflake\_file\_formats
-* snowflake\_managed\_account
-* snowflake\_materialized\_view
-* snowflake\_materialized\_views (datasource)
-* snowflake\_network\_policy\_attachment
-* snowflake\_network\_rule
-* snowflake\_email\_notification\_ integration
-* snowflake\_notification\_integration
-* snowflake\_password\_policy
-* snowflake\_pipe
-* snowflake\_pipes (datasource)
-* snowflake\_current\_role (datasource)
-* snowflake\_sequence
-* snowflake\_sequences (datasource)
-* snowflake\_share
-* snowflake\_shares (datasource)
-* snowflake\_object\_parameter
-* snowflake\_parameters (datasource)
-* snowflake\_stage
-* snowflake\_stages (datasource)
-* snowflake\_storage\_integration
-* snowflake\_storage\_integrations (datasource)
-* snowflake\_system\_generate\_scim\_access\_token (datasource)
-* snowflake\_system\_get\_aws\_sns\_iam\_policy (datasource)
-* snowflake\_system\_get\_privatelink\_config (datasource)
-* snowflake\_system\_get\_snowflake\_platform\_info (datasource)
-* snowflake\_table\_column\_masking\_policy\_application
-* snowflake\_table\_constraint (undecided \- may be deleted instead)
-* snowflake\_user\_public\_keys
-* snowflake\_user\_password\_ policy\_attachment
+* [snowflake_current_account](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/current_account) (datasource)
+* [snowflake_account_password_policy_attachment](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/account_password_policy_attachment)
+* [snowflake_alert](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/alert)
+* [snowflake_alerts](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/alerts) (datasource)
+* [snowflake_api_integration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/api_integration)
+* [snowflake_cortex_search_service](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/cortex_search_service)
+* [snowflake_cortex_search_services](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/cortex_search_services) (datasource)
+* [snowflake_database](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/database) (datasource)
+* [snowflake_database_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/database_role) (datasource)
+* [snowflake_dynamic_table](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/dynamic_table)
+* [snowflake_dynamic_tables](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/dynamic_tables) (datasource)
+* [snowflake_external_function](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/external_function)
+* [snowflake_external_functions](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/external_functions)
+* [snowflake_external_table](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/external_table)
+* [snowflake_external_tables](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/external_tables)
+* [snowflake_failover_group](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/failover_group)
+* [snowflake_failover_groups](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/failover_groups)
+* [snowflake_file_format](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/file_format)
+* [snowflake_file_formats](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/file_formats)
+* [snowflake_managed_account](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/managed_account)
+* [snowflake_materialized_view](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/materialized_view)
+* [snowflake_materialized_views](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/materialized_views) (datasource)
+* [snowflake_network_policy_attachment](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/network_policy_attachment)
+* [snowflake_network_rule](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/network_rule)
+* [snowflake_email_notification_integration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/email_notification_integration)
+* [snowflake_notification_integration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/notification_integration)
+* [snowflake_password_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/password_policy)
+* [snowflake_pipe](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/pipe)
+* [snowflake_pipes](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/pipes) (datasource)
+* [snowflake_current_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/current_role) (datasource)
+* [snowflake_sequence](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/sequence)
+* [snowflake_sequences](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/sequences) (datasource)
+* [snowflake_share](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/share)
+* [snowflake_shares](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/shares) (datasource)
+* [snowflake_object_parameter](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/object_parameter)
+* [snowflake_parameters](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/parameters) (datasource)
+* [snowflake_stage](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/stage)
+* [snowflake_stages](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/stages) (datasource)
+* [snowflake_storage_integration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/storage_integration)
+* [snowflake_storage_integrations](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/storage_integrations) (datasource)
+* [snowflake_system_generate_scim_access_token](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/system_generate_scim_access_token) (datasource)
+* [snowflake_system_get_aws_sns_iam_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/system_get_aws_sns_iam_policy) (datasource)
+* [snowflake_system_get_privatelink_config](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/system_get_privatelink_config) (datasource)
+* [snowflake_system_get_snowflake_platform_info](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/system_get_snowflake_platform_info) (datasource)
+* [snowflake_table_column_masking_policy_application](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/table_column_masking_policy_application)
+* [snowflake_table_constraint](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/table_constraint) (undecided - may be deleted instead)
+* [snowflake_user_public_keys](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/user_public_keys)
+* [snowflake_user_password_policy_attachment](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/user_password_policy_attachment)
 
 #### which resources will be removed
 
-* snowflake\_database\_old
-* snowflake\_tag\_masking\_policy\_association
-* snowflake\_procedure
-* snowflake\_function
-* snowflake\_role
-* snowflake\_oauth\_integration
-* snowflake\_saml\_integration
-* snowflake\_session\_parameter
-* snowflake\_unsafe\_execute (renamed)
-* snowflake\_stream
-* snowflake\_tag\_masking\_policy\_association
+* [snowflake_database_old](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/database_old)
+* [snowflake_tag_masking_policy_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/tag_masking_policy_association)
+* [snowflake_procedure](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/procedure)
+* [snowflake_function](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/function)
+* [snowflake_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/role)
+* [snowflake_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/data-sources/role) (datasource)
+* [snowflake_oauth_integration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/oauth_integration)
+* [snowflake_saml_integration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/saml_integration)
+* [snowflake_session_parameter](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/session_parameter)
+* [snowflake_unsafe_execute](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/unsafe_execute) - will be renamed
+* [snowflake_stream](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/stream)
+* [snowflake_tag_masking_policy_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.96.0/docs/resources/tag_masking_policy_association)
 
 #### roadmap short after V1
 
