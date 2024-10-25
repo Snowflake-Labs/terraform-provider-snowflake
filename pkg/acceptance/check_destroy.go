@@ -99,6 +99,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.ApiIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.ApiIntegrations.ShowByID)
 	},
+	resources.AuthenticationPolicy: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.AuthenticationPolicies.ShowByID)
+	},
 	resources.CortexSearchService: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.CortexSearchServices.ShowByID)
 	},
@@ -451,6 +454,30 @@ func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.Stat
 			}
 			if len(policyReferences) > 0 {
 				return fmt.Errorf("user password policy attachment %v still exists", policyReferences[0].PolicyName)
+			}
+		}
+		return nil
+	}
+}
+
+// CheckUserAuthenticationPolicyAttachmentDestroy is a custom checks that should be later incorporated into generic CheckDestroy
+func CheckUserAuthenticationPolicyAttachmentDestroy(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_user_authentication_policy_attachment" {
+				continue
+			}
+			policyReferences, err := TestClient().PolicyReferences.GetPolicyReferences(t, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"]), sdk.PolicyEntityDomainUser)
+			if err != nil {
+				if strings.Contains(err.Error(), "does not exist or not authorized") {
+					// Note: this can happen if the Policy Reference or the User has been deleted as well; in this case, ignore the error
+					continue
+				}
+				return err
+			}
+			if len(policyReferences) > 0 {
+				return fmt.Errorf("user authentication policy attachment %v still exists", policyReferences[0].PolicyName)
 			}
 		}
 		return nil
