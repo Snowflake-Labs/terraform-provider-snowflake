@@ -9,6 +9,7 @@ var SdkShowResultStructs = []any{
 	sdk.ApplicationPackage{},
 	sdk.ApplicationRole{},
 	sdk.Application{},
+	sdk.AuthenticationPolicy{},
 	sdk.Connection{},
 	sdk.DatabaseRole{},
 	sdk.Database{},
