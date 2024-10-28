@@ -41,7 +41,7 @@ func intAttributeWithSpecialDefaultUpdate(d *schema.ResourceData, key string, se
 func booleanStringAttributeUpdate(d *schema.ResourceData, key string, setField **bool, unsetField **bool) error {
 	if d.HasChange(key) {
 		if v := d.Get(key).(string); v != BooleanDefault {
-			parsed, err := BooleanStringToBool(v)
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return err
 			}
@@ -56,7 +56,7 @@ func booleanStringAttributeUpdate(d *schema.ResourceData, key string, setField *
 func booleanStringAttributeUnsetFallbackUpdate(d *schema.ResourceData, key string, setField **bool, fallbackValue bool) error {
 	if d.HasChange(key) {
 		if v := d.Get(key).(string); v != BooleanDefault {
-			parsed, err := BooleanStringToBool(v)
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return err
 			}

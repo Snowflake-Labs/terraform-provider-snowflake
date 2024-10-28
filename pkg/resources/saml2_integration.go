@@ -369,7 +369,7 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	)
 
 	if v := d.Get("enabled").(string); v != BooleanDefault {
-		parsed, err := BooleanStringToBool(v)
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -381,7 +381,7 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v := d.Get("saml2_enable_sp_initiated").(string); v != BooleanDefault {
-		parsed, err := BooleanStringToBool(v)
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -389,7 +389,7 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v := d.Get("saml2_sign_request").(string); v != BooleanDefault {
-		parsed, err := BooleanStringToBool(v)
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -409,7 +409,7 @@ func CreateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v := d.Get("saml2_force_authn").(string); v != BooleanDefault {
-		parsed, err := BooleanStringToBool(v)
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -657,7 +657,7 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("enabled") {
 		if v := d.Get("enabled").(string); v != BooleanDefault {
-			parsed, err := BooleanStringToBool(v)
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -696,7 +696,7 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("saml2_enable_sp_initiated") {
 		if v := d.Get("saml2_enable_sp_initiated").(string); v != BooleanDefault {
-			parsed, err := BooleanStringToBool(v)
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -709,7 +709,7 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("saml2_sign_request") {
 		if v := d.Get("saml2_sign_request").(string); v != BooleanDefault {
-			parsed, err := BooleanStringToBool(v)
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -742,7 +742,7 @@ func UpdateContextSAML2Integration(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("saml2_force_authn") {
 		if v := d.Get("saml2_force_authn").(string); v != BooleanDefault {
-			parsed, err := BooleanStringToBool(v)
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}

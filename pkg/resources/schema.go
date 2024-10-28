@@ -187,14 +187,14 @@ func CreateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if v := d.Get("is_transient").(string); v != BooleanDefault {
-		parsed, err := BooleanStringToBool(v)
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		opts.Transient = sdk.Bool(parsed)
 	}
 	if v := d.Get("with_managed_access").(string); v != BooleanDefault {
-		parsed, err := BooleanStringToBool(v)
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -330,7 +330,7 @@ func UpdateContextSchema(ctx context.Context, d *schema.ResourceData, meta any) 
 	if d.HasChange("with_managed_access") {
 		if v := d.Get("with_managed_access").(string); v != BooleanDefault {
 			var err error
-			parsed, err := BooleanStringToBool(v)
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}

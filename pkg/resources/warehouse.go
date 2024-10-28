@@ -320,7 +320,7 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		createOptions.AutoSuspend = sdk.Int(v)
 	}
 	if v := d.Get("auto_resume").(string); v != BooleanDefault {
-		parsed, err := BooleanStringToBool(v)
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -336,7 +336,7 @@ func CreateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 		createOptions.Comment = sdk.String(v.(string))
 	}
 	if v := d.Get("enable_query_acceleration").(string); v != BooleanDefault {
-		parsed, err := BooleanStringToBool(v)
+		parsed, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -527,7 +527,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 	if d.HasChange("auto_resume") {
 		if v := d.Get("auto_resume").(string); v != BooleanDefault {
-			parsed, err := BooleanStringToBool(v)
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -554,7 +554,7 @@ func UpdateWarehouse(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 	if d.HasChange("enable_query_acceleration") {
 		if v := d.Get("enable_query_acceleration").(string); v != BooleanDefault {
-			parsed, err := BooleanStringToBool(v)
+			parsed, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}

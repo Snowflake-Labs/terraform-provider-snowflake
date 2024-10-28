@@ -224,7 +224,7 @@ func CreateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 	}
 
 	if v := d.Get("enabled").(string); v != BooleanDefault {
-		parsedBool, err := BooleanStringToBool(v)
+		parsedBool, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -232,7 +232,7 @@ func CreateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 	}
 
 	if v := d.Get("oauth_issue_refresh_tokens").(string); v != BooleanDefault {
-		parsedBool, err := BooleanStringToBool(v)
+		parsedBool, err := booleanStringToBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -422,7 +422,7 @@ func UpdateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 
 	if d.HasChange("enabled") {
 		if v := d.Get("oauth_issue_refresh_tokens").(string); v != BooleanDefault {
-			parsedBool, err := BooleanStringToBool(d.Get("enabled").(string))
+			parsedBool, err := booleanStringToBool(d.Get("enabled").(string))
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -434,7 +434,7 @@ func UpdateContextOauthIntegrationForPartnerApplications(ctx context.Context, d 
 
 	if d.HasChange("oauth_issue_refresh_tokens") {
 		if v := d.Get("oauth_issue_refresh_tokens").(string); v != BooleanDefault {
-			parsedBool, err := BooleanStringToBool(v)
+			parsedBool, err := booleanStringToBool(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
