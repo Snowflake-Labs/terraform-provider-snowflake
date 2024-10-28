@@ -1,8 +1,8 @@
 ## Minimal
 resource "snowflake_authentication_policy" "basic" {
   database = "database_name"
-  schema = "schema_name"
-  name = "network_policy_name"
+  schema   = "schema_name"
+  name     = "network_policy_name"
 }
 
 ## Complete (with every optional set)

@@ -30,7 +30,7 @@ func ParseIdentifierStringWithOpts(identifier string, opts func(*csv.Reader)) ([
 
 // TODO(SNOW-1495053): Temporarily exported, make as private
 func ParseIdentifierString(identifier string) ([]string, error) {
-	parts, err := ParseExternalObjectIdentifier(identifier, func(r *csv.Reader) {
+	parts, err := ParseIdentifierStringWithOpts(identifier, func(r *csv.Reader) {
 		r.Comma = IdDelimiter
 	})
 	if err != nil {

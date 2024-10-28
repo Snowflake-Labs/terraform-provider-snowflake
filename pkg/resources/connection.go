@@ -85,12 +85,12 @@ func Connection() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateContextConnection,
 		ReadContext:   ReadContextConnection,
-		UpdateContext: UpdateContextConnection,
-		DeleteContext: DeleteContextConnection,
+		//UpdateContext: UpdateContextConnection,
+		//DeleteContext: DeleteContextConnection,
 		Description:   "Resource used to manage connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
 		Schema:        connectionSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportConnection,
+			//StateContext: ImportConnection,
 		},
 	}
 }
