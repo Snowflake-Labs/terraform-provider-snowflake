@@ -20,7 +20,7 @@ resource "snowflake_network_policy" "basic" {
 }
 
 ## Complete (with every optional set)
-resource "snowflake_network_policy" "basic" {
+resource "snowflake_network_policy" "complete" {
   name                      = "network_policy_name"
   allowed_network_rule_list = ["<fully qualified network rule id>"]
   blocked_network_rule_list = ["<fully qualified network rule id>"]

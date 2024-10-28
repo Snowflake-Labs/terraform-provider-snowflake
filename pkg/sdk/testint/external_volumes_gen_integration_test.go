@@ -288,7 +288,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 			AllowWrites: strconv.FormatBool(allowWrites),
 		}
 
-		assert.True(t, helpers.ParsedExternalVolumesDescribedEqual(parsedExternalVolumeDescribed, expectedParsedExternalVolumeDescribed))
+		assert.Equal(t, expectedParsedExternalVolumeDescribed, parsedExternalVolumeDescribed)
 	})
 
 	t.Run("Alter - set comment", func(t *testing.T) {
@@ -327,7 +327,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 			AllowWrites: strconv.FormatBool(allowWrites),
 		}
 
-		assert.True(t, helpers.ParsedExternalVolumesDescribedEqual(parsedExternalVolumeDescribed, expectedParsedExternalVolumeDescribed))
+		assert.Equal(t, expectedParsedExternalVolumeDescribed, parsedExternalVolumeDescribed)
 	})
 
 	t.Run("Alter - set allow writes", func(t *testing.T) {
@@ -365,7 +365,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 			AllowWrites: strconv.FormatBool(allowWrites),
 		}
 
-		assert.True(t, helpers.ParsedExternalVolumesDescribedEqual(parsedExternalVolumeDescribed, expectedParsedExternalVolumeDescribed))
+		assert.Equal(t, expectedParsedExternalVolumeDescribed, parsedExternalVolumeDescribed)
 	})
 
 	t.Run("Alter - add s3 storage location to external volume", func(t *testing.T) {
@@ -424,7 +424,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 			AllowWrites: strconv.FormatBool(allowWrites),
 		}
 
-		assert.True(t, helpers.ParsedExternalVolumesDescribedEqual(parsedExternalVolumeDescribed, expectedParsedExternalVolumeDescribed))
+		assert.Equal(t, expectedParsedExternalVolumeDescribed, parsedExternalVolumeDescribed)
 	})
 
 	t.Run("Describe", func(t *testing.T) {
@@ -470,7 +470,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 					StorageBaseUrl:       azureStorageLocations[0].AzureStorageLocationParams.StorageBaseUrl,
 					StorageAwsRoleArn:    "",
 					StorageAwsExternalId: "",
-					EncryptionType:       "",
+					EncryptionType:       "NONE",
 					EncryptionKmsKeyId:   "",
 					AzureTenantId:        azureStorageLocations[0].AzureStorageLocationParams.AzureTenantId,
 				},
@@ -520,7 +520,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 			AllowWrites: strconv.FormatBool(allowWrites),
 		}
 
-		assert.True(t, helpers.ParsedExternalVolumesDescribedEqual(parsedExternalVolumeDescribed, expectedParsedExternalVolumeDescribed))
+		assert.Equal(t, expectedParsedExternalVolumeDescribed, parsedExternalVolumeDescribed)
 	})
 
 	t.Run("Show with like", func(t *testing.T) {

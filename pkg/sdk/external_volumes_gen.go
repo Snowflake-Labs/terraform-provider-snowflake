@@ -167,37 +167,39 @@ func CopySentinelStorageLocation(
 }
 
 func GetStorageLocationName(s ExternalVolumeStorageLocation) (string, error) {
-	if s.S3StorageLocationParams != nil && (*s.S3StorageLocationParams != S3StorageLocationParams{}) {
+	switch {
+	case s.S3StorageLocationParams != nil && *s.S3StorageLocationParams != S3StorageLocationParams{}:
 		if len(s.S3StorageLocationParams.Name) == 0 {
 			return "", fmt.Errorf("Invalid S3 storage location - no name set")
 		}
 
 		return s.S3StorageLocationParams.Name, nil
-	} else if s.GCSStorageLocationParams != nil && (*s.GCSStorageLocationParams != GCSStorageLocationParams{}) {
+	case s.GCSStorageLocationParams != nil && *s.GCSStorageLocationParams != GCSStorageLocationParams{}:
 		if len(s.GCSStorageLocationParams.Name) == 0 {
 			return "", fmt.Errorf("Invalid GCS storage location - no name set")
 		}
 
 		return s.GCSStorageLocationParams.Name, nil
-	} else if s.AzureStorageLocationParams != nil && (*s.AzureStorageLocationParams != AzureStorageLocationParams{}) {
+	case s.AzureStorageLocationParams != nil && *s.AzureStorageLocationParams != AzureStorageLocationParams{}:
 		if len(s.AzureStorageLocationParams.Name) == 0 {
 			return "", fmt.Errorf("Invalid Azure storage location - no name set")
 		}
 
 		return s.AzureStorageLocationParams.Name, nil
-	} else {
+	default:
 		return "", fmt.Errorf("Invalid storage location")
 	}
 }
 
 func GetStorageLocationStorageProvider(s ExternalVolumeStorageLocation) (StorageProvider, error) {
-	if s.S3StorageLocationParams != nil && (*s.S3StorageLocationParams != S3StorageLocationParams{}) {
+	switch {
+	case s.S3StorageLocationParams != nil && *s.S3StorageLocationParams != S3StorageLocationParams{}:
 		return ToStorageProvider(string(s.S3StorageLocationParams.StorageProvider))
-	} else if s.GCSStorageLocationParams != nil && (*s.GCSStorageLocationParams != GCSStorageLocationParams{}) {
+	case s.GCSStorageLocationParams != nil && *s.GCSStorageLocationParams != GCSStorageLocationParams{}:
 		return StorageProviderGCS, nil
-	} else if s.AzureStorageLocationParams != nil && (*s.AzureStorageLocationParams != AzureStorageLocationParams{}) {
+	case s.AzureStorageLocationParams != nil && *s.AzureStorageLocationParams != AzureStorageLocationParams{}:
 		return StorageProviderAzure, nil
-	} else {
+	default:
 		return "", fmt.Errorf("Invalid storage location")
 	}
 }

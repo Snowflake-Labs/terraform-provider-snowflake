@@ -413,7 +413,6 @@ func UpdateContextExternalVolume(ctx context.Context, d *schema.ResourceData, me
 				return diag.FromErr(updateErr)
 			}
 		}
-
 	}
 
 	return ReadContextExternalVolume(false)(ctx, d, meta)
