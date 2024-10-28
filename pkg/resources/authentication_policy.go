@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -11,7 +13,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -149,6 +150,9 @@ func ImportAuthenticationPolicy(ctx context.Context, d *schema.ResourceData, met
 
 	// needed as otherwise the resource will be incorrectly imported when a list-parameter value equals a default value
 	authenticationPolicyDescriptions, err := client.AuthenticationPolicies.Describe(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 	authenticationMethods := getListParameterFromDescribe(authenticationPolicyDescriptions, "AUTHENTICATION_METHODS")
 	if err = d.Set("authentication_methods", authenticationMethods); err != nil {
 		return nil, err
@@ -509,7 +513,7 @@ func stringSlicesEqual(s1 []string, s2 []string) bool {
 		set2[v] = true
 	}
 
-	for k, _ := range set1 {
+	for k := range set1 {
 		if _, ok := set2[k]; !ok {
 			return false
 		}
