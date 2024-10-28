@@ -10,6 +10,7 @@ import (
 
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 )
 
 const ConnectionFailoverToAccountInSameRegionErrorMessage = "The connection cannot be failed over to an account in the same region"
@@ -86,6 +87,9 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Alter enable failover", func(t *testing.T) {
+		// TODO: [SNOW-1763442]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
 
@@ -132,6 +136,9 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Create as replica of", func(t *testing.T) {
+		// TODO: [SNOW-1763442]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		_ = id
 		secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
@@ -188,6 +195,9 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Alter disable failover", func(t *testing.T) {
+		// TODO: [SNOW-1763442]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		secondaryAccountId := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 
@@ -233,7 +243,7 @@ func TestInt_Connections(t *testing.T) {
 		require.ErrorContains(t, err, "This account is not authorized to create a secondary connection of this primary connection")
 	})
 
-	t.Run("Alter", func(t *testing.T) {
+	t.Run("Alter comment", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
 		t.Cleanup(connectionCleanup)
