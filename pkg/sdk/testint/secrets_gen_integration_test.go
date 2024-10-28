@@ -75,7 +75,7 @@ func TestInt_Secrets(t *testing.T) {
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
 				HasComment("a").
-				HasSecretType(sdk.SecretTypeOAuth2).
+				HasSecretType(string(sdk.SecretTypeOAuth2)).
 				HasOauthScopes([]string{"foo", "bar"}).
 				HasDatabaseName(id.DatabaseName()).
 				HasSchemaName(id.SchemaName()),
@@ -87,7 +87,7 @@ func TestInt_Secrets(t *testing.T) {
 		assertSecretDetails(details, secretDetails{
 			Name:            id.Name(),
 			Comment:         sdk.String("a"),
-			SecretType:      sdk.SecretTypeOAuth2,
+			SecretType:      string(sdk.SecretTypeOAuth2),
 			OauthScopes:     []string{"foo", "bar"},
 			IntegrationName: sdk.String(integrationId.Name()),
 		})
@@ -114,7 +114,7 @@ func TestInt_Secrets(t *testing.T) {
 
 		assertSecretDetails(details, secretDetails{
 			Name:            id.Name(),
-			SecretType:      sdk.SecretTypeOAuth2,
+			SecretType:      string(sdk.SecretTypeOAuth2),
 			IntegrationName: sdk.String(integrationId.Name()),
 		})
 	})
@@ -164,7 +164,7 @@ func TestInt_Secrets(t *testing.T) {
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
 				HasComment("a").
-				HasSecretType(sdk.SecretTypeOAuth2).
+				HasSecretType(string(sdk.SecretTypeOAuth2)).
 				HasDatabaseName(id.DatabaseName()).
 				HasSchemaName(id.SchemaName()),
 		)
@@ -174,7 +174,7 @@ func TestInt_Secrets(t *testing.T) {
 
 		assertSecretDetails(details, secretDetails{
 			Name:                        id.Name(),
-			SecretType:                  sdk.SecretTypeOAuth2,
+			SecretType:                  string(sdk.SecretTypeOAuth2),
 			Comment:                     sdk.String("a"),
 			OauthRefreshTokenExpiryTime: stringDateToSnowflakeTimeFormat(time.DateOnly, refreshTokenExpiryTime),
 			IntegrationName:             sdk.String(integrationId.Name()),
@@ -196,7 +196,7 @@ func TestInt_Secrets(t *testing.T) {
 
 		assertSecretDetails(details, secretDetails{
 			Name:                        id.Name(),
-			SecretType:                  sdk.SecretTypeOAuth2,
+			SecretType:                  string(sdk.SecretTypeOAuth2),
 			OauthRefreshTokenExpiryTime: stringDateToSnowflakeTimeFormat(time.DateTime, refreshTokenWithTime),
 			IntegrationName:             sdk.String(integrationId.Name()),
 		})
@@ -220,7 +220,7 @@ func TestInt_Secrets(t *testing.T) {
 			objectassert.SecretFromObject(t, secret).
 				HasName(id.Name()).
 				HasComment(comment).
-				HasSecretType(sdk.SecretTypePassword).
+				HasSecretType(string(sdk.SecretTypePassword)).
 				HasDatabaseName(id.DatabaseName()).
 				HasSchemaName(id.SchemaName()),
 		)
@@ -231,7 +231,7 @@ func TestInt_Secrets(t *testing.T) {
 		assertSecretDetails(details, secretDetails{
 			Name:       id.Name(),
 			Comment:    sdk.String(comment),
-			SecretType: sdk.SecretTypePassword,
+			SecretType: string(sdk.SecretTypePassword),
 			Username:   sdk.String("foo"),
 		})
 	})
@@ -250,7 +250,7 @@ func TestInt_Secrets(t *testing.T) {
 
 		assertSecretDetails(details, secretDetails{
 			Name:       id.Name(),
-			SecretType: sdk.SecretTypePassword,
+			SecretType: string(sdk.SecretTypePassword),
 			Username:   sdk.String(""),
 		})
 	})
@@ -273,7 +273,7 @@ func TestInt_Secrets(t *testing.T) {
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
 				HasComment(comment).
-				HasSecretType(sdk.SecretTypeGenericString).
+				HasSecretType(string(sdk.SecretTypeGenericString)).
 				HasDatabaseName(id.DatabaseName()).
 				HasSchemaName(id.SchemaName()),
 		)
@@ -290,7 +290,7 @@ func TestInt_Secrets(t *testing.T) {
 		assertions.AssertThat(t,
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
-				HasSecretType(sdk.SecretTypeGenericString).
+				HasSecretType(string(sdk.SecretTypeGenericString)).
 				HasDatabaseName(id.DatabaseName()).
 				HasSchemaName(id.SchemaName()),
 		)
@@ -320,7 +320,7 @@ func TestInt_Secrets(t *testing.T) {
 
 		assertSecretDetails(details, secretDetails{
 			Name:            id.Name(),
-			SecretType:      sdk.SecretTypeOAuth2,
+			SecretType:      string(sdk.SecretTypeOAuth2),
 			Comment:         sdk.String(comment),
 			OauthScopes:     []string{"foo", "bar"},
 			IntegrationName: sdk.String(integrationId.Name()),
@@ -367,7 +367,7 @@ func TestInt_Secrets(t *testing.T) {
 
 		assertSecretDetails(details, secretDetails{
 			Name:                        id.Name(),
-			SecretType:                  sdk.SecretTypeOAuth2,
+			SecretType:                  string(sdk.SecretTypeOAuth2),
 			Comment:                     sdk.String(comment),
 			OauthRefreshTokenExpiryTime: stringDateToSnowflakeTimeFormat(time.DateOnly, alteredRefreshTokenExpiryTime),
 			IntegrationName:             sdk.String(integrationId.Name()),
@@ -414,7 +414,7 @@ func TestInt_Secrets(t *testing.T) {
 		// Cannot check password property since show and describe on secret do not have access to it
 		assertSecretDetails(details, secretDetails{
 			Name:       id.Name(),
-			SecretType: sdk.SecretTypePassword,
+			SecretType: string(sdk.SecretTypePassword),
 			Comment:    sdk.String(comment),
 			Username:   sdk.String("bar"),
 		})
@@ -712,7 +712,7 @@ func TestInt_Secrets(t *testing.T) {
 
 		assertSecretDetails(details, secretDetails{
 			Name:       id.Name(),
-			SecretType: sdk.SecretTypeGenericString,
+			SecretType: string(sdk.SecretTypeGenericString),
 		})
 	})
 }

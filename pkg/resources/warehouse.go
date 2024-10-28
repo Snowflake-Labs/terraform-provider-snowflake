@@ -391,16 +391,16 @@ func GetReadWarehouseFunc(withExternalChangesMarking bool) schema.ReadContextFun
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"type", "warehouse_type", string(w.Type), w.Type, nil},
-				showMapping{"size", "warehouse_size", string(w.Size), w.Size, nil},
-				showMapping{"max_cluster_count", "max_cluster_count", w.MaxClusterCount, w.MaxClusterCount, nil},
-				showMapping{"min_cluster_count", "min_cluster_count", w.MinClusterCount, w.MinClusterCount, nil},
-				showMapping{"scaling_policy", "scaling_policy", string(w.ScalingPolicy), w.ScalingPolicy, nil},
-				showMapping{"auto_suspend", "auto_suspend", w.AutoSuspend, w.AutoSuspend, nil},
-				showMapping{"auto_resume", "auto_resume", w.AutoResume, fmt.Sprintf("%t", w.AutoResume), nil},
-				showMapping{"resource_monitor", "resource_monitor", w.ResourceMonitor.Name(), w.ResourceMonitor.Name(), nil},
-				showMapping{"enable_query_acceleration", "enable_query_acceleration", w.EnableQueryAcceleration, fmt.Sprintf("%t", w.EnableQueryAcceleration), nil},
-				showMapping{"query_acceleration_max_scale_factor", "query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor, w.QueryAccelerationMaxScaleFactor, nil},
+				outputMapping{"type", "warehouse_type", string(w.Type), w.Type, nil},
+				outputMapping{"size", "warehouse_size", string(w.Size), w.Size, nil},
+				outputMapping{"max_cluster_count", "max_cluster_count", w.MaxClusterCount, w.MaxClusterCount, nil},
+				outputMapping{"min_cluster_count", "min_cluster_count", w.MinClusterCount, w.MinClusterCount, nil},
+				outputMapping{"scaling_policy", "scaling_policy", string(w.ScalingPolicy), w.ScalingPolicy, nil},
+				outputMapping{"auto_suspend", "auto_suspend", w.AutoSuspend, w.AutoSuspend, nil},
+				outputMapping{"auto_resume", "auto_resume", w.AutoResume, fmt.Sprintf("%t", w.AutoResume), nil},
+				outputMapping{"resource_monitor", "resource_monitor", w.ResourceMonitor.Name(), w.ResourceMonitor.Name(), nil},
+				outputMapping{"enable_query_acceleration", "enable_query_acceleration", w.EnableQueryAcceleration, fmt.Sprintf("%t", w.EnableQueryAcceleration), nil},
+				outputMapping{"query_acceleration_max_scale_factor", "query_acceleration_max_scale_factor", w.QueryAccelerationMaxScaleFactor, w.QueryAccelerationMaxScaleFactor, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}

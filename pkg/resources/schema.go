@@ -270,10 +270,10 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"options", "is_transient", schema.IsTransient(), booleanStringFromBool(schema.IsTransient()), func(x any) any {
+				outputMapping{"options", "is_transient", schema.IsTransient(), booleanStringFromBool(schema.IsTransient()), func(x any) any {
 					return slices.Contains(sdk.ParseCommaSeparatedStringArray(x.(string), false), "TRANSIENT")
 				}},
-				showMapping{"options", "with_managed_access", schema.IsManagedAccess(), booleanStringFromBool(schema.IsManagedAccess()), func(x any) any {
+				outputMapping{"options", "with_managed_access", schema.IsManagedAccess(), booleanStringFromBool(schema.IsManagedAccess()), func(x any) any {
 					return slices.Contains(sdk.ParseCommaSeparatedStringArray(x.(string), false), "MANAGED ACCESS")
 				}},
 			); err != nil {

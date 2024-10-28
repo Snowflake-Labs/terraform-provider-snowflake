@@ -1,6 +1,11 @@
 package sdk
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
 
 // Storage location structs for testing
 var s3StorageLocationParams = &S3StorageLocationParams{
@@ -438,4 +443,737 @@ func TestExternalVolumes_Show(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, "SHOW EXTERNAL VOLUMES LIKE '%s'", id.Name())
 	})
+}
+
+func Test_ExternalVolumes_ToS3EncryptionType(t *testing.T) {
+	type test struct {
+		input string
+		want  S3EncryptionType
+	}
+
+	valid := []test{
+		{input: "aws_sse_s3", want: S3EncryptionTypeSseS3},
+		{input: "AWS_SSE_S3", want: S3EncryptionTypeSseS3},
+		{input: "AWS_SSE_KMS", want: S3EncryptionTypeSseKms},
+		{input: "NONE", want: S3EncryptionNone},
+	}
+
+	invalid := []test{
+		{input: ""},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToS3EncryptionType(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToS3EncryptionType(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_ExternalVolumes_ToStorageProvider(t *testing.T) {
+	type test struct {
+		input string
+		want  StorageProvider
+	}
+
+	valid := []test{
+		{input: "s3", want: StorageProviderS3},
+		{input: "S3", want: StorageProviderS3},
+		{input: "s3gov", want: StorageProviderS3GOV},
+		{input: "S3GOV", want: StorageProviderS3GOV},
+		{input: "gcs", want: StorageProviderGCS},
+		{input: "GCS", want: StorageProviderGCS},
+		{input: "azure", want: StorageProviderAzure},
+		{input: "AZURE", want: StorageProviderAzure},
+	}
+
+	invalid := []test{
+		{input: ""},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToStorageProvider(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToStorageProvider(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_ExternalVolumes_ToS3StorageProvider(t *testing.T) {
+	type test struct {
+		input string
+		want  S3StorageProvider
+	}
+
+	valid := []test{
+		{input: "s3", want: S3StorageProviderS3},
+		{input: "S3", want: S3StorageProviderS3},
+		{input: "s3gov", want: S3StorageProviderS3GOV},
+		{input: "S3GOV", want: S3StorageProviderS3GOV},
+	}
+
+	invalid := []test{
+		{input: ""},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToS3StorageProvider(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToS3StorageProvider(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_ExternalVolumes_ToGCSEncryptionType(t *testing.T) {
+	type test struct {
+		input string
+		want  GCSEncryptionType
+	}
+
+	valid := []test{
+		{input: "gcs_sse_kms", want: GCSEncryptionTypeSseKms},
+		{input: "GCS_SSE_KMS", want: GCSEncryptionTypeSseKms},
+		{input: "NONE", want: GCSEncryptionTypeNone},
+		{input: "none", want: GCSEncryptionTypeNone},
+	}
+
+	invalid := []test{
+		{input: ""},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToGCSEncryptionType(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToGCSEncryptionType(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+// External volume helper tests
+
+func Test_GetStorageLocationName(t *testing.T) {
+	s3StorageLocationName := "s3Test"
+	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
+	s3EncryptionKmsKeyId := "123456789"
+
+	gcsStorageLocationName := "gcsTest"
+	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsEncryptionKmsKeyId := "123456789"
+
+	azureStorageLocationName := "azureTest"
+	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
+	azureTenantId := "123456789"
+
+	s3StorageLocationA := S3StorageLocationParams{
+		Name:                 s3StorageLocationName,
+		StorageProvider:      S3StorageProviderS3,
+		StorageBaseUrl:       s3StorageBaseUrl,
+		StorageAwsRoleArn:    s3StorageAwsRoleArn,
+		StorageAwsExternalId: &s3StorageAwsExternalId,
+		Encryption: &ExternalVolumeS3Encryption{
+			Type:     S3EncryptionTypeSseKms,
+			KmsKeyId: &s3EncryptionKmsKeyId,
+		},
+	}
+
+	azureStorageLocationA := AzureStorageLocationParams{
+		Name:           azureStorageLocationName,
+		StorageBaseUrl: azureStorageBaseUrl,
+		AzureTenantId:  azureTenantId,
+	}
+
+	gcsStorageLocationA := GCSStorageLocationParams{
+		Name:           gcsStorageLocationName,
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &ExternalVolumeGCSEncryption{
+			Type:     GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	s3GovStorageLocationA := S3StorageLocationParams{
+		Name:              s3StorageLocationName,
+		StorageProvider:   S3StorageProviderS3GOV,
+		StorageBaseUrl:    s3StorageBaseUrl,
+		StorageAwsRoleArn: s3StorageAwsRoleArn,
+	}
+
+	testCases := []struct {
+		Name            string
+		StorageLocation ExternalVolumeStorageLocation
+		ExpectedName    string
+	}{
+		{
+			Name:            "S3 storage location name successfully read",
+			StorageLocation: ExternalVolumeStorageLocation{S3StorageLocationParams: &s3StorageLocationA},
+			ExpectedName:    s3StorageLocationA.Name,
+		},
+		{
+			Name:            "S3GOV storage location name successfully read",
+			StorageLocation: ExternalVolumeStorageLocation{S3StorageLocationParams: &s3GovStorageLocationA},
+			ExpectedName:    s3GovStorageLocationA.Name,
+		},
+		{
+			Name:            "GCS storage location name successfully read",
+			StorageLocation: ExternalVolumeStorageLocation{GCSStorageLocationParams: &gcsStorageLocationA},
+			ExpectedName:    gcsStorageLocationA.Name,
+		},
+		{
+			Name:            "Azure storage location name successfully read",
+			StorageLocation: ExternalVolumeStorageLocation{AzureStorageLocationParams: &azureStorageLocationA},
+			ExpectedName:    azureStorageLocationA.Name,
+		},
+	}
+
+	invalidTestCases := []struct {
+		Name            string
+		StorageLocation ExternalVolumeStorageLocation
+	}{
+		{
+			Name:            "Empty S3 storage location",
+			StorageLocation: ExternalVolumeStorageLocation{S3StorageLocationParams: &S3StorageLocationParams{}},
+		},
+		{
+			Name:            "Empty GCS storage location",
+			StorageLocation: ExternalVolumeStorageLocation{GCSStorageLocationParams: &GCSStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty Azure storage location",
+			StorageLocation: ExternalVolumeStorageLocation{AzureStorageLocationParams: &AzureStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty storage location",
+			StorageLocation: ExternalVolumeStorageLocation{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			name, err := GetStorageLocationName(tc.StorageLocation)
+			require.NoError(t, err)
+			assert.Equal(t, tc.ExpectedName, name)
+		})
+	}
+	for _, tc := range invalidTestCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			_, err := GetStorageLocationName(tc.StorageLocation)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_GetStorageLocationStorageProvider(t *testing.T) {
+	s3StorageLocationName := "s3Test"
+	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
+	s3EncryptionKmsKeyId := "123456789"
+
+	gcsStorageLocationName := "gcsTest"
+	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsEncryptionKmsKeyId := "123456789"
+
+	azureStorageLocationName := "azureTest"
+	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
+	azureTenantId := "123456789"
+
+	s3StorageLocationA := S3StorageLocationParams{
+		Name:                 s3StorageLocationName,
+		StorageProvider:      S3StorageProviderS3,
+		StorageBaseUrl:       s3StorageBaseUrl,
+		StorageAwsRoleArn:    s3StorageAwsRoleArn,
+		StorageAwsExternalId: &s3StorageAwsExternalId,
+		Encryption: &ExternalVolumeS3Encryption{
+			Type:     S3EncryptionTypeSseKms,
+			KmsKeyId: &s3EncryptionKmsKeyId,
+		},
+	}
+
+	azureStorageLocationA := AzureStorageLocationParams{
+		Name:           azureStorageLocationName,
+		StorageBaseUrl: azureStorageBaseUrl,
+		AzureTenantId:  azureTenantId,
+	}
+
+	gcsStorageLocationA := GCSStorageLocationParams{
+		Name:           gcsStorageLocationName,
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &ExternalVolumeGCSEncryption{
+			Type:     GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	s3GovStorageLocationA := S3StorageLocationParams{
+		Name:              s3StorageLocationName,
+		StorageProvider:   S3StorageProviderS3GOV,
+		StorageBaseUrl:    s3StorageBaseUrl,
+		StorageAwsRoleArn: s3StorageAwsRoleArn,
+	}
+	testCases := []struct {
+		Name                    string
+		StorageLocation         ExternalVolumeStorageLocation
+		ExpectedStorageProvider StorageProvider
+	}{
+		{
+			Name:                    "S3 storage provider",
+			StorageLocation:         ExternalVolumeStorageLocation{S3StorageLocationParams: &s3StorageLocationA},
+			ExpectedStorageProvider: StorageProviderS3,
+		},
+		{
+			Name:                    "S3GOV storage provider",
+			StorageLocation:         ExternalVolumeStorageLocation{S3StorageLocationParams: &s3GovStorageLocationA},
+			ExpectedStorageProvider: StorageProviderS3GOV,
+		},
+		{
+			Name:                    "GCS storage provider",
+			StorageLocation:         ExternalVolumeStorageLocation{GCSStorageLocationParams: &gcsStorageLocationA},
+			ExpectedStorageProvider: StorageProviderGCS,
+		},
+		{
+			Name:                    "Azure storage provider",
+			StorageLocation:         ExternalVolumeStorageLocation{AzureStorageLocationParams: &azureStorageLocationA},
+			ExpectedStorageProvider: StorageProviderAzure,
+		},
+	}
+
+	invalidTestCases := []struct {
+		Name            string
+		StorageLocation ExternalVolumeStorageLocation
+	}{
+		{
+			Name:            "Empty S3 storage location",
+			StorageLocation: ExternalVolumeStorageLocation{S3StorageLocationParams: &S3StorageLocationParams{}},
+		},
+		{
+			Name:            "Empty GCS storage location",
+			StorageLocation: ExternalVolumeStorageLocation{GCSStorageLocationParams: &GCSStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty Azure storage location",
+			StorageLocation: ExternalVolumeStorageLocation{AzureStorageLocationParams: &AzureStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty storage location",
+			StorageLocation: ExternalVolumeStorageLocation{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			storageProvider, err := GetStorageLocationStorageProvider(tc.StorageLocation)
+			require.NoError(t, err)
+			assert.Equal(t, tc.ExpectedStorageProvider, storageProvider)
+		})
+	}
+	for _, tc := range invalidTestCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			_, err := GetStorageLocationName(tc.StorageLocation)
+			require.Error(t, err)
+		})
+	}
+}
+
+var s3StorageAwsExternalId = "1234567890"
+
+func Test_CopySentinelStorageLocation(t *testing.T) {
+	tempStorageLocationName := "terraform_provider_sentinel_storage_location"
+	s3StorageLocationName := "s3Test"
+	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
+	s3EncryptionKmsKeyId := "123456789"
+
+	gcsStorageLocationName := "gcsTest"
+	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsEncryptionKmsKeyId := "123456789"
+
+	azureStorageLocationName := "azureTest"
+	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
+	azureTenantId := "123456789"
+
+	s3StorageLocationA := S3StorageLocationParams{
+		Name:                 s3StorageLocationName,
+		StorageProvider:      S3StorageProviderS3,
+		StorageBaseUrl:       s3StorageBaseUrl,
+		StorageAwsRoleArn:    s3StorageAwsRoleArn,
+		StorageAwsExternalId: &s3StorageAwsExternalId,
+		Encryption: &ExternalVolumeS3Encryption{
+			Type:     S3EncryptionTypeSseKms,
+			KmsKeyId: &s3EncryptionKmsKeyId,
+		},
+	}
+
+	azureStorageLocationA := AzureStorageLocationParams{
+		Name:           azureStorageLocationName,
+		StorageBaseUrl: azureStorageBaseUrl,
+		AzureTenantId:  azureTenantId,
+	}
+
+	gcsStorageLocationA := GCSStorageLocationParams{
+		Name:           gcsStorageLocationName,
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &ExternalVolumeGCSEncryption{
+			Type:     GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	t.Run("S3 storage location", func(t *testing.T) {
+		storageLocationInput := ExternalVolumeStorageLocation{S3StorageLocationParams: &s3StorageLocationA}
+		copiedStorageLocation, err := CopySentinelStorageLocation(storageLocationInput)
+		require.NoError(t, err)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.Name, tempStorageLocationName)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageProvider, s3StorageLocationA.StorageProvider)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageBaseUrl, s3StorageLocationA.StorageBaseUrl)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageAwsRoleArn, s3StorageLocationA.StorageAwsRoleArn)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.StorageAwsExternalId, s3StorageLocationA.StorageAwsExternalId)
+		assert.Equal(t, copiedStorageLocation.S3StorageLocationParams.Encryption.Type, s3StorageLocationA.Encryption.Type)
+		assert.Equal(t, *copiedStorageLocation.S3StorageLocationParams.Encryption.KmsKeyId, *s3StorageLocationA.Encryption.KmsKeyId)
+	})
+
+	t.Run("GCS storage location", func(t *testing.T) {
+		storageLocationInput := ExternalVolumeStorageLocation{GCSStorageLocationParams: &gcsStorageLocationA}
+		copiedStorageLocation, err := CopySentinelStorageLocation(storageLocationInput)
+		require.NoError(t, err)
+		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.Name, tempStorageLocationName)
+		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.StorageBaseUrl, gcsStorageLocationA.StorageBaseUrl)
+		assert.Equal(t, copiedStorageLocation.GCSStorageLocationParams.Encryption.Type, gcsStorageLocationA.Encryption.Type)
+		assert.Equal(t, *copiedStorageLocation.GCSStorageLocationParams.Encryption.KmsKeyId, *gcsStorageLocationA.Encryption.KmsKeyId)
+	})
+
+	t.Run("Azure storage location", func(t *testing.T) {
+		storageLocationInput := ExternalVolumeStorageLocation{AzureStorageLocationParams: &azureStorageLocationA}
+		copiedStorageLocation, err := CopySentinelStorageLocation(storageLocationInput)
+		require.NoError(t, err)
+		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.Name, tempStorageLocationName)
+		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.StorageBaseUrl, azureStorageLocationA.StorageBaseUrl)
+		assert.Equal(t, copiedStorageLocation.AzureStorageLocationParams.AzureTenantId, azureStorageLocationA.AzureTenantId)
+	})
+
+	invalidTestCases := []struct {
+		Name            string
+		StorageLocation ExternalVolumeStorageLocation
+	}{
+		{
+			Name:            "Empty S3 storage location",
+			StorageLocation: ExternalVolumeStorageLocation{S3StorageLocationParams: &S3StorageLocationParams{}},
+		},
+		{
+			Name:            "Empty GCS storage location",
+			StorageLocation: ExternalVolumeStorageLocation{GCSStorageLocationParams: &GCSStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty Azure storage location",
+			StorageLocation: ExternalVolumeStorageLocation{AzureStorageLocationParams: &AzureStorageLocationParams{}},
+		},
+		{
+			Name:            "Empty storage location",
+			StorageLocation: ExternalVolumeStorageLocation{},
+		},
+	}
+
+	for _, tc := range invalidTestCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			_, err := CopySentinelStorageLocation(tc.StorageLocation)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_CommonPrefixLastIndex(t *testing.T) {
+	s3StorageLocationName := "s3Test"
+	s3StorageLocationName2 := "s3Test2"
+	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
+	s3EncryptionKmsKeyId := "123456789"
+
+	gcsStorageLocationName := "gcsTest"
+	gcsStorageLocationName2 := "gcsTest2"
+	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsEncryptionKmsKeyId := "123456789"
+
+	azureStorageLocationName := "azureTest"
+	azureStorageLocationName2 := "azureTest2"
+	azureStorageBaseUrl := "azure://123456789.blob.core.windows.net/my_example_container"
+	azureTenantId := "123456789"
+
+	s3StorageLocationA := S3StorageLocationParams{
+		Name:                 s3StorageLocationName,
+		StorageProvider:      S3StorageProviderS3,
+		StorageBaseUrl:       s3StorageBaseUrl,
+		StorageAwsRoleArn:    s3StorageAwsRoleArn,
+		StorageAwsExternalId: &s3StorageAwsExternalId,
+		Encryption: &ExternalVolumeS3Encryption{
+			Type:     S3EncryptionTypeSseKms,
+			KmsKeyId: &s3EncryptionKmsKeyId,
+		},
+	}
+
+	s3StorageLocationB := S3StorageLocationParams{
+		Name:                 s3StorageLocationName2,
+		StorageProvider:      S3StorageProviderS3,
+		StorageBaseUrl:       s3StorageBaseUrl,
+		StorageAwsRoleArn:    s3StorageAwsRoleArn,
+		StorageAwsExternalId: &s3StorageAwsExternalId,
+		Encryption: &ExternalVolumeS3Encryption{
+			Type:     S3EncryptionTypeSseKms,
+			KmsKeyId: &s3EncryptionKmsKeyId,
+		},
+	}
+
+	azureStorageLocationA := AzureStorageLocationParams{
+		Name:           azureStorageLocationName,
+		StorageBaseUrl: azureStorageBaseUrl,
+		AzureTenantId:  azureTenantId,
+	}
+
+	azureStorageLocationB := AzureStorageLocationParams{
+		Name:           azureStorageLocationName2,
+		StorageBaseUrl: azureStorageBaseUrl,
+		AzureTenantId:  azureTenantId,
+	}
+
+	gcsStorageLocationA := GCSStorageLocationParams{
+		Name:           gcsStorageLocationName,
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &ExternalVolumeGCSEncryption{
+			Type:     GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	gcsStorageLocationB := GCSStorageLocationParams{
+		Name:           gcsStorageLocationName2,
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &ExternalVolumeGCSEncryption{
+			Type:     GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	gcsStorageLocationC := GCSStorageLocationParams{
+		Name:           "test",
+		StorageBaseUrl: gcsStorageBaseUrl,
+		Encryption: &ExternalVolumeGCSEncryption{
+			Type:     GCSEncryptionTypeSseKms,
+			KmsKeyId: &gcsEncryptionKmsKeyId,
+		},
+	}
+
+	s3GovStorageLocationA := S3StorageLocationParams{
+		Name:              s3StorageLocationName,
+		StorageProvider:   S3StorageProviderS3GOV,
+		StorageBaseUrl:    s3StorageBaseUrl,
+		StorageAwsRoleArn: s3StorageAwsRoleArn,
+	}
+
+	testCases := []struct {
+		Name           string
+		ListA          []ExternalVolumeStorageLocation
+		ListB          []ExternalVolumeStorageLocation
+		ExpectedOutput int
+	}{
+		{
+			Name:           "Two empty lists",
+			ListA:          []ExternalVolumeStorageLocation{},
+			ListB:          []ExternalVolumeStorageLocation{},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "First list empty",
+			ListA:          []ExternalVolumeStorageLocation{},
+			ListB:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Second list empty",
+			ListA:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB:          []ExternalVolumeStorageLocation{},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Lists with no common prefix - length 1",
+			ListA:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationB}},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Lists with no common prefix - length 2",
+			ListA:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}, {AzureStorageLocationParams: &azureStorageLocationA}},
+			ListB:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationB}, {AzureStorageLocationParams: &azureStorageLocationB}},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Identical lists - length 1",
+			ListA:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ExpectedOutput: 0,
+		},
+		{
+			Name:           "Identical lists - length 2",
+			ListA:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}, {AzureStorageLocationParams: &azureStorageLocationA}},
+			ListB:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}, {AzureStorageLocationParams: &azureStorageLocationA}},
+			ExpectedOutput: 1,
+		},
+		{
+			Name: "Identical lists - length 3",
+			ListA: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{S3StorageLocationParams: &s3GovStorageLocationA},
+			},
+			ListB: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{S3StorageLocationParams: &s3GovStorageLocationA},
+			},
+			ExpectedOutput: 2,
+		},
+		{
+			Name: "Lists with a common prefix - length 3, matching up to and including index 1",
+			ListA: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+			},
+			ListB: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationB},
+			},
+			ExpectedOutput: 1,
+		},
+		{
+			Name: "Lists with a common prefix - length 4, matching up to and including index 2",
+			ListA: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationB},
+			},
+			ListB: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationC},
+			},
+			ExpectedOutput: 2,
+		},
+		{
+			Name: "Lists with a common prefix - length 4, matching up to and including index 1",
+			ListA: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationC},
+			},
+			ListB: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationB},
+				{GCSStorageLocationParams: &gcsStorageLocationC},
+			},
+			ExpectedOutput: 1,
+		},
+		{
+			Name: "Lists with a common prefix - different lengths, matching up to and including index 1 (last index of shorter list)",
+			ListA: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+			},
+			ListB: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+			},
+			ExpectedOutput: 1,
+		},
+		{
+			Name: "Lists with a common prefix - different lengths, matching up to and including index 2",
+			ListA: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{S3StorageLocationParams: &s3StorageLocationB},
+				{GCSStorageLocationParams: &gcsStorageLocationA},
+				{GCSStorageLocationParams: &gcsStorageLocationB},
+				{AzureStorageLocationParams: &azureStorageLocationB},
+			},
+			ListB: []ExternalVolumeStorageLocation{
+				{S3StorageLocationParams: &s3StorageLocationA},
+				{AzureStorageLocationParams: &azureStorageLocationA},
+				{S3StorageLocationParams: &s3StorageLocationB},
+				{GCSStorageLocationParams: &gcsStorageLocationB},
+				{AzureStorageLocationParams: &azureStorageLocationB},
+			},
+			ExpectedOutput: 2,
+		},
+		{
+			Name:           "Empty S3 storage location",
+			ListA:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &S3StorageLocationParams{}}},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Empty GCS storage location",
+			ListA:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB:          []ExternalVolumeStorageLocation{{GCSStorageLocationParams: &GCSStorageLocationParams{}}},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Empty Azure storage location",
+			ListA:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB:          []ExternalVolumeStorageLocation{{AzureStorageLocationParams: &AzureStorageLocationParams{}}},
+			ExpectedOutput: -1,
+		},
+		{
+			Name:           "Empty storage location",
+			ListA:          []ExternalVolumeStorageLocation{{S3StorageLocationParams: &s3StorageLocationA}},
+			ListB:          []ExternalVolumeStorageLocation{{}},
+			ExpectedOutput: -1,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			commonPrefixLastIndex, err := CommonPrefixLastIndex(tc.ListA, tc.ListB)
+			require.NoError(t, err)
+			assert.Equal(t, tc.ExpectedOutput, commonPrefixLastIndex)
+		})
+	}
 }

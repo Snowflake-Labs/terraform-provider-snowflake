@@ -42,3 +42,7 @@ func diffSuppressStatementFieldDescription(description string) string {
 func dataTypeFieldDescription(description string) string {
 	return fmt.Sprintf(`%s For more information about data types, check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).`, description)
 }
+
+func deprecatedResourceDescription(alternatives ...string) string {
+	return fmt.Sprintf(`This resource is deprecated and will be removed in a future major version release. Please use one of the new resources instead: %s`, possibleValuesListed(alternatives))
+}

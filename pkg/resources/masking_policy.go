@@ -282,7 +282,7 @@ func ReadMaskingPolicy(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"exempt_other_policies", "exempt_other_policies", maskingPolicy.ExemptOtherPolicies, booleanStringFromBool(maskingPolicy.ExemptOtherPolicies), nil},
+				outputMapping{"exempt_other_policies", "exempt_other_policies", maskingPolicy.ExemptOtherPolicies, booleanStringFromBool(maskingPolicy.ExemptOtherPolicies), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}

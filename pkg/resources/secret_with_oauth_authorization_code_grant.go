@@ -54,9 +54,9 @@ func SecretWithAuthorizationCodeGrant() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "name", "oauth_refresh_token_expiry_time", "api_authentication"),
-			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, ShowOutputAttributeName, "name", "comment"),
-			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, ShowOutputAttributeName, "comment"),
+			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "oauth_refresh_token_expiry_time", "api_authentication"),
+			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypeOAuth2AuthorizationCodeGrant),
 		),
 	}
 }
@@ -141,32 +141,27 @@ func ReadContextSecretWithAuthorizationCodeGrant(withExternalChangesMarking bool
 				},
 			}
 		}
+
 		secretDescription, err := client.Secrets.Describe(ctx, id)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		if withExternalChangesMarking {
-			if err = handleExternalValueChangesToObjectInDescribe(d,
-				describeMapping{"oauth_refresh_token_expiry_time", "oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.String(), secretDescription.OauthRefreshTokenExpiryTime.String(), nil},
+		// if secret type is changed externally, we wont be able to read oauth_refresh_token_expiry_time value (since it will not be provided)
+		// in any other case, there should be oauth_refresh_token_expiry_time value since it is required
+		if withExternalChangesMarking && secretDescription.OauthRefreshTokenExpiryTime != nil {
+			if err = handleExternalChangesToObjectInFlatDescribe(d,
+				outputMapping{"oauth_refresh_token_expiry_time", "oauth_refresh_token_expiry_time", secretDescription.OauthRefreshTokenExpiryTime.String(), secretDescription.OauthRefreshTokenExpiryTime.String(), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
 		}
 
-		if err = setStateToValuesFromConfig(d, secretAuthorizationCodeGrantSchema, []string{"oauth_refresh_token_expiry_time"}); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err = d.Set("api_authentication", secretDescription.IntegrationName); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := handleSecretRead(d, id, secret, secretDescription); err != nil {
-			return diag.FromErr(err)
-		}
-
-		return nil
+		return diag.FromErr(errors.Join(
+			handleSecretRead(d, id, secret, secretDescription),
+			setStateToValuesFromConfig(d, secretAuthorizationCodeGrantSchema, []string{"oauth_refresh_token_expiry_time"}),
+			d.Set("api_authentication", secretDescription.IntegrationName),
+		))
 	}
 }
 
