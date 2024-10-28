@@ -15,7 +15,7 @@ Currently, resources like `snowflake_view`, `snowflake_stream_on_table`, `snowfl
 ### *(new feature)* recovering stale streams
 Starting from this version, the provider detects stale streams for `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table` and recreates them (optionally with `copy_grants`) to recover them. To handle this correctly, a new computed-only field `stale` has been added to these resource, indicating whether a stream is stale.
 
-### *(new feature)* snowflake_stream_on_directory_table resource
+### *(new feature)* snowflake_stream_on_directory_table and snowflake_stream_on_view resource
 Continuing changes made in [v0.97](#v0960--v0970), the new resource `snowflake_stream_on_directory_table` and `snowflake_stream_on_view` have been introduced to replace the previous `snowflake_stream` for streams on directory tables and streams on views.
 
 To use the new `stream_on_directory_table`, change the old `stream` from
