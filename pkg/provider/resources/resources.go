@@ -10,6 +10,7 @@ const (
 	ApiAuthenticationIntegrationWithClientCredentials      resource = "snowflake_api_authentication_integration_with_client_credentials"
 	ApiAuthenticationIntegrationWithJwtBearer              resource = "snowflake_api_authentication_integration_with_jwt_bearer"
 	ApiIntegration                                         resource = "snowflake_api_integration"
+	AuthenticationPolicy                                   resource = "snowflake_authentication_policy"
 	CortexSearchService                                    resource = "snowflake_cortex_search_service"
 	DatabaseOld                                            resource = "snowflake_database_old"
 	Database                                               resource = "snowflake_database"
