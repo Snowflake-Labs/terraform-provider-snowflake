@@ -641,22 +641,22 @@ func Test_GetStorageLocationName(t *testing.T) {
 		ExpectedName    string
 	}{
 		{
-			Name:            "S3 storage location name succesfully read",
+			Name:            "S3 storage location name successfully read",
 			StorageLocation: ExternalVolumeStorageLocation{S3StorageLocationParams: &s3StorageLocationA},
 			ExpectedName:    s3StorageLocationA.Name,
 		},
 		{
-			Name:            "S3GOV storage location name succesfully read",
+			Name:            "S3GOV storage location name successfully read",
 			StorageLocation: ExternalVolumeStorageLocation{S3StorageLocationParams: &s3GovStorageLocationA},
 			ExpectedName:    s3GovStorageLocationA.Name,
 		},
 		{
-			Name:            "GCS storage location name succesfully read",
+			Name:            "GCS storage location name successfully read",
 			StorageLocation: ExternalVolumeStorageLocation{GCSStorageLocationParams: &gcsStorageLocationA},
 			ExpectedName:    gcsStorageLocationA.Name,
 		},
 		{
-			Name:            "Azure storage location name succesfully read",
+			Name:            "Azure storage location name successfully read",
 			StorageLocation: ExternalVolumeStorageLocation{AzureStorageLocationParams: &azureStorageLocationA},
 			ExpectedName:    azureStorageLocationA.Name,
 		},

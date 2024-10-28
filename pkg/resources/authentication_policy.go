@@ -150,6 +150,9 @@ func ImportAuthenticationPolicy(ctx context.Context, d *schema.ResourceData, met
 
 	// needed as otherwise the resource will be incorrectly imported when a list-parameter value equals a default value
 	authenticationPolicyDescriptions, err := client.AuthenticationPolicies.Describe(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 	authenticationMethods := getListParameterFromDescribe(authenticationPolicyDescriptions, "AUTHENTICATION_METHODS")
 	if err = d.Set("authentication_methods", authenticationMethods); err != nil {
 		return nil, err

@@ -13,6 +13,8 @@ import (
 )
 
 func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
+	// TODO [SNOW-1763613]: unskip
+	t.Skipf("Skip because error %s; will be fixed in SNOW-1763613", "Error: 003549 (23505): Object <account_name> already has a PASSWORD_POLICY. Only one PASSWORD_POLICY is allowed at a time")
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
