@@ -3,6 +3,7 @@ package objectassert
 import (
 	"fmt"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -39,5 +40,17 @@ func (c *ConnectionAssert) HasConnectionUrlNotEmpty() *ConnectionAssert {
 		return nil
 	})
 
+	return c
+}
+
+func (c *ConnectionAssert) HasPrimaryIdentifier(expected string) *ConnectionAssert {
+	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
+		t.Helper()
+		expected = strings.ReplaceAll(expected, `"`, "")
+		if o.Primary != expected {
+			return fmt.Errorf("expected primary identifier: %v; got: %v", expected, o.Primary)
+		}
+		return nil
+	})
 	return c
 }
