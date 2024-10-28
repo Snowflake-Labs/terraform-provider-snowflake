@@ -9,6 +9,10 @@ import (
 
 // ShowConnectionSchema represents output of SHOW query for the single Connection.
 var ShowConnectionSchema = map[string]*schema.Schema{
+	"region_group": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
 	"snowflake_region": {
 		Type:     schema.TypeString,
 		Computed: true,
@@ -38,7 +42,8 @@ var ShowConnectionSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"failover_allowed_to_accounts": {
-		Type:     schema.TypeInvalid,
+		Type:     schema.TypeList,
+		Elem:     &schema.Schema{Type: schema.TypeString},
 		Computed: true,
 	},
 	"connection_url": {
@@ -59,6 +64,9 @@ var _ = ShowConnectionSchema
 
 func ConnectionToSchema(connection *sdk.Connection) map[string]any {
 	connectionSchema := make(map[string]any)
+	if connection.RegionGroup != nil {
+		connectionSchema["region_group"] = connection.RegionGroup
+	}
 	connectionSchema["snowflake_region"] = connection.SnowflakeRegion
 	connectionSchema["created_on"] = connection.CreatedOn.String()
 	connectionSchema["account_name"] = connection.AccountName

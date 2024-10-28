@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -85,12 +86,12 @@ func Connection() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateContextConnection,
 		ReadContext:   ReadContextConnection,
-		// UpdateContext: UpdateContextConnection,
-		// DeleteContext: DeleteContextConnection,
-		Description: "Resource used to manage connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
-		Schema:      connectionSchema,
-		Importer:    &schema.ResourceImporter{
-			// StateContext: ImportConnection,
+		UpdateContext: UpdateContextConnection,
+		DeleteContext: DeleteContextConnection,
+		Description:   "Resource used to manage connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
+		Schema:        connectionSchema,
+		Importer: &schema.ResourceImporter{
+			StateContext: ImportName[sdk.AccountObjectIdentifier],
 		},
 	}
 }
@@ -136,10 +137,11 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		enableFailoverConfig := v.([]any)[0].(map[string]any)
 
 		if _, ok := enableFailoverConfig["to_accounts"].([]any); !ok || len(enableFailoverConfig) == 0 {
-			return diag.FromErr(fmt.Errorf("The %s Connection 'to_accounts' list field is required when enable_failover is set", id.FullyQualifiedName()))
+			// return diag.FromErr(fmt.Errorf("The %s Connection 'to_accounts' list field is required when enable_failover is set", id.FullyQualifiedName()))
+			return ReadContextConnection(ctx, d, meta)
 		}
-		enableFailoverToAccountsConfig := enableFailoverConfig["to_accounts"].([]any)
 
+		enableFailoverToAccountsConfig := enableFailoverConfig["to_accounts"].([]any)
 		enableFailoverToAccountsList := make([]sdk.AccountIdentifier, 0)
 		for _, enableToAccount := range enableFailoverToAccountsConfig {
 			accountInConfig := enableToAccount.(map[string]any)
@@ -188,13 +190,160 @@ func ReadContextConnection(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	return diag.FromErr(errors.Join(
+	errs := errors.Join(
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+		d.Set(ShowOutputAttributeName, []map[string]any{schemas.ConnectionToSchema(connection)}),
 		d.Set("as_replica_of", connection.Primary),
 		d.Set("comment", connection.Comment),
 		d.Set("is_primary", connection.IsPrimary),
+	)
+	if errs != nil {
+		return diag.FromErr(errs)
+	}
 
-		// should use some func to map failover accounts to schema
-		// if err := d.Set("enable_failover", connection.FailoverAllowedToAccounts); err != nil {}
-	))
+	sessionDetails, err := client.ContextFunctions.CurrentSessionDetails(ctx)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	currentAccountIdentifier := sdk.NewAccountIdentifier(sessionDetails.OrganizationName, sessionDetails.AccountName)
+
+	failoverAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
+	for _, allowedAccount := range connection.FailoverAllowedToAccounts {
+		allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
+		if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
+			continue
+		}
+		failoverAllowedToAccounts = append(failoverAllowedToAccounts, allowedAccountIdentifier)
+	}
+
+	enableToAccounts := make([]map[string]any, 0)
+	for _, allowedAccount := range failoverAllowedToAccounts {
+		enableToAccounts = append(enableToAccounts, map[string]any{
+			"account_identifier": strings.ReplaceAll(allowedAccount.FullyQualifiedName(), `"`, ""),
+		})
+	}
+
+	if len(enableToAccounts) == 0 {
+		err := d.Set("enable_failover", []any{})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		err := d.Set("enable_failover", map[string]any{
+			"to_accounts": enableToAccounts,
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return nil
+}
+
+func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	connectionSetRequest := new(sdk.SetConnectionRequest)
+	connectionUnsetRequest := new(sdk.UnsetConnectionRequest)
+
+	if d.HasChange("enable_failover") {
+		before, after := d.GetChange("enable_failover")
+
+		getFailoverToAccounts := func(failoverConfig []any) []sdk.AccountIdentifier {
+			failoverEnabledToAccounts := make([]sdk.AccountIdentifier, 0)
+
+			for _, enableFailoverConfigMap := range failoverConfig {
+				enableFailoverConfig := enableFailoverConfigMap.(map[string]any)
+				for _, toAccountsMap := range enableFailoverConfig["to_accounts"].([]any) {
+					enableToAccounts := toAccountsMap.(map[string]any)
+					accountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(enableToAccounts["account_identifier"].(string))
+
+					failoverEnabledToAccounts = append(failoverEnabledToAccounts, accountIdentifier)
+				}
+			}
+			return failoverEnabledToAccounts
+		}
+
+		beforeFailover := getFailoverToAccounts(before.([]any))
+		afterFailover := getFailoverToAccounts(after.([]any))
+
+		addedFailovers, removedFailovers := ListDiff(beforeFailover, afterFailover)
+
+		if len(addedFailovers) > 0 {
+			err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
+				WithEnableConnectionFailover(*sdk.NewEnableConnectionFailoverRequest().
+					WithToAccounts(addedFailovers),
+				),
+			)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if len(removedFailovers) > 0 {
+			err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
+				WithDisableConnectionFailover(*sdk.NewDisableConnectionFailoverRequest().
+					WithToAccounts(*sdk.NewToAccountsRequest().
+						WithAccounts(removedFailovers),
+					),
+				),
+			)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
+	if d.HasChange("is_primary") {
+		is_primary := d.Get("is_primary").(bool)
+		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
+			WithPrimary(is_primary))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("comment") {
+		comment := d.Get("comment").(string)
+		if len(comment) > 0 {
+			connectionSetRequest.WithComment(comment)
+		} else {
+			connectionUnsetRequest.WithComment(true)
+		}
+	}
+
+	if (*connectionSetRequest != sdk.SetConnectionRequest{}) {
+		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).WithSet(*connectionSetRequest))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if (*connectionUnsetRequest != sdk.UnsetConnectionRequest{}) {
+		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).WithUnset(*connectionUnsetRequest))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return ReadContextConnection(ctx, d, meta)
+}
+
+func DeleteContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	err = client.Connections.Drop(ctx, sdk.NewDropConnectionRequest(id))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+	return nil
 }

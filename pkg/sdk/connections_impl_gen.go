@@ -93,13 +93,13 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 	}
 
 	if r.Set != nil {
-		opts.Set = &Set{
+		opts.Set = &SetConnection{
 			Comment: r.Set.Comment,
 		}
 	}
 
 	if r.Unset != nil {
-		opts.Unset = &Unset{
+		opts.Unset = &UnsetConnection{
 			Comment: r.Unset.Comment,
 		}
 	}
