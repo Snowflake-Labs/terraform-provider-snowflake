@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/validators"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -29,7 +30,7 @@ func IsDataType() schema.SchemaValidateFunc { //nolint:staticcheck
 }
 
 func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier]() schema.SchemaValidateDiagFunc {
-	return helpers.IsValidIdentifier[T]()
+	return validators.IsValidIdentifier[T]()
 }
 
 // IsValidAccountIdentifier is a validator that can be used for validating account identifiers passed in resources and data sources.
@@ -72,7 +73,7 @@ func IsValidAccountIdentifier() schema.SchemaValidateDiagFunc {
 
 // StringInSlice has the same implementation as validation.StringInSlice, but adapted to schema.SchemaValidateDiagFunc
 func StringInSlice(valid []string, ignoreCase bool) schema.SchemaValidateDiagFunc {
-	return helpers.StringInSlice(valid, ignoreCase)
+	return validators.StringInSlice(valid, ignoreCase)
 }
 
 // IntInSlice has the same implementation as validation.StringInSlice, but adapted to schema.SchemaValidateDiagFunc
@@ -94,7 +95,7 @@ func IntInSlice(valid []int) schema.SchemaValidateDiagFunc {
 }
 
 func sdkValidation[T any](normalize func(string) (T, error)) schema.SchemaValidateDiagFunc {
-	return helpers.NormalizeValidation(normalize)
+	return validators.NormalizeValidation(normalize)
 }
 
 func isNotEqualTo(notExpectedValue string, errorMessage string) schema.SchemaValidateDiagFunc {

@@ -1,9 +1,12 @@
-package helpers
+package validators
 
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -49,7 +52,7 @@ func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentif
 		}
 
 		stringValue := value.(string)
-		id, err := DecodeSnowflakeParameterID(stringValue)
+		id, err := helpers.DecodeSnowflakeParameterID(stringValue)
 		if err != nil {
 			return diag.Diagnostics{
 				diag.Diagnostic{
@@ -108,3 +111,25 @@ func getExpectedIdentifierForm(id any) string {
 	}
 	return ""
 }
+
+// StringInSlice has the same implementation as validation.StringInSlice, but adapted to schema.SchemaValidateDiagFunc
+func StringInSlice(valid []string, ignoreCase bool) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		v, ok := i.(string)
+		if !ok {
+			return diag.Errorf("expected type of %v to be string", path)
+		}
+
+		for _, str := range valid {
+			if v == str || (ignoreCase && strings.EqualFold(v, str)) {
+				return nil
+			}
+		}
+
+		return diag.Errorf("expected %v to be one of %q, got %s", path, valid, v)
+	}
+}
+
+var ValidateBooleanString = StringInSlice([]string{provider.BooleanTrue, provider.BooleanFalse}, false)
+
+var ValidateBooleanStringWithDefault = StringInSlice([]string{provider.BooleanTrue, provider.BooleanFalse, provider.BooleanDefault}, false)

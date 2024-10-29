@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 )
 
 func possibleValuesListed[T ~string | ~int](values []T) string {
-	return helpers.PossibleValuesListed(values)
+	return docs.PossibleValuesListed(values)
 }
 
 func characterList(values []rune) string {
