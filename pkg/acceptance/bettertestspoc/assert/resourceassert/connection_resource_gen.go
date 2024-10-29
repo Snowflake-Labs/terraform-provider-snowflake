@@ -76,10 +76,12 @@ func (c *ConnectionResourceAssert) HasNoComment() *ConnectionResourceAssert {
 	return c
 }
 
-func (c *ConnectionResourceAssert) HasNoEnableFailover() *ConnectionResourceAssert {
-	c.AddAssertion(assert.ValueNotSet("enable_failover"))
+/*
+func (c *ConnectionResourceAssert) HasNoEnableFailoverToAccounts() *ConnectionResourceAssert {
+	c.AddAssertion(assert.ValueNotSet("enable_failover_to_accounts"))
 	return c
 }
+*/
 
 func (c *ConnectionResourceAssert) HasNoFullyQualifiedName() *ConnectionResourceAssert {
 	c.AddAssertion(assert.ValueNotSet("fully_qualified_name"))

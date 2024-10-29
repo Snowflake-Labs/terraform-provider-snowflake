@@ -10,12 +10,12 @@ import (
 )
 
 type ConnectionModel struct {
-	AsReplicaOf        tfconfig.Variable `json:"as_replica_of,omitempty"`
-	Comment            tfconfig.Variable `json:"comment,omitempty"`
-	EnableFailover     tfconfig.Variable `json:"enable_failover,omitempty"`
-	FullyQualifiedName tfconfig.Variable `json:"fully_qualified_name,omitempty"`
-	IsPrimary          tfconfig.Variable `json:"is_primary,omitempty"`
-	Name               tfconfig.Variable `json:"name,omitempty"`
+	AsReplicaOf              tfconfig.Variable `json:"as_replica_of,omitempty"`
+	Comment                  tfconfig.Variable `json:"comment,omitempty"`
+	EnableFailoverToAccounts tfconfig.Variable `json:"enable_failover_to_accounts,omitempty"`
+	FullyQualifiedName       tfconfig.Variable `json:"fully_qualified_name,omitempty"`
+	IsPrimary                tfconfig.Variable `json:"is_primary,omitempty"`
+	Name                     tfconfig.Variable `json:"name,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -87,7 +87,7 @@ func (c *ConnectionModel) WithCommentValue(value tfconfig.Variable) *ConnectionM
 }
 
 func (c *ConnectionModel) WithEnableFailoverValue(value tfconfig.Variable) *ConnectionModel {
-	c.EnableFailover = value
+	c.EnableFailoverToAccounts = value
 	return c
 }
 

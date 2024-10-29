@@ -9,6 +9,10 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
+### *(new feature)* connection resource
+Added a new resource for managing connections.
+See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-connection).
+
 ### *(behavior change)* handling copy_grants
 Currently, resources like `snowflake_view`, `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table`  support `copy_grants` field corresponding with `COPY GRANTS` during `CREATE`. The current behavior is that, when a change leading for recreation is detected (meaning a change that can not be handled by ALTER, but only by `CREATE OR REPLACE`), `COPY GRANTS` are used during recreation when `copy_grants` is set to `true`. Changing this field without changes in other field results in a noop because in this case there is no need to recreate a resource.
 
