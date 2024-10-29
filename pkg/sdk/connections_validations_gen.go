@@ -15,10 +15,8 @@ func (opts *CreateConnectionOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if valueSet(opts.AsReplicaOf) {
-		if !ValidObjectIdentifier(opts.AsReplicaOf.AsReplicaOf) {
-			errs = append(errs, ErrInvalidObjectIdentifier)
-		}
+	if opts.AsReplicaOf != nil && !ValidObjectIdentifier(opts.AsReplicaOf) {
+		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
 	return JoinErrors(errs...)
 }

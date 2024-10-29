@@ -58,9 +58,7 @@ func (r *CreateConnectionRequest) toOpts() *CreateConnectionOptions {
 	}
 
 	if r.AsReplicaOf != nil {
-		opts.AsReplicaOf = &AsReplicaOf{
-			AsReplicaOf: r.AsReplicaOf.AsReplicaOf,
-		}
+		opts.AsReplicaOf = r.AsReplicaOf
 	}
 
 	return opts
@@ -70,8 +68,7 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 	opts := &AlterConnectionOptions{
 		IfExists: r.IfExists,
 		name:     r.name,
-
-		Primary: r.Primary,
+		Primary:  r.Primary,
 	}
 
 	if r.EnableConnectionFailover != nil {
@@ -81,7 +78,6 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 	}
 
 	if r.DisableConnectionFailover != nil {
-
 		opts.DisableConnectionFailover = &DisableConnectionFailover{}
 
 		if r.DisableConnectionFailover.ToAccounts != nil {
@@ -89,7 +85,6 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 				Accounts: r.DisableConnectionFailover.ToAccounts.Accounts,
 			}
 		}
-
 	}
 
 	if r.Set != nil {

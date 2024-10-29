@@ -15,7 +15,7 @@ func (s *CreateConnectionRequest) WithIfNotExists(IfNotExists bool) *CreateConne
 	return s
 }
 
-func (s *CreateConnectionRequest) WithAsReplicaOf(AsReplicaOf AsReplicaOfRequest) *CreateConnectionRequest {
+func (s *CreateConnectionRequest) WithAsReplicaOf(AsReplicaOf ExternalObjectIdentifier) *CreateConnectionRequest {
 	s.AsReplicaOf = &AsReplicaOf
 	return s
 }
@@ -23,14 +23,6 @@ func (s *CreateConnectionRequest) WithAsReplicaOf(AsReplicaOf AsReplicaOfRequest
 func (s *CreateConnectionRequest) WithComment(Comment string) *CreateConnectionRequest {
 	s.Comment = &Comment
 	return s
-}
-
-func NewAsReplicaOfRequest(
-	AsReplicaOf ExternalObjectIdentifier,
-) *AsReplicaOfRequest {
-	s := AsReplicaOfRequest{}
-	s.AsReplicaOf = AsReplicaOf
-	return &s
 }
 
 func NewAlterConnectionRequest(
