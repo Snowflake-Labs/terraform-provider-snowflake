@@ -136,9 +136,9 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 	if v, ok := d.GetOk("enable_failover"); ok {
 		enableFailoverConfig := v.([]any)[0].(map[string]any)
 
-		if _, ok := enableFailoverConfig["to_accounts"].([]any); !ok || len(enableFailoverConfig) == 0 {
-			// return diag.FromErr(fmt.Errorf("The %s Connection 'to_accounts' list field is required when enable_failover is set", id.FullyQualifiedName()))
-			return ReadContextConnection(ctx, d, meta)
+		if _, ok := enableFailoverConfig["to_accounts"]; !ok || len(enableFailoverConfig) == 0 {
+			return diag.FromErr(fmt.Errorf("The %s Connection 'to_accounts' list field is required when enable_failover is set", id.FullyQualifiedName()))
+			// return ReadContextConnection(ctx, d, meta)
 		}
 
 		enableFailoverToAccountsConfig := enableFailoverConfig["to_accounts"].([]any)
@@ -339,7 +339,7 @@ func DeleteContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = client.Connections.Drop(ctx, sdk.NewDropConnectionRequest(id))
+	err = client.Connections.Drop(ctx, sdk.NewDropConnectionRequest(id).WithIfExists(true))
 	if err != nil {
 		return diag.FromErr(err)
 	}
