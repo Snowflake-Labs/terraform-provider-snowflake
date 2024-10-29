@@ -23,10 +23,10 @@ var connectionSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"as_replica_of": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		ForceNew:    true,
-		Description: "Specifies the identifier for a primary connection from which to create a replica (i.e. a secondary connection).",
+		Type:             schema.TypeString,
+		Optional:         true,
+		ForceNew:         true,
+		Description:      "Specifies the identifier for a primary connection from which to create a replica (i.e. a secondary connection).",
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"is_primary": {
@@ -107,7 +107,6 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		if err != nil {
 			return diag.FromErr(err)
 		}
-
 	}
 
 	if v, ok := d.GetOk("enable_failover_to_accounts"); ok {

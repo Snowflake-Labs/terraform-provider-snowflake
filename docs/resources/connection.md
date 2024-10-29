@@ -21,7 +21,7 @@ resource "snowflake_connection" "basic" {
 
 ## Enable failover to accounts
 resource "snowflake_connection" "with_enable_failover_list" {
-  name                        = "connection_name"
+  name = "connection_name"
   enable_failover_to_accounts = [
     "<secondary_account_organization_name>.<secondary_account_name>"
   ]
@@ -66,7 +66,7 @@ resource "snowflake_connection" "complete" {
 - `as_replica_of` (String) Specifies the identifier for a primary connection from which to create a replica (i.e. a secondary connection).
 - `comment` (String) Specifies a comment for the connection.
 - `enable_failover_to_accounts` (List of String) Enables failover for given connection to provided accounts. Specifies a list of accounts in your organization where a secondary connection for this primary connection can be promoted to serve as the primary connection. Include your organization name for each account in the list.
-- `is_primary` (Boolean) Promotes replicated connection to serve as primary connection.
+- `is_primary` (Boolean)
 
 ### Read-Only
 
