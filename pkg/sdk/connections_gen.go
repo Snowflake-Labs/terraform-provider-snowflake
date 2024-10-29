@@ -16,15 +16,12 @@ type Connections interface {
 
 // CreateConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-connection.
 type CreateConnectionOptions struct {
-	create      bool                    `ddl:"static" sql:"CREATE"`
-	connection  bool                    `ddl:"static" sql:"CONNECTION"`
-	IfNotExists *bool                   `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name        AccountObjectIdentifier `ddl:"identifier"`
-	AsReplicaOf *AsReplicaOf            `ddl:"identifier"`
-	Comment     *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
-}
-type AsReplicaOf struct {
-	AsReplicaOf ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
+	create      bool                      `ddl:"static" sql:"CREATE"`
+	connection  bool                      `ddl:"static" sql:"CONNECTION"`
+	IfNotExists *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name        AccountObjectIdentifier   `ddl:"identifier"`
+	AsReplicaOf *ExternalObjectIdentifier `ddl:"identifier" sql:"AS REPLICA OF"`
+	Comment     *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
 // AlterConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-connection.

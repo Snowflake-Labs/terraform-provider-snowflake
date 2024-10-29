@@ -25,6 +25,9 @@ func TestInt_Connections(t *testing.T) {
 	accountId := testClientHelper().Account.GetAccountIdentifier(t)
 
 	t.Run("Create minimal", func(t *testing.T) {
+		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		require.NoError(t, err)
 
@@ -39,7 +42,7 @@ func TestInt_Connections(t *testing.T) {
 			HasName(id.Name()).
 			HasNoComment().
 			HasIsPrimary(true).
-			HasPrimaryIdentifier(externalObjectIdentifier.FullyQualifiedName()).
+			HasPrimaryIdentifier(externalObjectIdentifier).
 			HasFailoverAllowedToAccounts(
 				[]string{
 					accountId.Name(),
@@ -56,6 +59,9 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Create all options", func(t *testing.T) {
+		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id).
 			WithIfNotExists(true).
@@ -70,7 +76,7 @@ func TestInt_Connections(t *testing.T) {
 			HasName(id.Name()).
 			HasComment("test comment for connection").
 			HasIsPrimary(true).
-			HasPrimaryIdentifier(externalObjectIdentifier.FullyQualifiedName()).
+			HasPrimaryIdentifier(externalObjectIdentifier).
 			HasFailoverAllowedToAccounts(
 				[]string{
 					accountId.Name(),
@@ -87,7 +93,7 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Alter enable failover", func(t *testing.T) {
-		// TODO: [SNOW-1763442]: Unskip; Business Critical Snowflake Edition needed
+		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
@@ -117,7 +123,7 @@ func TestInt_Connections(t *testing.T) {
 		       HasName(id.Name()).
 		       HasNoComment().
 		       HasIsPrimary(true).
-		       HasPrimaryIdentifier(externalObjectIdentifier.FullyQualifiedName()).
+		       HasPrimaryIdentifier(externalObjectIdentifier).
 		       HasFailoverAllowedToAccounts(
 		           []string{
 		               accountId.Name(),
@@ -136,11 +142,9 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Create as replica of", func(t *testing.T) {
-		// TODO: [SNOW-1763442]: Unskip; Business Critical Snowflake Edition needed
+		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		_ = id
 		secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
 
 		primaryConn, connectionCleanup := testClientHelper().Connection.Create(t, testClientHelper().Ids.RandomAccountObjectIdentifier())
@@ -176,7 +180,7 @@ func TestInt_Connections(t *testing.T) {
 				HasName(id.Name()).
 				HasNoComment().
 				HasIsPrimary(false).
-				HasPrimaryIdentifier(externalObjectIdentifier.FullyQualifiedName()).
+				HasPrimaryIdentifier(externalObjectIdentifier).
 				HasFailoverAllowedToAccounts(
 					[]string{
 						accountId.Name(),
@@ -227,7 +231,7 @@ func TestInt_Connections(t *testing.T) {
 		// Assert that promotion for other account has been disabled
 		externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
 		assertions.AssertThatObject(t, objectassert.Connection(t, primaryConn.ID()).
-			HasPrimaryIdentifier(externalObjectIdentifier.FullyQualifiedName()).
+			HasPrimaryIdentifier(externalObjectIdentifier).
 			HasFailoverAllowedToAccounts(
 				[]string{
 					accountId.Name(),
@@ -236,14 +240,14 @@ func TestInt_Connections(t *testing.T) {
 		)
 
 		// Try to create repllication on secondary account
-		err = secondaryClient.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id).
-			WithAsReplicaOf(sdk.AsReplicaOfRequest{
-				AsReplicaOf: externalObjectIdentifier,
-			}))
+		err = secondaryClient.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id).WithAsReplicaOf(externalObjectIdentifier))
 		require.ErrorContains(t, err, "This account is not authorized to create a secondary connection of this primary connection")
 	})
 
 	t.Run("Alter comment", func(t *testing.T) {
+		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
 		t.Cleanup(connectionCleanup)
@@ -272,6 +276,9 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
+		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
 		t.Cleanup(connectionCleanup)
@@ -289,6 +296,9 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Drop with if exists", func(t *testing.T) {
+		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		err = client.Connections.Drop(ctx, sdk.NewDropConnectionRequest(NonExistingAccountObjectIdentifier))
 		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 
@@ -297,6 +307,9 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Show", func(t *testing.T) {
+		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		id1 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
@@ -313,6 +326,9 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Show with Like", func(t *testing.T) {
+		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		id1 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
@@ -332,6 +348,9 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("ShowByID", func(t *testing.T) {
+		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		_, connectionCleanup := testClientHelper().Connection.Create(t, id)

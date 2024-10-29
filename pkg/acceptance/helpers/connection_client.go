@@ -38,7 +38,7 @@ func (c *ConnectionClient) Create(t *testing.T, id sdk.AccountObjectIdentifier) 
 func (c *ConnectionClient) CreateReplication(t *testing.T, id sdk.AccountObjectIdentifier, replicaOf sdk.ExternalObjectIdentifier) (*sdk.Connection, func()) {
 	t.Helper()
 	ctx := context.Background()
-	request := sdk.NewCreateConnectionRequest(id).WithAsReplicaOf(sdk.AsReplicaOfRequest{AsReplicaOf: replicaOf})
+	request := sdk.NewCreateConnectionRequest(id).WithAsReplicaOf(replicaOf)
 	err := c.client().Create(ctx, request)
 	require.NoError(t, err)
 	connection, err := c.client().ShowByID(ctx, id)

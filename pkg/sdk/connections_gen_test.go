@@ -24,7 +24,7 @@ func TestConnections_Create(t *testing.T) {
 	t.Run("validation: valid identifier for [opts.ReplicaOf]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = id
-		opts.AsReplicaOf = &AsReplicaOf{emptyExternalObjectIdentifier}
+		opts.AsReplicaOf = &emptyExternalObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
@@ -46,7 +46,7 @@ func TestConnections_Create(t *testing.T) {
 		externalId := randomExternalObjectIdentifier()
 		opts := defaultOpts()
 		opts.name = id
-		opts.AsReplicaOf = &AsReplicaOf{externalId}
+		opts.AsReplicaOf = &externalId
 		assertOptsValidAndSQLEquals(t, opts, "CREATE CONNECTION %s AS REPLICA OF %s", id.FullyQualifiedName(), externalId.FullyQualifiedName())
 	})
 
@@ -55,7 +55,7 @@ func TestConnections_Create(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = id
 		opts.IfNotExists = Bool(true)
-		opts.AsReplicaOf = &AsReplicaOf{externalId}
+		opts.AsReplicaOf = &externalId
 		opts.Comment = String("comment")
 		assertOptsValidAndSQLEquals(t, opts, "CREATE CONNECTION IF NOT EXISTS %s AS REPLICA OF %s COMMENT = 'comment'", id.FullyQualifiedName(), externalId.FullyQualifiedName())
 	})

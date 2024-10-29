@@ -17,15 +17,13 @@ var ConnectionDef = g.NewInterface(
 		SQL("CONNECTION").
 		IfNotExists().
 		Name().
-		OptionalQueryStructField(
+		OptionalIdentifier(
 			"AsReplicaOf",
-			g.NewQueryStruct("AsReplicaOf").
-				Identifier("AsReplicaOf", g.KindOfT[ExternalObjectIdentifier](), g.IdentifierOptions().Required().SQL("AS REPLICA OF")).
-				WithValidation(g.ValidIdentifier, "AsReplicaOf"),
-			g.IdentifierOptions(),
-		).
+			g.KindOfT[ExternalObjectIdentifier](),
+			g.IdentifierOptions().Required().SQL("AS REPLICA OF")).
 		OptionalComment().
-		WithValidation(g.ValidIdentifier, "name"),
+		WithValidation(g.ValidIdentifier, "name").
+		WithValidation(g.ValidIdentifierIfSet, "AsReplicaOf"),
 ).AlterOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/alter-connection",
 	g.NewQueryStruct("Alter").

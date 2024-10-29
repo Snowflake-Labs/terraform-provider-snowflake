@@ -58,9 +58,7 @@ func (r *CreateConnectionRequest) toOpts() *CreateConnectionOptions {
 	}
 
 	if r.AsReplicaOf != nil {
-		opts.AsReplicaOf = &AsReplicaOf{
-			AsReplicaOf: r.AsReplicaOf.AsReplicaOf,
-		}
+		opts.AsReplicaOf = r.AsReplicaOf
 	}
 
 	return opts

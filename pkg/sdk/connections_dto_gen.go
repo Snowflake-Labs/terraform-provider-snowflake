@@ -12,12 +12,8 @@ var (
 type CreateConnectionRequest struct {
 	IfNotExists *bool
 	name        AccountObjectIdentifier // required
-	AsReplicaOf *AsReplicaOfRequest
+	AsReplicaOf *ExternalObjectIdentifier
 	Comment     *string
-}
-
-type AsReplicaOfRequest struct {
-	AsReplicaOf ExternalObjectIdentifier // required
 }
 
 type AlterConnectionRequest struct {
