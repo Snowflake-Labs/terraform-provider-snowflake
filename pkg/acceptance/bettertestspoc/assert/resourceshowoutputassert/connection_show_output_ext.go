@@ -20,8 +20,3 @@ func (c *ConnectionShowOutputAssert) HasFailoverAllowedToAccounts(expected ...sd
 	}
 	return c
 }
-
-func (c *ConnectionShowOutputAssert) HasNoFailoverAllowedToAccounts() *ConnectionShowOutputAssert {
-	c.AddAssertion(assert.ResourceShowOutputValueSet("failover_allowed_to_accounts.#", "0"))
-	return c
-}

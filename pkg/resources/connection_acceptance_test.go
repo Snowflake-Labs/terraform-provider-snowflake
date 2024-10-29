@@ -32,7 +32,6 @@ func TestAcc_Connection_Basic(t *testing.T) {
 	comment := random.Comment()
 
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
-	//	secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
 
 	getConnectionUrl := func(organizationName, objectName string) string {
@@ -41,14 +40,18 @@ func TestAcc_Connection_Basic(t *testing.T) {
 
 	connectionModel := model.Connection("t", id.Name())
 	connectionModelWithComment := model.Connection("t", id.Name()).WithComment(comment)
+
+	// TODO: [SNOW-1763442]
 	/*
+	   secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
+
 	   connectionModelWithFailover := model.Connection("t", id.Name()).WithEnableFailover(secondaryAccountId)
 
 	   replicatedConnectionModel := model.Connection("replicated_connection", id.Name()).
-	       WithAsReplicaOf(primaryConnectionAsExternalId.FullyQualifiedName())
+	       WithAsReplicaOfIdentifier(primaryConnectionAsExternalId)
 
 	   replicatedConnectionModelWithPrimary := model.Connection("replicated_connection", id.Name()).
-	       WithAsReplicaOf(primaryConnectionAsExternalId.FullyQualifiedName()).
+	       WithAsReplicaOfIdentifier(primaryConnectionAsExternalId).
 	       WithIsPrimary(true)
 	*/
 
@@ -254,7 +257,7 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
 
-	connectionModel := model.Connection("t", id.Name())
+	connectionModel := model.Connection("t", id.Name()).WithComment("config comment")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -275,7 +278,7 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 							HasNoAsReplicaOf().
 							HasNoEnableFailoverToAccounts().
 							HasNoIsPrimary().
-							HasCommentString(""),
+							HasCommentString("config comment"),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
 							HasName(id.Name()).
@@ -283,7 +286,7 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 							HasAccountLocator(acc.TestClient().GetAccountLocator()).
 							HasAccountName(accountId.AccountName()).
 							HasOrganizationName(accountId.OrganizationName()).
-							HasComment("").
+							HasComment("config comment").
 							HasIsPrimary(true).
 							HasPrimaryIdentifier(primaryConnectionAsExternalId).
 							HasFailoverAllowedToAccounts(accountId),
@@ -301,15 +304,15 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(connectionModel.ResourceReference(), plancheck.ResourceActionUpdate),
-						planchecks.ExpectChange(connectionModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String("external comment"), nil),
+						planchecks.ExpectChange(connectionModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String("external comment"), sdk.String("config comment")),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
-							HasCommentString(""),
+							HasCommentString("config comment"),
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
-							HasComment(""),
+							HasComment("config comment"),
 					),
 				),
 			},

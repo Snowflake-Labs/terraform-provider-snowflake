@@ -31,6 +31,7 @@ resource "snowflake_connection" "with_enable_failover_list" {
 resource "snowflake_connection" "replica" {
   name          = "connection_name"
   as_replica_of = "<organization_name>.<account_name>.<connection_name>"
+  is_primary    = false
 }
 
 # As replica with promotion to primary

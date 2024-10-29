@@ -16,7 +16,7 @@ func (c *ConnectionResourceAssert) HasAsReplicaOfIdentifier(expected sdk.Externa
 
 func (c *ConnectionResourceAssert) HasEnableFailoverToAccounts(expected ...sdk.AccountIdentifier) *ConnectionResourceAssert {
 	for i, v := range expected {
-		c.AddAssertion(assert.ValueSet(fmt.Sprintf("enable_failover_to_accounts.%d.account_identifier", i), v.Name()))
+		c.AddAssertion(assert.ValueSet(fmt.Sprintf("enable_failover_to_accounts.%d", i), v.Name()))
 	}
 	return c
 }

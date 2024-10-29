@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -82,11 +81,11 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 	request := sdk.NewCreateConnectionRequest(id)
 
 	if v, ok := d.GetOk("as_replica_of"); ok {
-		if externalObjectId, err := sdk.ParseExternalObjectIdentifier(v.(string)); err != nil {
-			request.WithAsReplicaOf(externalObjectId)
-		} else {
+		externalObjectId, err := sdk.ParseExternalObjectIdentifier(v.(string))
+		if err != nil {
 			return diag.FromErr(err)
 		}
+		request.WithAsReplicaOf(externalObjectId)
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -100,7 +99,7 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	if v, ok := d.GetOk("is_primary"); ok {
+	if v, ok := d.GetOk("is_primary"); ok && v.(bool) {
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
 			WithPrimary(v.(bool)),
 		)
@@ -185,27 +184,22 @@ func ReadContextConnection(withExternalChangesMarking bool) schema.ReadContextFu
 		}
 		currentAccountIdentifier := sdk.NewAccountIdentifier(sessionDetails.OrganizationName, sessionDetails.AccountName)
 
-		failoverAllowedToAccounts := make([]sdk.AccountIdentifier, 0)
+		enableFailoverToAccounts := make([]string, 0)
 		for _, allowedAccount := range connection.FailoverAllowedToAccounts {
-			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(strings.TrimSpace(allowedAccount))
+			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(allowedAccount)
 			if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
 				continue
 			}
-			failoverAllowedToAccounts = append(failoverAllowedToAccounts, allowedAccountIdentifier)
+			enableFailoverToAccounts = append(enableFailoverToAccounts, allowedAccountIdentifier.Name())
 		}
 
-		enableToAccounts := make([]string, 0)
-		for _, allowedAccount := range failoverAllowedToAccounts {
-			enableToAccounts = append(enableToAccounts, allowedAccount.Name())
-		}
-
-		if len(enableToAccounts) == 0 {
+		if len(enableFailoverToAccounts) == 0 {
 			err := d.Set("enable_failover_to_accounts", []any{})
 			if err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
-			err := d.Set("enable_failover_to_accounts", enableToAccounts)
+			err := d.Set("enable_failover_to_accounts", enableFailoverToAccounts)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -231,10 +225,8 @@ func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		getFailoverToAccounts := func(failoverConfig []any) []sdk.AccountIdentifier {
 			failoverEnabledToAccounts := make([]sdk.AccountIdentifier, 0)
 
-			for _, toAccountsMap := range failoverConfig {
-				enableToAccounts := toAccountsMap.(string)
-				accountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(enableToAccounts)
-
+			for _, allowedAccount := range failoverConfig {
+				accountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(allowedAccount.(string))
 				failoverEnabledToAccounts = append(failoverEnabledToAccounts, accountIdentifier)
 			}
 			return failoverEnabledToAccounts
@@ -271,11 +263,11 @@ func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if d.HasChange("is_primary") {
-		is_primary := d.Get("is_primary").(bool)
-		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
-			WithPrimary(is_primary))
-		if err != nil {
-			return diag.FromErr(err)
+		if is_primary := d.Get("is_primary").(bool); is_primary {
+			err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).WithPrimary(is_primary))
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
