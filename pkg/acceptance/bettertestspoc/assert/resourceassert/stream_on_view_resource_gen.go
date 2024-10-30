@@ -155,3 +155,8 @@ func (s *StreamOnViewResourceAssert) HasNoView() *StreamOnViewResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("view"))
 	return s
 }
+
+func (s *StreamOnViewResourceAssert) HasStreamTypeString(expected string) *StreamOnViewResourceAssert {
+	s.AddAssertion(assert.ValueSet("stream_type", expected))
+	return s
+}
