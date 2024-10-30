@@ -9,7 +9,7 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
-### snowflake_masking_policies data source changes
+### snowflake_streamsdata source changes
 New filtering options:
 - `like`
 - `in`
@@ -27,14 +27,28 @@ Breaking changes:
 
 Please adjust your Terraform configuration files.
 
+### *(behavior change)* Provider configuration rework
+On our road to v1, we have decided to rework configuration to address the most common issues (see a [roadmap entry](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#providers-configuration-rework)). We have created a list of topics we wanted to address before v1. We will prepare an announcement soon. The following subsections describe the things addressed in the v0.98.0.
+
+#### *(behavior change)* changed behavior of some fields
+For the fields that are not deprecated, we focused on improving validations and documentation. Also, we adjusted some fields to match our [driver's](https://github.com/snowflakedb/gosnowflake) defaults. Specifically:
+- Relaxed validations for enum fields like `protocol` and `authenticator`. Now, the case on such fields is ignored.
+- `user`, `warehouse`, `role` - added a validation for an account object identifier
+- `validate_default_parameters`, `client_request_mfa_token`, `client_store_temporary_credential`, `ocsp_fail_open`,  - to easily handle three-value logic (true, false, unknown) in provider's config, type of these fields was changed from boolean to string. For more details about default values, please refer to the [changes before v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#default-values) document.
+- `client_ip` - added a validation for an IP address
+- `port` - added a validation for a port number
+- `okta_url`, `token_accessor.token_endpoint`, `client_store_temporary_credential` - added a validation for a URL address
+- `login_timeout`, `request_timeout`, `jwt_expire_timeout`, `client_timeout`, `jwt_client_timeout`, `external_browser_timeout` - added a validation for setting this value to at least `0`
+- `authenticator` - added a possibility to configure JWT flow with `SNOWFLAKE_JWT` (formerly, this was upported with `JWT`); the previous value `JWT` was left for compatibility, but will be removed before v1
+
 ### *(behavior change)* handling copy_grants
 Currently, resources like `snowflake_view`, `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table`  support `copy_grants` field corresponding with `COPY GRANTS` during `CREATE`. The current behavior is that, when a change leading for recreation is detected (meaning a change that can not be handled by ALTER, but only by `CREATE OR REPLACE`), `COPY GRANTS` are used during recreation when `copy_grants` is set to `true`. Changing this field without changes in other field results in a noop because in this case there is no need to recreate a resource.
 
 ### *(new feature)* recovering stale streams
 Starting from this version, the provider detects stale streams for `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table` and recreates them (optionally with `copy_grants`) to recover them. To handle this correctly, a new computed-only field `stale` has been added to these resource, indicating whether a stream is stale.
 
-### *(new feature)* snowflake_stream_on_directory_table resource
-Continuing changes made in [v0.97](#v0960--v0970), the new resource `snowflake_stream_on_directory_table` has been introduced to replace the previous `snowflake_stream` for streams on directory tables.
+### *(new feature)* snowflake_stream_on_directory_table and snowflake_stream_on_view resource
+Continuing changes made in [v0.97](#v0960--v0970), the new resource `snowflake_stream_on_directory_table` and `snowflake_stream_on_view` have been introduced to replace the previous `snowflake_stream` for streams on directory tables and streams on views.
 
 To use the new `stream_on_directory_table`, change the old `stream` from
 ```terraform
@@ -63,6 +77,33 @@ resource "snowflake_stream_on_directory_table" "stream" {
 }
 ```
 
+To use the new `stream_on_view`, change the old `stream` from
+```terraform
+resource "snowflake_stream" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  on_view    = snowflake_view.view.fully_qualified_name
+
+  comment = "A stream."
+}
+```
+
+to
+
+```terraform
+resource "snowflake_stream_on_view" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  view             = snowflake_view.view.fully_qualified_name
+
+  comment = "A stream."
+}
+```
+
 Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
 
 ### *(new feature)* Secret resources
@@ -81,7 +122,7 @@ See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secr
 
 ### *(new feature)* snowflake_stream_on_table, snowflake_stream_on_external_table resource
 
-To enhance clarity and functionality, the new resources `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table` have been introduced to replace the previous `snowflake_stream`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into more specialized resources.
+To enhance clarity and functionality, the new resources `snowflake_stream_on_table` and `snowflake_stream_on_external_table` have been introduced to replace the previous `snowflake_stream`. Recognizing that the old resource carried multiple responsibilities within a single entity, we opted to divide it into more specialized resources.
 The newly introduced resources are aligned with the latest Snowflake documentation at the time of implementation, and adhere to our [new conventions](#general-changes).
 This segregation was based on the object on which the stream is created. The mapping between SQL statements and the resources is the following:
 - `ON TABLE <table_name>` -> `snowflake_stream_on_table`

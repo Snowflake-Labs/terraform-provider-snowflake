@@ -178,7 +178,7 @@ func ReadStreamOnTable(withExternalChangesMarking bool) schema.ReadContextFunc {
 				mode = *stream.Mode
 			}
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"mode", "append_only", string(mode), booleanStringFromBool(stream.IsAppendOnly()), nil},
+				outputMapping{"mode", "append_only", string(mode), booleanStringFromBool(stream.IsAppendOnly()), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}

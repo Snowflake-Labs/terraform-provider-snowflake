@@ -18,6 +18,7 @@ type SecretWithAuthorizationCodeGrantModel struct {
 	OauthRefreshToken           tfconfig.Variable `json:"oauth_refresh_token,omitempty"`
 	OauthRefreshTokenExpiryTime tfconfig.Variable `json:"oauth_refresh_token_expiry_time,omitempty"`
 	Schema                      tfconfig.Variable `json:"schema,omitempty"`
+	SecretType                  tfconfig.Variable `json:"secret_type,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -49,9 +50,9 @@ func SecretWithAuthorizationCodeGrantWithDefaultMeta(
 	apiAuthentication string,
 	database string,
 	name string,
+	schema string,
 	oauthRefreshToken string,
 	oauthRefreshTokenExpiryTime string,
-	schema string,
 ) *SecretWithAuthorizationCodeGrantModel {
 	s := &SecretWithAuthorizationCodeGrantModel{ResourceModelMeta: config.DefaultMeta(resources.SecretWithAuthorizationCodeGrant)}
 	s.WithApiAuthentication(apiAuthentication)
@@ -107,6 +108,11 @@ func (s *SecretWithAuthorizationCodeGrantModel) WithSchema(schema string) *Secre
 	return s
 }
 
+func (s *SecretWithAuthorizationCodeGrantModel) WithSecretType(secretType string) *SecretWithAuthorizationCodeGrantModel {
+	s.SecretType = tfconfig.StringVariable(secretType)
+	return s
+}
+
 //////////////////////////////////////////
 // below it's possible to set any value //
 //////////////////////////////////////////
@@ -148,5 +154,10 @@ func (s *SecretWithAuthorizationCodeGrantModel) WithOauthRefreshTokenExpiryTimeV
 
 func (s *SecretWithAuthorizationCodeGrantModel) WithSchemaValue(value tfconfig.Variable) *SecretWithAuthorizationCodeGrantModel {
 	s.Schema = value
+	return s
+}
+
+func (s *SecretWithAuthorizationCodeGrantModel) WithSecretTypeValue(value tfconfig.Variable) *SecretWithAuthorizationCodeGrantModel {
+	s.SecretType = value
 	return s
 }

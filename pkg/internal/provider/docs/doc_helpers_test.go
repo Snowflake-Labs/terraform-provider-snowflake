@@ -1,4 +1,4 @@
-package resources
+package docs
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 func Test_PossibleValuesListedStrings(t *testing.T) {
 	values := []string{"abc", "DEF"}
 
-	result := possibleValuesListed(values)
+	result := PossibleValuesListed(values)
 
 	assert.Equal(t, "`abc` | `DEF`", result)
 }
@@ -17,7 +17,7 @@ func Test_PossibleValuesListedStrings(t *testing.T) {
 func Test_PossibleValuesListedInts(t *testing.T) {
 	values := []int{42, 21}
 
-	result := possibleValuesListed(values)
+	result := PossibleValuesListed(values)
 
 	assert.Equal(t, "`42` | `21`", result)
 }
@@ -25,7 +25,7 @@ func Test_PossibleValuesListedInts(t *testing.T) {
 func Test_PossibleValuesListed_empty(t *testing.T) {
 	var values []string
 
-	result := possibleValuesListed(values)
+	result := PossibleValuesListed(values)
 
 	assert.Empty(t, result)
 }

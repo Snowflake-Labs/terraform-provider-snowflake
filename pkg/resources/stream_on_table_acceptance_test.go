@@ -416,11 +416,7 @@ func TestAcc_StreamOnTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.
 	t.Cleanup(cleanupSchema)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
-	columns := []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest("id", "NUMBER"),
-	}
-
-	table, cleanupTable := acc.TestClient().Table.CreateWithRequest(t, sdk.NewCreateTableRequest(acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID()), columns).WithChangeTracking(sdk.Pointer(true)))
+	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTrackingInSchema(t, schema.ID())
 	t.Cleanup(cleanupTable)
 
 	var createdOn string
@@ -495,11 +491,7 @@ func TestAcc_StreamOnTable_StaleWithExternalChanges(t *testing.T) {
 	t.Cleanup(cleanupSchema)
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
-	columns := []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest("id", "NUMBER"),
-	}
-
-	table, cleanupTable := acc.TestClient().Table.CreateWithRequest(t, sdk.NewCreateTableRequest(acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID()), columns).WithChangeTracking(sdk.Pointer(true)))
+	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTrackingInSchema(t, schema.ID())
 	t.Cleanup(cleanupTable)
 
 	var createdOn string

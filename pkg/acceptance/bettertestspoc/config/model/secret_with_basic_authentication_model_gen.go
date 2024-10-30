@@ -16,6 +16,7 @@ type SecretWithBasicAuthenticationModel struct {
 	Name               tfconfig.Variable `json:"name,omitempty"`
 	Password           tfconfig.Variable `json:"password,omitempty"`
 	Schema             tfconfig.Variable `json:"schema,omitempty"`
+	SecretType         tfconfig.Variable `json:"secret_type,omitempty"`
 	Username           tfconfig.Variable `json:"username,omitempty"`
 
 	*config.ResourceModelMeta
@@ -92,6 +93,11 @@ func (s *SecretWithBasicAuthenticationModel) WithSchema(schema string) *SecretWi
 	return s
 }
 
+func (s *SecretWithBasicAuthenticationModel) WithSecretType(secretType string) *SecretWithBasicAuthenticationModel {
+	s.SecretType = tfconfig.StringVariable(secretType)
+	return s
+}
+
 func (s *SecretWithBasicAuthenticationModel) WithUsername(username string) *SecretWithBasicAuthenticationModel {
 	s.Username = tfconfig.StringVariable(username)
 	return s
@@ -128,6 +134,11 @@ func (s *SecretWithBasicAuthenticationModel) WithPasswordValue(value tfconfig.Va
 
 func (s *SecretWithBasicAuthenticationModel) WithSchemaValue(value tfconfig.Variable) *SecretWithBasicAuthenticationModel {
 	s.Schema = value
+	return s
+}
+
+func (s *SecretWithBasicAuthenticationModel) WithSecretTypeValue(value tfconfig.Variable) *SecretWithBasicAuthenticationModel {
+	s.SecretType = value
 	return s
 }
 
