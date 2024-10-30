@@ -9,7 +9,7 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
-### snowflake_streamsdata source changes
+### snowflake_streams data source changes
 New filtering options:
 - `like`
 - `in`
