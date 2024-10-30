@@ -35,7 +35,7 @@ func (c *ConnectionClient) Create(t *testing.T, id sdk.AccountObjectIdentifier) 
 	return connection, c.DropFunc(t, id)
 }
 
-func (c *ConnectionClient) CreateAsReplicaOf(t *testing.T, id sdk.AccountObjectIdentifier, replicaOf sdk.ExternalObjectIdentifier) (*sdk.Connection, func()) {
+func (c *ConnectionClient) CreateReplication(t *testing.T, id sdk.AccountObjectIdentifier, replicaOf sdk.ExternalObjectIdentifier) (*sdk.Connection, func()) {
 	t.Helper()
 	ctx := context.Background()
 	request := sdk.NewCreateConnectionRequest(id).WithAsReplicaOf(replicaOf)
@@ -46,7 +46,7 @@ func (c *ConnectionClient) CreateAsReplicaOf(t *testing.T, id sdk.AccountObjectI
 	return connection, c.DropFunc(t, id)
 }
 
-func (c *ConnectionClient) Alter(t *testing.T, req *sdk.AlterConnectionRequest) {
+func (c *ConnectionClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, req *sdk.AlterConnectionRequest) {
 	t.Helper()
 	ctx := context.Background()
 

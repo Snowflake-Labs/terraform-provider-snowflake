@@ -51,14 +51,14 @@ var ConnectionDef = g.NewInterface(
 		OptionalSQL("PRIMARY").
 		OptionalQueryStructField(
 			"Set",
-			g.NewQueryStruct("SetConnection").
+			g.NewQueryStruct("Set").
 				OptionalComment().
 				WithValidation(g.AtLeastOneValueSet, "Comment"),
 			g.KeywordOptions().SQL("SET"),
 		).
 		OptionalQueryStructField(
 			"Unset",
-			g.NewQueryStruct("UnsetConnection").
+			g.NewQueryStruct("Unset").
 				OptionalSQL("COMMENT").
 				WithValidation(g.AtLeastOneValueSet, "Comment"),
 			g.KeywordOptions().SQL("UNSET"),

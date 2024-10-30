@@ -53,12 +53,12 @@ func (s *AlterConnectionRequest) WithPrimary(Primary bool) *AlterConnectionReque
 	return s
 }
 
-func (s *AlterConnectionRequest) WithSet(Set SetConnectionRequest) *AlterConnectionRequest {
+func (s *AlterConnectionRequest) WithSet(Set SetRequest) *AlterConnectionRequest {
 	s.Set = &Set
 	return s
 }
 
-func (s *AlterConnectionRequest) WithUnset(Unset UnsetConnectionRequest) *AlterConnectionRequest {
+func (s *AlterConnectionRequest) WithUnset(Unset UnsetRequest) *AlterConnectionRequest {
 	s.Unset = &Unset
 	return s
 }
@@ -90,20 +90,20 @@ func (s *ToAccountsRequest) WithAccounts(Accounts []AccountIdentifier) *ToAccoun
 	return s
 }
 
-func NewSetRequest() *SetConnectionRequest {
-	return &SetConnectionRequest{}
+func NewSetRequest() *SetRequest {
+	return &SetRequest{}
 }
 
-func (s *SetConnectionRequest) WithComment(Comment string) *SetConnectionRequest {
+func (s *SetRequest) WithComment(Comment string) *SetRequest {
 	s.Comment = &Comment
 	return s
 }
 
-func NewUnsetRequest() *UnsetConnectionRequest {
-	return &UnsetConnectionRequest{}
+func NewUnsetRequest() *UnsetRequest {
+	return &UnsetRequest{}
 }
 
-func (s *UnsetConnectionRequest) WithComment(Comment bool) *UnsetConnectionRequest {
+func (s *UnsetRequest) WithComment(Comment bool) *UnsetRequest {
 	s.Comment = &Comment
 	return s
 }
