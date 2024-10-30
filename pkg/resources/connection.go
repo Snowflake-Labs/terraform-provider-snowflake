@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -29,9 +30,11 @@ var connectionSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"is_primary": {
-		Type:         schema.TypeBool,
-		Optional:     true,
-		RequiredWith: []string{"as_replica_of"},
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          BooleanDefault,
+		ValidateDiagFunc: validateBooleanString,
+		// TODO: Description: "",
 	},
 	"enable_failover_to_accounts": {
 		Type:        schema.TypeList,
@@ -59,7 +62,7 @@ var connectionSchema = map[string]*schema.Schema{
 func Connection() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: CreateContextConnection,
-		ReadContext:   ReadContextConnection(true),
+		ReadContext:   ReadContextConnection,
 		UpdateContext: UpdateContextConnection,
 		DeleteContext: DeleteContextConnection,
 		Description:   "Resource used to manage connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
@@ -99,14 +102,30 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	if v, ok := d.GetOk("is_primary"); ok && v.(bool) {
-		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
-			WithPrimary(v.(bool)),
-		)
+	if v := d.Get("is_primary").(string); v != BooleanDefault {
+		parsedBool, err := strconv.ParseBool(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		if parsedBool {
+			err = client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
+				WithPrimary(parsedBool))
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
 	}
+
+	/*
+		if v, ok := d.GetOk("is_primary"); ok && v.(bool) {
+			err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
+				WithPrimary(v.(bool)),
+			)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	*/
 
 	if v, ok := d.GetOk("enable_failover_to_accounts"); ok {
 		enableFailoverConfig := v.([]any)
@@ -128,85 +147,75 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	return ReadContextConnection(false)(ctx, d, meta)
+	return ReadContextConnection(ctx, d, meta)
 }
 
-func ReadContextConnection(withExternalChangesMarking bool) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		client := meta.(*provider.Context).Client
-		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
-		if err != nil {
-			return diag.FromErr(err)
-		}
+func ReadContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-		connection, err := client.Connections.ShowByID(ctx, id)
-		if err != nil {
-			if errors.Is(err, sdk.ErrObjectNotFound) {
-				d.SetId("")
-				return diag.Diagnostics{
-					diag.Diagnostic{
-						Severity: diag.Warning,
-						Summary:  "Failed to retrieve connection. Target object not found. Marking the resource as removed.",
-						Detail:   fmt.Sprintf("Connection name: %s, Err: %s", id.FullyQualifiedName(), err),
-					},
-				}
-			}
+	connection, err := client.Connections.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
 			return diag.Diagnostics{
 				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Failed to retrieve connection.",
+					Severity: diag.Warning,
+					Summary:  "Failed to retrieve connection. Target object not found. Marking the resource as removed.",
 					Detail:   fmt.Sprintf("Connection name: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}
 		}
-
-		if withExternalChangesMarking {
-			if err := handleExternalChangesToObjectInShow(d,
-				outputMapping{"is_primary", "is_primary", connection.IsPrimary, connection.IsPrimary, nil},
-			); err != nil {
-				return diag.FromErr(err)
-			}
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Failed to retrieve connection.",
+				Detail:   fmt.Sprintf("Connection name: %s, Err: %s", id.FullyQualifiedName(), err),
+			},
 		}
+	}
 
-		errs := errors.Join(
-			setStateToValuesFromConfig(d, connectionSchema, []string{"is_primary"}),
-			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
-			d.Set(ShowOutputAttributeName, []map[string]any{schemas.ConnectionToSchema(connection)}),
-			d.Set("comment", connection.Comment),
-		)
-		if errs != nil {
-			return diag.FromErr(errs)
+	errs := errors.Join(
+		setStateToValuesFromConfig(d, connectionSchema, []string{"is_primary"}),
+		//d.Set("is_primary", booleanStringFromBool(connection.IsPrimary)),
+		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+		d.Set(ShowOutputAttributeName, []map[string]any{schemas.ConnectionToSchema(connection)}),
+		d.Set("comment", connection.Comment),
+	)
+	if errs != nil {
+		return diag.FromErr(errs)
+	}
+
+	sessionDetails, err := client.ContextFunctions.CurrentSessionDetails(ctx)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	currentAccountIdentifier := sdk.NewAccountIdentifier(sessionDetails.OrganizationName, sessionDetails.AccountName)
+
+	enableFailoverToAccounts := make([]string, 0)
+	for _, allowedAccount := range connection.FailoverAllowedToAccounts {
+		if currentAccountIdentifier.FullyQualifiedName() == allowedAccount.FullyQualifiedName() {
+			continue
 		}
+		enableFailoverToAccounts = append(enableFailoverToAccounts, allowedAccount.Name())
+	}
 
-		sessionDetails, err := client.ContextFunctions.CurrentSessionDetails(ctx)
+	if len(enableFailoverToAccounts) == 0 {
+		err := d.Set("enable_failover_to_accounts", []any{})
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		currentAccountIdentifier := sdk.NewAccountIdentifier(sessionDetails.OrganizationName, sessionDetails.AccountName)
-
-		enableFailoverToAccounts := make([]string, 0)
-		for _, allowedAccount := range connection.FailoverAllowedToAccounts {
-			allowedAccountIdentifier := sdk.NewAccountIdentifierFromFullyQualifiedName(allowedAccount)
-			if currentAccountIdentifier.FullyQualifiedName() == allowedAccountIdentifier.FullyQualifiedName() {
-				continue
-			}
-			enableFailoverToAccounts = append(enableFailoverToAccounts, allowedAccountIdentifier.Name())
+	} else {
+		err := d.Set("enable_failover_to_accounts", enableFailoverToAccounts)
+		if err != nil {
+			return diag.FromErr(err)
 		}
-
-		if len(enableFailoverToAccounts) == 0 {
-			err := d.Set("enable_failover_to_accounts", []any{})
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		} else {
-			err := d.Set("enable_failover_to_accounts", enableFailoverToAccounts)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
-
-		return nil
 	}
+
+	return nil
 }
 
 func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -263,10 +272,16 @@ func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if d.HasChange("is_primary") {
-		if is_primary := d.Get("is_primary").(bool); is_primary {
-			err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).WithPrimary(is_primary))
+		if is_primary := d.Get("is_primary").(string); is_primary != BooleanDefault {
+			parsed, err := strconv.ParseBool(is_primary)
 			if err != nil {
 				return diag.FromErr(err)
+			}
+			if parsed {
+				err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).WithPrimary(parsed))
+				if err != nil {
+					return diag.FromErr(err)
+				}
 			}
 		}
 	}
@@ -294,7 +309,7 @@ func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	return ReadContextConnection(false)(ctx, d, meta)
+	return ReadContextConnection(ctx, d, meta)
 }
 
 func DeleteContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

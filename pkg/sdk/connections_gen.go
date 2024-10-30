@@ -42,6 +42,7 @@ type EnableConnectionFailover struct {
 type DisableConnectionFailover struct {
 	ToAccounts *ToAccounts `ddl:"keyword" sql:"TO ACCOUNTS"`
 }
+
 type ToAccounts struct {
 	Accounts []AccountIdentifier `ddl:"list,no_parentheses"`
 }
@@ -88,8 +89,8 @@ type Connection struct {
 	Name                      string
 	Comment                   *string
 	IsPrimary                 bool
-	Primary                   string
-	FailoverAllowedToAccounts []string
+	Primary                   ExternalObjectIdentifier
+	FailoverAllowedToAccounts []AccountIdentifier
 	ConnectionUrl             string
 	OrganizationName          string
 	AccountLocator            string

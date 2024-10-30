@@ -3,14 +3,6 @@ resource "snowflake_connection" "basic" {
   name = "connection_name"
 }
 
-## Enable failover to accounts
-resource "snowflake_connection" "with_enable_failover_list" {
-  name = "connection_name"
-  enable_failover_to_accounts = [
-    "<secondary_account_organization_name>.<secondary_account_name>"
-  ]
-}
-
 ## As replica
 resource "snowflake_connection" "replica" {
   name          = "connection_name"

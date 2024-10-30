@@ -75,8 +75,12 @@ func ConnectionToSchema(connection *sdk.Connection) map[string]any {
 		connectionSchema["comment"] = connection.Comment
 	}
 	connectionSchema["is_primary"] = connection.IsPrimary
-	connectionSchema["primary"] = connection.Primary
-	connectionSchema["failover_allowed_to_accounts"] = connection.FailoverAllowedToAccounts
+	connectionSchema["primary"] = connection.Primary.Name()
+	var allowedAccounts []string
+	for _, accountId := range connection.FailoverAllowedToAccounts {
+		allowedAccounts = append(allowedAccounts, accountId.Name())
+	}
+	connectionSchema["failover_allowed_to_accounts"] = allowedAccounts
 	connectionSchema["connection_url"] = connection.ConnectionUrl
 	connectionSchema["organization_name"] = connection.OrganizationName
 	connectionSchema["account_locator"] = connection.AccountLocator

@@ -43,11 +43,7 @@ func TestInt_Connections(t *testing.T) {
 			HasNoComment().
 			HasIsPrimary(true).
 			HasPrimaryIdentifier(externalObjectIdentifier).
-			HasFailoverAllowedToAccounts(
-				[]string{
-					accountId.Name(),
-				},
-			).
+			HasFailoverAllowedToAccounts(accountId).
 			HasOrganizationName(sessionDetails.OrganizationName).
 			HasAccountLocator(client.GetAccountLocator()).
 			HasConnectionUrl(
@@ -77,11 +73,7 @@ func TestInt_Connections(t *testing.T) {
 			HasComment("test comment for connection").
 			HasIsPrimary(true).
 			HasPrimaryIdentifier(externalObjectIdentifier).
-			HasFailoverAllowedToAccounts(
-				[]string{
-					accountId.Name(),
-				},
-			).
+			HasFailoverAllowedToAccounts(accountId).
 			HasOrganizationName(sessionDetails.OrganizationName).
 			HasAccountLocator(client.GetAccountLocator()).
 			HasConnectionUrl(
@@ -232,11 +224,7 @@ func TestInt_Connections(t *testing.T) {
 		externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
 		assertions.AssertThatObject(t, objectassert.Connection(t, primaryConn.ID()).
 			HasPrimaryIdentifier(externalObjectIdentifier).
-			HasFailoverAllowedToAccounts(
-				[]string{
-					accountId.Name(),
-				},
-			),
+			HasFailoverAllowedToAccounts(accountId),
 		)
 
 		// Try to create repllication on secondary account

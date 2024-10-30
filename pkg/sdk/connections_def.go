@@ -34,7 +34,7 @@ var ConnectionDef = g.NewInterface(
 		OptionalQueryStructField(
 			"EnableConnectionFailover",
 			g.NewQueryStruct("EnableConnectionFailover").
-				List("ToAccounts", "AccountIdentifier", g.ListOptions().NoParentheses()),
+				List("ToAccounts", "AccountIdentifier", g.ListOptions().NoParentheses().Required()),
 			g.KeywordOptions().SQL("ENABLE FAILOVER TO ACCOUNTS"),
 		).
 		OptionalQueryStructField(
@@ -43,7 +43,7 @@ var ConnectionDef = g.NewInterface(
 				OptionalQueryStructField(
 					"ToAccounts",
 					g.NewQueryStruct("ToAccounts").
-						List("Accounts", "AccountIdentifier", g.ListOptions().NoParentheses()),
+						List("Accounts", "AccountIdentifier", g.ListOptions().NoParentheses().Required()),
 					g.KeywordOptions().SQL("TO ACCOUNTS"),
 				),
 			g.KeywordOptions().SQL("DISABLE FAILOVER"),
@@ -51,14 +51,14 @@ var ConnectionDef = g.NewInterface(
 		OptionalSQL("PRIMARY").
 		OptionalQueryStructField(
 			"Set",
-			g.NewQueryStruct("Set").
+			g.NewQueryStruct("ConnectionSet").
 				OptionalComment().
 				WithValidation(g.AtLeastOneValueSet, "Comment"),
 			g.KeywordOptions().SQL("SET"),
 		).
 		OptionalQueryStructField(
 			"Unset",
-			g.NewQueryStruct("Unset").
+			g.NewQueryStruct("ConnectionUnset").
 				OptionalSQL("COMMENT").
 				WithValidation(g.AtLeastOneValueSet, "Comment"),
 			g.KeywordOptions().SQL("UNSET"),
@@ -95,8 +95,8 @@ var ConnectionDef = g.NewInterface(
 		Text("Name").
 		OptionalText("Comment").
 		Bool("IsPrimary").
-		Text("Primary").
-		Field("FailoverAllowedToAccounts", "[]string").
+		Field("Primary", "ExternalObjectIdentifier").
+		Field("FailoverAllowedToAccounts", "[]AccountIdentifier").
 		Text("ConnectionUrl").
 		Text("OrganizationName").
 		Text("AccountLocator"),

@@ -5,12 +5,11 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 )
 
 func (c *ConnectionModel) WithAsReplicaOfIdentifier(asReplicaOf sdk.ExternalObjectIdentifier) *ConnectionModel {
 	asReplicaOfString := strings.ReplaceAll(asReplicaOf.FullyQualifiedName(), `"`, "")
-	c.AsReplicaOf = tfconfig.StringVariable(asReplicaOfString)
+	c.AsReplicaOf = config.StringVariable(asReplicaOfString)
 	return c
 }
 

@@ -42,8 +42,8 @@ func (c *ConnectionResourceAssert) HasCommentString(expected string) *Connection
 	return c
 }
 
-func (c *ConnectionResourceAssert) HasEnableFailoverString(expected string) *ConnectionResourceAssert {
-	c.AddAssertion(assert.ValueSet("enable_failover", expected))
+func (c *ConnectionResourceAssert) HasEnableFailoverToAccountsString(expected string) *ConnectionResourceAssert {
+	c.AddAssertion(assert.ValueSet("enable_failover_to_accounts", expected))
 	return c
 }
 

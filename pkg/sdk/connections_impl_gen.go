@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"log"
 	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -119,18 +120,41 @@ func (r *ShowConnectionRequest) toOpts() *ShowConnectionOptions {
 
 func (r connectionRow) convert() *Connection {
 	c := &Connection{
-		SnowflakeRegion:           r.SnowflakeRegion,
-		CreatedOn:                 r.CreatedOn,
-		AccountName:               r.AccountName,
-		Name:                      r.Name,
-		Primary:                   r.Primary,
-		FailoverAllowedToAccounts: ParseCommaSeparatedStringArray(r.FailoverAllowedToAccounts, false),
-		ConnectionUrl:             r.ConnectionUrl,
-		OrganizationName:          r.OrganizationName,
-		AccountLocator:            r.AccountLocator,
+		SnowflakeRegion:  r.SnowflakeRegion,
+		CreatedOn:        r.CreatedOn,
+		AccountName:      r.AccountName,
+		Name:             r.Name,
+		ConnectionUrl:    r.ConnectionUrl,
+		OrganizationName: r.OrganizationName,
+		AccountLocator:   r.AccountLocator,
 	}
-	b, _ := strconv.ParseBool(r.IsPrimary)
-	c.IsPrimary = b
+
+	parsedIsPrimary, err := strconv.ParseBool(r.IsPrimary)
+	if err != nil {
+		log.Printf("unable to parse bool is_primary for connection: %v, err = %s", r.IsPrimary, err)
+	} else {
+		c.IsPrimary = parsedIsPrimary
+	}
+
+	primaryExternalId, err := ParseExternalObjectIdentifier(r.Primary)
+	if err != nil {
+		log.Printf("unable to parse primary connection external identifier: %v, err = %s", r.Primary, err)
+	} else {
+		c.Primary = primaryExternalId
+	}
+
+	allowedToAccounts := make([]AccountIdentifier, 0)
+	allowedAccountsString := ParseCommaSeparatedStringArray(r.FailoverAllowedToAccounts, false)
+	for _, accountString := range allowedAccountsString {
+		accountId, err := ParseAccountIdentifier(accountString)
+		if err != nil {
+			log.Printf("unable to print account identifier for 'enable failover to accounts' account %s, err = %v", accountString, err)
+			continue
+		}
+		allowedToAccounts = append(allowedToAccounts, accountId)
+	}
+	c.FailoverAllowedToAccounts = allowedToAccounts
+
 	if r.Comment.Valid {
 		c.Comment = String(r.Comment.String)
 	}

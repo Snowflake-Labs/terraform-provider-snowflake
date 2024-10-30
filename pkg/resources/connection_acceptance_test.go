@@ -26,7 +26,7 @@ import (
 
 func TestAcc_Connection_Basic(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+	//_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
@@ -38,7 +38,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 		return strings.ToLower(fmt.Sprintf("%s-%s.snowflakecomputing.com", organizationName, objectName))
 	}
 
-	connectionModel := model.Connection("t", id.Name())
+	connectionModel := model.Connection("t", id.Name())//.WithIsPrimary(true)
 	connectionModelWithComment := model.Connection("t", id.Name()).WithComment(comment)
 
 	// TODO: [SNOW-1763442]
@@ -73,7 +73,8 @@ func TestAcc_Connection_Basic(t *testing.T) {
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
 							HasNoAsReplicaOf().
 							HasNoEnableFailoverToAccounts().
-							HasNoIsPrimary().
+							// HasNoIsPrimary().
+							HasIsPrimaryString("default").
 							HasCommentString(""),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
