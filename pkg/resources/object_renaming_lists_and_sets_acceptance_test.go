@@ -1,11 +1,18 @@
 package resources_test
 
 import (
+	"context"
 	"fmt"
+	"reflect"
+	"regexp"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	tfjson "github.com/hashicorp/terraform-json"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -31,7 +38,7 @@ func TestAcc_BasicListFlow(t *testing.T) {
 					{"name": "", "string": "333", "int": 333},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"name": "", "string": "111", "int": "111"},
 						{"name": "", "string": "222", "int": "222"},
 						{"name": "", "string": "333", "int": "333"},
@@ -46,7 +53,7 @@ func TestAcc_BasicListFlow(t *testing.T) {
 					{"name": "", "string": "333", "int": 333},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"name": "", "string": "222", "int": "222"},
 						{"name": "", "string": "444", "int": "444"},
 						{"name": "", "string": "333", "int": "333"},
@@ -61,7 +68,7 @@ func TestAcc_BasicListFlow(t *testing.T) {
 					{"name": "", "string": "111", "int": 111},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"name": "", "string": "444", "int": "444"},
 						{"name": "", "string": "333", "int": "333"},
 						{"name": "", "string": "111", "int": "111"},
@@ -76,7 +83,7 @@ func TestAcc_BasicListFlow(t *testing.T) {
 					{"name": "", "string": "444", "int": 444},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"name": "", "string": "222", "int": "222"},
 						{"name": "", "string": "333", "int": "333"},
 						{"name": "", "string": "444", "int": "444"},
@@ -92,7 +99,7 @@ func TestAcc_BasicListFlow(t *testing.T) {
 					{"name": "", "string": "222", "int": 222},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"name": "", "string": "444", "int": "444"},
 						{"name": "", "string": "555", "int": "555"},
 						{"name": "", "string": "333", "int": "333"},
@@ -109,7 +116,7 @@ func TestAcc_BasicListFlow(t *testing.T) {
 					{"name": "", "string": "222", "int": 222},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"name": "", "string": "444", "int": "444"},
 						{"name": "", "string": "555", "int": "555"},
 						{"name": "", "string": "333", "int": "333"},
@@ -117,7 +124,7 @@ func TestAcc_BasicListFlow(t *testing.T) {
 					}),
 				),
 			},
-			// Add an item that is identical to another one (currently, failing)
+			// Add an item that is identical to another one (currently, failing because hash duplicates are not handled)
 			// {
 			//	Config: objectRenamingConfigList([]map[string]any{
 			//		{"name": "", "string": "444", "int": 444},
@@ -141,6 +148,7 @@ func TestAcc_BasicListFlow(t *testing.T) {
 }
 
 // This test researches the possibility of performing update instead of remove + add item
+
 func TestAcc_ListNameUpdate(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
@@ -158,7 +166,7 @@ func TestAcc_ListNameUpdate(t *testing.T) {
 					{"name": "column2", "string": "222", "int": 222},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"name": "column1", "string": "111", "int": "111"},
 						{"name": "column2", "string": "222", "int": "222"},
 					}),
@@ -170,7 +178,7 @@ func TestAcc_ListNameUpdate(t *testing.T) {
 					{"name": "column1", "string": "111", "int": 111},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"name": "column2", "string": "222", "int": "222"},
 						{"name": "column1", "string": "111", "int": "111"},
 					}),
@@ -184,7 +192,7 @@ func TestAcc_ListNameUpdate(t *testing.T) {
 					{"name": "column1", "string": "111", "int": 111},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"name": "column3", "string": "222", "int": "222"},
 						{"name": "column1", "string": "111", "int": "111"},
 					}),
@@ -216,7 +224,7 @@ func TestAcc_ListsWithDuplicatedItems(t *testing.T) {
 					{"string": "333", "int": 333},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"string": "111", "int": "111"},
 						{"string": "222", "int": "222"},
 						{"string": "333", "int": "333"},
@@ -234,7 +242,7 @@ func TestAcc_ListsWithDuplicatedItems(t *testing.T) {
 					{"string": "333", "int": 333},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
 						{"string": "111", "int": "111"},
 						{"string": "111", "int": "111"},
 						{"string": "222", "int": "222"},
@@ -255,11 +263,13 @@ func objectRenamingConfigList(listItems []map[string]any) string {
 			nameField = fmt.Sprintf(`name = "%s"`, *name)
 		}
 		return fmt.Sprintf(`
-list {
-	%[1]s
-	string = "%[2]s"
-	int = %[3]d
-}
+
+	list {
+		%[1]s
+		string = "%[2]s"
+		int = %[3]d
+	}
+
 `, nameField, s, i)
 	}
 
@@ -273,13 +283,32 @@ list {
 	}
 
 	return fmt.Sprintf(`
-resource "snowflake_object_renaming" "test" {
-	%s
-}
+
+	resource "snowflake_object_renaming" "test" {
+		%s
+	}
+
 `, generatedListItems)
 }
 
-func TestAcc_BasicManuallyOrderedListFlow(t *testing.T) {
+type objectRenamingPlanCheck func(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse)
+
+func (fn objectRenamingPlanCheck) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	fn(ctx, req, resp)
+}
+
+func assertObjectRenamingDatabaseChangelogAndClearIt(changelog resources.ObjectRenamingDatabaseChangelog) plancheck.PlanCheck {
+	return objectRenamingPlanCheck(func(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+		if !reflect.DeepEqual(resources.ObjectRenamingDatabaseInstance.ChangeLog, changelog) {
+			resp.Error = fmt.Errorf("expected %+v changelog for this step, but got: %+v", changelog, resources.ObjectRenamingDatabaseInstance.ChangeLog)
+		}
+		resources.ObjectRenamingDatabaseInstance.ChangeLog.Added = nil
+		resources.ObjectRenamingDatabaseInstance.ChangeLog.Removed = nil
+		resources.ObjectRenamingDatabaseInstance.ChangeLog.Changed = nil
+	})
+}
+
+func TestAcc_SupportedActions(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	acc.TestAccPreCheck(t)
@@ -292,148 +321,649 @@ func TestAcc_BasicManuallyOrderedListFlow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
-					{"name": "name1", "order": 1},
-					{"name": "name2", "order": 2},
-					{"name": "name3", "order": 3},
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+					{"name": "nameThree", "type": "NUMBER", "order": 30},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name1"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name2"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name3"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "nameThree"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.type", "NUMBER"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.order", "30"),
 				),
 			},
-			// Change values
+			// Drop item (any position)
 			{
-				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
-					{"name": "name2", "order": 1},
-					{"name": "name2", "order": 2},
-					{"name": "name4", "order": 3},
-				}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name2"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name4"),
-				),
-			},
-			// Change the order
-			{
-				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
-					{"name": "name4", "order": 3},
-					{"name": "name2", "order": 2},
-					{"name": "name2", "order": 1},
-				}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name2"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name4"),
-				),
-			},
-			// change order and values
-			{
-				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
-					{"name": "name1", "order": 2},
-					{"name": "name2", "order": 3},
-					{"name": "name3", "order": 1},
-				}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name3"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name1"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name2"),
-				),
-			},
-			// Add items
-			{
-				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
-					{"name": "name4", "order": 4}, // added
-					{"name": "name1", "order": 2},
-					{"name": "name5", "order": 5}, // added
-					{"name": "name2", "order": 3},
-					{"name": "name3", "order": 1},
-					{"name": "name6", "order": 6}, // added
-				}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name3"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name1"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name2"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.3.name", "name4"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.4.name", "name5"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.5.name", "name6"),
-				),
-			},
-			// Remove items
-			// The removal is kind of remove + update when you remove from the middle of the list,
-			// because some items have to jump into place of removed ones.
-			// With the Terraform SDKv2, it would be hard to achieve "shift after removal" functionality without assuming that,
-			// e.g., none of the items were changed between the states. The topic is further discussed in the research documentation.
-			{
-				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
-					{"name": "name4", "order": 2},
-					{"name": "name5", "order": 3},
-					{"name": "name2", "order": 1},
-					{"name": "name6", "order": 4},
-				}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name4"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name5"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.3.name", "name6"),
-				),
-			},
-			// Change externally
-			{
-				PreConfig: func() {
-					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[0].Name = "name changed externally"
-					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[1].Name = "name changed externally"
-					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[2].Name = "name changed externally"
-					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[3].Name = "name changed externally"
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Removed: []resources.ObjectRenamingDatabaseManuallyOrderedListItem{
+								{Name: "nameTwo", Type: "STRING"},
+							},
+						}),
+					},
 				},
 				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
-					{"name": "name4", "order": 2},
-					{"name": "name5", "order": 3},
-					{"name": "name2", "order": 1},
-					{"name": "name6", "order": 4},
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameThree", "type": "NUMBER", "order": 30},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name4"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name5"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.3.name", "name6"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameThree"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "NUMBER"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "30"),
 				),
 			},
-			// Add externally
+			// Add item (at the end)
 			{
-				PreConfig: func() {
-					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList = append(resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList, resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "name added externally"})
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Added: []resources.ObjectRenamingDatabaseManuallyOrderedListItem{
+								{Name: "nameFour", Type: "INT"},
+							},
+						}),
+					},
 				},
 				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
-					{"name": "name4", "order": 2},
-					{"name": "name5", "order": 3},
-					{"name": "name2", "order": 1},
-					{"name": "name6", "order": 4},
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameThree", "type": "NUMBER", "order": 30},
+					{"name": "nameFour", "type": "INT", "order": 40},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name4"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name5"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.3.name", "name6"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameThree"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "NUMBER"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "30"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "nameFour"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.type", "INT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.order", "40"),
 				),
 			},
-			// Removed externally
+			// Rename item / Change item type (any position; compatible type change)
 			{
-				PreConfig: func() {
-					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList = resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[1:]
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Changed: []resources.ObjectRenamingDatabaseChangelogChange{
+								{
+									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameOne", Type: "TEXT"},
+									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameOneV2", Type: "STRING"},
+								},
+								{
+									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameThree", Type: "NUMBER"},
+									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameThreeV2", Type: "INT"},
+								},
+								{
+									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFour", Type: "INT"},
+									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFourV2", Type: "NUMBER"},
+								},
+							},
+						}),
+					},
 				},
 				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
-					{"name": "name4", "order": 2},
-					{"name": "name5", "order": 3},
-					{"name": "name2", "order": 1},
-					{"name": "name6", "order": 4},
+					{"name": "nameOneV2", "type": "STRING", "order": 10},
+					{"name": "nameThreeV2", "type": "INT", "order": 30},
+					{"name": "nameFourV2", "type": "NUMBER", "order": 40},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "name2"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "name4"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "name5"),
-					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.3.name", "name6"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOneV2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameThreeV2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "INT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "30"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "nameFourV2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.type", "NUMBER"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.order", "40"),
+				),
+			},
+			// Reorder items in the configuration
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{}),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameFourV2", "type": "NUMBER", "order": 40},
+					{"name": "nameThreeV2", "type": "INT", "order": 30},
+					{"name": "nameOneV2", "type": "STRING", "order": 10},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOneV2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameThreeV2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "INT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "30"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "nameFourV2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.type", "NUMBER"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.order", "40"),
+				),
+			},
+			// (after reorder) Drop item (any position)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Removed: []resources.ObjectRenamingDatabaseManuallyOrderedListItem{
+								{Name: "nameThreeV2", Type: "INT"},
+							},
+						}),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameFourV2", "type": "NUMBER", "order": 40},
+					{"name": "nameOneV2", "type": "STRING", "order": 10},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOneV2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameFourV2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "NUMBER"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "40"),
+				),
+			},
+			// (after reorder) Add item (at the end)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Added: []resources.ObjectRenamingDatabaseManuallyOrderedListItem{
+								{Name: "nameFive", Type: "INT"},
+							},
+						}),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameFive", "type": "INT", "order": 50},
+					{"name": "nameFourV2", "type": "NUMBER", "order": 40},
+					{"name": "nameOneV2", "type": "STRING", "order": 10},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOneV2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameFourV2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "NUMBER"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "40"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "nameFive"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.type", "INT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.order", "50"),
+				),
+			},
+			// (after reorder) Rename item / Change item type (any position; compatible type change)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Changed: []resources.ObjectRenamingDatabaseChangelogChange{
+								{
+									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameOneV2", Type: "STRING"},
+									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameOneV10", Type: "TEXT"},
+								},
+								{
+									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFourV2", Type: "NUMBER"},
+									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFourV10", Type: "INT"},
+								},
+								{
+									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFive", Type: "INT"},
+									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFiveV10", Type: "NUMBER"},
+								},
+							},
+						}),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameFiveV10", "type": "NUMBER", "order": 50},
+					{"name": "nameFourV10", "type": "INT", "order": 40},
+					{"name": "nameOneV10", "type": "TEXT", "order": 10},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOneV10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameFourV10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "INT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "40"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "nameFiveV10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.type", "NUMBER"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.order", "50"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_UnsupportedActions_AddItemsNotAtTheEnd(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
+	acc.TestAccPreCheck(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+				),
+			},
+			// Add item (in the middle)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(
+							"snowflake_object_renaming.test",
+							"manually_ordered_list",
+							tfjson.ActionUpdate,
+							sdk.String("[map[name:nameOne order:10 type:TEXT] map[name:nameTwo order:20 type:STRING]]"),
+							sdk.String("[map[name:atTheBeginning order:15 type:TEXT] map[name:nameTwo order:20 type:STRING] map[name:inTheMiddle order:17 type:INT] map[name:nameTwo order:20 type:STRING]]"),
+						),
+					},
+					// PostChecks don't apply when the expected error is set
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "atTheBeginning", "type": "TEXT", "order": 15},
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "inTheMiddle", "type": "INT", "order": 17},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				ExpectError: regexp.MustCompile("unable to add a new item: \\{Name:atTheBeginning Type:TEXT}, in the middle\nunable to add a new item: \\{Name:inTheMiddle Type:INT}, in the middle"),
+			},
+			// Try to go back to the original state (with flipped items in config)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{}),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_UnsupportedActions_ChangeItemTypeToIncompatibleOne(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
+	acc.TestAccPreCheck(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+				),
+			},
+			// Change item type (incompatible change)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(
+							"snowflake_object_renaming.test",
+							"manually_ordered_list",
+							tfjson.ActionUpdate,
+							sdk.String("[map[name:nameOne order:10 type:TEXT] map[name:nameTwo order:20 type:STRING]]"),
+							sdk.String("[map[name:nameOne order:10 type:NUMBER] map[name:nameTwo order:20 type:STRING]]"),
+						),
+					},
+					// PostChecks don't apply when the expected error is set
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "NUMBER", "order": 10},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				ExpectError: regexp.MustCompile("unable to change item type from TEXT to NUMBER"),
+			},
+			// Try to go back to the original state (with flipped items in config)
+			{
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionNoop),
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{}),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_UnsupportedActions_ExternalChange_AddNewItem(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
+	acc.TestAccPreCheck(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+				),
+			},
+			// Add one item externally
+			{
+				PreConfig: func() {
+					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList = append(resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList, resources.ObjectRenamingDatabaseManuallyOrderedListItem{
+						Name: "externalItem",
+						Type: "INT",
+					})
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(
+							"snowflake_object_renaming.test",
+							"manually_ordered_list",
+							tfjson.ActionUpdate,
+							sdk.String("[map[name:nameOne order:10 type:TEXT] map[name:nameTwo order:20 type:STRING]]"),
+							sdk.String("[map[name:nameOne order:10 type:NUMBER] map[name:nameTwo order:20 type:STRING] map[name:externalItem order:-1 type:INT]]"),
+						),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "NUMBER", "order": 10},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				ExpectError: regexp.MustCompile("detected external changes in manually_ordered_list"),
+			},
+			// Try to go back to the original state (after external correction)
+			{
+				PreConfig: func() {
+					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList = resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[:len(resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList)-1]
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{}),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_UnsupportedActions_ExternalChange_RemoveItem(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
+	acc.TestAccPreCheck(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameThree", "type": "INT", "order": 30},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "nameThree"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.type", "INT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.order", "30"),
+				),
+			},
+			// Remove one item externally
+			{
+				PreConfig: func() {
+					// Remove middle item
+					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList = append(resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[:1], resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[2])
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(
+							"snowflake_object_renaming.test",
+							"manually_ordered_list",
+							tfjson.ActionUpdate,
+							sdk.String("[map[name:nameOne order:10 type:NUMBER] map[name:nameTwo order:20 type:STRING] map[name:nameThree order:30 type:INT]]"),
+							sdk.String("[map[name:nameOne order:10 type:NUMBER] map[name:nameThree order:30 type:INT]]"),
+						),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameThree", "type": "INT", "order": 30},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				ExpectError: regexp.MustCompile("detected external changes in manually_ordered_list"),
+			},
+			// Try to go back to the original state (after external correction)
+			{
+				PreConfig: func() {
+					// Bring the middle item back
+					resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList = []resources.ObjectRenamingDatabaseManuallyOrderedListItem{
+						resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[0],
+						{
+							Name: "nameTwo",
+							Type: "STRING",
+						},
+						resources.ObjectRenamingDatabaseInstance.ManuallyOrderedList[1],
+					}
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{}),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameThree", "type": "INT", "order": 30},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "nameThree"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.type", "INT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.order", "30"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_UnsupportedActions_ChangingTheOrderOfItem(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
+	acc.TestAccPreCheck(t)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameThree", "type": "INT", "order": 30},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "nameThree"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.type", "INT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.order", "30"),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "TEXT", "order": 15},
+					{"name": "nameThree", "type": "INT", "order": 35},
+					{"name": "nameTwo", "type": "STRING", "order": 25},
+				}),
+				ExpectError: regexp.MustCompile("unable to add a new item: \\{Name:nameOne Type:TEXT}, in the middle\nunable to add a new item: \\{Name:nameTwo Type:STRING}, in the middle"),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionNoop),
+					},
+				},
+				Config: objectRenamingConfigManuallyOrderedList([]map[string]any{
+					{"name": "nameOne", "type": "TEXT", "order": 10},
+					{"name": "nameThree", "type": "INT", "order": 30},
+					{"name": "nameTwo", "type": "STRING", "order": 20},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.name", "nameOne"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.type", "TEXT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.0.order", "10"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.name", "nameTwo"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.type", "STRING"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.1.order", "20"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.name", "nameThree"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.type", "INT"),
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.2.order", "30"),
 				),
 			},
 		},
@@ -441,18 +971,19 @@ func TestAcc_BasicManuallyOrderedListFlow(t *testing.T) {
 }
 
 func objectRenamingConfigManuallyOrderedList(listItems []map[string]any) string {
-	generateListItem := func(name string, order int) string {
+	generateListItem := func(name string, itemType string, order int) string {
 		return fmt.Sprintf(`
 manually_ordered_list {
 	name = "%s"
+	type = "%s"
 	order = %d
 }
-`, name, order)
+`, name, itemType, order)
 	}
 
 	generatedListItems := ""
 	for _, item := range listItems {
-		generatedListItems += generateListItem(item["name"].(string), item["order"].(int))
+		generatedListItems += generateListItem(item["name"].(string), item["type"].(string), item["order"].(int))
 	}
 
 	return fmt.Sprintf(`

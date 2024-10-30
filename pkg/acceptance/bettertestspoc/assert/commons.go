@@ -3,6 +3,7 @@ package assert
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -106,56 +107,55 @@ func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier) {
 	objectAssert.VerifyAll(t)
 }
 
-func HasListItemsOrderIndependent(resourceKey string, attributePath string, expectedItems []map[string]string) resource.TestCheckFunc {
+func ContainsExactlyInAnyOrder(resourceKey string, attributePath string, expectedItems []map[string]string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		var actualItems []map[string]string
+		var resourceValue *terraform.ResourceState
+
+		if value, ok := state.RootModule().Resources[resourceKey]; ok {
+			resourceValue = value
+		} else {
+			return fmt.Errorf("resource %s not found", resourceKey)
+		}
 
 		// Allocate space for actualItems and assert length
-		for key, value := range state.RootModule().Resources {
-			if resourceKey == key {
-				for attrKey, attrValue := range value.Primary.Attributes {
-					if strings.HasPrefix(attrKey, attributePath) {
-						attr := strings.TrimPrefix(attrKey, attributePath+".")
+		for attrKey, attrValue := range resourceValue.Primary.Attributes {
+			if strings.HasPrefix(attrKey, attributePath) {
+				attr := strings.TrimPrefix(attrKey, attributePath+".")
 
-						if attr == "#" {
-							attrValueLen, err := strconv.Atoi(attrValue)
-							if err != nil {
-								return fmt.Errorf("failed to convert length of the attribute %s: %w", attrKey, err)
-							}
-							if len(expectedItems) != attrValueLen {
-								return fmt.Errorf("expected to find %d items in %s, but found %d", len(expectedItems), attributePath, attrValueLen)
-							}
+				if attr == "#" {
+					attrValueLen, err := strconv.Atoi(attrValue)
+					if err != nil {
+						return fmt.Errorf("failed to convert length of the attribute %s: %w", attrKey, err)
+					}
+					if len(expectedItems) != attrValueLen {
+						return fmt.Errorf("expected to find %d items in %s, but found %d", len(expectedItems), attributePath, attrValueLen)
+					}
 
-							actualItems = make([]map[string]string, attrValueLen)
-							for i := range actualItems {
-								actualItems[i] = make(map[string]string)
-							}
-						}
+					actualItems = make([]map[string]string, attrValueLen)
+					for i := range actualItems {
+						actualItems[i] = make(map[string]string)
 					}
 				}
 			}
 		}
 
 		// Gather all actual items
-		for key, value := range state.RootModule().Resources {
-			if resourceKey == key {
-				for attrKey, attrValue := range value.Primary.Attributes {
-					if strings.HasPrefix(attrKey, attributePath) {
-						attr := strings.TrimPrefix(attrKey, attributePath+".")
+		for attrKey, attrValue := range resourceValue.Primary.Attributes {
+			if strings.HasPrefix(attrKey, attributePath) {
+				attr := strings.TrimPrefix(attrKey, attributePath+".")
 
-						if strings.HasSuffix(attr, "%") || strings.HasSuffix(attr, "#") {
-							continue
-						}
+				if strings.HasSuffix(attr, "%") || strings.HasSuffix(attr, "#") {
+					continue
+				}
 
-						attrParts := strings.SplitN(attr, ".", 2)
-						index, indexErr := strconv.Atoi(attrParts[0])
-						isIndex := indexErr == nil
+				attrParts := strings.SplitN(attr, ".", 2)
+				index, indexErr := strconv.Atoi(attrParts[0])
+				isIndex := indexErr == nil
 
-						if len(attrParts) > 1 && isIndex {
-							itemKey := attrParts[1]
-							actualItems[index][itemKey] = attrValue
-						}
-					}
+				if len(attrParts) > 1 && isIndex {
+					itemKey := attrParts[1]
+					actualItems[index][itemKey] = attrValue
 				}
 			}
 		}
@@ -163,10 +163,8 @@ func HasListItemsOrderIndependent(resourceKey string, attributePath string, expe
 		errs := make([]error, 0)
 		for _, actualItem := range actualItems {
 			found := false
-			for _, expectedItem := range expectedItems {
-				if maps.Equal(actualItem, expectedItem) {
-					found = true
-				}
+			if slices.ContainsFunc(expectedItems, func(expected map[string]string) bool { return maps.Equal(expected, actualItem) }) {
+				found = true
 			}
 			if !found {
 				errs = append(errs, fmt.Errorf("unexpected item found: %s", actualItem))
@@ -175,15 +173,14 @@ func HasListItemsOrderIndependent(resourceKey string, attributePath string, expe
 
 		for _, expectedItem := range expectedItems {
 			found := false
-			for _, actualItem := range actualItems {
-				if maps.Equal(actualItem, expectedItem) {
-					found = true
-				}
+			if slices.ContainsFunc(actualItems, func(actual map[string]string) bool { return maps.Equal(actual, expectedItem) }) {
+				found = true
 			}
 			if !found {
 				errs = append(errs, fmt.Errorf("expected item to be found, but it wasn't: %s", expectedItem))
 			}
 		}
+
 		return errors.Join(errs...)
 	}
 }
