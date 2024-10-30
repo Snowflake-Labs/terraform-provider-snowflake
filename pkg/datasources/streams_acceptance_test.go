@@ -55,7 +55,7 @@ func TestAcc_Streams(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -94,7 +94,7 @@ func TestAcc_Streams(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -141,7 +141,7 @@ func TestAcc_StreamOnTable(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -206,7 +206,7 @@ func TestAcc_StreamOnExternalTable(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -293,7 +293,68 @@ func TestAcc_StreamOnDirectoryTable(t *testing.T) {
 	})
 }
 
-// TODO (this pr): after merge, test stream on views.
+func TestAcc_StreamOnView(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	resourceName := "snowflake_stream_on_view.test"
+	dsName := "data.snowflake_streams.test"
+
+	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
+	t.Cleanup(cleanupTable)
+	statement := fmt.Sprintf("SELECT * FROM %s", table.ID().FullyQualifiedName())
+	view, cleanupView := acc.TestClient().View.CreateView(t, statement)
+	t.Cleanup(cleanupView)
+
+	model := model.StreamOnView("test", id.DatabaseName(), id.Name(), id.SchemaName(), view.ID().FullyQualifiedName()).
+		WithComment("foo").
+		WithAppendOnly("true")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model) + streamsDatasource(id.Name(), resourceName),
+				Check: assert.AssertThat(t,
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.#", "1")),
+					resourceshowoutputassert.StreamsDatasourceShowOutput(t, "snowflake_streams.test").
+						HasCreatedOnNotEmpty().
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner(snowflakeroles.Accountadmin.Name()).
+						HasTableName(view.ID().FullyQualifiedName()).
+						HasSourceType(sdk.StreamSourceTypeView).
+						HasBaseTables(table.ID()).
+						HasType("DELTA").
+						HasStale("false").
+						HasMode(sdk.StreamModeAppendOnly).
+						HasStaleAfterNotEmpty().
+						HasInvalidReason("N/A").
+						HasOwnerRoleType("ROLE"),
+					assert.Check(resource.TestCheckResourceAttrSet(dsName, "streams.0.describe_output.0.created_on")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.comment", "foo")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.table_name", view.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.source_type", string(sdk.StreamSourceTypeView))),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.base_tables.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.type", "DELTA")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.mode", string(sdk.StreamModeAppendOnly))),
+					assert.Check(resource.TestCheckResourceAttrSet(dsName, "streams.0.describe_output.0.stale_after")),
+					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.owner_role_type", "ROLE")),
+				),
+			},
+		},
+	})
+}
 
 func streamsDatasource(like, resourceName string) string {
 	return fmt.Sprintf(`
