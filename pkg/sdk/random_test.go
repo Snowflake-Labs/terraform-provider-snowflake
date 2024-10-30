@@ -10,6 +10,7 @@ var (
 
 	// TODO: Add to the generator
 	emptyAccountObjectIdentifier             = NewAccountObjectIdentifier("")
+	emptyExternalObjectIdentifier            = NewExternalObjectIdentifier(NewAccountIdentifier("", ""), NewObjectIdentifierFromFullyQualifiedName(""))
 	emptyDatabaseObjectIdentifier            = NewDatabaseObjectIdentifier("", "")
 	emptySchemaObjectIdentifier              = NewSchemaObjectIdentifier("", "", "")
 	emptySchemaObjectIdentifierWithArguments = NewSchemaObjectIdentifierWithArguments("", "", "")
@@ -37,6 +38,10 @@ func randomDatabaseObjectIdentifier() DatabaseObjectIdentifier {
 
 func randomDatabaseObjectIdentifierInDatabase(databaseId AccountObjectIdentifier) DatabaseObjectIdentifier {
 	return NewDatabaseObjectIdentifier(databaseId.Name(), random.StringN(12))
+}
+
+func randomAccountIdentifier() AccountIdentifier {
+	return NewAccountIdentifier(random.StringN(12), random.StringN(12))
 }
 
 func randomAccountObjectIdentifier() AccountObjectIdentifier {
