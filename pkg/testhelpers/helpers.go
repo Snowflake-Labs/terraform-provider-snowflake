@@ -2,6 +2,8 @@ package testhelpers
 
 import (
 	"database/sql"
+	"os"
+	"path/filepath"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
@@ -22,4 +24,12 @@ func WithMockDb(t *testing.T, f func(*sql.DB, sqlmock.Sqlmock)) {
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
+}
+
+func TestFile(t *testing.T, filename string, dat []byte) string {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), filename)
+	err := os.WriteFile(path, dat, 0o600)
+	require.NoError(t, err)
+	return path
 }

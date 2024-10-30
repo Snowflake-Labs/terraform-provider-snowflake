@@ -3,7 +3,6 @@ package provider
 import (
 	"crypto/rsa"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -12,57 +11,14 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
 	"github.com/snowflakedb/gosnowflake"
-	"github.com/youmark/pkcs8"
-	"golang.org/x/crypto/ssh"
 )
-
-type authenticationType string
-
-const (
-	authenticationTypeSnowflake           authenticationType = "SNOWFLAKE"
-	authenticationTypeOauth               authenticationType = "OAUTH"
-	authenticationTypeExternalBrowser     authenticationType = "EXTERNALBROWSER"
-	authenticationTypeOkta                authenticationType = "OKTA"
-	authenticationTypeJwtLegacy           authenticationType = "JWT"
-	authenticationTypeJwt                 authenticationType = "SNOWFLAKE_JWT"
-	authenticationTypeTokenAccessor       authenticationType = "TOKENACCESSOR"
-	authenticationTypeUsernamePasswordMfa authenticationType = "USERNAMEPASSWORDMFA"
-)
-
-var allAuthenticationTypes = []authenticationType{
-	authenticationTypeSnowflake,
-	authenticationTypeOauth,
-	authenticationTypeExternalBrowser,
-	authenticationTypeOkta,
-	authenticationTypeJwt,
-	authenticationTypeTokenAccessor,
-	authenticationTypeUsernamePasswordMfa,
-}
-
-func toAuthenticatorType(s string) (gosnowflake.AuthType, error) {
-	s = strings.ToUpper(s)
-	switch s {
-	case string(authenticationTypeSnowflake):
-		return gosnowflake.AuthTypeSnowflake, nil
-	case string(authenticationTypeOauth):
-		return gosnowflake.AuthTypeOAuth, nil
-	case string(authenticationTypeExternalBrowser):
-		return gosnowflake.AuthTypeExternalBrowser, nil
-	case string(authenticationTypeOkta):
-		return gosnowflake.AuthTypeOkta, nil
-	case string(authenticationTypeJwt), string(authenticationTypeJwtLegacy):
-		return gosnowflake.AuthTypeJwt, nil
-	case string(authenticationTypeTokenAccessor):
-		return gosnowflake.AuthTypeTokenAccessor, nil
-	case string(authenticationTypeUsernamePasswordMfa):
-		return gosnowflake.AuthTypeUsernamePasswordMFA, nil
-	default:
-		return gosnowflake.AuthType(0), fmt.Errorf("invalid authenticator type: %s", s)
-	}
-}
 
 type protocol string
 
@@ -85,6 +41,45 @@ func toProtocol(s string) (protocol, error) {
 		return protocolHttps, nil
 	default:
 		return "", fmt.Errorf("invalid protocol: %s", s)
+	}
+}
+
+type driverLogLevel string
+
+const (
+	logLevelOff driverLogLevel = "OFF"
+	// The levels below are lowercase on purpose to match the driver docs.
+	logLevelError driverLogLevel = "error"
+	logLevelWarn  driverLogLevel = "warn"
+	logLevelPrint driverLogLevel = "print"
+	logLevelTrace driverLogLevel = "trace"
+	logLevelDebug driverLogLevel = "debug"
+	logLevelInfo  driverLogLevel = "info"
+)
+
+var allDriverLogLevels = []driverLogLevel{
+	logLevelOff,
+	logLevelError,
+	logLevelWarn,
+	logLevelPrint,
+	logLevelTrace,
+	logLevelDebug,
+	logLevelInfo,
+}
+
+func toDriverLogLevel(s string) (driverLogLevel, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case strings.ToUpper(string(logLevelOff)),
+		strings.ToUpper(string(logLevelError)),
+		strings.ToUpper(string(logLevelWarn)),
+		strings.ToUpper(string(logLevelPrint)),
+		strings.ToUpper(string(logLevelTrace)),
+		strings.ToUpper(string(logLevelDebug)),
+		strings.ToUpper(string(logLevelInfo)):
+		return driverLogLevel(s), nil
+	default:
+		return "", fmt.Errorf("invalid driver log level: %s", s)
 	}
 }
 
@@ -122,32 +117,7 @@ func readFile(privateKeyPath string) ([]byte, error) {
 }
 
 func parsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey, error) {
-	privateKeyBlock, _ := pem.Decode(privateKeyBytes)
-	if privateKeyBlock == nil {
-		return nil, fmt.Errorf("could not parse private key, key is not in PEM format")
-	}
-
-	if privateKeyBlock.Type == "ENCRYPTED PRIVATE KEY" {
-		if len(passhrase) == 0 {
-			return nil, fmt.Errorf("private key requires a passphrase, but private_key_passphrase was not supplied")
-		}
-		privateKey, err := pkcs8.ParsePKCS8PrivateKeyRSA(privateKeyBlock.Bytes, passhrase)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse encrypted private key with passphrase, only ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc are supported err = %w", err)
-		}
-		return privateKey, nil
-	}
-
-	privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse private key err = %w", err)
-	}
-
-	rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
-	if !ok {
-		return nil, errors.New("privateKey not of type RSA")
-	}
-	return rsaPrivateKey, nil
+	return sdk.ParsePrivateKey(privateKeyBytes, passhrase)
 }
 
 type GetRefreshTokenResponseBody struct {
@@ -200,4 +170,49 @@ func GetAccessTokenWithRefreshToken(
 
 func envNameFieldDescription(description, envName string) string {
 	return fmt.Sprintf("%s Can also be sourced from the `%s` environment variable.", description, envName)
+}
+
+func handleStringField(d *schema.ResourceData, key string, field *string) error {
+	if v, ok := d.GetOk(key); ok {
+		*field = v.(string)
+	}
+	return nil
+}
+
+func handleBoolField(d *schema.ResourceData, key string, field *bool) error {
+	if v, ok := d.GetOk(key); ok {
+		*field = v.(bool)
+	}
+	return nil
+}
+
+func handleDurationAttribute(d *schema.ResourceData, key string, field *time.Duration) error {
+	if v, ok := d.GetOk(key); ok {
+		*field = time.Second * time.Duration(int64(v.(int)))
+	}
+	return nil
+}
+
+func handleIntAttribute(d *schema.ResourceData, key string, field *int) error {
+	if v, ok := d.GetOk(key); ok {
+		*field = v.(int)
+	}
+	return nil
+}
+
+func handleBooleanStringAttribute(d *schema.ResourceData, key string, field *gosnowflake.ConfigBool) error {
+	if v := d.Get(key).(string); v != provider.BooleanDefault {
+		parsed, err := provider.BooleanStringToBool(v)
+		if err != nil {
+			return err
+		}
+		// *field = sdk.Bool(parsed)
+		if parsed {
+			*field = gosnowflake.ConfigBoolTrue
+		} else {
+			*field = gosnowflake.ConfigBoolFalse
+		}
+
+	}
+	return nil
 }

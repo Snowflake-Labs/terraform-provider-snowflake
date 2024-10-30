@@ -40,16 +40,39 @@ func GenerateX509(t *testing.T) string {
 	return encode(t, "CERTIFICATE", caBytes)
 }
 
-// GenerateRSAPublicKey returns an RSA public key without BEGIN and END markers, and key's hash.
+// GenerateRSAPublicKey returns an RSA public key WITHOUT BEGIN and END markers, and key's hash.
 func GenerateRSAPublicKey(t *testing.T) (string, string) {
 	t.Helper()
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	key := GenerateRSAPrivateKey(t)
 
 	pub := key.Public()
 	b, err := x509.MarshalPKIXPublicKey(pub.(*rsa.PublicKey))
 	require.NoError(t, err)
 	return encode(t, "RSA PUBLIC KEY", b), hash(t, b)
+}
+
+// GenerateRSAPrivateKey returns an RSA private key.
+func GenerateRSAPrivateKey(t *testing.T) *rsa.PrivateKey {
+	t.Helper()
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	return key
+}
+
+// GenerateRSAPrivateKeyWithPassphrase returns an RSA private key with its passphrase.
+func GenerateRSAPrivateKeyWithPassphrase(t *testing.T) ([]byte, string) {
+	t.Helper()
+	key := GenerateRSAPrivateKey(t)
+	block := &pem.Block{
+		Type:  "ENCRYPTED PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(key),
+	}
+	pwd := AlphaN(8)
+	var err error
+	block, err = x509.EncryptPEMBlock(rand.Reader, block.Type, block.Bytes, []byte(pwd), x509.PEMCipherAES256)
+	require.NoError(t, err)
+
+	return pem.EncodeToMemory(block), pwd
 }
 
 func hash(t *testing.T, b []byte) string {

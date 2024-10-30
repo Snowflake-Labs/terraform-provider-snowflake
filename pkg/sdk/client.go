@@ -188,6 +188,29 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	return client, nil
 }
 
+// func NewClientOnlyConfig(cfg *gosnowflake.Config) (*Client, error) {
+// 	if cfg == nil {
+// 		log.Printf("[DEBUG] Searching for default config in credentials chain...\n")
+// 		cfg = DefaultConfig()
+// 	}
+
+// 	dsn, err := gosnowflake.DSN(cfg)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	db, err := sqlx.Open("snowflake", dsn)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("open snowflake connection: %w", err)
+// 	}
+// 	client := &Client{
+// 		db:     db.Unsafe(),
+// 		config: cfg,
+// 	}
+// 	client.initialize()
+// 	return client, nil
+// }
+
 func NewClientFromDB(db *sql.DB) *Client {
 	dbx := sqlx.NewDb(db, "snowflake")
 	client := &Client{
