@@ -216,8 +216,8 @@ func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		return diag.FromErr(err)
 	}
 
-	connectionSetRequest := new(sdk.SetConnectionRequest)
-	connectionUnsetRequest := new(sdk.UnsetConnectionRequest)
+	connectionSetRequest := new(sdk.ConnectionSetRequest)
+	connectionUnsetRequest := new(sdk.ConnectionUnsetRequest)
 
 	if d.HasChange("enable_failover_to_accounts") {
 		before, after := d.GetChange("enable_failover_to_accounts")
@@ -280,14 +280,14 @@ func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	if (*connectionSetRequest != sdk.SetConnectionRequest{}) {
+	if (*connectionSetRequest != sdk.ConnectionSetRequest{}) {
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).WithSet(*connectionSetRequest))
 		if err != nil {
 			return diag.FromErr(err)
 		}
 	}
 
-	if (*connectionUnsetRequest != sdk.UnsetConnectionRequest{}) {
+	if (*connectionUnsetRequest != sdk.ConnectionUnsetRequest{}) {
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).WithUnset(*connectionUnsetRequest))
 		if err != nil {
 			return diag.FromErr(err)

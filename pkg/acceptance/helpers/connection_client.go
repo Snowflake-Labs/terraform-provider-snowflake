@@ -46,7 +46,7 @@ func (c *ConnectionClient) CreateReplication(t *testing.T, id sdk.AccountObjectI
 	return connection, c.DropFunc(t, id)
 }
 
-func (c *ConnectionClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, req *sdk.AlterConnectionRequest) {
+func (c *ConnectionClient) Alter(t *testing.T, req *sdk.AlterConnectionRequest) {
 	t.Helper()
 	ctx := context.Background()
 

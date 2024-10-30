@@ -254,7 +254,7 @@ func TestInt_Connections(t *testing.T) {
 
 		// Set
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
-			WithSet(*sdk.NewSetRequest().
+			WithSet(*sdk.NewSetConnectionRequest().
 				WithComment("new integration test comment")))
 		require.NoError(t, err)
 
@@ -265,7 +265,7 @@ func TestInt_Connections(t *testing.T) {
 
 		// Unset
 		err = client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
-			WithUnset(*sdk.NewUnsetRequest().
+			WithUnset(*sdk.NewUnsetConnectionRequest().
 				WithComment(true)))
 		require.NoError(t, err)
 

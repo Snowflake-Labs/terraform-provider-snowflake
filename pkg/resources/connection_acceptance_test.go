@@ -297,7 +297,7 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 			{
 				PreConfig: func() {
 					acc.TestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(id).
-						WithSet(*sdk.NewSetRequest().
+						WithSet(*sdk.NewSetConnectionRequest().
 							WithComment("external comment")))
 				},
 				Config: config.FromModel(t, connectionModel),
