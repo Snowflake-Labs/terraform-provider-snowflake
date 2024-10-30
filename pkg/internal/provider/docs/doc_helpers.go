@@ -3,6 +3,7 @@ package docs
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 // deprecationMessageRegex is the message that should be used in resource/datasource DeprecationMessage to get a nice link in the documentation to the replacing resource.
@@ -22,4 +23,12 @@ func GetDeprecatedResourceReplacement(deprecationMessage string) (replacement st
 // RelativeLink allows us to get relative link to the resource/datasource in the same subtree. Will have to change when we introduce subcategories.
 func RelativeLink(title string, path string) string {
 	return fmt.Sprintf(`[%s](./%s)`, title, path)
+}
+
+func PossibleValuesListed[T ~string | ~int](values []T) string {
+	valuesWrapped := make([]string, len(values))
+	for i, value := range values {
+		valuesWrapped[i] = fmt.Sprintf("`%v`", value)
+	}
+	return strings.Join(valuesWrapped, " | ")
 }

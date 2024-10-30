@@ -154,6 +154,115 @@ func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 	})
 }
 
+func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	nonExisting := "NON-EXISTENT"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+		},
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      providerConfigWithRole(testprofiles.Default, nonExisting),
+				ExpectError: regexp.MustCompile("Role 'NON-EXISTENT' specified in the connect string does not exist or not authorized."),
+			},
+			{
+				Config:      providerConfigWithWarehouse(testprofiles.Default, nonExisting),
+				ExpectError: regexp.MustCompile("The requested warehouse does not exist or not authorized."),
+			},
+			// check that using a non-existing warehouse with disabled verification succeeds
+			{
+				Config: providerConfigWithWarehouseAndDisabledValidation(testprofiles.Default, nonExisting),
+			},
+		},
+	})
+}
+
+// prove we can use tri-value booleans, similarly to the ones in resources
+func TestAcc_Provider_triValueBoolean(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+		},
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.97.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `"true"`),
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_invalidConfigurations(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      providerConfigWithClientIp(testprofiles.Default, "invalid"),
+				ExpectError: regexp.MustCompile("expected client_ip to contain a valid IP"),
+			},
+			{
+				Config:      providerConfigWithProtocol(testprofiles.Default, "invalid"),
+				ExpectError: regexp.MustCompile("invalid protocol: INVALID"),
+			},
+			{
+				Config:      providerConfigWithPort(testprofiles.Default, 123456789),
+				ExpectError: regexp.MustCompile(`expected "port" to be a valid port number or 0, got: 123456789`),
+			},
+			{
+				Config:      providerConfigWithAuthType(testprofiles.Default, "invalid"),
+				ExpectError: regexp.MustCompile("invalid authenticator type: INVALID"),
+			},
+			{
+				Config:      providerConfigWithOktaUrl(testprofiles.Default, "invalid"),
+				ExpectError: regexp.MustCompile(`expected "okta_url" to have a host, got invalid`),
+			},
+			{
+				Config:      providerConfigWithTimeout(testprofiles.Default, "login_timeout", -1),
+				ExpectError: regexp.MustCompile(`expected login_timeout to be at least \(0\), got -1`),
+			},
+			{
+				Config:      providerConfigWithTokenEndpoint(testprofiles.Default, "invalid"),
+				ExpectError: regexp.MustCompile(`expected "token_endpoint" to have a host, got invalid`),
+			},
+		},
+	})
+}
+
+// TODO(SNOW-1754319): for JWT auth flow, check setting authenticator value as `SNOWFLAKE_JWT`.
+// This will ensure https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983 is solved.
+
 func emptyProviderConfig() string {
 	return `
 provider "snowflake" {
@@ -166,6 +275,112 @@ provider "snowflake" {
 	profile = "%[1]s"
 }
 `, profile) + datasourceConfig()
+}
+
+func providerConfigWithRole(profile, role string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	role    = "%[2]s"
+}
+`, profile, role) + datasourceConfig()
+}
+
+func providerConfigWithWarehouse(profile, warehouse string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	warehouse    = "%[2]s"
+}
+`, profile, warehouse) + datasourceConfig()
+}
+
+func providerConfigWithClientStoreTemporaryCredential(profile, clientStoreTemporaryCredential string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	client_store_temporary_credential    = %[2]s
+}
+`, profile, clientStoreTemporaryCredential) + datasourceConfig()
+}
+
+func providerConfigWithWarehouseAndDisabledValidation(profile, warehouse string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	warehouse    = "%[2]s"
+	validate_default_parameters = "false"
+}
+`, profile, warehouse) + datasourceConfig()
+}
+
+func providerConfigWithProtocol(profile, protocol string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	protocol    = "%[2]s"
+}
+`, profile, protocol) + datasourceConfig()
+}
+
+func providerConfigWithPort(profile string, port int) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	port    = %[2]d
+}
+`, profile, port) + datasourceConfig()
+}
+
+func providerConfigWithAuthType(profile, authType string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	authenticator    = "%[2]s"
+}
+`, profile, authType) + datasourceConfig()
+}
+
+func providerConfigWithOktaUrl(profile, oktaUrl string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	okta_url    = "%[2]s"
+}
+`, profile, oktaUrl) + datasourceConfig()
+}
+
+func providerConfigWithTimeout(profile, timeoutName string, timeoutSeconds int) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	%[2]s    = %[3]d
+}
+`, profile, timeoutName, timeoutSeconds) + datasourceConfig()
+}
+
+func providerConfigWithTokenEndpoint(profile, tokenEndpoint string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	token_accessor {
+		token_endpoint = "%[2]s"
+		refresh_token = "refresh_token"
+		client_id = "client_id"
+		client_secret = "client_secret"
+		redirect_uri = "redirect_uri"
+	}
+}
+`, profile, tokenEndpoint) + datasourceConfig()
+}
+
+func providerConfigWithClientIp(profile, clientIp string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	client_ip    = "%[2]s"
+}
+`, profile, clientIp) + datasourceConfig()
 }
 
 func providerConfigWithUser(user string, profile string) string {
