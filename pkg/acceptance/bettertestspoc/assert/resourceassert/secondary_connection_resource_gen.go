@@ -47,6 +47,11 @@ func (s *SecondaryConnectionResourceAssert) HasFullyQualifiedNameString(expected
 	return s
 }
 
+func (s *SecondaryConnectionResourceAssert) HasIsPrimaryString(expected string) *SecondaryConnectionResourceAssert {
+	s.AddAssertion(assert.ValueSet("is_primary", expected))
+	return s
+}
+
 func (s *SecondaryConnectionResourceAssert) HasNameString(expected string) *SecondaryConnectionResourceAssert {
 	s.AddAssertion(assert.ValueSet("name", expected))
 	return s
@@ -68,6 +73,11 @@ func (s *SecondaryConnectionResourceAssert) HasNoComment() *SecondaryConnectionR
 
 func (s *SecondaryConnectionResourceAssert) HasNoFullyQualifiedName() *SecondaryConnectionResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("fully_qualified_name"))
+	return s
+}
+
+func (s *SecondaryConnectionResourceAssert) HasNoIsPrimary() *SecondaryConnectionResourceAssert {
+	s.AddAssertion(assert.ValueNotSet("is_primary"))
 	return s
 }
 

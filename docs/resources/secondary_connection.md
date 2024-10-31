@@ -45,6 +45,7 @@ resource "snowflake_secondary_connection" "complete" {
 
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+- `is_primary` (Boolean) Indicates if the connection has been changed to primary. If change is detected, the secondary connection will be recreated.
 - `show_output` (List of Object) Outputs the result of `SHOW CONNECTIONS` for the given secret. (see [below for nested schema](#nestedatt--show_output))
 
 <a id="nestedatt--show_output"></a>

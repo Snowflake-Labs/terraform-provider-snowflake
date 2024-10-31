@@ -13,6 +13,7 @@ type SecondaryConnectionModel struct {
 	AsReplicaOf        tfconfig.Variable `json:"as_replica_of,omitempty"`
 	Comment            tfconfig.Variable `json:"comment,omitempty"`
 	FullyQualifiedName tfconfig.Variable `json:"fully_qualified_name,omitempty"`
+	IsPrimary          tfconfig.Variable `json:"is_primary,omitempty"`
 	Name               tfconfig.Variable `json:"name,omitempty"`
 
 	*config.ResourceModelMeta
@@ -62,6 +63,11 @@ func (s *SecondaryConnectionModel) WithFullyQualifiedName(fullyQualifiedName str
 	return s
 }
 
+func (s *SecondaryConnectionModel) WithIsPrimary(isPrimary bool) *SecondaryConnectionModel {
+	s.IsPrimary = tfconfig.BoolVariable(isPrimary)
+	return s
+}
+
 func (s *SecondaryConnectionModel) WithName(name string) *SecondaryConnectionModel {
 	s.Name = tfconfig.StringVariable(name)
 	return s
@@ -83,6 +89,11 @@ func (s *SecondaryConnectionModel) WithCommentValue(value tfconfig.Variable) *Se
 
 func (s *SecondaryConnectionModel) WithFullyQualifiedNameValue(value tfconfig.Variable) *SecondaryConnectionModel {
 	s.FullyQualifiedName = value
+	return s
+}
+
+func (s *SecondaryConnectionModel) WithIsPrimaryValue(value tfconfig.Variable) *SecondaryConnectionModel {
+	s.IsPrimary = value
 	return s
 }
 

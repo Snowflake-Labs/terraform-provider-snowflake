@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -51,6 +52,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
 							HasAsReplicaOfIdentifier(primaryConnectionAsExternalId).
+							HasIsPrimaryString("false").
 							HasCommentString(""),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, secondartyConnectionModel.ResourceReference()).
@@ -105,6 +107,27 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 
 						resourceshowoutputassert.ConnectionShowOutput(t, secondartyConnectionModel.ResourceReference()).
 							HasComment(""),
+					),
+				),
+			},
+			// recreate when exteranlly promoted to primary
+			{
+				PreConfig: func() {
+					acc.TestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(id).WithPrimary(true))
+				},
+				Config: config.FromModel(t, secondartyConnectionModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(secondartyConnectionModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModel.ResourceReference()).
+							HasIsPrimaryString("false"),
+
+						resourceshowoutputassert.ConnectionShowOutput(t, secondartyConnectionModel.ResourceReference()).
+							HasIsPrimary(false),
 					),
 				),
 			},
