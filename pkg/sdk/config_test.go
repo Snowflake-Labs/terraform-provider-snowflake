@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"os"
 	"testing"
 	"time"
 
@@ -37,9 +36,8 @@ func TestLoadConfigFile(t *testing.T) {
 	role='SECURITYADMIN'
 	`
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
-	t.Setenv(snowflakeenvs.ConfigPath, configPath)
 
-	m, err := loadConfigFile()
+	m, err := loadConfigFile(configPath)
 	require.NoError(t, err)
 	assert.Equal(t, "TEST_ACCOUNT", *m["default"].Account)
 	assert.Equal(t, "TEST_USER", *m["default"].User)
@@ -178,19 +176,16 @@ func TestProfileConfig(t *testing.T) {
 	t.Run("with not found profile", func(t *testing.T) {
 		t.Setenv(snowflakeenvs.ConfigPath, configPath)
 
-		config, err := ProfileConfig("orgadmin")
-		require.NoError(t, err)
-		require.Nil(t, config)
+		_, err := ProfileConfig("orgadmin")
+		require.ErrorContains(t, err, "profile \"orgadmin\" not found in file")
 	})
 
 	t.Run("with not found config", func(t *testing.T) {
-		dir, err := os.UserHomeDir()
-		require.NoError(t, err)
-		t.Setenv(snowflakeenvs.ConfigPath, dir)
+		name := random.AlphaN(8)
+		t.Setenv(snowflakeenvs.ConfigPath, name)
 
-		config, err := ProfileConfig("orgadmin")
-		require.Error(t, err)
-		require.Nil(t, config)
+		_, err = ProfileConfig("orgadmin")
+		require.ErrorContains(t, err, fmt.Sprintf("open %s: no such file or directory", name))
 	})
 }
 
