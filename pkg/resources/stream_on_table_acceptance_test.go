@@ -82,7 +82,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeDefault).
@@ -140,7 +140,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -192,7 +192,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -241,7 +241,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeDefault).
@@ -619,7 +619,7 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 						HasComment("foo").
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -736,7 +736,7 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 						HasComment("foo").
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
