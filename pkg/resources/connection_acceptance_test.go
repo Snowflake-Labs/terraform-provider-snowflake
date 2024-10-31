@@ -34,7 +34,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 	secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
 
-	connectionModel := model.Connection("t", id.Name()) //.WithIsPrimary(true)
+	connectionModel := model.Connection("t", id.Name())
 	connectionModelWithComment := model.Connection("t", id.Name()).WithComment(comment)
 	connectionModelWithFailover := model.Connection("t", id.Name()).WithEnableFailover(secondaryAccountId)
 

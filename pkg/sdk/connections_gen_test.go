@@ -88,19 +88,19 @@ func TestConnections_Alter(t *testing.T) {
 
 	t.Run("validation: at least one of the fields [opts.EnableConnectionFailover.ToAccounts] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-        opts.EnableConnectionFailover = &EnableConnectionFailover{}
+		opts.EnableConnectionFailover = &EnableConnectionFailover{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterConnectionOptions.EnableConnectionFailover", "ToAccounts"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Set.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set= &ConnectionSet{}
+		opts.Set = &ConnectionSet{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterConnectionOptions.Set", "Comment"))
 	})
 
 	t.Run("validation: at least one of the fields [opts.Unset.Comment] should be set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset= &ConnectionUnset{}
+		opts.Unset = &ConnectionUnset{}
 		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterConnectionOptions.Unset", "Comment"))
 	})
 
@@ -137,13 +137,13 @@ func TestConnections_Alter(t *testing.T) {
 
 	t.Run("set comment", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Set= &ConnectionSet{Comment: String("test comment")}
+		opts.Set = &ConnectionSet{Comment: String("test comment")}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s SET COMMENT = 'test comment'", id.FullyQualifiedName())
 	})
 
 	t.Run("unset comment", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.Unset= &ConnectionUnset{Comment: Bool(true)}
+		opts.Unset = &ConnectionUnset{Comment: Bool(true)}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER CONNECTION %s UNSET COMMENT", id.FullyQualifiedName())
 	})
 }
