@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/youmark/pkcs8"
@@ -90,7 +91,7 @@ func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config
 	if !configBoolSet(baseConfig.ValidateDefaultParameters) {
 		baseConfig.ValidateDefaultParameters = mergeConfig.ValidateDefaultParameters
 	}
-	if mergedMap := MergeMaps(baseConfig.Params, mergeConfig.Params); len(mergedMap) > 0 {
+	if mergedMap := collections.MergeMaps(baseConfig.Params, mergeConfig.Params); len(mergedMap) > 0 {
 		baseConfig.Params = mergedMap
 	}
 	if baseConfig.ClientIP == nil {
@@ -190,16 +191,6 @@ func boolToConfigBool(v bool) gosnowflake.ConfigBool {
 		return gosnowflake.ConfigBoolTrue
 	}
 	return gosnowflake.ConfigBoolFalse
-}
-
-func MergeMaps[M ~map[K]V, K comparable, V any](src ...M) M {
-	merged := make(M)
-	for _, m := range src {
-		for k, v := range m {
-			merged[k] = v
-		}
-	}
-	return merged
 }
 
 func getConfigFileName() (string, error) {
