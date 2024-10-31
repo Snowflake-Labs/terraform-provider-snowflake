@@ -87,7 +87,7 @@ func TestAcc_StreamOnView_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(view.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeView).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeDefault).
@@ -145,7 +145,7 @@ func TestAcc_StreamOnView_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(view.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeView).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -197,7 +197,7 @@ func TestAcc_StreamOnView_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(view.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeView).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -246,7 +246,7 @@ func TestAcc_StreamOnView_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(view.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeView).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeDefault).
@@ -642,7 +642,7 @@ func TestAcc_StreamOnView_At(t *testing.T) {
 						HasComment("foo").
 						HasTableName(view.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeView).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -762,7 +762,7 @@ func TestAcc_StreamOnView_Before(t *testing.T) {
 						HasComment("foo").
 						HasTableName(view.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeView).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).

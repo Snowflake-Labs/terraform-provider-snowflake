@@ -92,7 +92,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -154,7 +154,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -206,7 +206,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -255,7 +255,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -304,7 +304,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -708,7 +708,7 @@ func TestAcc_StreamOnExternalTable_At(t *testing.T) {
 						HasComment("foo").
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -800,7 +800,7 @@ func TestAcc_StreamOnExternalTable_Before(t *testing.T) {
 						HasComment("foo").
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).

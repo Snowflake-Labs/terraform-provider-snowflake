@@ -9,6 +9,24 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
+### snowflake_streams data source changes
+New filtering options:
+- `like`
+- `in`
+- `starts_with`
+- `limit`
+- `with_describe`
+
+New output fields
+- `show_output`
+- `describe_output`
+
+Breaking changes:
+- `database` and `schema` are right now under `in` field
+- `streams` field now organizes output of show under `show_output` field and the output of describe under `describe_output` field.
+
+Please adjust your Terraform configuration files.
+
 ### *(behavior change)* Provider configuration rework
 On our road to v1, we have decided to rework configuration to address the most common issues (see a [roadmap entry](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#providers-configuration-rework)). We have created a list of topics we wanted to address before v1. We will prepare an announcement soon. The following subsections describe the things addressed in the v0.98.0.
 
