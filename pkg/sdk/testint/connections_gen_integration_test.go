@@ -16,6 +16,9 @@ import (
 const ConnectionFailoverToAccountInSameRegionErrorMessage = "The connection cannot be failed over to an account in the same region"
 
 func TestInt_Connections(t *testing.T) {
+	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
 	client := testClient(t)
 	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
@@ -25,9 +28,6 @@ func TestInt_Connections(t *testing.T) {
 	accountId := testClientHelper().Account.GetAccountIdentifier(t)
 
 	t.Run("Create minimal", func(t *testing.T) {
-		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		require.NoError(t, err)
 
@@ -43,11 +43,7 @@ func TestInt_Connections(t *testing.T) {
 			HasNoComment().
 			HasIsPrimary(true).
 			HasPrimaryIdentifier(externalObjectIdentifier).
-			HasFailoverAllowedToAccounts(
-				[]string{
-					accountId.Name(),
-				},
-			).
+			HasFailoverAllowedToAccounts(accountId).
 			HasOrganizationName(sessionDetails.OrganizationName).
 			HasAccountLocator(client.GetAccountLocator()).
 			HasConnectionUrl(
@@ -59,9 +55,6 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Create all options", func(t *testing.T) {
-		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		err := client.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id).
 			WithIfNotExists(true).
@@ -77,11 +70,7 @@ func TestInt_Connections(t *testing.T) {
 			HasComment("test comment for connection").
 			HasIsPrimary(true).
 			HasPrimaryIdentifier(externalObjectIdentifier).
-			HasFailoverAllowedToAccounts(
-				[]string{
-					accountId.Name(),
-				},
-			).
+			HasFailoverAllowedToAccounts(accountId).
 			HasOrganizationName(sessionDetails.OrganizationName).
 			HasAccountLocator(client.GetAccountLocator()).
 			HasConnectionUrl(
@@ -93,58 +82,45 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Alter enable failover", func(t *testing.T) {
-		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
+
+		secondaryAccountId := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 
 		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
 		t.Cleanup(connectionCleanup)
 
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
 			WithEnableConnectionFailover(
-				*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
-					[]sdk.AccountIdentifier{
-						secondaryAccountId,
-					},
+				*sdk.NewEnableConnectionFailoverRequest([]sdk.AccountIdentifier{secondaryAccountId})),
+		)
+		// TODO: [SNOW-1763442]
+		// require.NoError(t, err)
+		require.ErrorContains(t, err, ConnectionFailoverToAccountInSameRegionErrorMessage)
+
+		externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
+		assertions.AssertThatObject(t, objectassert.Connection(t, id).
+			HasSnowflakeRegion(sessionDetails.Region).
+			HasAccountName(sessionDetails.AccountName).
+			HasName(id.Name()).
+			HasNoComment().
+			HasIsPrimary(true).
+			HasPrimaryIdentifier(externalObjectIdentifier).
+			HasFailoverAllowedToAccounts(
+				accountId,
+				secondaryAccountId,
+			).
+			HasOrganizationName(sessionDetails.OrganizationName).
+			HasAccountLocator(client.GetAccountLocator()).
+			HasConnectionUrl(
+				strings.ToLower(
+					fmt.Sprintf("%s-%s.snowflakecomputing.com", sessionDetails.OrganizationName, id.Name()),
 				),
 			),
 		)
-		require.ErrorContains(t, err, ConnectionFailoverToAccountInSameRegionErrorMessage)
-
-		// TODO: [SNOW-1763442]
-		/*
-		   require.NoError(t, err)
-		   externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
-		   assertions.AssertThatObject(t, objectassert.Connection(t, id).
-		       HasSnowflakeRegion(sessionDetails.Region).
-		       HasAccountName(sessionDetails.AccountName).
-		       HasName(id.Name()).
-		       HasNoComment().
-		       HasIsPrimary(true).
-		       HasPrimaryIdentifier(externalObjectIdentifier).
-		       HasFailoverAllowedToAccounts(
-		           []string{
-		               accountId.Name(),
-		               secondaryAccountId.Name(),
-		           },
-		       ).
-		       HasOrganizationName(sessionDetails.OrganizationName).
-		       HasAccountLocator(client.GetAccountLocator()),
-		       HasConnectionUrl(
-		           strings.ToLower(
-		               fmt.Sprintf("%s-%s.snowflakecomputing.com", sessionDetails.OrganizationName, id.Name()),
-		           ),
-		       ),
-		   )
-		*/
 	})
 
 	t.Run("Create as replica of", func(t *testing.T) {
-		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
 
 		primaryConn, connectionCleanup := testClientHelper().Connection.Create(t, testClientHelper().Ids.RandomAccountObjectIdentifier())
@@ -152,12 +128,7 @@ func TestInt_Connections(t *testing.T) {
 
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(primaryConn.ID()).
 			WithEnableConnectionFailover(
-				*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
-					[]sdk.AccountIdentifier{
-						secondaryAccountId,
-					},
-				),
-			),
+				*sdk.NewEnableConnectionFailoverRequest([]sdk.AccountIdentifier{secondaryAccountId})),
 		)
 		require.ErrorContains(t, err, ConnectionFailoverToAccountInSameRegionErrorMessage)
 		// TODO: [SNOW-1763442]
@@ -165,43 +136,33 @@ func TestInt_Connections(t *testing.T) {
 		// require.NoError(t, err)
 
 		// create replica on secondary account
-		/*
-			externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
-			err = secondaryClient.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id).
-				WithAsReplicaOf(sdk.AsReplicaOfRequest{
-					AsReplicaOf: externalObjectIdentifier,
-				}))
-			t.Cleanup(testClientHelper().Connection.DropFunc(t, id))
-			require.NoError(t, err)
+		externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
+		err = secondaryClient.Connections.Create(ctx, sdk.NewCreateConnectionRequest(id).WithAsReplicaOf(externalObjectIdentifier))
+		t.Cleanup(testClientHelper().Connection.DropFunc(t, id))
+		require.NoError(t, err)
 
-			assertions.AssertThatObject(t, objectassert.Connection(t, id).
-				HasSnowflakeRegion(sessionDetails.Region).
-				HasAccountName(sessionDetails.AccountName).
-				HasName(id.Name()).
-				HasNoComment().
-				HasIsPrimary(false).
-				HasPrimaryIdentifier(externalObjectIdentifier).
-				HasFailoverAllowedToAccounts(
-					[]string{
-						accountId.Name(),
-						secondaryAccountId.Name(),
-					},
-				).
-				HasOrganizationName(sessionDetails.OrganizationName).
-				HasAccountLocator(client.GetAccountLocator()).
-				HasConnectionUrl(
-					strings.ToLower(
-						fmt.Sprintf("%s-%s.snowflakecomputing.com", sessionDetails.OrganizationName, id.Name()),
-					),
+		assertions.AssertThatObject(t, objectassert.Connection(t, id).
+			HasSnowflakeRegion(sessionDetails.Region).
+			HasAccountName(sessionDetails.AccountName).
+			HasName(id.Name()).
+			HasNoComment().
+			HasIsPrimary(false).
+			HasPrimaryIdentifier(externalObjectIdentifier).
+			HasFailoverAllowedToAccounts(
+				accountId,
+				secondaryAccountId,
+			).
+			HasOrganizationName(sessionDetails.OrganizationName).
+			HasAccountLocator(client.GetAccountLocator()).
+			HasConnectionUrl(
+				strings.ToLower(
+					fmt.Sprintf("%s-%s.snowflakecomputing.com", sessionDetails.OrganizationName, id.Name()),
 				),
-			)
-		*/
+			),
+		)
 	})
 
 	t.Run("Alter disable failover", func(t *testing.T) {
-		// TODO: [SNOW-1763442]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		secondaryAccountId := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 
@@ -211,12 +172,7 @@ func TestInt_Connections(t *testing.T) {
 		// Add secondary account to failover list
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
 			WithEnableConnectionFailover(
-				*sdk.NewEnableConnectionFailoverRequest().WithToAccounts(
-					[]sdk.AccountIdentifier{
-						secondaryAccountId,
-					},
-				),
-			),
+				*sdk.NewEnableConnectionFailoverRequest([]sdk.AccountIdentifier{secondaryAccountId})),
 		)
 		require.ErrorContains(t, err, ConnectionFailoverToAccountInSameRegionErrorMessage)
 		// TODO: [SNOW-1763442]
@@ -232,11 +188,7 @@ func TestInt_Connections(t *testing.T) {
 		externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
 		assertions.AssertThatObject(t, objectassert.Connection(t, primaryConn.ID()).
 			HasPrimaryIdentifier(externalObjectIdentifier).
-			HasFailoverAllowedToAccounts(
-				[]string{
-					accountId.Name(),
-				},
-			),
+			HasFailoverAllowedToAccounts(accountId),
 		)
 
 		// Try to create repllication on secondary account
@@ -245,16 +197,13 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Alter comment", func(t *testing.T) {
-		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
 		t.Cleanup(connectionCleanup)
 
 		// Set
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
-			WithSet(*sdk.NewSetConnectionRequest().
+			WithSet(*sdk.NewConnectionSetRequest().
 				WithComment("new integration test comment")))
 		require.NoError(t, err)
 
@@ -265,7 +214,7 @@ func TestInt_Connections(t *testing.T) {
 
 		// Unset
 		err = client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
-			WithUnset(*sdk.NewUnsetConnectionRequest().
+			WithUnset(*sdk.NewConnectionUnsetRequest().
 				WithComment(true)))
 		require.NoError(t, err)
 
@@ -276,9 +225,6 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Drop", func(t *testing.T) {
-		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
 		t.Cleanup(connectionCleanup)
@@ -296,9 +242,6 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Drop with if exists", func(t *testing.T) {
-		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
 		err = client.Connections.Drop(ctx, sdk.NewDropConnectionRequest(NonExistingAccountObjectIdentifier))
 		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 
@@ -307,9 +250,6 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Show", func(t *testing.T) {
-		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
 		id1 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
@@ -326,9 +266,6 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("Show with Like", func(t *testing.T) {
-		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
 		id1 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
@@ -348,9 +285,6 @@ func TestInt_Connections(t *testing.T) {
 	})
 
 	t.Run("ShowByID", func(t *testing.T) {
-		// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-		_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		_, connectionCleanup := testClientHelper().Connection.Create(t, id)

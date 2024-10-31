@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
@@ -455,6 +456,60 @@ func TestAcc_StreamOnDirectoryTable_InvalidConfiguration(t *testing.T) {
 			{
 				Config:      config.FromModel(t, modelWithInvalidStageId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
+			},
+		},
+	})
+}
+
+func TestAcc_StreamOnDirectoryTable_ExternalStreamTypeChange(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	acc.TestAccPreCheck(t)
+	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
+	t.Cleanup(cleanupStage)
+	model := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.StreamOnDirectoryTableResource(t, model.ResourceReference()).
+							HasStreamTypeString(string(sdk.StreamSourceTypeStage)),
+						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
+							HasSourceType(sdk.StreamSourceTypeStage),
+					),
+				),
+			},
+			// external change with a different type
+			{
+				PreConfig: func() {
+					table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
+					t.Cleanup(cleanupTable)
+					acc.TestClient().Stream.DropFunc(t, id)()
+					externalChangeStream, cleanup := acc.TestClient().Stream.CreateOnTableWithRequest(t, sdk.NewCreateOnTableStreamRequest(id, table.ID()))
+					t.Cleanup(cleanup)
+					require.Equal(t, sdk.StreamSourceTypeTable, *externalChangeStream.SourceType)
+				},
+				Config: config.FromModel(t, model),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.StreamOnDirectoryTableResource(t, model.ResourceReference()).
+							HasStreamTypeString(string(sdk.StreamSourceTypeStage)),
+						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
+							HasSourceType(sdk.StreamSourceTypeStage),
+					),
+				),
 			},
 		},
 	})

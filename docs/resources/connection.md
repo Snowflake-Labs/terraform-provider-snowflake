@@ -2,14 +2,14 @@
 page_title: "snowflake_connection Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Resource used to manage connections. For more information, check connection documentation https://docs.snowflake.com/en/sql-reference/sql/create-connection.html.
+  Resource used to manage primary (not replicated) connections. For more information, check connection documentation https://docs.snowflake.com/en/sql-reference/sql/create-connection.html.
 ---
 
 !> **V1 release candidate** This resource is a release candidate for the V1. It is on the list of remaining GA objects for V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0970--v0980) to use it.
 
 # snowflake_connection (Resource)
 
-Resource used to manage connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).
+Resource used to manage primary (not replicated) connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).
 
 ## Example Usage
 
@@ -19,37 +19,13 @@ resource "snowflake_connection" "basic" {
   name = "connection_name"
 }
 
-## Enable failover to accounts
-resource "snowflake_connection" "with_enable_failover_list" {
-  name = "connection_name"
-  enable_failover_to_accounts = [
-    "<secondary_account_organization_name>.<secondary_account_name>"
-  ]
-}
-
-## As replica
-resource "snowflake_connection" "replica" {
-  name          = "connection_name"
-  as_replica_of = "<organization_name>.<account_name>.<connection_name>"
-  is_primary    = false
-}
-
-# As replica with promotion to primary
-resource "snowflake_connection" "replica_with_promotion" {
-  name          = "connection_name"
-  as_replica_of = "<organization_name>.<account_name>.<connection_name>"
-  is_primary    = true
-}
-
 ## Complete (with every optional set)
 resource "snowflake_connection" "complete" {
-  name          = "connection_name"
-  as_replica_of = "<organization_name>.<account_name>.<connection_name>"
-  is_primary    = true
+  name    = "connection_name"
+  comment = "my complete connection"
   enable_failover_to_accounts = [
     "<secondary_account_organization_name>.<secondary_account_name>"
   ]
-  comment = "my complete connection"
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -60,14 +36,12 @@ resource "snowflake_connection" "complete" {
 
 ### Required
 
-- `name` (String) String that specifies the identifier (i.e. name) for the connection. Must start with an alphabetic character and may only contain letters, decimal digits (0-9), and underscores (_). For a primary connection, the name must be unique across connection names and account names in the organization. For a secondary connection, the name must match the name of its primary connection. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `name` (String) String that specifies the identifier (i.e. name) for the connection. Must start with an alphabetic character and may only contain letters, decimal digits (0-9), and underscores (_). For a primary connection, the name must be unique across connection names and account names in the organization.  Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 
 ### Optional
 
-- `as_replica_of` (String) Specifies the identifier for a primary connection from which to create a replica (i.e. a secondary connection).
 - `comment` (String) Specifies a comment for the connection.
 - `enable_failover_to_accounts` (List of String) Enables failover for given connection to provided accounts. Specifies a list of accounts in your organization where a secondary connection for this primary connection can be promoted to serve as the primary connection. Include your organization name for each account in the list.
-- `is_primary` (Boolean)
 
 ### Read-Only
 

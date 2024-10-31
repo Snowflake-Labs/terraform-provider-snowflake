@@ -24,13 +24,12 @@ func connectionsData() string {
     }`
 }
 
-func TestAcc_Connections(t *testing.T) {
+func TestAcc_Connections_Basic(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-	//_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
-	prefix := random.AlphaN(4)
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	connectionModel := model.Connection("test", id.Name())
 
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
@@ -49,7 +48,7 @@ func TestAcc_Connections(t *testing.T) {
 				Config: dataConnections,
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_connections.test", "connections.#", "1")),
-					resourceshowoutputassert.ConnectionShowOutput(t, "snowflake_connections.test").
+					resourceshowoutputassert.ConnectionShowOutput(t, "snowflake_connection.test").
 						HasName(id.Name()).
 						HasSnowflakeRegion(acc.TestClient().Context.CurrentRegion(t)).
 						HasAccountLocator(acc.TestClient().GetAccountLocator()).
@@ -72,18 +71,24 @@ func TestAcc_Connections_Filtering(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	prefix := random.AlphaN(4)
+	prefix := random.AlphaN(3)
 	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idThree := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 
-	connectionModelOne := model.Connection("c1", idOne.Name())
+	secoundaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
+	connectionModelOne := model.Connection("c1", idOne.Name()).WithEnableFailover(secoundaryAccountId)
+	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(secoundaryAccountId, idOne)
+
 	connectionModelTwo := model.Connection("c2", idTwo.Name())
 	connectionModelThree := model.Connection("c3", idThree.Name())
 
+	secondaryConnection := model.SecondaryConnection("sc1", primaryConnectionAsExternalId.FullyQualifiedName(), idOne.FullyQualifiedName())
+
 	configWithLike := accConfig.FromModel(t, connectionModelOne) +
 		accConfig.FromModel(t, connectionModelTwo) +
-		accConfig.FromModel(t, connectionModelThree)
+		accConfig.FromModel(t, connectionModelThree) +
+		accConfig.FromModel(t, secondaryConnection)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

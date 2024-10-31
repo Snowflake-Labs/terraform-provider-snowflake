@@ -52,6 +52,11 @@ var streamCommonSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the stream.",
 	},
+	"stream_type": {
+		Type:        schema.TypeString,
+		Computed:    true,
+		Description: "Specifies a type for the stream. This field is used for checking external changes and recreating the resources if needed.",
+	},
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
@@ -203,6 +208,7 @@ func handleStreamRead(d *schema.ResourceData,
 ) error {
 	return errors.Join(
 		d.Set("comment", stream.Comment),
+		d.Set("stream_type", stream.SourceType),
 		d.Set(ShowOutputAttributeName, []map[string]any{schemas.StreamToSchema(stream)}),
 		d.Set(DescribeOutputAttributeName, []map[string]any{schemas.StreamDescriptionToSchema(*streamDescription)}),
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),

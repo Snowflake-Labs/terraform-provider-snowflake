@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"fmt"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -30,24 +31,12 @@ func TestAcc_Connection_Basic(t *testing.T) {
 	comment := random.Comment()
 
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
+	secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
 
 	connectionModel := model.Connection("t", id.Name())
 	connectionModelWithComment := model.Connection("t", id.Name()).WithComment(comment)
-
-	// TODO: [SNOW-1763442]
-	/*
-	   secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
-
-	   connectionModelWithFailover := model.Connection("t", id.Name()).WithEnableFailover(secondaryAccountId)
-
-	   replicatedConnectionModel := model.Connection("replicated_connection", id.Name()).
-	       WithAsReplicaOfIdentifier(primaryConnectionAsExternalId)
-
-	   replicatedConnectionModelWithPrimary := model.Connection("replicated_connection", id.Name()).
-	       WithAsReplicaOfIdentifier(primaryConnectionAsExternalId).
-	       WithIsPrimary(true)
-	*/
+	connectionModelWithFailover := model.Connection("t", id.Name()).WithEnableFailover(secondaryAccountId)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -65,9 +54,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
-							HasNoAsReplicaOf().
 							HasNoEnableFailoverToAccounts().
-							HasNoIsPrimary().
 							HasCommentString(""),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
@@ -86,118 +73,6 @@ func TestAcc_Connection_Basic(t *testing.T) {
 					),
 				),
 			},
-			// TODO: [SNOW-1763442]
-			// enable failover to secondary account
-			/*
-				{
-					Config: config.FromModel(t, connectionModelWithFailover),
-					Check: resource.ComposeTestCheckFunc(
-						assert.AssertThat(t,
-							resourceassert.ConnectionResource(t, connectionModelWithFailover.ResourceReference()).
-								HasNameString(id.Name()).
-								HasFullyQualifiedNameString(id.FullyQualifiedName()).
-								HasNoAsReplicaOf().
-								HasNoIsPrimary().
-								HasEnableFailoverToAccounts(secondaryAccountId),
-
-							resourceshowoutputassert.ConnectionShowOutput(t, connectionModelWithFailover.ResourceReference()).
-								HasIsPrimary(true).
-								HasPrimaryIdentifier(primaryConnectionAsExternalId).
-								HasFailoverAllowedToAccounts(
-									accountId,
-									secondaryAccountId,
-								),
-						),
-					),
-				},
-			*/
-			// TODO: [SNOW-1763442]
-			// create as replica of
-			/*
-				{
-					Config: config.FromModel(t, replicatedConnectionModel),
-					Check: resource.ComposeTestCheckFunc(
-						assert.AssertThat(t,
-							resourceassert.ConnectionResource(t, replicatedConnectionModel.ResourceReference()).
-								HasNameString(id.Name()).
-								HasFullyQualifiedNameString(id.FullyQualifiedName()).
-								HasAsReplicaOfIdentifier(primaryConnectionAsExternalId).
-								HasNoEnableFailoverToAccounts().
-								HasIsPrimaryString("false").
-								HasNoComment(),
-
-							resourceshowoutputassert.ConnectionShowOutput(t, replicatedConnectionModel.ResourceReference()).
-								HasName(id.Name()).
-								HasSnowflakeRegion(acc.TestClient().Context.CurrentRegion(t)).
-								HasAccountLocator(acc.TestClient().GetAccountLocator()).
-								HasAccountName(secondaryAccountId.AccountName()).
-								HasOrganizationName(secondaryAccountId.OrganizationName()).
-								HasComment("").
-								HasIsPrimary(false).
-								HasPrimaryIdentifier(primaryConnectionAsExternalId).
-								HasFailoverAllowedToAccounts(secondaryAccountId).
-								HasConnectionUrl(
-									acc.TestClient().Connection.GetConnectionUrl(secondaryAccountId.OrganizationName(), id.Name()),
-								),
-						),
-					),
-				},
-			*/
-			// TODO: [SNOW-1763442]
-			// promote to primary
-			/*
-				{
-					Config: config.FromModel(t, replicatedConnectionModelWithPrimary),
-					Check: resource.ComposeTestCheckFunc(
-						assert.AssertThat(t,
-							resourceassert.ConnectionResource(t, replicatedConnectionModelWithPrimary.ResourceReference()).
-								HasNameString(id.Name()).
-								HasFullyQualifiedNameString(id.FullyQualifiedName()).
-								HasAsReplicaOfString(primaryConnectionAsExternalId.FullyQualifiedName()).
-								HasNoEnableFailoverToAccounts().
-								HasIsPrimaryString("true").
-								HasNoComment(),
-
-							resourceshowoutputassert.ConnectionShowOutput(t, replicatedConnectionModelWithPrimary.ResourceReference()).
-								HasName(id.Name()).
-								HasSnowflakeRegion(acc.TestClient().Context.CurrentRegion(t)).
-								HasAccountLocator(acc.TestClient().GetAccountLocator()).
-								HasAccountName(secondaryAccountId.AccountName()).
-								HasOrganizationName(secondaryAccountId.OrganizationName()).
-								HasComment("").
-								HasIsPrimary(true).
-								HasPrimaryIdentifier(primaryConnectionAsExternalId).
-								HasFailoverAllowedToAccounts(
-									secondaryAccountId,
-								).
-								HasConnectionUrl(
-									acc.TestClient().Connection.GetConnectionUrl(secondaryAccountId.OrganizationName(), id.Name()),
-								),
-						),
-					),
-				},
-			*/
-			// TODO: [SNOW-1763442]
-			// disable failover to accounts
-			/*
-				{
-					Config: config.FromModel(t, connectionModel),
-					Check: resource.ComposeTestCheckFunc(
-						assert.AssertThat(t,
-							resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
-								HasIsPrimaryString("true").
-								HasNoEnableFailoverToAccounts(),
-
-							resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
-								HasIsPrimary(true).
-								HasPrimaryIdentifier(primaryConnectionAsExternalId).
-								HasFailoverAllowedToAccounts(
-									accountId,
-								),
-						),
-					),
-				},
-			*/
 			// set comment
 			{
 				Config: config.FromModel(t, connectionModelWithComment),
@@ -206,9 +81,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 						resourceassert.ConnectionResource(t, connectionModelWithComment.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
-							HasNoAsReplicaOf().
 							HasNoEnableFailoverToAccounts().
-							HasNoIsPrimary().
 							HasCommentString(comment),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModelWithComment.ResourceReference()).
@@ -239,6 +112,38 @@ func TestAcc_Connection_Basic(t *testing.T) {
 					),
 				),
 			},
+			// enable failover to second account
+			{
+				Config: config.FromModel(t, connectionModelWithFailover),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.ConnectionResource(t, connectionModelWithFailover.ResourceReference()).
+							HasNameString(id.Name()).
+							HasFullyQualifiedNameString(id.FullyQualifiedName()).
+							HasEnableFailoverToAccounts(secondaryAccountId).
+							HasCommentString(""),
+
+						resourceshowoutputassert.ConnectionShowOutput(t, connectionModelWithFailover.ResourceReference()).
+							HasFailoverAllowedToAccounts(accountId, secondaryAccountId),
+					),
+				),
+			},
+			// disable failover to second account
+			{
+				Config: config.FromModel(t, connectionModel),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
+							HasNameString(id.Name()).
+							HasFullyQualifiedNameString(id.FullyQualifiedName()).
+							HasNoEnableFailoverToAccounts().
+							HasCommentString(""),
+
+						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
+							HasFailoverAllowedToAccounts(accountId),
+					),
+				),
+			},
 		},
 	})
 }
@@ -249,9 +154,11 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
+	secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
 
 	connectionModel := model.Connection("t", id.Name()).WithComment("config comment")
+	connectionModelWithFailover := model.Connection("t", id.Name()).WithEnableFailover(secondaryAccountId)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -269,9 +176,7 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
-							HasNoAsReplicaOf().
 							HasNoEnableFailoverToAccounts().
-							HasNoIsPrimary().
 							HasCommentString("config comment"),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
@@ -291,7 +196,7 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 			{
 				PreConfig: func() {
 					acc.TestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(id).
-						WithSet(*sdk.NewSetConnectionRequest().
+						WithSet(*sdk.NewConnectionSetRequest().
 							WithComment("external comment")))
 				},
 				Config: config.FromModel(t, connectionModel),
@@ -310,106 +215,63 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 					),
 				),
 			},
-		},
-	})
-}
-
-// TODO: [SNOW-1763442]
-/*
-func TestAcc_Connection_ExternalChangeToIsPrimary(t *testing.T) {
-	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
-	secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
-
-	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
-
-	connectionModel := model.Connection("t", id.Name()).WithEnableFailover(secondaryAccountId)
-	secondaryConnectionModel := model.Connection("replicated", id.Name()).WithAsReplicaOfIdentifier(primaryConnectionAsExternalId)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Connection),
-		Steps: []resource.TestStep{
-			// create
-			{
-				Config: config.FromModel(t, connectionModel),
-				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
-							HasNameString(id.Name()).
-							HasFullyQualifiedNameString(id.FullyQualifiedName()).
-							HasNoAsReplicaOf().
-							HasEnableFailoverToAccounts(secondaryAccountId).
-							HasNoIsPrimary().
-							HasCommentString(""),
-
-						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
-							HasName(id.Name()).
-							HasSnowflakeRegion(acc.TestClient().Context.CurrentRegion(t)).
-							HasAccountLocator(acc.TestClient().GetAccountLocator()).
-							HasAccountName(accountId.AccountName()).
-							HasOrganizationName(accountId.OrganizationName()).
-							HasComment("").
-							HasIsPrimary(true).
-							HasPrimaryIdentifier(primaryConnectionAsExternalId).
-							HasFailoverAllowedToAccounts(accountId, secondaryAccountId),
-					),
-				),
-			},
-			// create replication
-			{
-				Config: config.FromModel(t, secondaryConnectionModel),
-				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, secondaryConnectionModel.ResourceReference()).
-							HasNameString(id.Name()).
-							HasFullyQualifiedNameString(id.FullyQualifiedName()).
-							HasAsReplicaOfIdentifier(primaryConnectionAsExternalId).
-							HasNoEnableFailoverToAccounts().
-							HasIsPrimaryString("false").
-							HasCommentString(""),
-
-						resourceshowoutputassert.ConnectionShowOutput(t, secondaryConnectionModel.ResourceReference()).
-							HasName(id.Name()).
-							HasSnowflakeRegion(acc.SecondaryTestClient().Context.CurrentRegion(t)).
-							HasAccountLocator(acc.SecondaryTestClient().GetAccountLocator()).
-							HasAccountName(secondaryAccountId.AccountName()).
-							HasOrganizationName(secondaryAccountId.OrganizationName()).
-							HasComment("").
-							HasIsPrimary(false).
-							HasPrimaryIdentifier(primaryConnectionAsExternalId).
-							HasFailoverAllowedToAccounts(secondaryAccountId),
-					),
-				),
-			},
-			// change to primary externally
+			// externally change enable failover accounts list - add second account
 			{
 				PreConfig: func() {
-					acc.SecondaryTestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(id).WithPrimary(true))
+					acc.TestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(id).
+						WithEnableConnectionFailover(*sdk.NewEnableConnectionFailoverRequest(
+							[]sdk.AccountIdentifier{secondaryAccountId})),
+					)
 				},
-				Config: config.FromModel(t, secondaryConnectionModel),
+				Config: config.FromModel(t, connectionModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(secondaryConnectionModel.ResourceReference(), plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(connectionModel.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(
+							connectionModel.ResourceReference(),
+							"enable_failover_to_accounts",
+							tfjson.ActionUpdate,
+							sdk.String(fmt.Sprintf("[%s]", secondaryAccountId.FullyQualifiedName())),
+							nil,
+						),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, secondaryConnectionModel.ResourceReference()).
-							HasIsPrimaryString("false"),
-						resourceshowoutputassert.ConnectionShowOutput(t, secondaryConnectionModel.ResourceReference()).
-							HasIsPrimary(false),
+						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
+							HasNoEnableFailoverToAccounts(),
+						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
+							HasFailoverAllowedToAccounts(accountId),
+					),
+				),
+			},
+			// externally change disable failover
+			{
+				PreConfig: func() {
+					acc.TestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(id).WithDisableConnectionFailover(*sdk.NewDisableConnectionFailoverRequest()))
+				},
+				Config: config.FromModel(t, connectionModelWithFailover),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(connectionModelWithFailover.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(
+							connectionModel.ResourceReference(),
+							"enable_failover_to_accounts",
+							tfjson.ActionUpdate,
+							nil,
+							sdk.String(fmt.Sprintf("[%s]", secondaryAccountId.FullyQualifiedName())),
+						),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.ConnectionResource(t, connectionModelWithFailover.ResourceReference()).
+							HasEnableFailoverToAccounts(secondaryAccountId),
+						resourceshowoutputassert.ConnectionShowOutput(t, connectionModelWithFailover.ResourceReference()).
+							HasFailoverAllowedToAccounts(accountId, secondaryAccountId),
 					),
 				),
 			},
 		},
 	})
 }
-*/

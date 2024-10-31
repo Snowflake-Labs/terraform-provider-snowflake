@@ -27,7 +27,7 @@ type AlterConnectionRequest struct {
 }
 
 type EnableConnectionFailoverRequest struct {
-	ToAccounts []AccountIdentifier
+	ToAccounts []AccountIdentifier // required
 }
 
 type DisableConnectionFailoverRequest struct {
@@ -35,7 +35,7 @@ type DisableConnectionFailoverRequest struct {
 }
 
 type ToAccountsRequest struct {
-	Accounts []AccountIdentifier
+	Accounts []AccountIdentifier // required
 }
 
 type ConnectionSetRequest struct {

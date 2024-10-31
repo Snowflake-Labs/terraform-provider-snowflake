@@ -12,6 +12,7 @@ const (
 	ApiIntegration                                         resource = "snowflake_api_integration"
 	AuthenticationPolicy                                   resource = "snowflake_authentication_policy"
 	Connection                                             resource = "snowflake_connection"
+	SecondaryConnection                                    resource = "snowflake_secondary_connection"
 	CortexSearchService                                    resource = "snowflake_cortex_search_service"
 	DatabaseOld                                            resource = "snowflake_database_old"
 	Database                                               resource = "snowflake_database"

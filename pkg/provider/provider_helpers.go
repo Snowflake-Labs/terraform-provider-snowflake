@@ -13,21 +13,79 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
 )
 
-func mergeSchemas(schemaCollections ...map[string]*schema.Resource) map[string]*schema.Resource {
-	out := map[string]*schema.Resource{}
-	for _, schemaCollection := range schemaCollections {
-		for name, s := range schemaCollection {
-			out[name] = s
-		}
+type authenticationType string
+
+const (
+	authenticationTypeSnowflake           authenticationType = "SNOWFLAKE"
+	authenticationTypeOauth               authenticationType = "OAUTH"
+	authenticationTypeExternalBrowser     authenticationType = "EXTERNALBROWSER"
+	authenticationTypeOkta                authenticationType = "OKTA"
+	authenticationTypeJwtLegacy           authenticationType = "JWT"
+	authenticationTypeJwt                 authenticationType = "SNOWFLAKE_JWT"
+	authenticationTypeTokenAccessor       authenticationType = "TOKENACCESSOR"
+	authenticationTypeUsernamePasswordMfa authenticationType = "USERNAMEPASSWORDMFA"
+)
+
+var allAuthenticationTypes = []authenticationType{
+	authenticationTypeSnowflake,
+	authenticationTypeOauth,
+	authenticationTypeExternalBrowser,
+	authenticationTypeOkta,
+	authenticationTypeJwt,
+	authenticationTypeTokenAccessor,
+	authenticationTypeUsernamePasswordMfa,
+}
+
+func toAuthenticatorType(s string) (gosnowflake.AuthType, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(authenticationTypeSnowflake):
+		return gosnowflake.AuthTypeSnowflake, nil
+	case string(authenticationTypeOauth):
+		return gosnowflake.AuthTypeOAuth, nil
+	case string(authenticationTypeExternalBrowser):
+		return gosnowflake.AuthTypeExternalBrowser, nil
+	case string(authenticationTypeOkta):
+		return gosnowflake.AuthTypeOkta, nil
+	case string(authenticationTypeJwt), string(authenticationTypeJwtLegacy):
+		return gosnowflake.AuthTypeJwt, nil
+	case string(authenticationTypeTokenAccessor):
+		return gosnowflake.AuthTypeTokenAccessor, nil
+	case string(authenticationTypeUsernamePasswordMfa):
+		return gosnowflake.AuthTypeUsernamePasswordMFA, nil
+	default:
+		return gosnowflake.AuthType(0), fmt.Errorf("invalid authenticator type: %s", s)
 	}
-	return out
+}
+
+type protocol string
+
+const (
+	protocolHttp  protocol = "HTTP"
+	protocolHttps protocol = "HTTPS"
+)
+
+var allProtocols = []protocol{
+	protocolHttp,
+	protocolHttps,
+}
+
+func toProtocol(s string) (protocol, error) {
+	s = strings.ToUpper(s)
+	switch s {
+	case string(protocolHttp):
+		return protocolHttp, nil
+	case string(protocolHttps):
+		return protocolHttps, nil
+	default:
+		return "", fmt.Errorf("invalid protocol: %s", s)
+	}
 }
 
 func getPrivateKey(privateKeyPath, privateKeyString, privateKeyPassphrase string) (*rsa.PrivateKey, error) {
@@ -43,54 +101,6 @@ func getPrivateKey(privateKeyPath, privateKeyString, privateKeyPassphrase string
 		}
 	}
 	return parsePrivateKey(privateKeyBytes, []byte(privateKeyPassphrase))
-}
-
-func toAuthenticatorType(authenticator string) gosnowflake.AuthType {
-	switch authenticator {
-	case "Snowflake":
-		return gosnowflake.AuthTypeSnowflake
-	case "OAuth":
-		return gosnowflake.AuthTypeOAuth
-	case "ExternalBrowser":
-		return gosnowflake.AuthTypeExternalBrowser
-	case "Okta":
-		return gosnowflake.AuthTypeOkta
-	case "JWT":
-		return gosnowflake.AuthTypeJwt
-	case "TokenAccessor":
-		return gosnowflake.AuthTypeTokenAccessor
-	case "UsernamePasswordMFA":
-		return gosnowflake.AuthTypeUsernamePasswordMFA
-	default:
-		return gosnowflake.AuthTypeSnowflake
-	}
-}
-
-func getInt64Env(key string, defaultValue int64) int64 {
-	s := os.Getenv(key)
-	if s == "" {
-		return defaultValue
-	}
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return defaultValue
-	}
-	return int64(i)
-}
-
-func getBoolEnv(key string, defaultValue bool) bool {
-	s := strings.ToLower(os.Getenv(key))
-	if s == "" {
-		return defaultValue
-	}
-	switch s {
-	case "true", "1":
-		return true
-	case "false", "0":
-		return false
-	default:
-		return defaultValue
-	}
 }
 
 func readFile(privateKeyPath string) ([]byte, error) {
@@ -186,4 +196,8 @@ func GetAccessTokenWithRefreshToken(
 		return "", fmt.Errorf("error parsing JSON from Snowflake err = %w", err)
 	}
 	return result.AccessToken, nil
+}
+
+func envNameFieldDescription(description, envName string) string {
+	return fmt.Sprintf("%s Can also be sourced from the `%s` environment variable.", description, envName)
 }

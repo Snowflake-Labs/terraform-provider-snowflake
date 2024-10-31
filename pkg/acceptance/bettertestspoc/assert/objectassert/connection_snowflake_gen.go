@@ -31,6 +31,20 @@ func ConnectionFromObject(t *testing.T, connection *sdk.Connection) *ConnectionA
 	}
 }
 
+func (c *ConnectionAssert) HasRegionGroup(expected string) *ConnectionAssert {
+	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
+		t.Helper()
+		if o.RegionGroup == nil {
+			return fmt.Errorf("expected region group to have value; got: nil")
+		}
+		if *o.RegionGroup != expected {
+			return fmt.Errorf("expected region group: %v; got: %v", expected, *o.RegionGroup)
+		}
+		return nil
+	})
+	return c
+}
+
 func (c *ConnectionAssert) HasSnowflakeRegion(expected string) *ConnectionAssert {
 	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
 		t.Helper()
@@ -100,7 +114,7 @@ func (c *ConnectionAssert) HasIsPrimary(expected bool) *ConnectionAssert {
 	return c
 }
 
-func (c *ConnectionAssert) HasPrimary(expected string) *ConnectionAssert {
+func (c *ConnectionAssert) HasPrimary(expected sdk.ExternalObjectIdentifier) *ConnectionAssert {
 	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
 		t.Helper()
 		if o.Primary != expected {
@@ -110,6 +124,19 @@ func (c *ConnectionAssert) HasPrimary(expected string) *ConnectionAssert {
 	})
 	return c
 }
+
+/*
+func (c *ConnectionAssert) HasFailoverAllowedToAccounts(expected []sdk.AccountIdentifier) *ConnectionAssert {
+	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
+		t.Helper()
+		if o.FailoverAllowedToAccounts != expected {
+			return fmt.Errorf("expected failover allowed to accounts: %v; got: %v", expected, o.FailoverAllowedToAccounts)
+		}
+		return nil
+	})
+	return c
+}
+*/
 
 func (c *ConnectionAssert) HasConnectionUrl(expected string) *ConnectionAssert {
 	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {

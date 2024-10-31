@@ -52,6 +52,7 @@ func StreamOnExternalTable() *schema.Resource {
 			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, ShowOutputAttributeName, "external_table", "insert_only", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, DescribeOutputAttributeName, "external_table", "insert_only", "comment"),
 			RecreateWhenStreamIsStale(),
+			RecreateWhenStreamTypeChangedExternally(sdk.StreamSourceTypeExternalTable),
 		),
 
 		Schema: streamOnExternalTableSchema,

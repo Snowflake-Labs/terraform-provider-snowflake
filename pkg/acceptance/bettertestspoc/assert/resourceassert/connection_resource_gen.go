@@ -32,28 +32,18 @@ func ImportedConnectionResource(t *testing.T, id string) *ConnectionResourceAsse
 // Attribute value string checks //
 ///////////////////////////////////
 
-func (c *ConnectionResourceAssert) HasAsReplicaOfString(expected string) *ConnectionResourceAssert {
-	c.AddAssertion(assert.ValueSet("as_replica_of", expected))
-	return c
-}
-
 func (c *ConnectionResourceAssert) HasCommentString(expected string) *ConnectionResourceAssert {
 	c.AddAssertion(assert.ValueSet("comment", expected))
 	return c
 }
 
-func (c *ConnectionResourceAssert) HasEnableFailoverString(expected string) *ConnectionResourceAssert {
-	c.AddAssertion(assert.ValueSet("enable_failover", expected))
+func (c *ConnectionResourceAssert) HasEnableFailoverToAccountsString(expected string) *ConnectionResourceAssert {
+	c.AddAssertion(assert.ValueSet("enable_failover_to_accounts", expected))
 	return c
 }
 
 func (c *ConnectionResourceAssert) HasFullyQualifiedNameString(expected string) *ConnectionResourceAssert {
 	c.AddAssertion(assert.ValueSet("fully_qualified_name", expected))
-	return c
-}
-
-func (c *ConnectionResourceAssert) HasIsPrimaryString(expected string) *ConnectionResourceAssert {
-	c.AddAssertion(assert.ValueSet("is_primary", expected))
 	return c
 }
 
@@ -65,11 +55,6 @@ func (c *ConnectionResourceAssert) HasNameString(expected string) *ConnectionRes
 ////////////////////////////
 // Attribute empty checks //
 ////////////////////////////
-
-func (c *ConnectionResourceAssert) HasNoAsReplicaOf() *ConnectionResourceAssert {
-	c.AddAssertion(assert.ValueNotSet("as_replica_of"))
-	return c
-}
 
 func (c *ConnectionResourceAssert) HasNoComment() *ConnectionResourceAssert {
 	c.AddAssertion(assert.ValueNotSet("comment"))
@@ -85,11 +70,6 @@ func (c *ConnectionResourceAssert) HasNoEnableFailoverToAccounts() *ConnectionRe
 
 func (c *ConnectionResourceAssert) HasNoFullyQualifiedName() *ConnectionResourceAssert {
 	c.AddAssertion(assert.ValueNotSet("fully_qualified_name"))
-	return c
-}
-
-func (c *ConnectionResourceAssert) HasNoIsPrimary() *ConnectionResourceAssert {
-	c.AddAssertion(assert.ValueNotSet("is_primary"))
 	return c
 }
 
