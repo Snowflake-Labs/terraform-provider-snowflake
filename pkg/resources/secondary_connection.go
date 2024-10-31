@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -20,6 +21,11 @@ var secondaryConnectionSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		Description:      blocklistedCharactersFieldDescription("String that specifies the identifier (i.e. name) for the connection. Must start with an alphabetic character and may only contain letters, decimal digits (0-9), and underscores (_). For a secondary connection, the name must match the name of its primary connection."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
+	},
+	"is_primary": {
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Description: "Indicates if the connection has been changed to primary. If change is detected, the secondary connection will be recreated.",
 	},
 	"as_replica_of": {
 		Type:             schema.TypeString,
@@ -51,7 +57,12 @@ func SecondaryConnection() *schema.Resource {
 		UpdateContext: UpdateSecondaryContextConnection,
 		DeleteContext: DeleteSecondaryContextConnection,
 		Description:   "Resource used to manage secondary connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
-		Schema:        secondaryConnectionSchema,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(connectionSchema, ShowOutputAttributeName, "comment", "is_primary", "primary"),
+		),
+
+		Schema: secondaryConnectionSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportName[sdk.AccountObjectIdentifier],
 		},
@@ -119,6 +130,7 @@ func ReadSecondaryContextConnection(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return diag.FromErr(errors.Join(
+		d.Set("is_primary", connection.IsPrimary),
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 		d.Set(ShowOutputAttributeName, []map[string]any{schemas.ConnectionToSchema(connection)}),
 		d.Set("comment", connection.Comment),

@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -53,8 +54,13 @@ func Connection() *schema.Resource {
 		ReadContext:   ReadContextConnection,
 		UpdateContext: UpdateContextConnection,
 		DeleteContext: DeleteContextConnection,
-		Description:   "Resource used to manage primary (not replicated) connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
-		Schema:        connectionSchema,
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(connectionSchema, ShowOutputAttributeName, "comment", "primary", "failover_allowed_to_accounts"),
+		),
+
+		Description: "Resource used to manage primary (not replicated) connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
+		Schema:      connectionSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportName[sdk.AccountObjectIdentifier],
 		},

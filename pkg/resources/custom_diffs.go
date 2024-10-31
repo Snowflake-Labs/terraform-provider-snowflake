@@ -238,3 +238,15 @@ func RecreateWhenStreamIsStale() schema.CustomizeDiffFunc {
 		return nil
 	}
 }
+
+// TODO: [SNOW-1763442] unable to test now, as there is no test accounts with different regions
+// RecreateWhenSecondaryConnectionChangedExternally detects if the secondary connection was promoted externally to serve as primary.
+// If so, it sets the `is_primary` field to `false` to recreate the secondary connection.
+func RecreateWhenSecondaryConnectionChangedExternally() schema.CustomizeDiffFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		if _, newValue := diff.GetChange("is_primary"); newValue.(bool) {
+			return diff.SetNew("is_primary", false)
+		}
+		return nil
+	}
+}

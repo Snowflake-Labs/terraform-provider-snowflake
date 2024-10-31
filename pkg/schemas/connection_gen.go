@@ -36,6 +36,7 @@ var ShowConnectionSchema = map[string]*schema.Schema{
 	"is_primary": {
 		Type:     schema.TypeBool,
 		Computed: true,
+		ForceNew: true,
 	},
 	"primary": {
 		Type:     schema.TypeString,
