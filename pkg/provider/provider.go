@@ -153,7 +153,7 @@ func Provider() *schema.Provider {
 			},
 			"okta_url": {
 				Type:             schema.TypeString,
-				Description:      envNameFieldDescription("The URL of the Okta server. e.g. https://example.okta.com.", snowflakeenvs.OktaUrl),
+				Description:      envNameFieldDescription("The URL of the Okta server. e.g. https://example.okta.com. Okta URL host needs to to have a suffix `okta.com`. Read more in Snowflake [docs](https://docs.snowflake.com/en/user-guide/oauth-okta).", snowflakeenvs.OktaUrl),
 				Optional:         true,
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.OktaUrl, nil),
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
