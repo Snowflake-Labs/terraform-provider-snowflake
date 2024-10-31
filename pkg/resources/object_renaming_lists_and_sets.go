@@ -15,35 +15,24 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type objectRenamingDatabaseListItem struct {
-	Name   string
+type ObjectRenamingDatabaseListItem struct {
 	String string
 	Int    int
 }
 
-func mapObjectRenamingDatabaseListItemFromValue(items []cty.Value) []objectRenamingDatabaseListItem {
-	return collections.Map(items, func(item cty.Value) objectRenamingDatabaseListItem {
+func mapObjectRenamingDatabaseListItemFromValue(items []cty.Value) []ObjectRenamingDatabaseListItem {
+	return collections.Map(items, func(item cty.Value) ObjectRenamingDatabaseListItem {
 		intValue, _ := item.AsValueMap()["int"].AsBigFloat().Int64()
-		var name string
-		if nameValue, ok := item.AsValueMap()["name"]; ok && !nameValue.IsNull() {
-			name = nameValue.AsString()
-		}
-		return objectRenamingDatabaseListItem{
-			Name:   name,
+		return ObjectRenamingDatabaseListItem{
 			String: item.AsValueMap()["string"].AsString(),
 			Int:    int(intValue),
 		}
 	})
 }
 
-func objectRenamingDatabaseListFromSchema(items []any) []objectRenamingDatabaseListItem {
-	return collections.Map(items, func(item any) objectRenamingDatabaseListItem {
-		var name string
-		if nameValue, ok := item.(map[string]any)["name"]; ok {
-			name = nameValue.(string)
-		}
-		return objectRenamingDatabaseListItem{
-			Name:   name,
+func objectRenamingDatabaseListFromSchema(items []any) []ObjectRenamingDatabaseListItem {
+	return collections.Map(items, func(item any) ObjectRenamingDatabaseListItem {
+		return ObjectRenamingDatabaseListItem{
 			String: item.(map[string]any)["string"].(string),
 			Int:    item.(map[string]any)["int"].(int),
 		}
@@ -107,34 +96,30 @@ func objectRenamingDatabaseManuallyOrderedListFromSchema(list []any) []ObjectRen
 }
 
 type objectRenamingDatabase struct {
-	List                []objectRenamingDatabaseListItem
+	List                []ObjectRenamingDatabaseListItem
 	OrderedList         []objectRenamingDatabaseOrderedListItem
 	ManuallyOrderedList []ObjectRenamingDatabaseManuallyOrderedListItem
 	ChangeLog           ObjectRenamingDatabaseChangelog
 }
 
 type ObjectRenamingDatabaseChangelogChange struct {
-	Before ObjectRenamingDatabaseManuallyOrderedListItem
-	After  ObjectRenamingDatabaseManuallyOrderedListItem
+	Before map[string]any
+	After  map[string]any
 }
 
 // ObjectRenamingDatabaseChangelog is used for testing purposes to track actions taken in the Update method like Add/Remove/Change.
 // It's only supported the manually_ordered_list option.
 type ObjectRenamingDatabaseChangelog struct {
-	Added   []ObjectRenamingDatabaseManuallyOrderedListItem
-	Removed []ObjectRenamingDatabaseManuallyOrderedListItem
+	Added   []map[string]any
+	Removed []map[string]any
 	Changed []ObjectRenamingDatabaseChangelogChange
 }
 
 var ObjectRenamingDatabaseInstance = &objectRenamingDatabase{
-	List:                make([]objectRenamingDatabaseListItem, 0),
+	List:                make([]ObjectRenamingDatabaseListItem, 0),
 	OrderedList:         make([]objectRenamingDatabaseOrderedListItem, 0),
 	ManuallyOrderedList: make([]ObjectRenamingDatabaseManuallyOrderedListItem, 0),
-	ChangeLog:           ObjectRenamingDatabaseChangelog{
-		// Added:   make([]ObjectRenamingDatabaseManuallyOrderedListItem, 0),
-		// Removed: make([]ObjectRenamingDatabaseManuallyOrderedListItem, 0),
-		// Changed: make([]ObjectRenamingDatabaseChangelogChange, 0),
-	},
+	ChangeLog:           ObjectRenamingDatabaseChangelog{},
 }
 
 var objectRenamingListsAndSetsSchema = map[string]*schema.Schema{
@@ -150,10 +135,6 @@ var objectRenamingListsAndSetsSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: ignoreListOrderAfterFirstApply("list"),
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:     schema.TypeString,
-					Optional: true,
-				},
 				"string": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -289,8 +270,22 @@ func UpdateObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceDat
 		addedItems, removedItems := ListDiff(oldListMapped, newListMapped)
 
 		for _, removedItem := range removedItems {
-			ObjectRenamingDatabaseInstance.List = slices.DeleteFunc(ObjectRenamingDatabaseInstance.List, func(item objectRenamingDatabaseListItem) bool {
-				return item == removedItem
+			ObjectRenamingDatabaseInstance.List = slices.DeleteFunc(ObjectRenamingDatabaseInstance.List, func(item ObjectRenamingDatabaseListItem) bool {
+				shouldRemove := item == removedItem
+				if shouldRemove {
+					ObjectRenamingDatabaseInstance.ChangeLog.Removed = append(ObjectRenamingDatabaseInstance.ChangeLog.Removed, map[string]any{
+						"int":    item.Int,
+						"string": item.String,
+					})
+				}
+				return shouldRemove
+			})
+		}
+
+		for _, addedItem := range addedItems {
+			ObjectRenamingDatabaseInstance.ChangeLog.Added = append(ObjectRenamingDatabaseInstance.ChangeLog.Added, map[string]any{
+				"int":    addedItem.Int,
+				"string": addedItem.String,
 			})
 		}
 
@@ -370,18 +365,21 @@ func UpdateObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceDat
 
 				if wasChanged {
 					updateChangelog.Changed = append(updateChangelog.Changed, ObjectRenamingDatabaseChangelogChange{
-						Before: ObjectRenamingDatabaseManuallyOrderedListItem{
-							Name: oldItem["name"].AsString(),
-							Type: oldItem["type"].AsString(),
+						Before: map[string]any{
+							"name": oldItem["name"].AsString(),
+							"type": oldItem["type"].AsString(),
 						},
-						After: itemToAdd,
+						After: map[string]any{
+							"name": itemToAdd.Name,
+							"type": itemToAdd.Type,
+						},
 					})
 				}
 			} else {
 				// If given order wasn't found, it means this item was removed.
-				updateChangelog.Removed = append(updateChangelog.Removed, ObjectRenamingDatabaseManuallyOrderedListItem{
-					Name: oldItem["name"].AsString(),
-					Type: oldItem["type"].AsString(),
+				updateChangelog.Removed = append(updateChangelog.Removed, map[string]any{
+					"name": oldItem["name"].AsString(),
+					"type": oldItem["type"].AsString(),
 				})
 			}
 		}
@@ -401,7 +399,10 @@ func UpdateObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceDat
 				// Items can be only added at the end of the list, otherwise invalid operation will be reported.
 				if int(newItemOrder) > maxStateOrder {
 					finalState = append(finalState, itemToAdd)
-					updateChangelog.Added = append(updateChangelog.Added, itemToAdd)
+					updateChangelog.Added = append(updateChangelog.Added, map[string]any{
+						"name": itemToAdd.Name,
+						"type": itemToAdd.Type,
+					})
 				} else {
 					invalidOperations = append(invalidOperations, fmt.Errorf("unable to add a new item: %+v, in the middle", itemToAdd))
 				}
@@ -426,9 +427,8 @@ func UpdateObjectRenamingListsAndSets(ctx context.Context, d *schema.ResourceDat
 
 func ReadObjectRenamingListsAndSets(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		list := collections.Map(ObjectRenamingDatabaseInstance.List, func(t objectRenamingDatabaseListItem) map[string]any {
+		list := collections.Map(ObjectRenamingDatabaseInstance.List, func(t ObjectRenamingDatabaseListItem) map[string]any {
 			return map[string]any{
-				"name":   t.Name,
 				"string": t.String,
 				"int":    t.Int,
 			}
@@ -532,8 +532,12 @@ func ignoreListOrderAfterFirstApply(parentKey string) schema.SchemaDiffSuppressF
 					return false
 				}
 
-				// Get the hash of the whole item from config (because it represents new value)
-				newItemHash := d.GetRawConfig().AsValueMap()[parentKey].AsValueSlice()[index].Hash()
+				newItems := d.GetRawConfig().AsValueMap()[parentKey].AsValueSlice()
+				if len(newItems) <= index {
+					// item was removed
+					return false
+				}
+				newItemHash := newItems[index].Hash()
 
 				newItemWasAlreadyPresent := false
 

@@ -25,6 +25,7 @@ func TestAcc_BasicListFlow(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	acc.TestAccPreCheck(t)
 
+	// TODO: Add planchecks
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -33,113 +34,348 @@ func TestAcc_BasicListFlow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: objectRenamingConfigList([]map[string]any{
-					{"name": "", "string": "111", "int": 111},
-					{"name": "", "string": "222", "int": 222},
-					{"name": "", "string": "333", "int": 333},
+					{"string": "111", "int": 111},
+					{"string": "222", "int": 222},
+					{"string": "333", "int": 333},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
-						{"name": "", "string": "111", "int": "111"},
-						{"name": "", "string": "222", "int": "222"},
-						{"name": "", "string": "333", "int": "333"},
+						{"string": "111", "int": "111"},
+						{"string": "222", "int": "222"},
+						{"string": "333", "int": "333"},
 					}),
 				),
 			},
 			// Remove, shift, and add one item (in the middle)
 			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Removed: []map[string]any{
+								{"string": "111", "int": 111},
+							},
+							Added: []map[string]any{
+								{"string": "444", "int": 444},
+							},
+						}),
+					},
+				},
 				Config: objectRenamingConfigList([]map[string]any{
-					{"name": "", "string": "222", "int": 222},
-					{"name": "", "string": "444", "int": 444},
-					{"name": "", "string": "333", "int": 333},
+					{"string": "222", "int": 222},
+					{"string": "444", "int": 444},
+					{"string": "333", "int": 333},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
-						{"name": "", "string": "222", "int": "222"},
-						{"name": "", "string": "444", "int": "444"},
-						{"name": "", "string": "333", "int": "333"},
+						{"string": "222", "int": "222"},
+						{"string": "444", "int": "444"},
+						{"string": "333", "int": "333"},
 					}),
 				),
 			},
 			// Remove, shift, and add one item (at the end)
 			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Removed: []map[string]any{
+								{"string": "222", "int": 222},
+							},
+							Added: []map[string]any{
+								{"string": "111", "int": 111},
+							},
+						}),
+					},
+				},
 				Config: objectRenamingConfigList([]map[string]any{
-					{"name": "", "string": "444", "int": 444},
-					{"name": "", "string": "333", "int": 333},
-					{"name": "", "string": "111", "int": 111},
+					{"string": "444", "int": 444},
+					{"string": "333", "int": 333},
+					{"string": "111", "int": 111},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
-						{"name": "", "string": "444", "int": "444"},
-						{"name": "", "string": "333", "int": "333"},
-						{"name": "", "string": "111", "int": "111"},
+						{"string": "444", "int": "444"},
+						{"string": "333", "int": "333"},
+						{"string": "111", "int": "111"},
 					}),
 				),
 			},
 			// Remove, shift, and add one item (at the beginning)
 			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Removed: []map[string]any{
+								{"string": "111", "int": 111},
+							},
+							Added: []map[string]any{
+								{"string": "222", "int": 222},
+							},
+						}),
+					},
+				},
 				Config: objectRenamingConfigList([]map[string]any{
-					{"name": "", "string": "222", "int": 222},
-					{"name": "", "string": "333", "int": 333},
-					{"name": "", "string": "444", "int": 444},
+					{"string": "222", "int": 222},
+					{"string": "333", "int": 333},
+					{"string": "444", "int": 444},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
-						{"name": "", "string": "222", "int": "222"},
-						{"name": "", "string": "333", "int": "333"},
-						{"name": "", "string": "444", "int": "444"},
+						{"string": "222", "int": "222"},
+						{"string": "333", "int": "333"},
+						{"string": "444", "int": "444"},
 					}),
 				),
 			},
 			// Reorder items and add one
 			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Added: []map[string]any{
+								{"string": "555", "int": 555},
+							},
+						}),
+					},
+				},
 				Config: objectRenamingConfigList([]map[string]any{
-					{"name": "", "string": "444", "int": 444},
-					{"name": "", "string": "555", "int": 555},
-					{"name": "", "string": "333", "int": 333},
-					{"name": "", "string": "222", "int": 222},
+					{"string": "444", "int": 444},
+					{"string": "555", "int": 555},
+					{"string": "333", "int": 333},
+					{"string": "222", "int": 222},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
-						{"name": "", "string": "444", "int": "444"},
-						{"name": "", "string": "555", "int": "555"},
-						{"name": "", "string": "333", "int": "333"},
-						{"name": "", "string": "222", "int": "222"},
+						{"string": "444", "int": "444"},
+						{"string": "555", "int": "555"},
+						{"string": "333", "int": "333"},
+						{"string": "222", "int": "222"},
 					}),
 				),
 			},
 			// Replace all items
 			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Removed: []map[string]any{
+								{"string": "333", "int": 333},
+								{"string": "444", "int": 444},
+								{"string": "222", "int": 222},
+								{"string": "555", "int": 555},
+							},
+							Added: []map[string]any{
+								{"string": "1111", "int": 1111},
+								{"string": "2222", "int": 2222},
+								{"string": "3333", "int": 3333},
+								{"string": "4444", "int": 4444},
+							},
+						}),
+					},
+				},
 				Config: objectRenamingConfigList([]map[string]any{
-					{"name": "", "string": "444", "int": 444},
-					{"name": "", "string": "555", "int": 555},
-					{"name": "", "string": "333", "int": 333},
-					{"name": "", "string": "222", "int": 222},
+					{"string": "1111", "int": 1111},
+					{"string": "2222", "int": 2222},
+					{"string": "3333", "int": 3333},
+					{"string": "4444", "int": 4444},
 				}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
-						{"name": "", "string": "444", "int": "444"},
-						{"name": "", "string": "555", "int": "555"},
-						{"name": "", "string": "333", "int": "333"},
-						{"name": "", "string": "222", "int": "222"},
+						{"string": "1111", "int": "1111"},
+						{"string": "2222", "int": "2222"},
+						{"string": "3333", "int": "3333"},
+						{"string": "4444", "int": "4444"},
+					}),
+				),
+			},
+			// Remove a few items
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Removed: []map[string]any{
+								{"string": "3333", "int": 3333},
+								{"string": "4444", "int": 4444},
+							},
+						}),
+					},
+				},
+				Config: objectRenamingConfigList([]map[string]any{
+					{"string": "1111", "int": 1111},
+					{"string": "2222", "int": 2222},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
+						{"string": "1111", "int": "1111"},
+						{"string": "2222", "int": "2222"},
+					}),
+				),
+			},
+			// Remove all items
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Removed: []map[string]any{
+								{"string": "1111", "int": 1111},
+								{"string": "2222", "int": 2222},
+							},
+						}),
+					},
+				},
+				Config: objectRenamingConfigList([]map[string]any{}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_object_renaming.test", "manually_ordered_list.#", "0"),
+				),
+			},
+			// Add few items
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Added: []map[string]any{
+								{"string": "1111", "int": 1111},
+								{"string": "2222", "int": 2222},
+							},
+						}),
+					},
+				},
+				Config: objectRenamingConfigList([]map[string]any{
+					{"string": "1111", "int": 1111},
+					{"string": "2222", "int": 2222},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
+						{"string": "1111", "int": "1111"},
+						{"string": "2222", "int": "2222"},
+					}),
+				),
+			},
+			// External changes: add item
+			{
+				PreConfig: func() {
+					resources.ObjectRenamingDatabaseInstance.List = append(resources.ObjectRenamingDatabaseInstance.List, resources.ObjectRenamingDatabaseListItem{
+						String: "3333",
+						Int:    3333,
+					})
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Removed: []map[string]any{
+								{"string": "3333", "int": 3333},
+							},
+						}),
+					},
+				},
+				Config: objectRenamingConfigList([]map[string]any{
+					{"string": "1111", "int": 1111},
+					{"string": "2222", "int": 2222},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
+						{"string": "1111", "int": "1111"},
+						{"string": "2222", "int": "2222"},
+					}),
+				),
+			},
+			// External changes: removed item
+			{
+				PreConfig: func() {
+					resources.ObjectRenamingDatabaseInstance.List = resources.ObjectRenamingDatabaseInstance.List[:1]
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Added: []map[string]any{
+								{"string": "2222", "int": 2222},
+							},
+						}),
+					},
+				},
+				Config: objectRenamingConfigList([]map[string]any{
+					{"string": "1111", "int": 1111},
+					{"string": "2222", "int": 2222},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
+						{"string": "1111", "int": "1111"},
+						{"string": "2222", "int": "2222"},
+					}),
+				),
+			},
+			// External changes: change item
+			{
+				PreConfig: func() {
+					resources.ObjectRenamingDatabaseInstance.List[1].String = "1010"
+					resources.ObjectRenamingDatabaseInstance.List[1].Int = 1010
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_object_renaming.test", plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
+							Removed: []map[string]any{
+								{"string": "1010", "int": 1010},
+							},
+							Added: []map[string]any{
+								{"string": "2222", "int": 2222},
+							},
+						}),
+					},
+				},
+				Config: objectRenamingConfigList([]map[string]any{
+					{"string": "1111", "int": 1111},
+					{"string": "2222", "int": 2222},
+				}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					assert.ContainsExactlyInAnyOrder("snowflake_object_renaming.test", "list", []map[string]string{
+						{"string": "1111", "int": "1111"},
+						{"string": "2222", "int": "2222"},
 					}),
 				),
 			},
 			// Add an item that is identical to another one (currently, failing because hash duplicates are not handled)
 			// {
 			//	Config: objectRenamingConfigList([]map[string]any{
-			//		{"name": "", "string": "444", "int": 444},
-			//		{"name": "", "string": "555", "int": 555},
-			//		{"name": "", "string": "333", "int": 333},
-			//		{"name": "", "string": "222", "int": 222},
-			//		{"name": "", "string": "222", "int": 222},
+			//		{"string": "222", "int": 222},
+			//		{"string": "222", "int": 222},
 			//	}),
 			//	Check: resource.ComposeAggregateTestCheckFunc(
 			//		assert.HasListItemsOrderIndependent("snowflake_object_renaming.test", "list", []map[string]string{
-			//			{"name": "", "string": "444", "int": "444"},
-			//			{"name": "", "string": "555", "int": "555"},
-			//			{"name": "", "string": "333", "int": "333"},
-			//			{"name": "", "string": "222", "int": "222"},
-			//			{"name": "", "string": "222", "int": "222"},
+			//			{"string": "222", "int": "222"},
+			//			{"string": "222", "int": "222"},
 			//		}),
 			//	),
 			// },
@@ -148,7 +384,6 @@ func TestAcc_BasicListFlow(t *testing.T) {
 }
 
 // This test researches the possibility of performing update instead of remove + add item
-
 func TestAcc_ListNameUpdate(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
@@ -257,29 +492,18 @@ func TestAcc_ListsWithDuplicatedItems(t *testing.T) {
 }
 
 func objectRenamingConfigList(listItems []map[string]any) string {
-	generateListItem := func(name *string, s string, i int) string {
-		var nameField string
-		if name != nil {
-			nameField = fmt.Sprintf(`name = "%s"`, *name)
-		}
+	generateListItem := func(s string, i int) string {
 		return fmt.Sprintf(`
-
 	list {
-		%[1]s
-		string = "%[2]s"
-		int = %[3]d
+		string = "%[1]s"
+		int = %[2]d
 	}
-
-`, nameField, s, i)
+`, s, i)
 	}
 
 	generatedListItems := ""
 	for _, item := range listItems {
-		var name *string
-		if nameValue, ok := item["name"]; ok && nameValue != nil {
-			name = sdk.String(nameValue.(string))
-		}
-		generatedListItems += generateListItem(name, item["string"].(string), item["int"].(int))
+		generatedListItems += generateListItem(item["string"].(string), item["int"].(int))
 	}
 
 	return fmt.Sprintf(`
@@ -345,8 +569,8 @@ func TestAcc_SupportedActions(t *testing.T) {
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
-							Removed: []resources.ObjectRenamingDatabaseManuallyOrderedListItem{
-								{Name: "nameTwo", Type: "STRING"},
+							Removed: []map[string]any{
+								{"name": "nameTwo", "type": "STRING"},
 							},
 						}),
 					},
@@ -372,8 +596,8 @@ func TestAcc_SupportedActions(t *testing.T) {
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
-							Added: []resources.ObjectRenamingDatabaseManuallyOrderedListItem{
-								{Name: "nameFour", Type: "INT"},
+							Added: []map[string]any{
+								{"name": "nameFour", "type": "INT"},
 							},
 						}),
 					},
@@ -405,16 +629,16 @@ func TestAcc_SupportedActions(t *testing.T) {
 						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
 							Changed: []resources.ObjectRenamingDatabaseChangelogChange{
 								{
-									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameOne", Type: "TEXT"},
-									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameOneV2", Type: "STRING"},
+									Before: map[string]any{"name": "nameOne", "type": "TEXT"},
+									After:  map[string]any{"name": "nameOneV2", "type": "STRING"},
 								},
 								{
-									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameThree", Type: "NUMBER"},
-									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameThreeV2", Type: "INT"},
+									Before: map[string]any{"name": "nameThree", "type": "NUMBER"},
+									After:  map[string]any{"name": "nameThreeV2", "type": "INT"},
 								},
 								{
-									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFour", Type: "INT"},
-									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFourV2", Type: "NUMBER"},
+									Before: map[string]any{"name": "nameFour", "type": "INT"},
+									After:  map[string]any{"name": "nameFourV2", "type": "NUMBER"},
 								},
 							},
 						}),
@@ -472,8 +696,8 @@ func TestAcc_SupportedActions(t *testing.T) {
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
-							Removed: []resources.ObjectRenamingDatabaseManuallyOrderedListItem{
-								{Name: "nameThreeV2", Type: "INT"},
+							Removed: []map[string]any{
+								{"name": "nameThreeV2", "type": "INT"},
 							},
 						}),
 					},
@@ -499,8 +723,8 @@ func TestAcc_SupportedActions(t *testing.T) {
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
-							Added: []resources.ObjectRenamingDatabaseManuallyOrderedListItem{
-								{Name: "nameFive", Type: "INT"},
+							Added: []map[string]any{
+								{"name": "nameFive", "type": "INT"},
 							},
 						}),
 					},
@@ -532,16 +756,16 @@ func TestAcc_SupportedActions(t *testing.T) {
 						assertObjectRenamingDatabaseChangelogAndClearIt(resources.ObjectRenamingDatabaseChangelog{
 							Changed: []resources.ObjectRenamingDatabaseChangelogChange{
 								{
-									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameOneV2", Type: "STRING"},
-									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameOneV10", Type: "TEXT"},
+									Before: map[string]any{"name": "nameOneV2", "type": "STRING"},
+									After:  map[string]any{"name": "nameOneV10", "type": "TEXT"},
 								},
 								{
-									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFourV2", Type: "NUMBER"},
-									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFourV10", Type: "INT"},
+									Before: map[string]any{"name": "nameFourV2", "type": "NUMBER"},
+									After:  map[string]any{"name": "nameFourV10", "type": "INT"},
 								},
 								{
-									Before: resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFive", Type: "INT"},
-									After:  resources.ObjectRenamingDatabaseManuallyOrderedListItem{Name: "nameFiveV10", Type: "NUMBER"},
+									Before: map[string]any{"name": "nameFive", "type": "INT"},
+									After:  map[string]any{"name": "nameFiveV10", "type": "NUMBER"},
 								},
 							},
 						}),
