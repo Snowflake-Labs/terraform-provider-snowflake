@@ -23,15 +23,20 @@ import (
 
 func DefaultConfig() *gosnowflake.Config {
 	config, err := ProfileConfig("default")
-	if err != nil || config == nil {
-		log.Printf("[DEBUG] No Snowflake config file found, returning empty config: %v\n", err)
-		config = &gosnowflake.Config{}
+	if err != nil {
+		log.Printf("[DEBUG] Could not read \"default\" profile, returning empty config: %v\n", err)
+		return &gosnowflake.Config{}
 	}
 	return config
 }
 
 func ProfileConfig(profile string) (*gosnowflake.Config, error) {
-	configs, err := loadConfigFile()
+	path, err := getConfigFileName()
+	if err != nil {
+		return nil, err
+	}
+
+	configs, err := loadConfigFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -44,14 +49,11 @@ func ProfileConfig(profile string) (*gosnowflake.Config, error) {
 		log.Printf("[DEBUG] loading config for profile: \"%s\"", profile)
 		driverCfg, err := cfg.DriverConfig()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("converting profile \"%s\" in file %s failed: %w", profile, path, err)
 		}
 		config = Pointer(driverCfg)
-	}
-
-	if config == nil {
-		log.Printf("[DEBUG] no config found for profile: \"%s\"", profile)
-		return nil, nil
+	} else {
+		return nil, fmt.Errorf("profile \"%s\" not found in file %s", profile, path)
 	}
 
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
@@ -272,12 +274,12 @@ func (c *ConfigDTO) DriverConfig() (gosnowflake.Config, error) {
 	if err != nil {
 		return gosnowflake.Config{}, err
 	}
-	pointerTimeAttributeSet(c.ClientTimeout, &driverCfg.ClientTimeout)
-	pointerTimeAttributeSet(c.JwtClientTimeout, &driverCfg.JWTClientTimeout)
-	pointerTimeAttributeSet(c.LoginTimeout, &driverCfg.LoginTimeout)
-	pointerTimeAttributeSet(c.RequestTimeout, &driverCfg.RequestTimeout)
-	pointerTimeAttributeSet(c.JwtExpireTimeout, &driverCfg.JWTExpireTimeout)
-	pointerTimeAttributeSet(c.ExternalBrowserTimeout, &driverCfg.ExternalBrowserTimeout)
+	pointerTimeInSecondsAttributeSet(c.ClientTimeout, &driverCfg.ClientTimeout)
+	pointerTimeInSecondsAttributeSet(c.JwtClientTimeout, &driverCfg.JWTClientTimeout)
+	pointerTimeInSecondsAttributeSet(c.LoginTimeout, &driverCfg.LoginTimeout)
+	pointerTimeInSecondsAttributeSet(c.RequestTimeout, &driverCfg.RequestTimeout)
+	pointerTimeInSecondsAttributeSet(c.JwtExpireTimeout, &driverCfg.JWTExpireTimeout)
+	pointerTimeInSecondsAttributeSet(c.ExternalBrowserTimeout, &driverCfg.ExternalBrowserTimeout)
 	pointerAttributeSet(c.MaxRetryCount, &driverCfg.MaxRetryCount)
 	if c.Authenticator != nil {
 		authenticator, err := ToAuthenticatorType(*c.Authenticator)
@@ -322,7 +324,7 @@ func pointerAttributeSet[T any](src, dst *T) {
 	}
 }
 
-func pointerTimeAttributeSet(src *int, dst *time.Duration) {
+func pointerTimeInSecondsAttributeSet(src *int, dst *time.Duration) {
 	if src != nil {
 		*dst = time.Second * time.Duration(*src)
 	}
@@ -351,11 +353,7 @@ func pointerUrlAttributeSet(src *string, dst **url.URL) error {
 	return nil
 }
 
-func loadConfigFile() (map[string]ConfigDTO, error) {
-	path, err := getConfigFileName()
-	if err != nil {
-		return nil, err
-	}
+func loadConfigFile(path string) (map[string]ConfigDTO, error) {
 	dat, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -363,8 +361,7 @@ func loadConfigFile() (map[string]ConfigDTO, error) {
 	var s map[string]ConfigDTO
 	err = toml.Unmarshal(dat, &s)
 	if err != nil {
-		log.Printf("[DEBUG] error unmarshalling config file: %v\n", err)
-		return nil, nil
+		return nil, fmt.Errorf("unmarshalling config file %s: %w", path, err)
 	}
 	return s, nil
 }
@@ -417,6 +414,7 @@ var AllAuthenticationTypes = []AuthenticationType{
 	AuthenticationTypeOauth,
 	AuthenticationTypeExternalBrowser,
 	AuthenticationTypeOkta,
+	AuthenticationTypeJwtLegacy,
 	AuthenticationTypeJwt,
 	AuthenticationTypeTokenAccessor,
 	AuthenticationTypeUsernamePasswordMfa,

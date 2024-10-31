@@ -38,7 +38,7 @@ The Snowflake provider support multiple ways to authenticate:
 * Private Key
 * Config File
 
-In all cases account and username are required.
+In all cases `organization_name`, `account_name` and `user` are required.
 
 ### Keypair Authentication Environment Variables
 
@@ -115,32 +115,17 @@ export SNOWFLAKE_USER='...'
 export SNOWFLAKE_PASSWORD='...'
 ```
 
-### Config File
-
-If you choose to use a config file, the optional `profile` attribute specifies the profile to use from the config file. If no profile is specified, the default profile is used. The Snowflake config file lives at `~/.snowflake/config` and uses [TOML](https://toml.io/) format. You can override this location by setting the `SNOWFLAKE_CONFIG_PATH` environment variable. If no username and account are specified, the provider will fall back to reading the config file.
-
-```shell
-[default]
-account='TESTACCOUNT'
-user='TEST_USER'
-password='hunter2'
-role='ACCOUNTADMIN'
-
-[securityadmin]
-account='TESTACCOUNT'
-user='TEST_USER'
-password='hunter2'
-role='SECURITYADMIN'
-```
-
 ## Order Precedence
 
 Currently, the provider can be configured in three ways:
-1. In a Terraform file located in the Terraform module with other resources, configuration
+1. In a Terraform file located in the Terraform module with other resources.
+
+Example content of the Terraform file configuration:
 
 ```terraform
 provider "snowflake" {
-    account = "..."
+    organization_name = "..."
+    account_name = "..."
     username = "..."
     password = "..."
 }
@@ -148,15 +133,27 @@ provider "snowflake" {
 
 2. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field.
 
+Example content of the Terraform file configuration:
+
+```terraform
+provider "snowflake" {
+    profile = "default"
+}
+```
+
+Example content of the TOML file configuration:
+
 ```toml
 [default]
-account='account'
+organizationname='organization_name'
+accountname='account_name'
 user='user'
 password='password'
 role='ACCOUNTADMIN'
 
 [secondary_test_account]
-account='account2'
+organizationname='organization_name'
+accountname='account2_name'
 user='user'
 password='password'
 role='ACCOUNTADMIN'

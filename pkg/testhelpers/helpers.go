@@ -3,7 +3,6 @@ package testhelpers
 import (
 	"database/sql"
 	"os"
-	"path/filepath"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
@@ -26,10 +25,12 @@ func WithMockDb(t *testing.T, f func(*sql.DB, sqlmock.Sqlmock)) {
 	}
 }
 
-func TestFile(t *testing.T, filename string, dat []byte) string {
+func TestFile(t *testing.T, filename string, data []byte) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), filename)
-	err := os.WriteFile(path, dat, 0o600)
+	f, err := os.CreateTemp(t.TempDir(), filename)
 	require.NoError(t, err)
-	return path
+
+	err = os.WriteFile(f.Name(), data, 0o600)
+	require.NoError(t, err)
+	return f.Name()
 }

@@ -47,36 +47,38 @@ func toProtocol(s string) (protocol, error) {
 type driverLogLevel string
 
 const (
-	logLevelOff driverLogLevel = "OFF"
-	// The levels below are lowercase on purpose to match the driver docs.
-	logLevelError driverLogLevel = "error"
-	logLevelWarn  driverLogLevel = "warn"
-	logLevelPrint driverLogLevel = "print"
-	logLevelTrace driverLogLevel = "trace"
-	logLevelDebug driverLogLevel = "debug"
-	logLevelInfo  driverLogLevel = "info"
+	logLevelTrace   driverLogLevel = "trace"
+	logLevelDebug   driverLogLevel = "debug"
+	logLevelInfo    driverLogLevel = "info"
+	logLevelPrint   driverLogLevel = "print"
+	logLevelWarning driverLogLevel = "warning"
+	logLevelError   driverLogLevel = "error"
+	logLevelFatal   driverLogLevel = "fatal"
+	logLevelPanic   driverLogLevel = "panic"
 )
 
 var allDriverLogLevels = []driverLogLevel{
-	logLevelOff,
-	logLevelError,
-	logLevelWarn,
-	logLevelPrint,
 	logLevelTrace,
 	logLevelDebug,
 	logLevelInfo,
+	logLevelPrint,
+	logLevelWarning,
+	logLevelError,
+	logLevelFatal,
+	logLevelPanic,
 }
 
 func toDriverLogLevel(s string) (driverLogLevel, error) {
-	s = strings.ToUpper(s)
+	s = strings.ToLower(s)
 	switch s {
-	case strings.ToUpper(string(logLevelOff)),
-		strings.ToUpper(string(logLevelError)),
-		strings.ToUpper(string(logLevelWarn)),
-		strings.ToUpper(string(logLevelPrint)),
-		strings.ToUpper(string(logLevelTrace)),
-		strings.ToUpper(string(logLevelDebug)),
-		strings.ToUpper(string(logLevelInfo)):
+	case strings.ToLower(string(logLevelTrace)),
+		strings.ToLower(string(logLevelDebug)),
+		strings.ToLower(string(logLevelInfo)),
+		strings.ToLower(string(logLevelPrint)),
+		strings.ToLower(string(logLevelWarning)),
+		strings.ToLower(string(logLevelError)),
+		strings.ToLower(string(logLevelFatal)),
+		strings.ToLower(string(logLevelPanic)):
 		return driverLogLevel(s), nil
 	default:
 		return "", fmt.Errorf("invalid driver log level: %s", s)
@@ -182,7 +184,7 @@ func handleBoolField(d *schema.ResourceData, key string, field *bool) error {
 	return nil
 }
 
-func handleDurationAttribute(d *schema.ResourceData, key string, field *time.Duration) error {
+func handleDurationInSecondsAttribute(d *schema.ResourceData, key string, field *time.Duration) error {
 	if v, ok := d.GetOk(key); ok {
 		*field = time.Second * time.Duration(int64(v.(int)))
 	}

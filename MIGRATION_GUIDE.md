@@ -34,7 +34,7 @@ On our road to v1, we have decided to rework configuration to address the most c
 We have added new fields to match the ones in [the driver](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#Config) and to simplify setting account name. Specifically:
 - `include_retry_reason`, `max_retry_count`, `driver_tracing`, `tmp_directory_path` and `disable_console_login` are the new fields that are supported in the driver
 - `disable_saml_url_check` will be added to the provider after upgrading the driver
-- `account_name` and `organization_name` were added to improve handling account names. Read more in [docs](https://docs.snowflake.com/en/user-guide/admin-account-identifier).
+- `account_name` and `organization_name` were added to improve handling account names. Read more in [docs](https://docs.snowflake.com/en/user-guide/admin-account-identifier#using-an-account-name-as-an-identifier).
 
 #### *(behavior change)* deprecated fields
 Because of new fields `account_name` and `organization_name`, `account` is now deprecated. Please adjust your configurations from

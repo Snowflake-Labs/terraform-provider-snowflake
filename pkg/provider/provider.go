@@ -71,7 +71,7 @@ func Provider() *schema.Provider {
 			},
 			"password": {
 				Type:          schema.TypeString,
-				Description:   envNameFieldDescription("Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`.", snowflakeenvs.Password),
+				Description:   envNameFieldDescription("Password for user + password auth. Cannot be used with `browser_auth` or `private_key_path`.", snowflakeenvs.Password),
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.Password, nil),
@@ -132,7 +132,7 @@ func Provider() *schema.Provider {
 			},
 			"authenticator": {
 				Type:             schema.TypeString,
-				Description:      envNameFieldDescription(fmt.Sprintf("Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid options are: %v. It has to be set explicitly to JWT for private key authentication.", docs.PossibleValuesListed(sdk.AllAuthenticationTypes)), snowflakeenvs.Authenticator),
+				Description:      envNameFieldDescription(fmt.Sprintf("Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid options are: %v. Value `JWT` is deprecated and will be removed in future releases.", docs.PossibleValuesListed(sdk.AllAuthenticationTypes)), snowflakeenvs.Authenticator),
 				Optional:         true,
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Authenticator, string(sdk.AuthenticationTypeSnowflake)),
 				ValidateDiagFunc: validators.NormalizeValidation(sdk.ToAuthenticatorType),
@@ -358,14 +358,14 @@ func Provider() *schema.Provider {
 			// Deprecated attributes
 			"account": {
 				Type:        schema.TypeString,
-				Description: envNameFieldDescription("Specifies your Snowflake account identifier assigned, by Snowflake. The [account locator](https://docs.snowflake.com/en/user-guide/admin-account-identifier#format-2-account-locator-in-a-region) format is not supported. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). Required unless using `profile`.", snowflakeenvs.Account),
+				Description: envNameFieldDescription("Use `account_name` and `organization_name` instead. Specifies your Snowflake account identifier assigned, by Snowflake. The [account locator](https://docs.snowflake.com/en/user-guide/admin-account-identifier#format-2-account-locator-in-a-region) format is not supported. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). Required unless using `profile`.", snowflakeenvs.Account),
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Account, nil),
 				Deprecated:  "Use `account_name` and `organization_name` instead of `account`",
 			},
 			"username": {
 				Type:        schema.TypeString,
-				Description: envNameFieldDescription("Username for username+password authentication. Required unless using `profile`.", snowflakeenvs.Username),
+				Description: envNameFieldDescription("Username for user + password authentication. Required unless using `profile`.", snowflakeenvs.Username),
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Username, nil),
 				Deprecated:  "Use `user` instead of `username`",
@@ -654,9 +654,6 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 }
 
 func getDriverConfigFromTOML(profile string) (*gosnowflake.Config, error) {
-	if profile == "default" {
-		return sdk.DefaultConfig(), nil
-	}
 	profileConfig, err := sdk.ProfileConfig(profile)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve profile config: %w", err)
@@ -724,12 +721,12 @@ func getDriverConfigFromTerraform(s *schema.ResourceData) (*gosnowflake.Config, 
 			}
 			return nil
 		}(),
-		handleDurationAttribute(s, "login_timeout", &config.LoginTimeout),
-		handleDurationAttribute(s, "request_timeout", &config.RequestTimeout),
-		handleDurationAttribute(s, "jwt_expire_timeout", &config.JWTExpireTimeout),
-		handleDurationAttribute(s, "client_timeout", &config.ClientTimeout),
-		handleDurationAttribute(s, "jwt_client_timeout", &config.JWTClientTimeout),
-		handleDurationAttribute(s, "external_browser_timeout", &config.ExternalBrowserTimeout),
+		handleDurationInSecondsAttribute(s, "login_timeout", &config.LoginTimeout),
+		handleDurationInSecondsAttribute(s, "request_timeout", &config.RequestTimeout),
+		handleDurationInSecondsAttribute(s, "jwt_expire_timeout", &config.JWTExpireTimeout),
+		handleDurationInSecondsAttribute(s, "client_timeout", &config.ClientTimeout),
+		handleDurationInSecondsAttribute(s, "jwt_client_timeout", &config.JWTClientTimeout),
+		handleDurationInSecondsAttribute(s, "external_browser_timeout", &config.ExternalBrowserTimeout),
 		handleBoolField(s, "insecure_mode", &config.InsecureMode),
 		// ocsp fail open
 		func() error {
