@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_StreamOnTable_Basic(t *testing.T) {
@@ -869,8 +870,9 @@ func TestAcc_StreamOnTable_ExternalStreamTypeChange(t *testing.T) {
 					view, cleanupView := acc.TestClient().View.CreateView(t, statement)
 					t.Cleanup(cleanupView)
 					acc.TestClient().Stream.DropFunc(t, id)()
-					_, cleanup := acc.TestClient().Stream.CreateOnViewWithRequest(t, sdk.NewCreateOnViewStreamRequest(id, view.ID()))
+					externalChangeStream, cleanup := acc.TestClient().Stream.CreateOnViewWithRequest(t, sdk.NewCreateOnViewStreamRequest(id, view.ID()))
 					t.Cleanup(cleanup)
+					require.Equal(t, sdk.StreamSourceTypeView, *externalChangeStream.SourceType)
 				},
 				Config: config.FromModel(t, model),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

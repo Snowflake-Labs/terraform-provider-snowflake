@@ -250,6 +250,9 @@ func RecreateWhenResourceTypeChangedExternally[T ~string](typeField string, want
 				return fmt.Errorf("unknown type: %w", err)
 			}
 			if gotType != wantType {
+				// we have to set here a value instead of just SetNewComputed
+				// because with empty value (default snowflake behavior for type) ForceNew fails
+				// because there are no changes (at least from the SDKv2 point of view) for typeField
 				return errors.Join(diff.SetNew(typeField, "<changed externally>"), diff.ForceNew(typeField))
 			}
 		}
