@@ -1,6 +1,9 @@
 package sdk
 
 import (
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -16,6 +19,7 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/youmark/pkcs8"
 )
 
 func TestLoadConfigFile(t *testing.T) {
@@ -47,74 +51,31 @@ func TestLoadConfigFile(t *testing.T) {
 	assert.Equal(t, "SECURITYADMIN", *m["securityadmin"].Role)
 }
 
-// These keys were generated with the following commands:
-// openssl genrsa -aes128 -passout pass:password -out private.key 2048
-// openssl rsa -in private.key -out decrypted_private.key
-// <enter password>
-// TODO(): generate keys dynamically using Go libraries
-const privateKey = `-----BEGIN PRIVATE KEY-----
-MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDyXQvU2Bffntwm
-2RMntwBagl8Q/yco8L+Gotd7jq1JldamvxJbpO2tj7Iq/nhAA9N4gDQ3AHbEmWgV
-f/+xYKuWs9Itp5OAU0fLRxPkUIsapX8PO67NlTIQLXsp7Jg60R36r6aSD68pGie1
-NWSfqw5EB6eezn/7iBjJQfnvZ5TdTyHm+L0+qsAj5PhWSvgLyzGXgXw5Cz0QwbmD
-bkt5gkPIvjzgPc/1V8kclknyc7mU5Eu2F06xvK+MQHvR9usLZBG2Q7BD2jDPBHGe
-M/aVsUA1v9F8bw9CdPQEa+7TdHmsdvDi8m3OhYC2RNBoqpZ+yy+A6JiWMYBCK82e
-Itg00SdjAgMBAAECggEAAeuHUzKJD2u7kejo4IQDvm7k+OjEkLDP4Is3VH7VNoia
-FXZTDKNaMtXDBGMtxzz5IwZdma9VS2K8Mu8Y7dF2qU3JAXAf7CMkJeMUdSWzlkLM
-/yg+Yp6iFBeT1xhNKiCVSi3bNgDIzlerICum2LEhL9dSm0f356tXJ9nv6pvjWUrb
-Nch5bm084m8As1La99HPLOhr4zN6YONAnb2SkuTy/TJJ3BCWPci3obrtGePSbnf5
-3DSqfRF/BBcq1yPMyHKvmdEOFBzSNtH8PKT//9Yg5IpDj3WWOGlWTv2eQIriRmQx
-Ha36RbzXMn3BSPPkVSGPbDGrp3WBLTVTx6ST5fnIyQKBgQD82qCdNwCEK8Aya9wL
-303BK4KFnnAfNT91pS7sgnrFvTKAnCtYbofNUsQwtzicKSLJ6rOLPsxfvr1hwVZE
-avUgfTXSjWuJ3kQq9MoXKtCb2XKDcUk+HrN5l9XObZLfB5mpQgBZmXGbMaHujcA9
-1gP/bJ0k4whOyQDHloxjSH83mwKBgQD1YQFLmhmqydTUPlxr1N7haxNpttC6RBIb
-oRbXQNihzAeyYccab/FdSoWyzPjYvYm0EwFWYhZBetnSb9D9vZP0opvdtLLzzySI
-CzW053eePyvb63FNJgWpEQsrL3GAOUIIrGkuC2BRL5XtF+mUcU2jPQDTgDhfrefz
-0dFvPtHf2QKBgQDuSBmUDoEuDQzSd1Km3YkowRf/U4/V2Rg0hbXyrAOG1QUCrikq
-7P6NP7IjNobiouFl5wfL8SIoGFfgB5KEZ0cZluVhxmPRSOR0lrrbmj18oS6JL/kV
-0VjQ/YU/Q4NlKoRkPQ6XYULuPZecd3jyzPx3eKOeX1U06bcSX41tAqTggQKBgQCB
-6AFPjR3ZlVDfrMQxMlls7csxRF/svOz5Q6db/jCyN9o7ThiinnEh+rodlvaHiJDG
-jOlAWl19/RQknJ4AN8WE1jG+hlPXT+r/OzALvh9N4BPQMi2hsmd8wlEvY8arI6Ua
-Am0Mu2kakh7FjstSk0mPClTNpCw0O1V5d7NxOcjSwQKBgF6HPWRTkE/no2NNwLle
-epeaH9iCeFMKZWsSF1t4T09i4H+izBmTQqgJKm202FXSOEngHyiGdXZNzcujzQLb
-V+mI/CeDv1PZTa2ju5D/fniqgeRRgfixqR0wq7sDqJIlpBzHnQnANBoJW2t4pirE
-HPOlkuMp4rxcPXwQgV5LMrao
------END PRIVATE KEY-----
-`
-
-const encryptedPrivateKey = `-----BEGIN ENCRYPTED PRIVATE KEY-----
-MIIFNTBfBgkqhkiG9w0BBQ0wUjAxBgkqhkiG9w0BBQwwJAQQ7R0F4yA4ir5buYp7
-UzK+vAICCAAwDAYIKoZIhvcNAgkFADAdBglghkgBZQMEAQIEEIaGrNdggYwWopje
-YurbXlcEggTQpb/QNPnjHiZ5WNeM/bnYjK0/W0oKBiCmDz7ZgyHypIyAqfOTesh5
-rEbI7+EnkEOqCE4OwpGWZgkJsbrxbmbv1eGm1fTZXxZBONpmeuv72FRL1NZ2kTUJ
-JV84tc7uyYbJcKnfPjcqjDOxxK5gVkArm2uaVLSZkXpCjL2LWgurF4ajZfotOiDo
-ziYxDnLXzkhhdNu/itTJ0Qoo5/Eo91QO6+zZWx6/T1mNtDW4gUXN0T8ev5FYpFdR
-aJVetwMLJYprbsbatHMjazsdUoMQVt74e4pDfkZROidLgfSP2ud3ZgTp50uIbyfG
-h9mTAWAv1Cv8KCvc2BbCQc3B6IJdiA9oO6P1H9bmSlQE7UYwwqJ4TVN+RCc2Uosi
-QshRpeAoSOHGqQw0LeXbr6wFYsYbbjTTlMEK9dor3vLDXfsuSBzf9rVyMpLeL+s2
-GCag90Bd+MjHJCz+hQHEXlDtbSLNEp8oIOj+Y0FodDKzfMBrKghUsIiE64rVVLOQ
-SwUrQTYWsbu9O8bmcKthzedz5ZCJc6JujR1jgnTeLsLNTjOazHiZEoNJAUyqds3p
-StpTlRFBAy+UGYqSuX3aNkVL2hXQPzZ4Xe3QMGrCyQfzLxH0QaSYdCdH37k5EzEb
-MbaHMt9ktt0aGJfAAKzqagcvOnwgvq8lQHPMJZcyKCpUCrf1yKxpIutVD8l0l+70
-rtMr3McALKOfhKqokiZBR6VCL1l78Ifu//qhzsCXW3HLcdwfBSwHwoAwCkip9tFq
-7ZjfMZ4/6466kvt1ZwrrjClkfS5Kaz0ZuzFdUSpUoE4sXzgvL6i/HvnBCwEA476E
-yTJKu9QmGFE2Jz2PVuhhRyGmDy4Tpg68wTBhZZLbf+190G0eSvXdhus/IZfdh5bH
-pkbcs7ApsR9I+2HwPqUpNzclktlblsXPpwzBsFvE48qYs9ybSej1wamzx3DmDmuJ
-surY5eF5lZJtKEdaFASORZbtgwmr5OnycYK0Qrzm/P5lTwlZPaJSN8sJCsAV/++w
-r76vxmVUaIvhaIs2DR3fp8FTXz1+obulivP6j7qNGcW72Yk1Ssx9wuroS/4PZ/T3
-x6hgWqdeaLCDK9pBibf3R/7wZLr3UygkUrA95bHzLaEsKHA7h1qwPaWO6a/255Nx
-mJBeDruhULaCMjrcMK5SHf/Iwo6wRbDSbb8uQkpdH9Si5lDaBtf0FtNVCefzu+B8
-MFVQ9VrQPLv5h0AZnKNynLe0JwdB+mdadKCebF+2FhB5X7h8IfyhAhsQ+vST61P5
-meRXgyuIukr3BjAWenuZkYHc7BSxwTSfWcxptDW9BzM3aEA+wP2HR+dzbv+mZrw/
-ABUOA1WweCTKrKMnvOaJPuXoZMe8BfN4YvAHYRn14f4M/cU2D41iZQV0VAq0jnaZ
-Oye8TLd5QgqVXIoXKsSTzcVhs90ga3c7UJWixUK8K5d5tspbY3JCfHY24P8t6vlt
-MQOU9wX+FwliEXEGuntPwKksyzOYD0P+olzfqc3U+xI+60jCK6EoPHlJE7BeDBkI
-L63OUALjyIijmvsKJ6NnQ8RzPqR6qrLocTQA/dEE1RUy7K8RQduWjHmASSe8tiCT
-EGmrLRxfSjAOuO14x/WbIh+p88t6u4ewNid1LrQNWbE+xFaEQqqDpmo=
------END ENCRYPTED PRIVATE KEY-----
-`
-
 func TestProfileConfig(t *testing.T) {
+	rsaPrivateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	unencryptedDer, err := x509.MarshalPKCS8PrivateKey(rsaPrivateKey)
+	require.NoError(t, err)
+	privBlock := pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: unencryptedDer,
+	}
+	unencryptedKey := string(pem.EncodeToMemory(&privBlock))
+
+	encryptedDer, err := pkcs8.MarshalPrivateKey(rsaPrivateKey, []byte("password"), &pkcs8.Opts{
+		Cipher: pkcs8.AES256CBC,
+		KDFOpts: pkcs8.PBKDF2Opts{
+			SaltSize: 16, IterationCount: 2000, HMACHash: crypto.SHA256,
+		},
+	})
+	require.NoError(t, err)
+	privEncryptedBlock := pem.Block{
+		Type:  "ENCRYPTED PRIVATE KEY",
+		Bytes: encryptedDer,
+	}
+	encryptedKey := string(pem.EncodeToMemory(&privEncryptedBlock))
+
 	c := fmt.Sprintf(`
 	[securityadmin]
 	account='account'
@@ -154,7 +115,10 @@ func TestProfileConfig(t *testing.T) {
 	disablequerycontextcache=true
 	includeretryreason=true
 	disableconsolelogin=true
-	`, encryptedPrivateKey, "password")
+
+	[securityadmin.params]
+	foo = 'bar'
+	`, encryptedKey, "password")
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
 	t.Run("with found profile", func(t *testing.T) {
@@ -162,13 +126,14 @@ func TestProfileConfig(t *testing.T) {
 
 		config, err := ProfileConfig("securityadmin")
 		require.NoError(t, err)
+		require.NotNil(t, config.PrivateKey)
 
-		key, err := x509.MarshalPKCS8PrivateKey(config.PrivateKey)
+		gotKey, err := x509.MarshalPKCS8PrivateKey(config.PrivateKey)
 		require.NoError(t, err)
-		pemdata := pem.EncodeToMemory(
+		gotUnencryptedKey := pem.EncodeToMemory(
 			&pem.Block{
 				Type:  "PRIVATE KEY",
-				Bytes: key,
+				Bytes: gotKey,
 			},
 		)
 
@@ -177,6 +142,7 @@ func TestProfileConfig(t *testing.T) {
 		assert.Equal(t, "password", config.Password)
 		assert.Equal(t, "warehouse", config.Warehouse)
 		assert.Equal(t, "role", config.Role)
+		assert.Equal(t, map[string]*string{"foo": Pointer("bar")}, config.Params)
 		assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
 		assert.Equal(t, "1.1.1.1", config.ClientIP.String())
 		assert.Equal(t, "http", config.Protocol)
@@ -194,17 +160,17 @@ func TestProfileConfig(t *testing.T) {
 		assert.Equal(t, 60*time.Second, config.ExternalBrowserTimeout)
 		assert.Equal(t, 1, config.MaxRetryCount)
 		assert.Equal(t, true, config.InsecureMode)
-		assert.Equal(t, true, config.InsecureMode)
 		assert.Equal(t, "token", config.Token)
 		assert.Equal(t, gosnowflake.OCSPFailOpenTrue, config.OCSPFailOpen)
 		assert.Equal(t, true, config.KeepSessionAlive)
-		assert.Equal(t, privateKey, string(pemdata))
+		assert.Equal(t, unencryptedKey, string(gotUnencryptedKey))
 		assert.Equal(t, true, config.DisableTelemetry)
 		assert.Equal(t, "tracing", config.Tracing)
 		assert.Equal(t, ".", config.TmpDirPath)
 		assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ClientRequestMfaToken)
 		assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ClientStoreTemporaryCredential)
 		assert.Equal(t, true, config.DisableQueryContextCache)
+		assert.Equal(t, gosnowflake.ConfigBoolTrue, config.IncludeRetryReason)
 		assert.Equal(t, gosnowflake.ConfigBoolTrue, config.IncludeRetryReason)
 		assert.Equal(t, gosnowflake.ConfigBoolTrue, config.DisableConsoleLogin)
 	})
@@ -310,7 +276,7 @@ func Test_MergeConfig(t *testing.T) {
 		ClientRequestMfaToken:          gosnowflake.ConfigBoolTrue,
 		ClientStoreTemporaryCredential: gosnowflake.ConfigBoolTrue,
 		DisableQueryContextCache:       true,
-		IncludeRetryReason:             2,
+		IncludeRetryReason:             gosnowflake.ConfigBoolTrue,
 		DisableConsoleLogin:            gosnowflake.ConfigBoolTrue,
 	}
 

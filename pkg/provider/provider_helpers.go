@@ -95,7 +95,7 @@ func getPrivateKey(privateKeyPath, privateKeyString, privateKeyPassphrase string
 			return nil, fmt.Errorf("private Key file could not be read err = %w", err)
 		}
 	}
-	return parsePrivateKey(privateKeyBytes, []byte(privateKeyPassphrase))
+	return sdk.ParsePrivateKey(privateKeyBytes, []byte(privateKeyPassphrase))
 }
 
 func readFile(privateKeyPath string) ([]byte, error) {
@@ -114,10 +114,6 @@ func readFile(privateKeyPath string) ([]byte, error) {
 	}
 
 	return privateKeyBytes, nil
-}
-
-func parsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey, error) {
-	return sdk.ParsePrivateKey(privateKeyBytes, passhrase)
 }
 
 type GetRefreshTokenResponseBody struct {
@@ -206,13 +202,11 @@ func handleBooleanStringAttribute(d *schema.ResourceData, key string, field *gos
 		if err != nil {
 			return err
 		}
-		// *field = sdk.Bool(parsed)
 		if parsed {
 			*field = gosnowflake.ConfigBoolTrue
 		} else {
 			*field = gosnowflake.ConfigBoolFalse
 		}
-
 	}
 	return nil
 }

@@ -194,16 +194,18 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 					assert.Equal(t, &gosnowflake.Config{
-						Account:                        account,
-						User:                           user,
-						Password:                       pass,
-						Warehouse:                      "SNOWFLAKE",
-						Role:                           "ACCOUNTADMIN",
-						ValidateDefaultParameters:      gosnowflake.ConfigBoolTrue,
-						ClientIP:                       net.ParseIP("1.2.3.4"),
-						Protocol:                       "https",
-						Host:                           fmt.Sprintf("%s.snowflakecomputing.com", account),
-						Params:                         make(map[string]*string),
+						Account:                   account,
+						User:                      user,
+						Password:                  pass,
+						Warehouse:                 "SNOWFLAKE",
+						Role:                      "ACCOUNTADMIN",
+						ValidateDefaultParameters: gosnowflake.ConfigBoolTrue,
+						ClientIP:                  net.ParseIP("1.2.3.4"),
+						Protocol:                  "https",
+						Host:                      fmt.Sprintf("%s.snowflakecomputing.com", account),
+						Params: map[string]*string{
+							"foo": sdk.Pointer("bar"),
+						},
 						Port:                           443,
 						Authenticator:                  gosnowflake.AuthTypeSnowflake,
 						PasscodeInPassword:             false,
@@ -299,15 +301,17 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 					assert.Equal(t, &gosnowflake.Config{
-						Account:                        account,
-						User:                           user,
-						Password:                       pass,
-						Warehouse:                      "SNOWFLAKE",
-						Role:                           "ACCOUNTADMIN",
-						ValidateDefaultParameters:      gosnowflake.ConfigBoolFalse,
-						ClientIP:                       net.ParseIP("2.2.2.2"),
-						Protocol:                       "https",
-						Params:                         make(map[string]*string),
+						Account:                   account,
+						User:                      user,
+						Password:                  pass,
+						Warehouse:                 "SNOWFLAKE",
+						Role:                      "ACCOUNTADMIN",
+						ValidateDefaultParameters: gosnowflake.ConfigBoolFalse,
+						ClientIP:                  net.ParseIP("2.2.2.2"),
+						Protocol:                  "https",
+						Params: map[string]*string{
+							"foo": sdk.Pointer("bar"),
+						},
 						Host:                           fmt.Sprintf("%s.snowflakecomputing.com", account),
 						Port:                           443,
 						Authenticator:                  gosnowflake.AuthTypeSnowflake,
@@ -418,7 +422,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 						ClientIP:                  net.ParseIP("3.3.3.3"),
 						Protocol:                  "HTTPS",
 						Params: map[string]*string{
-							"foo": sdk.Pointer("bar"),
+							"foo": sdk.Pointer("piyo"),
 						},
 						Host:                           fmt.Sprintf("%s.snowflakecomputing.com", account),
 						Port:                           443,
@@ -488,6 +492,10 @@ tmpdirpath='.'
 disablequerycontextcache=true
 includeretryreason=true
 disableconsolelogin=true
+
+[complete_fields.params]
+foo = 'bar'
+
 `, accountName, orgName, user, password))
 }
 
@@ -816,7 +824,7 @@ provider "snowflake" {
 	tmp_directory_path = "../../"
 	disable_console_login = true
 	params = {
-		foo = "bar"
+		foo = "piyo"
 	}
 }
 `, profile, orgName, accountName, user, password) + datasourceConfig()

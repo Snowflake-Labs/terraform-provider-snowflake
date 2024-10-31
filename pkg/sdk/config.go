@@ -218,44 +218,45 @@ func getConfigFileName() (string, error) {
 }
 
 type ConfigDTO struct {
-	Account                        *string `toml:"account"`
-	AccountName                    *string `toml:"accountname"`
-	OrganizationName               *string `toml:"organizationname"`
-	User                           *string `toml:"user"`
-	Username                       *string `toml:"username"`
-	Password                       *string `toml:"password"`
-	Host                           *string `toml:"host"`
-	Warehouse                      *string `toml:"warehouse"`
-	Role                           *string `toml:"role"`
-	ClientIp                       *string `toml:"clientip"`
-	Protocol                       *string `toml:"protocol"`
-	Passcode                       *string `toml:"passcode"`
-	Port                           *int    `toml:"port"`
-	PasscodeInPassword             *bool   `toml:"passcodeinpassword"`
-	OktaUrl                        *string `toml:"oktaurl"`
-	ClientTimeout                  *int    `toml:"clienttimeout"`
-	JwtClientTimeout               *int    `toml:"jwtclienttimeout"`
-	LoginTimeout                   *int    `toml:"logintimeout"`
-	RequestTimeout                 *int    `toml:"requesttimeout"`
-	JwtExpireTimeout               *int    `toml:"jwtexpiretimeout"`
-	ExternalBrowserTimeout         *int    `toml:"externalbrowsertimeout"`
-	MaxRetryCount                  *int    `toml:"maxretrycount"`
-	Authenticator                  *string `toml:"authenticator"`
-	InsecureMode                   *bool   `toml:"insecuremode"`
-	OcspFailOpen                   *bool   `toml:"ocspfailopen"`
-	Token                          *string `toml:"token"`
-	KeepSessionAlive               *bool   `toml:"keepsessionalive"`
-	PrivateKey                     *string `toml:"privatekey,multiline"`
-	PrivateKeyPassphrase           *string `toml:"privatekeypassphrase"`
-	DisableTelemetry               *bool   `toml:"disabletelemetry"`
-	ValidateDefaultParameters      *bool   `toml:"validatedefaultparameters"`
-	ClientRequestMfaToken          *bool   `toml:"clientrequestmfatoken"`
-	ClientStoreTemporaryCredential *bool   `toml:"clientstoretemporarycredential"`
-	Tracing                        *string `toml:"tracing"`
-	TmpDirPath                     *string `toml:"tmpdirpath"`
-	DisableQueryContextCache       *bool   `toml:"disablequerycontextcache"`
-	IncludeRetryReason             *bool   `toml:"includeretryreason"`
-	DisableConsoleLogin            *bool   `toml:"disableconsolelogin"`
+	Account                        *string             `toml:"account"`
+	AccountName                    *string             `toml:"accountname"`
+	OrganizationName               *string             `toml:"organizationname"`
+	User                           *string             `toml:"user"`
+	Username                       *string             `toml:"username"`
+	Password                       *string             `toml:"password"`
+	Host                           *string             `toml:"host"`
+	Warehouse                      *string             `toml:"warehouse"`
+	Role                           *string             `toml:"role"`
+	Params                         *map[string]*string `toml:"params"`
+	ClientIp                       *string             `toml:"clientip"`
+	Protocol                       *string             `toml:"protocol"`
+	Passcode                       *string             `toml:"passcode"`
+	Port                           *int                `toml:"port"`
+	PasscodeInPassword             *bool               `toml:"passcodeinpassword"`
+	OktaUrl                        *string             `toml:"oktaurl"`
+	ClientTimeout                  *int                `toml:"clienttimeout"`
+	JwtClientTimeout               *int                `toml:"jwtclienttimeout"`
+	LoginTimeout                   *int                `toml:"logintimeout"`
+	RequestTimeout                 *int                `toml:"requesttimeout"`
+	JwtExpireTimeout               *int                `toml:"jwtexpiretimeout"`
+	ExternalBrowserTimeout         *int                `toml:"externalbrowsertimeout"`
+	MaxRetryCount                  *int                `toml:"maxretrycount"`
+	Authenticator                  *string             `toml:"authenticator"`
+	InsecureMode                   *bool               `toml:"insecuremode"`
+	OcspFailOpen                   *bool               `toml:"ocspfailopen"`
+	Token                          *string             `toml:"token"`
+	KeepSessionAlive               *bool               `toml:"keepsessionalive"`
+	PrivateKey                     *string             `toml:"privatekey,multiline"`
+	PrivateKeyPassphrase           *string             `toml:"privatekeypassphrase"`
+	DisableTelemetry               *bool               `toml:"disabletelemetry"`
+	ValidateDefaultParameters      *bool               `toml:"validatedefaultparameters"`
+	ClientRequestMfaToken          *bool               `toml:"clientrequestmfatoken"`
+	ClientStoreTemporaryCredential *bool               `toml:"clientstoretemporarycredential"`
+	Tracing                        *string             `toml:"tracing"`
+	TmpDirPath                     *string             `toml:"tmpdirpath"`
+	DisableQueryContextCache       *bool               `toml:"disablequerycontextcache"`
+	IncludeRetryReason             *bool               `toml:"includeretryreason"`
+	DisableConsoleLogin            *bool               `toml:"disableconsolelogin"`
 }
 
 func (c *ConfigDTO) DriverConfig() (gosnowflake.Config, error) {
@@ -270,6 +271,7 @@ func (c *ConfigDTO) DriverConfig() (gosnowflake.Config, error) {
 	pointerAttributeSet(c.Host, &driverCfg.Host)
 	pointerAttributeSet(c.Warehouse, &driverCfg.Warehouse)
 	pointerAttributeSet(c.Role, &driverCfg.Role)
+	pointerAttributeSet(c.Params, &driverCfg.Params)
 	pointerIpAttributeSet(c.ClientIp, &driverCfg.ClientIP)
 	pointerAttributeSet(c.Protocol, &driverCfg.Protocol)
 	pointerAttributeSet(c.Passcode, &driverCfg.Passcode)
@@ -376,23 +378,24 @@ func loadConfigFile() (map[string]ConfigDTO, error) {
 	return s, nil
 }
 
-func ParsePrivateKey(privateKeyBytes []byte, passhrase []byte) (*rsa.PrivateKey, error) {
+func ParsePrivateKey(privateKeyBytes []byte, passphrase []byte) (*rsa.PrivateKey, error) {
 	privateKeyBlock, _ := pem.Decode(privateKeyBytes)
 	if privateKeyBlock == nil {
 		return nil, fmt.Errorf("could not parse private key, key is not in PEM format")
 	}
 
 	if privateKeyBlock.Type == "ENCRYPTED PRIVATE KEY" {
-		if len(passhrase) == 0 {
+		if len(passphrase) == 0 {
 			return nil, fmt.Errorf("private key requires a passphrase, but private_key_passphrase was not supplied")
 		}
-		privateKey, err := pkcs8.ParsePKCS8PrivateKeyRSA(privateKeyBlock.Bytes, passhrase)
+		privateKey, err := pkcs8.ParsePKCS8PrivateKeyRSA(privateKeyBlock.Bytes, passphrase)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse encrypted private key with passphrase, only ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc are supported err = %w", err)
 		}
 		return privateKey, nil
 	}
 
+	// TODO(SNOW-1754327): check if we can simply use ssh.ParseRawPrivateKeyWithPassphrase
 	privateKey, err := ssh.ParseRawPrivateKey(privateKeyBytes)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse private key err = %w", err)

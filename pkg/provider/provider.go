@@ -100,7 +100,7 @@ func Provider() *schema.Provider {
 			},
 			"params": {
 				Type:        schema.TypeMap,
-				Description: "Sets other connection (i.e. session) parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters)",
+				Description: "Sets other connection (i.e. session) parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters). This field can not be set with environmental variables.",
 				Optional:    true,
 			},
 			"client_ip": {
