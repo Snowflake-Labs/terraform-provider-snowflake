@@ -41,6 +41,7 @@ func StreamOnDirectoryTable() *schema.Resource {
 			ComputedIfAnyAttributeChanged(streamOnDirectoryTableSchema, ShowOutputAttributeName, "stage", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnDirectoryTableSchema, DescribeOutputAttributeName, "stage", "comment"),
 			RecreateWhenStreamIsStale(),
+			RecreateWhenStreamTypeChangedExternally(sdk.StreamSourceTypeStage),
 		),
 
 		Schema: streamOnDirectoryTableSchema,
