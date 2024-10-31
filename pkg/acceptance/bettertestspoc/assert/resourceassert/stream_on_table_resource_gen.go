@@ -155,3 +155,8 @@ func (s *StreamOnTableResourceAssert) HasNoTable() *StreamOnTableResourceAssert 
 	s.AddAssertion(assert.ValueNotSet("table"))
 	return s
 }
+
+func (s *StreamOnTableResourceAssert) HasStreamTypeString(expected string) *StreamOnTableResourceAssert {
+	s.AddAssertion(assert.ValueSet("stream_type", expected))
+	return s
+}

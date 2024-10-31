@@ -228,6 +228,38 @@ func RecreateWhenSecretTypeChangedExternally(secretType sdk.SecretType) schema.C
 	}
 }
 
+// RecreateWhenStreamTypeChangedExternally recreates a stream when argument streamType is different than in the state.
+func RecreateWhenStreamTypeChangedExternally(streamType sdk.StreamSourceType) schema.CustomizeDiffFunc {
+	return RecreateWhenResourceTypeChangedExternally("stream_type", streamType, sdk.ToStreamSourceType)
+}
+
+// RecreateWhenResourceTypeChangedExternally recreates a resource when argument wantType is different than the value in typeField.
+func RecreateWhenResourceTypeChangedExternally[T ~string](typeField string, wantType T, toType func(string) (T, error)) schema.CustomizeDiffFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		if n := diff.Get(typeField); n != nil {
+			logging.DebugLogger.Printf("[DEBUG] new external value for %s: %s\n", typeField, n.(string))
+
+			gotTypeRaw := n.(string)
+			// if the type is empty, the state is empty - do not recreate
+			if gotTypeRaw == "" {
+				return nil
+			}
+
+			gotType, err := toType(gotTypeRaw)
+			if err != nil {
+				return fmt.Errorf("unknown type: %w", err)
+			}
+			if gotType != wantType {
+				// we have to set here a value instead of just SetNewComputed
+				// because with empty value (default snowflake behavior for type) ForceNew fails
+				// because there are no changes (at least from the SDKv2 point of view) for typeField
+				return errors.Join(diff.SetNew(typeField, "<changed externally>"), diff.ForceNew(typeField))
+			}
+		}
+		return nil
+	}
+}
+
 // RecreateWhenStreamIsStale detects when the stream is stale, and sets a `false` value for `stale` field.
 // This means that the provider can detect that change in `stale` from `true` to `false`, where `false` is our desired state.
 func RecreateWhenStreamIsStale() schema.CustomizeDiffFunc {

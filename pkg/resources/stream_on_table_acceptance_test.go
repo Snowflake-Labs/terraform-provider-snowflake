@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_StreamOnTable_Basic(t *testing.T) {
@@ -82,7 +83,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeDefault).
@@ -140,7 +141,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -192,7 +193,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -241,7 +242,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeDefault).
@@ -619,7 +620,7 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 						HasComment("foo").
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -736,7 +737,7 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 						HasComment("foo").
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -831,6 +832,62 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 			{
 				Config:      config.FromModel(t, modelWithInvalidTableId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
+			},
+		},
+	})
+}
+
+func TestAcc_StreamOnTable_ExternalStreamTypeChange(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	acc.TestAccPreCheck(t)
+	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
+	t.Cleanup(cleanupTable)
+
+	model := model.StreamOnTableBase("test", id, table.ID())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.StreamOnTableResource(t, model.ResourceReference()).
+							HasStreamTypeString(string(sdk.StreamSourceTypeTable)),
+						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
+							HasSourceType(sdk.StreamSourceTypeTable),
+					),
+				),
+			},
+			// external change with a different type
+			{
+				PreConfig: func() {
+					statement := fmt.Sprintf("SELECT * FROM %s", table.ID().FullyQualifiedName())
+					view, cleanupView := acc.TestClient().View.CreateView(t, statement)
+					t.Cleanup(cleanupView)
+					acc.TestClient().Stream.DropFunc(t, id)()
+					externalChangeStream, cleanup := acc.TestClient().Stream.CreateOnViewWithRequest(t, sdk.NewCreateOnViewStreamRequest(id, view.ID()))
+					t.Cleanup(cleanup)
+					require.Equal(t, sdk.StreamSourceTypeView, *externalChangeStream.SourceType)
+				},
+				Config: config.FromModel(t, model),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.StreamOnTableResource(t, model.ResourceReference()).
+							HasStreamTypeString(string(sdk.StreamSourceTypeTable)),
+						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
+							HasSourceType(sdk.StreamSourceTypeTable),
+					),
+				),
 			},
 		},
 	})

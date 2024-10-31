@@ -2,53 +2,48 @@ package datasources
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var streamsSchema = map[string]*schema.Schema{
-	"database": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The database from which to return the streams from.",
+	"with_describe": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: "Runs DESC STREAM for each user returned by SHOW STREAMS. The output of describe is saved to the description field. By default this value is set to true.",
 	},
-	"schema": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The schema from which to return the streams from.",
-	},
+	"like":        likeSchema,
+	"in":          extendedInSchema,
+	"starts_with": startsWithSchema,
+	"limit":       limitFromSchema,
 	"streams": {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "The streams in the schema",
+		Description: "Holds the aggregated output of all streams details queries.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
-					Type:     schema.TypeString,
-					Computed: true,
+				resources.ShowOutputAttributeName: {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "Holds the output of SHOW STREAMS.",
+					Elem: &schema.Resource{
+						Schema: schemas.ShowStreamSchema,
+					},
 				},
-				"database": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"schema": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"comment": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"table": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+				resources.DescribeOutputAttributeName: {
+					Type:        schema.TypeList,
+					Computed:    true,
+					Description: "Holds the output of DESCRIBE STREAM.",
+					Elem: &schema.Resource{
+						Schema: schemas.DescribeStreamSchema,
+					},
 				},
 			},
 		},
@@ -57,40 +52,49 @@ var streamsSchema = map[string]*schema.Schema{
 
 func Streams() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadStreams,
-		Schema: streamsSchema,
+		ReadContext: ReadStreams,
+		Schema:      streamsSchema,
+		Description: "Datasource used to get details of filtered streams. Filtering is aligned with the current possibilities for [SHOW STREAMS](https://docs.snowflake.com/en/sql-reference/sql/show-streams) query. The results of SHOW and DESCRIBE are encapsulated in one output collection `streams`.",
 	}
 }
 
-func ReadStreams(d *schema.ResourceData, meta interface{}) error {
+func ReadStreams(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-	databaseName := d.Get("database").(string)
-	schemaName := d.Get("schema").(string)
+	req := sdk.ShowStreamRequest{}
 
-	currentStreams, err := client.Streams.Show(ctx, sdk.NewShowStreamRequest().
-		WithIn(sdk.ExtendedIn{
-			In: sdk.In{
-				Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
-			},
-		}))
+	handleLike(d, &req.Like)
+	handleLimitFrom(d, &req.Limit)
+	handleStartsWith(d, &req.StartsWith)
+	err := handleExtendedIn(d, &req.In)
 	if err != nil {
-		log.Printf("[DEBUG] streams in schema (%s) not found", d.Id())
-		d.SetId("")
-		return nil
+		return diag.FromErr(err)
 	}
 
-	streams := make([]map[string]any, len(currentStreams))
-	for i, stream := range currentStreams {
-		streams[i] = map[string]any{
-			"name":     stream.Name,
-			"database": stream.DatabaseName,
-			"schema":   stream.SchemaName,
-			"comment":  stream.Comment,
-			"table":    stream.TableName,
+	streams, err := client.Streams.Show(ctx, &req)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId("streams_read")
+
+	flattenedStreams := make([]map[string]any, len(streams))
+	for i, stream := range streams {
+		stream := stream
+		var streamDescriptions []map[string]any
+		if d.Get("with_describe").(bool) {
+			describeOutput, err := client.Streams.Describe(ctx, stream.ID())
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			streamDescriptions = []map[string]any{schemas.StreamDescriptionToSchema(*describeOutput)}
+		}
+
+		flattenedStreams[i] = map[string]any{
+			resources.ShowOutputAttributeName:     []map[string]any{schemas.StreamToSchema(&stream)},
+			resources.DescribeOutputAttributeName: streamDescriptions,
 		}
 	}
-
-	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
-	return d.Set("streams", streams)
+	if err := d.Set("streams", flattenedStreams); err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
 }

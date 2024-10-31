@@ -145,3 +145,8 @@ func (s *StreamOnExternalTableResourceAssert) HasNoStale() *StreamOnExternalTabl
 	s.AddAssertion(assert.ValueNotSet("stale"))
 	return s
 }
+
+func (s *StreamOnExternalTableResourceAssert) HasStreamTypeString(expected string) *StreamOnExternalTableResourceAssert {
+	s.AddAssertion(assert.ValueSet("stream_type", expected))
+	return s
+}

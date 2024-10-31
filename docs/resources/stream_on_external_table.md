@@ -90,6 +90,7 @@ resource "snowflake_stream_on_external_table" "stream" {
 - `id` (String) The ID of this resource.
 - `show_output` (List of Object) Outputs the result of `SHOW STREAMS` for the given stream. (see [below for nested schema](#nestedatt--show_output))
 - `stale` (Boolean) Indicated if the stream is stale. When Terraform detects that the stream is stale, the stream is recreated with `CREATE OR REPLACE`. Read more on stream staleness in Snowflake [docs](https://docs.snowflake.com/en/user-guide/streams-intro#data-retention-period-and-staleness).
+- `stream_type` (String) Specifies a type for the stream. This field is used for checking external changes and recreating the resources if needed.
 
 <a id="nestedblock--at"></a>
 ### Nested Schema for `at`

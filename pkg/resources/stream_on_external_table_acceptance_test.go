@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
@@ -92,7 +93,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -154,7 +155,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -206,7 +207,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -255,7 +256,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -304,7 +305,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -708,7 +709,7 @@ func TestAcc_StreamOnExternalTable_At(t *testing.T) {
 						HasComment("foo").
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -800,7 +801,7 @@ func TestAcc_StreamOnExternalTable_Before(t *testing.T) {
 						HasComment("foo").
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{externalTable.ID()}).
+						HasBaseTables(externalTable.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeInsertOnly).
@@ -886,6 +887,65 @@ func TestAcc_StreamOnExternalTable_InvalidConfiguration(t *testing.T) {
 			{
 				Config:      config.FromModel(t, modelWithInvalidExternalTableId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
+			},
+		},
+	})
+}
+
+func TestAcc_StreamOnExternalTable_ExternalStreamTypeChange(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	acc.TestAccPreCheck(t)
+	stageID := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
+	_, stageCleanup := acc.TestClient().Stage.CreateStageWithURL(t, stageID)
+	t.Cleanup(stageCleanup)
+
+	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stageLocation)
+	t.Cleanup(externalTableCleanup)
+	model := model.StreamOnExternalTableBase("test", id, externalTable.ID())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.StreamOnExternalTableResource(t, model.ResourceReference()).
+							HasStreamTypeString(string(sdk.StreamSourceTypeExternalTable)),
+						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
+							HasSourceType(sdk.StreamSourceTypeExternalTable),
+					),
+				),
+			},
+			// external change with a different type
+			{
+				PreConfig: func() {
+					table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
+					t.Cleanup(cleanupTable)
+					acc.TestClient().Stream.DropFunc(t, id)()
+					externalChangeStream, cleanup := acc.TestClient().Stream.CreateOnTableWithRequest(t, sdk.NewCreateOnTableStreamRequest(id, table.ID()))
+					t.Cleanup(cleanup)
+					require.Equal(t, sdk.StreamSourceTypeTable, *externalChangeStream.SourceType)
+				},
+				Config: config.FromModel(t, model),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.StreamOnExternalTableResource(t, model.ResourceReference()).
+							HasStreamTypeString(string(sdk.StreamSourceTypeExternalTable)),
+						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
+							HasSourceType(sdk.StreamSourceTypeExternalTable),
+					),
+				),
 			},
 		},
 	})

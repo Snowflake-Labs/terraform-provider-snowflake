@@ -79,6 +79,10 @@ type CreateOnViewStreamRequest struct {
 	Comment         *string
 }
 
+func (r *CreateOnViewStreamRequest) GetName() SchemaObjectIdentifier {
+	return r.name
+}
+
 type CloneStreamRequest struct {
 	OrReplace    *bool
 	name         SchemaObjectIdentifier // required

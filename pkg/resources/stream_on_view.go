@@ -59,6 +59,7 @@ func StreamOnView() *schema.Resource {
 			ComputedIfAnyAttributeChanged(StreamOnViewSchema, ShowOutputAttributeName, "view", "append_only", "comment"),
 			ComputedIfAnyAttributeChanged(StreamOnViewSchema, DescribeOutputAttributeName, "view", "append_only", "comment"),
 			RecreateWhenStreamIsStale(),
+			RecreateWhenStreamTypeChangedExternally(sdk.StreamSourceTypeView),
 		),
 
 		Schema: StreamOnViewSchema,
