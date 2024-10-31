@@ -34,7 +34,7 @@ var ConnectionDef = g.NewInterface(
 		OptionalQueryStructField(
 			"EnableConnectionFailover",
 			g.NewQueryStruct("EnableConnectionFailover").
-				List("ToAccounts", "AccountIdentifier", g.ListOptions().NoParentheses()),
+				List("ToAccounts", "AccountIdentifier", g.ListOptions().NoParentheses()), //.WithValidation(g.ValidateValueSet, "ToAccounts"),
 			g.KeywordOptions().SQL("ENABLE FAILOVER TO ACCOUNTS"),
 		).
 		OptionalQueryStructField(

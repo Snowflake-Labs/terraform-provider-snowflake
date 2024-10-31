@@ -1,8 +1,6 @@
 package resources_test
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -26,17 +24,13 @@ import (
 
 func TestAcc_Connection_Basic(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+	//_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
-
-	getConnectionUrl := func(organizationName, objectName string) string {
-		return strings.ToLower(fmt.Sprintf("%s-%s.snowflakecomputing.com", organizationName, objectName))
-	}
 
 	connectionModel := model.Connection("t", id.Name())
 	connectionModelWithComment := model.Connection("t", id.Name()).WithComment(comment)
@@ -87,7 +81,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 							HasPrimaryIdentifier(primaryConnectionAsExternalId).
 							HasFailoverAllowedToAccounts(accountId).
 							HasConnectionUrl(
-								getConnectionUrl(accountId.OrganizationName(), id.Name()),
+								acc.TestClient().Connection.GetConnectionUrl(accountId.OrganizationName(), id.Name()),
 							),
 					),
 				),
@@ -143,7 +137,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 								HasPrimaryIdentifier(primaryConnectionAsExternalId).
 								HasFailoverAllowedToAccounts(secondaryAccountId).
 								HasConnectionUrl(
-									getConnectionUrl(secondaryAccountId.OrganizationName(), id.Name()),
+									acc.TestClient().Connection.GetConnectionUrl(secondaryAccountId.OrganizationName(), id.Name()),
 								),
 						),
 					),
@@ -177,7 +171,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 									secondaryAccountId,
 								).
 								HasConnectionUrl(
-									getConnectionUrl(secondaryAccountId.OrganizationName(), id.Name()),
+									acc.TestClient().Connection.GetConnectionUrl(secondaryAccountId.OrganizationName(), id.Name()),
 								),
 						),
 					),

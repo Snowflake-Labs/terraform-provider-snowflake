@@ -54,12 +54,13 @@ func ReadConnections(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId("secrets_read")
+
+	d.SetId("connections_read")
 
 	flattenedConnections := make([]map[string]any, len(connections))
 	for i, connection := range connections {
 		flattenedConnections[i] = map[string]any{
-			resources.ShowOutputAttributeName:     []map[string]any{schemas.ConnectionToSchema(&connection)},
+			resources.ShowOutputAttributeName: []map[string]any{schemas.ConnectionToSchema(&connection)},
 		}
 	}
 	if err := d.Set("connections", flattenedConnections); err != nil {
