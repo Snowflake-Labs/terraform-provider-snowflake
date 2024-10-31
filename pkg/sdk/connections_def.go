@@ -20,7 +20,7 @@ var ConnectionDef = g.NewInterface(
 		OptionalIdentifier(
 			"AsReplicaOf",
 			g.KindOfT[ExternalObjectIdentifier](),
-			g.IdentifierOptions().Required().SQL("AS REPLICA OF")).
+			g.IdentifierOptions().SQL("AS REPLICA OF")).
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidIdentifierIfSet, "AsReplicaOf"),
@@ -34,7 +34,8 @@ var ConnectionDef = g.NewInterface(
 		OptionalQueryStructField(
 			"EnableConnectionFailover",
 			g.NewQueryStruct("EnableConnectionFailover").
-				List("ToAccounts", "AccountIdentifier", g.ListOptions().NoParentheses().Required()),
+				List("ToAccounts", "AccountIdentifier", g.ListOptions().NoParentheses().Required()).
+				WithValidation(g.AtLeastOneValueSet, "ToAccounts"),
 			g.KeywordOptions().SQL("ENABLE FAILOVER TO ACCOUNTS"),
 		).
 		OptionalQueryStructField(

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -19,29 +18,18 @@ var connectionSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      blocklistedCharactersFieldDescription("String that specifies the identifier (i.e. name) for the connection. Must start with an alphabetic character and may only contain letters, decimal digits (0-9), and underscores (_). For a primary connection, the name must be unique across connection names and account names in the organization. For a secondary connection, the name must match the name of its primary connection."),
+		Description:      blocklistedCharactersFieldDescription("String that specifies the identifier (i.e. name) for the connection. Must start with an alphabetic character and may only contain letters, decimal digits (0-9), and underscores (_). For a primary connection, the name must be unique across connection names and account names in the organization. "),
 		DiffSuppressFunc: suppressIdentifierQuoting,
-	},
-	"as_replica_of": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		Description:      "Specifies the identifier for a primary connection from which to create a replica (i.e. a secondary connection).",
-		DiffSuppressFunc: suppressIdentifierQuoting,
-	},
-	"is_primary": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		Default:          BooleanDefault,
-		ValidateDiagFunc: validateBooleanString,
-		// TODO: Description: "",
 	},
 	"enable_failover_to_accounts": {
 		Type:        schema.TypeList,
 		Optional:    true,
 		Description: "Enables failover for given connection to provided accounts. Specifies a list of accounts in your organization where a secondary connection for this primary connection can be promoted to serve as the primary connection. Include your organization name for each account in the list.",
 		MinItems:    1,
-		Elem:        &schema.Schema{Type: schema.TypeString},
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			DiffSuppressFunc: suppressIdentifierQuoting,
+		},
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -65,7 +53,7 @@ func Connection() *schema.Resource {
 		ReadContext:   ReadContextConnection,
 		UpdateContext: UpdateContextConnection,
 		DeleteContext: DeleteContextConnection,
-		Description:   "Resource used to manage connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
+		Description:   "Resource used to manage primary (not replicated) connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
 		Schema:        connectionSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportName[sdk.AccountObjectIdentifier],
@@ -83,14 +71,6 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 
 	request := sdk.NewCreateConnectionRequest(id)
 
-	if v, ok := d.GetOk("as_replica_of"); ok {
-		externalObjectId, err := sdk.ParseExternalObjectIdentifier(v.(string))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		request.WithAsReplicaOf(externalObjectId)
-	}
-
 	if v, ok := d.GetOk("comment"); ok {
 		request.WithComment(v.(string))
 	}
@@ -101,31 +81,6 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	d.SetId(helpers.EncodeResourceIdentifier(id))
-
-	if v := d.Get("is_primary").(string); v != BooleanDefault {
-		parsedBool, err := strconv.ParseBool(v)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if parsedBool {
-			err = client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
-				WithPrimary(parsedBool))
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	}
-
-	/*
-		if v, ok := d.GetOk("is_primary"); ok && v.(bool) {
-			err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
-				WithPrimary(v.(bool)),
-			)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	*/
 
 	if v, ok := d.GetOk("enable_failover_to_accounts"); ok {
 		enableFailoverConfig := v.([]any)
@@ -139,9 +94,7 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		}
 
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
-			WithEnableConnectionFailover(*sdk.NewEnableConnectionFailoverRequest().
-				WithToAccounts(enableFailoverToAccountsList)),
-		)
+			WithEnableConnectionFailover(*sdk.NewEnableConnectionFailoverRequest(enableFailoverToAccountsList)))
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -179,8 +132,6 @@ func ReadContextConnection(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	errs := errors.Join(
-		setStateToValuesFromConfig(d, connectionSchema, []string{"is_primary"}),
-		//d.Set("is_primary", booleanStringFromBool(connection.IsPrimary)),
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 		d.Set(ShowOutputAttributeName, []map[string]any{schemas.ConnectionToSchema(connection)}),
 		d.Set("comment", connection.Comment),
@@ -248,9 +199,7 @@ func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 
 		if len(addedFailovers) > 0 {
 			err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
-				WithEnableConnectionFailover(*sdk.NewEnableConnectionFailoverRequest().
-					WithToAccounts(addedFailovers),
-				),
+				WithEnableConnectionFailover(*sdk.NewEnableConnectionFailoverRequest(addedFailovers)),
 			)
 			if err != nil {
 				return diag.FromErr(err)
@@ -260,28 +209,11 @@ func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		if len(removedFailovers) > 0 {
 			err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
 				WithDisableConnectionFailover(*sdk.NewDisableConnectionFailoverRequest().
-					WithToAccounts(*sdk.NewToAccountsRequest().
-						WithAccounts(removedFailovers),
-					),
+					WithToAccounts(*sdk.NewToAccountsRequest(removedFailovers)),
 				),
 			)
 			if err != nil {
 				return diag.FromErr(err)
-			}
-		}
-	}
-
-	if d.HasChange("is_primary") {
-		if is_primary := d.Get("is_primary").(string); is_primary != BooleanDefault {
-			parsed, err := strconv.ParseBool(is_primary)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			if parsed {
-				err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).WithPrimary(parsed))
-				if err != nil {
-					return diag.FromErr(err)
-				}
 			}
 		}
 	}

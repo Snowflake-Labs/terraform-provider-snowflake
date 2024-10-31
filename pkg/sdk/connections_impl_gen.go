@@ -54,14 +54,9 @@ func (r *CreateConnectionRequest) toOpts() *CreateConnectionOptions {
 	opts := &CreateConnectionOptions{
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
-
-		Comment: r.Comment,
+		AsReplicaOf: r.AsReplicaOf,
+		Comment:     r.Comment,
 	}
-
-	if r.AsReplicaOf != nil {
-		opts.AsReplicaOf = r.AsReplicaOf
-	}
-
 	return opts
 }
 
@@ -69,7 +64,8 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 	opts := &AlterConnectionOptions{
 		IfExists: r.IfExists,
 		name:     r.name,
-		Primary:  r.Primary,
+
+		Primary: r.Primary,
 	}
 
 	if r.EnableConnectionFailover != nil {
@@ -79,6 +75,7 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 	}
 
 	if r.DisableConnectionFailover != nil {
+
 		opts.DisableConnectionFailover = &DisableConnectionFailover{}
 
 		if r.DisableConnectionFailover.ToAccounts != nil {
@@ -86,16 +83,17 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 				Accounts: r.DisableConnectionFailover.ToAccounts.Accounts,
 			}
 		}
+
 	}
 
 	if r.Set != nil {
-		opts.SetConnection = &SetConnection{
+		opts.Set = &ConnectionSet{
 			Comment: r.Set.Comment,
 		}
 	}
 
 	if r.Unset != nil {
-		opts.UnsetConnection = &UnsetConnection{
+		opts.Unset = &ConnectionUnset{
 			Comment: r.Unset.Comment,
 		}
 	}

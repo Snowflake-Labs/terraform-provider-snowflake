@@ -2,17 +2,18 @@ package resourceassert
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
+/*
 func (c *ConnectionResourceAssert) HasAsReplicaOfIdentifier(expected sdk.ExternalObjectIdentifier) *ConnectionResourceAssert {
 	expectedString := strings.ReplaceAll(expected.FullyQualifiedName(), `"`, "")
 	c.AddAssertion(assert.ValueSet("as_replica_of", expectedString))
 	return c
 }
+*/
 
 func (c *ConnectionResourceAssert) HasEnableFailoverToAccounts(expected ...sdk.AccountIdentifier) *ConnectionResourceAssert {
 	c.AddAssertion(assert.ValueSet("enable_failover_to_accounts.#", fmt.Sprintf("%d", len(expected))))

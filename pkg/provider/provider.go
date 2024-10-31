@@ -475,6 +475,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_saml2_integration":                                            resources.SAML2Integration(),
 		"snowflake_schema":                                                       resources.Schema(),
 		"snowflake_scim_integration":                                             resources.SCIMIntegration(),
+		"snowflake_secondary_connection":                                         resources.SecondaryConnection(),
 		"snowflake_secondary_database":                                           resources.SecondaryDatabase(),
 		"snowflake_secret_with_authorization_code_grant":                         resources.SecretWithAuthorizationCodeGrant(),
 		"snowflake_secret_with_basic_authentication":                             resources.SecretWithBasicAuthentication(),
