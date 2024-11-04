@@ -2,10 +2,11 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
