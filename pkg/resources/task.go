@@ -538,7 +538,7 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"allow_overlapping_execution", "allow_overlapping_execution", task.AllowOverlappingExecution, booleanStringFromBool(task.AllowOverlappingExecution), nil},
+				outputMapping{"allow_overlapping_execution", "allow_overlapping_execution", task.AllowOverlappingExecution, booleanStringFromBool(task.AllowOverlappingExecution), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}

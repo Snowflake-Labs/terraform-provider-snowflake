@@ -772,13 +772,13 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 		WithSuspendTaskAfterNumFailures(2)
 	childTaskModel := model.TaskWithId("second_task", id2, true, statement).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(id.FullyQualifiedName())))
-	childTaskModel.SetDependsOn([]string{rootTaskModel.ResourceReference()})
+	childTaskModel.SetDependsOn(rootTaskModel.ResourceReference())
 
 	firstTaskStandaloneModelDisabled := model.TaskWithId("main_task", id, false, statement).
 		WithSchedule(schedule)
 	secondTaskStandaloneModelDisabled := model.TaskWithId("second_task", id2, false, statement).
 		WithSchedule(schedule)
-	secondTaskStandaloneModelDisabled.SetDependsOn([]string{firstTaskStandaloneModelDisabled.ResourceReference()})
+	secondTaskStandaloneModelDisabled.SetDependsOn(firstTaskStandaloneModelDisabled.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -868,13 +868,13 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 		WithSuspendTaskAfterNumFailures(2)
 	childTaskModel := model.TaskWithId("second_task", finalizerTaskId, true, statement).
 		WithFinalize(rootTaskId.FullyQualifiedName())
-	childTaskModel.SetDependsOn([]string{rootTaskModel.ResourceReference()})
+	childTaskModel.SetDependsOn(rootTaskModel.ResourceReference())
 
 	firstTaskStandaloneModelDisabled := model.TaskWithId("main_task", rootTaskId, false, statement).
 		WithSchedule(schedule)
 	secondTaskStandaloneModelDisabled := model.TaskWithId("second_task", finalizerTaskId, false, statement).
 		WithSchedule(schedule)
-	secondTaskStandaloneModelDisabled.SetDependsOn([]string{firstTaskStandaloneModelDisabled.ResourceReference()})
+	secondTaskStandaloneModelDisabled.SetDependsOn(firstTaskStandaloneModelDisabled.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -966,13 +966,13 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 		WithSuspendTaskAfterNumFailures(2)
 	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, true, statement).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName())))
-	childTaskConfigModelWithAfter.SetDependsOn([]string{rootTaskConfigModelAfterSuspendFailuresUpdate.ResourceReference()})
+	childTaskConfigModelWithAfter.SetDependsOn(rootTaskConfigModelAfterSuspendFailuresUpdate.ResourceReference())
 
 	rootTaskConfigModelDisabled := model.TaskWithId("root", rootId, false, statement).
 		WithSchedule(schedule)
 	childTaskConfigModelDisabled := model.TaskWithId("child", childId, false, statement).
 		WithSchedule(schedule)
-	childTaskConfigModelDisabled.SetDependsOn([]string{rootTaskConfigModelDisabled.ResourceReference()})
+	childTaskConfigModelDisabled.SetDependsOn(rootTaskConfigModelDisabled.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1060,13 +1060,13 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithSqlStatement(statement)
-	childTaskConfigModelWithAfter.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+	childTaskConfigModelWithAfter.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	childTaskConfigModelWithoutAfter := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithSchedule(schedule).
 		WithSqlStatement(statement)
-	childTaskConfigModelWithoutAfter.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+	childTaskConfigModelWithoutAfter.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1120,13 +1120,13 @@ func TestAcc_Task_WithFinalizer(t *testing.T) {
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithFinalize(rootId.FullyQualifiedName()).
 		WithSqlStatement(statement)
-	childTaskConfigModelWithFinalizer.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+	childTaskConfigModelWithFinalizer.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	childTaskConfigModelWithoutFinalizer := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithSchedule(schedule).
 		WithSqlStatement(statement)
-	childTaskConfigModelWithoutFinalizer.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+	childTaskConfigModelWithoutFinalizer.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1181,14 +1181,14 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 		WithSchedule(schedule).
 		WithComment("abc").
 		WithSqlStatement(statement)
-	childTaskConfigModelWithoutFinalizer.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+	childTaskConfigModelWithoutFinalizer.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	childTaskConfigModelWithFinalizer := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithFinalize(rootId.FullyQualifiedName()).
 		WithComment("abc").
 		WithSqlStatement(statement)
-	childTaskConfigModelWithFinalizer.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+	childTaskConfigModelWithFinalizer.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1292,14 +1292,14 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 		WithSchedule(schedule).
 		WithComment("abc").
 		WithSqlStatement(statement)
-	childTaskConfigModelWithoutAfter.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+	childTaskConfigModelWithoutAfter.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithComment("abc").
 		WithSqlStatement(statement)
-	childTaskConfigModelWithAfter.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+	childTaskConfigModelWithAfter.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1403,14 +1403,14 @@ func TestAcc_Task_issue2207(t *testing.T) {
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithComment("abc").
 		WithSqlStatement(statement)
-	childTaskConfigModel.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+	childTaskConfigModel.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	childTaskConfigModelWithDifferentComment := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithComment("def").
 		WithSqlStatement(statement)
-	childTaskConfigModelWithDifferentComment.SetDependsOn([]string{rootTaskConfigModel.ResourceReference()})
+	childTaskConfigModelWithDifferentComment.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
