@@ -46,11 +46,11 @@ func Connections() *schema.Resource {
 
 func ReadConnections(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	req := sdk.NewShowConnectionRequest()
+	req := sdk.ShowConnectionRequest{}
 
 	handleLike(d, &req.Like)
 
-	connections, err := client.Connections.Show(ctx, req)
+	connections, err := client.Connections.Show(ctx, &req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
