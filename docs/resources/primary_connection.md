@@ -1,5 +1,5 @@
 ---
-page_title: "snowflake_connection Resource - terraform-provider-snowflake"
+page_title: "snowflake_primary_connection Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
   Resource used to manage primary (not replicated) connections. For more information, check connection documentation https://docs.snowflake.com/en/sql-reference/sql/create-connection.html.
@@ -7,7 +7,7 @@ description: |-
 
 !> **V1 release candidate** This resource is a release candidate for the V1. It is on the list of remaining GA objects for V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0970--v0980) to use it.
 
-# snowflake_connection (Resource)
+# snowflake_primary_connection (Resource)
 
 Resource used to manage primary (not replicated) connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).
 
@@ -15,12 +15,12 @@ Resource used to manage primary (not replicated) connections. For more informati
 
 ```terraform
 ## Minimal
-resource "snowflake_connection" "basic" {
+resource "snowflake_primary_connection" "basic" {
   name = "connection_name"
 }
 
 ## Complete (with every optional set)
-resource "snowflake_connection" "complete" {
+resource "snowflake_primary_connection" "complete" {
   name    = "connection_name"
   comment = "my complete connection"
   enable_failover_to_accounts = [
@@ -47,7 +47,7 @@ resource "snowflake_connection" "complete" {
 
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
-- `show_output` (List of Object) Outputs the result of `SHOW CONNECTIONS` for the given secret. (see [below for nested schema](#nestedatt--show_output))
+- `show_output` (List of Object) Outputs the result of `SHOW CONNECTIONS` for the given connection. (see [below for nested schema](#nestedatt--show_output))
 
 <a id="nestedatt--show_output"></a>
 ### Nested Schema for `show_output`
@@ -72,5 +72,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_connection.example 'connection_name'
+terraform import snowflake_primary_connection.example 'connection_name'
 ```
