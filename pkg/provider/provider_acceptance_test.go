@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -97,12 +98,15 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					t.Setenv(snowflakeenvs.ConfigPath, dir)
 				},
 				Config:      providerConfigWithUserAndPassword(user, pass, testprofiles.Default),
-				ExpectError: regexp.MustCompile("account is empty"),
+				ExpectError: regexp.MustCompile("could not retrieve profile config"),
 			},
 			// provider's config should not be rewritten by env when there is no profile (incorrect user in config versus correct one in env) - proves #2242
 			{
 				PreConfig: func() {
-					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
+					dir, err := os.UserHomeDir()
+					require.NoError(t, err)
+					t.Setenv(snowflakeenvs.ConfigPath, filepath.Join(dir, ".snowflake", "config"))
+
 					t.Setenv(snowflakeenvs.User, user)
 					t.Setenv(snowflakeenvs.Password, pass)
 					t.Setenv(snowflakeenvs.Account, account)
@@ -330,7 +334,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 						Token:                          "token",
 						KeepSessionAlive:               true,
 						DisableTelemetry:               true,
-						Tracing:                        "DEBUG",
+						Tracing:                        "debug",
 						TmpDirPath:                     "../",
 						ClientRequestMfaToken:          gosnowflake.ConfigBoolFalse,
 						ClientStoreTemporaryCredential: gosnowflake.ConfigBoolFalse,
@@ -442,7 +446,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 						Token:                          "token",
 						KeepSessionAlive:               true,
 						DisableTelemetry:               true,
-						Tracing:                        "INFO",
+						Tracing:                        "info",
 						TmpDirPath:                     "../../",
 						ClientRequestMfaToken:          gosnowflake.ConfigBoolTrue,
 						ClientStoreTemporaryCredential: gosnowflake.ConfigBoolTrue,
@@ -574,7 +578,7 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 			},
 			{
 				Config:      providerConfigWithProtocol(testprofiles.Default, "invalid"),
-				ExpectError: regexp.MustCompile("invalid protocol: INVALID"),
+				ExpectError: regexp.MustCompile("invalid protocol: invalid"),
 			},
 			{
 				Config:      providerConfigWithPort(testprofiles.Default, 123456789),
@@ -582,7 +586,7 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 			},
 			{
 				Config:      providerConfigWithAuthType(testprofiles.Default, "invalid"),
-				ExpectError: regexp.MustCompile("invalid authenticator type: INVALID"),
+				ExpectError: regexp.MustCompile("invalid authenticator type: invalid"),
 			},
 			{
 				Config:      providerConfigWithOktaUrl(testprofiles.Default, "invalid"),
@@ -598,7 +602,7 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 			},
 			{
 				Config:      providerConfigWithLogLevel(testprofiles.Default, "invalid"),
-				ExpectError: regexp.MustCompile(`invalid driver log level: INVALID`),
+				ExpectError: regexp.MustCompile(`invalid driver log level: invalid`),
 			},
 			{
 				Config: providerConfig("non-existing"),

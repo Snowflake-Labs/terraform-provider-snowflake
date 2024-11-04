@@ -33,12 +33,11 @@ var allProtocols = []protocol{
 }
 
 func toProtocol(s string) (protocol, error) {
-	s = strings.ToUpper(s)
-	switch s {
-	case string(protocolHttp):
-		return protocolHttp, nil
-	case string(protocolHttps):
-		return protocolHttps, nil
+	upperCase := strings.ToUpper(s)
+	switch upperCase {
+	case string(protocolHttp),
+		string(protocolHttps):
+		return protocol(upperCase), nil
 	default:
 		return "", fmt.Errorf("invalid protocol: %s", s)
 	}
@@ -47,6 +46,7 @@ func toProtocol(s string) (protocol, error) {
 type driverLogLevel string
 
 const (
+	// these values
 	logLevelTrace   driverLogLevel = "trace"
 	logLevelDebug   driverLogLevel = "debug"
 	logLevelInfo    driverLogLevel = "info"
@@ -69,17 +69,17 @@ var allDriverLogLevels = []driverLogLevel{
 }
 
 func toDriverLogLevel(s string) (driverLogLevel, error) {
-	s = strings.ToLower(s)
-	switch s {
-	case strings.ToLower(string(logLevelTrace)),
-		strings.ToLower(string(logLevelDebug)),
-		strings.ToLower(string(logLevelInfo)),
-		strings.ToLower(string(logLevelPrint)),
-		strings.ToLower(string(logLevelWarning)),
-		strings.ToLower(string(logLevelError)),
-		strings.ToLower(string(logLevelFatal)),
-		strings.ToLower(string(logLevelPanic)):
-		return driverLogLevel(s), nil
+	lowerCase := strings.ToLower(s)
+	switch lowerCase {
+	case string(logLevelTrace),
+		string(logLevelDebug),
+		string(logLevelInfo),
+		string(logLevelPrint),
+		string(logLevelWarning),
+		string(logLevelError),
+		string(logLevelFatal),
+		string(logLevelPanic):
+		return driverLogLevel(lowerCase), nil
 	default:
 		return "", fmt.Errorf("invalid driver log level: %s", s)
 	}

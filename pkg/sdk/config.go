@@ -93,7 +93,7 @@ func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config
 	if !configBoolSet(baseConfig.ValidateDefaultParameters) {
 		baseConfig.ValidateDefaultParameters = mergeConfig.ValidateDefaultParameters
 	}
-	if mergedMap := collections.MergeMaps(baseConfig.Params, mergeConfig.Params); len(mergedMap) > 0 {
+	if mergedMap := collections.MergeMaps(mergeConfig.Params, baseConfig.Params); len(mergedMap) > 0 {
 		baseConfig.Params = mergedMap
 	}
 	if baseConfig.ClientIP == nil {
@@ -421,8 +421,7 @@ var AllAuthenticationTypes = []AuthenticationType{
 }
 
 func ToAuthenticatorType(s string) (gosnowflake.AuthType, error) {
-	s = strings.ToUpper(s)
-	switch s {
+	switch strings.ToUpper(s) {
 	case string(AuthenticationTypeSnowflake):
 		return gosnowflake.AuthTypeSnowflake, nil
 	case string(AuthenticationTypeOauth):
