@@ -62,6 +62,17 @@ func attributeDirectValueCreate[T any](d *schema.ResourceData, key string, creat
 	return nil
 }
 
+func attributeMappedValueCreate[T any](d *schema.ResourceData, key string, createField **T, mapper func(value any) (*T, error)) error {
+	if v, ok := d.GetOk(key); ok {
+		value, err := mapper(v)
+		if err != nil {
+			return err
+		}
+		*createField = value
+	}
+	return nil
+}
+
 func copyGrantsAttributeCreate(d *schema.ResourceData, isOrReplace bool, orReplaceField, copyGrantsField **bool) error {
 	if isOrReplace {
 		*orReplaceField = sdk.Bool(true)

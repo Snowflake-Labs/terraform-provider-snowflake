@@ -29,6 +29,7 @@ import (
 
 // TODO(SNOW-1348116 - next pr): More tests for complicated DAGs
 // TODO(SNOW-1348116 - next pr): Test for stored procedures passed to sql_statement (decide on name)
+
 // TODO(SNOW-1348116 - next pr): Test with cron schedule
 // TODO(SNOW-1348116 - next pr): More test with external changes
 
@@ -66,7 +67,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, configModel.ResourceReference()).
@@ -284,7 +285,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -328,7 +329,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
 						HasCommentString(comment).
 						HasFinalizeString("").
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasWhenString(condition).
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, completeConfigModel.ResourceReference()).
@@ -372,7 +373,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -818,7 +819,7 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 						HasSchedule(schedule).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
-						HasAfterIds(id).
+						HasAfterIdsInOrder(id).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
 						HasPredecessors(id).
@@ -988,7 +989,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, "snowflake_task.child").
 						HasStartedString(r.BooleanTrue).
 						HasScheduleString(schedule).
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceassert.TaskResource(t, "snowflake_task.root").
 						HasStartedString(r.BooleanTrue).
@@ -1002,7 +1003,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, "snowflake_task.child").
 						HasStartedString(r.BooleanTrue).
 						HasScheduleString("").
-						HasAfterIds(rootId).
+						HasAfterIdsInOrder(rootId).
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceassert.TaskResource(t, "snowflake_task.root").
 						HasStartedString(r.BooleanTrue).
@@ -1016,7 +1017,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, "snowflake_task.child").
 						HasStartedString(r.BooleanTrue).
 						HasScheduleString(schedule).
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceassert.TaskResource(t, "snowflake_task.root").
 						HasStartedString(r.BooleanTrue).
@@ -1030,7 +1031,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, "snowflake_task.child").
 						HasStartedString(r.BooleanFalse).
 						HasScheduleString(schedule).
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceassert.TaskResource(t, "snowflake_task.root").
 						HasStartedString(r.BooleanFalse).
@@ -1084,7 +1085,7 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 						HasScheduleString(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId),
+						HasAfterIdsInOrder(rootId),
 				),
 			},
 			{
@@ -1095,7 +1096,7 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 						HasScheduleString(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(),
+						HasAfterIdsInOrder(),
 				),
 			},
 		},
@@ -1328,7 +1329,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(),
+						HasAfterIdsInOrder(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
@@ -1340,7 +1341,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId),
+						HasAfterIdsInOrder(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
@@ -1362,7 +1363,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId),
+						HasAfterIdsInOrder(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
@@ -1374,7 +1375,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(),
+						HasAfterIdsInOrder(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
@@ -1428,7 +1429,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 						HasScheduleString(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId).
+						HasAfterIdsInOrder(rootId).
 						HasCommentString("abc"),
 				),
 			},
@@ -1446,7 +1447,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 						HasScheduleString(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithDifferentComment.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId).
+						HasAfterIdsInOrder(rootId).
 						HasCommentString("def"),
 				),
 			},

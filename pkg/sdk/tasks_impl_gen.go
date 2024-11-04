@@ -100,7 +100,7 @@ func (v *tasks) SuspendRootTasks(ctx context.Context, taskId SchemaObjectIdentif
 
 	for _, rootTask := range rootTasks {
 		// If a root task is started, then it needs to be suspended before the child tasks can be created
-		if rootTask.State == TaskStateStarted {
+		if rootTask.IsStarted() {
 			err := v.client.Tasks.Alter(ctx, NewAlterTaskRequest(rootTask.ID()).WithSuspend(true))
 			if err != nil {
 				log.Printf("[WARN] failed to suspend task %s", rootTask.ID().FullyQualifiedName())
