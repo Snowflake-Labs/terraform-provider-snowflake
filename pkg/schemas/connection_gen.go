@@ -76,7 +76,7 @@ func ConnectionToSchema(connection *sdk.Connection) map[string]any {
 		connectionSchema["comment"] = connection.Comment
 	}
 	connectionSchema["is_primary"] = connection.IsPrimary
-	connectionSchema["primary"] = connection.Primary.Name()
+	connectionSchema["primary"] = connection.Primary.FullyQualifiedName()
 	var allowedAccounts []string
 	for _, accountId := range connection.FailoverAllowedToAccounts {
 		allowedAccounts = append(allowedAccounts, accountId.Name())

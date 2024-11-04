@@ -102,7 +102,7 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.AuthenticationPolicy: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.AuthenticationPolicies.ShowByID)
 	},
-	resources.Connection: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+	resources.PrimaryConnection: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Connections.ShowByID)
 	},
 	resources.CortexSearchService: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {

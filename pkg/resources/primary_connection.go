@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var connectionSchema = map[string]*schema.Schema{
+var primaryConnectionSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
@@ -26,7 +26,6 @@ var connectionSchema = map[string]*schema.Schema{
 		Type:        schema.TypeList,
 		Optional:    true,
 		Description: "Enables failover for given connection to provided accounts. Specifies a list of accounts in your organization where a secondary connection for this primary connection can be promoted to serve as the primary connection. Include your organization name for each account in the list.",
-		MinItems:    1,
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
 			DiffSuppressFunc: suppressIdentifierQuoting,
@@ -40,7 +39,7 @@ var connectionSchema = map[string]*schema.Schema{
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `SHOW CONNECTIONS` for the given secret.",
+		Description: "Outputs the result of `SHOW CONNECTIONS` for the given connection.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowConnectionSchema,
 		},
@@ -48,26 +47,26 @@ var connectionSchema = map[string]*schema.Schema{
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 }
 
-func Connection() *schema.Resource {
+func PrimaryConnection() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextConnection,
-		ReadContext:   ReadContextConnection,
-		UpdateContext: UpdateContextConnection,
-		DeleteContext: DeleteContextConnection,
+		CreateContext: CreateContextPrimaryConnection,
+		ReadContext:   ReadContextPrimaryConnection,
+		UpdateContext: UpdateContextPrimaryConnection,
+		DeleteContext: DeleteContextPrimaryConnection,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(connectionSchema, ShowOutputAttributeName, "comment", "primary", "failover_allowed_to_accounts"),
+			ComputedIfAnyAttributeChanged(primaryConnectionSchema, ShowOutputAttributeName, "comment", "is_primary", "failover_allowed_to_accounts"),
 		),
 
 		Description: "Resource used to manage primary (not replicated) connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
-		Schema:      connectionSchema,
+		Schema:      primaryConnectionSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportName[sdk.AccountObjectIdentifier],
 		},
 	}
 }
 
-func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func CreateContextPrimaryConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
@@ -106,10 +105,10 @@ func CreateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	return ReadContextConnection(ctx, d, meta)
+	return ReadContextPrimaryConnection(ctx, d, meta)
 }
 
-func ReadContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func ReadContextPrimaryConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
 	if err != nil {
@@ -175,7 +174,7 @@ func ReadContextConnection(ctx context.Context, d *schema.ResourceData, meta any
 	return nil
 }
 
-func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func UpdateContextPrimaryConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
 	if err != nil {
@@ -247,10 +246,10 @@ func UpdateContextConnection(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
-	return ReadContextConnection(ctx, d, meta)
+	return ReadContextPrimaryConnection(ctx, d, meta)
 }
 
-func DeleteContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func DeleteContextPrimaryConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
 	if err != nil {

@@ -98,8 +98,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.StreamOnView().Schema,
 	},
 	{
-		name:   "Connection",
-		schema: resources.Connection().Schema,
+		name:   "PrimaryConnection",
+		schema: resources.PrimaryConnection().Schema,
 	},
 	{
 		name:   "SecondaryConnection",

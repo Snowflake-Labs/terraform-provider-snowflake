@@ -42,7 +42,7 @@ var secondaryConnectionSchema = map[string]*schema.Schema{
 	ShowOutputAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Outputs the result of `SHOW CONNECTIONS` for the given secret.",
+		Description: "Outputs the result of `SHOW CONNECTIONS` for the given connection.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowConnectionSchema,
 		},
@@ -52,14 +52,14 @@ var secondaryConnectionSchema = map[string]*schema.Schema{
 
 func SecondaryConnection() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateSecondaryContextConnection,
-		ReadContext:   ReadSecondaryContextConnection,
-		UpdateContext: UpdateSecondaryContextConnection,
-		DeleteContext: DeleteSecondaryContextConnection,
-		Description:   "Resource used to manage secondary connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
+		CreateContext: CreateContextSecondaryConnection,
+		ReadContext:   ReadContextSecondaryConnection,
+		UpdateContext: UpdateContextSecondaryConnection,
+		DeleteContext: DeleteContextSecondaryConnection,
+		Description:   "Resource used to manage secondary connections. To promote secondary connection to primary check [migraton guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#connection-resources). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(connectionSchema, ShowOutputAttributeName, "comment", "is_primary", "primary"),
+			ComputedIfAnyAttributeChanged(secondaryConnectionSchema, ShowOutputAttributeName, "comment", "is_primary", "failover_allowed_to_accounts"),
 		),
 
 		Schema: secondaryConnectionSchema,
@@ -69,7 +69,7 @@ func SecondaryConnection() *schema.Resource {
 	}
 }
 
-func CreateSecondaryContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func CreateContextSecondaryConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	id, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
@@ -98,10 +98,10 @@ func CreateSecondaryContextConnection(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	return ReadSecondaryContextConnection(ctx, d, meta)
+	return ReadContextSecondaryConnection(ctx, d, meta)
 }
 
-func ReadSecondaryContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func ReadContextSecondaryConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
 	if err != nil {
@@ -138,7 +138,7 @@ func ReadSecondaryContextConnection(ctx context.Context, d *schema.ResourceData,
 	))
 }
 
-func UpdateSecondaryContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func UpdateContextSecondaryConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
 	if err != nil {
@@ -171,10 +171,10 @@ func UpdateSecondaryContextConnection(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	return ReadSecondaryContextConnection(ctx, d, meta)
+	return ReadContextSecondaryConnection(ctx, d, meta)
 }
 
-func DeleteSecondaryContextConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func DeleteContextSecondaryConnection(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
 	if err != nil {

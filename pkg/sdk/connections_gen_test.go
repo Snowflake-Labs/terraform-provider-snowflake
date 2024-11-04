@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -50,7 +49,7 @@ func TestConnections_Create(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = id
 		opts.AsReplicaOf = &externalId
-		assertOptsValidAndSQLEquals(t, opts, "CREATE CONNECTION %s AS REPLICA OF %s", id.FullyQualifiedName(), strings.ReplaceAll(externalId.FullyQualifiedName(), `"`, ""))
+		assertOptsValidAndSQLEquals(t, opts, "CREATE CONNECTION %s AS REPLICA OF %s", id.FullyQualifiedName(), externalId.FullyQualifiedName())
 	})
 
 	t.Run("as replica of - all options", func(t *testing.T) {
