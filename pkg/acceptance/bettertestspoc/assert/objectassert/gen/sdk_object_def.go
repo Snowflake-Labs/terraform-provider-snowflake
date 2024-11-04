@@ -18,6 +18,11 @@ var allStructs = []SdkObjectDef{
 		ObjectStruct: sdk.Database{},
 	},
 	{
+		IdType:       "sdk.AccountObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeConnection,
+		ObjectStruct: sdk.Connection{},
+	},
+	{
 		IdType:       "sdk.DatabaseObjectIdentifier",
 		ObjectType:   sdk.ObjectTypeDatabaseRole,
 		ObjectStruct: sdk.DatabaseRole{},
@@ -63,6 +68,11 @@ var allStructs = []SdkObjectDef{
 		ObjectStruct: sdk.Task{},
 	},
 	{
+		IdType:       "sdk.ExternalVolumeObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeExternalVolume,
+		ObjectStruct: sdk.ExternalVolume{},
+	},
+	{
 		IdType:       "sdk.SchemaObjectIdentifier",
 		ObjectType:   sdk.ObjectTypeSecret,
 		ObjectStruct: sdk.Secret{},
@@ -71,6 +81,11 @@ var allStructs = []SdkObjectDef{
 		IdType:       "sdk.SchemaObjectIdentifier",
 		ObjectType:   sdk.ObjectTypeStream,
 		ObjectStruct: sdk.Stream{},
+	},
+	{
+		IdType:       "sdk.SchemaObjectIdentifier",
+		ObjectType:   sdk.ObjectTypeTag,
+		ObjectStruct: sdk.Tag{},
 	},
 }
 

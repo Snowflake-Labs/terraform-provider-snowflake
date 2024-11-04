@@ -13,14 +13,13 @@ const (
 	RelatedParametersAttributeName = "related_parameters"
 )
 
-// handleExternalChangesToObjectInShow assumes that show output is kept in ShowOutputAttributeName attribute
-func handleExternalChangesToObjectInShow(d *schema.ResourceData, mappings ...showMapping) error {
-	if showOutput, ok := d.GetOk(ShowOutputAttributeName); ok {
-		showOutputList := showOutput.([]any)
-		if len(showOutputList) == 1 {
-			result := showOutputList[0].(map[string]any)
+func handleExternalChangesToObject(d *schema.ResourceData, outputAttributeName string, mappings ...outputMapping) error {
+	if output, ok := d.GetOk(outputAttributeName); ok {
+		outputList := output.([]any)
+		if len(outputList) == 1 {
+			result := outputList[0].(map[string]any)
 			for _, mapping := range mappings {
-				valueToCompareFrom := result[mapping.nameInShow]
+				valueToCompareFrom := result[mapping.nameInOutput]
 				if mapping.normalizeFunc != nil {
 					valueToCompareFrom = mapping.normalizeFunc(valueToCompareFrom)
 				}
@@ -35,8 +34,20 @@ func handleExternalChangesToObjectInShow(d *schema.ResourceData, mappings ...sho
 	return nil
 }
 
-type showMapping struct {
-	nameInShow     string
+// handleExternalChangesToObjectInShow assumes that show output is kept in ShowOutputAttributeName attribute
+func handleExternalChangesToObjectInShow(d *schema.ResourceData, mappings ...outputMapping) error {
+	return handleExternalChangesToObject(d, ShowOutputAttributeName, mappings...)
+}
+
+// handleExternalChangesToObjectInFlatDescribe assumes that describe output is kept in DescribeOutputAttributeName attribute
+// It is to be used with flat - show like describe_output schemas
+// To handle external changes to describe with properties like collections use `handleExternalChangesToObjectInDescribe()`
+func handleExternalChangesToObjectInFlatDescribe(d *schema.ResourceData, mappings ...outputMapping) error {
+	return handleExternalChangesToObject(d, DescribeOutputAttributeName, mappings...)
+}
+
+type outputMapping struct {
+	nameInOutput   string
 	nameInConfig   string
 	valueToCompare any
 	valueToSet     any

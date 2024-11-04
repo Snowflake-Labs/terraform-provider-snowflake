@@ -63,10 +63,31 @@ func (s *StreamAssert) HasBaseTables(expected ...sdk.SchemaObjectIdentifier) *St
 		}
 		var errs []error
 		for _, wantId := range expected {
-			if !slices.ContainsFunc(o.BaseTables, func(gotId sdk.SchemaObjectIdentifier) bool {
+			if !slices.ContainsFunc(o.BaseTables, func(gotName string) bool {
+				gotId, err := sdk.ParseSchemaObjectIdentifier(gotName)
+				if err != nil {
+					errs = append(errs, err)
+				}
 				return wantId.FullyQualifiedName() == gotId.FullyQualifiedName()
 			}) {
 				errs = append(errs, fmt.Errorf("expected id: %s, to be in the list ids: %v", wantId.FullyQualifiedName(), o.BaseTables))
+			}
+		}
+		return errors.Join(errs...)
+	})
+	return s
+}
+
+func (s *StreamAssert) HasBaseTablesPartiallyQualified(expected ...string) *StreamAssert {
+	s.AddAssertion(func(t *testing.T, o *sdk.Stream) error {
+		t.Helper()
+		if len(o.BaseTables) != len(expected) {
+			return fmt.Errorf("expected base tables length: %v; got: %v", len(expected), len(o.BaseTables))
+		}
+		var errs []error
+		for _, wantName := range expected {
+			if !slices.Contains(o.BaseTables, wantName) {
+				errs = append(errs, fmt.Errorf("expected name: %s, to be in the list ids: %v", wantName, o.BaseTables))
 			}
 		}
 		return errors.Join(errs...)

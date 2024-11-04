@@ -74,6 +74,8 @@ resource "snowflake_stream_on_table" "stream" {
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 - `show_output` (List of Object) Outputs the result of `SHOW STREAMS` for the given stream. (see [below for nested schema](#nestedatt--show_output))
+- `stale` (Boolean) Indicated if the stream is stale. When Terraform detects that the stream is stale, the stream is recreated with `CREATE OR REPLACE`. Read more on stream staleness in Snowflake [docs](https://docs.snowflake.com/en/user-guide/streams-intro#data-retention-period-and-staleness).
+- `stream_type` (String) Specifies a type for the stream. This field is used for checking external changes and recreating the resources if needed.
 
 <a id="nestedblock--at"></a>
 ### Nested Schema for `at`
@@ -113,7 +115,7 @@ Read-Only:
 - `owner_role_type` (String)
 - `schema_name` (String)
 - `source_type` (String)
-- `stale` (String)
+- `stale` (Boolean)
 - `stale_after` (String)
 - `table_name` (String)
 - `type` (String)
@@ -135,7 +137,7 @@ Read-Only:
 - `owner_role_type` (String)
 - `schema_name` (String)
 - `source_type` (String)
-- `stale` (String)
+- `stale` (Boolean)
 - `stale_after` (String)
 - `table_name` (String)
 - `type` (String)

@@ -1,8 +1,50 @@
 package sdk
 
-import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+import (
+	"fmt"
+	"strings"
+
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
+)
 
 //go:generate go run ./poc/main.go
+
+type (
+	SecretType string
+)
+
+func ToSecretType(s string) (SecretType, error) {
+	switch strings.ToUpper(s) {
+	case string(SecretTypePassword):
+		return SecretTypePassword, nil
+	case string(SecretTypeOAuth2):
+		return SecretTypeOAuth2, nil
+	case string(SecretTypeGenericString):
+		return SecretTypeGenericString, nil
+	case string(SecretTypeOAuth2ClientCredentials):
+		return SecretTypeOAuth2ClientCredentials, nil
+	case string(SecretTypeOAuth2AuthorizationCodeGrant):
+		return SecretTypeOAuth2AuthorizationCodeGrant, nil
+	default:
+		return "", fmt.Errorf("invalid secret type: %s", s)
+	}
+}
+
+const (
+	SecretTypePassword                     SecretType = "PASSWORD"
+	SecretTypeOAuth2                       SecretType = "OAUTH2"
+	SecretTypeGenericString                SecretType = "GENERIC_STRING"
+	SecretTypeOAuth2ClientCredentials      SecretType = "OAUTH2_CLIENT_CREDENTIALS"       // #nosec G101
+	SecretTypeOAuth2AuthorizationCodeGrant SecretType = "OAUTH2_AUTHORIZATION_CODE_GRANT" // #nosec G101
+)
+
+var AcceptableSecretTypes = map[SecretType][]SecretType{
+	SecretTypePassword:                     {SecretTypePassword},
+	SecretTypeOAuth2:                       {SecretTypeOAuth2},
+	SecretTypeGenericString:                {SecretTypeGenericString},
+	SecretTypeOAuth2ClientCredentials:      {SecretTypeOAuth2ClientCredentials, SecretTypeOAuth2},
+	SecretTypeOAuth2AuthorizationCodeGrant: {SecretTypeOAuth2ClientCredentials, SecretTypeOAuth2},
+}
 
 var secretDbRow = g.DbStruct("secretDBRow").
 	Field("created_on", "time.Time").
@@ -112,7 +154,7 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		IfNotExists().
 		Name().
-		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
+		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL(fmt.Sprintf("TYPE = %s", SecretTypeOAuth2))).
 		Identifier("ApiIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION")).
 		OptionalQueryStructField("OauthScopes", oauthScopesListDef, g.ParameterOptions().SQL("OAUTH_SCOPES").Parentheses()).
 		OptionalComment().
@@ -128,7 +170,7 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		IfNotExists().
 		Name().
-		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL("TYPE = OAUTH2")).
+		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL(fmt.Sprintf("TYPE = %s", SecretTypeOAuth2))).
 		TextAssignment("OAUTH_REFRESH_TOKEN", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		TextAssignment("OAUTH_REFRESH_TOKEN_EXPIRY_TIME", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		Identifier("ApiIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Required().Equals().SQL("API_AUTHENTICATION")).
@@ -144,7 +186,7 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		IfNotExists().
 		Name().
-		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL("TYPE = PASSWORD")).
+		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL(fmt.Sprintf("TYPE = %s", SecretTypePassword))).
 		TextAssignment("USERNAME", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		TextAssignment("PASSWORD", g.ParameterOptions().NoParentheses().SingleQuotes().Required()).
 		OptionalComment().
@@ -159,7 +201,7 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		IfNotExists().
 		Name().
-		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL("TYPE = GENERIC_STRING")).
+		PredefinedQueryStructField("secretType", "string", g.StaticOptions().SQL(fmt.Sprintf("TYPE = %s", SecretTypeGenericString))).
 		TextAssignment("SECRET_STRING", g.ParameterOptions().SingleQuotes().Required()).
 		OptionalComment().
 		WithValidation(g.ValidIdentifier, "name").

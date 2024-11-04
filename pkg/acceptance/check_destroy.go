@@ -15,6 +15,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
+func ComposeCheckDestroy(t *testing.T, resources ...resources.Resource) func(*terraform.State) error {
+	t.Helper()
+
+	return func(s *terraform.State) error {
+		errs := make([]error, 0)
+		for _, resource := range resources {
+			checkFunc := CheckDestroy(t, resource)
+			errs = append(errs, checkFunc(s))
+		}
+		return errors.Join(errs...)
+	}
+}
+
 func CheckDestroy(t *testing.T, resource resources.Resource) func(*terraform.State) error {
 	t.Helper()
 	// TODO [SNOW-1653619]: use TestClient() here
@@ -86,6 +99,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.ApiIntegration: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.ApiIntegrations.ShowByID)
 	},
+	resources.AuthenticationPolicy: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.AuthenticationPolicies.ShowByID)
+	},
 	resources.CortexSearchService: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.CortexSearchServices.ShowByID)
 	},
@@ -112,6 +128,9 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	},
 	resources.ExternalTable: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.ExternalTables.ShowByID)
+	},
+	resources.ExternalVolume: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.ExternalVolumes.ShowByID)
 	},
 	resources.FailoverGroup: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.FailoverGroups.ShowByID)
@@ -179,6 +198,18 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.SecondaryDatabase: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Databases.ShowByID)
 	},
+	resources.SecretWithAuthorizationCodeGrant: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Secrets.ShowByID)
+	},
+	resources.SecretWithBasicAuthentication: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Secrets.ShowByID)
+	},
+	resources.SecretWithClientCredentials: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Secrets.ShowByID)
+	},
+	resources.SecretWithGenericString: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Secrets.ShowByID)
+	},
 	resources.Sequence: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Sequences.ShowByID)
 	},
@@ -200,10 +231,16 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Stream: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Streams.ShowByID)
 	},
+	resources.StreamOnDirectoryTable: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Streams.ShowByID)
+	},
 	resources.StreamOnExternalTable: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Streams.ShowByID)
 	},
 	resources.StreamOnTable: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Streams.ShowByID)
+	},
+	resources.StreamOnView: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Streams.ShowByID)
 	},
 	resources.Streamlit: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
@@ -417,6 +454,30 @@ func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.Stat
 			}
 			if len(policyReferences) > 0 {
 				return fmt.Errorf("user password policy attachment %v still exists", policyReferences[0].PolicyName)
+			}
+		}
+		return nil
+	}
+}
+
+// CheckUserAuthenticationPolicyAttachmentDestroy is a custom checks that should be later incorporated into generic CheckDestroy
+func CheckUserAuthenticationPolicyAttachmentDestroy(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_user_authentication_policy_attachment" {
+				continue
+			}
+			policyReferences, err := TestClient().PolicyReferences.GetPolicyReferences(t, sdk.NewAccountObjectIdentifierFromFullyQualifiedName(rs.Primary.Attributes["user_name"]), sdk.PolicyEntityDomainUser)
+			if err != nil {
+				if strings.Contains(err.Error(), "does not exist or not authorized") {
+					// Note: this can happen if the Policy Reference or the User has been deleted as well; in this case, ignore the error
+					continue
+				}
+				return err
+			}
+			if len(policyReferences) > 0 {
+				return fmt.Errorf("user authentication policy attachment %v still exists", policyReferences[0].PolicyName)
 			}
 		}
 		return nil

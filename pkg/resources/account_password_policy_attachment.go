@@ -21,7 +21,7 @@ var accountPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 	},
 }
 
-// AccountPasswordPolicyAttachment returns a pointer to the resource representing an api integration.
+// AccountPasswordPolicyAttachment returns a pointer to the resource representing an account password policy attachment.
 func AccountPasswordPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "Specifies the password policy to use for the current account. To set the password policy of a different account, use a provider alias.",

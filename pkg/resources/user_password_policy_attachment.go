@@ -28,6 +28,7 @@ var userPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 	},
 }
 
+// UserPasswordPolicyAttachment returns a pointer to the resource representing a user password policy attachment.
 func UserPasswordPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "Specifies the password policy to use for a certain user.",

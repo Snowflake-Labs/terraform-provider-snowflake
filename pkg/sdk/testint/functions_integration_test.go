@@ -376,6 +376,10 @@ func TestInt_OtherFunctions(t *testing.T) {
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 
+		value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeFunction)
+		require.NoError(t, err)
+		assert.Equal(t, "v1", value)
+
 		unsetTags := []sdk.ObjectIdentifier{
 			tagTest.ID(),
 		}

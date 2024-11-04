@@ -7,21 +7,25 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	tfjson "github.com/hashicorp/terraform-json"
 	pluginconfig "github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_StreamOnTable_Basic(t *testing.T) {
@@ -79,7 +83,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeDefault).
@@ -137,7 +141,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -189,7 +193,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -238,7 +242,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeDefault).
@@ -316,7 +320,7 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						if value != createdOn {
-							return fmt.Errorf("view was recreated")
+							return fmt.Errorf("stream was recreated")
 						}
 						return nil
 					})),
@@ -328,7 +332,225 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						if value != createdOn {
-							return fmt.Errorf("view was recreated")
+							return fmt.Errorf("stream was recreated")
+						}
+						return nil
+					})),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_StreamOnTable_CheckGrantsAfterRecreation(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	resourceName := "snowflake_stream_on_table.test"
+
+	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
+	t.Cleanup(cleanupTable)
+
+	table2, cleanupTable2 := acc.TestClient().Table.CreateWithChangeTracking(t)
+	t.Cleanup(cleanupTable2)
+
+	role, cleanupRole := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(cleanupRole)
+
+	model1 := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName()).
+		WithCopyGrants(true)
+	model1WithoutCopyGrants := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
+	model2 := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table2.ID().FullyQualifiedName()).
+		WithCopyGrants(true)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnExternalTable),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model1) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
+				),
+			},
+			{
+				Config: config.FromModel(t, model2) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
+				),
+			},
+			{
+				Config:             config.FromModel(t, model1WithoutCopyGrants) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_account_role.grant", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_StreamOnTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	resourceName := "snowflake_stream_on_table.test"
+
+	schema, cleanupSchema := acc.TestClient().Schema.CreateSchemaWithOpts(t,
+		acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(acc.TestClient().Ids.DatabaseId()),
+		&sdk.CreateSchemaOptions{
+			DataRetentionTimeInDays:    sdk.Pointer(0),
+			MaxDataExtensionTimeInDays: sdk.Pointer(0),
+		},
+	)
+	t.Cleanup(cleanupSchema)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+
+	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTrackingInSchema(t, schema.ID())
+	t.Cleanup(cleanupTable)
+
+	var createdOn string
+
+	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		Steps: []resource.TestStep{
+			// check that stale state is marked properly and forces an update
+			{
+				Config: config.FromModel(t, model),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(resourceName, "stale", tfjson.ActionUpdate, sdk.String(r.BooleanTrue), sdk.String(r.BooleanFalse)),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasStaleString(r.BooleanTrue),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						createdOn = value
+						return nil
+					})),
+				),
+			},
+			// check that the resource was recreated
+			// note that it is stale again because we still have schema parameters set to 0
+			{
+				Config: config.FromModel(t, model),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(resourceName, "stale", tfjson.ActionUpdate, sdk.String(r.BooleanTrue), sdk.String(r.BooleanFalse)),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasStaleString(r.BooleanTrue),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						if value == createdOn {
+							return fmt.Errorf("stream was not recreated")
+						}
+						return nil
+					})),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_StreamOnTable_StaleWithExternalChanges(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	resourceName := "snowflake_stream_on_table.test"
+
+	schema, cleanupSchema := acc.TestClient().Schema.CreateSchemaWithOpts(t,
+		acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(acc.TestClient().Ids.DatabaseId()),
+		&sdk.CreateSchemaOptions{
+			DataRetentionTimeInDays:    sdk.Pointer(1),
+			MaxDataExtensionTimeInDays: sdk.Pointer(1),
+		},
+	)
+	t.Cleanup(cleanupSchema)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+
+	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTrackingInSchema(t, schema.ID())
+	t.Cleanup(cleanupTable)
+
+	var createdOn string
+
+	model := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName())
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
+		Steps: []resource.TestStep{
+			// initial creation does not lead to stale stream
+			{
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasStaleString(r.BooleanFalse),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						createdOn = value
+						return nil
+					})),
+				),
+			},
+			// changing the value externally on schema
+			{
+				PreConfig: func() {
+					acc.TestClient().Schema.Alter(t, schema.ID(), &sdk.AlterSchemaOptions{
+						Set: &sdk.SchemaSet{
+							DataRetentionTimeInDays:    sdk.Int(0),
+							MaxDataExtensionTimeInDays: sdk.Int(0),
+						},
+					})
+					assert.AssertThatObject(t, objectassert.Stream(t, id).
+						HasName(id.Name()).
+						HasStale(true),
+					)
+
+					acc.TestClient().Schema.Alter(t, schema.ID(), &sdk.AlterSchemaOptions{
+						Set: &sdk.SchemaSet{
+							DataRetentionTimeInDays:    sdk.Int(1),
+							MaxDataExtensionTimeInDays: sdk.Int(1),
+						},
+					})
+					assert.AssertThatObject(t, objectassert.Stream(t, id).
+						HasName(id.Name()).
+						HasStale(false),
+					)
+				},
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+					HasNameString(id.Name()).
+					HasStaleString(r.BooleanFalse),
+					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+						if value != createdOn {
+							return fmt.Errorf("stream was recreated")
 						}
 						return nil
 					})),
@@ -398,7 +620,7 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 						HasComment("foo").
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -515,7 +737,7 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 						HasComment("foo").
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables([]sdk.SchemaObjectIdentifier{table.ID()}).
+						HasBaseTables(table.ID()).
 						HasType("DELTA").
 						HasStale("false").
 						HasMode(sdk.StreamModeAppendOnly).
@@ -610,6 +832,62 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 			{
 				Config:      config.FromModel(t, modelWithInvalidTableId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
+			},
+		},
+	})
+}
+
+func TestAcc_StreamOnTable_ExternalStreamTypeChange(t *testing.T) {
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	acc.TestAccPreCheck(t)
+	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
+	t.Cleanup(cleanupTable)
+
+	model := model.StreamOnTableBase("test", id, table.ID())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model),
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.StreamOnTableResource(t, model.ResourceReference()).
+							HasStreamTypeString(string(sdk.StreamSourceTypeTable)),
+						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
+							HasSourceType(sdk.StreamSourceTypeTable),
+					),
+				),
+			},
+			// external change with a different type
+			{
+				PreConfig: func() {
+					statement := fmt.Sprintf("SELECT * FROM %s", table.ID().FullyQualifiedName())
+					view, cleanupView := acc.TestClient().View.CreateView(t, statement)
+					t.Cleanup(cleanupView)
+					acc.TestClient().Stream.DropFunc(t, id)()
+					externalChangeStream, cleanup := acc.TestClient().Stream.CreateOnViewWithRequest(t, sdk.NewCreateOnViewStreamRequest(id, view.ID()))
+					t.Cleanup(cleanup)
+					require.Equal(t, sdk.StreamSourceTypeView, *externalChangeStream.SourceType)
+				},
+				Config: config.FromModel(t, model),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					assert.AssertThat(t,
+						resourceassert.StreamOnTableResource(t, model.ResourceReference()).
+							HasStreamTypeString(string(sdk.StreamSourceTypeTable)),
+						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
+							HasSourceType(sdk.StreamSourceTypeTable),
+					),
+				),
 			},
 		},
 	})

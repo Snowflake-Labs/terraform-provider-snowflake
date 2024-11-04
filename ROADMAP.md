@@ -1,5 +1,115 @@
 # Our roadmap
 
+## (25.10.2024) Project state overview
+
+### Goals
+
+Since the last update we have focused on:
+
+* [Reducing the feature gap](#reducing-the-feature-gap) (focusing on the Snowflake essential GA resources)
+* Redesigning identifiers (check [\#3045](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/3045) and [identifiers_rework_design_decisions](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md))
+* Reworking the provider's configuration (the doc/discussion will be shared when ready)
+* Researching the object renaming in our provider (the doc will be shared when ready)
+
+These steps were all needed to get us closer to the first stable version of the provider which... is really close. In the next 1-2 months we want to:
+
+* [Wrap up the functional scope](#wrap-up-the-functional-scope) (not all the objects will be declared stable, more details below)
+* [Prepare for the V1 release](#prepare-for-the-v1-release)
+* [Prepare some basic performance benchmarks](#prepare-some-basic-performance-benchmarks) (especially, after a few major changes to the resources logic)
+* [Improve/update the documentation](#improveupdate-the-documentation)
+* [Run a closed early adopter program](#run-a-closed-early-adopter-program) to verify the readiness of the provider to enter a stable V1
+
+If there won't be any major obstacles or critical issues we aim to release V1 on **December 9th**. To better understand its scope, please check the ["What is V1?"](#what-is-v1) section.
+
+#### Reducing the feature gap
+
+During the last six months, we have been tackling objects from the [essential](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/ESSENTIAL_GA_OBJECTS.MD) and [remaining](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/REMAINING_GA_OBJECTS.MD) object lists. We’ve been aligning the implementation, adding missing attributes, and fixing known issues of the chosen objects (full list below). We had to make design decisions that sometimes were not only dictated by our engineering assessments but also by the limitations of Terraform and the underlying [SDKv2](https://developer.hashicorp.com/terraform/plugin/sdkv2). The main decisions are listed inside the repository in the [Design decisions before v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#design-decisions-before-v1) (we will validate if all essential ones are present there before releasing V1).
+
+#### Wrap up the functional scope
+
+It’s about finishing the redesign of objects we want to declare stable. This mainly affects tables and accounts, but it also involves small alterations in other objects (which will be listed in the migration guide as usual).
+
+As shown [below](#which-resources-will-be-declared-stable), all but one of the [essential](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/ESSENTIAL_GA_OBJECTS.MD) objects and a few of the [remaining](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/REMAINING_GA_OBJECTS.MD) objects made the cut.
+
+#### Prepare for the V1 release
+
+This is mainly cleaning up the repository but also activities around the release:
+
+* removing deprecated resources
+* marking the resources as [preview features](#preview-resourcesdatasources)
+* removing deprecated attributes
+* potentially renaming some configuration options
+* summarizing migration guidelines between v0.x.x and v1.0.0
+
+#### Prepare some basic performance benchmarks
+
+During the resources redesign we introduced multiple changes that may affect the performance. Namely:
+
+* more SQL statements are run (`SHOW`, `DESCRIBE`, and `SHOW PARAMETERS` when needed)
+* the state we save is bigger because of the `show_output`, `describe_output`, and `parameters`.
+
+We observed that our customers tend to have lots of objects in single terraform deployments. This leads to longer planning and execution times. To be able to guide “what is too much”, we need to perform tests with more objects on our end.
+
+#### Improve/update the documentation
+
+We greatly improved the docs and the transparency of the project. However, there are still topics that need our attention (e.g. adding a migration guide directly to the [registry](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs), adding missing design decisions like granting ownership, or adding more guides \- similar to [identifiers rework](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers) \- like importing existing infrastructure into Snowflake).
+
+#### Run a closed early adopter program
+
+We planned V1 to be as close as possible to the latest 0.x.x version before the V1 release. However, some changes/migrations are still expected. To improve confidence, we have decided to provide early V1 binaries to early adopters. We are still actively recruiting customers; please reach out to your Snowflake Account Manager at the earliest if you would like to participate. The program runs from mid-November to mid-December.
+
+#### What is V1?
+
+The first major version, V1, marks the first step in getting to GA by providing stable versions to customers who use the provider. We hope to have all our current customers migrate to V1. The provider's Product and Engineering teams will be available for migration or any other questions, as we believe this migration is key in preparing our customers for seamless GA adoption.
+
+From the engineering point of view, the provider will be in the stable version, but it will still stay in the Snowflake-Labs GitHub organization. We plan to change that and move it to the official snowflakedb org so that it gets the official Snowflake support. This will be a necessary step to reach the GA.
+
+#### Which resources will be declared stable
+
+Check [this list](v1-preparations/LIST_OF_STABLE_RESOURCES_FOR_V1.md) for details.
+
+#### Preview resources/datasources
+
+On our road to V1, we went through the resources, starting with the most used ones. We did not cover all of them (as described above). Because of that, in the newest [v0.97.0](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs) version of the provider, we have multiple resources that were not redesigned/fixed.
+
+We discussed two main options: removing them from 1.0.0 or marking them as preview features. We were mostly worried that removing resources would prevent the majority of our users from migrating to the stable version. On the other hand, we know they are not ready so we don’t want to declare them as stable.
+
+After consideration, we decided to leave them as preview features that need to be **explicitly enabled by the user**. This way, we are not reducing the provider's functionality between v0.x.x and v1.0.0 and leave the possibility to use them while accepting the limitations they have. However, these resources will be subject to change after V1. They should be treated as [Snowflake Preview Features](https://docs.snowflake.com/en/release-notes/preview-features) so changes to their schemas (breaking changes included\!) may be introduced even without bumping the major version of the provider.
+
+#### “Attachment” resources clarification
+
+During our road to V1 we tried to limit the number of resources needed to be configured in order to manage the given Snowflake object correctly. Because of that, we moved [Snowflake parameters](https://docs.snowflake.com/en/sql-reference/parameters) handling directly to the given object’s resource (check [this](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters)). We did that to other types of properties too (e.g. we changed the logic for public keys handling in the [snowflake_user](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.95.0/docs/resources/user#rsa_public_key) resource, so that [snowflake_user_public_keys](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.94.1/docs/resources/user_public_keys) is no longer compatible with it).
+
+Still, these “attachment” objects serve a specific use case (i.e. the main object is not managed by Terraform but part of the object may be). It opened a question for the future not only because of the aforementioned use case but also because of a wider perspective on the default resource behavior. For example, a resource monitor can be attached to a warehouse only by a user with an ACCOUNTADMIN role (check [\#3019](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3019)). Some of our users would like to provision warehouses separately from assigning resource monitors but the caveat here is that leaving the resource monitor empty in the resource config will currently remove any assigned resources. Handling this would require adding a separate attachment resource and allowing a conditional change in behavior for empty assignments in the main object.
+
+The topic is wide. For the V1, we decided to keep most of the attachment resources as [preview features](#preview-resourcesdatasources) and we will discuss the need for handling the use cases described in this section as a separate topic after V1.
+
+#### Which resources will be left as preview features
+
+Check [this list](v1-preparations/LIST_OF_PREVIEW_FEATURES_FOR_V1.md) for details.
+
+#### Which resources will be removed
+
+Check [this list](v1-preparations/LIST_OF_REMOVED_RESOURCES_FOR_V1.md) for details.
+
+#### Roadmap short after V1
+
+Right after V1, we would like to focus on helping all of you with the migration. We will prioritize it so we encourage you to approach us with any issues you might have.
+
+In the meantime, if we have enough time, we want to prioritize redesigning the object marked as preview features. Currently, stages and shares open the list.
+
+#### Next year priorities
+
+This is only a general overview of the next year and may be subject to change:
+
+* Graduate out of Snowflake-Labs into the official snowflakedb organization
+* GA of the Snowflake Terraform Provider
+* Research performance improvements (optimize Snowflake invocations)
+* Grants improvements
+* Redesign remaining GA objects
+* Design transition to the [plugin framework](https://developer.hashicorp.com/terraform/plugin/framework)
+* Introduce Terraform modules
+
 ## (05.05.2024) Roadmap Overview
 
 ### Goals

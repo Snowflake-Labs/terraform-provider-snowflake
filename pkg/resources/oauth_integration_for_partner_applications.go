@@ -336,7 +336,7 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"enabled", "enabled", integration.Enabled, booleanStringFromBool(integration.Enabled), nil},
+				outputMapping{"enabled", "enabled", integration.Enabled, booleanStringFromBool(integration.Enabled), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}

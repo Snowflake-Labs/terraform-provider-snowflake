@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -12,9 +13,13 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/validators"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -38,55 +43,51 @@ func init() {
 	}
 }
 
-// Provider returns a Terraform Provider using configuration from https://pkg.go.dev/github.com/snowflakedb/gosnowflake#Config
+// Provider returns a Terraform Provider using configuration. It is based on https://pkg.go.dev/github.com/snowflakedb/gosnowflake#Config.
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"account": {
 				Type:        schema.TypeString,
-				Description: "Specifies your Snowflake account identifier assigned, by Snowflake. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). Can also be sourced from the `SNOWFLAKE_ACCOUNT` environment variable. Required unless using `profile`.",
+				Description: envNameFieldDescription("Specifies your Snowflake account identifier assigned, by Snowflake. The [account locator](https://docs.snowflake.com/en/user-guide/admin-account-identifier#format-2-account-locator-in-a-region) format is not supported. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). Required unless using `profile`.", snowflakeenvs.Account),
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ACCOUNT", nil),
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Account, nil),
 			},
 			"user": {
-				Type:        schema.TypeString,
-				Description: "Username. Can also be sourced from the `SNOWFLAKE_USER` environment variable. Required unless using `profile`.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USER", nil),
-			},
-			"username": {
-				Type:        schema.TypeString,
-				Description: "Username for username+password authentication. Can also be sourced from the `SNOWFLAKE_USERNAME` environment variable. Required unless using `profile`.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_USERNAME", nil),
-				Deprecated:  "Use `user` instead of `username`",
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("Username. Required unless using `profile`.", snowflakeenvs.User),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.User, nil),
+				ValidateDiagFunc: validators.IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			},
 			"password": {
 				Type:          schema.TypeString,
-				Description:   "Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`. Can also be sourced from the `SNOWFLAKE_PASSWORD` environment variable.",
+				Description:   envNameFieldDescription("Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`.", snowflakeenvs.Password),
 				Optional:      true,
 				Sensitive:     true,
-				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSWORD", nil),
+				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.Password, nil),
 				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token"},
 			},
-			// todo: add database and schema once unqualified identifiers are supported
 			"warehouse": {
-				Type:        schema.TypeString,
-				Description: "Specifies the virtual warehouse to use by default for queries, loading, etc. in the client session. Can also be sourced from the `SNOWFLAKE_WAREHOUSE` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_WAREHOUSE", nil),
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("Specifies the virtual warehouse to use by default for queries, loading, etc. in the client session.", snowflakeenvs.Warehouse),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Warehouse, nil),
+				ValidateDiagFunc: validators.IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			},
 			"role": {
-				Type:        schema.TypeString,
-				Description: "Specifies the role to use by default for accessing Snowflake objects in the client session. Can also be sourced from the `SNOWFLAKE_ROLE` environment variable. .",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_ROLE", nil),
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("Specifies the role to use by default for accessing Snowflake objects in the client session.", snowflakeenvs.Role),
+				Optional:         true,
+				ValidateDiagFunc: validators.IsValidIdentifier[sdk.AccountObjectIdentifier](),
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Role, nil),
 			},
 			"validate_default_parameters": {
-				Type:        schema.TypeBool,
-				Description: "True by default. If false, disables the validation checks for Database, Schema, Warehouse and Role at the time a connection is established. Can also be sourced from the `SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS", nil),
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("True by default. If false, disables the validation checks for Database, Schema, Warehouse and Role at the time a connection is established.", snowflakeenvs.ValidateDefaultParameters),
+				Optional:         true,
+				ValidateDiagFunc: validators.ValidateBooleanStringWithDefault,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ValidateDefaultParameters, provider.BooleanDefault),
 			},
 			"params": {
 				Type:        schema.TypeMap,
@@ -94,127 +95,121 @@ func Provider() *schema.Provider {
 				Optional:    true,
 			},
 			"client_ip": {
-				Type:        schema.TypeString,
-				Description: "IP address for network checks. Can also be sourced from the `SNOWFLAKE_CLIENT_IP` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_CLIENT_IP", nil),
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("IP address for network checks.", snowflakeenvs.ClientIp),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ClientIp, nil),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IsIPAddress),
 			},
 			"protocol": {
-				Type:        schema.TypeString,
-				Description: "Either http or https, defaults to https. Can also be sourced from the `SNOWFLAKE_PROTOCOL` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROTOCOL", nil),
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					switch val.(string) {
-					case "http", "https":
-						return nil, nil
-					default:
-						errs := append(errs, fmt.Errorf("%q must be one of http or https", key))
-						return warns, errs
-					}
-				},
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription(fmt.Sprintf("A protocol used in the connection. Valid options are: %v.", docs.PossibleValuesListed(allProtocols)), snowflakeenvs.Protocol),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Protocol, nil),
+				ValidateDiagFunc: validators.NormalizeValidation(toProtocol),
 			},
 			"host": {
 				Type:        schema.TypeString,
-				Description: "Supports passing in a custom host value to the snowflake go driver for use with privatelink. Can also be sourced from the `SNOWFLAKE_HOST` environment variable. ",
+				Description: envNameFieldDescription("Specifies a custom host value used by the driver for privatelink connections.", snowflakeenvs.Host),
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_HOST", nil),
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Host, nil),
 			},
 			"port": {
-				Type:        schema.TypeInt,
-				Description: "Support custom port values to snowflake go driver for use with privatelink. Can also be sourced from the `SNOWFLAKE_PORT` environment variable. ",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PORT", nil),
+				Type:             schema.TypeInt,
+				Description:      envNameFieldDescription("Specifies a custom port value used by the driver for privatelink connections.", snowflakeenvs.Port),
+				Optional:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IsPortNumberOrZero),
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Port, nil),
 			},
 			"authenticator": {
-				Type:        schema.TypeString,
-				Description: "Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid values include: Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor, UsernamePasswordMFA. Can also be sourced from the `SNOWFLAKE_AUTHENTICATOR` environment variable. It has to be set explicitly to JWT for private key authentication.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_AUTHENTICATOR", nil),
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					switch val.(string) {
-					case "Snowflake", "OAuth", "ExternalBrowser", "Okta", "JWT", "TokenAccessor", "UsernamePasswordMFA":
-						return nil, nil
-					default:
-						errs := append(errs, fmt.Errorf("%q must be one of Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor or UsernamePasswordMFA", key))
-						return warns, errs
-					}
-				},
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid values include: Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor, UsernamePasswordMFA. It has to be set explicitly to JWT for private key authentication.", snowflakeenvs.Authenticator),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Authenticator, string(authenticationTypeSnowflake)),
+				ValidateDiagFunc: validators.NormalizeValidation(toAuthenticatorType),
 			},
 			"passcode": {
 				Type:          schema.TypeString,
-				Description:   "Specifies the passcode provided by Duo when using multi-factor authentication (MFA) for login. Can also be sourced from the `SNOWFLAKE_PASSCODE` environment variable. ",
+				Description:   envNameFieldDescription("Specifies the passcode provided by Duo when using multi-factor authentication (MFA) for login.", snowflakeenvs.Passcode),
 				Optional:      true,
 				ConflictsWith: []string{"passcode_in_password"},
-				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSCODE", nil),
+				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.Passcode, nil),
 			},
 			"passcode_in_password": {
 				Type:          schema.TypeBool,
-				Description:   "False by default. Set to true if the MFA passcode is embedded in the login password. Appends the MFA passcode to the end of the password. Can also be sourced from the `SNOWFLAKE_PASSCODE_IN_PASSWORD` environment variable. ",
+				Description:   envNameFieldDescription("False by default. Set to true if the MFA passcode is embedded to the configured password.", snowflakeenvs.PasscodeInPassword),
 				Optional:      true,
 				ConflictsWith: []string{"passcode"},
-				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PASSCODE_IN_PASSWORD", nil),
+				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.PasscodeInPassword, nil),
 			},
 			"okta_url": {
-				Type:        schema.TypeString,
-				Description: "The URL of the Okta server. e.g. https://example.okta.com. Can also be sourced from the `SNOWFLAKE_OKTA_URL` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_OKTA_URL", nil),
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("The URL of the Okta server. e.g. https://example.okta.com.", snowflakeenvs.OktaUrl),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.OktaUrl, nil),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
 			},
 			"login_timeout": {
-				Type:        schema.TypeInt,
-				Description: "Login retry timeout EXCLUDING network roundtrip and read out http response. Can also be sourced from the `SNOWFLAKE_LOGIN_TIMEOUT` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_LOGIN_TIMEOUT", nil),
+				Type:             schema.TypeInt,
+				Description:      envNameFieldDescription("Login retry timeout in seconds EXCLUDING network roundtrip and read out http response.", snowflakeenvs.LoginTimeout),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.LoginTimeout, nil),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 			},
 			"request_timeout": {
-				Type:        schema.TypeInt,
-				Description: "request retry timeout EXCLUDING network roundtrip and read out http response. Can also be sourced from the `SNOWFLAKE_REQUEST_TIMEOUT` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_REQUEST_TIMEOUT", nil),
+				Type:             schema.TypeInt,
+				Description:      envNameFieldDescription("request retry timeout in seconds EXCLUDING network roundtrip and read out http response.", snowflakeenvs.RequestTimeout),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.RequestTimeout, nil),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 			},
 			"jwt_expire_timeout": {
-				Type:        schema.TypeInt,
-				Description: "JWT expire after timeout in seconds. Can also be sourced from the `SNOWFLAKE_JWT_EXPIRE_TIMEOUT` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_JWT_EXPIRE_TIMEOUT", nil),
+				Type:             schema.TypeInt,
+				Description:      envNameFieldDescription("JWT expire after timeout in seconds.", snowflakeenvs.JwtExpireTimeout),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.JwtExpireTimeout, nil),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 			},
 			"client_timeout": {
-				Type:        schema.TypeInt,
-				Description: "The timeout in seconds for the client to complete the authentication. Default is 900 seconds. Can also be sourced from the `SNOWFLAKE_CLIENT_TIMEOUT` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_CLIENT_TIMEOUT", nil),
+				Type:             schema.TypeInt,
+				Description:      envNameFieldDescription("The timeout in seconds for the client to complete the authentication.", snowflakeenvs.ClientTimeout),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ClientTimeout, nil),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 			},
 			"jwt_client_timeout": {
-				Type:        schema.TypeInt,
-				Description: "The timeout in seconds for the JWT client to complete the authentication. Default is 10 seconds. Can also be sourced from the `SNOWFLAKE_JWT_CLIENT_TIMEOUT` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_JWT_CLIENT_TIMEOUT", nil),
+				Type:             schema.TypeInt,
+				Description:      envNameFieldDescription("The timeout in seconds for the JWT client to complete the authentication.", snowflakeenvs.JwtClientTimeout),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.JwtClientTimeout, nil),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 			},
 			"external_browser_timeout": {
-				Type:        schema.TypeInt,
-				Description: "The timeout in seconds for the external browser to complete the authentication. Default is 120 seconds. Can also be sourced from the `SNOWFLAKE_EXTERNAL_BROWSER_TIMEOUT` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_EXTERNAL_BROWSER_TIMEOUT", nil),
+				Type:             schema.TypeInt,
+				Description:      envNameFieldDescription("The timeout in seconds for the external browser to complete the authentication.", snowflakeenvs.ExternalBrowserTimeout),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ExternalBrowserTimeout, nil),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 			},
 			"insecure_mode": {
 				Type:        schema.TypeBool,
-				Description: "If true, bypass the Online Certificate Status Protocol (OCSP) certificate revocation check. IMPORTANT: Change the default value for testing or emergency situations only. Can also be sourced from the `SNOWFLAKE_INSECURE_MODE` environment variable.",
+				Description: envNameFieldDescription("If true, bypass the Online Certificate Status Protocol (OCSP) certificate revocation check. IMPORTANT: Change the default value for testing or emergency situations only.", snowflakeenvs.InsecureMode),
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_INSECURE_MODE", nil),
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.InsecureMode, nil),
 			},
 			"ocsp_fail_open": {
-				Type:        schema.TypeBool,
-				Description: "True represents OCSP fail open mode. False represents OCSP fail closed mode. Fail open true by default. Can also be sourced from the `SNOWFLAKE_OCSP_FAIL_OPEN` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_OCSP_FAIL_OPEN", nil),
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("True represents OCSP fail open mode. False represents OCSP fail closed mode. Fail open true by default.", snowflakeenvs.OcspFailOpen),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.OcspFailOpen, provider.BooleanDefault),
+				ValidateDiagFunc: validators.ValidateBooleanStringWithDefault,
 			},
 			"token": {
 				Type:        schema.TypeString,
-				Description: "Token to use for OAuth and other forms of token based auth. Can also be sourced from the `SNOWFLAKE_TOKEN` environment variable.",
+				Description: envNameFieldDescription("Token to use for OAuth and other forms of token based auth.", snowflakeenvs.Token),
 				Sensitive:   true,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_TOKEN", nil),
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Token, nil),
 			},
 			"token_accessor": {
 				Type:     schema.TypeList,
@@ -223,105 +218,107 @@ func Provider() *schema.Provider {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"token_endpoint": {
-							Type:        schema.TypeString,
-							Description: "The token endpoint for the OAuth provider e.g. https://{yourDomain}/oauth/token when using a refresh token to renew access token. Can also be sourced from the `SNOWFLAKE_TOKEN_ACCESSOR_TOKEN_ENDPOINT` environment variable.",
-							Required:    true,
-							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_TOKEN_ACCESSOR_TOKEN_ENDPOINT", nil),
+							Type:             schema.TypeString,
+							Description:      envNameFieldDescription("The token endpoint for the OAuth provider e.g. https://{yourDomain}/oauth/token when using a refresh token to renew access token.", snowflakeenvs.TokenAccessorTokenEndpoint),
+							Required:         true,
+							Sensitive:        true,
+							DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.TokenAccessorTokenEndpoint, nil),
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
 						},
 						"refresh_token": {
 							Type:        schema.TypeString,
-							Description: "The refresh token for the OAuth provider when using a refresh token to renew access token. Can also be sourced from the `SNOWFLAKE_TOKEN_ACCESSOR_REFRESH_TOKEN` environment variable.",
+							Description: envNameFieldDescription("The refresh token for the OAuth provider when using a refresh token to renew access token.", snowflakeenvs.TokenAccessorRefreshToken),
 							Required:    true,
 							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_TOKEN_ACCESSOR_REFRESH_TOKEN", nil),
+							DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.TokenAccessorRefreshToken, nil),
 						},
 						"client_id": {
 							Type:        schema.TypeString,
-							Description: "The client ID for the OAuth provider when using a refresh token to renew access token. Can also be sourced from the `SNOWFLAKE_TOKEN_ACCESSOR_CLIENT_ID` environment variable.",
+							Description: envNameFieldDescription("The client ID for the OAuth provider when using a refresh token to renew access token.", snowflakeenvs.TokenAccessorClientId),
 							Required:    true,
 							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_TOKEN_ACCESSOR_CLIENT_ID", nil),
+							DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.TokenAccessorClientId, nil),
 						},
 						"client_secret": {
 							Type:        schema.TypeString,
-							Description: "The client secret for the OAuth provider when using a refresh token to renew access token. Can also be sourced from the `SNOWFLAKE_TOKEN_ACCESSOR_CLIENT_SECRET` environment variable.",
+							Description: envNameFieldDescription("The client secret for the OAuth provider when using a refresh token to renew access token.", snowflakeenvs.TokenAccessorClientSecret),
 							Required:    true,
 							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_TOKEN_ACCESSOR_CLIENT_SECRET", nil),
+							DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.TokenAccessorClientSecret, nil),
 						},
 						"redirect_uri": {
 							Type:        schema.TypeString,
-							Description: "The redirect URI for the OAuth provider when using a refresh token to renew access token. Can also be sourced from the `SNOWFLAKE_TOKEN_ACCESSOR_REDIRECT_URI` environment variable.",
+							Description: envNameFieldDescription("The redirect URI for the OAuth provider when using a refresh token to renew access token.", snowflakeenvs.TokenAccessorRedirectUri),
 							Required:    true,
 							Sensitive:   true,
-							DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_TOKEN_ACCESSOR_REDIRECT_URI", nil),
+							DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.TokenAccessorRedirectUri, nil),
 						},
 					},
 				},
 			},
 			"keep_session_alive": {
 				Type:        schema.TypeBool,
-				Description: "Enables the session to persist even after the connection is closed. Can also be sourced from the `SNOWFLAKE_KEEP_SESSION_ALIVE` environment variable.",
+				Description: envNameFieldDescription("Enables the session to persist even after the connection is closed.", snowflakeenvs.KeepSessionAlive),
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_KEEP_SESSION_ALIVE", nil),
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.KeepSessionAlive, nil),
 			},
 			"private_key": {
 				Type:          schema.TypeString,
-				Description:   "Private Key for username+private-key auth. Cannot be used with `browser_auth` or `password`. Can also be sourced from `SNOWFLAKE_PRIVATE_KEY` environment variable.",
+				Description:   envNameFieldDescription("Private Key for username+private-key auth. Cannot be used with `browser_auth` or `password`.", snowflakeenvs.PrivateKey),
 				Optional:      true,
 				Sensitive:     true,
-				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY", nil),
+				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.PrivateKey, nil),
 				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "private_key_path", "oauth_refresh_token"},
 			},
 			"private_key_passphrase": {
 				Type:          schema.TypeString,
-				Description:   "Supports the encryption ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc. Can also be sourced from `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE` environment variable.",
+				Description:   envNameFieldDescription("Supports the encryption ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc.", snowflakeenvs.PrivateKeyPassphrase),
 				Optional:      true,
 				Sensitive:     true,
-				DefaultFunc:   schema.EnvDefaultFunc("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE", nil),
+				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.PrivateKeyPassphrase, nil),
 				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "oauth_refresh_token"},
 			},
 			"disable_telemetry": {
 				Type:        schema.TypeBool,
-				Description: "Indicates whether to disable telemetry. Can also be sourced from the `SNOWFLAKE_DISABLE_TELEMETRY` environment variable.",
+				Description: envNameFieldDescription("Disables telemetry in the driver.", snowflakeenvs.DisableTelemetry),
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_DISABLE_TELEMETRY", nil),
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.DisableTelemetry, nil),
 			},
 			"client_request_mfa_token": {
-				Type:        schema.TypeBool,
-				Description: "When true the MFA token is cached in the credential manager. True by default in Windows/OSX. False for Linux. Can also be sourced from the `SNOWFLAKE_CLIENT_REQUEST_MFA_TOKEN` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_CLIENT_REQUEST_MFA_TOKEN", nil),
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("When true the MFA token is cached in the credential manager. True by default in Windows/OSX. False for Linux.", snowflakeenvs.ClientRequestMfaToken),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ClientRequestMfaToken, provider.BooleanDefault),
+				ValidateDiagFunc: validators.ValidateBooleanStringWithDefault,
 			},
 			"client_store_temporary_credential": {
-				Type:        schema.TypeBool,
-				Description: "When true the ID token is cached in the credential manager. True by default in Windows/OSX. False for Linux. Can also be sourced from the `SNOWFLAKE_CLIENT_STORE_TEMPORARY_CREDENTIAL` environment variable.",
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_CLIENT_STORE_TEMPORARY_CREDENTIAL", nil),
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("When true the ID token is cached in the credential manager. True by default in Windows/OSX. False for Linux.", snowflakeenvs.ClientStoreTemporaryCredential),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ClientStoreTemporaryCredential, provider.BooleanDefault),
+				ValidateDiagFunc: validators.ValidateBooleanStringWithDefault,
 			},
 			"disable_query_context_cache": {
 				Type:        schema.TypeBool,
-				Description: "Should HTAP query context cache be disabled. Can also be sourced from the `SNOWFLAKE_DISABLE_QUERY_CONTEXT_CACHE` environment variable.",
+				Description: envNameFieldDescription("Disables HTAP query context cache in the driver.", snowflakeenvs.DisableQueryContextCache),
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_DISABLE_QUERY_CONTEXT_CACHE", nil),
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.DisableQueryContextCache, nil),
 			},
-			/*
-				Feature not yet released as of latest gosnowflake release
-				https://github.com/snowflakedb/gosnowflake/blob/master/dsn.go#L103
-				"include_retry_reason": {
-					Type:        schema.TypeBool,
-					Description: "Should retried request contain retry reason. Can also be sourced from the `SNOWFLAKE_INCLUDE_RETRY_REASON` environment variable.",
-					Optional:    true,
-				},
-			*/
 			"profile": {
-				Type:        schema.TypeString,
-				Description: "Sets the profile to read from ~/.snowflake/config file. Can also be sourced from the `SNOWFLAKE_PROFILE` environment variable.",
+				Type: schema.TypeString,
+				// TODO(SNOW-1754364): Note that a default file path is already filled on sdk side.
+				Description: envNameFieldDescription("Sets the profile to read from ~/.snowflake/config file.", snowflakeenvs.Profile),
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("SNOWFLAKE_PROFILE", "default"),
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Profile, "default"),
 			},
 			// Deprecated attributes
+			"username": {
+				Type:        schema.TypeString,
+				Description: envNameFieldDescription("Username for username+password authentication. Required unless using `profile`.", snowflakeenvs.Username),
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Username, nil),
+				Deprecated:  "Use `user` instead of `username`",
+			},
 			"region": {
 				Type:        schema.TypeString,
 				Description: "Snowflake region, such as \"eu-central-1\", with this parameter. However, since this parameter is deprecated, it is best to specify the region as part of the account parameter. For details, see the description of the account parameter. [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use.  Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can also be sourced from the `SNOWFLAKE_REGION` environment variable. ",
@@ -412,24 +409,26 @@ func Provider() *schema.Provider {
 				Deprecated:    "use the [file Function](https://developer.hashicorp.com/terraform/language/functions/file) instead",
 			},
 		},
-		ResourcesMap:       getResources(),
-		DataSourcesMap:     getDataSources(),
-		ConfigureFunc:      ConfigureProvider,
-		ProviderMetaSchema: map[string]*schema.Schema{},
+		ResourcesMap:         getResources(),
+		DataSourcesMap:       getDataSources(),
+		ConfigureContextFunc: ConfigureProvider,
+		ProviderMetaSchema:   map[string]*schema.Schema{},
 	}
 }
 
 func getResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"snowflake_account":                            resources.Account(),
-		"snowflake_account_role":                       resources.AccountRole(),
-		"snowflake_account_password_policy_attachment": resources.AccountPasswordPolicyAttachment(),
-		"snowflake_account_parameter":                  resources.AccountParameter(),
-		"snowflake_alert":                              resources.Alert(),
+		"snowflake_account": resources.Account(),
+		"snowflake_account_authentication_policy_attachment":                     resources.AccountAuthenticationPolicyAttachment(),
+		"snowflake_account_role":                                                 resources.AccountRole(),
+		"snowflake_account_password_policy_attachment":                           resources.AccountPasswordPolicyAttachment(),
+		"snowflake_account_parameter":                                            resources.AccountParameter(),
+		"snowflake_alert":                                                        resources.Alert(),
 		"snowflake_api_authentication_integration_with_authorization_code_grant": resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant(),
 		"snowflake_api_authentication_integration_with_client_credentials":       resources.ApiAuthenticationIntegrationWithClientCredentials(),
 		"snowflake_api_authentication_integration_with_jwt_bearer":               resources.ApiAuthenticationIntegrationWithJwtBearer(),
 		"snowflake_api_integration":                                              resources.APIIntegration(),
+		"snowflake_authentication_policy":                                        resources.AuthenticationPolicy(),
 		"snowflake_cortex_search_service":                                        resources.CortexSearchService(),
 		"snowflake_database_old":                                                 resources.DatabaseOld(),
 		"snowflake_database":                                                     resources.Database(),
@@ -439,6 +438,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_external_function":                                            resources.ExternalFunction(),
 		"snowflake_external_oauth_integration":                                   resources.ExternalOauthIntegration(),
 		"snowflake_external_table":                                               resources.ExternalTable(),
+		"snowflake_external_volume":                                              resources.ExternalVolume(),
 		"snowflake_failover_group":                                               resources.FailoverGroup(),
 		"snowflake_file_format":                                                  resources.FileFormat(),
 		"snowflake_function":                                                     resources.Function(),
@@ -472,6 +472,10 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_schema":                                                       resources.Schema(),
 		"snowflake_scim_integration":                                             resources.SCIMIntegration(),
 		"snowflake_secondary_database":                                           resources.SecondaryDatabase(),
+		"snowflake_secret_with_authorization_code_grant":                         resources.SecretWithAuthorizationCodeGrant(),
+		"snowflake_secret_with_basic_authentication":                             resources.SecretWithBasicAuthentication(),
+		"snowflake_secret_with_client_credentials":                               resources.SecretWithClientCredentials(),
+		"snowflake_secret_with_generic_string":                                   resources.SecretWithGenericString(),
 		"snowflake_sequence":                                                     resources.Sequence(),
 		"snowflake_service_user":                                                 resources.ServiceUser(),
 		"snowflake_session_parameter":                                            resources.SessionParameter(),
@@ -480,8 +484,10 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_stage":                                                        resources.Stage(),
 		"snowflake_storage_integration":                                          resources.StorageIntegration(),
 		"snowflake_stream":                                                       resources.Stream(),
+		"snowflake_stream_on_directory_table":                                    resources.StreamOnDirectoryTable(),
 		"snowflake_stream_on_external_table":                                     resources.StreamOnExternalTable(),
 		"snowflake_stream_on_table":                                              resources.StreamOnTable(),
+		"snowflake_stream_on_view":                                               resources.StreamOnView(),
 		"snowflake_streamlit":                                                    resources.Streamlit(),
 		"snowflake_table":                                                        resources.Table(),
 		"snowflake_table_column_masking_policy_application":                      resources.TableColumnMaskingPolicyApplication(),
@@ -492,6 +498,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_task":                                                         resources.Task(),
 		"snowflake_unsafe_execute":                                               resources.UnsafeExecute(),
 		"snowflake_user":                                                         resources.User(),
+		"snowflake_user_authentication_policy_attachment":                        resources.UserAuthenticationPolicyAttachment(),
 		"snowflake_user_password_policy_attachment":                              resources.UserPasswordPolicyAttachment(),
 		"snowflake_user_public_keys":                                             resources.UserPublicKeys(),
 		"snowflake_view":                                                         resources.View(),
@@ -528,6 +535,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_roles":                              datasources.Roles(),
 		"snowflake_row_access_policies":                datasources.RowAccessPolicies(),
 		"snowflake_schemas":                            datasources.Schemas(),
+		"snowflake_secrets":                            datasources.Secrets(),
 		"snowflake_security_integrations":              datasources.SecurityIntegrations(),
 		"snowflake_sequences":                          datasources.Sequences(),
 		"snowflake_shares":                             datasources.Shares(),
@@ -552,14 +560,14 @@ var (
 	configureClientError error //nolint:errname
 )
 
-func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
+func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
 	// hacky way to speed up our acceptance tests
 	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
 		if configuredClient != nil {
 			return &provider.Context{Client: configuredClient}, nil
 		}
 		if configureClientError != nil {
-			return nil, configureClientError
+			return nil, diag.FromErr(configureClientError)
 		}
 	}
 
@@ -570,10 +578,12 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if v, ok := s.GetOk("account"); ok && v.(string) != "" {
 		config.Account = v.(string)
 	}
+
 	// backwards compatibility until we can remove this
 	if v, ok := s.GetOk("username"); ok && v.(string) != "" {
 		config.User = v.(string)
 	}
+
 	if v, ok := s.GetOk("user"); ok && v.(string) != "" {
 		config.User = v.(string)
 	}
@@ -594,8 +604,16 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		config.Region = v.(string)
 	}
 
-	if v, ok := s.GetOk("validate_default_parameters"); ok && v.(bool) {
-		config.ValidateDefaultParameters = gosnowflake.ConfigBoolTrue
+	if v := s.Get("validate_default_parameters").(string); v != provider.BooleanDefault {
+		parsed, err := provider.BooleanStringToBool(v)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+		if parsed {
+			config.ValidateDefaultParameters = gosnowflake.ConfigBoolTrue
+		} else {
+			config.ValidateDefaultParameters = gosnowflake.ConfigBoolFalse
+		}
 	}
 
 	m := make(map[string]interface{})
@@ -637,7 +655,11 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	}
 
 	if v, ok := s.GetOk("authenticator"); ok && v.(string) != "" {
-		config.Authenticator = toAuthenticatorType(v.(string))
+		authType, err := toAuthenticatorType(v.(string))
+		if err != nil {
+			return "", diag.FromErr(err)
+		}
+		config.Authenticator = authType
 	}
 
 	if v, ok := s.GetOk("passcode"); ok && v.(string) != "" {
@@ -650,7 +672,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	if v, ok := s.GetOk("okta_url"); ok && v.(string) != "" {
 		oktaURL, err := url.Parse(v.(string))
 		if err != nil {
-			return nil, fmt.Errorf("could not parse okta_url err = %w", err)
+			return nil, diag.FromErr(fmt.Errorf("could not parse okta_url err = %w", err))
 		}
 		config.OktaURL = oktaURL
 	}
@@ -683,8 +705,16 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		config.InsecureMode = v.(bool)
 	}
 
-	if v, ok := s.GetOk("ocsp_fail_open"); ok && v.(bool) {
-		config.OCSPFailOpen = gosnowflake.OCSPFailOpenTrue
+	if v := s.Get("ocsp_fail_open").(string); v != provider.BooleanDefault {
+		parsed, err := provider.BooleanStringToBool(v)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+		if parsed {
+			config.OCSPFailOpen = gosnowflake.OCSPFailOpenTrue
+		} else {
+			config.OCSPFailOpen = gosnowflake.OCSPFailOpenFalse
+		}
 	}
 
 	if v, ok := s.GetOk("token"); ok && v.(string) != "" {
@@ -702,7 +732,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 			redirectURI := tokenAccessor["redirect_uri"].(string)
 			accessToken, err := GetAccessTokenWithRefreshToken(tokenEndpoint, clientID, clientSecret, refreshToken, redirectURI)
 			if err != nil {
-				return nil, fmt.Errorf("could not retrieve access token from refresh token, err = %w", err)
+				return nil, diag.FromErr(fmt.Errorf("could not retrieve access token from refresh token, err = %w", err))
 			}
 			config.Token = accessToken
 			config.Authenticator = gosnowflake.AuthTypeOAuth
@@ -718,7 +748,7 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 	privateKeyPassphrase := s.Get("private_key_passphrase").(string)
 	v, err := getPrivateKey(privateKeyPath, privateKey, privateKeyPassphrase)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve private key: %w", err)
+		return nil, diag.FromErr(fmt.Errorf("could not retrieve private key: %w", err))
 	}
 	if v != nil {
 		config.PrivateKey = v
@@ -728,25 +758,34 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		config.DisableTelemetry = v.(bool)
 	}
 
-	if v, ok := s.GetOk("client_request_mfa_token"); ok && v.(bool) {
-		config.ClientRequestMfaToken = gosnowflake.ConfigBoolTrue
+	if v := s.Get("client_request_mfa_token").(string); v != provider.BooleanDefault {
+		parsed, err := provider.BooleanStringToBool(v)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+		if parsed {
+			config.ClientRequestMfaToken = gosnowflake.ConfigBoolTrue
+		} else {
+			config.ClientRequestMfaToken = gosnowflake.ConfigBoolFalse
+		}
 	}
 
-	if v, ok := s.GetOk("client_store_temporary_credential"); ok && v.(bool) {
-		config.ClientStoreTemporaryCredential = gosnowflake.ConfigBoolTrue
+	if v := s.Get("client_store_temporary_credential").(string); v != provider.BooleanDefault {
+		parsed, err := provider.BooleanStringToBool(v)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+		if parsed {
+			config.ClientStoreTemporaryCredential = gosnowflake.ConfigBoolTrue
+		} else {
+			config.ClientStoreTemporaryCredential = gosnowflake.ConfigBoolFalse
+		}
 	}
 
 	if v, ok := s.GetOk("disable_query_context_cache"); ok && v.(bool) {
 		config.DisableQueryContextCache = v.(bool)
 	}
 
-	/*
-		Feature not yet released as of latest gosnowflake release
-		https://github.com/snowflakedb/gosnowflake/blob/master/dsn.go#L103
-		if v, ok := s.GetOk("include_retry_reason"); ok && v.(bool) {
-			config.IncludeRetryParameters = v.(bool)
-		}
-	*/
 	if v, ok := s.GetOk("profile"); ok && v.(string) != "" {
 		profile := v.(string)
 		if profile == "default" {
@@ -755,30 +794,30 @@ func ConfigureProvider(s *schema.ResourceData) (interface{}, error) {
 		} else {
 			profileConfig, err := sdk.ProfileConfig(profile)
 			if err != nil {
-				return "", errors.New("could not retrieve profile config: " + err.Error())
+				return "", diag.FromErr(errors.New("could not retrieve profile config: " + err.Error()))
 			}
 			if profileConfig == nil {
-				return "", errors.New("profile with name: " + profile + " not found in config file")
+				return "", diag.FromErr(errors.New("profile with name: " + profile + " not found in config file"))
 			}
 			// merge any credentials found in profile with config
 			config = sdk.MergeConfig(config, profileConfig)
 		}
 	}
 
-	cl, clErr := sdk.NewClient(config)
+	client, clientErr := sdk.NewClient(config)
 
 	// needed for tests verifying different provider setups
 	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
-		configuredClient = cl
-		configureClientError = clErr
+		configuredClient = client
+		configureClientError = clientErr
 	} else {
 		configuredClient = nil
 		configureClientError = nil
 	}
 
-	if clErr != nil {
-		return nil, clErr
+	if clientErr != nil {
+		return nil, diag.FromErr(clientErr)
 	}
 
-	return &provider.Context{Client: cl}, nil
+	return &provider.Context{Client: client}, nil
 }
