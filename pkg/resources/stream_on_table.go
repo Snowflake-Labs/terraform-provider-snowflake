@@ -60,6 +60,7 @@ func StreamOnTable() *schema.Resource {
 			ComputedIfAnyAttributeChanged(streamOnTableSchema, ShowOutputAttributeName, "table", "append_only", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnTableSchema, DescribeOutputAttributeName, "table", "append_only", "comment"),
 			RecreateWhenStreamIsStale(),
+			RecreateWhenStreamTypeChangedExternally(sdk.StreamSourceTypeTable),
 		),
 
 		Schema: streamOnTableSchema,

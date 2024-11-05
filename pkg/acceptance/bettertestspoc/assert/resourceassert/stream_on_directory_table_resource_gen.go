@@ -115,3 +115,8 @@ func (s *StreamOnDirectoryTableResourceAssert) HasNoStale() *StreamOnDirectoryTa
 	s.AddAssertion(assert.ValueNotSet("stale"))
 	return s
 }
+
+func (s *StreamOnDirectoryTableResourceAssert) HasStreamTypeString(expected string) *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValueSet("stream_type", expected))
+	return s
+}

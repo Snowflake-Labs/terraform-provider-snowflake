@@ -469,7 +469,7 @@ func Provider() *schema.Provider {
 }
 
 func getResources() map[string]*schema.Resource {
-	return map[string]*schema.Resource{
+	resourceList := map[string]*schema.Resource{
 		"snowflake_account": resources.Account(),
 		"snowflake_account_authentication_policy_attachment":                     resources.AccountAuthenticationPolicyAttachment(),
 		"snowflake_account_role":                                                 resources.AccountRole(),
@@ -556,6 +556,12 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_view":                                                         resources.View(),
 		"snowflake_warehouse":                                                    resources.Warehouse(),
 	}
+
+	if os.Getenv(string(testenvs.EnableObjectRenamingTest)) != "" {
+		resourceList["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
+	}
+
+	return resourceList
 }
 
 func getDataSources() map[string]*schema.Resource {
