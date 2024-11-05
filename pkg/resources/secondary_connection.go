@@ -60,6 +60,7 @@ func SecondaryConnection() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(secondaryConnectionSchema, ShowOutputAttributeName, "comment", "is_primary", "failover_allowed_to_accounts"),
+			RecreateWhenSecondaryConnectionPromotedExternally(),
 		),
 
 		Schema: secondaryConnectionSchema,

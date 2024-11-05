@@ -55,7 +55,7 @@ func PrimaryConnection() *schema.Resource {
 		DeleteContext: DeleteContextPrimaryConnection,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(primaryConnectionSchema, ShowOutputAttributeName, "comment", "is_primary", "failover_allowed_to_accounts"),
+			ComputedIfAnyAttributeChanged(primaryConnectionSchema, ShowOutputAttributeName, "comment", "failover_allowed_to_accounts"),
 		),
 
 		Description: "Resource used to manage primary (not replicated) connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
