@@ -25,7 +25,6 @@ func TestAcc_BasicListFlow(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	acc.TestAccPreCheck(t)
 
-	// TODO: Add planchecks
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -466,7 +465,7 @@ func TestAcc_ListsWithDuplicatedItems(t *testing.T) {
 					}),
 				),
 			},
-			// Introduce duplicates
+			// Introduce duplicates (it would be enough just to introduce only one to break the approach assumptions)
 			{
 				Config: objectRenamingConfigList([]map[string]any{
 					{"string": "111", "int": 111},

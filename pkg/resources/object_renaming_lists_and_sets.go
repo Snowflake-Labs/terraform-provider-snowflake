@@ -199,10 +199,12 @@ var objectRenamingListsAndSetsSchema = map[string]*schema.Schema{
 			},
 		},
 	},
-	"invalid_operation": {
-		Type:     schema.TypeString,
-		Computed: true,
-	},
+	// The invalid_operation_handler is a switch that we wanted to implement for the approach with manually_ordered_list.
+	// The idea behind it was to switch between different error handling behaviors for invalid operations we discussed
+	// (see unsupported actions in the manually_ordered_list description). For now, we wanted to have two options:
+	// error out or force re-creation (force new). Currently, the proposal uses only errors because during FORCE_NEW
+	// testing it seemed like it's impossible to for resource re-creation without adding more logic into custom diff
+	// that would be able to calculate it on plan time, not apply time.
 	"invalid_operation_handler": {
 		Type:     schema.TypeString,
 		Optional: true,
@@ -213,6 +215,19 @@ var objectRenamingListsAndSetsSchema = map[string]*schema.Schema{
 			}
 			return "", fmt.Errorf("invalid invalid operation handler: %s", value)
 		}),
+	},
+	// The invalid_operation field was an attempt to collect error messages gathered in the Update and Read methods
+	// and use it in custom diff that would try to re-create the resource on non-empty invalid_operation field.
+	// The FORCE_NEW handler applied this way seemed to have no impact on the resource behavior because the information was
+	// transferred to the field too late. As mentioned, it happened during Update and Read when the `terraform apply` is
+	// already running. During the run, it's not valid to apply the force new, because it has to be known before the apply, so
+	// Terraform would be able to show it during the plan. Because of that, we know that the logic inside custom diff has to
+	// do much more guessing on its own, so we would be able to know those invalid operations during the plan time.
+	// Only then we would be able to have invalid_operation_handler and FORCE_NEW as a valid option (and this field would be
+	// most likely useless and could be removed).
+	"invalid_operation": {
+		Type:     schema.TypeString,
+		Computed: true,
 	},
 	// The ordered_list field was an attempt of making manual work done in manually_ordered_list automatic by making the order field computed.
 	// It didn't work because in DiffSuppressFunc it's hard to get the computed value in the "after" state to compare against.
@@ -450,7 +465,7 @@ func ReadObjectRenamingListsAndSets(withExternalChangesMarking bool) schema.Read
 
 		itemAdded := len(ObjectRenamingDatabaseInstance.ManuallyOrderedList) > len(d.Get("manually_ordered_list").([]any))
 		itemRemoved := len(ObjectRenamingDatabaseInstance.ManuallyOrderedList) < len(d.Get("manually_ordered_list").([]any))
-		if withExternalChangesMarking && d.Get("manually_ordered_list") != nil && itemAdded || itemRemoved {
+		if withExternalChangesMarking && d.Get("manually_ordered_list") != nil && (itemAdded || itemRemoved) {
 			// Detecting external changes by comparing current state with external source
 			// Improvements:
 			// - When the items' length is the same, try to match items by unique combinations (like name + type in this case).
