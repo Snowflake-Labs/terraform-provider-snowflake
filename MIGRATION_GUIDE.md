@@ -9,15 +9,112 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
+### snowflake_streams data source changes
+New filtering options:
+- `like`
+- `in`
+- `starts_with`
+- `limit`
+- `with_describe`
+
+New output fields
+- `show_output`
+- `describe_output`
+
+Breaking changes:
+- `database` and `schema` are right now under `in` field
+- `streams` field now organizes output of show under `show_output` field and the output of describe under `describe_output` field.
+
+Please adjust your Terraform configuration files.
+
+### *(behavior change)* Provider configuration rework
+On our road to v1, we have decided to rework configuration to address the most common issues (see a [roadmap entry](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#providers-configuration-rework)). We have created a list of topics we wanted to address before v1. We will prepare an announcement soon. The following subsections describe the things addressed in the v0.98.0.
+
+#### *(behavior change)* changed behavior of some fields
+For the fields that are not deprecated, we focused on improving validations and documentation. Also, we adjusted some fields to match our [driver's](https://github.com/snowflakedb/gosnowflake) defaults. Specifically:
+- Relaxed validations for enum fields like `protocol` and `authenticator`. Now, the case on such fields is ignored.
+- `user`, `warehouse`, `role` - added a validation for an account object identifier
+- `validate_default_parameters`, `client_request_mfa_token`, `client_store_temporary_credential`, `ocsp_fail_open`,  - to easily handle three-value logic (true, false, unknown) in provider's config, type of these fields was changed from boolean to string. For more details about default values, please refer to the [changes before v1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#default-values) document.
+- `client_ip` - added a validation for an IP address
+- `port` - added a validation for a port number
+- `okta_url`, `token_accessor.token_endpoint`, `client_store_temporary_credential` - added a validation for a URL address
+- `login_timeout`, `request_timeout`, `jwt_expire_timeout`, `client_timeout`, `jwt_client_timeout`, `external_browser_timeout` - added a validation for setting this value to at least `0`
+- `authenticator` - added a possibility to configure JWT flow with `SNOWFLAKE_JWT` (formerly, this was upported with `JWT`); the previous value `JWT` was left for compatibility, but will be removed before v1
+
+### *(behavior change)* handling copy_grants
+Currently, resources like `snowflake_view`, `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table`  support `copy_grants` field corresponding with `COPY GRANTS` during `CREATE`. The current behavior is that, when a change leading for recreation is detected (meaning a change that can not be handled by ALTER, but only by `CREATE OR REPLACE`), `COPY GRANTS` are used during recreation when `copy_grants` is set to `true`. Changing this field without changes in other field results in a noop because in this case there is no need to recreate a resource.
+
+### *(new feature)* recovering stale streams
+Starting from this version, the provider detects stale streams for `snowflake_stream_on_table`, `snowflake_stream_on_external_table` and `snowflake_stream_on_directory_table` and recreates them (optionally with `copy_grants`) to recover them. To handle this correctly, a new computed-only field `stale` has been added to these resource, indicating whether a stream is stale.
+
+### *(new feature)* snowflake_stream_on_directory_table and snowflake_stream_on_view resource
+Continuing changes made in [v0.97](#v0960--v0970), the new resource `snowflake_stream_on_directory_table` and `snowflake_stream_on_view` have been introduced to replace the previous `snowflake_stream` for streams on directory tables and streams on views.
+
+To use the new `stream_on_directory_table`, change the old `stream` from
+```terraform
+resource "snowflake_stream" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  on_stage    = snowflake_stage.stage.fully_qualified_name
+
+  comment = "A stream."
+}
+```
+
+to
+
+```terraform
+resource "snowflake_stream_on_directory_table" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  stage             = snowflake_stage.stage.fully_qualified_name
+
+  comment = "A stream."
+}
+```
+
+To use the new `stream_on_view`, change the old `stream` from
+```terraform
+resource "snowflake_stream" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  on_view    = snowflake_view.view.fully_qualified_name
+
+  comment = "A stream."
+}
+```
+
+to
+
+```terraform
+resource "snowflake_stream_on_view" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  view             = snowflake_view.view.fully_qualified_name
+
+  comment = "A stream."
+}
+```
+
+Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+
 ### *(new feature)* Secret resources
 Added a new secrets resources for managing secrets.
-We decided to split each secret flow into individual resources. 
+We decided to split each secret flow into individual resources.
 This segregation was based on the secret flows in CREATE SECRET. i.e.:
 - `snowflake_secret_with_client_credentials`
 - `snowflake_secret_with_authorization_code_grant`
 - `snowflake_secret_with_basic_authentication`
 - `snowflake_secret_with_generic_string`
- 
+
 
 See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secret).
 
@@ -49,7 +146,7 @@ resource "snowflake_stream" "stream" {
 
 to
 
-```
+```terraform
 resource "snowflake_stream_on_table" "stream" {
   name     = "stream"
   schema   = "schema"
@@ -61,6 +158,7 @@ resource "snowflake_stream_on_table" "stream" {
   comment = "A stream."
 }
 ```
+
 
 Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
 
@@ -97,7 +195,7 @@ resource "snowflake_user" "service_user" {
   lifecycle {
     ignore_changes = [user_type]
   }
-  
+
   name         = "Snowflake Service User"
   login_name   = "service_user"
   email        = "service_user@snowflake.example"

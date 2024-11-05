@@ -143,6 +143,18 @@ func createProviderWithNamedPropertyAndCustomDiff(t *testing.T, propertyName str
 	}
 }
 
+func createProviderWithCustomSchemaAndCustomDiff(t *testing.T, customSchema map[string]*schema.Schema, customDiffFunc schema.CustomizeDiffFunc) *schema.Provider {
+	t.Helper()
+	return &schema.Provider{
+		ResourcesMap: map[string]*schema.Resource{
+			"test": {
+				Schema:        customSchema,
+				CustomizeDiff: customDiffFunc,
+			},
+		},
+	}
+}
+
 func calculateDiff(t *testing.T, providerConfig *schema.Provider, rawConfigValue cty.Value, stateValue map[string]any) *terraform.InstanceDiff {
 	t.Helper()
 	diff, err := providerConfig.ResourcesMap["test"].Diff(
@@ -776,6 +788,290 @@ func Test_RecreateWhenUserTypeChangedExternally(t *testing.T) {
 				Type:     schema.TypeString,
 				Computed: true,
 			}, customDiff)
+			diff := calculateDiffFromAttributes(
+				t,
+				testProvider,
+				tt.stateValue,
+				map[string]any{},
+			)
+			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
+		})
+	}
+}
+
+func Test_RecreateWhenSecretTypeChangedExternally(t *testing.T) {
+	tests := []struct {
+		name         string
+		secretType   sdk.SecretType
+		stateValue   map[string]string
+		wantForceNew bool
+	}{
+		// password type
+		{
+			name:         "password - nothing in state",
+			secretType:   sdk.SecretTypePassword,
+			stateValue:   map[string]string{},
+			wantForceNew: true,
+		},
+		{
+			name:       "password - empty value in state",
+			secretType: sdk.SecretTypePassword,
+			stateValue: map[string]string{
+				"secret_type": "",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:       "password - password in state",
+			secretType: sdk.SecretTypePassword,
+			stateValue: map[string]string{
+				"secret_type": "PASSWORD",
+			},
+			wantForceNew: false,
+		},
+		{
+			name:       "password - password in state lowercased",
+			secretType: sdk.SecretTypePassword,
+			stateValue: map[string]string{
+				"secret_type": "password",
+			},
+			wantForceNew: false,
+		},
+		{
+			name:       "password - oauth2 in state",
+			secretType: sdk.SecretTypePassword,
+			stateValue: map[string]string{
+				"secret_type": "OAUTH2",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:       "password - generic_string in state",
+			secretType: sdk.SecretTypePassword,
+			stateValue: map[string]string{
+				"secret_type": "GENERIC_STRING",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:       "password - oauth2 in state lowercased",
+			secretType: sdk.SecretTypePassword,
+			stateValue: map[string]string{
+				"secret_type": "oauth2",
+			},
+			wantForceNew: true,
+		},
+		// generic string type
+		{
+			name:         "generic_string - nothing in state",
+			secretType:   sdk.SecretTypeGenericString,
+			stateValue:   map[string]string{},
+			wantForceNew: true,
+		},
+		{
+			name:       "generic_string - empty value in state",
+			secretType: sdk.SecretTypeGenericString,
+			stateValue: map[string]string{
+				"secret_type": "",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:       "generic_string - generic_string in state",
+			secretType: sdk.SecretTypeGenericString,
+			stateValue: map[string]string{
+				"secret_type": "generic_string",
+			},
+			wantForceNew: false,
+		},
+		{
+			name:       "generic_string - generic_string in state lowercased",
+			secretType: sdk.SecretTypeGenericString,
+			stateValue: map[string]string{
+				"secret_type": "generic_string",
+			},
+			wantForceNew: false,
+		},
+		{
+			name:       "generic_string - oauth2 in state",
+			secretType: sdk.SecretTypeGenericString,
+			stateValue: map[string]string{
+				"secret_type": "OAUTH2",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:       "generic_string - password in state",
+			secretType: sdk.SecretTypeGenericString,
+			stateValue: map[string]string{
+				"secret_type": "PASSWORD",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:       "generic_string - oauth2 in state lowercased",
+			secretType: sdk.SecretTypeGenericString,
+			stateValue: map[string]string{
+				"secret_type": "oauth2",
+			},
+			wantForceNew: true,
+		},
+		// oauth2 authorization code grant type
+		{
+			name:         "oauth2 authorization code grant - nothing in state",
+			secretType:   sdk.SecretTypeOAuth2AuthorizationCodeGrant,
+			stateValue:   map[string]string{},
+			wantForceNew: true,
+		},
+		{
+			name:       "oauth2 authorization code grant - empty value in state",
+			secretType: sdk.SecretTypeOAuth2AuthorizationCodeGrant,
+			stateValue: map[string]string{
+				"secret_type": "",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:       "oauth2 authorization code grant - password in state",
+			secretType: sdk.SecretTypeOAuth2AuthorizationCodeGrant,
+			stateValue: map[string]string{
+				"secret_type": "PASSWORD",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:       "oauth2 authorization code grant - generic_string in state",
+			secretType: sdk.SecretTypeOAuth2AuthorizationCodeGrant,
+			stateValue: map[string]string{
+				"secret_type": "GENERIC_STRING",
+			},
+			wantForceNew: true,
+		},
+		// oauth2 client credentials type
+		{
+			name:         "oauth2 client credentials - nothing in state",
+			secretType:   sdk.SecretTypeOAuth2ClientCredentials,
+			stateValue:   map[string]string{},
+			wantForceNew: true,
+		},
+		{
+			name:       "oauth2 client credentials - empty value in state",
+			secretType: sdk.SecretTypeOAuth2ClientCredentials,
+			stateValue: map[string]string{
+				"secret_type": "",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:       "oauth2 client credentials - password in state",
+			secretType: sdk.SecretTypeOAuth2ClientCredentials,
+			stateValue: map[string]string{
+				"secret_type": "PASSWORD",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:       "oauth2 client credentials - generic_string in state",
+			secretType: sdk.SecretTypeOAuth2ClientCredentials,
+			stateValue: map[string]string{
+				"secret_type": "GENERIC_STRING",
+			},
+			wantForceNew: true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			customDiff := resources.RecreateWhenSecretTypeChangedExternally(tt.secretType)
+			testProvider := createProviderWithNamedPropertyAndCustomDiff(t, "secret_type", &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			}, customDiff)
+			diff := calculateDiffFromAttributes(
+				t,
+				testProvider,
+				tt.stateValue,
+				map[string]any{},
+			)
+			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
+		})
+	}
+}
+
+func Test_RecreateWhenSecretTypeChangedExternallyForOAuth2(t *testing.T) {
+	tests := []struct {
+		name         string
+		secretType   sdk.SecretType
+		stateValue   map[string]string
+		wantForceNew bool
+	}{
+		// config          - authorization code
+		// external change - drop and recreate with the same id but as oauth2 with client credentials
+		{
+			name:       "oauth2 authorization code - oauth2 client credentials in state",
+			secretType: sdk.SecretTypeOAuth2AuthorizationCodeGrant,
+			stateValue: map[string]string{
+				"secret_type": "OAUTH2",
+				"describe_output.0.oauth_refresh_token_expiry_time": "",
+			},
+			wantForceNew: true,
+		},
+		// config          - client credentials
+		// external change - drop and recreate with the same id but as oauth2 with authorization code grant
+		{
+			name:       "oauth2 client credentials - oauth2 authorization code in state",
+			secretType: sdk.SecretTypeOAuth2ClientCredentials,
+			stateValue: map[string]string{
+				"secret_type": "OAUTH2",
+				"describe_output.0.oauth_refresh_token_expiry_time": "some test date here",
+			},
+			wantForceNew: true,
+		},
+		// no external change
+		{
+			name:       "oauth2 authorization code - oauth2 authorization code in state",
+			secretType: sdk.SecretTypeOAuth2AuthorizationCodeGrant,
+			stateValue: map[string]string{
+				"secret_type": "OAUTH2",
+				"describe_output.0.oauth_refresh_token_expiry_time": "some test date here",
+			},
+			wantForceNew: false,
+		},
+		// no external change
+		{
+			name:       "oauth2 client credentials - oauth2 client credentials code in state",
+			secretType: sdk.SecretTypeOAuth2ClientCredentials,
+			stateValue: map[string]string{
+				"secret_type": "OAUTH2",
+				"describe_output.0.oauth_refresh_token_expiry_time": "",
+			},
+			wantForceNew: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			customDiff := resources.RecreateWhenSecretTypeChangedExternally(tt.secretType)
+			testProvider := createProviderWithCustomSchemaAndCustomDiff(t,
+				map[string]*schema.Schema{
+					"secret_type": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"describe_output": {
+						Type:     schema.TypeList,
+						Computed: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"oauth_refresh_token_expiry_time": {
+									Type:     schema.TypeString,
+									Computed: true,
+								},
+							},
+						},
+					},
+				},
+				customDiff)
 			diff := calculateDiffFromAttributes(
 				t,
 				testProvider,

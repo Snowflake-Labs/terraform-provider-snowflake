@@ -36,9 +36,9 @@ func SecretWithGenericString() *schema.Resource {
 		Description:   "Resource used to manage secret objects with Generic String. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(secretGenericStringSchema, DescribeOutputAttributeName, "name"),
-			ComputedIfAnyAttributeChanged(secretGenericStringSchema, ShowOutputAttributeName, "name", "comment"),
-			ComputedIfAnyAttributeChanged(secretGenericStringSchema, FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(secretGenericStringSchema, ShowOutputAttributeName, "comment"),
+			ComputedIfAnyAttributeChanged(secretGenericStringSchema, DescribeOutputAttributeName),
+			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypeGenericString),
 		),
 
 		Schema: secretGenericStringSchema,

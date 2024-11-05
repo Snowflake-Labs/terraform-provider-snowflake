@@ -44,13 +44,11 @@ var viewSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"copy_grants": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.",
-		DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-			return oldValue != "" && oldValue != newValue
-		},
+		Type:             schema.TypeBool,
+		Optional:         true,
+		Default:          false,
+		Description:      "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.",
+		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"is_secure": {
 		Type:             schema.TypeString,
@@ -354,12 +352,8 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 		statement := d.Get("statement").(string)
 		req := sdk.NewCreateViewRequest(id, statement)
 
-		if orReplace {
-			req.WithOrReplace(true)
-		}
-
-		if v := d.Get("copy_grants"); v.(bool) {
-			req.WithCopyGrants(true).WithOrReplace(true)
+		if err := copyGrantsAttributeCreate(d, orReplace, &req.OrReplace, &req.CopyGrants); err != nil {
+			return diag.FromErr(err)
 		}
 
 		if v := d.Get("is_secure").(string); v != BooleanDefault {
@@ -611,22 +605,19 @@ func ReadView(withExternalChangesMarking bool) schema.ReadContextFunc {
 		if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
 			return diag.FromErr(err)
 		}
-		if err = d.Set("copy_grants", view.HasCopyGrants()); err != nil {
-			return diag.FromErr(err)
-		}
 		if err = d.Set("comment", view.Comment); err != nil {
 			return diag.FromErr(err)
 		}
 		if withExternalChangesMarking {
 			if err = handleExternalChangesToObjectInShow(d,
-				showMapping{"is_secure", "is_secure", view.IsSecure, booleanStringFromBool(view.IsSecure), nil},
-				showMapping{"text", "is_recursive", view.IsRecursive(), booleanStringFromBool(view.IsRecursive()), func(x any) any {
+				outputMapping{"is_secure", "is_secure", view.IsSecure, booleanStringFromBool(view.IsSecure), nil},
+				outputMapping{"text", "is_recursive", view.IsRecursive(), booleanStringFromBool(view.IsRecursive()), func(x any) any {
 					return strings.Contains(x.(string), "RECURSIVE")
 				}},
-				showMapping{"text", "is_temporary", view.IsTemporary(), booleanStringFromBool(view.IsTemporary()), func(x any) any {
+				outputMapping{"text", "is_temporary", view.IsTemporary(), booleanStringFromBool(view.IsTemporary()), func(x any) any {
 					return strings.Contains(x.(string), "TEMPORARY")
 				}},
-				showMapping{"change_tracking", "change_tracking", view.IsChangeTracking(), booleanStringFromBool(view.IsChangeTracking()), func(x any) any {
+				outputMapping{"change_tracking", "change_tracking", view.IsChangeTracking(), booleanStringFromBool(view.IsChangeTracking()), func(x any) any {
 					return x.(string) == "ON"
 				}},
 			); err != nil {
@@ -865,7 +856,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 
 	// change on these fields can not be ForceNew because then view is dropped explicitly and copying grants does not have effect
-	if keys := changedKeys(d, "statement", "is_temporary", "is_recursive", "copy_grant", "column"); len(keys) > 0 {
+	if keys := changedKeys(d, "statement", "is_temporary", "is_recursive", "column"); len(keys) > 0 {
 		log.Printf("[DEBUG] Detected change on %q, recreating...", keys)
 		return CreateView(true)(ctx, d, meta)
 	}

@@ -68,6 +68,16 @@ func (c *TableClient) CreateWithPredefinedColumns(t *testing.T) (*sdk.Table, fun
 	return c.CreateWithRequest(t, sdk.NewCreateTableRequest(c.ids.RandomSchemaObjectIdentifier(), columns))
 }
 
+func (c *TableClient) CreateWithChangeTrackingInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier) (*sdk.Table, func()) {
+	t.Helper()
+
+	columns := []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", "NUMBER"),
+	}
+
+	return c.CreateWithRequest(t, sdk.NewCreateTableRequest(c.ids.RandomSchemaObjectIdentifierInSchema(schemaId), columns).WithChangeTracking(sdk.Pointer(true)))
+}
+
 func (c *TableClient) CreateWithChangeTracking(t *testing.T) (*sdk.Table, func()) {
 	t.Helper()
 

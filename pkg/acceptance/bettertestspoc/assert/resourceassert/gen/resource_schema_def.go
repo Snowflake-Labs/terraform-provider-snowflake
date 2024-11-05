@@ -73,4 +73,28 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "StreamOnExternalTable",
 		schema: resources.StreamOnExternalTable().Schema,
 	},
+	{
+		name:   "SecretWithAuthorizationCodeGrant",
+		schema: resources.SecretWithAuthorizationCodeGrant().Schema,
+	},
+	{
+		name:   "SecretWithBasicAuthentication",
+		schema: resources.SecretWithBasicAuthentication().Schema,
+	},
+	{
+		name:   "SecretWithClientCredentials",
+		schema: resources.SecretWithClientCredentials().Schema,
+	},
+	{
+		name:   "SecretWithGenericString",
+		schema: resources.SecretWithGenericString().Schema,
+	},
+	{
+		name:   "StreamOnDirectoryTable",
+		schema: resources.StreamOnDirectoryTable().Schema,
+	},
+	{
+		name:   "StreamOnView",
+		schema: resources.StreamOnView().Schema,
+	},
 }

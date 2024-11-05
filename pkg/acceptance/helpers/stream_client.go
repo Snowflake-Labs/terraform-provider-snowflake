@@ -43,6 +43,19 @@ func (c *StreamClient) CreateOnTableWithRequest(t *testing.T, req *sdk.CreateOnT
 	return stream, c.DropFunc(t, req.GetName())
 }
 
+func (c *StreamClient) CreateOnViewWithRequest(t *testing.T, req *sdk.CreateOnViewStreamRequest) (*sdk.Stream, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().CreateOnView(ctx, req)
+	require.NoError(t, err)
+
+	stream, err := c.client().ShowByID(ctx, req.GetName())
+	require.NoError(t, err)
+
+	return stream, c.DropFunc(t, req.GetName())
+}
+
 func (c *StreamClient) Update(t *testing.T, request *sdk.AlterStreamRequest) {
 	t.Helper()
 	ctx := context.Background()

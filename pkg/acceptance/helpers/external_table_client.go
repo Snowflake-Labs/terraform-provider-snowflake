@@ -42,6 +42,14 @@ func (c *ExternalTableClient) CreateWithLocation(t *testing.T, location string) 
 	return c.CreateWithRequest(t, req)
 }
 
+func (c *ExternalTableClient) CreateInSchemaWithLocation(t *testing.T, location string, schemaId sdk.DatabaseObjectIdentifier) (*sdk.ExternalTable, func()) {
+	t.Helper()
+
+	req := sdk.NewCreateExternalTableRequest(c.ids.RandomSchemaObjectIdentifierInSchema(schemaId), location).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON)).WithColumns([]*sdk.ExternalTableColumnRequest{sdk.NewExternalTableColumnRequest("id", sdk.DataTypeNumber, "value:time::int")})
+
+	return c.CreateWithRequest(t, req)
+}
+
 func (c *ExternalTableClient) CreateWithRequest(t *testing.T, req *sdk.CreateExternalTableRequest) (*sdk.ExternalTable, func()) {
 	t.Helper()
 	ctx := context.Background()

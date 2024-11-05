@@ -460,7 +460,7 @@ func GetReadUserFunc(userType sdk.UserType, withExternalChangesMarking bool) sch
 		}
 
 		if withExternalChangesMarking {
-			showMappings := []showMapping{
+			showMappings := []outputMapping{
 				{"login_name", "login_name", u.LoginName, u.LoginName, nil},
 				{"display_name", "display_name", u.DisplayName, u.DisplayName, nil},
 				{"disabled", "disabled", u.Disabled, fmt.Sprintf("%t", u.Disabled), nil},
@@ -468,7 +468,7 @@ func GetReadUserFunc(userType sdk.UserType, withExternalChangesMarking bool) sch
 				{"default_secondary_roles", "default_secondary_roles_option", u.DefaultSecondaryRoles, u.GetSecondaryRolesOption(), nil},
 			}
 			if userType == sdk.UserTypePerson || userType == sdk.UserTypeLegacyService {
-				showMappings = append(showMappings, showMapping{"must_change_password", "must_change_password", u.MustChangePassword, fmt.Sprintf("%t", u.MustChangePassword), nil})
+				showMappings = append(showMappings, outputMapping{"must_change_password", "must_change_password", u.MustChangePassword, fmt.Sprintf("%t", u.MustChangePassword), nil})
 			}
 			if err = handleExternalChangesToObjectInShow(d, showMappings...); err != nil {
 				return diag.FromErr(err)

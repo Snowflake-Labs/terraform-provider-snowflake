@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -11,7 +13,9 @@ import (
 )
 
 func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
-	prefix := acc.TestClient().Ids.Alpha()
+	// TODO [SNOW-1763613]: unskip
+	t.Skipf("Skip because error %s; will be fixed in SNOW-1763613", "Error: 003549 (23505): Object <account_name> already has a PASSWORD_POLICY. Only one PASSWORD_POLICY is allowed at a time")
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -22,7 +26,7 @@ func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: accountPasswordPolicyAttachmentConfig(acc.TestDatabaseName, acc.TestSchemaName, prefix),
+				Config: accountPasswordPolicyAttachmentConfig(id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("snowflake_account_password_policy_attachment.att", "id"),
 				),
@@ -44,7 +48,7 @@ func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
 	})
 }
 
-func accountPasswordPolicyAttachmentConfig(databaseName, schemaName, prefix string) string {
+func accountPasswordPolicyAttachmentConfig(id sdk.SchemaObjectIdentifier) string {
 	s := `
 resource "snowflake_password_policy" "pa" {
 	database   = "%s"
@@ -56,5 +60,5 @@ resource "snowflake_account_password_policy_attachment" "att" {
 	password_policy = snowflake_password_policy.pa.fully_qualified_name
 }
 `
-	return fmt.Sprintf(s, databaseName, schemaName, prefix)
+	return fmt.Sprintf(s, id.DatabaseName(), id.SchemaName(), id.Name())
 }
