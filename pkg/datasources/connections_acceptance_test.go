@@ -21,17 +21,17 @@ import (
 func connectionsData() string {
 	return `
     data "snowflake_connections" "test" {
-        depends_on = [snowflake_connection.test]
+        depends_on = [snowflake_primary_connection.test]
     }`
 }
 
 func TestAcc_Connections_Minimal(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-	// _ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	connectionModel := model.Connection("test", id.Name())
+	connectionModel := model.PrimaryConnection("test", id.Name())
 
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
 
@@ -43,13 +43,13 @@ func TestAcc_Connections_Minimal(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Connection),
+		CheckDestroy: acc.CheckDestroy(t, resources.PrimaryConnection),
 		Steps: []resource.TestStep{
 			{
 				Config: dataConnections,
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_connections.test", "connections.#", "1")),
-					resourceshowoutputassert.ConnectionShowOutput(t, "snowflake_connection.test").
+					resourceshowoutputassert.ConnectionShowOutput(t, "snowflake_primary_connection.test").
 						HasName(id.Name()).
 						HasSnowflakeRegion(acc.TestClient().Context.CurrentRegion(t)).
 						HasAccountLocator(acc.TestClient().GetAccountLocator()).
@@ -76,7 +76,7 @@ func TestAcc_Connections_Complete(t *testing.T) {
 	secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	connectionModel := model.Connection("test", id.Name()).
+	connectionModel := model.PrimaryConnection("test", id.Name()).
 		WithEnableFailover(secondaryAccountId).
 		WithComment("test comment")
 
@@ -90,7 +90,7 @@ func TestAcc_Connections_Complete(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Connection),
+		CheckDestroy: acc.CheckDestroy(t, resources.PrimaryConnection),
 		Steps: []resource.TestStep{
 			{
 				Config: dataConnections,
@@ -119,17 +119,17 @@ func TestAcc_Connections_Filtering(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
+	// TODO: [SNOW-1788041] - need to uppercase as connection name in snowflake is returned in uppercase
 	prefix := random.AlphaN(4)
-	// need to convert to uppercase as connection names in snowflake are always uppercase
-	// comparing prefix (with lowercase) with name from snowflake (uppercase) results in no match
 	prefix = strings.ToUpper(prefix)
+
 	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idThree := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
-	connectionModelOne := model.Connection("c1", idOne.Name())
-	connectionModelTwo := model.Connection("c2", idTwo.Name())
-	connectionModelThree := model.Connection("c3", idThree.Name())
+	connectionModelOne := model.PrimaryConnection("c1", idOne.Name())
+	connectionModelTwo := model.PrimaryConnection("c2", idTwo.Name())
+	connectionModelThree := model.PrimaryConnection("c3", idThree.Name())
 
 	configWithLike := accConfig.FromModel(t, connectionModelOne) +
 		accConfig.FromModel(t, connectionModelTwo) +
@@ -141,7 +141,7 @@ func TestAcc_Connections_Filtering(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Connection),
+		CheckDestroy: acc.CheckDestroy(t, resources.PrimaryConnection),
 		Steps: []resource.TestStep{
 			// with like
 			{
@@ -158,10 +158,10 @@ func TestAcc_Connections_FilteringWithReplica(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
+	// TODO: [SNOW-1788041] - need to uppercase as connection name in snowflake is returned in uppercase
 	prefix := random.AlphaN(4)
-	// need to convert to uppercase as connection names in snowflake are always uppercase
-	// comparing prefix (with lowercase) with name from snowflake (uppercase) results in no match
 	prefix = strings.ToUpper(prefix)
+
 	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idTwo := acc.SecondaryTestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 
@@ -174,7 +174,7 @@ func TestAcc_Connections_FilteringWithReplica(t *testing.T) {
 	acc.SecondaryTestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(idTwo).
 		WithEnableConnectionFailover(*sdk.NewEnableConnectionFailoverRequest([]sdk.AccountIdentifier{accountId})))
 
-	connectionModelOne := model.Connection("c1", idOne.Name())
+	connectionModelOne := model.PrimaryConnection("c1", idOne.Name())
 	connectionModelTwo := model.SecondaryConnection("c2", primaryConnectionAsExternalId.FullyQualifiedName(), idTwo.Name())
 
 	configWithLike := accConfig.FromModel(t, connectionModelOne) +
@@ -186,7 +186,7 @@ func TestAcc_Connections_FilteringWithReplica(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.ComposeCheckDestroy(t, resources.Connection, resources.SecondaryConnection),
+		CheckDestroy: acc.ComposeCheckDestroy(t, resources.PrimaryConnection, resources.SecondaryConnection),
 		Steps: []resource.TestStep{
 			// with like
 			{
@@ -202,7 +202,7 @@ func TestAcc_Connections_FilteringWithReplica(t *testing.T) {
 func connectionDatasourceWithLike(like string) string {
 	return fmt.Sprintf(`
     data "snowflake_connections" "test" {
-        depends_on = [snowflake_connection.c1, snowflake_connection.c2, snowflake_connection.c3]
+        depends_on = [snowflake_primary_connection.c1, snowflake_primary_connection.c2, snowflake_primary_connection.c3]
 
         like = "%s"
     }
@@ -212,7 +212,7 @@ func connectionDatasourceWithLike(like string) string {
 func connectionAndSecondaryConnectionDatasourceWithLike(like string) string {
 	return fmt.Sprintf(`
     data "snowflake_connections" "test" {
-        depends_on = [snowflake_connection.c1, snowflake_secondary_connection.c2]
+        depends_on = [snowflake_primary_connection.c1, snowflake_secondary_connection.c2]
 
         like = "%s"
     }

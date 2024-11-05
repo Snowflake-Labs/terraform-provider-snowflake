@@ -25,7 +25,7 @@ import (
 
 func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-	//_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
