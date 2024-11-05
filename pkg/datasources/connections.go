@@ -26,7 +26,7 @@ var connectionsSchema = map[string]*schema.Schema{
 				resources.ShowOutputAttributeName: {
 					Type:        schema.TypeList,
 					Computed:    true,
-					Description: "Holds the output of SHOW CONNECTION.",
+					Description: "Holds the output of SHOW CONNECTIONS.",
 					Elem: &schema.Resource{
 						Schema: schemas.ShowConnectionSchema,
 					},
