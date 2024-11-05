@@ -76,10 +76,9 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 				Config: config.FromModel(t, secondartyConnectionModelWithComment),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, secondartyConnectionModelWithComment.ResourceReference()).
+						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModelWithComment.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
-							HasNoEnableFailoverToAccounts().
 							HasCommentString("secondary connection test comment"),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, secondartyConnectionModelWithComment.ResourceReference()).
@@ -102,7 +101,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 				Config: config.FromModel(t, secondartyConnectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, secondartyConnectionModel.ResourceReference()).
+						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModel.ResourceReference()).
 							HasCommentString(""),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, secondartyConnectionModel.ResourceReference()).

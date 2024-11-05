@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_Connection_Basic(t *testing.T) {
+func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	//_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
@@ -34,9 +34,9 @@ func TestAcc_Connection_Basic(t *testing.T) {
 	secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
 
-	connectionModel := model.Connection("t", id.Name())
-	connectionModelWithComment := model.Connection("t", id.Name()).WithComment(comment)
-	connectionModelWithFailover := model.Connection("t", id.Name()).WithEnableFailover(secondaryAccountId)
+	connectionModel := model.PrimaryConnection("t", id.Name())
+	connectionModelWithComment := model.PrimaryConnection("t", id.Name()).WithComment(comment)
+	connectionModelWithFailover := model.PrimaryConnection("t", id.Name()).WithEnableFailover(secondaryAccountId)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -44,14 +44,14 @@ func TestAcc_Connection_Basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Connection),
+		CheckDestroy: acc.CheckDestroy(t, resources.PrimaryConnection),
 		Steps: []resource.TestStep{
 			// create
 			{
 				Config: config.FromModel(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
+						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
 							HasNoEnableFailoverToAccounts().
@@ -78,7 +78,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 				Config: config.FromModel(t, connectionModelWithComment),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, connectionModelWithComment.ResourceReference()).
+						resourceassert.PrimaryConnectionResource(t, connectionModelWithComment.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
 							HasNoEnableFailoverToAccounts().
@@ -104,7 +104,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 				Config: config.FromModel(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
+						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasCommentString(""),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
@@ -117,10 +117,10 @@ func TestAcc_Connection_Basic(t *testing.T) {
 				Config: config.FromModel(t, connectionModelWithFailover),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, connectionModelWithFailover.ResourceReference()).
+						resourceassert.PrimaryConnectionResource(t, connectionModelWithFailover.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
-							HasEnableFailoverToAccounts(secondaryAccountId).
+							HasExactlyFailoverToAccountsInOrder(secondaryAccountId).
 							HasCommentString(""),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModelWithFailover.ResourceReference()).
@@ -133,7 +133,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 				Config: config.FromModel(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
+						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
 							HasNoEnableFailoverToAccounts().
@@ -148,7 +148,7 @@ func TestAcc_Connection_Basic(t *testing.T) {
 	})
 }
 
-func TestAcc_Connection_ExternalChanges(t *testing.T) {
+func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
@@ -157,8 +157,8 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 	secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
 
-	connectionModel := model.Connection("t", id.Name()).WithComment("config comment")
-	connectionModelWithFailover := model.Connection("t", id.Name()).WithEnableFailover(secondaryAccountId)
+	connectionModel := model.PrimaryConnection("t", id.Name()).WithComment("config comment")
+	connectionModelWithFailover := model.PrimaryConnection("t", id.Name()).WithEnableFailover(secondaryAccountId)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -166,14 +166,14 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Connection),
+		CheckDestroy: acc.CheckDestroy(t, resources.PrimaryConnection),
 		Steps: []resource.TestStep{
 			// create
 			{
 				Config: config.FromModel(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
+						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
 							HasNoEnableFailoverToAccounts().
@@ -208,7 +208,7 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
+						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasCommentString("config comment"),
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
 							HasComment("config comment"),
@@ -238,7 +238,7 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, connectionModel.ResourceReference()).
+						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasNoEnableFailoverToAccounts(),
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
 							HasFailoverAllowedToAccounts(accountId),
@@ -265,8 +265,8 @@ func TestAcc_Connection_ExternalChanges(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
-						resourceassert.ConnectionResource(t, connectionModelWithFailover.ResourceReference()).
-							HasEnableFailoverToAccounts(secondaryAccountId),
+						resourceassert.PrimaryConnectionResource(t, connectionModelWithFailover.ResourceReference()).
+							HasExactlyFailoverToAccountsInOrder(secondaryAccountId),
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModelWithFailover.ResourceReference()).
 							HasFailoverAllowedToAccounts(accountId, secondaryAccountId),
 					),

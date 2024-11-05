@@ -5,7 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 )
 
-func (c *ConnectionModel) WithEnableFailover(toAccount ...sdk.AccountIdentifier) *ConnectionModel {
+func (c *PrimaryConnectionModel) WithEnableFailover(toAccount ...sdk.AccountIdentifier) *PrimaryConnectionModel {
 	variables := make([]config.Variable, 0)
 	for _, v := range toAccount {
 		variables = append(variables, config.StringVariable(v.Name()))

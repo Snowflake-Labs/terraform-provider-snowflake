@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
@@ -417,7 +419,7 @@ func Provider() *schema.Provider {
 }
 
 func getResources() map[string]*schema.Resource {
-	return map[string]*schema.Resource{
+	resourceList := map[string]*schema.Resource{
 		"snowflake_account": resources.Account(),
 		"snowflake_account_authentication_policy_attachment":                     resources.AccountAuthenticationPolicyAttachment(),
 		"snowflake_account_role":                                                 resources.AccountRole(),
@@ -429,7 +431,6 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_api_authentication_integration_with_jwt_bearer":               resources.ApiAuthenticationIntegrationWithJwtBearer(),
 		"snowflake_api_integration":                                              resources.APIIntegration(),
 		"snowflake_authentication_policy":                                        resources.AuthenticationPolicy(),
-		"snowflake_connection":                                                   resources.Connection(),
 		"snowflake_cortex_search_service":                                        resources.CortexSearchService(),
 		"snowflake_database_old":                                                 resources.DatabaseOld(),
 		"snowflake_database":                                                     resources.Database(),
@@ -464,6 +465,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_object_parameter":                                             resources.ObjectParameter(),
 		"snowflake_password_policy":                                              resources.PasswordPolicy(),
 		"snowflake_pipe":                                                         resources.Pipe(),
+		"snowflake_primary_connection":                                           resources.PrimaryConnection(),
 		"snowflake_procedure":                                                    resources.Procedure(),
 		"snowflake_resource_monitor":                                             resources.ResourceMonitor(),
 		"snowflake_role":                                                         resources.Role(),
@@ -506,6 +508,12 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_view":                                                         resources.View(),
 		"snowflake_warehouse":                                                    resources.Warehouse(),
 	}
+
+	if os.Getenv(string(testenvs.EnableObjectRenamingTest)) != "" {
+		resourceList["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
+	}
+
+	return resourceList
 }
 
 func getDataSources() map[string]*schema.Resource {

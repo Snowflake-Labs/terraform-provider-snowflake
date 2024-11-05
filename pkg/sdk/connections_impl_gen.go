@@ -138,17 +138,11 @@ func (r connectionRow) convert() *Connection {
 		c.Primary = primaryExternalId
 	}
 
-	allowedToAccounts := make([]AccountIdentifier, 0)
-	allowedAccountsString := ParseCommaSeparatedStringArray(r.FailoverAllowedToAccounts, false)
-	for _, accountString := range allowedAccountsString {
-		accountId, err := ParseAccountIdentifier(accountString)
-		if err != nil {
-			log.Printf("unable to print account identifier for 'enable failover to accounts' account %s, err = %v", accountString, err)
-			continue
-		}
-		allowedToAccounts = append(allowedToAccounts, accountId)
+	if allowedToAccounts, err := ParseCommaSeparatedAccountIdentifierArray(r.FailoverAllowedToAccounts); err != nil {
+		log.Printf("unable to parse account identifier list for 'enable failover to accounts': %s, err = %v", r.FailoverAllowedToAccounts, err)
+	} else {
+		c.FailoverAllowedToAccounts = allowedToAccounts
 	}
-	c.FailoverAllowedToAccounts = allowedToAccounts
 
 	if r.Comment.Valid {
 		c.Comment = String(r.Comment.String)

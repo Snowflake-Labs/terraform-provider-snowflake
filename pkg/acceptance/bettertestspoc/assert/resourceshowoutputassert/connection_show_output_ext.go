@@ -8,8 +8,7 @@ import (
 )
 
 func (c *ConnectionShowOutputAssert) HasPrimaryIdentifier(expected sdk.ExternalObjectIdentifier) *ConnectionShowOutputAssert {
-	// expectedString := strings.ReplaceAll(expected.FullyQualifiedName(), `"`, "")
-	c.AddAssertion(assert.ResourceShowOutputValueSet("primary", expected.Name()))
+	c.AddAssertion(assert.ResourceShowOutputValueSet("primary", expected.FullyQualifiedName()))
 	return c
 }
 
