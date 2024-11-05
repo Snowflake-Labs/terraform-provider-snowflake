@@ -85,7 +85,7 @@ func ReadTasks(d *schema.ResourceData, meta interface{}) error {
 		taskMap["database"] = task.DatabaseName
 		taskMap["schema"] = task.SchemaName
 		taskMap["comment"] = task.Comment
-		taskMap["warehouse"] = task.Warehouse
+		taskMap["warehouse"] = task.Warehouse.Name()
 
 		tasks = append(tasks, taskMap)
 	}

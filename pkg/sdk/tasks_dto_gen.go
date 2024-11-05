@@ -24,7 +24,7 @@ type CreateTaskRequest struct {
 	SessionParameters                       *SessionParameters
 	UserTaskTimeoutMs                       *int
 	SuspendTaskAfterNumFailures             *int
-	ErrorNotificationIntegration            *AccountObjectIdentifier
+	ErrorIntegration                        *AccountObjectIdentifier
 	Comment                                 *string
 	Finalize                                *SchemaObjectIdentifier
 	TaskAutoRetryAttempts                   *int
@@ -45,21 +45,21 @@ func (r *CreateTaskRequest) GetName() SchemaObjectIdentifier {
 }
 
 type CreateOrAlterTaskRequest struct {
-	name                         SchemaObjectIdentifier // required
-	Warehouse                    *CreateTaskWarehouseRequest
-	Schedule                     *string
-	Config                       *string
-	AllowOverlappingExecution    *bool
-	UserTaskTimeoutMs            *int
-	SessionParameters            *SessionParameters
-	SuspendTaskAfterNumFailures  *int
-	ErrorNotificationIntegration *AccountObjectIdentifier
-	Comment                      *string
-	Finalize                     *SchemaObjectIdentifier
-	TaskAutoRetryAttempts        *int
-	After                        []SchemaObjectIdentifier
-	When                         *string
-	sql                          string // required
+	name                        SchemaObjectIdentifier // required
+	Warehouse                   *CreateTaskWarehouseRequest
+	Schedule                    *string
+	Config                      *string
+	AllowOverlappingExecution   *bool
+	UserTaskTimeoutMs           *int
+	SessionParameters           *SessionParameters
+	SuspendTaskAfterNumFailures *int
+	ErrorIntegration            *AccountObjectIdentifier
+	Comment                     *string
+	Finalize                    *SchemaObjectIdentifier
+	TaskAutoRetryAttempts       *int
+	After                       []SchemaObjectIdentifier
+	When                        *string
+	sql                         string // required
 }
 
 func (r *CreateOrAlterTaskRequest) GetName() SchemaObjectIdentifier {
@@ -103,7 +103,7 @@ type TaskSetRequest struct {
 	AllowOverlappingExecution               *bool
 	UserTaskTimeoutMs                       *int
 	SuspendTaskAfterNumFailures             *int
-	ErrorNotificationIntegration            *AccountObjectIdentifier
+	ErrorIntegration                        *AccountObjectIdentifier
 	Comment                                 *string
 	SessionParameters                       *SessionParameters
 	TaskAutoRetryAttempts                   *int
@@ -112,6 +112,7 @@ type TaskSetRequest struct {
 
 type TaskUnsetRequest struct {
 	Warehouse                               *bool
+	UserTaskManagedInitialWarehouseSize     *bool
 	Schedule                                *bool
 	Config                                  *bool
 	AllowOverlappingExecution               *bool

@@ -38,7 +38,6 @@ func TestAcc_Tasks(t *testing.T) {
 
 func tasks(databaseName string, schemaName string, taskName string) string {
 	return fmt.Sprintf(`
-
 	resource snowflake_database "test" {
 	   name = "%v"
 	}
@@ -60,11 +59,8 @@ func tasks(databaseName string, schemaName string, taskName string) string {
 		schema   	  = snowflake_schema.test.name
 		warehouse 	  = snowflake_warehouse.test.name
 		sql_statement = "SHOW FUNCTIONS"
-		enabled  	  = true
+		started  	  = true
 		schedule 	  = "15 MINUTES"
-		lifecycle {
-		  ignore_changes = [session_parameters]
-		}
 	  }
 
 	data snowflake_tasks "t" {

@@ -97,4 +97,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "StreamOnView",
 		schema: resources.StreamOnView().Schema,
 	},
+	{
+		name:   "Task",
+		schema: resources.Task().Schema,
+	},
 }

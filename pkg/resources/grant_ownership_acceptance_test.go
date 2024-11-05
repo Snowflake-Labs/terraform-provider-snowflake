@@ -1210,7 +1210,7 @@ func TestAcc_GrantOwnership_OnTask_Discussion2877(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_task.test", "name", taskId.Name()),
 					resource.TestCheckResourceAttr("snowflake_task.child", "name", childId.Name()),
-					resource.TestCheckResourceAttr("snowflake_task.child", "after.0", taskId.Name()),
+					resource.TestCheckResourceAttr("snowflake_task.child", "after.0", taskId.FullyQualifiedName()),
 					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
 						On: &sdk.ShowGrantsOn{
 							Object: &sdk.Object{

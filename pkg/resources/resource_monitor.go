@@ -101,6 +101,7 @@ func ResourceMonitor() *schema.Resource {
 		ReadContext:   ReadResourceMonitor(true),
 		UpdateContext: UpdateResourceMonitor,
 		DeleteContext: DeleteResourceMonitor,
+		Description:   "Resource used to manage resource monitor objects. For more information, check [resource monitor documentation](https://docs.snowflake.com/en/user-guide/resource-monitors).",
 
 		Schema: resourceMonitorSchema,
 		Importer: &schema.ResourceImporter{

@@ -13,6 +13,7 @@ type Tasks interface {
 	Drop(ctx context.Context, request *DropTaskRequest) error
 	Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
+	ShowParameters(ctx context.Context, id SchemaObjectIdentifier) ([]*Parameter, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	Execute(ctx context.Context, request *ExecuteTaskRequest) error
 	SuspendRootTasks(ctx context.Context, taskId SchemaObjectIdentifier, id SchemaObjectIdentifier) ([]SchemaObjectIdentifier, error)
@@ -33,7 +34,7 @@ type CreateTaskOptions struct {
 	SessionParameters                       *SessionParameters       `ddl:"list,no_parentheses"`
 	UserTaskTimeoutMs                       *int                     `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
 	SuspendTaskAfterNumFailures             *int                     `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
-	ErrorNotificationIntegration            *AccountObjectIdentifier `ddl:"identifier,equals" sql:"ERROR_INTEGRATION"`
+	ErrorIntegration                        *AccountObjectIdentifier `ddl:"identifier,equals" sql:"ERROR_INTEGRATION"`
 	Comment                                 *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Finalize                                *SchemaObjectIdentifier  `ddl:"identifier,equals" sql:"FINALIZE"`
 	TaskAutoRetryAttempts                   *int                     `ddl:"parameter" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
@@ -52,24 +53,24 @@ type CreateTaskWarehouse struct {
 
 // CreateOrAlterTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-task#create-or-alter-task.
 type CreateOrAlterTaskOptions struct {
-	createOrAlter                bool                     `ddl:"static" sql:"CREATE OR ALTER"`
-	task                         bool                     `ddl:"static" sql:"TASK"`
-	name                         SchemaObjectIdentifier   `ddl:"identifier"`
-	Warehouse                    *CreateTaskWarehouse     `ddl:"keyword"`
-	Schedule                     *string                  `ddl:"parameter,single_quotes" sql:"SCHEDULE"`
-	Config                       *string                  `ddl:"parameter,no_quotes" sql:"CONFIG"`
-	AllowOverlappingExecution    *bool                    `ddl:"parameter" sql:"ALLOW_OVERLAPPING_EXECUTION"`
-	UserTaskTimeoutMs            *int                     `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
-	SessionParameters            *SessionParameters       `ddl:"list,no_parentheses"`
-	SuspendTaskAfterNumFailures  *int                     `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
-	ErrorNotificationIntegration *AccountObjectIdentifier `ddl:"identifier,equals" sql:"ERROR_INTEGRATION"`
-	Comment                      *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Finalize                     *SchemaObjectIdentifier  `ddl:"identifier,equals" sql:"FINALIZE"`
-	TaskAutoRetryAttempts        *int                     `ddl:"parameter" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
-	After                        []SchemaObjectIdentifier `ddl:"parameter,no_equals" sql:"AFTER"`
-	When                         *string                  `ddl:"parameter,no_quotes,no_equals" sql:"WHEN"`
-	as                           bool                     `ddl:"static" sql:"AS"`
-	sql                          string                   `ddl:"keyword,no_quotes"`
+	createOrAlter               bool                     `ddl:"static" sql:"CREATE OR ALTER"`
+	task                        bool                     `ddl:"static" sql:"TASK"`
+	name                        SchemaObjectIdentifier   `ddl:"identifier"`
+	Warehouse                   *CreateTaskWarehouse     `ddl:"keyword"`
+	Schedule                    *string                  `ddl:"parameter,single_quotes" sql:"SCHEDULE"`
+	Config                      *string                  `ddl:"parameter,no_quotes" sql:"CONFIG"`
+	AllowOverlappingExecution   *bool                    `ddl:"parameter" sql:"ALLOW_OVERLAPPING_EXECUTION"`
+	UserTaskTimeoutMs           *int                     `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
+	SessionParameters           *SessionParameters       `ddl:"list,no_parentheses"`
+	SuspendTaskAfterNumFailures *int                     `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
+	ErrorIntegration            *AccountObjectIdentifier `ddl:"identifier,equals" sql:"ERROR_INTEGRATION"`
+	Comment                     *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Finalize                    *SchemaObjectIdentifier  `ddl:"identifier,equals" sql:"FINALIZE"`
+	TaskAutoRetryAttempts       *int                     `ddl:"parameter" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
+	After                       []SchemaObjectIdentifier `ddl:"parameter,no_equals" sql:"AFTER"`
+	When                        *string                  `ddl:"parameter,no_quotes,no_equals" sql:"WHEN"`
+	as                          bool                     `ddl:"static" sql:"AS"`
+	sql                         string                   `ddl:"keyword,no_quotes"`
 }
 
 // CloneTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-task#create-task-clone.
@@ -112,7 +113,7 @@ type TaskSet struct {
 	AllowOverlappingExecution               *bool                    `ddl:"parameter" sql:"ALLOW_OVERLAPPING_EXECUTION"`
 	UserTaskTimeoutMs                       *int                     `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
 	SuspendTaskAfterNumFailures             *int                     `ddl:"parameter" sql:"SUSPEND_TASK_AFTER_NUM_FAILURES"`
-	ErrorNotificationIntegration            *AccountObjectIdentifier `ddl:"identifier,equals" sql:"ERROR_INTEGRATION"`
+	ErrorIntegration                        *AccountObjectIdentifier `ddl:"identifier,equals" sql:"ERROR_INTEGRATION"`
 	Comment                                 *string                  `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	SessionParameters                       *SessionParameters       `ddl:"list,no_parentheses"`
 	TaskAutoRetryAttempts                   *int                     `ddl:"parameter" sql:"TASK_AUTO_RETRY_ATTEMPTS"`
@@ -121,6 +122,7 @@ type TaskSet struct {
 
 type TaskUnset struct {
 	Warehouse                               *bool                   `ddl:"keyword" sql:"WAREHOUSE"`
+	UserTaskManagedInitialWarehouseSize     *bool                   `ddl:"keyword" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
 	Schedule                                *bool                   `ddl:"keyword" sql:"SCHEDULE"`
 	Config                                  *bool                   `ddl:"keyword" sql:"CONFIG"`
 	AllowOverlappingExecution               *bool                   `ddl:"keyword" sql:"ALLOW_OVERLAPPING_EXECUTION"`
@@ -186,7 +188,7 @@ type Task struct {
 	SchemaName                string
 	Owner                     string
 	Comment                   string
-	Warehouse                 string
+	Warehouse                 *AccountObjectIdentifier
 	Schedule                  string
 	Predecessors              []SchemaObjectIdentifier
 	State                     TaskState
