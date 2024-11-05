@@ -21,7 +21,6 @@ var (
 
 func init() {
 	instrumentedSQL = os.Getenv(snowflakeenvs.NoInstrumentedSql) == ""
-	gosnowflakeLoggingLevel = os.Getenv(snowflakeenvs.GosnowflakeLogLevel)
 }
 
 type Client struct {
@@ -144,10 +143,6 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 			sql.Register("snowflake-instrumented", instrumentedsql.WrapDriver(new(gosnowflake.SnowflakeDriver), instrumentedsql.WithLogger(logger)))
 		}
 		driverName = "snowflake-instrumented"
-	}
-
-	if gosnowflakeLoggingLevel != "" {
-		cfg.Tracing = gosnowflakeLoggingLevel
 	}
 
 	dsn, err := gosnowflake.DSN(cfg)

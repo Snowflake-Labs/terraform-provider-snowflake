@@ -109,7 +109,7 @@ provider "snowflake" {
 - `private_key_passphrase` (String, Sensitive) Supports the encryption ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc. Can also be sourced from the `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE` environment variable.
 - `private_key_path` (String, Sensitive, Deprecated) Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can also be sourced from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
 - `profile` (String) Sets the profile to read from ~/.snowflake/config file. Can also be sourced from the `SNOWFLAKE_PROFILE` environment variable.
-- `protocol` (String) A protocol used in the connection. Valid options are: `HTTP` | `HTTPS`. Can also be sourced from the `SNOWFLAKE_PROTOCOL` environment variable.
+- `protocol` (String) A protocol used in the connection. Valid options are: `http` | `https`. Can also be sourced from the `SNOWFLAKE_PROTOCOL` environment variable.
 - `region` (String, Deprecated) Snowflake region, such as "eu-central-1", with this parameter. However, since this parameter is deprecated, it is best to specify the region as part of the account parameter. For details, see the description of the account parameter. [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use.  Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can also be sourced from the `SNOWFLAKE_REGION` environment variable.
 - `request_timeout` (Number) request retry timeout in seconds EXCLUDING network roundtrip and read out http response. Can also be sourced from the `SNOWFLAKE_REQUEST_TIMEOUT` environment variable.
 - `role` (String) Specifies the role to use by default for accessing Snowflake objects in the client session. Can also be sourced from the `SNOWFLAKE_ROLE` environment variable.
@@ -237,7 +237,16 @@ provider "snowflake" {
 }
 ```
 
-2. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field.
+2. In environmental variables (envs). This is mainly used to provide sensitive values.
+
+
+```bash
+export SNOWFLAKE_USER="..."
+export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
+```
+
+3. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field. When this is not specified, `default` profile is loaded.
+When a `default` profile is not present in the TOML file, it is treated as "empty", without failing.
 
 Example content of the Terraform file configuration:
 
@@ -263,14 +272,6 @@ accountname='account2_name'
 user='user'
 password='password'
 role='ACCOUNTADMIN'
-```
-
-3. In environmental variables (envs). This is mainly used to provide sensitive values.
-
-
-```bash
-export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
 ```
 
 Not all fields must be configured in one source; users can choose which fields are configured in which source.

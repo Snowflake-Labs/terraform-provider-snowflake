@@ -50,6 +50,5 @@ const (
 
 	ConfigPath = "SNOWFLAKE_CONFIG_PATH"
 
-	NoInstrumentedSql   = "SF_TF_NO_INSTRUMENTED_SQL"
-	GosnowflakeLogLevel = "SF_TF_GOSNOWFLAKE_LOG_LEVEL"
+	NoInstrumentedSql = "SF_TF_NO_INSTRUMENTED_SQL"
 )

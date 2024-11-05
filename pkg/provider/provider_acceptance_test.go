@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/url"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -98,15 +97,12 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					t.Setenv(snowflakeenvs.ConfigPath, dir)
 				},
 				Config:      providerConfigWithUserAndPassword(user, pass, testprofiles.Default),
-				ExpectError: regexp.MustCompile("could not retrieve profile config"),
+				ExpectError: regexp.MustCompile("account is empty"),
 			},
 			// provider's config should not be rewritten by env when there is no profile (incorrect user in config versus correct one in env) - proves #2242
 			{
 				PreConfig: func() {
-					dir, err := os.UserHomeDir()
-					require.NoError(t, err)
-					t.Setenv(snowflakeenvs.ConfigPath, filepath.Join(dir, ".snowflake", "config"))
-
+					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
 					t.Setenv(snowflakeenvs.User, user)
 					t.Setenv(snowflakeenvs.Password, pass)
 					t.Setenv(snowflakeenvs.Account, account)
@@ -175,9 +171,6 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 	pass := acc.DefaultConfig(t).Password
 	account := acc.DefaultConfig(t).Account
 
-	accountParts := strings.SplitN(account, "-", 2)
-	filename := testhelpers.TestFile(t, "config.toml", getTomlConfig(accountParts[1], accountParts[0], user, pass))
-
 	oktaUrl, err := url.Parse("https://example.com")
 	require.NoError(t, err)
 
@@ -187,7 +180,6 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
-			t.Setenv("SNOWFLAKE_CONFIG_PATH", filename)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -251,7 +243,6 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 	account := acc.DefaultConfig(t).Account
 
 	accountParts := strings.SplitN(account, "-", 2)
-	filename := testhelpers.TestFile(t, "config.toml", getTomlConfig("incorrect", "incorrect", "incorrect", "incorrect"))
 
 	oktaUrlFromEnv, err := url.Parse("https://example-env.com")
 	require.NoError(t, err)
@@ -262,7 +253,6 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
-			t.Setenv("SNOWFLAKE_CONFIG_PATH", filename)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -274,7 +264,12 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.OrganizationName, accountParts[0])
 					t.Setenv(snowflakeenvs.User, user)
 					t.Setenv(snowflakeenvs.Password, pass)
-					// do not set warehouse, protocol, port, token and role - they should be propagated from TOML
+					t.Setenv(snowflakeenvs.Warehouse, "SNOWFLAKE")
+					t.Setenv(snowflakeenvs.Protocol, "https")
+					t.Setenv(snowflakeenvs.Port, "443")
+					// do not set token - it should be propagated from TOML
+					t.Setenv(snowflakeenvs.Role, "ACCOUNTADMIN")
+					t.Setenv(snowflakeenvs.Authenticator, "snowflake")
 					t.Setenv(snowflakeenvs.ValidateDefaultParameters, "false")
 					t.Setenv(snowflakeenvs.ClientIp, "2.2.2.2")
 					t.Setenv(snowflakeenvs.Host, "")
@@ -301,7 +296,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
-				Config: providerConfig(testprofiles.CompleteFields),
+				Config: providerConfig(testprofiles.CompleteFieldsInvalid),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 					assert.Equal(t, &gosnowflake.Config{
@@ -359,7 +354,6 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 
 	accountParts := strings.SplitN(account, "-", 2)
 	orgName, accountName := accountParts[0], accountParts[1]
-	filename := testhelpers.TestFile(t, "config.toml", getTomlConfig("incorrect", "incorrect", "incorrect", "incorrect"))
 
 	oktaUrlFromTf, err := url.Parse("https://example-tf.com")
 	require.NoError(t, err)
@@ -370,7 +364,6 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
-			t.Setenv("SNOWFLAKE_CONFIG_PATH", filename)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -413,7 +406,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
-				Config: providerConfigAllFields(testprofiles.CompleteFields, orgName, accountName, user, pass),
+				Config: providerConfigAllFields(testprofiles.CompleteFieldsInvalid, orgName, accountName, user, pass),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 					assert.Equal(t, &gosnowflake.Config{
@@ -424,7 +417,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 						Role:                      "ACCOUNTADMIN",
 						ValidateDefaultParameters: gosnowflake.ConfigBoolTrue,
 						ClientIP:                  net.ParseIP("3.3.3.3"),
-						Protocol:                  "HTTPS",
+						Protocol:                  "https",
 						Params: map[string]*string{
 							"foo": sdk.Pointer("piyo"),
 						},
@@ -462,47 +455,6 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 	})
 }
 
-func getTomlConfig(accountName, orgName, user, password string) []byte {
-	return []byte(fmt.Sprintf(`
-[complete_fields]
-accountname='%s'
-organizationname='%s'
-user='%s'
-password='%s'
-warehouse='SNOWFLAKE'
-role='ACCOUNTADMIN'
-clientip='1.2.3.4'
-protocol='https'
-port=443
-oktaurl='https://example.com'
-clienttimeout=10
-jwtclienttimeout=20
-logintimeout=30
-requesttimeout=40
-jwtexpiretimeout=50
-externalbrowsertimeout=60
-maxretrycount=1
-authenticator='snowflake'
-insecuremode=true
-ocspfailopen=true
-token='token'
-keepsessionalive=true
-disabletelemetry=true
-validatedefaultparameters=true
-clientrequestmfatoken=true
-clientstoretemporarycredential=true
-tracing='info'
-tmpdirpath='.'
-disablequerycontextcache=true
-includeretryreason=true
-disableconsolelogin=true
-
-[complete_fields.params]
-foo = 'bar'
-
-`, accountName, orgName, user, password))
-}
-
 func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
@@ -538,6 +490,19 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 // prove we can use tri-value booleans, similarly to the ones in resources
 func TestAcc_Provider_triValueBoolean(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	account := acc.DefaultConfig(t).Account
+	user := acc.DefaultConfig(t).User
+	password := acc.DefaultConfig(t).Password
+
+	// Prepare a temporary TOML config that is valid for v0.97.0.
+	// The default TOML is not valid because we set new fields, which is incorrect from v0.97.0's point of view.
+	c := fmt.Sprintf(`
+	[default]
+	account='%s'
+	user='%s'
+	password='%s'
+	`, account, user, password)
+	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -550,10 +515,17 @@ func TestAcc_Provider_triValueBoolean(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, configPath)
+				},
 				ExternalProviders: acc.ExternalProviderWithExactVersion("0.97.0"),
 				Config:            providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
 			},
 			{
+				// Use the default TOML config again.
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, "")
+				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
 			},
@@ -607,7 +579,7 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 			{
 				Config: providerConfig("non-existing"),
 				// .* is used to match the error message regarding of the home user location
-				ExpectError: regexp.MustCompile(`could not retrieve profile config: profile "non-existing" not found in file .*.snowflake/config`),
+				ExpectError: regexp.MustCompile(`profile "non-existing" not found in file .*.snowflake/config`),
 			},
 		},
 	})

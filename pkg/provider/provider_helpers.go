@@ -23,8 +23,9 @@ import (
 type protocol string
 
 const (
-	protocolHttp  protocol = "HTTP"
-	protocolHttps protocol = "HTTPS"
+	// these values are lower case on purpose to match gosnowflake case
+	protocolHttp  protocol = "http"
+	protocolHttps protocol = "https"
 )
 
 var allProtocols = []protocol{
@@ -33,11 +34,11 @@ var allProtocols = []protocol{
 }
 
 func toProtocol(s string) (protocol, error) {
-	upperCase := strings.ToUpper(s)
-	switch upperCase {
+	lowerCase := strings.ToLower(s)
+	switch lowerCase {
 	case string(protocolHttp),
 		string(protocolHttps):
-		return protocol(upperCase), nil
+		return protocol(lowerCase), nil
 	default:
 		return "", fmt.Errorf("invalid protocol: %s", s)
 	}
@@ -46,7 +47,7 @@ func toProtocol(s string) (protocol, error) {
 type driverLogLevel string
 
 const (
-	// these values
+	// these values are lower case on purpose to match gosnowflake case
 	logLevelTrace   driverLogLevel = "trace"
 	logLevelDebug   driverLogLevel = "debug"
 	logLevelInfo    driverLogLevel = "info"
@@ -170,6 +171,7 @@ func envNameFieldDescription(description, envName string) string {
 	return fmt.Sprintf("%s Can also be sourced from the `%s` environment variable.", description, envName)
 }
 
+// TODO(SNOW-1787926): reuse these handlers with the ones in resources
 func handleStringField(d *schema.ResourceData, key string, field *string) error {
 	if v, ok := d.GetOk(key); ok {
 		*field = v.(string)

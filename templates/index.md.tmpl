@@ -131,7 +131,16 @@ provider "snowflake" {
 }
 ```
 
-2. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field.
+2. In environmental variables (envs). This is mainly used to provide sensitive values.
+
+
+```bash
+export SNOWFLAKE_USER="..."
+export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
+```
+
+3. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field. When this is not specified, `default` profile is loaded.
+When a `default` profile is not present in the TOML file, it is treated as "empty", without failing.
 
 Example content of the Terraform file configuration:
 
@@ -157,14 +166,6 @@ accountname='account2_name'
 user='user'
 password='password'
 role='ACCOUNTADMIN'
-```
-
-3. In environmental variables (envs). This is mainly used to provide sensitive values.
-
-
-```bash
-export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
 ```
 
 Not all fields must be configured in one source; users can choose which fields are configured in which source.

@@ -23,22 +23,22 @@ import (
 
 func DefaultConfig() *gosnowflake.Config {
 	config, err := ProfileConfig("default")
-	if err != nil {
-		log.Printf("[DEBUG] Could not read \"default\" profile, returning empty config: %v\n", err)
-		return &gosnowflake.Config{}
+	if err != nil || config == nil {
+		log.Printf("[DEBUG] No Snowflake config file found, returning empty config: %v\n", err)
+		config = &gosnowflake.Config{}
 	}
 	return config
 }
 
 func ProfileConfig(profile string) (*gosnowflake.Config, error) {
-	path, err := getConfigFileName()
+	path, err := GetConfigFileName()
 	if err != nil {
 		return nil, err
 	}
 
 	configs, err := loadConfigFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not load config file: %w", err)
 	}
 
 	if profile == "" {
@@ -52,8 +52,10 @@ func ProfileConfig(profile string) (*gosnowflake.Config, error) {
 			return nil, fmt.Errorf("converting profile \"%s\" in file %s failed: %w", profile, path, err)
 		}
 		config = Pointer(driverCfg)
-	} else {
-		return nil, fmt.Errorf("profile \"%s\" not found in file %s", profile, path)
+	}
+	if config == nil {
+		log.Printf("[DEBUG] no config found for profile: \"%s\"", profile)
+		return nil, nil
 	}
 
 	// us-west-2 is Snowflake's default region, but if you actually specify that it won't trigger the default code
@@ -195,8 +197,8 @@ func boolToConfigBool(v bool) gosnowflake.ConfigBool {
 	return gosnowflake.ConfigBoolFalse
 }
 
-func getConfigFileName() (string, error) {
-	// has the user overwridden the default config path?
+func GetConfigFileName() (string, error) {
+	// has the user overridden the default config path?
 	if configPath, ok := os.LookupEnv("SNOWFLAKE_CONFIG_PATH"); ok {
 		if configPath != "" {
 			return configPath, nil
@@ -210,6 +212,7 @@ func getConfigFileName() (string, error) {
 	return filepath.Join(dir, ".snowflake", "config"), nil
 }
 
+// TODO(SNOW-1787920): improve TOML parsing
 type ConfigDTO struct {
 	Account                        *string             `toml:"account"`
 	AccountName                    *string             `toml:"accountname"`
@@ -299,7 +302,11 @@ func (c *ConfigDTO) DriverConfig() (gosnowflake.Config, error) {
 	pointerAttributeSet(c.Token, &driverCfg.Token)
 	pointerAttributeSet(c.KeepSessionAlive, &driverCfg.KeepSessionAlive)
 	if c.PrivateKey != nil {
-		privKey, err := ParsePrivateKey([]byte(*c.PrivateKey), []byte(*c.PrivateKeyPassphrase))
+		passphrase := make([]byte, 0)
+		if c.PrivateKeyPassphrase != nil {
+			passphrase = []byte(*c.PrivateKeyPassphrase)
+		}
+		privKey, err := ParsePrivateKey([]byte(*c.PrivateKey), passphrase)
 		if err != nil {
 			return gosnowflake.Config{}, err
 		}

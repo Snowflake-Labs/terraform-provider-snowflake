@@ -36,8 +36,11 @@ We have added new fields to match the ones in [the driver](https://pkg.go.dev/gi
 - `disable_saml_url_check` will be added to the provider after upgrading the driver
 - `account_name` and `organization_name` were added to improve handling account names. Read more in [docs](https://docs.snowflake.com/en/user-guide/admin-account-identifier#using-an-account-name-as-an-identifier).
 
+#### *(behavior change)* changed configuration of driver log level
+To be more consistent with other configuration options, we have decided to add `driver_tracing` to the configuration schema. This value can also be configured by `SNOWFLAKE_DRIVER_TRACING` environmental variable and by `drivertracing` field in the TOML file. The previous `SF_TF_GOSNOWFLAKE_LOG_LEVEL` environmental variable is not supported now, and was removed from the provider.
+
 #### *(behavior change)* deprecated fields
-Because of new fields `account_name` and `organization_name`, `account` is now deprecated. Please adjust your configurations from
+Because of new fields `account_name` and `organization_name`, `account` is now deprecated. It will be removed before v1.  Please adjust your configurations from
 ```terraform
 provider "snowflake" {
 	account = "ORGANIZATION-ACCOUNT"

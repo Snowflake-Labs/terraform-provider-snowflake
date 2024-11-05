@@ -1,9 +1,6 @@
 package sdk
 
 import (
-	"crypto"
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -18,7 +15,6 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/youmark/pkcs8"
 )
 
 func TestLoadConfigFile(t *testing.T) {
@@ -50,29 +46,7 @@ func TestLoadConfigFile(t *testing.T) {
 }
 
 func TestProfileConfig(t *testing.T) {
-	rsaPrivateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
-
-	unencryptedDer, err := x509.MarshalPKCS8PrivateKey(rsaPrivateKey)
-	require.NoError(t, err)
-	privBlock := pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: unencryptedDer,
-	}
-	unencryptedKey := string(pem.EncodeToMemory(&privBlock))
-
-	encryptedDer, err := pkcs8.MarshalPrivateKey(rsaPrivateKey, []byte("password"), &pkcs8.Opts{
-		Cipher: pkcs8.AES256CBC,
-		KDFOpts: pkcs8.PBKDF2Opts{
-			SaltSize: 16, IterationCount: 2000, HMACHash: crypto.SHA256,
-		},
-	})
-	require.NoError(t, err)
-	privEncryptedBlock := pem.Block{
-		Type:  "ENCRYPTED PRIVATE KEY",
-		Bytes: encryptedDer,
-	}
-	encryptedKey := string(pem.EncodeToMemory(&privEncryptedBlock))
+	unencryptedKey, encryptedKey := random.GenerateRSAPrivateKeyEncrypted(t, "password")
 
 	c := fmt.Sprintf(`
 	[securityadmin]
@@ -176,16 +150,18 @@ func TestProfileConfig(t *testing.T) {
 	t.Run("with not found profile", func(t *testing.T) {
 		t.Setenv(snowflakeenvs.ConfigPath, configPath)
 
-		_, err := ProfileConfig("orgadmin")
-		require.ErrorContains(t, err, "profile \"orgadmin\" not found in file")
+		config, err := ProfileConfig("orgadmin")
+		require.NoError(t, err)
+		require.Nil(t, config)
 	})
 
 	t.Run("with not found config", func(t *testing.T) {
-		name := random.AlphaN(8)
-		t.Setenv(snowflakeenvs.ConfigPath, name)
+		filename := random.AlphaN(8)
+		t.Setenv(snowflakeenvs.ConfigPath, filename)
 
-		_, err = ProfileConfig("orgadmin")
-		require.ErrorContains(t, err, fmt.Sprintf("open %s: no such file or directory", name))
+		config, err := ProfileConfig("orgadmin")
+		require.ErrorContains(t, err, fmt.Sprintf("could not load config file: open %s: no such file or directory", filename))
+		require.Nil(t, config)
 	})
 }
 

@@ -98,6 +98,7 @@ func Provider() *schema.Provider {
 				ValidateDiagFunc: validators.ValidateBooleanStringWithDefault,
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ValidateDefaultParameters, provider.BooleanDefault),
 			},
+			// TODO(SNOW-999056): optionally rename to session_params
 			"params": {
 				Type:        schema.TypeMap,
 				Description: "Sets other connection (i.e. session) parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters). This field can not be set with environmental variables.",
@@ -654,12 +655,20 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 }
 
 func getDriverConfigFromTOML(profile string) (*gosnowflake.Config, error) {
+	if profile == "default" {
+		return sdk.DefaultConfig(), nil
+	}
+	path, err := sdk.GetConfigFileName()
+	if err != nil {
+		return nil, err
+	}
+
 	profileConfig, err := sdk.ProfileConfig(profile)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve profile config: %w", err)
+		return nil, fmt.Errorf(`could not retrieve "%s" profile config from file %s: %w`, profile, path, err)
 	}
 	if profileConfig == nil {
-		return nil, fmt.Errorf(`profile with name "%s" not found in the TOML config file`, profile)
+		return nil, fmt.Errorf(`profile "%s" not found in file %s`, profile, path)
 	}
 	return profileConfig, nil
 }
