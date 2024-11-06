@@ -165,6 +165,8 @@ func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 }
 
 func TestAcc_Provider_tomlConfig(t *testing.T) {
+	// TODO(SNOW-1752038): unskip
+	t.Skip("Skip because this test needs a TOML config incompatible with older versions, causing tests with ExternalProvider to fail.")
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	user := acc.DefaultConfig(t).User
@@ -236,6 +238,8 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 }
 
 func TestAcc_Provider_envConfig(t *testing.T) {
+	// TODO(SNOW-1752038): unskip
+	t.Skip("Skip because this test needs a TOML config incompatible with older versions, causing tests with ExternalProvider to fail.")
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	user := acc.DefaultConfig(t).User
@@ -346,6 +350,8 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 }
 
 func TestAcc_Provider_tfConfig(t *testing.T) {
+	// TODO(SNOW-1752038): unskip
+	t.Skip("Skip because this test needs a TOML config incompatible with older versions, causing tests with ExternalProvider to fail.")
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	user := acc.DefaultConfig(t).User
