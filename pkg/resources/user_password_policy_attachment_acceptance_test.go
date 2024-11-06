@@ -52,6 +52,12 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 	})
 }
 
+// Adding this test to check if it will fail sometimes. It should, based on:
+// - https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3005
+// - https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2627
+// but haven't (at least during manual runs).
+// The behavior was fixed in https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2627
+// so the problem should not occur in the newest provider versions.
 func TestAcc_UserPasswordPolicyAttachment_gh3005(t *testing.T) {
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	userName := userId.Name()
