@@ -75,7 +75,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3153(t *testing.T) {
 	configVariables := config.Variables{
 		"name": config.StringVariable(roleFullyQualifiedName),
 		"privileges": config.ListVariable(
-			config.StringVariable("MANAGE SHARE TARGET"),
+			config.StringVariable(string(sdk.GlobalPrivilegeManageShareTarget)),
 		),
 	}
 	resourceName := "snowflake_grant_privileges_to_account_role.test"
@@ -99,9 +99,9 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3153(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "privileges.0", "MANAGE SHARE TARGET"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.GlobalPrivilegeManageShareTarget)),
 					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|MANAGE SHARE TARGET|OnAccount", roleFullyQualifiedName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|%s|OnAccount", roleFullyQualifiedName, sdk.GlobalPrivilegeManageShareTarget)),
 				),
 			},
 		},
