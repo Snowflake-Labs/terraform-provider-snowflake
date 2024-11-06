@@ -159,6 +159,14 @@ This segregation was based on the secret flows in CREATE SECRET. i.e.:
 
 See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secret).
 
+### *(bugfix)* Handle BCR Bundle 2024_08 in snowflake_user resource
+
+[bcr 2024_08](https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798) changed the "empty" response in the `SHOW USERS` query. This provider version adapts to the new result types; it should be used if you want to have 2024_08 Bundle enabled on your account.
+
+Note: Because [bcr 2024_07](https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_07/bcr-1692) changes the way how the `default_secondary_roles` attribute behaves, drift may be reported when enabling 2024_08 Bundle. Check [Handling default secondary roles](#breaking-change-handling-default-secondary-roles) for more context.
+
+Connected issues: [#3125](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125)
+
 ## v0.96.0 ➞ v0.97.0
 
 ### *(new feature)* snowflake_stream_on_table, snowflake_stream_on_external_table resource
