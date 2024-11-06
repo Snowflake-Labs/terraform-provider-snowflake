@@ -177,6 +177,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.all",
 						"on_schema_object.0.future",
 					},
+					// TODO [this PR]: implement
 					DiffSuppressFunc: suppressIdentifierQuoting,
 				},
 				"all": {

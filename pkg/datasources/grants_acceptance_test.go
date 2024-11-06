@@ -99,6 +99,32 @@ func TestAcc_Grants_On_SchemaObject(t *testing.T) {
 	})
 }
 
+// TODO [this PR]: implement
+func TestAcc_Grants_On_SchemaObject_WithArguments(t *testing.T) {
+	tableName := acc.TestClient().Ids.Alpha()
+	configVariables := config.Variables{
+		"database": config.StringVariable(acc.TestDatabaseName),
+		"schema":   config.StringVariable(acc.TestSchemaName),
+		"table":    config.StringVariable(tableName),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/SchemaObject"),
+				ConfigVariables: configVariables,
+				Check:           checkAtLeastOneGrantPresent(),
+			},
+		},
+	})
+}
+
 func TestAcc_Grants_On_Invalid_NoAttribute(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

@@ -94,11 +94,12 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
 	},
 	"on_function": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		Description:      "The fully qualified name of the function on which privileges will be granted.",
-		ExactlyOneOf:     grantPrivilegesToShareGrantExactlyOneOfValidation,
+		Type:         schema.TypeString,
+		Optional:     true,
+		ForceNew:     true,
+		Description:  "The fully qualified name of the function on which privileges will be granted.",
+		ExactlyOneOf: grantPrivilegesToShareGrantExactlyOneOfValidation,
+		// TODO [this PR]: implement
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 }

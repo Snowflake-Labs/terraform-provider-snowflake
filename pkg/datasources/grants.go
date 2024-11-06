@@ -378,6 +378,7 @@ func buildOptsForGrantsOn(grantsOn map[string]any) (*sdk.ShowGrantOptions, error
 		if objectType == "" || objectName == "" {
 			return nil, fmt.Errorf("object_type (%s) or object_name (%s) missing", objectType, objectName)
 		}
+		// TODO [this PR]: implement
 		objectId, err := helpers.DecodeSnowflakeParameterID(objectName)
 		if err != nil {
 			return nil, err
