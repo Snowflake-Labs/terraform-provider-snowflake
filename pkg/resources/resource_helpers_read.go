@@ -50,13 +50,17 @@ func setBooleanStringFromBoolProperty(d *schema.ResourceData, key string, proper
 	return nil
 }
 
-func attributeMappedValueReadIfNotEmpty[T, R any](d *schema.ResourceData, key string, value *T, mapper func(*T) (R, error)) error {
+func attributeMappedValueReadIfNotEmptyElse[T, R any](d *schema.ResourceData, key string, value *T, mapper func(*T) (R, error), defaultValue any) error {
 	if value != nil {
 		mappedValue, err := mapper(value)
 		if err != nil {
 			return err
 		}
 		if err := d.Set(key, mappedValue); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set(key, defaultValue); err != nil {
 			return err
 		}
 	}

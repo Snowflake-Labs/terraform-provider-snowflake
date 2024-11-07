@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -64,12 +66,36 @@ var taskSchema = map[string]*schema.Schema{
 		Description:      "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. Due to Snowflake limitations warehouse identifier can consist of only upper-cased letters. (Conflicts with user_task_managed_initial_warehouse_size)",
 		ConflictsWith:    []string{"user_task_managed_initial_warehouse_size"},
 	},
+	//"schedule": {
+	//	Type:             schema.TypeString,
+	//	Optional:         true,
+	//	DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("schedule"),
+	//	Description:      "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after)",
+	//	ConflictsWith:    []string{"finalize", "after"},
+	//},
 	"schedule": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("schedule"),
-		Description:      "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after)",
-		ConflictsWith:    []string{"finalize", "after"},
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"minutes": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					Description:      "", // TODO
+					ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+					ConflictsWith:    []string{"schedule.0.using_cron"},
+				},
+				"using_cron": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Description:      "", // TODO
+					DiffSuppressFunc: ignoreCaseSuppressFunc,
+					ConflictsWith:    []string{"schedule.0.minutes"},
+				},
+			},
+		},
+		Description: "", // TODO
 	},
 	"config": {
 		Type:     schema.TypeString,
@@ -223,7 +249,17 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) (diags di
 			}
 			return sdk.NewCreateTaskWarehouseRequest().WithWarehouse(warehouseId), nil
 		}),
-		stringAttributeCreate(d, "schedule", &req.Schedule),
+		attributeMappedValueCreate(d, "schedule", &req.Schedule, func(v any) (*string, error) {
+			if len(v.([]any)) > 0 {
+				if minutes, ok := d.GetOk("schedule.0.minutes"); ok {
+					return sdk.String(fmt.Sprintf("%d MINUTE", minutes)), nil
+				}
+				if cron, ok := d.GetOk("schedule.0.using_cron"); ok {
+					return sdk.String(fmt.Sprintf("USING CRON %s", cron)), nil
+				}
+			}
+			return nil, nil
+		}),
 		stringAttributeCreate(d, "config", &req.Config),
 		booleanStringAttributeCreate(d, "allow_overlapping_execution", &req.AllowOverlappingExecution),
 		accountObjectIdentifierAttributeCreate(d, "error_integration", &req.ErrorIntegration),
@@ -339,7 +375,6 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 
 	err = errors.Join(
 		accountObjectIdentifierAttributeUpdate(d, "warehouse", &set.Warehouse, &unset.Warehouse),
-		stringAttributeUpdate(d, "schedule", &set.Schedule, &unset.Schedule),
 		stringAttributeUpdate(d, "config", &set.Config, &unset.Config),
 		booleanStringAttributeUpdate(d, "allow_overlapping_execution", &set.AllowOverlappingExecution, &unset.AllowOverlappingExecution),
 		accountObjectIdentifierAttributeUpdate(d, "error_integration", &set.ErrorIntegration, &unset.ErrorIntegration),
@@ -347,6 +382,21 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if d.HasChange("schedule") {
+		_, newSchedule := d.GetChange("schedule")
+
+		if newSchedule != nil && len(newSchedule.([]any)) == 1 {
+			if _, newMinutes := d.GetChange("schedule.0.minutes"); newMinutes.(int) > 0 {
+				set.Schedule = sdk.String(fmt.Sprintf("%d MINUTE", newMinutes.(int)))
+			}
+			if _, newCron := d.GetChange("schedule.0.using_cron"); newCron.(string) != "" {
+				set.Schedule = sdk.String(fmt.Sprintf("USING CRON %s", newCron.(string)))
+			}
+		} else {
+			unset.Schedule = sdk.Bool(true)
+		}
 	}
 
 	if updateDiags := handleTaskParametersUpdate(d, set, unset); len(updateDiags) > 0 {
@@ -536,17 +586,44 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 
 		if errs := errors.Join(
-			attributeMappedValueReadIfNotEmpty(d, "finalize", task.TaskRelations.FinalizedRootTask, func(finalizedRootTask *sdk.SchemaObjectIdentifier) (string, error) {
+			attributeMappedValueReadIfNotEmptyElse(d, "finalize", task.TaskRelations.FinalizedRootTask, func(finalizedRootTask *sdk.SchemaObjectIdentifier) (string, error) {
 				return finalizedRootTask.FullyQualifiedName(), nil
-			}),
-			attributeMappedValueReadIfNotEmpty(d, "error_integration", task.ErrorIntegration, func(errorIntegration *sdk.AccountObjectIdentifier) (string, error) {
+			}, nil),
+			attributeMappedValueReadIfNotEmptyElse(d, "error_integration", task.ErrorIntegration, func(errorIntegration *sdk.AccountObjectIdentifier) (string, error) {
 				return errorIntegration.Name(), nil
-			}),
-			attributeMappedValueReadIfNotEmpty(d, "warehouse", task.Warehouse, func(warehouse *sdk.AccountObjectIdentifier) (string, error) {
+			}, nil),
+			attributeMappedValueReadIfNotEmptyElse(d, "warehouse", task.Warehouse, func(warehouse *sdk.AccountObjectIdentifier) (string, error) {
 				return warehouse.Name(), nil
-			}),
+			}, nil),
+			func() error {
+				upperSchedule := strings.ToUpper(task.Schedule)
+				if strings.Contains(upperSchedule, "USING CRON") {
+					cron := strings.TrimPrefix(upperSchedule, "USING CRON ")
+					if err := d.Set("schedule", []any{map[string]any{
+						"using_cron": cron,
+					}}); err != nil {
+						return err
+					}
+				} else if strings.Contains(upperSchedule, "MINUTE") {
+					minuteParts := strings.Split(upperSchedule, " ")
+					minutes, err := strconv.Atoi(minuteParts[0])
+					if err != nil {
+						return err
+					}
+
+					if err := d.Set("schedule", []any{map[string]any{
+						"minutes": minutes,
+					}}); err != nil {
+						return err
+					}
+				} else {
+					if err := d.Set("schedule", nil); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(),
 			d.Set("started", task.IsStarted()),
-			d.Set("schedule", task.Schedule),
 			d.Set("when", task.Condition),
 			d.Set("config", task.Config),
 			d.Set("comment", task.Comment),

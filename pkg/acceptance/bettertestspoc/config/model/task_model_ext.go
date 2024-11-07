@@ -71,3 +71,17 @@ func (t *TaskModel) WithUserTaskManagedInitialWarehouseSizeEnum(warehouseSize sd
 	t.UserTaskManagedInitialWarehouseSize = tfconfig.StringVariable(string(warehouseSize))
 	return t
 }
+
+func (t *TaskModel) WithScheduleMinutes(minutes int) *TaskModel {
+	t.Schedule = tfconfig.MapVariable(map[string]tfconfig.Variable{
+		"minutes": tfconfig.IntegerVariable(minutes),
+	})
+	return t
+}
+
+func (t *TaskModel) WithScheduleCron(cron string) *TaskModel {
+	t.Schedule = tfconfig.MapVariable(map[string]tfconfig.Variable{
+		"cron": tfconfig.StringVariable(cron),
+	})
+	return t
+}

@@ -42,12 +42,14 @@ var (
 		parameter[sdk.TaskParameter]{sdk.TaskParameterErrorOnNondeterministicUpdate, valueTypeBool, sdk.ParameterTypeTask},
 		parameter[sdk.TaskParameter]{sdk.TaskParameterGeographyOutputFormat, valueTypeString, sdk.ParameterTypeTask},
 		parameter[sdk.TaskParameter]{sdk.TaskParameterGeometryOutputFormat, valueTypeString, sdk.ParameterTypeTask},
+		// TODO: Remove?
 		parameter[sdk.TaskParameter]{sdk.TaskParameterJdbcTreatTimestampNtzAsUtc, valueTypeBool, sdk.ParameterTypeTask},
 		parameter[sdk.TaskParameter]{sdk.TaskParameterJdbcUseSessionTimezone, valueTypeBool, sdk.ParameterTypeTask},
 		parameter[sdk.TaskParameter]{sdk.TaskParameterJsonIndent, valueTypeInt, sdk.ParameterTypeTask},
 		parameter[sdk.TaskParameter]{sdk.TaskParameterLockTimeout, valueTypeInt, sdk.ParameterTypeTask},
 		parameter[sdk.TaskParameter]{sdk.TaskParameterLogLevel, valueTypeString, sdk.ParameterTypeTask},
 		parameter[sdk.TaskParameter]{sdk.TaskParameterMultiStatementCount, valueTypeInt, sdk.ParameterTypeTask},
+		// TODO: Remove?
 		parameter[sdk.TaskParameter]{sdk.TaskParameterNoorderSequenceAsDefault, valueTypeBool, sdk.ParameterTypeTask},
 		parameter[sdk.TaskParameter]{sdk.TaskParameterOdbcTreatDecimalAsInt, valueTypeBool, sdk.ParameterTypeTask},
 		parameter[sdk.TaskParameter]{sdk.TaskParameterQueryTag, valueTypeString, sdk.ParameterTypeTask},

@@ -80,10 +80,11 @@ func (t *TaskShowOutputAssert) HasWarehouse(expected sdk.AccountObjectIdentifier
 	return t
 }
 
-func (t *TaskShowOutputAssert) HasSchedule(expected string) *TaskShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputValueSet("schedule", expected))
-	return t
-}
+// TODO: Bring back
+//func (t *TaskShowOutputAssert) HasSchedule(expected string) *TaskShowOutputAssert {
+//	t.AddAssertion(assert.ResourceShowOutputValueSet("schedule", expected))
+//	return t
+//}
 
 func (t *TaskShowOutputAssert) HasState(expected sdk.TaskState) *TaskShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("state", expected))

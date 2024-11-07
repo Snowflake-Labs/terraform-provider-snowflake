@@ -127,6 +127,31 @@ func ConfigVariablesFromModel(t *testing.T, model ResourceModel) tfconfig.Variab
 	return variables
 }
 
+// ConfigVariablesFromModels can be used to create a list of objects that are referring to the same resource model.
+// It's useful when there's a need to create associations between objects of the same type in Snowflake.
+func ConfigVariablesFromModels(t *testing.T, variableName string, models ...ResourceModel) tfconfig.Variables {
+	t.Helper()
+	allVariables := make([]tfconfig.Variable, 0)
+	for _, model := range models {
+		rType := reflect.TypeOf(model).Elem()
+		rValue := reflect.ValueOf(model).Elem()
+		variables := make(tfconfig.Variables)
+		for i := 0; i < rType.NumField(); i++ {
+			field := rType.Field(i)
+			if jsonTag, ok := field.Tag.Lookup("json"); ok {
+				name := strings.Split(jsonTag, ",")[0]
+				if fieldValue, ok := rValue.Field(i).Interface().(tfconfig.Variable); ok {
+					variables[name] = fieldValue
+				}
+			}
+		}
+		allVariables = append(allVariables, tfconfig.ObjectVariable(variables))
+	}
+	return tfconfig.Variables{
+		variableName: tfconfig.ListVariable(allVariables...),
+	}
+}
+
 type nullVariable struct{}
 
 // MarshalJSON returns the JSON encoding of nullVariable.

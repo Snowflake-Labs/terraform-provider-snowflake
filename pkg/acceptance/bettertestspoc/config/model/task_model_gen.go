@@ -325,10 +325,7 @@ func (t *TaskModel) WithS3StageVpceDnsName(s3StageVpceDnsName string) *TaskModel
 	return t
 }
 
-func (t *TaskModel) WithSchedule(schedule string) *TaskModel {
-	t.Schedule = tfconfig.StringVariable(schedule)
-	return t
-}
+// schedule attribute type is not yet supported, so WithSchedule can't be generated
 
 func (t *TaskModel) WithSchema(schema string) *TaskModel {
 	t.Schema = tfconfig.StringVariable(schema)
