@@ -312,6 +312,23 @@ func TestAcc_Secrets_Filtering(t *testing.T) {
 	})
 }
 
+func TestAcc_Secrets_EmptyIn(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      secretDatasourceEmptyIn(),
+				ExpectError: regexp.MustCompile("Invalid combination of arguments"),
+			},
+		},
+	})
+}
+
 func datasourceWithLikeMultipleSecretTypes(like string) string {
 	return fmt.Sprintf(`
     data "snowflake_secrets" "test" {
@@ -341,23 +358,6 @@ func secretDatasourceInAccountWithLike(prefix string) string {
         like = "%s"
     }
 `, prefix)
-}
-
-func TestAcc_Secrets_EmptyIn(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: nil,
-		Steps: []resource.TestStep{
-			{
-				Config:      secretDatasourceEmptyIn(),
-				ExpectError: regexp.MustCompile("Invalid combination of arguments"),
-			},
-		},
-	})
 }
 
 func secretDatasourceEmptyIn() string {

@@ -25,7 +25,6 @@ var primaryConnectionSchema = map[string]*schema.Schema{
 	"is_primary": {
 		Type:        schema.TypeBool,
 		Computed:    true,
-		Default:     false,
 		Description: "Indicates if the connection primary status has been changed. If change is detected, resource will be recreated.",
 	},
 	"enable_failover_to_accounts": {
