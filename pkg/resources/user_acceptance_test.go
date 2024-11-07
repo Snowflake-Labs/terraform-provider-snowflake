@@ -1753,3 +1753,65 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_disable
 		},
 	})
 }
+
+func TestAcc_User_importPassword(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	pass := random.Password()
+	firstName := random.AlphaN(6)
+
+	_, userCleanup := acc.TestClient().User.CreateUserWithOptions(t, userId, &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+		Password:  sdk.String(pass),
+		FirstName: sdk.String(firstName),
+	}})
+	t.Cleanup(userCleanup)
+
+	userModel := model.User("w", userId.Name()).WithPassword(pass).WithFirstName(firstName)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			// IMPORT
+			{
+				Config:        config.FromModel(t, userModel),
+				ResourceName:  userModel.ResourceReference(),
+				ImportState:   true,
+				ImportStateId: userId.Name(),
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedUserResource(t, userId.Name()).
+						HasNoPassword().
+						HasFirstNameString(firstName),
+				),
+				ImportStatePersist: true,
+			},
+			{
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasNotEmptyPassword().
+						HasFirstNameString(firstName),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasNotEmptyPassword().
+						HasFirstNameString(firstName),
+				),
+			},
+		},
+	})
+}

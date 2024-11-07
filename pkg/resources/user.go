@@ -512,17 +512,17 @@ func GetReadUserFunc(userType sdk.UserType, withExternalChangesMarking bool) sch
 			// can't read disable_mfa
 			d.Set("user_type", u.Type),
 
-			func() error {
+			func(rd *schema.ResourceData, ud *sdk.UserDetails) error {
 				var errs error
 				if userType == sdk.UserTypePerson {
 					errs = errors.Join(
-						setFromStringPropertyIfNotEmpty(d, "first_name", userDetails.FirstName),
-						setFromStringPropertyIfNotEmpty(d, "middle_name", userDetails.MiddleName),
-						setFromStringPropertyIfNotEmpty(d, "last_name", userDetails.LastName),
+						setFromStringPropertyIfNotEmpty(rd, "first_name", ud.FirstName),
+						setFromStringPropertyIfNotEmpty(rd, "middle_name", ud.MiddleName),
+						setFromStringPropertyIfNotEmpty(rd, "last_name", ud.LastName),
 					)
 				}
 				return errs
-			}(),
+			}(d, userDetails),
 
 			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 			handleUserParameterRead(d, userParameters),
@@ -607,7 +607,6 @@ func GetUpdateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schem
 		switch userType {
 		case sdk.UserTypePerson:
 			userTypeSpecificFieldsErrs = errors.Join(
-				stringAttributeUpdate(d, "password", &setObjectProperties.Password, &unsetObjectProperties.Password),
 				stringAttributeUpdate(d, "first_name", &setObjectProperties.FirstName, &unsetObjectProperties.FirstName),
 				stringAttributeUpdate(d, "middle_name", &setObjectProperties.MiddleName, &unsetObjectProperties.MiddleName),
 				stringAttributeUpdate(d, "last_name", &setObjectProperties.LastName, &unsetObjectProperties.LastName),
@@ -617,7 +616,6 @@ func GetUpdateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schem
 			)
 		case sdk.UserTypeLegacyService:
 			userTypeSpecificFieldsErrs = errors.Join(
-				stringAttributeUpdate(d, "password", &setObjectProperties.Password, &unsetObjectProperties.Password),
 				booleanStringAttributeUpdate(d, "must_change_password", &setObjectProperties.MustChangePassword, &unsetObjectProperties.MustChangePassword),
 			)
 		}
@@ -638,6 +636,10 @@ func GetUpdateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schem
 				d.Partial(true)
 				return diag.FromErr(err)
 			}
+		}
+
+		if err := handlePasswordUpdate(ctx, id, userType, d, client); err != nil {
+			return diag.FromErr(err)
 		}
 
 		set := &sdk.UserSet{
@@ -675,6 +677,40 @@ func GetUpdateUserFunc(userType sdk.UserType) func(ctx context.Context, d *schem
 
 		return GetReadUserFunc(userType, false)(ctx, d, meta)
 	}
+}
+
+// handlePasswordUpdate is a current workaround to handle user's password after import.
+// Password is empty after the import, we can't read it from the config or from Snowflake.
+// During the next terraform plan+apply it's updated to the "same" value.
+// It results in an error on Snowflake side: New password rejected by current password policy. Reason: 'PRIOR_USE'.
+// Current workaround is to ignore such an error. We will revisit it after migration to plugin framework.
+func handlePasswordUpdate(ctx context.Context, id sdk.AccountObjectIdentifier, userType sdk.UserType, d *schema.ResourceData, client *sdk.Client) error {
+	if userType == sdk.UserTypePerson || userType == sdk.UserTypeLegacyService {
+		setPassword := sdk.UserAlterObjectProperties{}
+		unsetPassword := sdk.UserObjectPropertiesUnset{}
+		if err := stringAttributeUpdate(d, "password", &setPassword.Password, &unsetPassword.Password); err != nil {
+			return err
+		}
+		if (setPassword != sdk.UserAlterObjectProperties{}) {
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &setPassword}})
+			if err != nil {
+				if strings.Contains(err.Error(), "Error: 003002 (28P01)") || strings.Contains(err.Error(), "Reason: 'PRIOR_USE'") {
+					logging.DebugLogger.Printf("[DEBUG] Update to the same password is prohibited but it means we have a valid password in the current state. Continue.")
+				} else {
+					d.Partial(true)
+					return err
+				}
+			}
+		}
+		if (unsetPassword != sdk.UserObjectPropertiesUnset{}) {
+			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Unset: &sdk.UserUnset{ObjectProperties: &unsetPassword}})
+			if err != nil {
+				d.Partial(true)
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func DeleteUser(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

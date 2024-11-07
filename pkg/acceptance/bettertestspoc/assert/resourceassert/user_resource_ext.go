@@ -19,6 +19,11 @@ func (u *UserResourceAssert) HasEmptyPassword() *UserResourceAssert {
 	return u
 }
 
+func (u *UserResourceAssert) HasNotEmptyPassword() *UserResourceAssert {
+	u.AddAssertion(assert.ValuePresent("password"))
+	return u
+}
+
 func (u *UserResourceAssert) HasMustChangePassword(expected bool) *UserResourceAssert {
 	u.AddAssertion(assert.ValueSet("must_change_password", strconv.FormatBool(expected)))
 	return u
