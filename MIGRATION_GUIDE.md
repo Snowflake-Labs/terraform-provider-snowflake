@@ -16,12 +16,19 @@ Added a new resources for managing connections. We decided to split connection i
 - `snowflake_primary_connection` is used to manage primary connection, with ability to enable failover to other accounts.
 - `snowflake_secondary_connection` is used to manage replicated (secondary) connection.
 
-In order to promote `secondary_connection` to `primary_connection`, resources need to be migrated manually. For guidance on removing and importing resources into the state check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
-Before importing the `primary_connection` needs to be recreated in the Snowflake Worksheet using:
+In order to promote `snowflake_secondary_connection` to `snowflake_primary_connection`, resources need to be removed from the state, altered manually using:
 ```
-CREATE CONNECTION <name> AS REPLICA OF <organization_name>.<account_name>.<connection_name>;
 ALTER CONNECTION <name> PRIMARY;
 ```
+and then imported again, now as `snowflake_primary_connection`.
+
+In order to demote `snowflake_primary_connection` back to `snowflake_secondary_connection`, resources need to be removed from the state, re-created manually using:
+```
+CREATE CONNECTION <name> AS REPLICA OF <organization_name>.<account_name>.<connection_name>;
+```
+and then imported as `snowflake_secondary_connection`.
+
+For guidance on removing and importing resources into the state check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
 
 See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-connection).
 

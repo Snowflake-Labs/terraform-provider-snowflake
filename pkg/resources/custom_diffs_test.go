@@ -2,9 +2,10 @@ package resources_test
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -1082,24 +1083,50 @@ func Test_RecreateWhenSecretTypeChangedExternallyForOAuth2(t *testing.T) {
 	}
 }
 
-func Test_RecreateWhenSecondaryConnectionChangedExternally(t *testing.T) {
+func Test_RecreateWhenResourceBoolFieldChangedExternally(t *testing.T) {
 	tests := []struct {
-		name              string
-		expectedIsPrimary string
-		stateValue        map[string]string
+		name         string
+		isPrimary    bool
+		stateValue   map[string]string
+		wantForceNew bool
 	}{
 		{
-			name:              "changed from is_primary from false to true",
-			expectedIsPrimary: "false",
+			name:      "changed is_primary from false to true",
+			isPrimary: false,
 			stateValue: map[string]string{
 				"is_primary": "true",
 			},
+			wantForceNew: true,
+		},
+		{
+			name:      "changed is_primary from true to false",
+			isPrimary: true,
+			stateValue: map[string]string{
+				"is_primary": "false",
+			},
+			wantForceNew: true,
+		},
+		{
+			name:      "no change in is_primary - true to true",
+			isPrimary: true,
+			stateValue: map[string]string{
+				"is_primary": "true",
+			},
+			wantForceNew: false,
+		},
+		{
+			name:      "no change in is_primary - false to false",
+			isPrimary: false,
+			stateValue: map[string]string{
+				"is_primary": "false",
+			},
+			wantForceNew: false,
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			customDiff := resources.RecreateWhenSecondaryConnectionPromotedExternally()
+			customDiff := resources.RecreateWhenResourceBoolFieldChangedExternally("is_primary", tt.isPrimary)
 			testProvider := createProviderWithCustomSchemaAndCustomDiff(t,
 				map[string]*schema.Schema{
 					"is_primary": {
@@ -1114,7 +1141,7 @@ func Test_RecreateWhenSecondaryConnectionChangedExternally(t *testing.T) {
 				tt.stateValue,
 				map[string]any{},
 			)
-			assert.Equal(t, tt.expectedIsPrimary, diff.Attributes["is_primary"].New)
+			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
 		})
 	}
 }

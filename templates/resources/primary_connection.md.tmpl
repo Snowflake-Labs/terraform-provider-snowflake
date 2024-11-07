@@ -20,7 +20,10 @@ description: |-
 
 {{ tffile (printf "examples/resources/%s/resource.tf" .Name)}}
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
--> **Note** When demoting primary_connection to secondary_connection, resources need to be migrated manually. For guidance on removing and importing resources into the state check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+-> **Note** In order to demote primary_connection to secondary_connection, resources need to be migrated manually. For guidance on removing and importing resources into the state check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md). Before impoting the connection needs to be recreated in Snowflake Worksheet using:
+```
+CREATE CONNECTION <name> AS REPLICA OF <organization_name>.<account_name>.<connection_name>;
+```
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
 {{- end }}
