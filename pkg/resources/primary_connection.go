@@ -58,7 +58,7 @@ func PrimaryConnection() *schema.Resource {
 			ComputedIfAnyAttributeChanged(primaryConnectionSchema, ShowOutputAttributeName, "comment", "failover_allowed_to_accounts"),
 		),
 
-		Description: "Resource used to manage primary (not replicated) connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
+		Description: "Resource used to manage primary connections. For managing replicated connection check resource [snowflake_secondary_connection](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/resources/secondary_connection.md). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
 		Schema:      primaryConnectionSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportName[sdk.AccountObjectIdentifier],

@@ -11,13 +11,13 @@ across different versions.
 
 ### *(new feature)* connection resources
 
-Added a new resources for managing connections. We decided to split connection into two separate resources based on whether the connection is primary or a replica (secondary). i.e.:
+Added a new resources for managing connections. We decided to split connection into two separate resources based on whether the connection is a primary or replicated (secondary). i.e.:
 
-- `snowflake_connection` is used as primary connection, with ability to enable failover to other accounts.
-- `snowflake_secondary_connection` is used as replica (secondary) connection.
+- `snowflake_primary_connection` is used to manage primary connection, with ability to enable failover to other accounts.
+- `snowflake_secondary_connection` is used to manage replicated (secondary) connection.
 
-In order to promote secondary_connection to primary, resources need to be migrated (check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md)) or re-created and imported using the following SQL statements on Snowflake Worksheet:
-
+In order to promote `secondary_connection` to `primary_connection`, resources need to be migrated manually. For guidance on removing and importing resources into the state check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+Before importing the `primary_connection` needs to be recreated in the Snowflake Worksheet using:
 ```
 CREATE CONNECTION <name> AS REPLICA OF <organization_name>.<account_name>.<connection_name>;
 ALTER CONNECTION <name> PRIMARY;
