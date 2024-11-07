@@ -310,3 +310,45 @@ func Test_toAuthenticationType(t *testing.T) {
 		})
 	}
 }
+
+func Test_Provider_toDriverLogLevel(t *testing.T) {
+	type test struct {
+		input string
+		want  DriverLogLevel
+	}
+
+	valid := []test{
+		// Case insensitive.
+		{input: "WARNING", want: DriverLogLevelWarning},
+
+		// Supported Values.
+		{input: "trace", want: DriverLogLevelTrace},
+		{input: "debug", want: DriverLogLevelDebug},
+		{input: "info", want: DriverLogLevelInfo},
+		{input: "print", want: DriverLogLevelPrint},
+		{input: "warning", want: DriverLogLevelWarning},
+		{input: "error", want: DriverLogLevelError},
+		{input: "fatal", want: DriverLogLevelFatal},
+		{input: "panic", want: DriverLogLevelPanic},
+	}
+
+	invalid := []test{
+		{input: ""},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToDriverLogLevel(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToDriverLogLevel(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
