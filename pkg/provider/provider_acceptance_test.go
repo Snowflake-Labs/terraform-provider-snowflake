@@ -550,9 +550,6 @@ func TestAcc_Provider_sessionParameters(t *testing.T) {
 }
 
 func TestAcc_Provider_JwtAuth(t *testing.T) {
-	// TODO(SNOW-1752038): unskip
-	t.Skip("Skip because this test needs a TOML config incompatible with older versions, causing tests with ExternalProvider to fail.")
-
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	resource.Test(t, resource.TestCase{
@@ -568,16 +565,16 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 		Steps: []resource.TestStep{
 			// authenticate with unencrypted private key
 			{
-				Config: providerConfigWithAuthenticator("jwt_test", sdk.AuthenticationTypeJwt),
+				Config: providerConfigWithAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwt),
 			},
 			// authenticate with unencrypted private key with a legacy authenticator value
 			// solves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983
 			{
-				Config: providerConfigWithAuthenticator("jwt_test", sdk.AuthenticationTypeJwtLegacy),
+				Config: providerConfigWithAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwtLegacy),
 			},
 			// authenticate with encrypted private key
 			{
-				Config: providerConfigWithAuthenticator("jwt_encrypted_test", sdk.AuthenticationTypeJwt),
+				Config: providerConfigWithAuthenticator(testprofiles.EncryptedJwtAuth, sdk.AuthenticationTypeJwt),
 			},
 		},
 	})
@@ -831,10 +828,10 @@ provider "snowflake" {
 }
 
 func datasourceConfig() string {
-	return fmt.Sprintf(`
+	return `
 data snowflake_database "t" {
-	name = "%s"
-}`, acc.TestDatabaseName)
+	name = "SNOWFLAKE"
+}`
 }
 
 func providerConfigAllFields(profile, orgName, accountName, user, password string) string {

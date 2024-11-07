@@ -9,4 +9,7 @@ const (
 	CompleteFields           = "complete_fields"
 	CompleteFieldsInvalid    = "complete_fields_invalid"
 	DefaultWithPasscode      = "default_with_passcode"
+
+	JwtAuth          = "jwt_auth"
+	EncryptedJwtAuth = "encrypted_jwt_auth"
 )
