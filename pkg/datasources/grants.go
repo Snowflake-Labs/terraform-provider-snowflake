@@ -378,19 +378,88 @@ func buildOptsForGrantsOn(grantsOn map[string]any) (*sdk.ShowGrantOptions, error
 		if objectType == "" || objectName == "" {
 			return nil, fmt.Errorf("object_type (%s) or object_name (%s) missing", objectType, objectName)
 		}
-		// TODO [this PR]: implement
-		objectId, err := helpers.DecodeSnowflakeParameterID(objectName)
-		if err != nil {
-			return nil, err
+
+		sdkObjectType := sdk.ObjectType(objectType)
+		var objectId sdk.ObjectIdentifier
+		var err error
+		// TODO [SNOW-1569535]: use a mapper from object type to parsing function
+		// TODO [SNOW-1569535]: grant_ownership#getOnObjectIdentifier could be used but it is limited only to ownership-transferable objects (according to the docs) - we should add an integration test to verify if the docs are complete
+		if sdkObjectType.IsWithArguments() {
+			objectId, err = sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			objectId, err = helpers.DecodeSnowflakeParameterID(objectName)
+			if err != nil {
+				return nil, err
+			}
 		}
+
 		opts.On = &sdk.ShowGrantsOn{
 			Object: &sdk.Object{
-				ObjectType: sdk.ObjectType(objectType),
+				ObjectType: sdkObjectType,
 				Name:       objectId,
 			},
 		}
 	}
 	return opts, nil
+}
+
+// TODO(SNOW-1229218): Make sdk.ObjectType + string objectName to sdk.ObjectIdentifier mapping available in the sdk (for all object types).
+func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.ObjectIdentifier, error) {
+	switch objectType {
+	case sdk.ObjectTypeComputePool,
+		sdk.ObjectTypeDatabase,
+		sdk.ObjectTypeExternalVolume,
+		sdk.ObjectTypeFailoverGroup,
+		sdk.ObjectTypeIntegration,
+		sdk.ObjectTypeNetworkPolicy,
+		sdk.ObjectTypeReplicationGroup,
+		sdk.ObjectTypeRole,
+		sdk.ObjectTypeUser,
+		sdk.ObjectTypeWarehouse:
+		return sdk.ParseAccountObjectIdentifier(objectName)
+	case sdk.ObjectTypeDatabaseRole,
+		sdk.ObjectTypeSchema:
+		return sdk.ParseDatabaseObjectIdentifier(objectName)
+	case sdk.ObjectTypeAggregationPolicy,
+		sdk.ObjectTypeAlert,
+		sdk.ObjectTypeAuthenticationPolicy,
+		sdk.ObjectTypeDataMetricFunction,
+		sdk.ObjectTypeDynamicTable,
+		sdk.ObjectTypeEventTable,
+		sdk.ObjectTypeExternalTable,
+		sdk.ObjectTypeFileFormat,
+		sdk.ObjectTypeGitRepository,
+		sdk.ObjectTypeHybridTable,
+		sdk.ObjectTypeIcebergTable,
+		sdk.ObjectTypeImageRepository,
+		sdk.ObjectTypeMaterializedView,
+		sdk.ObjectTypeNetworkRule,
+		sdk.ObjectTypePackagesPolicy,
+		sdk.ObjectTypePipe,
+		sdk.ObjectTypeMaskingPolicy,
+		sdk.ObjectTypePasswordPolicy,
+		sdk.ObjectTypeProjectionPolicy,
+		sdk.ObjectTypeRowAccessPolicy,
+		sdk.ObjectTypeSessionPolicy,
+		sdk.ObjectTypeSecret,
+		sdk.ObjectTypeSequence,
+		sdk.ObjectTypeStage,
+		sdk.ObjectTypeStream,
+		sdk.ObjectTypeTable,
+		sdk.ObjectTypeTag,
+		sdk.ObjectTypeTask,
+		sdk.ObjectTypeView:
+		return sdk.ParseSchemaObjectIdentifier(objectName)
+	case sdk.ObjectTypeFunction,
+		sdk.ObjectTypeProcedure,
+		sdk.ObjectTypeExternalFunction:
+		return sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
+	default:
+		return nil, sdk.NewError(fmt.Sprintf("object_type %s is not supported, please create a feature request for the provider if given object_type should be supported", objectType))
+	}
 }
 
 func buildOptsForGrantsTo(grantsTo map[string]any) (*sdk.ShowGrantOptions, error) {

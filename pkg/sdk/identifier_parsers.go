@@ -45,7 +45,7 @@ func ParseIdentifierString(identifier string) ([]string, error) {
 	return parts, nil
 }
 
-func parseIdentifier[T ObjectIdentifier](identifier string, expectedParts int, expectedFormat string, constructFromParts func(parts []string) T) (T, error) {
+func parseIdentifier[T AccountIdentifier | AccountObjectIdentifier | DatabaseObjectIdentifier | ExternalObjectIdentifier | SchemaObjectIdentifier | TableColumnIdentifier](identifier string, expectedParts int, expectedFormat string, constructFromParts func(parts []string) T) (T, error) {
 	var emptyIdentifier T
 	parts, err := ParseIdentifierString(identifier)
 	if err != nil {

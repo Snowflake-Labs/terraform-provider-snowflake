@@ -68,11 +68,10 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 					ValidateFunc: validation.StringInSlice(sdk.ValidGrantOwnershipObjectTypesString, true),
 				},
 				"object_name": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					ForceNew:    true,
-					Description: "Specifies the identifier for the object on which you are transferring ownership.",
-					// TODO [this PR]: implement
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Description:      "Specifies the identifier for the object on which you are transferring ownership.",
 					DiffSuppressFunc: suppressIdentifierQuoting,
 					RequiredWith: []string{
 						"on.0.object_type",
