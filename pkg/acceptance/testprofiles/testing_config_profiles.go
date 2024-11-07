@@ -12,4 +12,5 @@ const (
 
 	JwtAuth          = "jwt_auth"
 	EncryptedJwtAuth = "encrypted_jwt_auth"
+	Okta             = "okta"
 )
