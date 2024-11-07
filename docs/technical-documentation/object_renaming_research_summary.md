@@ -27,7 +27,7 @@ In addition to improved documentation, the tests showed us that we need to impro
 
 **Description:** The issues with table columns ([\#420](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/420), [\#753](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/753), [\#2839](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2839)) are something we had in mind for a very long time and finally had a chance to work on a solution that would improve them, and possibly some of the other resources. In short, the use case for table columns consists of two use cases connected to each other:
 
-- Ignoring the order of columns after creation. Users should be able to reorder, add, and remove columns from any place while still having somewhat control over column order on the Snowlake side.
+- Ignoring the order of columns after creation. Users should be able to reorder, add, and remove columns from any place while still having somewhat control over column order on the Snowflake side.
 - Updating a given column instead of removing and adding it again. Ignoring the order was an additional challenge because if someone wants to order the columns and change their name in one apply, then we need a way to identify this column to perform the correct action.
 
 **Tests:** The tests were carried out on a resource created only for the purpose of the research ([resource reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/pkg/resources/object_renaming_lists_and_sets.go#L125)). Note that it won’t be normally visible and no other changes in other resources were made. We tested a few approaches regarding order ignoring and one on updating items.

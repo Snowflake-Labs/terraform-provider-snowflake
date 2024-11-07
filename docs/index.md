@@ -17,6 +17,8 @@ Coverage is focused on part of Snowflake related to access control.
 
 ## Example Provider Configuration
 
+This is an example configuration of the provider in `main.tf` in a configuration directory. More examples are provided [below](#order-precedence).
+
 ```terraform
 terraform {
   required_providers {
@@ -26,31 +28,34 @@ terraform {
   }
 }
 
+# A simple configuration of the provider with a default authentication.
+# A default value for `authenticator` is `snowflake`, enabling authentication with `user` and `password`.
 provider "snowflake" {
-  account                = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT env var
-  username               = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
-  password               = "..."
-  authenticator          = "..." # required if not using password as auth method
-  oauth_access_token     = "..."
-  private_key_path       = "..."
-  private_key            = "..."
-  private_key_passphrase = "..."
-  oauth_refresh_token    = "..."
-  oauth_client_id        = "..."
-  oauth_client_secret    = "..."
-  oauth_endpoint         = "..."
-  oauth_redirect_url     = "..."
+  organization_name = "..." # required if not using profile. Can also be set via SNOWFLAKE_ORGANIZATION_NAME env var
+  account_name      = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT_NAME env var
+  user              = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
+  password          = "..."
 
   // optional
-  region    = "..." # required if using legacy format for account identifier
   role      = "..."
   host      = "..."
   warehouse = "..."
-  session_params = {
+  params = {
     query_tag = "..."
   }
 }
 
+# A simple configuration of the provider with private key authentication.
+provider "snowflake" {
+  organization_name      = "..." # required if not using profile. Can also be set via SNOWFLAKE_ORGANIZATION_NAME env var
+  account_name           = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT_NAME env var
+  user                   = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
+  authenticator          = "SNOWFLAKE_JWT"
+  private_key            = "-----BEGIN ENCRYPTED PRIVATE KEY-----..."
+  private_key_passphrase = "passphrase"
+}
+
+# By using the `profile` field, missing fields will be populated from ~/.snowflake/config TOML file
 provider "snowflake" {
   profile = "securityadmin"
 }
@@ -65,22 +70,27 @@ provider "snowflake" {
 
 ### Optional
 
-- `account` (String) Specifies your Snowflake account identifier assigned, by Snowflake. The [account locator](https://docs.snowflake.com/en/user-guide/admin-account-identifier#format-2-account-locator-in-a-region) format is not supported. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). Required unless using `profile`. Can also be sourced from the `SNOWFLAKE_ACCOUNT` environment variable.
-- `authenticator` (String) Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid values include: Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor, UsernamePasswordMFA. It has to be set explicitly to JWT for private key authentication. Can also be sourced from the `SNOWFLAKE_AUTHENTICATOR` environment variable.
+- `account` (String, Deprecated) Use `account_name` and `organization_name` instead. Specifies your Snowflake account identifier assigned, by Snowflake. The [account locator](https://docs.snowflake.com/en/user-guide/admin-account-identifier#format-2-account-locator-in-a-region) format is not supported. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). Required unless using `profile`. Can also be sourced from the `SNOWFLAKE_ACCOUNT` environment variable.
+- `account_name` (String) Specifies your Snowflake account name assigned by Snowflake. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier#account-name). Required unless using `profile`. Can also be sourced from the `SNOWFLAKE_ACCOUNT_NAME` environment variable.
+- `authenticator` (String) Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid options are: `SNOWFLAKE` | `OAUTH` | `EXTERNALBROWSER` | `OKTA` | `JWT` | `SNOWFLAKE_JWT` | `TOKENACCESSOR` | `USERNAMEPASSWORDMFA`. Value `JWT` is deprecated and will be removed in future releases. Can also be sourced from the `SNOWFLAKE_AUTHENTICATOR` environment variable.
 - `browser_auth` (Boolean, Deprecated) Required when `oauth_refresh_token` is used. Can also be sourced from `SNOWFLAKE_USE_BROWSER_AUTH` environment variable.
 - `client_ip` (String) IP address for network checks. Can also be sourced from the `SNOWFLAKE_CLIENT_IP` environment variable.
 - `client_request_mfa_token` (String) When true the MFA token is cached in the credential manager. True by default in Windows/OSX. False for Linux. Can also be sourced from the `SNOWFLAKE_CLIENT_REQUEST_MFA_TOKEN` environment variable.
 - `client_store_temporary_credential` (String) When true the ID token is cached in the credential manager. True by default in Windows/OSX. False for Linux. Can also be sourced from the `SNOWFLAKE_CLIENT_STORE_TEMPORARY_CREDENTIAL` environment variable.
 - `client_timeout` (Number) The timeout in seconds for the client to complete the authentication. Can also be sourced from the `SNOWFLAKE_CLIENT_TIMEOUT` environment variable.
+- `disable_console_login` (String) Indicates whether console login should be disabled in the driver. Can also be sourced from the `SNOWFLAKE_DISABLE_CONSOLE_LOGIN` environment variable.
 - `disable_query_context_cache` (Boolean) Disables HTAP query context cache in the driver. Can also be sourced from the `SNOWFLAKE_DISABLE_QUERY_CONTEXT_CACHE` environment variable.
 - `disable_telemetry` (Boolean) Disables telemetry in the driver. Can also be sourced from the `DISABLE_TELEMETRY` environment variable.
+- `driver_tracing` (String) Specifies the logging level to be used by the driver. Valid options are: `trace` | `debug` | `info` | `print` | `warning` | `error` | `fatal` | `panic`. Can also be sourced from the `SNOWFLAKE_DRIVER_TRACING` environment variable.
 - `external_browser_timeout` (Number) The timeout in seconds for the external browser to complete the authentication. Can also be sourced from the `SNOWFLAKE_EXTERNAL_BROWSER_TIMEOUT` environment variable.
 - `host` (String) Specifies a custom host value used by the driver for privatelink connections. Can also be sourced from the `SNOWFLAKE_HOST` environment variable.
+- `include_retry_reason` (String) Should retried request contain retry reason. Can also be sourced from the `SNOWFLAKE_INCLUDE_RETRY_REASON` environment variable.
 - `insecure_mode` (Boolean) If true, bypass the Online Certificate Status Protocol (OCSP) certificate revocation check. IMPORTANT: Change the default value for testing or emergency situations only. Can also be sourced from the `SNOWFLAKE_INSECURE_MODE` environment variable.
 - `jwt_client_timeout` (Number) The timeout in seconds for the JWT client to complete the authentication. Can also be sourced from the `SNOWFLAKE_JWT_CLIENT_TIMEOUT` environment variable.
 - `jwt_expire_timeout` (Number) JWT expire after timeout in seconds. Can also be sourced from the `SNOWFLAKE_JWT_EXPIRE_TIMEOUT` environment variable.
 - `keep_session_alive` (Boolean) Enables the session to persist even after the connection is closed. Can also be sourced from the `SNOWFLAKE_KEEP_SESSION_ALIVE` environment variable.
 - `login_timeout` (Number) Login retry timeout in seconds EXCLUDING network roundtrip and read out http response. Can also be sourced from the `SNOWFLAKE_LOGIN_TIMEOUT` environment variable.
+- `max_retry_count` (Number) Specifies how many times non-periodic HTTP request can be retried by the driver. Can also be sourced from the `SNOWFLAKE_MAX_RETRY_COUNT` environment variable.
 - `oauth_access_token` (String, Sensitive, Deprecated) Token for use with OAuth. Generating the token is left to other tools. Cannot be used with `browser_auth`, `private_key_path`, `oauth_refresh_token` or `password`. Can also be sourced from `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.
 - `oauth_client_id` (String, Sensitive, Deprecated) Required when `oauth_refresh_token` is used. Can also be sourced from `SNOWFLAKE_OAUTH_CLIENT_ID` environment variable.
 - `oauth_client_secret` (String, Sensitive, Deprecated) Required when `oauth_refresh_token` is used. Can also be sourced from `SNOWFLAKE_OAUTH_CLIENT_SECRET` environment variable.
@@ -88,25 +98,27 @@ provider "snowflake" {
 - `oauth_redirect_url` (String, Sensitive, Deprecated) Required when `oauth_refresh_token` is used. Can also be sourced from `SNOWFLAKE_OAUTH_REDIRECT_URL` environment variable.
 - `oauth_refresh_token` (String, Sensitive, Deprecated) Token for use with OAuth. Setup and generation of the token is left to other tools. Should be used in conjunction with `oauth_client_id`, `oauth_client_secret`, `oauth_endpoint`, `oauth_redirect_url`. Cannot be used with `browser_auth`, `private_key_path`, `oauth_access_token` or `password`. Can also be sourced from `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment variable.
 - `ocsp_fail_open` (String) True represents OCSP fail open mode. False represents OCSP fail closed mode. Fail open true by default. Can also be sourced from the `SNOWFLAKE_OCSP_FAIL_OPEN` environment variable.
-- `okta_url` (String) The URL of the Okta server. e.g. https://example.okta.com. Can also be sourced from the `SNOWFLAKE_OKTA_URL` environment variable.
-- `params` (Map of String) Sets other connection (i.e. session) parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters)
+- `okta_url` (String) The URL of the Okta server. e.g. https://example.okta.com. Okta URL host needs to to have a suffix `okta.com`. Read more in Snowflake [docs](https://docs.snowflake.com/en/user-guide/oauth-okta). Can also be sourced from the `SNOWFLAKE_OKTA_URL` environment variable.
+- `organization_name` (String) Specifies your Snowflake organization name assigned by Snowflake. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier#organization-name). Required unless using `profile`. Can also be sourced from the `SNOWFLAKE_ORGANIZATION_NAME` environment variable.
+- `params` (Map of String) Sets other connection (i.e. session) parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters). This field can not be set with environmental variables.
 - `passcode` (String) Specifies the passcode provided by Duo when using multi-factor authentication (MFA) for login. Can also be sourced from the `SNOWFLAKE_PASSCODE` environment variable.
 - `passcode_in_password` (Boolean) False by default. Set to true if the MFA passcode is embedded to the configured password. Can also be sourced from the `SNOWFLAKE_PASSCODE_IN_PASSWORD` environment variable.
-- `password` (String, Sensitive) Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`. Can also be sourced from the `SNOWFLAKE_PASSWORD` environment variable.
+- `password` (String, Sensitive) Password for user + password auth. Cannot be used with `browser_auth` or `private_key_path`. Can also be sourced from the `SNOWFLAKE_PASSWORD` environment variable.
 - `port` (Number) Specifies a custom port value used by the driver for privatelink connections. Can also be sourced from the `SNOWFLAKE_PORT` environment variable.
 - `private_key` (String, Sensitive) Private Key for username+private-key auth. Cannot be used with `browser_auth` or `password`. Can also be sourced from the `SNOWFLAKE_PRIVATE_KEY` environment variable.
 - `private_key_passphrase` (String, Sensitive) Supports the encryption ciphers aes-128-cbc, aes-128-gcm, aes-192-cbc, aes-192-gcm, aes-256-cbc, aes-256-gcm, and des-ede3-cbc. Can also be sourced from the `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE` environment variable.
 - `private_key_path` (String, Sensitive, Deprecated) Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can also be sourced from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.
 - `profile` (String) Sets the profile to read from ~/.snowflake/config file. Can also be sourced from the `SNOWFLAKE_PROFILE` environment variable.
-- `protocol` (String) A protocol used in the connection. Valid options are: `HTTP` | `HTTPS`. Can also be sourced from the `SNOWFLAKE_PROTOCOL` environment variable.
+- `protocol` (String) A protocol used in the connection. Valid options are: `http` | `https`. Can also be sourced from the `SNOWFLAKE_PROTOCOL` environment variable.
 - `region` (String, Deprecated) Snowflake region, such as "eu-central-1", with this parameter. However, since this parameter is deprecated, it is best to specify the region as part of the account parameter. For details, see the description of the account parameter. [Snowflake region](https://docs.snowflake.com/en/user-guide/intro-regions.html) to use.  Required if using the [legacy format for the `account` identifier](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#format-2-legacy-account-locator-in-a-region) in the form of `<cloud_region_id>.<cloud>`. Can also be sourced from the `SNOWFLAKE_REGION` environment variable.
 - `request_timeout` (Number) request retry timeout in seconds EXCLUDING network roundtrip and read out http response. Can also be sourced from the `SNOWFLAKE_REQUEST_TIMEOUT` environment variable.
 - `role` (String) Specifies the role to use by default for accessing Snowflake objects in the client session. Can also be sourced from the `SNOWFLAKE_ROLE` environment variable.
 - `session_params` (Map of String, Deprecated) Sets session parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters)
+- `tmp_directory_path` (String) Sets temporary directory used by the driver for operations like encrypting, compressing etc. Can also be sourced from the `SNOWFLAKE_TMP_DIRECTORY_PATH` environment variable.
 - `token` (String, Sensitive) Token to use for OAuth and other forms of token based auth. Can also be sourced from the `SNOWFLAKE_TOKEN` environment variable.
 - `token_accessor` (Block List, Max: 1) (see [below for nested schema](#nestedblock--token_accessor))
 - `user` (String) Username. Required unless using `profile`. Can also be sourced from the `SNOWFLAKE_USER` environment variable.
-- `username` (String, Deprecated) Username for username+password authentication. Required unless using `profile`. Can also be sourced from the `SNOWFLAKE_USERNAME` environment variable.
+- `username` (String, Deprecated) Username for user + password authentication. Required unless using `profile`. Can also be sourced from the `SNOWFLAKE_USERNAME` environment variable.
 - `validate_default_parameters` (String) True by default. If false, disables the validation checks for Database, Schema, Warehouse and Role at the time a connection is established. Can also be sourced from the `SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS` environment variable.
 - `warehouse` (String) Specifies the virtual warehouse to use by default for queries, loading, etc. in the client session. Can also be sourced from the `SNOWFLAKE_WAREHOUSE` environment variable.
 
@@ -132,7 +144,7 @@ The Snowflake provider support multiple ways to authenticate:
 * Private Key
 * Config File
 
-In all cases account and username are required.
+In all cases `organization_name`, `account_name` and `user` are required.
 
 ### Keypair Authentication Environment Variables
 
@@ -209,30 +221,143 @@ export SNOWFLAKE_USER='...'
 export SNOWFLAKE_PASSWORD='...'
 ```
 
-### Config File
-
-If you choose to use a config file, the optional `profile` attribute specifies the profile to use from the config file. If no profile is specified, the default profile is used. The Snowflake config file lives at `~/.snowflake/config` and uses [TOML](https://toml.io/) format. You can override this location by setting the `SNOWFLAKE_CONFIG_PATH` environment variable. If no username and account are specified, the provider will fall back to reading the config file.
-
-```shell
-[default]
-account='TESTACCOUNT'
-user='TEST_USER'
-password='hunter2'
-role='ACCOUNTADMIN'
-
-[securityadmin]
-account='TESTACCOUNT'
-user='TEST_USER'
-password='hunter2'
-role='SECURITYADMIN'
-```
-
 ## Order Precedence
 
-The Snowflake provider will use the following order of precedence when determining which credentials to use:
-1) Provider Configuration
-2) Environment Variables
-3) Config File
+Currently, the provider can be configured in three ways:
+1. In a Terraform file located in the Terraform module with other resources.
+
+Example content of the Terraform file configuration:
+
+```terraform
+provider "snowflake" {
+    organization_name = "..."
+    account_name = "..."
+    username = "..."
+    password = "..."
+}
+```
+
+2. In environmental variables (envs). This is mainly used to provide sensitive values.
+
+
+```bash
+export SNOWFLAKE_USER="..."
+export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
+```
+
+3. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field. When this is not specified, `default` profile is loaded.
+When a `default` profile is not present in the TOML file, it is treated as "empty", without failing.
+
+Example content of the Terraform file configuration:
+
+```terraform
+provider "snowflake" {
+    profile = "default"
+}
+```
+
+Example content of the TOML file configuration:
+
+```toml
+[default]
+organizationname='organization_name'
+accountname='account_name'
+user='user'
+password='password'
+role='ACCOUNTADMIN'
+
+[secondary_test_account]
+organizationname='organization_name'
+accountname='account2_name'
+user='user'
+password='password'
+role='ACCOUNTADMIN'
+```
+
+Not all fields must be configured in one source; users can choose which fields are configured in which source.
+Provider uses an established hierarchy of sources. The current behavior is that for each field:
+1. Check if it is present in the provider configuration. If yes, use this value. If not, go to step 2.
+1. Check if it is present in the environment variables. If yes, use this value. If not, go to step 3.
+1. Check if it is present in the TOML config file (specifically, use the profile name configured in one of the steps above). If yes, use this value. If not, the value is considered empty.
+
+An example TOML file contents:
+
+```toml
+[example]
+accountname = 'account_name'
+organizationname = 'organization_name'
+user = 'user'
+password = 'password'
+warehouse = 'SNOWFLAKE'
+role = 'ACCOUNTADMIN'
+clientip = '1.2.3.4'
+protocol = 'https'
+port = 443
+oktaurl = 'https://example.com'
+clienttimeout = 10
+jwtclienttimeout = 20
+logintimeout = 30
+requesttimeout = 40
+jwtexpiretimeout = 50
+externalbrowsertimeout = 60
+maxretrycount = 1
+authenticator = 'snowflake'
+insecuremode = true
+ocspfailopen = true
+keepsessionalive = true
+disabletelemetry = true
+validatedefaultparameters = true
+clientrequestmfatoken = true
+clientstoretemporarycredential = true
+tracing = 'info'
+tmpdirpath = '/tmp/terraform-provider/'
+disablequerycontextcache = true
+includeretryreason = true
+disableconsolelogin = true
+
+[example.params]
+param_key = 'param_value'
+```
+
+An example terraform configuration file equivalent:
+
+```terraform
+provider "snowflake" {
+	organization_name = "organization_name"
+	account_name = "account_name"
+	user = "user"
+	password = "password"
+	warehouse = "SNOWFLAKE"
+	protocol = "https"
+	port = "443"
+	role = "ACCOUNTADMIN"
+	validate_default_parameters = true
+	client_ip = "1.2.3.4"
+	authenticator = "snowflake"
+	okta_url = "https://example.com"
+	login_timeout = 10
+	request_timeout = 20
+	jwt_expire_timeout = 30
+	client_timeout = 40
+	jwt_client_timeout = 50
+	external_browser_timeout = 60
+	insecure_mode = true
+	ocsp_fail_open = true
+	keep_session_alive = true
+	disable_telemetry = true
+	client_request_mfa_token = true
+	client_store_temporary_credential = true
+	disable_query_context_cache = true
+	include_retry_reason = true
+	max_retry_count = 3
+	driver_tracing = "info"
+	tmp_directory_path = "/tmp/terraform-provider/"
+	disable_console_login = true
+	params = {
+		param_key = "param_value"
+	}
+}
+```
 
 ## Currently deprecated resources
 

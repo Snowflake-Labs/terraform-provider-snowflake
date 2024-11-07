@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -37,7 +38,7 @@ var secretAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
 	}
-	return helpers.MergeMaps(secretCommonSchema, secretAuthorizationCodeGrant)
+	return collections.MergeMaps(secretCommonSchema, secretAuthorizationCodeGrant)
 }()
 
 func SecretWithAuthorizationCodeGrant() *schema.Resource {

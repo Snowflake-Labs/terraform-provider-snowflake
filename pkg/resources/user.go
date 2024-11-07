@@ -191,7 +191,7 @@ func User() *schema.Resource {
 		DeleteContext: DeleteUser,
 		Description:   "Resource used to manage user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
-		Schema: helpers.MergeMaps(userSchema, userParametersSchema),
+		Schema: collections.MergeMaps(userSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: GetImportUserFunc(sdk.UserTypePerson),
 		},
@@ -224,7 +224,7 @@ func ServiceUser() *schema.Resource {
 		DeleteContext: DeleteUser,
 		Description:   "Resource used to manage service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
-		Schema: helpers.MergeMaps(serviceUserSchema, userParametersSchema),
+		Schema: collections.MergeMaps(serviceUserSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: GetImportUserFunc(sdk.UserTypeService),
 		},
@@ -247,7 +247,7 @@ func LegacyServiceUser() *schema.Resource {
 		DeleteContext: DeleteUser,
 		Description:   "Resource used to manage legacy service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
-		Schema: helpers.MergeMaps(legacyServiceUserSchema, userParametersSchema),
+		Schema: collections.MergeMaps(legacyServiceUserSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: GetImportUserFunc(sdk.UserTypeLegacyService),
 		},

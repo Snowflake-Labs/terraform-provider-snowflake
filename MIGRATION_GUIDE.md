@@ -53,6 +53,31 @@ Please adjust your Terraform configuration files.
 ### *(behavior change)* Provider configuration rework
 On our road to v1, we have decided to rework configuration to address the most common issues (see a [roadmap entry](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#providers-configuration-rework)). We have created a list of topics we wanted to address before v1. We will prepare an announcement soon. The following subsections describe the things addressed in the v0.98.0.
 
+#### *(behavior change)* new fields
+We have added new fields to match the ones in [the driver](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#Config) and to simplify setting account name. Specifically:
+- `include_retry_reason`, `max_retry_count`, `driver_tracing`, `tmp_directory_path` and `disable_console_login` are the new fields that are supported in the driver
+- `disable_saml_url_check` will be added to the provider after upgrading the driver
+- `account_name` and `organization_name` were added to improve handling account names. Read more in [docs](https://docs.snowflake.com/en/user-guide/admin-account-identifier#using-an-account-name-as-an-identifier).
+
+#### *(behavior change)* changed configuration of driver log level
+To be more consistent with other configuration options, we have decided to add `driver_tracing` to the configuration schema. This value can also be configured by `SNOWFLAKE_DRIVER_TRACING` environmental variable and by `drivertracing` field in the TOML file. The previous `SF_TF_GOSNOWFLAKE_LOG_LEVEL` environmental variable is not supported now, and was removed from the provider.
+
+#### *(behavior change)* deprecated fields
+Because of new fields `account_name` and `organization_name`, `account` is now deprecated. It will be removed before v1.  Please adjust your configurations from
+```terraform
+provider "snowflake" {
+	account = "ORGANIZATION-ACCOUNT"
+}
+```
+
+to
+```terraform
+provider "snowflake" {
+	organization_name = "ORGANIZATION"
+	account_name    = "ACCOUNT"
+}
+```
+
 #### *(behavior change)* changed behavior of some fields
 For the fields that are not deprecated, we focused on improving validations and documentation. Also, we adjusted some fields to match our [driver's](https://github.com/snowflakedb/gosnowflake) defaults. Specifically:
 - Relaxed validations for enum fields like `protocol` and `authenticator`. Now, the case on such fields is ignored.
