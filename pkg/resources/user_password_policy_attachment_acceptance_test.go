@@ -6,10 +6,16 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
+// TODO [SNOW-1423486]: Fix using warehouse; remove unsetting testenvs.ConfigureClientOnce
 func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	userName := userId.Name()
 	newUserId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
