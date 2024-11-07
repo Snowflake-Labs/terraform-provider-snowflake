@@ -2,10 +2,9 @@ package resources_test
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"strings"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -1079,6 +1078,43 @@ func Test_RecreateWhenSecretTypeChangedExternallyForOAuth2(t *testing.T) {
 				map[string]any{},
 			)
 			assert.Equal(t, tt.wantForceNew, diff.RequiresNew())
+		})
+	}
+}
+
+func Test_RecreateWhenSecondaryConnectionChangedExternally(t *testing.T) {
+	tests := []struct {
+		name              string
+		expectedIsPrimary string
+		stateValue        map[string]string
+	}{
+		{
+			name:              "changed from is_primary from false to true",
+			expectedIsPrimary: "false",
+			stateValue: map[string]string{
+				"is_primary": "true",
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			customDiff := resources.RecreateWhenSecondaryConnectionPromotedExternally()
+			testProvider := createProviderWithCustomSchemaAndCustomDiff(t,
+				map[string]*schema.Schema{
+					"is_primary": {
+						Type:     schema.TypeBool,
+						Computed: true,
+					},
+				},
+				customDiff)
+			diff := calculateDiffFromAttributes(
+				t,
+				testProvider,
+				tt.stateValue,
+				map[string]any{},
+			)
+			assert.Equal(t, tt.expectedIsPrimary, diff.Attributes["is_primary"].New)
 		})
 	}
 }

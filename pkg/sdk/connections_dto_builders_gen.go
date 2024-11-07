@@ -2,6 +2,8 @@
 
 package sdk
 
+import ()
+
 func NewCreateConnectionRequest(
 	name AccountObjectIdentifier,
 ) *CreateConnectionRequest {
@@ -53,23 +55,22 @@ func (s *AlterConnectionRequest) WithPrimary(Primary bool) *AlterConnectionReque
 	return s
 }
 
-func (s *AlterConnectionRequest) WithSet(Set SetRequest) *AlterConnectionRequest {
+func (s *AlterConnectionRequest) WithSet(Set ConnectionSetRequest) *AlterConnectionRequest {
 	s.Set = &Set
 	return s
 }
 
-func (s *AlterConnectionRequest) WithUnset(Unset UnsetRequest) *AlterConnectionRequest {
+func (s *AlterConnectionRequest) WithUnset(Unset ConnectionUnsetRequest) *AlterConnectionRequest {
 	s.Unset = &Unset
 	return s
 }
 
-func NewEnableConnectionFailoverRequest() *EnableConnectionFailoverRequest {
-	return &EnableConnectionFailoverRequest{}
-}
-
-func (s *EnableConnectionFailoverRequest) WithToAccounts(ToAccounts []AccountIdentifier) *EnableConnectionFailoverRequest {
+func NewEnableConnectionFailoverRequest(
+	ToAccounts []AccountIdentifier,
+) *EnableConnectionFailoverRequest {
+	s := EnableConnectionFailoverRequest{}
 	s.ToAccounts = ToAccounts
-	return s
+	return &s
 }
 
 func NewDisableConnectionFailoverRequest() *DisableConnectionFailoverRequest {
@@ -81,29 +82,28 @@ func (s *DisableConnectionFailoverRequest) WithToAccounts(ToAccounts ToAccountsR
 	return s
 }
 
-func NewToAccountsRequest() *ToAccountsRequest {
-	return &ToAccountsRequest{}
-}
-
-func (s *ToAccountsRequest) WithAccounts(Accounts []AccountIdentifier) *ToAccountsRequest {
+func NewToAccountsRequest(
+	Accounts []AccountIdentifier,
+) *ToAccountsRequest {
+	s := ToAccountsRequest{}
 	s.Accounts = Accounts
-	return s
+	return &s
 }
 
-func NewSetRequest() *SetRequest {
-	return &SetRequest{}
+func NewConnectionSetRequest() *ConnectionSetRequest {
+	return &ConnectionSetRequest{}
 }
 
-func (s *SetRequest) WithComment(Comment string) *SetRequest {
+func (s *ConnectionSetRequest) WithComment(Comment string) *ConnectionSetRequest {
 	s.Comment = &Comment
 	return s
 }
 
-func NewUnsetRequest() *UnsetRequest {
-	return &UnsetRequest{}
+func NewConnectionUnsetRequest() *ConnectionUnsetRequest {
+	return &ConnectionUnsetRequest{}
 }
 
-func (s *UnsetRequest) WithComment(Comment bool) *UnsetRequest {
+func (s *ConnectionUnsetRequest) WithComment(Comment bool) *ConnectionUnsetRequest {
 	s.Comment = &Comment
 	return s
 }

@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"log"
 	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -53,14 +54,9 @@ func (r *CreateConnectionRequest) toOpts() *CreateConnectionOptions {
 	opts := &CreateConnectionOptions{
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
-
-		Comment: r.Comment,
+		AsReplicaOf: r.AsReplicaOf,
+		Comment:     r.Comment,
 	}
-
-	if r.AsReplicaOf != nil {
-		opts.AsReplicaOf = r.AsReplicaOf
-	}
-
 	return opts
 }
 
@@ -88,13 +84,13 @@ func (r *AlterConnectionRequest) toOpts() *AlterConnectionOptions {
 	}
 
 	if r.Set != nil {
-		opts.Set = &Set{
+		opts.Set = &ConnectionSet{
 			Comment: r.Set.Comment,
 		}
 	}
 
 	if r.Unset != nil {
-		opts.Unset = &Unset{
+		opts.Unset = &ConnectionUnset{
 			Comment: r.Unset.Comment,
 		}
 	}
@@ -119,18 +115,35 @@ func (r *ShowConnectionRequest) toOpts() *ShowConnectionOptions {
 
 func (r connectionRow) convert() *Connection {
 	c := &Connection{
-		SnowflakeRegion:           r.SnowflakeRegion,
-		CreatedOn:                 r.CreatedOn,
-		AccountName:               r.AccountName,
-		Name:                      r.Name,
-		Primary:                   r.Primary,
-		FailoverAllowedToAccounts: ParseCommaSeparatedStringArray(r.FailoverAllowedToAccounts, false),
-		ConnectionUrl:             r.ConnectionUrl,
-		OrganizationName:          r.OrganizationName,
-		AccountLocator:            r.AccountLocator,
+		SnowflakeRegion:  r.SnowflakeRegion,
+		CreatedOn:        r.CreatedOn,
+		AccountName:      r.AccountName,
+		Name:             r.Name,
+		ConnectionUrl:    r.ConnectionUrl,
+		OrganizationName: r.OrganizationName,
+		AccountLocator:   r.AccountLocator,
 	}
-	b, _ := strconv.ParseBool(r.IsPrimary)
-	c.IsPrimary = b
+
+	parsedIsPrimary, err := strconv.ParseBool(r.IsPrimary)
+	if err != nil {
+		log.Printf("unable to parse bool is_primary for connection: %v, err = %s", r.IsPrimary, err)
+	} else {
+		c.IsPrimary = parsedIsPrimary
+	}
+
+	primaryExternalId, err := ParseExternalObjectIdentifier(r.Primary)
+	if err != nil {
+		log.Printf("unable to parse primary connection external identifier: %v, err = %s", r.Primary, err)
+	} else {
+		c.Primary = primaryExternalId
+	}
+
+	if allowedToAccounts, err := ParseCommaSeparatedAccountIdentifierArray(r.FailoverAllowedToAccounts); err != nil {
+		log.Printf("unable to parse account identifier list for 'enable failover to accounts': %s, err = %v", r.FailoverAllowedToAccounts, err)
+	} else {
+		c.FailoverAllowedToAccounts = allowedToAccounts
+	}
+
 	if r.Comment.Valid {
 		c.Comment = String(r.Comment.String)
 	}
