@@ -56,7 +56,7 @@ func SecondaryConnection() *schema.Resource {
 		ReadContext:   ReadContextSecondaryConnection,
 		UpdateContext: UpdateContextSecondaryConnection,
 		DeleteContext: DeleteContextSecondaryConnection,
-		Description:   "Resource used to manage secondary connections. To promote secondary connection to primary check [migraton guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#connection-resources). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
+		Description:   "Resource used to manage secondary (replicated) connections. To manage primary connection check resource [sonwflake_primary_connection](). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
 
 		CustomizeDiff: customdiff.All(
 			ComputedIfAnyAttributeChanged(secondaryConnectionSchema, ShowOutputAttributeName, "comment", "is_primary", "failover_allowed_to_accounts"),

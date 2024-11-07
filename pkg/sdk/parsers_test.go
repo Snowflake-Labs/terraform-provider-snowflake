@@ -168,6 +168,68 @@ func TestParseCommaSeparatedSchemaObjectIdentifierArray(t *testing.T) {
 	}
 }
 
+func TestParseCommaSeparatedAccountIdentifierArray(t *testing.T) {
+	testCases := []struct {
+		Name   string
+		Value  string
+		Result []AccountIdentifier
+	}{
+		{
+			Name:   "empty list",
+			Value:  "[]",
+			Result: []AccountIdentifier{},
+		},
+		{
+			Name:   "empty string",
+			Value:  "",
+			Result: []AccountIdentifier{},
+		},
+		{
+			Name:   "one element in list",
+			Value:  "[A.B]",
+			Result: []AccountIdentifier{NewAccountIdentifier("A", "B")},
+		},
+		{
+			Name:   "one element in list - with mixed cases",
+			Value:  `[A."b"]`,
+			Result: []AccountIdentifier{NewAccountIdentifier("A", "b")},
+		},
+		{
+			Name:   "multiple elements in list",
+			Value:  "[A.B, C.D]",
+			Result: []AccountIdentifier{NewAccountIdentifier("A", "B"), NewAccountIdentifier("C", "D")},
+		},
+		{
+			Name:   "multiple elements in list - with mixed cases",
+			Value:  `[A."b", "c"."d"]`,
+			Result: []AccountIdentifier{NewAccountIdentifier("A", "b"), NewAccountIdentifier("c", "d")},
+		},
+		{
+			Name:   "multiple elements in list - packed",
+			Value:  "[A.B,C.D]",
+			Result: []AccountIdentifier{NewAccountIdentifier("A", "B"), NewAccountIdentifier("C", "D")},
+		},
+		{
+			Name:   "multiple elements in list - additional spaces",
+			Value:  "[A.B,     	 C.D]",
+			Result: []AccountIdentifier{NewAccountIdentifier("A", "B"), NewAccountIdentifier("C", "D")},
+		},
+		{
+			Name:   "list without brackets",
+			Value:  "A.B, C.D",
+			Result: []AccountIdentifier{NewAccountIdentifier("A", "B"), NewAccountIdentifier("C", "D")},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			ids, err := ParseCommaSeparatedAccountIdentifierArray(tc.Value)
+			require.NoError(t, err)
+			require.Equal(t, tc.Result, ids)
+		})
+	}
+}
+
 func TestParseCommaSeparatedSchemaObjectIdentifierArray_Invalid(t *testing.T) {
 	testCases := []struct {
 		Name  string
