@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -24,7 +25,7 @@ var secretGenericStringSchema = func() map[string]*schema.Schema {
 			Description: externalChangesNotDetectedFieldDescription("Specifies the string to store in the secret. The string can be an API token or a string of sensitive value that can be used in the handler code of a UDF or stored procedure. For details, see [Creating and using an external access integration](https://docs.snowflake.com/en/developer-guide/external-network-access/creating-using-external-network-access). You should not use this property to store any kind of OAuth token; use one of the other secret types for your OAuth use cases."),
 		},
 	}
-	return helpers.MergeMaps(secretCommonSchema, secretGenericString)
+	return collections.MergeMaps(secretCommonSchema, secretGenericString)
 }()
 
 func SecretWithGenericString() *schema.Resource {

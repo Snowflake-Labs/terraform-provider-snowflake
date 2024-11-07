@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -52,7 +52,7 @@ func init() {
 			Optional:    true,
 		}
 	}
-	schemaParametersSchema = helpers.MergeMaps(databaseParametersSchema, additionalSchemaParameters)
+	schemaParametersSchema = collections.MergeMaps(databaseParametersSchema, additionalSchemaParameters)
 }
 
 func schemaParametersProvider(ctx context.Context, d ResourceIdProvider, meta any) ([]*sdk.Parameter, error) {

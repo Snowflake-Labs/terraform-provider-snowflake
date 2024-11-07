@@ -17,6 +17,8 @@ Coverage is focused on part of Snowflake related to access control.
 
 ## Example Provider Configuration
 
+This is an example configuration of the provider in `main.tf` in a configuration directory. More examples are provided [below](#order-precedence).
+
 {{tffile "examples/provider/provider.tf"}}
 
 ## Configuration Schema
@@ -36,7 +38,7 @@ The Snowflake provider support multiple ways to authenticate:
 * Private Key
 * Config File
 
-In all cases account and username are required.
+In all cases `organization_name`, `account_name` and `user` are required.
 
 ### Keypair Authentication Environment Variables
 
@@ -113,30 +115,72 @@ export SNOWFLAKE_USER='...'
 export SNOWFLAKE_PASSWORD='...'
 ```
 
-### Config File
-
-If you choose to use a config file, the optional `profile` attribute specifies the profile to use from the config file. If no profile is specified, the default profile is used. The Snowflake config file lives at `~/.snowflake/config` and uses [TOML](https://toml.io/) format. You can override this location by setting the `SNOWFLAKE_CONFIG_PATH` environment variable. If no username and account are specified, the provider will fall back to reading the config file.
-
-```shell
-[default]
-account='TESTACCOUNT'
-user='TEST_USER'
-password='hunter2'
-role='ACCOUNTADMIN'
-
-[securityadmin]
-account='TESTACCOUNT'
-user='TEST_USER'
-password='hunter2'
-role='SECURITYADMIN'
-```
-
 ## Order Precedence
 
-The Snowflake provider will use the following order of precedence when determining which credentials to use:
-1) Provider Configuration
-2) Environment Variables
-3) Config File
+Currently, the provider can be configured in three ways:
+1. In a Terraform file located in the Terraform module with other resources.
+
+Example content of the Terraform file configuration:
+
+```terraform
+provider "snowflake" {
+    organization_name = "..."
+    account_name = "..."
+    username = "..."
+    password = "..."
+}
+```
+
+2. In environmental variables (envs). This is mainly used to provide sensitive values.
+
+
+```bash
+export SNOWFLAKE_USER="..."
+export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
+```
+
+3. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field. When this is not specified, `default` profile is loaded.
+When a `default` profile is not present in the TOML file, it is treated as "empty", without failing.
+
+Example content of the Terraform file configuration:
+
+```terraform
+provider "snowflake" {
+    profile = "default"
+}
+```
+
+Example content of the TOML file configuration:
+
+```toml
+[default]
+organizationname='organization_name'
+accountname='account_name'
+user='user'
+password='password'
+role='ACCOUNTADMIN'
+
+[secondary_test_account]
+organizationname='organization_name'
+accountname='account2_name'
+user='user'
+password='password'
+role='ACCOUNTADMIN'
+```
+
+Not all fields must be configured in one source; users can choose which fields are configured in which source.
+Provider uses an established hierarchy of sources. The current behavior is that for each field:
+1. Check if it is present in the provider configuration. If yes, use this value. If not, go to step 2.
+1. Check if it is present in the environment variables. If yes, use this value. If not, go to step 3.
+1. Check if it is present in the TOML config file (specifically, use the profile name configured in one of the steps above). If yes, use this value. If not, the value is considered empty.
+
+An example TOML file contents:
+
+{{ codefile "toml" "examples/additional/provider_config_toml.MD" | trimspace }}
+
+An example terraform configuration file equivalent:
+
+{{ codefile "terraform" "examples/additional/provider_config_tf.MD" | trimspace }}
 
 {{ index (split (codefile "" "examples/additional/deprecated_resources.MD") "```") 1 | trimspace }}
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -37,7 +38,7 @@ var streamOnExternalTableSchema = func() map[string]*schema.Schema {
 		AtAttributeName:     atSchema,
 		BeforeAttributeName: beforeSchema,
 	}
-	return helpers.MergeMaps(streamCommonSchema, streamOnExternalTable)
+	return collections.MergeMaps(streamCommonSchema, streamOnExternalTable)
 }()
 
 func StreamOnExternalTable() *schema.Resource {
