@@ -3,13 +3,12 @@ package objectassert
 import (
 	"fmt"
 	"slices"
-	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-func (c *ConnectionAssert) HasFailoverAllowedToAccounts(expected []string) *ConnectionAssert {
+func (c *ConnectionAssert) HasFailoverAllowedToAccounts(expected ...sdk.AccountIdentifier) *ConnectionAssert {
 	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
 		t.Helper()
 		if !slices.Equal(expected, o.FailoverAllowedToAccounts) {
@@ -46,9 +45,8 @@ func (c *ConnectionAssert) HasConnectionUrlNotEmpty() *ConnectionAssert {
 func (c *ConnectionAssert) HasPrimaryIdentifier(expected sdk.ExternalObjectIdentifier) *ConnectionAssert {
 	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
 		t.Helper()
-		expectedString := strings.ReplaceAll(expected.FullyQualifiedName(), `"`, "")
-		if o.Primary != expectedString {
-			return fmt.Errorf("expected primary identifier: %v; got: %v", expectedString, o.Primary)
+		if o.Primary != expected {
+			return fmt.Errorf("expected primary identifier: %v; got: %v", expected.FullyQualifiedName(), o.Primary)
 		}
 		return nil
 	})

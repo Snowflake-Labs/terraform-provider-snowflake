@@ -33,8 +33,8 @@ type AlterConnectionOptions struct {
 	EnableConnectionFailover  *EnableConnectionFailover  `ddl:"keyword" sql:"ENABLE FAILOVER TO ACCOUNTS"`
 	DisableConnectionFailover *DisableConnectionFailover `ddl:"keyword" sql:"DISABLE FAILOVER"`
 	Primary                   *bool                      `ddl:"keyword" sql:"PRIMARY"`
-	Set                       *Set                       `ddl:"keyword" sql:"SET"`
-	Unset                     *Unset                     `ddl:"keyword" sql:"UNSET"`
+	Set                       *ConnectionSet             `ddl:"keyword" sql:"SET"`
+	Unset                     *ConnectionUnset           `ddl:"keyword" sql:"UNSET"`
 }
 type EnableConnectionFailover struct {
 	ToAccounts []AccountIdentifier `ddl:"list,no_parentheses"`
@@ -45,10 +45,10 @@ type DisableConnectionFailover struct {
 type ToAccounts struct {
 	Accounts []AccountIdentifier `ddl:"list,no_parentheses"`
 }
-type Set struct {
+type ConnectionSet struct {
 	Comment *string `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
-type Unset struct {
+type ConnectionUnset struct {
 	Comment *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
@@ -88,8 +88,8 @@ type Connection struct {
 	Name                      string
 	Comment                   *string
 	IsPrimary                 bool
-	Primary                   string
-	FailoverAllowedToAccounts []string
+	Primary                   ExternalObjectIdentifier
+	FailoverAllowedToAccounts []AccountIdentifier
 	ConnectionUrl             string
 	OrganizationName          string
 	AccountLocator            string
