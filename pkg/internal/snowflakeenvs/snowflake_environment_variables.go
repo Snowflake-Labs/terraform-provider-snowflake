@@ -2,6 +2,8 @@ package snowflakeenvs
 
 const (
 	Account                   = "SNOWFLAKE_ACCOUNT"
+	AccountName               = "SNOWFLAKE_ACCOUNT_NAME"
+	OrganizationName          = "SNOWFLAKE_ORGANIZATION_NAME"
 	User                      = "SNOWFLAKE_USER"
 	Username                  = "SNOWFLAKE_USERNAME"
 	Password                  = "SNOWFLAKE_PASSWORD"
@@ -41,9 +43,12 @@ const (
 	DisableQueryContextCache       = "SNOWFLAKE_DISABLE_QUERY_CONTEXT_CACHE"
 	IncludeRetryReason             = "SNOWFLAKE_INCLUDE_RETRY_REASON"
 	Profile                        = "SNOWFLAKE_PROFILE"
+	MaxRetryCount                  = "SNOWFLAKE_MAX_RETRY_COUNT"
+	DriverTracing                  = "SNOWFLAKE_DRIVER_TRACING"
+	TmpDirectoryPath               = "SNOWFLAKE_TMP_DIRECTORY_PATH"
+	DisableConsoleLogin            = "SNOWFLAKE_DISABLE_CONSOLE_LOGIN"
 
 	ConfigPath = "SNOWFLAKE_CONFIG_PATH"
 
-	NoInstrumentedSql   = "SF_TF_NO_INSTRUMENTED_SQL"
-	GosnowflakeLogLevel = "SF_TF_GOSNOWFLAKE_LOG_LEVEL"
+	NoInstrumentedSql = "SF_TF_NO_INSTRUMENTED_SQL"
 )

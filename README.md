@@ -77,7 +77,7 @@ Some links that might help you:
 - The [issues section](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues) might already have an issue addressing your question.
 
 ## Would you like to create an issue?
-If you would like to create a GitHub issue, please read our [guide](./CREATING_ISSUES.md) first. 
+If you would like to create a GitHub issue, please read our [guide](./CREATING_ISSUES.md) first.
 It contains useful links, FAQ, and commonly known issues with solutions that may already solve your case.
 
 ## Additional debug logs for `snowflake_grant_privileges_to_role` resource
@@ -89,17 +89,17 @@ Set environment variable `SF_TF_ADDITIONAL_DEBUG_LOGGING` to a non-empty value. 
 ## Additional SQL Client configuration
 Currently underlying sql [gosnowflake](https://github.com/snowflakedb/gosnowflake) driver is wrapped with [instrumentedsql](https://github.com/luna-duclos/instrumentedsql). In order to use raw [gosnowflake](https://github.com/snowflakedb/gosnowflake) driver, set environment variable `SF_TF_NO_INSTRUMENTED_SQL` to a non-empty value.
 
-By default, the underlying driver is set to error level logging. It can be changed by setting `SF_TF_GOSNOWFLAKE_LOG_LEVEL` to one of:
-- `panic`
-- `fatal`
-- `error`
-- `warn`
-- `warning`
-- `info`
-- `debug`
+By default, the underlying driver is set to error level logging. It can be changed by setting `driver_tracing` field in the configuration to one of (from most to least verbose):
 - `trace`
+- `debug`
+- `info`
+- `print`
+- `warning`
+- `error`
+- `fatal`
+- `panic`
 
-*note*: It's possible it will be one of the provider config parameters in the future provider versions.
+Read more in [provider configuration docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#schema).
 
 ## Contributing
 

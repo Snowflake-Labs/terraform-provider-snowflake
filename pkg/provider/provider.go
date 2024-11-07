@@ -8,10 +8,8 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
@@ -22,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -49,11 +48,19 @@ func init() {
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"account": {
-				Type:        schema.TypeString,
-				Description: envNameFieldDescription("Specifies your Snowflake account identifier assigned, by Snowflake. The [account locator](https://docs.snowflake.com/en/user-guide/admin-account-identifier#format-2-account-locator-in-a-region) format is not supported. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). Required unless using `profile`.", snowflakeenvs.Account),
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Account, nil),
+			"account_name": {
+				Type:         schema.TypeString,
+				Description:  envNameFieldDescription("Specifies your Snowflake account name assigned by Snowflake. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier#account-name). Required unless using `profile`.", snowflakeenvs.AccountName),
+				Optional:     true,
+				DefaultFunc:  schema.EnvDefaultFunc(snowflakeenvs.AccountName, nil),
+				RequiredWith: []string{"account_name", "organization_name"},
+			},
+			"organization_name": {
+				Type:         schema.TypeString,
+				Description:  envNameFieldDescription("Specifies your Snowflake organization name assigned by Snowflake. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier#organization-name). Required unless using `profile`.", snowflakeenvs.OrganizationName),
+				Optional:     true,
+				DefaultFunc:  schema.EnvDefaultFunc(snowflakeenvs.OrganizationName, nil),
+				RequiredWith: []string{"account_name", "organization_name"},
 			},
 			"user": {
 				Type:             schema.TypeString,
@@ -64,7 +71,7 @@ func Provider() *schema.Provider {
 			},
 			"password": {
 				Type:          schema.TypeString,
-				Description:   envNameFieldDescription("Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`.", snowflakeenvs.Password),
+				Description:   envNameFieldDescription("Password for user + password auth. Cannot be used with `browser_auth` or `private_key_path`.", snowflakeenvs.Password),
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.Password, nil),
@@ -91,9 +98,10 @@ func Provider() *schema.Provider {
 				ValidateDiagFunc: validators.ValidateBooleanStringWithDefault,
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.ValidateDefaultParameters, provider.BooleanDefault),
 			},
+			// TODO(SNOW-999056): optionally rename to session_params
 			"params": {
 				Type:        schema.TypeMap,
-				Description: "Sets other connection (i.e. session) parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters)",
+				Description: "Sets other connection (i.e. session) parameters. [Parameters](https://docs.snowflake.com/en/sql-reference/parameters). This field can not be set with environmental variables.",
 				Optional:    true,
 			},
 			"client_ip": {
@@ -125,10 +133,10 @@ func Provider() *schema.Provider {
 			},
 			"authenticator": {
 				Type:             schema.TypeString,
-				Description:      envNameFieldDescription("Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid values include: Snowflake, OAuth, ExternalBrowser, Okta, JWT, TokenAccessor, UsernamePasswordMFA. It has to be set explicitly to JWT for private key authentication.", snowflakeenvs.Authenticator),
+				Description:      envNameFieldDescription(fmt.Sprintf("Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid options are: %v. Value `JWT` is deprecated and will be removed in future releases.", docs.PossibleValuesListed(sdk.AllAuthenticationTypes)), snowflakeenvs.Authenticator),
 				Optional:         true,
-				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Authenticator, string(authenticationTypeSnowflake)),
-				ValidateDiagFunc: validators.NormalizeValidation(toAuthenticatorType),
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Authenticator, string(sdk.AuthenticationTypeSnowflake)),
+				ValidateDiagFunc: validators.NormalizeValidation(sdk.ToAuthenticatorType),
 			},
 			"passcode": {
 				Type:          schema.TypeString,
@@ -146,7 +154,7 @@ func Provider() *schema.Provider {
 			},
 			"okta_url": {
 				Type:             schema.TypeString,
-				Description:      envNameFieldDescription("The URL of the Okta server. e.g. https://example.okta.com.", snowflakeenvs.OktaUrl),
+				Description:      envNameFieldDescription("The URL of the Okta server. e.g. https://example.okta.com. Okta URL host needs to to have a suffix `okta.com`. Read more in Snowflake [docs](https://docs.snowflake.com/en/user-guide/oauth-okta).", snowflakeenvs.OktaUrl),
 				Optional:         true,
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.OktaUrl, nil),
 				ValidateDiagFunc: validation.ToDiagFunc(validation.IsURLWithHTTPorHTTPS),
@@ -306,6 +314,41 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.DisableQueryContextCache, nil),
 			},
+			"include_retry_reason": {
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("Should retried request contain retry reason.", snowflakeenvs.IncludeRetryReason),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.IncludeRetryReason, resources.BooleanDefault),
+				ValidateDiagFunc: validators.ValidateBooleanStringWithDefault,
+			},
+			"max_retry_count": {
+				Type:             schema.TypeInt,
+				Description:      envNameFieldDescription("Specifies how many times non-periodic HTTP request can be retried by the driver.", snowflakeenvs.MaxRetryCount),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.MaxRetryCount, nil),
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+			},
+			"driver_tracing": {
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription(fmt.Sprintf("Specifies the logging level to be used by the driver. Valid options are: %v.", docs.PossibleValuesListed(allDriverLogLevels)), snowflakeenvs.DriverTracing),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.DriverTracing, nil),
+				ValidateDiagFunc: validators.NormalizeValidation(toDriverLogLevel),
+			},
+			"tmp_directory_path": {
+				Type:        schema.TypeString,
+				Description: envNameFieldDescription("Sets temporary directory used by the driver for operations like encrypting, compressing etc.", snowflakeenvs.TmpDirectoryPath),
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.TmpDirectoryPath, nil),
+			},
+			"disable_console_login": {
+				Type:             schema.TypeString,
+				Description:      envNameFieldDescription("Indicates whether console login should be disabled in the driver.", snowflakeenvs.DisableConsoleLogin),
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.DisableConsoleLogin, resources.BooleanDefault),
+				ValidateDiagFunc: validators.ValidateBooleanStringWithDefault,
+			},
+			// TODO(SNOW-1761318): handle DisableSamlURLCheck after upgrading the driver to at least 1.10.1
 			"profile": {
 				Type: schema.TypeString,
 				// TODO(SNOW-1754364): Note that a default file path is already filled on sdk side.
@@ -314,9 +357,16 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Profile, "default"),
 			},
 			// Deprecated attributes
+			"account": {
+				Type:        schema.TypeString,
+				Description: envNameFieldDescription("Use `account_name` and `organization_name` instead. Specifies your Snowflake account identifier assigned, by Snowflake. The [account locator](https://docs.snowflake.com/en/user-guide/admin-account-identifier#format-2-account-locator-in-a-region) format is not supported. For information about account identifiers, see the [Snowflake documentation](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html). Required unless using `profile`.", snowflakeenvs.Account),
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Account, nil),
+				Deprecated:  "Use `account_name` and `organization_name` instead of `account`",
+			},
 			"username": {
 				Type:        schema.TypeString,
-				Description: envNameFieldDescription("Username for username+password authentication. Required unless using `profile`.", snowflakeenvs.Username),
+				Description: envNameFieldDescription("Username for user + password authentication. Required unless using `profile`.", snowflakeenvs.Username),
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Username, nil),
 				Deprecated:  "Use `user` instead of `username`",
@@ -582,49 +632,185 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		}
 	}
 
+	config, err := getDriverConfigFromTerraform(s)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+
+	if v, ok := s.GetOk("profile"); ok && v.(string) != "" {
+		tomlConfig, err := getDriverConfigFromTOML(v.(string))
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+		config = sdk.MergeConfig(config, tomlConfig)
+	}
+
+	client, clientErr := sdk.NewClient(config)
+
+	// needed for tests verifying different provider setups
+	if os.Getenv(resource.EnvTfAcc) != "" && os.Getenv(string(testenvs.ConfigureClientOnce)) == "true" {
+		configuredClient = client
+		configureClientError = clientErr
+	} else {
+		configuredClient = nil
+		configureClientError = nil
+	}
+
+	if clientErr != nil {
+		return nil, diag.FromErr(clientErr)
+	}
+
+	return &provider.Context{Client: client}, nil
+}
+
+func getDriverConfigFromTOML(profile string) (*gosnowflake.Config, error) {
+	if profile == "default" {
+		return sdk.DefaultConfig(), nil
+	}
+	path, err := sdk.GetConfigFileName()
+	if err != nil {
+		return nil, err
+	}
+
+	profileConfig, err := sdk.ProfileConfig(profile)
+	if err != nil {
+		return nil, fmt.Errorf(`could not retrieve "%s" profile config from file %s: %w`, profile, path, err)
+	}
+	if profileConfig == nil {
+		return nil, fmt.Errorf(`profile "%s" not found in file %s`, profile, path)
+	}
+	return profileConfig, nil
+}
+
+func getDriverConfigFromTerraform(s *schema.ResourceData) (*gosnowflake.Config, error) {
 	config := &gosnowflake.Config{
 		Application: "terraform-provider-snowflake",
 	}
 
-	if v, ok := s.GetOk("account"); ok && v.(string) != "" {
-		config.Account = v.(string)
+	err := errors.Join(
+		// account_name and organization_name are handled below
+		handleStringField(s, "user", &config.User),
+		handleStringField(s, "password", &config.Password),
+		handleStringField(s, "warehouse", &config.Warehouse),
+		handleStringField(s, "role", &config.Role),
+		handleBooleanStringAttribute(s, "validate_default_parameters", &config.ValidateDefaultParameters),
+		// params are handled below
+		// client ip
+		func() error {
+			if v, ok := s.GetOk("client_ip"); ok && v.(string) != "" {
+				config.ClientIP = net.ParseIP(v.(string))
+			}
+			return nil
+		}(),
+		// protocol
+		func() error {
+			if v, ok := s.GetOk("protocol"); ok && v.(string) != "" {
+				protocol, err := toProtocol(v.(string))
+				if err != nil {
+					return err
+				}
+				config.Protocol = string(protocol)
+			}
+			return nil
+		}(),
+		handleStringField(s, "host", &config.Host),
+		handleIntAttribute(s, "port", &config.Port),
+		// authenticator
+		func() error {
+			if v, ok := s.GetOk("authenticator"); ok && v.(string) != "" {
+				authType, err := sdk.ToAuthenticatorType(v.(string))
+				if err != nil {
+					return err
+				}
+				config.Authenticator = authType
+			}
+			return nil
+		}(),
+		handleStringField(s, "passcode", &config.Passcode),
+		handleBoolField(s, "passcode_in_password", &config.PasscodeInPassword),
+		// okta url
+		func() error {
+			if v, ok := s.GetOk("okta_url"); ok && v.(string) != "" {
+				oktaURL, err := url.Parse(v.(string))
+				if err != nil {
+					return fmt.Errorf("could not parse okta_url err = %w", err)
+				}
+				config.OktaURL = oktaURL
+			}
+			return nil
+		}(),
+		handleDurationInSecondsAttribute(s, "login_timeout", &config.LoginTimeout),
+		handleDurationInSecondsAttribute(s, "request_timeout", &config.RequestTimeout),
+		handleDurationInSecondsAttribute(s, "jwt_expire_timeout", &config.JWTExpireTimeout),
+		handleDurationInSecondsAttribute(s, "client_timeout", &config.ClientTimeout),
+		handleDurationInSecondsAttribute(s, "jwt_client_timeout", &config.JWTClientTimeout),
+		handleDurationInSecondsAttribute(s, "external_browser_timeout", &config.ExternalBrowserTimeout),
+		handleBoolField(s, "insecure_mode", &config.InsecureMode),
+		// ocsp fail open
+		func() error {
+			if v := s.Get("ocsp_fail_open").(string); v != provider.BooleanDefault {
+				parsed, err := provider.BooleanStringToBool(v)
+				if err != nil {
+					return err
+				}
+				if parsed {
+					config.OCSPFailOpen = gosnowflake.OCSPFailOpenTrue
+				} else {
+					config.OCSPFailOpen = gosnowflake.OCSPFailOpenFalse
+				}
+			}
+			return nil
+		}(),
+		// token
+		func() error {
+			if v, ok := s.GetOk("token"); ok && v.(string) != "" {
+				config.Token = v.(string)
+				config.Authenticator = gosnowflake.AuthTypeOAuth
+			}
+			return nil
+		}(),
+		// token accessor is handled below
+		handleBoolField(s, "keep_session_alive", &config.KeepSessionAlive),
+		// private key and private key passphrase are handled below
+		handleBoolField(s, "disable_telemetry", &config.DisableTelemetry),
+		handleBooleanStringAttribute(s, "client_request_mfa_token", &config.ClientRequestMfaToken),
+		handleBooleanStringAttribute(s, "client_store_temporary_credential", &config.ClientStoreTemporaryCredential),
+		handleBoolField(s, "disable_query_context_cache", &config.DisableQueryContextCache),
+		handleBooleanStringAttribute(s, "include_retry_reason", &config.IncludeRetryReason),
+		handleIntAttribute(s, "max_retry_count", &config.MaxRetryCount),
+		// driver tracing
+		func() error {
+			if v, ok := s.GetOk("driver_tracing"); ok {
+				driverLogLevel, err := toDriverLogLevel(v.(string))
+				if err != nil {
+					return err
+				}
+				config.Tracing = string(driverLogLevel)
+			}
+			return nil
+		}(),
+		handleStringField(s, "tmp_directory_path", &config.TmpDirPath),
+		handleBooleanStringAttribute(s, "disable_console_login", &config.DisableConsoleLogin),
+		// profile is handled in the calling function
+		// TODO(SNOW-1761318): handle DisableSamlURLCheck after upgrading the driver to at least 1.10.1
+
+		// deprecated
+		handleStringField(s, "account", &config.Account),
+		handleStringField(s, "username", &config.User),
+		handleStringField(s, "region", &config.Region),
+		// session params are handled below
+		// browser auth is handled below
+		// private key path is handled below
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	// backwards compatibility until we can remove this
-	if v, ok := s.GetOk("username"); ok && v.(string) != "" {
-		config.User = v.(string)
-	}
-
-	if v, ok := s.GetOk("user"); ok && v.(string) != "" {
-		config.User = v.(string)
-	}
-
-	if v, ok := s.GetOk("password"); ok && v.(string) != "" {
-		config.Password = v.(string)
-	}
-
-	if v, ok := s.GetOk("warehouse"); ok && v.(string) != "" {
-		config.Warehouse = v.(string)
-	}
-
-	if v, ok := s.GetOk("role"); ok && v.(string) != "" {
-		config.Role = v.(string)
-	}
-
-	if v, ok := s.GetOk("region"); ok && v.(string) != "" {
-		config.Region = v.(string)
-	}
-
-	if v := s.Get("validate_default_parameters").(string); v != provider.BooleanDefault {
-		parsed, err := provider.BooleanStringToBool(v)
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-		if parsed {
-			config.ValidateDefaultParameters = gosnowflake.ConfigBoolTrue
-		} else {
-			config.ValidateDefaultParameters = gosnowflake.ConfigBoolFalse
-		}
+	// account_name and organization_name override legacy account field
+	accountName := s.Get("account_name").(string)
+	organizationName := s.Get("organization_name").(string)
+	if accountName != "" && organizationName != "" {
+		config.Account = strings.Join([]string{organizationName, accountName}, "-")
 	}
 
 	m := make(map[string]interface{})
@@ -644,98 +830,14 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 	}
 	config.Params = params
 
-	if v, ok := s.GetOk("client_ip"); ok && v.(string) != "" {
-		config.ClientIP = net.ParseIP(v.(string))
-	}
-
-	if v, ok := s.GetOk("protocol"); ok && v.(string) != "" {
-		config.Protocol = v.(string)
-	}
-
-	if v, ok := s.GetOk("host"); ok && v.(string) != "" {
-		config.Host = v.(string)
-	}
-
-	if v, ok := s.GetOk("port"); ok && v.(int) > 0 {
-		config.Port = v.(int)
-	}
-
 	// backwards compatibility until we can remove this
 	if v, ok := s.GetOk("browser_auth"); ok && v.(bool) {
 		config.Authenticator = gosnowflake.AuthTypeExternalBrowser
 	}
 
-	if v, ok := s.GetOk("authenticator"); ok && v.(string) != "" {
-		authType, err := toAuthenticatorType(v.(string))
-		if err != nil {
-			return "", diag.FromErr(err)
-		}
-		config.Authenticator = authType
-	}
-
-	if v, ok := s.GetOk("passcode"); ok && v.(string) != "" {
-		config.Passcode = v.(string)
-	}
-
-	if v, ok := s.GetOk("passcode_in_password"); ok && v.(bool) {
-		config.PasscodeInPassword = v.(bool)
-	}
-	if v, ok := s.GetOk("okta_url"); ok && v.(string) != "" {
-		oktaURL, err := url.Parse(v.(string))
-		if err != nil {
-			return nil, diag.FromErr(fmt.Errorf("could not parse okta_url err = %w", err))
-		}
-		config.OktaURL = oktaURL
-	}
-
-	if v, ok := s.GetOk("login_timeout"); ok && v.(int) > 0 {
-		config.LoginTimeout = time.Second * time.Duration(int64(v.(int)))
-	}
-
-	if v, ok := s.GetOk("request_timeout"); ok && v.(int) > 0 {
-		config.RequestTimeout = time.Second * time.Duration(int64(v.(int)))
-	}
-
-	if v, ok := s.GetOk("jwt_expire_timeout"); ok && v.(int) > 0 {
-		config.JWTExpireTimeout = time.Second * time.Duration(int64(v.(int)))
-	}
-
-	if v, ok := s.GetOk("client_timeout"); ok && v.(int) > 0 {
-		config.ClientTimeout = time.Second * time.Duration(int64(v.(int)))
-	}
-
-	if v, ok := s.GetOk("jwt_client_timeout"); ok && v.(int) > 0 {
-		config.JWTClientTimeout = time.Second * time.Duration(int64(v.(int)))
-	}
-
-	if v, ok := s.GetOk("external_browser_timeout"); ok && v.(int) > 0 {
-		config.ExternalBrowserTimeout = time.Second * time.Duration(int64(v.(int)))
-	}
-
-	if v, ok := s.GetOk("insecure_mode"); ok && v.(bool) {
-		config.InsecureMode = v.(bool)
-	}
-
-	if v := s.Get("ocsp_fail_open").(string); v != provider.BooleanDefault {
-		parsed, err := provider.BooleanStringToBool(v)
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-		if parsed {
-			config.OCSPFailOpen = gosnowflake.OCSPFailOpenTrue
-		} else {
-			config.OCSPFailOpen = gosnowflake.OCSPFailOpenFalse
-		}
-	}
-
-	if v, ok := s.GetOk("token"); ok && v.(string) != "" {
-		config.Token = v.(string)
-		config.Authenticator = gosnowflake.AuthTypeOAuth
-	}
-
 	if v, ok := s.GetOk("token_accessor"); ok {
-		if len(v.([]interface{})) > 0 {
-			tokenAccessor := v.([]interface{})[0].(map[string]interface{})
+		if len(v.([]any)) > 0 {
+			tokenAccessor := v.([]any)[0].(map[string]any)
 			tokenEndpoint := tokenAccessor["token_endpoint"].(string)
 			refreshToken := tokenAccessor["refresh_token"].(string)
 			clientID := tokenAccessor["client_id"].(string)
@@ -743,15 +845,11 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 			redirectURI := tokenAccessor["redirect_uri"].(string)
 			accessToken, err := GetAccessTokenWithRefreshToken(tokenEndpoint, clientID, clientSecret, refreshToken, redirectURI)
 			if err != nil {
-				return nil, diag.FromErr(fmt.Errorf("could not retrieve access token from refresh token, err = %w", err))
+				return nil, fmt.Errorf("could not retrieve access token from refresh token, err = %w", err)
 			}
 			config.Token = accessToken
 			config.Authenticator = gosnowflake.AuthTypeOAuth
 		}
-	}
-
-	if v, ok := s.GetOk("keep_session_alive"); ok && v.(bool) {
-		config.KeepSessionAlive = v.(bool)
 	}
 
 	privateKeyPath := s.Get("private_key_path").(string)
@@ -759,76 +857,11 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 	privateKeyPassphrase := s.Get("private_key_passphrase").(string)
 	v, err := getPrivateKey(privateKeyPath, privateKey, privateKeyPassphrase)
 	if err != nil {
-		return nil, diag.FromErr(fmt.Errorf("could not retrieve private key: %w", err))
+		return nil, fmt.Errorf("could not retrieve private key: %w", err)
 	}
 	if v != nil {
 		config.PrivateKey = v
 	}
 
-	if v, ok := s.GetOk("disable_telemetry"); ok && v.(bool) {
-		config.DisableTelemetry = v.(bool)
-	}
-
-	if v := s.Get("client_request_mfa_token").(string); v != provider.BooleanDefault {
-		parsed, err := provider.BooleanStringToBool(v)
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-		if parsed {
-			config.ClientRequestMfaToken = gosnowflake.ConfigBoolTrue
-		} else {
-			config.ClientRequestMfaToken = gosnowflake.ConfigBoolFalse
-		}
-	}
-
-	if v := s.Get("client_store_temporary_credential").(string); v != provider.BooleanDefault {
-		parsed, err := provider.BooleanStringToBool(v)
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-		if parsed {
-			config.ClientStoreTemporaryCredential = gosnowflake.ConfigBoolTrue
-		} else {
-			config.ClientStoreTemporaryCredential = gosnowflake.ConfigBoolFalse
-		}
-	}
-
-	if v, ok := s.GetOk("disable_query_context_cache"); ok && v.(bool) {
-		config.DisableQueryContextCache = v.(bool)
-	}
-
-	if v, ok := s.GetOk("profile"); ok && v.(string) != "" {
-		profile := v.(string)
-		if profile == "default" {
-			defaultConfig := sdk.DefaultConfig()
-			config = sdk.MergeConfig(config, defaultConfig)
-		} else {
-			profileConfig, err := sdk.ProfileConfig(profile)
-			if err != nil {
-				return "", diag.FromErr(errors.New("could not retrieve profile config: " + err.Error()))
-			}
-			if profileConfig == nil {
-				return "", diag.FromErr(errors.New("profile with name: " + profile + " not found in config file"))
-			}
-			// merge any credentials found in profile with config
-			config = sdk.MergeConfig(config, profileConfig)
-		}
-	}
-
-	client, clientErr := sdk.NewClient(config)
-
-	// needed for tests verifying different provider setups
-	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
-		configuredClient = client
-		configureClientError = clientErr
-	} else {
-		configuredClient = nil
-		configureClientError = nil
-	}
-
-	if clientErr != nil {
-		return nil, diag.FromErr(clientErr)
-	}
-
-	return &provider.Context{Client: client}, nil
+	return config, nil
 }

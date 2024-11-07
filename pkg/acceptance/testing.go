@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -196,4 +197,14 @@ func TestClient() *helpers.TestClient {
 
 func SecondaryTestClient() *helpers.TestClient {
 	return atc.secondaryTestClient
+}
+
+// ExternalProviderWithExactVersion returns a map of external providers with an exact version constraint
+func ExternalProviderWithExactVersion(version string) map[string]resource.ExternalProvider {
+	return map[string]resource.ExternalProvider{
+		"snowflake": {
+			VersionConstraint: fmt.Sprintf("=%s", version),
+			Source:            "Snowflake-Labs/snowflake",
+		},
+	}
 }

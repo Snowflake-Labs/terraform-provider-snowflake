@@ -42,7 +42,7 @@ func (f *File) ExportedMethods() Methods {
 	for _, d := range f.fileSrc.Decls {
 		if v, ok := d.(*ast.FuncDecl); ok {
 			name := v.Name.Name
-			if ast.IsExported(name) {
+			if ast.IsExported(name) && v.Recv == nil {
 				allExportedMethods = append(allExportedMethods, *NewMethod(name, f))
 			}
 		}

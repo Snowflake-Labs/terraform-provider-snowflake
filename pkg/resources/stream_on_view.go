@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -44,7 +45,7 @@ var StreamOnViewSchema = func() map[string]*schema.Schema {
 		AtAttributeName:     atSchema,
 		BeforeAttributeName: beforeSchema,
 	}
-	return helpers.MergeMaps(streamCommonSchema, streamOnView)
+	return collections.MergeMaps(streamCommonSchema, streamOnView)
 }()
 
 func StreamOnView() *schema.Resource {
