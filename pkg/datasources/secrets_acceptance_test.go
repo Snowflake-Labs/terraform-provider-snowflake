@@ -42,7 +42,7 @@ func TestAcc_Secrets_WithClientCredentials(t *testing.T) {
 
 	secretModel := model.SecretWithClientCredentials("test", integrationId.Name(), id.DatabaseName(), id.SchemaName(), id.Name(), []string{"username", "test_scope"})
 
-	dataSecretsClientCredentials := accConfig.FromModel(t, secretModel) + secretsData(secretWithClientCredentials)
+	dataSecretsClientCredentials := accConfig.FromModel(t, secretModel) + secretsData(secretWithClientCredentials, id.DatabaseId().FullyQualifiedName())
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -97,7 +97,7 @@ func TestAcc_Secrets_WithAuthorizationCodeGrant(t *testing.T) {
 
 	secretModel := model.SecretWithAuthorizationCodeGrant("test", integrationId.Name(), id.DatabaseName(), id.SchemaName(), id.Name(), "test_token", time.Now().Add(24*time.Hour).Format(time.DateTime)).WithComment("test_comment")
 
-	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithAuthorizationCodeGrant)
+	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithAuthorizationCodeGrant, id.DatabaseId().FullyQualifiedName())
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -138,7 +138,7 @@ func TestAcc_Secrets_WithBasicAuthentication(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	secretModel := model.SecretWithBasicAuthentication("test", id.DatabaseName(), id.Name(), "test_passwd", id.SchemaName(), "test_username")
-	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithBasicAuthentication)
+	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithBasicAuthentication, id.DatabaseId().FullyQualifiedName())
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -179,7 +179,7 @@ func TestAcc_Secrets_WithGenericString(t *testing.T) {
 
 	secretModel := model.SecretWithGenericString("test", id.DatabaseName(), id.Name(), id.SchemaName(), "test_secret_string")
 
-	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithGenericString)
+	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithGenericString, id.DatabaseId().FullyQualifiedName())
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -216,11 +216,14 @@ func TestAcc_Secrets_WithGenericString(t *testing.T) {
 	})
 }
 
-func secretsData(secretResourceName string) string {
+func secretsData(secretResourceName string, inDatabaseName string) string {
 	return fmt.Sprintf(`
     data "snowflake_secrets" "test" {
         depends_on = [%s.test]
-    }`, secretResourceName)
+        in { 
+            database = %s 
+        }
+    }`, secretResourceName, inDatabaseName)
 }
 
 func TestAcc_Secrets_Filtering(t *testing.T) {
