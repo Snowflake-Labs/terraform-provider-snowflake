@@ -406,62 +406,6 @@ func buildOptsForGrantsOn(grantsOn map[string]any) (*sdk.ShowGrantOptions, error
 	return opts, nil
 }
 
-// TODO(SNOW-1229218): Make sdk.ObjectType + string objectName to sdk.ObjectIdentifier mapping available in the sdk (for all object types).
-func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.ObjectIdentifier, error) {
-	switch objectType {
-	case sdk.ObjectTypeComputePool,
-		sdk.ObjectTypeDatabase,
-		sdk.ObjectTypeExternalVolume,
-		sdk.ObjectTypeFailoverGroup,
-		sdk.ObjectTypeIntegration,
-		sdk.ObjectTypeNetworkPolicy,
-		sdk.ObjectTypeReplicationGroup,
-		sdk.ObjectTypeRole,
-		sdk.ObjectTypeUser,
-		sdk.ObjectTypeWarehouse:
-		return sdk.ParseAccountObjectIdentifier(objectName)
-	case sdk.ObjectTypeDatabaseRole,
-		sdk.ObjectTypeSchema:
-		return sdk.ParseDatabaseObjectIdentifier(objectName)
-	case sdk.ObjectTypeAggregationPolicy,
-		sdk.ObjectTypeAlert,
-		sdk.ObjectTypeAuthenticationPolicy,
-		sdk.ObjectTypeDataMetricFunction,
-		sdk.ObjectTypeDynamicTable,
-		sdk.ObjectTypeEventTable,
-		sdk.ObjectTypeExternalTable,
-		sdk.ObjectTypeFileFormat,
-		sdk.ObjectTypeGitRepository,
-		sdk.ObjectTypeHybridTable,
-		sdk.ObjectTypeIcebergTable,
-		sdk.ObjectTypeImageRepository,
-		sdk.ObjectTypeMaterializedView,
-		sdk.ObjectTypeNetworkRule,
-		sdk.ObjectTypePackagesPolicy,
-		sdk.ObjectTypePipe,
-		sdk.ObjectTypeMaskingPolicy,
-		sdk.ObjectTypePasswordPolicy,
-		sdk.ObjectTypeProjectionPolicy,
-		sdk.ObjectTypeRowAccessPolicy,
-		sdk.ObjectTypeSessionPolicy,
-		sdk.ObjectTypeSecret,
-		sdk.ObjectTypeSequence,
-		sdk.ObjectTypeStage,
-		sdk.ObjectTypeStream,
-		sdk.ObjectTypeTable,
-		sdk.ObjectTypeTag,
-		sdk.ObjectTypeTask,
-		sdk.ObjectTypeView:
-		return sdk.ParseSchemaObjectIdentifier(objectName)
-	case sdk.ObjectTypeFunction,
-		sdk.ObjectTypeProcedure,
-		sdk.ObjectTypeExternalFunction:
-		return sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
-	default:
-		return nil, sdk.NewError(fmt.Sprintf("object_type %s is not supported, please create a feature request for the provider if given object_type should be supported", objectType))
-	}
-}
-
 func buildOptsForGrantsTo(grantsTo map[string]any) (*sdk.ShowGrantOptions, error) {
 	opts := new(sdk.ShowGrantOptions)
 

@@ -90,7 +90,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 		containsAll(t, parts, expected)
 	})
 
-	t.Run("returns error when identifier contains closing parenthesis", func(t *testing.T) {
+	t.Run("returns parts correctly when identifier contains closing parenthesis", func(t *testing.T) {
 		input := `"ab)c".def`
 		expected := []string{"ab)c", "def"}
 
@@ -100,7 +100,7 @@ func Test_ParseIdentifierString(t *testing.T) {
 		containsAll(t, parts, expected)
 	})
 
-	t.Run("returns error when identifier contains opening and closing parentheses", func(t *testing.T) {
+	t.Run("returns parts correctly when identifier contains opening and closing parentheses", func(t *testing.T) {
 		input := `"ab()c".def`
 		expected := []string{"ab()c", "def"}
 
