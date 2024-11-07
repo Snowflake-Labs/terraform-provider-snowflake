@@ -12,11 +12,7 @@ import (
 )
 
 var connectionsSchema = map[string]*schema.Schema{
-	"like": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).",
-	},
+	"like": likeSchema,
 	"connections": {
 		Type:        schema.TypeList,
 		Computed:    true,
