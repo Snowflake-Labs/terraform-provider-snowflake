@@ -103,6 +103,7 @@ func TestAcc_GrantAccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourc
 		},
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -115,6 +116,7 @@ func TestAcc_GrantAccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourc
 				),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantAccountRoleBasicConfig(roleName.Name(), parentRoleName.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -164,6 +166,7 @@ func TestAcc_GrantAccountRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -174,6 +177,7 @@ func TestAcc_GrantAccountRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 				Config:      grantAccountRoleBasicConfig(quotedRoleId, quotedParentRoleId),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantAccountRoleBasicConfig(quotedRoleId, quotedParentRoleId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -12,7 +12,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/assert"
 
@@ -165,8 +164,6 @@ func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 }
 
 func TestAcc_Provider_tomlConfig(t *testing.T) {
-	// TODO(SNOW-1752038): unskip
-	t.Skip("Skip because this test needs a TOML config incompatible with older versions, causing tests with ExternalProvider to fail.")
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	user := acc.DefaultConfig(t).User
@@ -239,8 +236,6 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 }
 
 func TestAcc_Provider_envConfig(t *testing.T) {
-	// TODO(SNOW-1752038): unskip
-	t.Skip("Skip because this test needs a TOML config incompatible with older versions, causing tests with ExternalProvider to fail.")
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	user := acc.DefaultConfig(t).User
@@ -352,8 +347,6 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 }
 
 func TestAcc_Provider_tfConfig(t *testing.T) {
-	// TODO(SNOW-1752038): unskip
-	t.Skip("Skip because this test needs a TOML config incompatible with older versions, causing tests with ExternalProvider to fail.")
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	user := acc.DefaultConfig(t).User
@@ -499,19 +492,6 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 // prove we can use tri-value booleans, similarly to the ones in resources
 func TestAcc_Provider_triValueBoolean(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
-	account := acc.DefaultConfig(t).Account
-	user := acc.DefaultConfig(t).User
-	password := acc.DefaultConfig(t).Password
-
-	// Prepare a temporary TOML config that is valid for v0.97.0.
-	// The default TOML is not valid because we set new fields, which is incorrect from v0.97.0's point of view.
-	c := fmt.Sprintf(`
-	[default]
-	account='%s'
-	user='%s'
-	password='%s'
-	`, account, user, password)
-	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -524,9 +504,7 @@ func TestAcc_Provider_triValueBoolean(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					t.Setenv(snowflakeenvs.ConfigPath, configPath)
-				},
+				PreConfig:         acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: acc.ExternalProviderWithExactVersion("0.97.0"),
 				Config:            providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
 			},

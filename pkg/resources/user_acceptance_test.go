@@ -1350,6 +1350,7 @@ func TestAcc_User_migrateFromVersion094_noDefaultSecondaryRolesSet(t *testing.T)
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1363,6 +1364,7 @@ func TestAcc_User_migrateFromVersion094_noDefaultSecondaryRolesSet(t *testing.T)
 				),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1395,6 +1397,7 @@ func TestAcc_User_migrateFromVersion094_defaultSecondaryRolesSet(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1413,6 +1416,7 @@ resource "snowflake_user" "test" {
 				),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, userModelWithOptionAll),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

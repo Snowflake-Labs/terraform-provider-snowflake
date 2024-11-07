@@ -1750,6 +1750,7 @@ func TestAcc_GrantPrivilegesToAccountRole_migrateFromV0941_ensureSmoothUpgradeWi
 		},
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1762,6 +1763,7 @@ func TestAcc_GrantPrivilegesToAccountRole_migrateFromV0941_ensureSmoothUpgradeWi
 				),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantPrivilegesToAccountRoleBasicConfig(accountRoleId.Name(), accountRoleId.Name(), quotedSchemaId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1812,6 +1814,7 @@ func TestAcc_GrantPrivilegesToAccountRole_IdentifierQuotingDiffSuppression(t *te
 		},
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1826,6 +1829,7 @@ func TestAcc_GrantPrivilegesToAccountRole_IdentifierQuotingDiffSuppression(t *te
 				),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantPrivilegesToAccountRoleBasicConfig(accountRoleId.Name(), unquotedAccountRoleId, unquotedSchemaId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1913,6 +1917,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnFutureModels_issue3050(t *testing.T)
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.95.0",
@@ -1923,6 +1928,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnFutureModels_issue3050(t *testing.T)
 				ExpectNonEmptyPlan: true,
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantPrivilegesToAccountRoleOnFutureInDatabaseConfig(accountRoleName, []string{"USAGE"}, sdk.PluralObjectTypeModels, databaseName),
 			},

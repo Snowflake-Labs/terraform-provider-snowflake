@@ -425,6 +425,7 @@ func TestAcc_ScimIntegration_migrateFromVersion092EnabledTrue(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -438,6 +439,7 @@ func TestAcc_ScimIntegration_migrateFromVersion092EnabledTrue(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   scimIntegrationv093(id.Name(), role.Name(), true, sdk.ScimSecurityIntegrationScimClientGeneric),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -473,6 +475,7 @@ func TestAcc_ScimIntegration_migrateFromVersion092EnabledFalse(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -486,6 +489,7 @@ func TestAcc_ScimIntegration_migrateFromVersion092EnabledFalse(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   scimIntegrationv093(id.Name(), role.Name(), false, sdk.ScimSecurityIntegrationScimClientGeneric),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -514,6 +518,7 @@ func TestAcc_ScimIntegration_migrateFromVersion093HandleSyncPassword(t *testing.
 		Steps: []resource.TestStep{
 			// create resource with v0.92
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -547,6 +552,7 @@ func TestAcc_ScimIntegration_migrateFromVersion093HandleSyncPassword(t *testing.
 			},
 			// check with newest version - the value in state was set to boolean default, so there should be no diff
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   scimIntegrationv093(id.Name(), role.Name(), true, sdk.ScimSecurityIntegrationScimClientAzure),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -596,6 +602,7 @@ func TestAcc_ScimIntegration_migrateFromV0941_ensureSmoothUpgradeWithNewResource
 		CheckDestroy: acc.CheckDestroy(t, resources.ScimSecurityIntegration),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -608,6 +615,7 @@ func TestAcc_ScimIntegration_migrateFromV0941_ensureSmoothUpgradeWithNewResource
 				),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   scimIntegrationBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -630,6 +638,7 @@ func TestAcc_ScimIntegration_IdentifierQuotingDiffSuppression(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ScimSecurityIntegration),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -644,6 +653,7 @@ func TestAcc_ScimIntegration_IdentifierQuotingDiffSuppression(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   scimIntegrationBasicConfig(quotedId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

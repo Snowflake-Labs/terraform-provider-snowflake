@@ -207,8 +207,8 @@ resource "snowflake_alert" "test_alert" {
 
 // Can't reproduce the issue, leaving the test for now.
 func TestAcc_Alert_Issue3117(t *testing.T) {
+	// t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix("small caps with spaces")
-
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -217,6 +217,7 @@ func TestAcc_Alert_Issue3117(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Alert),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -229,6 +230,7 @@ func TestAcc_Alert_Issue3117(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                acc.UnsetConfigPathEnv(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   alertIssue3117Config(id, acc.TestClient().Ids.WarehouseId(), "test_alert"),
 				Check: resource.ComposeTestCheckFunc(
