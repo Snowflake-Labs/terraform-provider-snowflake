@@ -27,7 +27,7 @@ func connectionsData() string {
 
 func TestAcc_Connections_Minimal(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+	// _ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -51,6 +51,7 @@ func TestAcc_Connections_Minimal(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_connections.test", "connections.#", "1")),
 					resourceshowoutputassert.ConnectionShowOutput(t, "snowflake_primary_connection.test").
 						HasName(id.Name()).
+						HasCreatedOnNotEmpty().
 						HasSnowflakeRegion(acc.TestClient().Context.CurrentRegion(t)).
 						HasAccountLocator(acc.TestClient().GetAccountLocator()).
 						HasAccountName(accountId.AccountName()).
@@ -98,6 +99,7 @@ func TestAcc_Connections_Complete(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_connections.test", "connections.#", "1")),
 					resourceshowoutputassert.ConnectionShowOutput(t, "snowflake_connection.test").
 						HasName(id.Name()).
+						HasCreatedOnNotEmpty().
 						HasSnowflakeRegion(acc.TestClient().Context.CurrentRegion(t)).
 						HasAccountLocator(acc.TestClient().GetAccountLocator()).
 						HasAccountName(accountId.AccountName()).
