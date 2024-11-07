@@ -2,10 +2,9 @@ package resources_test
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"strings"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
