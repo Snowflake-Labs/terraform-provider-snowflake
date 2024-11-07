@@ -21,6 +21,7 @@ var (
 
 func init() {
 	instrumentedSQL = os.Getenv(snowflakeenvs.NoInstrumentedSql) == ""
+	gosnowflakeLoggingLevel = os.Getenv(snowflakeenvs.DriverTracing)
 }
 
 type Client struct {

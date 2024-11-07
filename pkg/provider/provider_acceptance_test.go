@@ -543,6 +543,84 @@ func TestAcc_Provider_triValueBoolean(t *testing.T) {
 	})
 }
 
+func TestAcc_Provider_sessionParameters(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+		},
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: providerWithParamsConfig(testprofiles.Default, 31337),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_unsafe_execute.t", "query_results.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_unsafe_execute.t", "query_results.0.value", "31337"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_JwtAuth(t *testing.T) {
+	// TODO(SNOW-1752038): unskip
+	t.Skip("Skip because this test needs a TOML config incompatible with older versions, causing tests with ExternalProvider to fail.")
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+		},
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			// authenticate with unencrypted private key
+			{
+				Config: providerConfigWithAuthenticator("jwt_test", sdk.AuthenticationTypeJwt),
+			},
+			// authenticate with unencrypted private key with a legacy authenticator value
+			// solves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983
+			{
+				Config: providerConfigWithAuthenticator("jwt_test", sdk.AuthenticationTypeJwtLegacy),
+			},
+			// authenticate with encrypted private key
+			{
+				Config: providerConfigWithAuthenticator("jwt_encrypted_test", sdk.AuthenticationTypeJwt),
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_SnowflakeAuth(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+		},
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: providerConfigWithAuthenticator(testprofiles.Default, sdk.AuthenticationTypeSnowflake),
+			},
+		},
+	})
+}
+
 func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -591,8 +669,14 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 	})
 }
 
-// TODO(SNOW-1754319): for JWT auth flow, check setting authenticator value as `SNOWFLAKE_JWT`.
-// This will ensure https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983 is solved.
+func providerConfigWithAuthenticator(profile string, authenticator sdk.AuthenticationType) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	authenticator    = "%[2]s"
+}
+`, profile, authenticator) + datasourceConfig()
+}
 
 func emptyProviderConfig() string {
 	return `
@@ -811,4 +895,25 @@ provider "snowflake" {
 	}
 }
 `, profile, orgName, accountName, user, password) + datasourceConfig()
+}
+
+// TODO(SNOW-1348325): Use parameter data source with `IN SESSION` filtering.
+func providerWithParamsConfig(profile string, statementTimeoutInSeconds int) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+    profile = "%[1]s"
+    params = {
+        statement_timeout_in_seconds = %[2]d
+    }
+}
+`, profile, statementTimeoutInSeconds) + unsafeExecuteShowSessionParameter()
+}
+
+func unsafeExecuteShowSessionParameter() string {
+	return `
+resource snowflake_unsafe_execute "t" {
+    execute = "SELECT 1"
+    query = "SHOW PARAMETERS LIKE 'STATEMENT_TIMEOUT_IN_SECONDS' IN SESSION"
+    revert        = "SELECT 1"
+}`
 }

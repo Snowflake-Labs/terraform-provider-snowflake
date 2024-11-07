@@ -330,10 +330,10 @@ func Provider() *schema.Provider {
 			},
 			"driver_tracing": {
 				Type:             schema.TypeString,
-				Description:      envNameFieldDescription(fmt.Sprintf("Specifies the logging level to be used by the driver. Valid options are: %v.", docs.PossibleValuesListed(allDriverLogLevels)), snowflakeenvs.DriverTracing),
+				Description:      envNameFieldDescription(fmt.Sprintf("Specifies the logging level to be used by the driver. Valid options are: %v.", docs.PossibleValuesListed(sdk.AllDriverLogLevels)), snowflakeenvs.DriverTracing),
 				Optional:         true,
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.DriverTracing, nil),
-				ValidateDiagFunc: validators.NormalizeValidation(toDriverLogLevel),
+				ValidateDiagFunc: validators.NormalizeValidation(sdk.ToDriverLogLevel),
 			},
 			"tmp_directory_path": {
 				Type:        schema.TypeString,
@@ -780,7 +780,7 @@ func getDriverConfigFromTerraform(s *schema.ResourceData) (*gosnowflake.Config, 
 		// driver tracing
 		func() error {
 			if v, ok := s.GetOk("driver_tracing"); ok {
-				driverLogLevel, err := toDriverLogLevel(v.(string))
+				driverLogLevel, err := sdk.ToDriverLogLevel(v.(string))
 				if err != nil {
 					return err
 				}

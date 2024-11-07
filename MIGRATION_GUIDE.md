@@ -56,7 +56,7 @@ We have added new fields to match the ones in [the driver](https://pkg.go.dev/gi
 To be more consistent with other configuration options, we have decided to add `driver_tracing` to the configuration schema. This value can also be configured by `SNOWFLAKE_DRIVER_TRACING` environmental variable and by `drivertracing` field in the TOML file. The previous `SF_TF_GOSNOWFLAKE_LOG_LEVEL` environmental variable is not supported now, and was removed from the provider.
 
 #### *(behavior change)* deprecated fields
-Because of new fields `account_name` and `organization_name`, `account` is now deprecated. It will be removed before v1.  Please adjust your configurations from
+Because of new fields `account_name` and `organization_name`, `account` is now deprecated. It will be removed with the v1 release. Please adjust your configurations from
 ```terraform
 provider "snowflake" {
 	account = "ORGANIZATION-ACCOUNT"

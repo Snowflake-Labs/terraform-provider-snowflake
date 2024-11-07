@@ -447,3 +447,45 @@ func ToAuthenticatorType(s string) (gosnowflake.AuthType, error) {
 		return gosnowflake.AuthType(0), fmt.Errorf("invalid authenticator type: %s", s)
 	}
 }
+
+type DriverLogLevel string
+
+const (
+	// these values are lower case on purpose to match gosnowflake case
+	DriverLogLevelTrace   DriverLogLevel = "trace"
+	DriverLogLevelDebug   DriverLogLevel = "debug"
+	DriverLogLevelInfo    DriverLogLevel = "info"
+	DriverLogLevelPrint   DriverLogLevel = "print"
+	DriverLogLevelWarning DriverLogLevel = "warning"
+	DriverLogLevelError   DriverLogLevel = "error"
+	DriverLogLevelFatal   DriverLogLevel = "fatal"
+	DriverLogLevelPanic   DriverLogLevel = "panic"
+)
+
+var AllDriverLogLevels = []DriverLogLevel{
+	DriverLogLevelTrace,
+	DriverLogLevelDebug,
+	DriverLogLevelInfo,
+	DriverLogLevelPrint,
+	DriverLogLevelWarning,
+	DriverLogLevelError,
+	DriverLogLevelFatal,
+	DriverLogLevelPanic,
+}
+
+func ToDriverLogLevel(s string) (DriverLogLevel, error) {
+	lowerCase := strings.ToLower(s)
+	switch lowerCase {
+	case string(DriverLogLevelTrace),
+		string(DriverLogLevelDebug),
+		string(DriverLogLevelInfo),
+		string(DriverLogLevelPrint),
+		string(DriverLogLevelWarning),
+		string(DriverLogLevelError),
+		string(DriverLogLevelFatal),
+		string(DriverLogLevelPanic):
+		return DriverLogLevel(lowerCase), nil
+	default:
+		return "", fmt.Errorf("invalid driver log level: %s", s)
+	}
+}
