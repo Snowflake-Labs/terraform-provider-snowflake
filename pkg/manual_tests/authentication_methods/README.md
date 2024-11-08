@@ -1,17 +1,17 @@
-# Manual tests
+# Authentication methods manual tests
 
-This directory is dedicated to hold steps for manual provider tests that are not possible to re-recreate in automated tests (or very hard to set up). These tests are disabled by default and require `TEST_SF_TF_ENABLE_MANUAL_TESTS` environmental variable to be set.
+This directory is dedicated to hold steps for manual authentication methods tests in the provider that are not possible to re-recreate in automated tests (or very hard to set up). These tests are disabled by default and require `TEST_SF_TF_ENABLE_MANUAL_TESTS` environmental variable to be set.
 
 ## Okta authenticator test
 This test checks `Okta` authenticator option. It requires manual steps because of additional setup on Okta side. It assumes that `default` profile uses a standard values of account name, user, password, etc.
 1. Set up a developer Okta account [here](https://developer.okta.com/signup/).
-1. Go to admin panel and select Applications -> Create App Integration.
-1. Create a new application with SAML 2.0 type and give it a unique name
-1. Fill SAML settings - paste the URLs for the testing accounts, like `https://example.snowflakecomputing.com/fed/login` for Single sign on URL, Recipient URL, Destination URL and Audience URI (SP Entity ID)
-1. Click Next and Finish
-1. After the app gets created, click View SAML setup instructions
-1. Save the values provided: IDP SSO URL, IDP Issuer, and X509 certificate
-1. Create a new security integration in Snowflake:
+2. Go to admin panel and select Applications -> Create App Integration.
+3. Create a new application with SAML 2.0 type and give it a unique name
+4. Fill SAML settings - paste the URLs for the testing accounts, like `https://example.snowflakecomputing.com/fed/login` for Single sign on URL, Recipient URL, Destination URL and Audience URI (SP Entity ID)
+5. Click Next and Finish
+6. After the app gets created, click View SAML setup instructions
+7. Save the values provided: IDP SSO URL, IDP Issuer, and X509 certificate
+8. Create a new security integration in Snowflake:
 ```
 CREATE SECURITY INTEGRATION MyIDP
 TYPE=SAML2
@@ -23,8 +23,8 @@ SAML2_SP_INITIATED_LOGIN_PAGE_LABEL='myidp - okta'
 SAML2_ENABLE_SP_INITIATED=false
 SAML2_X509_CERT='<x509 cert, without headers>';
 ```
-1. Note that Snowflake and Okta login name must match, otherwise create a temporary user with a login name matching the one in Okta.
-1. Prepare a TOML config like:
+9. Note that Snowflake and Okta login name must match, otherwise create a temporary user with a login name matching the one in Okta.
+10. Prepare a TOML config like:
 ```
 [okta]
 organizationname='ORGANIZATION_NAME'
@@ -33,7 +33,7 @@ user='LOGIN_NAME' # This is a value used to login in Okta
 password='PASSWORD' # This is a password in Okta
 oktaurl='https://dev-123456.okta.com' # URL of your Okta environment
 ```
-1. Run the tests - you should be able to authenticate with Okta.
+11. Run the tests - you should be able to authenticate with Okta.
 
 
 ## UsernamePasswordMFA authenticator test

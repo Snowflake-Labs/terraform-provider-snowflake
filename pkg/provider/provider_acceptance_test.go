@@ -221,7 +221,7 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 						Token:                          "token",
 						KeepSessionAlive:               true,
 						DisableTelemetry:               true,
-						Tracing:                        "info",
+						Tracing:                        string(sdk.DriverLogLevelInfo),
 						TmpDirPath:                     ".",
 						ClientRequestMfaToken:          gosnowflake.ConfigBoolTrue,
 						ClientStoreTemporaryCredential: gosnowflake.ConfigBoolTrue,
@@ -229,6 +229,7 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 						IncludeRetryReason:             gosnowflake.ConfigBoolTrue,
 						DisableConsoleLogin:            gosnowflake.ConfigBoolTrue,
 					}, config)
+					assert.Equal(t, string(sdk.DriverLogLevelInfo), gosnowflake.GetLogger().GetLogLevel())
 
 					return nil
 				},
@@ -296,7 +297,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.DisableQueryContextCache, "false")
 					t.Setenv(snowflakeenvs.IncludeRetryReason, "false")
 					t.Setenv(snowflakeenvs.MaxRetryCount, "2")
-					t.Setenv(snowflakeenvs.DriverTracing, "debug")
+					t.Setenv(snowflakeenvs.DriverTracing, string(sdk.DriverLogLevelDebug))
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
@@ -333,7 +334,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 						Token:                          "token",
 						KeepSessionAlive:               true,
 						DisableTelemetry:               true,
-						Tracing:                        "debug",
+						Tracing:                        string(sdk.DriverLogLevelDebug),
 						TmpDirPath:                     "../",
 						ClientRequestMfaToken:          gosnowflake.ConfigBoolFalse,
 						ClientStoreTemporaryCredential: gosnowflake.ConfigBoolFalse,
@@ -341,6 +342,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 						IncludeRetryReason:             gosnowflake.ConfigBoolFalse,
 						DisableConsoleLogin:            gosnowflake.ConfigBoolFalse,
 					}, config)
+					assert.Equal(t, string(sdk.DriverLogLevelDebug), gosnowflake.GetLogger().GetLogLevel())
 
 					return nil
 				},
@@ -408,7 +410,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.DisableQueryContextCache, "false")
 					t.Setenv(snowflakeenvs.IncludeRetryReason, "false")
 					t.Setenv(snowflakeenvs.MaxRetryCount, "2")
-					t.Setenv(snowflakeenvs.DriverTracing, "debug")
+					t.Setenv(snowflakeenvs.DriverTracing, string(sdk.DriverLogLevelDebug))
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
@@ -445,7 +447,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 						Token:                          "token",
 						KeepSessionAlive:               true,
 						DisableTelemetry:               true,
-						Tracing:                        "info",
+						Tracing:                        string(sdk.DriverLogLevelInfo),
 						TmpDirPath:                     "../../",
 						ClientRequestMfaToken:          gosnowflake.ConfigBoolTrue,
 						ClientStoreTemporaryCredential: gosnowflake.ConfigBoolTrue,
@@ -453,6 +455,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 						IncludeRetryReason:             gosnowflake.ConfigBoolTrue,
 						DisableConsoleLogin:            gosnowflake.ConfigBoolTrue,
 					}, config)
+					assert.Equal(t, string(sdk.DriverLogLevelInfo), gosnowflake.GetLogger().GetLogLevel())
 
 					return nil
 				},

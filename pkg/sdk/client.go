@@ -14,14 +14,10 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-var (
-	instrumentedSQL         bool
-	gosnowflakeLoggingLevel string
-)
+var instrumentedSQL bool
 
 func init() {
 	instrumentedSQL = os.Getenv(snowflakeenvs.NoInstrumentedSql) == ""
-	gosnowflakeLoggingLevel = os.Getenv(snowflakeenvs.DriverTracing)
 }
 
 type Client struct {

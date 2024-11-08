@@ -6,3 +6,4 @@ and should contain a file describing the manual steps to perform the test.
 
 Here's the list of cases we currently cannot reproduce and write acceptance tests for:
 - `user_default_database_and_role`: Setting up a user with default_namespace and default_role, then logging into that user to see what happens with those values in various scenarios (e.g. insufficient privileges on the role).
+- `authentication_methods`: Some of the authentication methods require manual steps, like confirming MFA or setting more dependencies.
