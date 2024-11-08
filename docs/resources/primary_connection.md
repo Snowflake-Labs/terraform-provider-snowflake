@@ -2,14 +2,14 @@
 page_title: "snowflake_primary_connection Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Resource used to manage primary connections. For managing replicated connection check resource snowflakesecondaryconnection https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/resources/secondary_connection.md. For more information, check connection documentation https://docs.snowflake.com/en/sql-reference/sql/create-connection.html.
+  Resource used to manage primary connections. For managing replicated connection check resource snowflakesecondaryconnection ./secondary_connection. For more information, check connection documentation https://docs.snowflake.com/en/sql-reference/sql/create-connection.html.
 ---
 
 !> **V1 release candidate** This resource is a release candidate for the V1. It is on the list of remaining GA objects for V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0970--v0980) to use it.
 
 # snowflake_primary_connection (Resource)
 
-Resource used to manage primary connections. For managing replicated connection check resource [snowflake_secondary_connection](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/resources/secondary_connection.md). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).
+Resource used to manage primary connections. For managing replicated connection check resource [snowflake_secondary_connection](./secondary_connection). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).
 
 ## Example Usage
 
@@ -29,9 +29,9 @@ resource "snowflake_primary_connection" "complete" {
 }
 ```
 
--> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
+-> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](./docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 
--> **Note** To demote [`snowflake_primary_connection`](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/primary_connection) to [`snowflake_secondary_connection`](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/secondary_connection), resources need to be migrated manually. For guidance on removing and importing resources into the state check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md). Remove the resource from the state, then recreate it in manually using:
+-> **Note** To demote [`snowflake_primary_connection`](./primary_connection) to [`snowflake_secondary_connection`](./secondary_connection), resources need to be migrated manually. For guidance on removing and importing resources into the state check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md). Remove the resource from the state, then recreate it in manually using:
     ```
     CREATE CONNECTION <name> AS REPLICA OF <organization_name>.<account_name>.<connection_name>;
     ```
