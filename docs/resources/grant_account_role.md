@@ -75,5 +75,5 @@ Import is supported using the following syntax:
 
 ```shell
 # format is role_name (string) | grantee_object_type (ROLE|USER) | grantee_name (string)
-terraform import "\"test_role\"|ROLE|\"test_parent_role\""
+terraform import snowflake_grant_account_role.example '"test_role"|ROLE|"test_parent_role"'
 ```
