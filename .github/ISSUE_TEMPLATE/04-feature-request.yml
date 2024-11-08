@@ -183,7 +183,7 @@ body:
       required: true
 
   - id: company-name
-    type: textarea
+    type: input
     attributes:
       label: Company Name
       description: Optional field. We would like to collect this information to improve our process of priorities discussion and delivering key features sooner.

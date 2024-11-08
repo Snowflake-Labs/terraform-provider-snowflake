@@ -248,7 +248,7 @@ body:
       placeholder: https://gist.github.com/example/12345678
 
   - id: company-name
-    type: textarea
+    type: input
     attributes:
       label: Company Name
       description: Optional field. We would like to collect this information to improve our process of priorities discussion and delivering key features sooner.
