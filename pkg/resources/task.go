@@ -66,36 +66,30 @@ var taskSchema = map[string]*schema.Schema{
 		Description:      "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. Due to Snowflake limitations warehouse identifier can consist of only upper-cased letters. (Conflicts with user_task_managed_initial_warehouse_size)",
 		ConflictsWith:    []string{"user_task_managed_initial_warehouse_size"},
 	},
-	//"schedule": {
-	//	Type:             schema.TypeString,
-	//	Optional:         true,
-	//	DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("schedule"),
-	//	Description:      "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after)",
-	//	ConflictsWith:    []string{"finalize", "after"},
-	//},
 	"schedule": {
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
+		Type:          schema.TypeList,
+		Optional:      true,
+		MaxItems:      1,
+		Description:   "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after)",
+		ConflictsWith: []string{"finalize", "after"},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"minutes": {
 					Type:             schema.TypeInt,
 					Optional:         true,
-					Description:      "", // TODO
+					Description:      "Specifies an interval (in minutes) of wait time inserted between runs of the task. Accepts positive integers only.",
 					ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 					ConflictsWith:    []string{"schedule.0.using_cron"},
 				},
 				"using_cron": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Description:      "", // TODO
+					Description:      "Specifies a cron expression and time zone for periodically running the task. Supports a subset of standard cron utility syntax.",
 					DiffSuppressFunc: ignoreCaseSuppressFunc,
 					ConflictsWith:    []string{"schedule.0.minutes"},
 				},
 			},
 		},
-		Description: "", // TODO
 	},
 	"config": {
 		Type:     schema.TypeString,
@@ -364,7 +358,6 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 
 	if task.IsStarted() {
-		// TODO(remove): log.Printf("Suspending the task in if")
 		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true)); err != nil {
 			return diag.FromErr(sdk.JoinErrors(err))
 		}
@@ -528,14 +521,15 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 
 	if d.Get("started").(bool) {
-		// TODO(remove): log.Printf("Resuming the task in handled update")
 		if err := waitForTaskStart(ctx, client, id); err != nil {
 			return diag.FromErr(fmt.Errorf("failed to resume task %s, err = %w", id.FullyQualifiedName(), err))
 		}
 	}
 	// We don't process the else case, because the task was already suspended at the beginning of the Update method.
+	tasksToResume = slices.DeleteFunc(tasksToResume, func(identifier sdk.SchemaObjectIdentifier) bool {
+		return identifier.FullyQualifiedName() == id.FullyQualifiedName()
+	})
 
-	// TODO(remove): log.Printf("Resuming the root tasks: %v", collections.Map(tasksToResume, sdk.SchemaObjectIdentifier.Name))
 	if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
 		log.Printf("[WARN] failed to resume tasks: %s", err)
 	}
@@ -598,7 +592,9 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 			func() error {
 				upperSchedule := strings.ToUpper(task.Schedule)
 				if strings.Contains(upperSchedule, "USING CRON") {
-					cron := strings.TrimPrefix(upperSchedule, "USING CRON ")
+					// We have to do it this was because we want to get rid of the prefix and leave the casing as is (mostly because timezones like America/Los_Angeles are case-sensitive).
+					// That why the prefix trimming has to be done by slicing rather than using strings.TrimPrefix.
+					cron := task.Schedule[len("USING CRON "):]
 					if err := d.Set("schedule", []any{map[string]any{
 						"using_cron": cron,
 					}}); err != nil {
