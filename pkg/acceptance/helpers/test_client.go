@@ -17,6 +17,7 @@ type TestClient struct {
 	ApplicationPackage           *ApplicationPackageClient
 	AuthenticationPolicy         *AuthenticationPolicyClient
 	BcrBundles                   *BcrBundlesClient
+	ComputePool                  *ComputePoolClient
 	Connection                   *ConnectionClient
 	Context                      *ContextClient
 	CortexSearchService          *CortexSearchServiceClient
@@ -85,6 +86,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		ApplicationPackage:           NewApplicationPackageClient(context, idsGenerator),
 		AuthenticationPolicy:         NewAuthenticationPolicyClient(context, idsGenerator),
 		BcrBundles:                   NewBcrBundlesClient(context),
+		ComputePool:                  NewComputePoolClient(context, idsGenerator),
 		Connection:                   NewConnectionClient(context, idsGenerator),
 		Context:                      NewContextClient(context),
 		CortexSearchService:          NewCortexSearchServiceClient(context, idsGenerator),

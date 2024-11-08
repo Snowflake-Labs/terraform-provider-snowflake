@@ -378,13 +378,27 @@ func buildOptsForGrantsOn(grantsOn map[string]any) (*sdk.ShowGrantOptions, error
 		if objectType == "" || objectName == "" {
 			return nil, fmt.Errorf("object_type (%s) or object_name (%s) missing", objectType, objectName)
 		}
-		objectId, err := helpers.DecodeSnowflakeParameterID(objectName)
-		if err != nil {
-			return nil, err
+
+		sdkObjectType := sdk.ObjectType(objectType)
+		var objectId sdk.ObjectIdentifier
+		var err error
+		// TODO [SNOW-1569535]: use a mapper from object type to parsing function
+		// TODO [SNOW-1569535]: grant_ownership#getOnObjectIdentifier could be used but it is limited only to ownership-transferable objects (according to the docs) - we should add an integration test to verify if the docs are complete
+		if sdkObjectType.IsWithArguments() {
+			objectId, err = sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			objectId, err = helpers.DecodeSnowflakeParameterID(objectName)
+			if err != nil {
+				return nil, err
+			}
 		}
+
 		opts.On = &sdk.ShowGrantsOn{
 			Object: &sdk.Object{
-				ObjectType: sdk.ObjectType(objectType),
+				ObjectType: sdkObjectType,
 				Name:       objectId,
 			},
 		}
