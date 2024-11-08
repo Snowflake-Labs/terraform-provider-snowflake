@@ -7,6 +7,11 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
+func (c *ConnectionShowOutputAssert) HasCreatedOnNotEmpty() *ConnectionShowOutputAssert {
+	c.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return c
+}
+
 func (c *ConnectionShowOutputAssert) HasPrimaryIdentifier(expected sdk.ExternalObjectIdentifier) *ConnectionShowOutputAssert {
 	c.AddAssertion(assert.ResourceShowOutputValueSet("primary", expected.FullyQualifiedName()))
 	return c

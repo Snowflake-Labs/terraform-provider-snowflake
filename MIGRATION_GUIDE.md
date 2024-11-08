@@ -9,6 +9,14 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
+### *(new feature)* snowflake_connections datasource
+Added a new datasource enabling querying and filtering connections. Notes:
+- all results are stored in `connections` field.
+- `like` field enables connections filtering.
+- SHOW CONNECTIONS output is enclosed in `show_output` field inside `connections`.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+
 ### *(new feature)* connection resources
 
 Added a new resources for managing connections. We decided to split connection into two separate resources based on whether the connection is primary or a replica (secondary). i.e.:
@@ -158,6 +166,26 @@ This segregation was based on the secret flows in CREATE SECRET. i.e.:
 
 
 See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secret).
+
+### *(bugfix)* Handle BCR Bundle 2024_08 in snowflake_user resource
+
+[bcr 2024_08](https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798) changed the "empty" response in the `SHOW USERS` query. This provider version adapts to the new result types; it should be used if you want to have 2024_08 Bundle enabled on your account.
+
+Note: Because [bcr 2024_07](https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_07/bcr-1692) changes the way how the `default_secondary_roles` attribute behaves, drift may be reported when enabling 2024_08 Bundle. Check [Handling default secondary roles](#breaking-change-handling-default-secondary-roles) for more context.
+
+Connected issues: [#3125](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125)
+
+### *(bugfix)* Handle user import correctly
+
+#### Context before the change
+
+Password is empty after the `snowflake_user` import; we can't read it from the config or from Snowflake.
+During the next terraform plan+apply it's updated to the "same" value.
+It results in an error on Snowflake side: `New password rejected by current password policy. Reason: 'PRIOR_USE'.`
+
+#### After the change
+
+The error will be ignored on the provider side (after all, it means that the password in state is the same as on Snowflake side). Still, plan+apply is needed after importing user.
 
 ## v0.96.0 ➞ v0.97.0
 

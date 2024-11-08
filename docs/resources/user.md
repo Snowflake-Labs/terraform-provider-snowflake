@@ -1021,3 +1021,5 @@ Import is supported using the following syntax:
 ```shell
 terraform import snowflake_user.example '"<user_name>"'
 ```
+
+Note: terraform plan+apply may be needed after successful import to fill out all the missing fields (like `password`) in state.

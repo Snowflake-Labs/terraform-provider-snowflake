@@ -41,15 +41,11 @@ func ParseIdentifierString(identifier string) ([]string, error) {
 		if strings.Contains(part, `"`) {
 			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing double quotes are not supported in the provider`, identifier)
 		}
-		// TODO(SNOW-1571674): Remove the validation
-		if strings.ContainsAny(part, `()`) {
-			return nil, fmt.Errorf(`unable to parse identifier: %s, currently identifiers containing opening and closing parentheses '()' are not supported in the provider`, identifier)
-		}
 	}
 	return parts, nil
 }
 
-func parseIdentifier[T ObjectIdentifier](identifier string, expectedParts int, expectedFormat string, constructFromParts func(parts []string) T) (T, error) {
+func parseIdentifier[T AccountIdentifier | AccountObjectIdentifier | DatabaseObjectIdentifier | ExternalObjectIdentifier | SchemaObjectIdentifier | TableColumnIdentifier](identifier string, expectedParts int, expectedFormat string, constructFromParts func(parts []string) T) (T, error) {
 	var emptyIdentifier T
 	parts, err := ParseIdentifierString(identifier)
 	if err != nil {

@@ -570,6 +570,7 @@ func getDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"snowflake_accounts":                           datasources.Accounts(),
 		"snowflake_alerts":                             datasources.Alerts(),
+		"snowflake_connections":                        datasources.Connections(),
 		"snowflake_cortex_search_services":             datasources.CortexSearchServices(),
 		"snowflake_current_account":                    datasources.CurrentAccount(),
 		"snowflake_current_role":                       datasources.CurrentRole(),

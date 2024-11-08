@@ -1582,3 +1582,236 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 		},
 	})
 }
+
+// https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
+// https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
+func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModelNoAttributes := model.User("w", userId.Name())
+	userModelWithNoneDefaultSecondaryRoles := model.User("w", userId.Name()).WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionNone)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
+				},
+				Config: config.FromModel(t, userModelNoAttributes),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelNoAttributes.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				),
+			},
+			{
+				Config: config.FromModel(t, userModelWithNoneDefaultSecondaryRoles),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModelWithNoneDefaultSecondaryRoles.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionNone),
+				),
+			},
+		},
+	})
+}
+
+// https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
+// https://docs.snowflake.com/release-notes/bcr-bundles/2024_08/bcr-1692
+// https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
+func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125_withbcr202407(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModel := model.User("w", userId.Name()).WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionNone)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
+					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
+				},
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionNone),
+				),
+			},
+		},
+	})
+}
+
+// https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
+// https://docs.snowflake.com/release-notes/bcr-bundles/2024_08/bcr-1692
+// https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
+func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_enabled(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModel := model.User("w", userId.Name())
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
+				},
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.97.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
+				},
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, userModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				),
+			},
+		},
+	})
+}
+
+// https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
+// https://docs.snowflake.com/release-notes/bcr-bundles/2024_08/bcr-1692
+// https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
+func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_disabled(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModel := model.User("w", userId.Name())
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.97.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
+				},
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, userModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.ExpectDrift(userModel.ResourceReference(), "default_secondary_roles_option", sdk.String(string(sdk.SecondaryRolesOptionDefault)), sdk.String(string(sdk.SecondaryRolesOptionAll))),
+						planchecks.ExpectChange(userModel.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String(string(sdk.SecondaryRolesOptionAll)), sdk.String(string(sdk.SecondaryRolesOptionDefault))),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_User_importPassword(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	pass := random.Password()
+	firstName := random.AlphaN(6)
+
+	_, userCleanup := acc.TestClient().User.CreateUserWithOptions(t, userId, &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+		Password:  sdk.String(pass),
+		FirstName: sdk.String(firstName),
+	}})
+	t.Cleanup(userCleanup)
+
+	userModel := model.User("w", userId.Name()).WithPassword(pass).WithFirstName(firstName)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			// IMPORT
+			{
+				Config:        config.FromModel(t, userModel),
+				ResourceName:  userModel.ResourceReference(),
+				ImportState:   true,
+				ImportStateId: userId.Name(),
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedUserResource(t, userId.Name()).
+						HasNoPassword().
+						HasFirstNameString(firstName),
+				),
+				ImportStatePersist: true,
+			},
+			{
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasNotEmptyPassword().
+						HasFirstNameString(firstName),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: config.FromModel(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasNotEmptyPassword().
+						HasFirstNameString(firstName),
+				),
+			},
+		},
+	})
+}
