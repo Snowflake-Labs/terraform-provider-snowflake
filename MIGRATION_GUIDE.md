@@ -9,6 +9,14 @@ across different versions.
 
 ## v0.97.0 ➞ v0.98.0
 
+### *(new feature)* snowflake_connections datasource
+Added a new datasource enabling querying and filtering connections. Notes:
+- all results are stored in `connections` field.
+- `like` field enables connections filtering.
+- SHOW CONNECTIONS output is enclosed in `show_output` field inside `connections`.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+
 ### *(new feature)* connection resources
 
 Added a new resources for managing connections. We decided to split connection into two separate resources based on whether the connection is primary or a replica (secondary). i.e.:
