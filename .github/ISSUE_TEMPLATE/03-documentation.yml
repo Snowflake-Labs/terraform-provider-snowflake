@@ -18,6 +18,12 @@ body:
         Documentation edits are generally a bit less involved, so are often a great entrypoint if you've ever been interested in contributing!
         If you would like to contribute to the project, please let us know and refer to the [contribution guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md) for tips on getting started.
 
+  - id: company-name
+    type: input
+    attributes:
+      label: Company Name
+      description: Optional field. Providing this information allows us to communicate faster which may lead to faster issue resolution.
+
   - id: object_type
     type: dropdown
     attributes:
@@ -145,12 +151,6 @@ body:
         Where possible, please supply links to Snowflake SQL documentation, other GitHub issues (open or closed) or pull requests that give additional context.
 
         [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
-
-  - id: company-name
-    type: input
-    attributes:
-      label: Company Name
-      description: Optional field. We would like to collect this information to improve our process of priorities discussion and delivering key features sooner.
 
   - id: will-contribute
     type: checkboxes

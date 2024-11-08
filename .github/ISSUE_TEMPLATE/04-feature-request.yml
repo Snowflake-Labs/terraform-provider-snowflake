@@ -19,6 +19,12 @@ body:
         - [Guide on creating issues + FAQ + Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) - If you would like to create a GitHub issue, please read our guide first. It contains useful links, FAQ, and commonly known issues with solutions that may already solve your case.
         - [Provider Roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md)
 
+  - id: company-name
+    type: input
+    attributes:
+      label: Company Name
+      description: Optional field. Providing this information allows us to communicate faster which may lead to faster issue resolution.
+
   - id: use-case
     type: textarea
     attributes:
@@ -181,12 +187,6 @@ body:
         2 # Low
     validations:
       required: true
-
-  - id: company-name
-    type: input
-    attributes:
-      label: Company Name
-      description: Optional field. We would like to collect this information to improve our process of priorities discussion and delivering key features sooner.
 
   - id: additional-information
     type: textarea
