@@ -167,6 +167,18 @@ Note: Because [bcr 2024_07](https://docs.snowflake.com/en/release-notes/bcr-bund
 
 Connected issues: [#3125](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125)
 
+### *(bugfix)* Handle user import correctly
+
+#### Context before the change
+
+Password is empty after the `snowflake_user` import; we can't read it from the config or from Snowflake.
+During the next terraform plan+apply it's updated to the "same" value.
+It results in an error on Snowflake side: `New password rejected by current password policy. Reason: 'PRIOR_USE'.`
+
+#### After the change
+
+The error will be ignored on the provider side (after all, it means that the password in state is the same as on Snowflake side). Still, plan+apply is needed after importing user.
+
 ## v0.96.0 ➞ v0.97.0
 
 ### *(new feature)* snowflake_stream_on_table, snowflake_stream_on_external_table resource
