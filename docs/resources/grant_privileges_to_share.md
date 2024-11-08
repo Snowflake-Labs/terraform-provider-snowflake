@@ -131,7 +131,7 @@ resource "snowflake_grant_privileges_to_share" "example" {
 
 Import is supported using the following syntax:
 
-`terraform import "<share_name>|<privileges>|<grant_type>|<grant_identifier>"`
+`terraform import snowflake_grant_privileges_to_share.example '<share_name>|<privileges>|<grant_type>|<grant_identifier>'`
 
 where:
 - share_name - fully qualified identifier
@@ -140,19 +140,19 @@ where:
 - grant_identifier - fully qualified identifier
 
 ### OnDatabase
-`terraform import "<share_name>|<privileges>|OnDatabase|<database_name>"`
+`terraform import snowflake_grant_privileges_to_share.example '<share_name>|<privileges>|OnDatabase|<database_name>'`
 
 ### OnSchema
-`terraform import "<share_name>|<privileges>|OnSchema|<database_name>.<schema_name>"`
+`terraform import snowflake_grant_privileges_to_share.example '<share_name>|<privileges>|OnSchema|<database_name>.<schema_name>'`
 
 ### OnTable
-`terraform import "<share_name>|<privileges>|OnTable|<database_name>.<schema_name>.<table_name>"`
+`terraform import snowflake_grant_privileges_to_share.example '<share_name>|<privileges>|OnTable|<database_name>.<schema_name>.<table_name>'`
 
 ### OnSchema
-`terraform import "<share_name>|<privileges>|OnAllTablesInSchema|<database_name>.<schema_name>"`
+`terraform import snowflake_grant_privileges_to_share.example '<share_name>|<privileges>|OnAllTablesInSchema|<database_name>.<schema_name>'`
 
 ### OnTag
-`terraform import "<share_name>|<privileges>|OnTag|<database_name>.<schema_name>.<tag_name>"`
+`terraform import snowflake_grant_privileges_to_share.example '<share_name>|<privileges>|OnTag|<database_name>.<schema_name>.<tag_name>'`
 
 ### OnView
-`terraform import "<share_name>|<privileges>|OnView|<database_name>.<schema_name>.<view_name>"`
+`terraform import snowflake_grant_privileges_to_share.example '<share_name>|<privileges>|OnView|<database_name>.<schema_name>.<view_name>'`

@@ -37,7 +37,7 @@ description: |-
 
 Import is supported using the following syntax:
 
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_data>"`
+`terraform import snowflake_grant_privileges_to_database_role.example '<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|<grant_type>|<grant_data>'`
 
 where:
 - database_role_name - fully qualified identifier
@@ -50,59 +50,59 @@ where:
 It has varying number of parts, depending on grant_type. All the possible types are:
 
 ### OnDatabase
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnDatabase|<database_name>"`
+`terraform import snowflake_grant_privileges_to_database_role.example '<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnDatabase|<database_name>'`
 
 ### OnSchema
 
 On schema contains inner types for all options.
 
 #### OnSchema
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnSchema|<schema_name>"`
+`terraform import snowflake_grant_privileges_to_database_role.example '<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnSchema|<schema_name>'`
 
 #### OnAllSchemasInDatabase
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnAllSchemasInDatabase|<database_name>"`
+`terraform import snowflake_grant_privileges_to_database_role.example '<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnAllSchemasInDatabase|<database_name>'`
 
 #### OnFutureSchemasInDatabase
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnFutureSchemasInDatabase|<database_name>"`
+`terraform import snowflake_grant_privileges_to_database_role.example '<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchema|OnFutureSchemasInDatabase|<database_name>'`
 
 ### OnSchemaObject
 
 On schema object contains inner types for all options.
 
 #### OnObject
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnObject|<object_type>|<object_name>"`
+`terraform import snowflake_grant_privileges_to_database_role.example '<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnObject|<object_type>|<object_name>'`
 
 #### OnAll
 
 On all contains inner types for all options.
 
 ##### InDatabase
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnAll|<object_type_plural>|InDatabase|<identifier>"`
+`terraform import snowflake_grant_privileges_to_database_role.example '<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnAll|<object_type_plural>|InDatabase|<identifier>'`
 
 ##### InSchema
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnAll|<object_type_plural>|InSchema|<identifier>"`
+`terraform import snowflake_grant_privileges_to_database_role.example '<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnAll|<object_type_plural>|InSchema|<identifier>'`
 
 #### OnFuture
 
 On future contains inner types for all options.
 
 ##### InDatabase
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnFuture|<object_type_plural>|InDatabase|<identifier>"`
+`terraform import snowflake_grant_privileges_to_database_role.example '<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnFuture|<object_type_plural>|InDatabase|<identifier>'`
 
 ##### InSchema
-`terraform import "<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnFuture|<object_type_plural>|InSchema|<identifier>"`
+`terraform import snowflake_grant_privileges_to_database_role.example '<database_role_name>|<with_grant_option>|<always_apply>|<privileges>|OnSchemaObject|OnFuture|<object_type_plural>|InSchema|<identifier>'`
 
 ### Import examples
 
 #### Grant all privileges OnDatabase
-`terraform import "\"test_db\".\"test_db_role\"|false|false|ALL|OnDatabase|\"test_db\""`
+`terraform import snowflake_grant_privileges_to_database_role.example '"test_db"."test_db_role"|false|false|ALL|OnDatabase|"test_db"'`
 
 #### Grant list of privileges OnAllSchemasInDatabase
-`terraform import "\"test_db\".\"test_db_role\"|false|false|CREATE TAG,CREATE TABLE|OnSchema|OnAllSchemasInDatabase|\"test_db\""`
+`terraform import snowflake_grant_privileges_to_database_role.example '"test_db"."test_db_role"|false|false|CREATE TAG,CREATE TABLE|OnSchema|OnAllSchemasInDatabase|"test_db"'`
 
 #### Grant list of privileges on table
-`terraform import "\"test_db\".\"test_db_role\"|false|false|SELECT,DELETE,INSERT|OnSchemaObject|OnObject|TABLE|\"test_db\".\"test_schema\".\"test_table\""`
+`terraform import snowflake_grant_privileges_to_database_role.example '"test_db"."test_db_role"|false|false|SELECT,DELETE,INSERT|OnSchemaObject|OnObject|TABLE|"test_db"."test_schema"."test_table"'`
 
 #### Grant list of privileges OnAll tables in schema
-`terraform import "\"test_db\".\"test_db_role\"|false|false|SELECT,DELETE,INSERT|OnSchemaObject|OnAll|TABLES|InSchema|\"test_db\".\"test_schema\""`
+`terraform import snowflake_grant_privileges_to_database_role.example '"test_db"."test_db_role"|false|false|SELECT,DELETE,INSERT|OnSchemaObject|OnAll|TABLES|InSchema|"test_db"."test_schema"'`
 
