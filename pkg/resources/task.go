@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"log"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -591,7 +592,8 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 			}, nil),
 			func() error {
 				upperSchedule := strings.ToUpper(task.Schedule)
-				if strings.Contains(upperSchedule, "USING CRON") {
+				switch {
+				case strings.Contains(upperSchedule, "USING CRON"):
 					// We have to do it this was because we want to get rid of the prefix and leave the casing as is (mostly because timezones like America/Los_Angeles are case-sensitive).
 					// That why the prefix trimming has to be done by slicing rather than using strings.TrimPrefix.
 					cron := task.Schedule[len("USING CRON "):]
@@ -600,7 +602,7 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 					}}); err != nil {
 						return err
 					}
-				} else if strings.Contains(upperSchedule, "MINUTE") {
+				case strings.Contains(upperSchedule, "MINUTE"):
 					minuteParts := strings.Split(upperSchedule, " ")
 					minutes, err := strconv.Atoi(minuteParts[0])
 					if err != nil {
@@ -612,7 +614,7 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 					}}); err != nil {
 						return err
 					}
-				} else {
+				default:
 					if err := d.Set("schedule", nil); err != nil {
 						return err
 					}

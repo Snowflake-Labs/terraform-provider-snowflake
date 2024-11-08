@@ -2,6 +2,10 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -9,9 +13,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"regexp"
-	"strings"
-	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
@@ -906,16 +907,16 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 	id2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
 
-	firstTaskStandaloneModel := model.TaskWithId("main_task", id, true, statement).
+	firstTaskStandaloneModel := model.TaskWithId("root", id, true, statement).
 		WithScheduleMinutes(5).
 		WithSuspendTaskAfterNumFailures(1)
-	secondTaskStandaloneModel := model.TaskWithId("second_task", id2, true, statement).
+	secondTaskStandaloneModel := model.TaskWithId("child", id2, true, statement).
 		WithScheduleMinutes(5)
 
-	rootTaskModel := model.TaskWithId("main_task", id, true, statement).
+	rootTaskModel := model.TaskWithId("root", id, true, statement).
 		WithScheduleMinutes(5).
 		WithSuspendTaskAfterNumFailures(2)
-	childTaskModel := model.TaskWithId("second_task", id2, true, statement).
+	childTaskModel := model.TaskWithId("child", id2, true, statement).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(id.FullyQualifiedName())))
 	childTaskModel.SetDependsOn(rootTaskModel.ResourceReference())
 
@@ -937,17 +938,17 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModel, secondTaskStandaloneModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, firstTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanTrue).
 						HasSuspendTaskAfterNumFailuresString("1"),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.root").
+					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateStarted),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, secondTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanTrue),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateStarted),
 				),
@@ -957,17 +958,17 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskModel, childTaskModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskModel.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanTrue).
 						HasSuspendTaskAfterNumFailuresString("2"),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.root").
+					resourceshowoutputassert.TaskShowOutput(t, rootTaskModel.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateStarted),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
 						HasAfterIdsInOrder(id).
 						HasStartedString(r.BooleanTrue),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
 						HasPredecessors(id).
 						HasState(sdk.TaskStateStarted),
 				),
@@ -977,17 +978,17 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModelDisabled, secondTaskStandaloneModelDisabled),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, firstTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanFalse).
 						HasSuspendTaskAfterNumFailuresString("10"),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.root").
+					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateSuspended),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, secondTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanFalse),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateSuspended),
 				),
@@ -1036,18 +1037,18 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModel, secondTaskStandaloneModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, firstTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanTrue).
 						HasSuspendTaskAfterNumFailuresString("1"),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.root").
+					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateStarted),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, secondTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanTrue),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateStarted),
@@ -1058,18 +1059,18 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskModel, childTaskModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanTrue).
 						HasSuspendTaskAfterNumFailuresString("2"),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.root").
+					resourceshowoutputassert.TaskShowOutput(t, rootTaskModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						// TODO(SNOW-1348116 - next pr): Create ticket and report; this field in task relations seems to have mixed chances of appearing (needs deeper digging, doesn't affect the resource; could be removed for now)
 						// HasTaskRelations(sdk.TaskRelations{FinalizerTask: &finalizerTaskId}).
 						HasState(sdk.TaskStateStarted),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
 						HasTaskRelations(sdk.TaskRelations{FinalizedRootTask: &rootTaskId}).
 						HasState(sdk.TaskStateStarted),
 				),
@@ -1079,18 +1080,18 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModelDisabled, secondTaskStandaloneModelDisabled),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, firstTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse).
 						HasSuspendTaskAfterNumFailuresString("10"),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.root").
+					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, secondTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
@@ -1136,11 +1137,11 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
 						HasSuspendTaskAfterNumFailuresString("1"),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
 						HasAfterIdsInOrder().
@@ -1151,11 +1152,11 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModelAfterSuspendFailuresUpdate, childTaskConfigModelWithAfter),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskConfigModelAfterSuspendFailuresUpdate.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
 						HasSuspendTaskAfterNumFailuresString("2"),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasNoScheduleSet().
 						HasAfterIdsInOrder(rootId).
@@ -1166,11 +1167,11 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
 						HasSuspendTaskAfterNumFailuresString("1"),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
 						HasAfterIdsInOrder().
@@ -1181,11 +1182,11 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModelDisabled, childTaskConfigModelDisabled),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskConfigModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse).
 						HasScheduleMinutes(schedule).
 						HasSuspendTaskAfterNumFailuresString("10"),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse).
 						HasScheduleMinutes(schedule).
 						HasAfterIdsInOrder().
@@ -1232,10 +1233,10 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithAfter),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfterIdsInOrder(rootId),
 				),
@@ -1244,10 +1245,10 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutAfter),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfterIdsInOrder(),
 				),
@@ -1292,10 +1293,10 @@ func TestAcc_Task_WithFinalizer(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithFinalizer),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(rootId.FullyQualifiedName()),
 				),
@@ -1304,10 +1305,10 @@ func TestAcc_Task_WithFinalizer(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutFinalizer),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(""),
 				),
@@ -1369,10 +1370,10 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutFinalizer),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(""),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
 				),
@@ -1382,10 +1383,10 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithFinalizer),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(rootId.FullyQualifiedName()),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{FinalizedRootTask: &rootId}),
 				),
@@ -1405,10 +1406,10 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithFinalizer),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(rootId.FullyQualifiedName()),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{FinalizedRootTask: &rootId}),
 				),
@@ -1418,10 +1419,10 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutFinalizer),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(""),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
 				),
@@ -1483,10 +1484,10 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutAfter),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfterIdsInOrder(),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
 				),
@@ -1496,10 +1497,10 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithAfter),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfterIdsInOrder(rootId),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
 				),
@@ -1519,10 +1520,10 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithAfter),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfterIdsInOrder(rootId),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
 				),
@@ -1532,10 +1533,10 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutAfter),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfterIdsInOrder(),
-					resourceshowoutputassert.TaskShowOutput(t, "snowflake_task.child").
+					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
 				),
@@ -1582,10 +1583,10 @@ func TestAcc_Task_issue2207(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfterIdsInOrder(rootId).
 						HasCommentString("abc"),
@@ -1601,10 +1602,10 @@ func TestAcc_Task_issue2207(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithDifferentComment),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, childTaskConfigModelWithDifferentComment.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfterIdsInOrder(rootId).
 						HasCommentString("def"),

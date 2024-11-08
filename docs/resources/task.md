@@ -121,7 +121,7 @@ resource "snowflake_task" "test_task" {
 - `quoted_identifiers_ignore_case` (Boolean) Specifies whether letters in double-quoted object identifiers are stored and resolved as uppercase letters. By default, Snowflake preserves the case of alphabetic characters when storing and resolving double-quoted identifiers (see [Identifier resolution](https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html#label-identifier-casing)). You can use this parameter in situations in which [third-party applications always use double quotes around identifiers](https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html#label-identifier-casing-parameter). For more information, check [QUOTED_IDENTIFIERS_IGNORE_CASE docs](https://docs.snowflake.com/en/sql-reference/parameters#quoted-identifiers-ignore-case).
 - `rows_per_resultset` (Number) Specifies the maximum number of rows returned in a result set. A value of 0 specifies no maximum. For more information, check [ROWS_PER_RESULTSET docs](https://docs.snowflake.com/en/sql-reference/parameters#rows-per-resultset).
 - `s3_stage_vpce_dns_name` (String) Specifies the DNS name of an Amazon S3 interface endpoint. Requests sent to the internal stage of an account via [AWS PrivateLink for Amazon S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/privatelink-interface-endpoints.html) use this endpoint to connect. For more information, see [Accessing Internal stages with dedicated interface endpoints](https://docs.snowflake.com/en/user-guide/private-internal-stages-aws.html#label-aws-privatelink-internal-stage-network-isolation). For more information, check [S3_STAGE_VPCE_DNS_NAME docs](https://docs.snowflake.com/en/sql-reference/parameters#s3-stage-vpce-dns-name).
-- `schedule` (String) The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after)
+- `schedule` (Block List, Max: 1) The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after) (see [below for nested schema](#nestedblock--schedule))
 - `search_path` (String) Specifies the path to search to resolve unqualified object names in queries. For more information, see [Name resolution in queries](https://docs.snowflake.com/en/sql-reference/name-resolution.html#label-object-name-resolution-search-path). Comma-separated list of identifiers. An identifier can be a fully or partially qualified schema name. For more information, check [SEARCH_PATH docs](https://docs.snowflake.com/en/sql-reference/parameters#search-path).
 - `statement_queued_timeout_in_seconds` (Number) Amount of time, in seconds, a SQL statement (query, DDL, DML, etc.) remains queued for a warehouse before it is canceled by the system. This parameter can be used in conjunction with the [MAX_CONCURRENCY_LEVEL](https://docs.snowflake.com/en/sql-reference/parameters#label-max-concurrency-level) parameter to ensure a warehouse is never backlogged. For more information, check [STATEMENT_QUEUED_TIMEOUT_IN_SECONDS docs](https://docs.snowflake.com/en/sql-reference/parameters#statement-queued-timeout-in-seconds).
 - `statement_timeout_in_seconds` (Number) Amount of time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system. For more information, check [STATEMENT_TIMEOUT_IN_SECONDS docs](https://docs.snowflake.com/en/sql-reference/parameters#statement-timeout-in-seconds).
@@ -158,6 +158,15 @@ resource "snowflake_task" "test_task" {
 - `id` (String) The ID of this resource.
 - `parameters` (List of Object) Outputs the result of `SHOW PARAMETERS IN TASK` for the given task. (see [below for nested schema](#nestedatt--parameters))
 - `show_output` (List of Object) Outputs the result of `SHOW TASKS` for the given task. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedblock--schedule"></a>
+### Nested Schema for `schedule`
+
+Optional:
+
+- `minutes` (Number) Specifies an interval (in minutes) of wait time inserted between runs of the task. Accepts positive integers only.
+- `using_cron` (String) Specifies a cron expression and time zone for periodically running the task. Supports a subset of standard cron utility syntax.
+
 
 <a id="nestedatt--parameters"></a>
 ### Nested Schema for `parameters`

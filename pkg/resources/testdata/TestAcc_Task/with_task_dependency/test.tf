@@ -14,12 +14,12 @@ resource "snowflake_task" "root" {
     }
   }
 
-  comment = var.tasks[0].comment
-  after = var.tasks[0].after
+  comment  = var.tasks[0].comment
+  after    = var.tasks[0].after
   finalize = var.tasks[0].finalize
 
   # Parameters
-  suspend_task_after_num_failures               = var.tasks[0].suspend_task_after_num_failures
+  suspend_task_after_num_failures = var.tasks[0].suspend_task_after_num_failures
 }
 
 resource "snowflake_task" "child" {
@@ -40,10 +40,10 @@ resource "snowflake_task" "child" {
     }
   }
 
-  comment = var.tasks[1].comment
-  after = var.tasks[1].after
+  comment  = var.tasks[1].comment
+  after    = var.tasks[1].after
   finalize = var.tasks[1].finalize
 
   # Parameters
-  suspend_task_after_num_failures               = var.tasks[1].suspend_task_after_num_failures
+  suspend_task_after_num_failures = var.tasks[1].suspend_task_after_num_failures
 }
