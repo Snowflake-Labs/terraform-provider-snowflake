@@ -479,7 +479,7 @@ func TestAcc_NetworkPolicy_Issue2236(t *testing.T) {
 				// Identifier quoting mismatch (no diff suppression)
 				ExpectNonEmptyPlan: true,
 				PreConfig: func() {
-					acc.SetV097CompatibleConfigPathEnv(t)
+					acc.SetV097CompatibleConfigPathEnv(t)()
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId)
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId2)
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId)

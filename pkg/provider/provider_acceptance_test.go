@@ -828,10 +828,10 @@ provider "snowflake" {
 }
 
 func datasourceConfig() string {
-	return `
+	return fmt.Sprintf(`
 data snowflake_database "t" {
-	name = "SNOWFLAKE"
-}`
+	name = "%s"
+}`, acc.TestDatabaseName)
 }
 
 func providerConfigAllFields(profile, orgName, accountName, user, password string) string {

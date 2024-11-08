@@ -207,7 +207,6 @@ resource "snowflake_alert" "test_alert" {
 
 // Can't reproduce the issue, leaving the test for now.
 func TestAcc_Alert_Issue3117(t *testing.T) {
-	// t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix("small caps with spaces")
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
