@@ -44,48 +44,6 @@ func toProtocol(s string) (protocol, error) {
 	}
 }
 
-type driverLogLevel string
-
-const (
-	// these values are lower case on purpose to match gosnowflake case
-	logLevelTrace   driverLogLevel = "trace"
-	logLevelDebug   driverLogLevel = "debug"
-	logLevelInfo    driverLogLevel = "info"
-	logLevelPrint   driverLogLevel = "print"
-	logLevelWarning driverLogLevel = "warning"
-	logLevelError   driverLogLevel = "error"
-	logLevelFatal   driverLogLevel = "fatal"
-	logLevelPanic   driverLogLevel = "panic"
-)
-
-var allDriverLogLevels = []driverLogLevel{
-	logLevelTrace,
-	logLevelDebug,
-	logLevelInfo,
-	logLevelPrint,
-	logLevelWarning,
-	logLevelError,
-	logLevelFatal,
-	logLevelPanic,
-}
-
-func toDriverLogLevel(s string) (driverLogLevel, error) {
-	lowerCase := strings.ToLower(s)
-	switch lowerCase {
-	case string(logLevelTrace),
-		string(logLevelDebug),
-		string(logLevelInfo),
-		string(logLevelPrint),
-		string(logLevelWarning),
-		string(logLevelError),
-		string(logLevelFatal),
-		string(logLevelPanic):
-		return driverLogLevel(lowerCase), nil
-	default:
-		return "", fmt.Errorf("invalid driver log level: %s", s)
-	}
-}
-
 func getPrivateKey(privateKeyPath, privateKeyString, privateKeyPassphrase string) (*rsa.PrivateKey, error) {
 	if privateKeyPath == "" && privateKeyString == "" {
 		return nil, nil

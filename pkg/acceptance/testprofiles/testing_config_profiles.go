@@ -8,4 +8,5 @@ const (
 	IncorrectUserAndPassword = "incorrect_test_profile"
 	CompleteFields           = "complete_fields"
 	CompleteFieldsInvalid    = "complete_fields_invalid"
+	DefaultWithPasscode      = "default_with_passcode"
 )

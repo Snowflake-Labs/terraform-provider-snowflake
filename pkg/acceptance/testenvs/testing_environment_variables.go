@@ -32,6 +32,7 @@ const (
 
 	EnableAcceptance         env = resource.EnvTfAcc
 	EnableSweep              env = "TEST_SF_TF_ENABLE_SWEEP"
+	EnableManual             env = "TEST_SF_TF_ENABLE_MANUAL_TESTS"
 	ConfigureClientOnce      env = "SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE"
 	TestObjectsSuffix        env = "TEST_SF_TF_TEST_OBJECT_SUFFIX"
 	RequireTestObjectsSuffix env = "TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX"

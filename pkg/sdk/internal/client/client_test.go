@@ -21,6 +21,7 @@ func TestNewClientWithoutInstrumentedSQL(t *testing.T) {
 
 	t.Run("registers snowflake-not-instrumented driver", func(t *testing.T) {
 		config := sdk.DefaultConfig()
+		config.Tracing = string(sdk.DriverLogLevelDebug)
 		_, err := sdk.NewClient(config)
 		require.NoError(t, err)
 

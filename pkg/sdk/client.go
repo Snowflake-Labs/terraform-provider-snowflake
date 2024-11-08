@@ -14,10 +14,7 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 )
 
-var (
-	instrumentedSQL         bool
-	gosnowflakeLoggingLevel string
-)
+var instrumentedSQL bool
 
 func init() {
 	instrumentedSQL = os.Getenv(snowflakeenvs.NoInstrumentedSql) == ""
