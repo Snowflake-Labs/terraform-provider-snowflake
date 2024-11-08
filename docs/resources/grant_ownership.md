@@ -301,7 +301,7 @@ Optional:
 
 Import is supported using the following syntax:
 
-`terraform import "<role_type>|<role_identifier>|<outbound_privileges_behavior>|<grant_type>|<grant_data>"`
+`terraform import snowflake_grant_ownership.example '<role_type>|<role_identifier>|<outbound_privileges_behavior>|<grant_type>|<grant_data>'`
 
 where:
 - role_type - string - type of granted role (either ToAccountRole or ToDatabaseRole)
