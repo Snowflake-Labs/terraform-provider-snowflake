@@ -43,6 +43,12 @@ body:
     validations:
       required: true
 
+  - id: company-name
+    type: input
+    attributes:
+      label: Company Name
+      description: Optional field. Providing this information allows us to communicate faster which may lead to faster issue resolution.
+
   - type: markdown
     attributes:
       value: |
