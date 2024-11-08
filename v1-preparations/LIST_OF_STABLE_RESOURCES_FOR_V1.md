@@ -3,9 +3,10 @@ We estimate the given list to be accurate, but it may be subject to small change
 * Account (in progress)
     * [snowflake_account](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/account)
     * [snowflake_accounts](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/accounts) (datasource)
-* Connection (in progress)
-    * snowflake_connection
-    * snowflake_connections (datasource)
+* Connection
+    * [snowflake_primary_connection](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/primary_connection)
+    * [snowflake_secondary_connection](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/secondary_connection)
+    * [snowflake_connections](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/connections) (datasource)
 * Database
     * [snowflake_database](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/database)
     * [snowflake_secondary_database](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/secondary_database)
@@ -55,12 +56,12 @@ We estimate the given list to be accurate, but it may be subject to small change
 * Schema
     * [snowflake_schema](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/schema)
     * [snowflake_schemas](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/schemas) (datasource)
-* Secret (in progress)
-    * snowflake_secret_with_client_credentials
-    * snowflake_secret_with_authorization_code_grant
-    * snowflake_secret_with_basic_authentication
-    * snowflake_secret_with_generic_string
-    * snowflake_secrets (datasource)
+* Secret
+    * [snowflake_secret_with_client_credentials](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/secret_with_client_credentials)
+    * [snowflake_secret_with_authorization_code_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/secret_with_authorization_code_grant)
+    * [snowflake_secret_with_basic_authentication](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/secret_with_basic_authentication)
+    * [snowflake_secret_with_generic_string](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/secret_with_generic_string)
+    * [snowflake_secrets](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/secrets) (datasource)
 * Security Integration
     * [snowflake_api_authentication_integration_with_authorization_code_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/api_authentication_integration_with_authorization_code_grant)
     * [snowflake_api_authentication_integration_with_client_credentials](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/api_authentication_integration_with_client_credentials)
@@ -75,11 +76,11 @@ We estimate the given list to be accurate, but it may be subject to small change
     * [snowflake_account_parameter](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/account_parameter)
 * SQL Execute (in progress)
     * \<new resource\> (no name yet)
-* Stream (in progress)
+* Stream
     * [snowflake_stream_on_table](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/stream_on_table)
     * [snowflake_stream_on_external_table](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/stream_on_external_table)
-    * snowflake_stream_on_directory_table
-    * snowflake_stream_on_view
+    * [snowflake_stream_on_directory_table](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/stream_on_directory_table)
+    * [snowflake_stream_on_view](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/stream_on_view)
     * [snowflake_streams](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/streams) (datasource)
 * Streamlit
     * [snowflake_streamlit](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/streamlit)
