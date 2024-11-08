@@ -16,13 +16,13 @@ Added a new resources for managing connections. We decided to split connection i
 - `snowflake_primary_connection` is used to manage primary connection, with ability to enable failover to other accounts.
 - `snowflake_secondary_connection` is used to manage replicated (secondary) connection.
 
-In order to promote `snowflake_secondary_connection` to `snowflake_primary_connection`, resources need to be removed from the state, altered manually using:
+To promote `snowflake_secondary_connection` to `snowflake_primary_connection`, resources need to be removed from the state, altered manually using:
 ```
 ALTER CONNECTION <name> PRIMARY;
 ```
 and then imported again, now as `snowflake_primary_connection`.
 
-In order to demote `snowflake_primary_connection` back to `snowflake_secondary_connection`, resources need to be removed from the state, re-created manually using:
+To demote `snowflake_primary_connection` back to `snowflake_secondary_connection`, resources need to be removed from the state, re-created manually using:
 ```
 CREATE CONNECTION <name> AS REPLICA OF <organization_name>.<account_name>.<connection_name>;
 ```

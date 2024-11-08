@@ -25,7 +25,7 @@ var primaryConnectionSchema = map[string]*schema.Schema{
 	"is_primary": {
 		Type:        schema.TypeBool,
 		Computed:    true,
-		Description: "Indicates if the connection primary status has been changed. If change is detected, resource will be recreated.",
+		Description: "Indicates if the connection is primary. When Terraform detects that the connection is not primary, the resource is recreated.",
 	},
 	"enable_failover_to_accounts": {
 		Type:        schema.TypeList,
