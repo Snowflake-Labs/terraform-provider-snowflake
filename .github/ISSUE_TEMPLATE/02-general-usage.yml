@@ -247,6 +247,12 @@ body:
         - *SF_TF_GOSNOWFLAKE_LOG_LEVEL=debug* - if you feel the problem may be connected with the Snowflake driver, please set this one for additional driver logs.
       placeholder: https://gist.github.com/example/12345678
 
+  - id: company-name
+    type: textarea
+    attributes:
+      label: Company Name
+      description: Optional field. We would like to collect this information to improve our process of priorities discussion and delivering key features sooner.
+
   - id: additional-information
     type: textarea
     attributes:

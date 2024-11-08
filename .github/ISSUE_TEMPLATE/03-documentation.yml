@@ -146,6 +146,12 @@ body:
 
         [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
 
+  - id: company-name
+    type: textarea
+    attributes:
+      label: Company Name
+      description: Optional field. We would like to collect this information to improve our process of priorities discussion and delivering key features sooner.
+
   - id: will-contribute
     type: checkboxes
     attributes:
