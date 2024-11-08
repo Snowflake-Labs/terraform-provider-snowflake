@@ -6,6 +6,8 @@ description: |-
   
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. To migrate from older grant resources please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#migration-from-old-grant-resources-to-new-ones).
+
 # snowflake_grant_privileges_to_share (Resource)
 
 

@@ -6,6 +6,8 @@ description: |-
   
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. To migrate from older grant resources please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#migration-from-old-grant-resources-to-new-ones).
+
 ~> **Note** For more details about granting ownership, please visit [`GRANT OWNERSHIP` Snowflake documentation page](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership).
 
 !> **Warning** Grant ownership resource still has some limitations. Delete operation is not implemented for on_future grants (you have to remove the config and then revoke ownership grant on future X manually).
