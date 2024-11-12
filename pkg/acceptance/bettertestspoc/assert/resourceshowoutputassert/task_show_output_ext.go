@@ -18,6 +18,11 @@ func (t *TaskShowOutputAssert) HasIdNotEmpty() *TaskShowOutputAssert {
 	return t
 }
 
+func (t *TaskShowOutputAssert) HasOwnerNotEmpty() *TaskShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
+	return t
+}
+
 func (t *TaskShowOutputAssert) HasLastCommittedOnNotEmpty() *TaskShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputValuePresent("last_committed_on"))
 	return t

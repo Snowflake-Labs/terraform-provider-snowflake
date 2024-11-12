@@ -12,6 +12,37 @@ var likeSchema = &schema.Schema{
 	Description: "Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).",
 }
 
+var inSchema = &schema.Schema{
+	Type:        schema.TypeList,
+	Optional:    true,
+	Description: "IN clause to filter the list of objects",
+	MaxItems:    1,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"account": {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Description:  "Returns records for the entire account.",
+				ExactlyOneOf: []string{"in.0.account", "in.0.database", "in.0.schema"},
+			},
+			"database": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Returns records for the current database in use or for a specified database.",
+				ExactlyOneOf:     []string{"in.0.account", "in.0.database", "in.0.schema"},
+				ValidateDiagFunc: resources.IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			},
+			"schema": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Returns records for the current schema in use or a specified schema. Use fully qualified name.",
+				ExactlyOneOf:     []string{"in.0.account", "in.0.database", "in.0.schema"},
+				ValidateDiagFunc: resources.IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+			},
+		},
+	},
+}
+
 var extendedInSchema = &schema.Schema{
 	Type:        schema.TypeList,
 	Optional:    true,
@@ -112,6 +143,30 @@ func handleLimitFrom(d *schema.ResourceData, setField **sdk.LimitFrom) {
 		}
 		*setField = limit
 	}
+}
+
+func handleIn(d *schema.ResourceData, setField **sdk.In) error {
+	if v, ok := d.GetOk("in"); ok {
+		in := v.([]any)[0].(map[string]any)
+		if v, ok := in["account"]; ok && v.(bool) {
+			*setField = &sdk.In{Account: sdk.Bool(true)}
+		}
+		if v, ok := in["database"]; ok {
+			if database := v.(string); database != "" {
+				*setField = &sdk.In{Database: sdk.NewAccountObjectIdentifier(database)}
+			}
+		}
+		if v, ok := in["schema"]; ok {
+			if schema := v.(string); schema != "" {
+				schemaId, err := sdk.ParseDatabaseObjectIdentifier(schema)
+				if err != nil {
+					return err
+				}
+				*setField = &sdk.In{Schema: schemaId}
+			}
+		}
+	}
+	return nil
 }
 
 func handleExtendedIn(d *schema.ResourceData, setField **sdk.ExtendedIn) error {
