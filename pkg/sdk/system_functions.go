@@ -27,13 +27,16 @@ type systemFunctions struct {
 }
 
 func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (string, error) {
-	objectType = normalizeGetTagObjectType(objectType)
+	objectType, err := normalizeGetTagObjectType(objectType)
+	if err != nil {
+		return "", err
+	}
 
 	s := &struct {
 		Tag string `db:"TAG"`
 	}{}
 	sql := fmt.Sprintf(`SELECT SYSTEM$GET_TAG('%s', '%s', '%v') AS "TAG"`, tagID.FullyQualifiedName(), objectID.FullyQualifiedName(), objectType)
-	err := c.client.queryOne(ctx, s, sql)
+	err = c.client.queryOne(ctx, s, sql)
 	if err != nil {
 		return "", err
 	}
@@ -43,15 +46,18 @@ func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, ob
 // normalize object types for some values because of errors like below
 // SQL compilation error: Invalid value VIEW for argument OBJECT_TYPE. Please use object type TABLE for all kinds of table-like objects.
 // TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
-func normalizeGetTagObjectType(objectType ObjectType) ObjectType {
+func normalizeGetTagObjectType(objectType ObjectType) (ObjectType, error) {
+	if !isTagAssociationAllowedObjectTypes(objectType) {
+		return "", fmt.Errorf("tagging for object type %s is not supported", objectType)
+	}
 	if slices.Contains([]ObjectType{ObjectTypeView, ObjectTypeMaterializedView, ObjectTypeExternalTable}, objectType) {
-		return ObjectTypeTable
+		return ObjectTypeTable, nil
 	}
 
 	if slices.Contains([]ObjectType{ObjectTypeExternalFunction}, objectType) {
-		return ObjectTypeFunction
+		return ObjectTypeFunction, nil
 	}
-	return objectType
+	return objectType, nil
 }
 
 type PipeExecutionState string

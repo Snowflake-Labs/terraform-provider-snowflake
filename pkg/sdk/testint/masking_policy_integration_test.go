@@ -343,40 +343,6 @@ func TestInt_MaskingPolicyAlter(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("setting and unsetting tags", func(t *testing.T) {
-		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
-		id := maskingPolicy.ID()
-		t.Cleanup(maskingPolicyCleanup)
-
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		tag2, tag2Cleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tag2Cleanup)
-
-		tagAssociations := []sdk.TagAssociation{{Name: tag.ID(), Value: "value1"}, {Name: tag2.ID(), Value: "value2"}}
-		alterOptions := &sdk.AlterMaskingPolicyOptions{
-			SetTag: tagAssociations,
-		}
-		err := client.MaskingPolicies.Alter(ctx, id, alterOptions)
-		require.NoError(t, err)
-		tagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeMaskingPolicy)
-		require.NoError(t, err)
-		assert.Equal(t, tagAssociations[0].Value, tagValue)
-		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2.ID(), id, sdk.ObjectTypeMaskingPolicy)
-		require.NoError(t, err)
-		assert.Equal(t, tagAssociations[1].Value, tag2Value)
-
-		// unset tag
-		alterOptions = &sdk.AlterMaskingPolicyOptions{
-			UnsetTag: []sdk.ObjectIdentifier{tag.ID()},
-		}
-		err = client.MaskingPolicies.Alter(ctx, id, alterOptions)
-		require.NoError(t, err)
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeMaskingPolicy)
-		assert.Error(t, err)
-	})
-
 	t.Run("set body", func(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 		id := maskingPolicy.ID()

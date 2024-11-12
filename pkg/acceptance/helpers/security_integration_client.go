@@ -25,12 +25,83 @@ func (c *SecurityIntegrationClient) client() sdk.SecurityIntegrations {
 	return c.context.client.SecurityIntegrations
 }
 
-func (c *SecurityIntegrationClient) UpdateExternalOauth(t *testing.T, request *sdk.AlterExternalOauthSecurityIntegrationRequest) {
+func (c *SecurityIntegrationClient) CreateApiAuthenticationWithClientCredentialsFlow(t *testing.T) (*sdk.SecurityIntegration, func()) {
 	t.Helper()
 	ctx := context.Background()
 
-	err := c.client().AlterExternalOauth(ctx, request)
+	id := c.ids.RandomAccountObjectIdentifier()
+	request := sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id, false, "foo", "foo")
+	err := c.client().CreateApiAuthenticationWithClientCredentialsFlow(ctx, request)
 	require.NoError(t, err)
+
+	si, err := c.client().ShowByID(ctx, request.GetName())
+	require.NoError(t, err)
+
+	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
+}
+
+func (c *SecurityIntegrationClient) CreateApiAuthenticationWithAuthorizationCodeGrantFlow(t *testing.T) (*sdk.SecurityIntegration, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	id := c.ids.RandomAccountObjectIdentifier()
+	request := sdk.NewCreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id, false, "foo", "foo")
+	err := c.client().CreateApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, request)
+	require.NoError(t, err)
+
+	si, err := c.client().ShowByID(ctx, request.GetName())
+	require.NoError(t, err)
+
+	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
+}
+
+func (c *SecurityIntegrationClient) CreateExternalOauth(t *testing.T) (*sdk.SecurityIntegration, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	id := c.ids.RandomAccountObjectIdentifier()
+	issuer := random.String()
+	request := sdk.NewCreateExternalOauthSecurityIntegrationRequest(id, false, sdk.ExternalOauthSecurityIntegrationTypeCustom,
+		issuer, []sdk.TokenUserMappingClaim{{Claim: "foo"}}, sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeLoginName,
+	).WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example.com"}})
+	err := c.client().CreateExternalOauth(ctx, request)
+	require.NoError(t, err)
+
+	si, err := c.client().ShowByID(ctx, request.GetName())
+	require.NoError(t, err)
+
+	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
+}
+
+func (c *SecurityIntegrationClient) CreateOauthForPartnerApplications(t *testing.T) (*sdk.SecurityIntegration, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	id := c.ids.RandomAccountObjectIdentifier()
+	request := sdk.NewCreateOauthForPartnerApplicationsSecurityIntegrationRequest(id, sdk.OauthSecurityIntegrationClientLooker).
+		WithOauthRedirectUri("http://example.com")
+	err := c.client().CreateOauthForPartnerApplications(ctx, request)
+	require.NoError(t, err)
+
+	si, err := c.client().ShowByID(ctx, request.GetName())
+	require.NoError(t, err)
+
+	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
+}
+
+func (c *SecurityIntegrationClient) CreateOauthForCustomClients(t *testing.T) (*sdk.SecurityIntegration, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	id := c.ids.RandomAccountObjectIdentifier()
+	request := sdk.NewCreateOauthForCustomClientsSecurityIntegrationRequest(id, sdk.OauthSecurityIntegrationClientTypePublic, "https://example.com")
+	err := c.client().CreateOauthForCustomClients(ctx, request)
+	require.NoError(t, err)
+
+	si, err := c.client().ShowByID(ctx, request.GetName())
+	require.NoError(t, err)
+
+	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
 }
 
 func (c *SecurityIntegrationClient) CreateSaml2(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.SecurityIntegration, func()) {
@@ -69,6 +140,27 @@ func (c *SecurityIntegrationClient) CreateApiAuthenticationClientCredentialsWith
 	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
 }
 
+func (c *SecurityIntegrationClient) CreateScimWithRequest(t *testing.T, request *sdk.CreateScimSecurityIntegrationRequest) (*sdk.SecurityIntegration, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().CreateScim(ctx, request)
+	require.NoError(t, err)
+
+	si, err := c.client().ShowByID(ctx, request.GetName())
+	require.NoError(t, err)
+
+	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
+}
+
+func (c *SecurityIntegrationClient) UpdateExternalOauth(t *testing.T, request *sdk.AlterExternalOauthSecurityIntegrationRequest) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().AlterExternalOauth(ctx, request)
+	require.NoError(t, err)
+}
+
 func (c *SecurityIntegrationClient) UpdateSaml2(t *testing.T, request *sdk.AlterSaml2SecurityIntegrationRequest) {
 	t.Helper()
 	ctx := context.Background()
@@ -88,19 +180,6 @@ func (c *SecurityIntegrationClient) UpdateOauthForPartnerApplications(t *testing
 
 	err := c.client().AlterOauthForPartnerApplications(ctx, request)
 	require.NoError(t, err)
-}
-
-func (c *SecurityIntegrationClient) CreateScimWithRequest(t *testing.T, request *sdk.CreateScimSecurityIntegrationRequest) (*sdk.SecurityIntegration, func()) {
-	t.Helper()
-	ctx := context.Background()
-
-	err := c.client().CreateScim(ctx, request)
-	require.NoError(t, err)
-
-	si, err := c.client().ShowByID(ctx, request.GetName())
-	require.NoError(t, err)
-
-	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
 }
 
 func (c *SecurityIntegrationClient) UpdateOauthForClients(t *testing.T, request *sdk.AlterOauthForCustomClientsSecurityIntegrationRequest) {

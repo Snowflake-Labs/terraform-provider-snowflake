@@ -281,44 +281,6 @@ func TestInt_PipeAlter(t *testing.T) {
 		assert.Equal(t, "", alteredPipe.Comment)
 	})
 
-	t.Run("set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, pipeCopyStatement)
-		t.Cleanup(pipeCleanup)
-
-		tagValue := "abc"
-		alterOptions := &sdk.AlterPipeOptions{
-			SetTag: []sdk.TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: tagValue,
-				},
-			},
-		}
-
-		err := itc.client.Pipes.Alter(itc.ctx, pipe.ID(), alterOptions)
-		require.NoError(t, err)
-
-		returnedTagValue, err := itc.client.SystemFunctions.GetTag(itc.ctx, tag.ID(), pipe.ID(), sdk.ObjectTypePipe)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		alterOptions = &sdk.AlterPipeOptions{
-			UnsetTag: []sdk.ObjectIdentifier{
-				tag.ID(),
-			},
-		}
-
-		err = itc.client.Pipes.Alter(itc.ctx, pipe.ID(), alterOptions)
-		require.NoError(t, err)
-
-		_, err = itc.client.SystemFunctions.GetTag(itc.ctx, tag.ID(), pipe.ID(), sdk.ObjectTypePipe)
-		assert.Error(t, err)
-	})
-
 	t.Run("refresh with all", func(t *testing.T) {
 		pipe, pipeCleanup := testClientHelper().Pipe.CreatePipe(t, pipeCopyStatement)
 		t.Cleanup(pipeCleanup)

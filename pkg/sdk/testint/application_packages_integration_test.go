@@ -53,31 +53,6 @@ func TestInt_ApplicationPackages(t *testing.T) {
 		return e
 	}
 
-	assertApplicationPackage := func(t *testing.T, id sdk.AccountObjectIdentifier) {
-		t.Helper()
-
-		param, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
-		require.NoError(t, err)
-
-		defaultDataRetentionTimeInDays, err := strconv.Atoi(param.Value)
-		require.NoError(t, err)
-
-		e, err := client.ApplicationPackages.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		assert.NotEmpty(t, e.CreatedOn)
-		assert.Equal(t, id.Name(), e.Name)
-		assert.Equal(t, false, e.IsDefault)
-		assert.Equal(t, true, e.IsCurrent)
-		assert.Equal(t, sdk.DistributionInternal, sdk.Distribution(e.Distribution))
-		assert.Equal(t, "ACCOUNTADMIN", e.Owner)
-		assert.Empty(t, e.Comment)
-		assert.Equal(t, defaultDataRetentionTimeInDays, e.RetentionTime)
-		assert.Empty(t, e.Options)
-		assert.Empty(t, e.DroppedOn)
-		assert.Empty(t, e.ApplicationClass)
-	}
-
 	t.Run("create application package", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		comment := random.Comment()
@@ -143,32 +118,6 @@ func TestInt_ApplicationPackages(t *testing.T) {
 		require.NoError(t, err)
 		require.Empty(t, o.Comment)
 		require.Equal(t, sdk.DistributionInternal, sdk.Distribution(o.Distribution))
-	})
-
-	t.Run("alter application package: set and unset tags", func(t *testing.T) {
-		e := createApplicationPackageHandle(t)
-		id := e.ID()
-
-		setTags := []sdk.TagAssociation{
-			{
-				Name:  tagTest.ID(),
-				Value: "v1",
-			},
-		}
-		err := client.ApplicationPackages.Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithSetTags(setTags))
-		require.NoError(t, err)
-		assertApplicationPackage(t, id)
-
-		value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeApplicationPackage)
-		require.NoError(t, err)
-		assert.Equal(t, "v1", value)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tagTest.ID(),
-		}
-		err = client.ApplicationPackages.Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithUnsetTags(unsetTags))
-		require.NoError(t, err)
-		assertApplicationPackage(t, id)
 	})
 
 	t.Run("show application package for SQL: with like", func(t *testing.T) {

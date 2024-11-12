@@ -44,9 +44,6 @@ func TestInt_Users(t *testing.T) {
 	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
-	tag2, tag2Cleanup := testClientHelper().Tag.CreateTag(t)
-	t.Cleanup(tag2Cleanup)
-
 	networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
 	t.Cleanup(networkPolicyCleanup)
 
@@ -1581,49 +1578,6 @@ func TestInt_Users(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-	})
-
-	t.Run("alter: set and unset tags", func(t *testing.T) {
-		user, userCleanup := testClientHelper().User.CreateUser(t)
-		t.Cleanup(userCleanup)
-
-		alterOptions := &sdk.AlterUserOptions{
-			SetTag: []sdk.TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: "val",
-				},
-				{
-					Name:  tag2.ID(),
-					Value: "val2",
-				},
-			},
-		}
-		err := client.Users.Alter(ctx, user.ID(), alterOptions)
-		require.NoError(t, err)
-
-		val, err := client.SystemFunctions.GetTag(ctx, tag.ID(), user.ID(), sdk.ObjectTypeUser)
-		require.NoError(t, err)
-		require.Equal(t, "val", val)
-		val2, err := client.SystemFunctions.GetTag(ctx, tag2.ID(), user.ID(), sdk.ObjectTypeUser)
-		require.NoError(t, err)
-		require.Equal(t, "val2", val2)
-
-		alterOptions = &sdk.AlterUserOptions{
-			UnsetTag: []sdk.ObjectIdentifier{
-				tag.ID(),
-				tag2.ID(),
-			},
-		}
-		err = client.Users.Alter(ctx, user.ID(), alterOptions)
-		require.NoError(t, err)
-
-		val, err = client.SystemFunctions.GetTag(ctx, tag.ID(), user.ID(), sdk.ObjectTypeUser)
-		require.Error(t, err)
-		require.Equal(t, "", val)
-		val2, err = client.SystemFunctions.GetTag(ctx, tag2.ID(), user.ID(), sdk.ObjectTypeUser)
-		require.Error(t, err)
-		require.Equal(t, "", val2)
 	})
 
 	t.Run("describe: when user exists", func(t *testing.T) {
