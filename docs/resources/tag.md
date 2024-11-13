@@ -2,33 +2,43 @@
 page_title: "snowflake_tag Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Resource used to manage tags. For more information, check tag documentation https://docs.snowflake.com/en/sql-reference/sql/create-tag.
 ---
+
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0980--v0990) to use it.
+
+-> **Note** `snowflake_user_password_policy_attachment` will be reworked in the following versions of the provider which may still affect this resource.
+
+-> **Note** Attaching user policies will be handled in the following versions of the provider which may still affect this resource.
+
+-> **Note** Other two user types are handled in separate resources: `snowflake_service_user` for user type `service` and `snowflake_legacy_service_user` for user type `legacy_service`.
+
+-> **Note** External changes to `days_to_expiry`, `mins_to_unlock`, and `mins_to_bypass_mfa` are not currently handled by the provider (because the value changes continuously on Snowflake side after setting it).
 
 # snowflake_tag (Resource)
 
-
+Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag).
 
 ## Example Usage
 
 ```terraform
-resource "snowflake_database" "database" {
-  name = "database"
-}
-
-resource "snowflake_schema" "schema" {
-  name     = "schema"
-  database = snowflake_database.database.name
-}
-
+# basic resource
 resource "snowflake_tag" "tag" {
-  name           = "cost_center"
-  database       = snowflake_database.database.name
-  schema         = snowflake_schema.schema.name
-  allowed_values = ["finance", "engineering"]
+  name     = "tag"
+  database = "database"
+  schema   = "schema"
+}
+
+# complete resource
+resource "snowflake_tag" "tag" {
+  name             = "tag"
+  database         = "database"
+  schema           = "schema"
+  comment          = "comment"
+  allowed_values   = ["finance", "engineering", ""]
+  masking_policies = [snowfalke_masking_policy.masking_policy.fully_qualified_name]
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
@@ -37,25 +47,42 @@ resource "snowflake_tag" "tag" {
 
 ### Required
 
-- `database` (String) The database in which to create the tag.
-- `name` (String) Specifies the identifier for the tag; must be unique for the database in which the tag is created.
-- `schema` (String) The schema in which to create the tag.
+- `database` (String) The database in which to create the tag. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `name` (String) Specifies the identifier for the tag; must be unique for the database in which the tag is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `schema` (String) The schema in which to create the tag. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
 
 ### Optional
 
-- `allowed_values` (List of String) List of allowed values for the tag.
+- `allowed_values` (Set of String) Set of allowed values for the tag.
 - `comment` (String) Specifies a comment for the tag.
+- `masking_policies` (Set of String) Set of masking policies for the tag.
 
 ### Read-Only
 
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+- `show_output` (List of Object) Outputs the result of `SHOW TAGS` for the given tag. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `allowed_values` (List of String)
+- `comment` (String)
+- `created_on` (String)
+- `database_name` (String)
+- `name` (String)
+- `owner` (String)
+- `owner_role_type` (String)
+- `schema_name` (String)
 
 ## Import
 
 Import is supported using the following syntax:
 
 ```shell
-# format is database name | schema name | tag name
-terraform import snowflake_tag.example 'dbName|schemaName|tagName'
+terraform import snowflake_tag.example '"<database_name>"."<schema_name>"."<tag_name>"'
 ```
+
+Note: terraform plan+apply may be needed after successful import to fill out all the missing fields (like `password`) in state.

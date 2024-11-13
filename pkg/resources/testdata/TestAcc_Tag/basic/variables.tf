@@ -9,11 +9,3 @@ variable "schema" {
 variable "name" {
   type = string
 }
-
-variable "comment" {
-  type = string
-}
-
-variable "allowed_values" {
-  type = list(string)
-}

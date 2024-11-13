@@ -2,10 +2,13 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"slices"
+	"log"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -16,22 +19,24 @@ import (
 
 var tagSchema = map[string]*schema.Schema{
 	"name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Specifies the identifier for the tag; must be unique for the database in which the tag is created.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      blocklistedCharactersFieldDescription("Specifies the identifier for the tag; must be unique for the database in which the tag is created."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The database in which to create the tag.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("The database in which to create the tag."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "The schema in which to create the tag.",
-		ForceNew:    true,
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      blocklistedCharactersFieldDescription("The schema in which to create the tag."),
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -39,12 +44,30 @@ var tagSchema = map[string]*schema.Schema{
 		Description: "Specifies a comment for the tag.",
 	},
 	"allowed_values": {
-		Type:        schema.TypeList,
+		Type:        schema.TypeSet,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 		Optional:    true,
-		Description: "List of allowed values for the tag.",
+		Description: "Set of allowed values for the tag.",
+	},
+	"masking_policies": {
+		Type: schema.TypeSet,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
+			DiffSuppressFunc: suppressIdentifierQuoting,
+		},
+		Optional:    true,
+		Description: "Set of masking policies for the tag.",
 	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
+	ShowOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW TAGS` for the given tag.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowTagSchema,
+		},
+	},
 }
 
 // TODO(SNOW-1348114, SNOW-1348110, SNOW-1348355, SNOW-1348353): remove after rework of external table, materialized view, stage and table
@@ -83,14 +106,31 @@ var tagReferenceSchema = &schema.Schema{
 // Schema returns a pointer to the resource representing a schema.
 func Tag() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		CreateContext: CreateContextTag,
 		ReadContext:   ReadContextTag,
 		UpdateContext: UpdateContextTag,
 		DeleteContext: DeleteContextTag,
+		Description:   "Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag).",
+
+		CustomizeDiff: customdiff.All(
+			ComputedIfAnyAttributeChanged(streamOnTableSchema, ShowOutputAttributeName, "name", "comment", "allowed_values"),
+			ComputedIfAnyAttributeChanged(streamOnTableSchema, FullyQualifiedNameAttributeName, "name"),
+		),
 
 		Schema: tagSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportName[sdk.SchemaObjectIdentifier],
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0_98_0_TagStateUpgrader,
+			},
 		},
 	}
 }
@@ -98,57 +138,98 @@ func Tag() *schema.Resource {
 func CreateContextTag(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	schemaName := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, schemaName, name)
 
 	request := sdk.NewCreateTagRequest(id)
 	if v, ok := d.GetOk("comment"); ok {
 		request.WithComment(sdk.String(v.(string)))
 	}
 	if v, ok := d.GetOk("allowed_values"); ok {
-		request.WithAllowedValues(expandStringListAllowEmpty(v.([]any)))
+		request.WithAllowedValues(expandStringListAllowEmpty(v.(*schema.Set).List()))
 	}
 	if err := client.Tags.Create(ctx, request); err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(helpers.EncodeSnowflakeID(id))
+	d.SetId(helpers.EncodeResourceIdentifier(id))
+	if v, ok := d.GetOk("masking_policies"); ok {
+		ids, err := parseSchemaObjectIdentifierList(v)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithSet(sdk.NewTagSetRequest().WithMaskingPolicies(ids)))
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error setting masking policies in tag %v err = %w", id.Name(), err))
+		}
+	}
 	return ReadContextTag(ctx, d, meta)
 }
 
 func ReadContextTag(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	diags := diag.Diagnostics{}
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-
-	tag, err := client.Tags.ShowByID(ctx, id)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
+
+	tag, err := client.Tags.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query tag. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Tag: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
 		return diag.FromErr(err)
 	}
-	if err := d.Set("name", tag.Name); err != nil {
-		return diag.FromErr(err)
+	errs := errors.Join(
+		d.Set("name", tag.Name),
+		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+		d.Set(ShowOutputAttributeName, []map[string]any{schemas.TagToSchema(tag)}),
+		d.Set("comment", tag.Comment),
+		d.Set("allowed_values", tag.AllowedValues),
+		func() error {
+			policyRefs, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(id, sdk.PolicyEntityDomainTag))
+			if err != nil {
+				return (fmt.Errorf("getting policy references for view: %w", err))
+			}
+			policyIds := make([]string, 0, len(policyRefs))
+			for _, p := range policyRefs {
+				if p.PolicyKind == sdk.PolicyKindMaskingPolicy {
+					policyId := sdk.NewSchemaObjectIdentifier(*p.PolicyDb, *p.PolicySchema, p.PolicyName)
+					policyIds = append(policyIds, policyId.FullyQualifiedName())
+				}
+			}
+			return d.Set("masking_policies", policyIds)
+		}(),
+	)
+	if errs != nil {
+		return diag.FromErr(errs)
 	}
-	if err := d.Set("database", tag.DatabaseName); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("schema", tag.SchemaName); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("comment", tag.Comment); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("allowed_values", tag.AllowedValues); err != nil {
-		return diag.FromErr(err)
-	}
-	return diags
+	return nil
 }
 
 func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if d.HasChange("name") {
+		newId := sdk.NewSchemaObjectIdentifierInSchema(id.SchemaId(), d.Get("name").(string))
+
+		err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithRename(newId))
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error renaming tag %v err = %w", d.Id(), err))
+		}
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
+		id = newId
+	}
 	if d.HasChange("comment") {
 		comment, ok := d.GetOk("comment")
 		if ok {
@@ -165,30 +246,56 @@ func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 	if d.HasChange("allowed_values") {
 		o, n := d.GetChange("allowed_values")
-		oldAllowedValues := expandStringListAllowEmpty(o.([]any))
-		newAllowedValues := expandStringListAllowEmpty(n.([]any))
-		var allowedValuesToAdd, allowedValuesToRemove []string
+		oldAllowedValues := expandStringListAllowEmpty(o.(*schema.Set).List())
+		newAllowedValues := expandStringListAllowEmpty(n.(*schema.Set).List())
 
-		for _, oldAllowedValue := range oldAllowedValues {
-			if !slices.Contains(newAllowedValues, oldAllowedValue) {
-				allowedValuesToRemove = append(allowedValuesToRemove, oldAllowedValue)
-			}
-		}
+		addedItems, removedItems := ListDiff(oldAllowedValues, newAllowedValues)
 
-		for _, newAllowedValue := range newAllowedValues {
-			if !slices.Contains(oldAllowedValues, newAllowedValue) {
-				allowedValuesToAdd = append(allowedValuesToAdd, newAllowedValue)
-			}
-		}
-
-		if len(allowedValuesToAdd) > 0 {
-			if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithAdd(allowedValuesToAdd)); err != nil {
+		if len(addedItems) > 0 {
+			if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithAdd(addedItems)); err != nil {
 				return diag.FromErr(err)
 			}
 		}
 
-		if len(allowedValuesToRemove) > 0 {
-			if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithDrop(allowedValuesToRemove)); err != nil {
+		if len(removedItems) > 0 {
+			if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithDrop(removedItems)); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+	if d.HasChange("masking_policies") {
+		o, n := d.GetChange("masking_policies")
+		oldAllowedValues := expandStringList(o.(*schema.Set).List())
+		newAllowedValues := expandStringList(n.(*schema.Set).List())
+
+		addedItems, removedItems := ListDiff(oldAllowedValues, newAllowedValues)
+
+		removedids := make([]sdk.SchemaObjectIdentifier, len(removedItems))
+		for i, idRaw := range removedItems {
+			id, err := sdk.ParseSchemaObjectIdentifier(idRaw)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			removedids[i] = id
+		}
+
+		addedids := make([]sdk.SchemaObjectIdentifier, len(addedItems))
+		for i, idRaw := range addedItems {
+			id, err := sdk.ParseSchemaObjectIdentifier(idRaw)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			addedids[i] = id
+		}
+
+		if len(removedItems) > 0 {
+			if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithUnset(sdk.NewTagUnsetRequest().WithMaskingPolicies(removedids))); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if len(addedItems) > 0 {
+			if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithSet(sdk.NewTagSetRequest().WithMaskingPolicies(addedids))); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -198,21 +305,31 @@ func UpdateContextTag(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 func DeleteContextTag(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	// before dropping the resource, all policies must be unset
+	policyRefs, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(id, sdk.PolicyEntityDomainTag))
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("getting policy references for view: %w", err))
+	}
+	removedPolicies := make([]sdk.SchemaObjectIdentifier, 0, len(policyRefs))
+	for _, p := range policyRefs {
+		if p.PolicyKind == sdk.PolicyKindMaskingPolicy {
+			policyName := sdk.NewSchemaObjectIdentifier(*p.PolicyDb, *p.PolicySchema, p.PolicyName)
+			removedPolicies = append(removedPolicies, policyName)
+		}
+	}
+	if len(removedPolicies) > 0 {
+		log.Printf("[DEBUG] unsetting masking policies before dropping tag: %s\n", id.FullyQualifiedName())
+		if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithUnset(sdk.NewTagUnsetRequest().WithMaskingPolicies(removedPolicies))); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	if err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id)); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")
 	return nil
-}
-
-// Returns the slice of strings for inputed allowed values.
-func expandAllowedValues(avChangeSet any) []string {
-	avList := avChangeSet.([]any)
-	newAvs := make([]string, len(avList))
-	for idx, value := range avList {
-		newAvs[idx] = fmt.Sprintf("%v", value)
-	}
-
-	return newAvs
 }
