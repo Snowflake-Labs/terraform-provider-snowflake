@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strings"
@@ -539,6 +540,204 @@ func TestAcc_Task_CronAndMinutes(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	minutes := 5
+	cron := "*/5 * * * * UTC"
+	configModelWithoutSchedule := model.TaskWithId("test", id, false, "SELECT 1")
+	configModelWithMinutes := model.TaskWithId("test", id, false, "SELECT 1").WithScheduleMinutes(minutes)
+	configModelWithCron := model.TaskWithId("test", id, false, "SELECT 1").WithScheduleCron(cron)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			// Create without a schedule
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasNoScheduleSet(),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithoutSchedule.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasNoSchedule(),
+				),
+			},
+			// External change - set minutes
+			{
+				PreConfig: func() {
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithSet(*sdk.NewTaskSetRequest().WithSchedule("5 MINUTES")))
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasNoScheduleSet(),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithoutSchedule.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasNoSchedule(),
+				),
+			},
+			// External change - set cron
+			{
+				PreConfig: func() {
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithSet(*sdk.NewTaskSetRequest().WithSchedule(fmt.Sprintf("USING CRON %s", cron))))
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasNoScheduleSet(),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithoutSchedule.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasNoSchedule(),
+				),
+			},
+			// Set minutes schedule
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithMinutes),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithMinutes.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasScheduleMinutes(minutes),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithMinutes.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleMinutes(minutes),
+				),
+			},
+			// External change - unset schedule
+			{
+				PreConfig: func() {
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithUnset(*sdk.NewTaskUnsetRequest().WithSchedule(true)))
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithMinutes),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithMinutes.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasScheduleMinutes(minutes),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithMinutes.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleMinutes(minutes),
+				),
+			},
+			// Set cron schedule
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithCron),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithCron.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasScheduleCron(cron),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithCron.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleCron(cron),
+				),
+			},
+			// External change - unset schedule
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithCron),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithCron.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasScheduleCron(cron),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithCron.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleCron(cron),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_ScheduleSchemaValidation(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config:      taskConfigInvalidScheduleSetMultipleOrEmpty(id, true),
+				ExpectError: regexp.MustCompile("\"schedule\": one of `schedule,schedule.0.minutes,schedule.0.using_cron` must"),
+			},
+			{
+				Config:      taskConfigInvalidScheduleSetMultipleOrEmpty(id, false),
+				ExpectError: regexp.MustCompile("\"schedule\": one of `schedule,schedule.0.minutes,schedule.0.using_cron` must"),
+			},
+		},
+	})
+}
+
+func taskConfigInvalidScheduleSetMultipleOrEmpty(id sdk.SchemaObjectIdentifier, setMultiple bool) string {
+	var scheduleString string
+	scheduleBuffer := new(bytes.Buffer)
+	scheduleBuffer.WriteString("schedule {\n")
+	if setMultiple {
+		scheduleBuffer.WriteString("minutes = 10\n")
+		scheduleBuffer.WriteString("using_cron = \"*/5 * * * * UTC\"\n")
+	}
+	scheduleBuffer.WriteString("}\n")
+
+	return fmt.Sprintf(`
+resource "snowflake_task" "test" {
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	started = false
+	sql_statement = "SELECT 1"
+
+	%[4]s
+}`, id.DatabaseName(), id.SchemaName(), id.Name(), scheduleString)
 }
 
 func TestAcc_Task_AllParameters(t *testing.T) {

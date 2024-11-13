@@ -73,6 +73,7 @@ var taskSchema = map[string]*schema.Schema{
 		MaxItems:      1,
 		Description:   "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after)",
 		ConflictsWith: []string{"finalize", "after"},
+		ExactlyOneOf:  []string{"schedule.0.minutes", "schedule.0.using_cron"},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"minutes": {
@@ -80,14 +81,12 @@ var taskSchema = map[string]*schema.Schema{
 					Optional:         true,
 					Description:      "Specifies an interval (in minutes) of wait time inserted between runs of the task. Accepts positive integers only.",
 					ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
-					ConflictsWith:    []string{"schedule.0.using_cron"},
 				},
 				"using_cron": {
 					Type:             schema.TypeString,
 					Optional:         true,
 					Description:      "Specifies a cron expression and time zone for periodically running the task. Supports a subset of standard cron utility syntax.",
 					DiffSuppressFunc: ignoreCaseSuppressFunc,
-					ConflictsWith:    []string{"schedule.0.minutes"},
 				},
 			},
 		},
@@ -330,11 +329,7 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) (diags di
 	defer func() {
 		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
 			log.Printf("[WARN] failed to resume tasks in create: %s", err)
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  fmt.Sprintf("Failed to resume tasks when creating %s", id.FullyQualifiedName()),
-				Detail:   fmt.Sprintf("Failed to resume some of the tasks with the following errors (tasks can be resumed by applying the same configuration again): %v", err),
-			})
+			diags = append(diags, resumeTaskErrorDiag(id, "create", err))
 		}
 	}()
 
@@ -581,13 +576,13 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 
 		if errs := errors.Join(
-			attributeMappedValueReadIfNotEmptyElse(d, "finalize", task.TaskRelations.FinalizedRootTask, func(finalizedRootTask *sdk.SchemaObjectIdentifier) (string, error) {
+			attributeMappedValueReadOrDefault(d, "finalize", task.TaskRelations.FinalizedRootTask, func(finalizedRootTask *sdk.SchemaObjectIdentifier) (string, error) {
 				return finalizedRootTask.FullyQualifiedName(), nil
 			}, nil),
-			attributeMappedValueReadIfNotEmptyElse(d, "error_integration", task.ErrorIntegration, func(errorIntegration *sdk.AccountObjectIdentifier) (string, error) {
+			attributeMappedValueReadOrDefault(d, "error_integration", task.ErrorIntegration, func(errorIntegration *sdk.AccountObjectIdentifier) (string, error) {
 				return errorIntegration.Name(), nil
 			}, nil),
-			attributeMappedValueReadIfNotEmptyElse(d, "warehouse", task.Warehouse, func(warehouse *sdk.AccountObjectIdentifier) (string, error) {
+			attributeMappedValueReadOrDefault(d, "warehouse", task.Warehouse, func(warehouse *sdk.AccountObjectIdentifier) (string, error) {
 				return warehouse.Name(), nil
 			}, nil),
 			func() error {
@@ -650,11 +645,7 @@ func DeleteTask(ctx context.Context, d *schema.ResourceData, meta any) (diags di
 	defer func() {
 		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
 			log.Printf("[WARN] failed to resume tasks in delete: %s", err)
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  fmt.Sprintf("Failed to resume tasks when deleting %s", id.FullyQualifiedName()),
-				Detail:   fmt.Sprintf("Failed to resume some of the tasks with the following errors (tasks can be resumed by applying the same configuration again): %v", err),
-			})
+			diags = append(diags, resumeTaskErrorDiag(id, "delete", err))
 		}
 	}()
 	if err != nil {
@@ -668,6 +659,14 @@ func DeleteTask(ctx context.Context, d *schema.ResourceData, meta any) (diags di
 
 	d.SetId("")
 	return nil
+}
+
+func resumeTaskErrorDiag(id sdk.SchemaObjectIdentifier, operation string, originalErr error) diag.Diagnostic {
+	return diag.Diagnostic{
+		Severity: diag.Warning,
+		Summary:  fmt.Sprintf("Failed to resume tasks in %s operation (id=%s)", operation, id.FullyQualifiedName()),
+		Detail:   fmt.Sprintf("Failed to resume some of the tasks with the following errors (tasks can be resumed by applying the same configuration again): %v", originalErr),
+	}
 }
 
 func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {

@@ -232,11 +232,10 @@ func (t *TaskResourceAssert) HasS3StageVpceDnsNameString(expected string) *TaskR
 	return t
 }
 
-// TODO: Bring back
-//func (t *TaskResourceAssert) HasScheduleString(expected string) *TaskResourceAssert {
-//	t.AddAssertion(assert.ValueSet("schedule", expected))
-//	return t
-//}
+func (t *TaskResourceAssert) HasScheduleString(expected string) *TaskResourceAssert {
+	t.AddAssertion(assert.ValueSet("schedule", expected))
+	return t
+}
 
 func (t *TaskResourceAssert) HasSchemaString(expected string) *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("schema", expected))

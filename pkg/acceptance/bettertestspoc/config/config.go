@@ -133,19 +133,7 @@ func ConfigVariablesFromModels(t *testing.T, variableName string, models ...Reso
 	t.Helper()
 	allVariables := make([]tfconfig.Variable, 0)
 	for _, model := range models {
-		rType := reflect.TypeOf(model).Elem()
-		rValue := reflect.ValueOf(model).Elem()
-		variables := make(tfconfig.Variables)
-		for i := 0; i < rType.NumField(); i++ {
-			field := rType.Field(i)
-			if jsonTag, ok := field.Tag.Lookup("json"); ok {
-				name := strings.Split(jsonTag, ",")[0]
-				if fieldValue, ok := rValue.Field(i).Interface().(tfconfig.Variable); ok {
-					variables[name] = fieldValue
-				}
-			}
-		}
-		allVariables = append(allVariables, tfconfig.ObjectVariable(variables))
+		allVariables = append(allVariables, tfconfig.ObjectVariable(ConfigVariablesFromModel(t, model)))
 	}
 	return tfconfig.Variables{
 		variableName: tfconfig.ListVariable(allVariables...),
