@@ -9,6 +9,9 @@ across different versions.
 
 ## v0.98.0 ➞ v0.99.0
 
+### snowflake_tag_masking_policy_association deprecation
+`snowflake_tag_masking_policy_association` is now deprecated in favor of `snowflake_tag` with a new `masking_policy` field. It will be removed with the v1 release. Please adjust your configuration files.
+
 ### snowflake_tag resource changes
 New fields:
   - `masking_policies` field that holds the associated masking policies.

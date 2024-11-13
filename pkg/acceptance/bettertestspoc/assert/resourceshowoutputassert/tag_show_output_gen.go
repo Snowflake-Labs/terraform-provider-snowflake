@@ -20,21 +20,21 @@ type TagShowOutputAssert struct {
 func TagShowOutput(t *testing.T, name string) *TagShowOutputAssert {
 	t.Helper()
 
-	tag := TagShowOutputAssert{
+	tt := TagShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	tag.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &tag
+	tt.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &tt
 }
 
 func ImportedTagShowOutput(t *testing.T, id string) *TagShowOutputAssert {
 	t.Helper()
 
-	tag := TagShowOutputAssert{
+	tt := TagShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	tag.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &tag
+	tt.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &tt
 }
 
 ////////////////////////////

@@ -68,7 +68,7 @@ resource "snowflake_tag" "tag" {
 
 Read-Only:
 
-- `allowed_values` (List of String)
+- `allowed_values` (Set of String)
 - `comment` (String)
 - `created_on` (String)
 - `database_name` (String)
