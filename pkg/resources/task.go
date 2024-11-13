@@ -71,7 +71,7 @@ var taskSchema = map[string]*schema.Schema{
 		Type:          schema.TypeList,
 		Optional:      true,
 		MaxItems:      1,
-		Description:   "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after)",
+		Description:   "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after; when set, one of the sub-fields `minutes` or `using_cron` should be set)",
 		ConflictsWith: []string{"finalize", "after"},
 		ExactlyOneOf:  []string{"schedule.0.minutes", "schedule.0.using_cron"},
 		Elem: &schema.Resource{
@@ -79,13 +79,13 @@ var taskSchema = map[string]*schema.Schema{
 				"minutes": {
 					Type:             schema.TypeInt,
 					Optional:         true,
-					Description:      "Specifies an interval (in minutes) of wait time inserted between runs of the task. Accepts positive integers only.",
+					Description:      "Specifies an interval (in minutes) of wait time inserted between runs of the task. Accepts positive integers only. (conflicts with `using_cron`)",
 					ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
 				},
 				"using_cron": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Description:      "Specifies a cron expression and time zone for periodically running the task. Supports a subset of standard cron utility syntax.",
+					Description:      "Specifies a cron expression and time zone for periodically running the task. Supports a subset of standard cron utility syntax. (conflicts with `minutes`)",
 					DiffSuppressFunc: ignoreCaseSuppressFunc,
 				},
 			},
@@ -328,7 +328,6 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) (diags di
 
 	defer func() {
 		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-			log.Printf("[WARN] failed to resume tasks in create: %s", err)
 			diags = append(diags, resumeTaskErrorDiag(id, "create", err))
 		}
 	}()
@@ -644,7 +643,6 @@ func DeleteTask(ctx context.Context, d *schema.ResourceData, meta any) (diags di
 	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, id, id)
 	defer func() {
 		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-			log.Printf("[WARN] failed to resume tasks in delete: %s", err)
 			diags = append(diags, resumeTaskErrorDiag(id, "delete", err))
 		}
 	}()

@@ -56,19 +56,10 @@ func attributeMappedValueReadOrDefault[T, R any](d *schema.ResourceData, key str
 		if err != nil {
 			return err
 		}
-		if err := d.Set(key, mappedValue); err != nil {
-			return err
-		}
-	} else {
-		if defaultValue != nil {
-			if err := d.Set(key, *defaultValue); err != nil {
-				return err
-			}
-		} else {
-			if err := d.Set(key, nil); err != nil {
-				return err
-			}
-		}
+		return d.Set(key, mappedValue)
 	}
-	return nil
+	if defaultValue != nil {
+		return d.Set(key, *defaultValue)
+	}
+	return d.Set(key, nil)
 }
