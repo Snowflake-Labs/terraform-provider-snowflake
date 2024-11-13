@@ -60,7 +60,9 @@ func tasks(databaseName string, schemaName string, taskName string) string {
 		warehouse 	  = snowflake_warehouse.test.name
 		sql_statement = "SHOW FUNCTIONS"
 		started  	  = true
-		schedule 	  = "15 MINUTES"
+		schedule 	  {
+			minutes = 15
+		}
 	  }
 
 	data snowflake_tasks "t" {

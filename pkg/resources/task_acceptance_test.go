@@ -708,11 +708,11 @@ func TestAcc_Task_ScheduleSchemaValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      taskConfigInvalidScheduleSetMultipleOrEmpty(id, true),
-				ExpectError: regexp.MustCompile("\"schedule\": one of `schedule,schedule.0.minutes,schedule.0.using_cron` must"),
+				ExpectError: regexp.MustCompile("\"schedule.0.minutes\": only one of `schedule.0.minutes,schedule.0.using_cron`"),
 			},
 			{
 				Config:      taskConfigInvalidScheduleSetMultipleOrEmpty(id, false),
-				ExpectError: regexp.MustCompile("\"schedule\": one of `schedule,schedule.0.minutes,schedule.0.using_cron` must"),
+				ExpectError: regexp.MustCompile("\"schedule.0.minutes\": one of `schedule.0.minutes,schedule.0.using_cron`"),
 			},
 		},
 	})
@@ -727,6 +727,7 @@ func taskConfigInvalidScheduleSetMultipleOrEmpty(id sdk.SchemaObjectIdentifier, 
 		scheduleBuffer.WriteString("using_cron = \"*/5 * * * * UTC\"\n")
 	}
 	scheduleBuffer.WriteString("}\n")
+	scheduleString = scheduleBuffer.String()
 
 	return fmt.Sprintf(`
 resource "snowflake_task" "test" {
