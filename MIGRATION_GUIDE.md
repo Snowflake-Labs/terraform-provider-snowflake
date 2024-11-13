@@ -11,7 +11,23 @@ across different versions.
 
 ### snowflake_tasks data source changes
 
-// TODO:
+New filtering options:
+- `with_parameters`
+- `like`
+- `in`
+- `starts_with`
+- `root_only`
+- `limit`
+
+New output fields
+- `show_output`
+- `parameters`
+
+Breaking changes:
+- `database` and `schema` are right now under `in` field
+- `tasks` field now organizes output of show under `show_output` field and the output of show parameters under `parameters` field.
+
+Please adjust your Terraform configuration files.
 
 ## v0.97.0 ➞ v0.98.0
 

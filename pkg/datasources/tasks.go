@@ -12,12 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// TODO:
-// - Migration notes
-// - Examples
-// - Docs and v1 note
-// - Tests
-
 var tasksSchema = map[string]*schema.Schema{
 	"with_parameters": {
 		Type:        schema.TypeBool,
