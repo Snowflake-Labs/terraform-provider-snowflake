@@ -6,6 +6,12 @@ across different versions.
 
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
+ 
+## v0.98.0 ➞ v0.99.0
+
+### snowflake_tasks data source changes
+
+// TODO:
 
 ## v0.97.0 ➞ v0.98.0
 

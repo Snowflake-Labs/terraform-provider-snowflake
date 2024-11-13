@@ -272,7 +272,7 @@ func TestInt_Tasks(t *testing.T) {
 			WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(testClientHelper().Ids.WarehouseId())).
 			WithErrorIntegration(errorIntegration.ID()).
 			WithSchedule("10 MINUTE").
-			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
+			WithConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
 			WithAllowOverlappingExecution(true).
 			WithSessionParameters(sdk.SessionParameters{
 				JSONIndent: sdk.Int(4),

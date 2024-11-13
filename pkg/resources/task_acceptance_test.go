@@ -3,7 +3,6 @@ package resources_test
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -132,17 +131,13 @@ func TestAcc_Task_Complete(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	taskConfig := `$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`
-	// We have to do three $ at the beginning because Terraform will remove one $.
-	// It's because `${` is a special pattern, and it's escaped by `$${`.
-	expectedTaskConfig := strings.ReplaceAll(taskConfig, "$", "")
-	taskConfigVariableValue := "$" + taskConfig
+	taskConfig := `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`
 	comment := random.Comment()
 	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
 	configModel := model.TaskWithId("test", id, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithSchedule("10 MINUTES").
-		WithConfigValue(configvariable.StringVariable(taskConfigVariableValue)).
+		WithConfigValue(configvariable.StringVariable(taskConfig)).
 		WithAllowOverlappingExecution(r.BooleanTrue).
 		WithErrorIntegration(errorNotificationIntegration.ID().Name()).
 		WithComment(comment).
@@ -167,7 +162,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 						HasStartedString(r.BooleanTrue).
 						HasWarehouseString(acc.TestClient().Ids.WarehouseId().Name()).
 						HasScheduleString("10 MINUTES").
-						HasConfigString(expectedTaskConfig).
+						HasConfigString(taskConfig).
 						HasAllowOverlappingExecutionString(r.BooleanTrue).
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
 						HasCommentString(comment).
@@ -194,7 +189,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 						HasLastCommittedOnNotEmpty().
 						HasLastSuspendedOn("").
 						HasOwnerRoleType("ROLE").
-						HasConfig(expectedTaskConfig).
+						HasConfig(taskConfig).
 						HasBudget("").
 						HasTaskRelations(sdk.TaskRelations{}),
 					resourceparametersassert.TaskResourceParameters(t, configModel.ResourceReference()).
@@ -213,7 +208,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 						HasStartedString(r.BooleanTrue).
 						HasWarehouseString(acc.TestClient().Ids.WarehouseId().Name()).
 						HasScheduleString("10 MINUTES").
-						HasConfigString(expectedTaskConfig).
+						HasConfigString(taskConfig).
 						HasAllowOverlappingExecutionString(r.BooleanTrue).
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
 						HasCommentString(comment).
@@ -244,17 +239,13 @@ func TestAcc_Task_Updates(t *testing.T) {
 	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
 
-	taskConfig := `$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`
-	// We have to do three $ at the beginning because Terraform will remove one $.
-	// It's because `${` is a special pattern, and it's escaped by `$${`.
-	expectedTaskConfig := strings.ReplaceAll(taskConfig, "$", "")
-	taskConfigVariableValue := "$" + taskConfig
+	taskConfig := `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`
 	comment := random.Comment()
 	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
 	completeConfigModel := model.TaskWithId("test", id, true, statement).
 		WithWarehouse(warehouse.ID().Name()).
 		WithSchedule("5 MINUTES").
-		WithConfigValue(configvariable.StringVariable(taskConfigVariableValue)).
+		WithConfigValue(configvariable.StringVariable(taskConfig)).
 		WithAllowOverlappingExecution(r.BooleanTrue).
 		WithErrorIntegration(errorNotificationIntegration.ID().Name()).
 		WithComment(comment).
@@ -323,7 +314,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasStartedString(r.BooleanTrue).
 						HasWarehouseString(warehouse.ID().Name()).
 						HasScheduleString("5 MINUTES").
-						HasConfigString(expectedTaskConfig).
+						HasConfigString(taskConfig).
 						HasAllowOverlappingExecutionString(r.BooleanTrue).
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
 						HasCommentString(comment).
@@ -350,7 +341,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasLastCommittedOnNotEmpty().
 						HasLastSuspendedOn("").
 						HasOwnerRoleType("ROLE").
-						HasConfig(expectedTaskConfig).
+						HasConfig(taskConfig).
 						HasBudget("").
 						HasTaskRelations(sdk.TaskRelations{}),
 				),

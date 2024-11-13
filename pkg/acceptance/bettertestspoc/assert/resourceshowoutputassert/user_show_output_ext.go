@@ -1,8 +1,9 @@
 package resourceshowoutputassert
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 )
 
 // TaskDatasourceShowOutput is a temporary workaround to have better show output assertions in data source acceptance tests.
