@@ -1,10 +1,22 @@
 package resourceparametersassert
 
 import (
-	"strings"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"strings"
+	"testing"
 )
+
+// TaskDatasourceParameters is a temporary workaround to have better parameter assertions in data source acceptance tests.
+func TaskDatasourceParameters(t *testing.T, name string) *TaskResourceParametersAssert {
+	t.Helper()
+
+	taskAssert := TaskResourceParametersAssert{
+		ResourceAssert: assert.NewDatasourceAssert("data."+name, "parameters", "tasks.0."),
+	}
+	taskAssert.AddAssertion(assert.ValueSet("parameters.#", "1"))
+	return &taskAssert
+}
 
 func (u *TaskResourceParametersAssert) HasAllDefaults() *TaskResourceParametersAssert {
 	return u.

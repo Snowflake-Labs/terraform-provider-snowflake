@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -68,7 +69,8 @@ func TestAcc_Tasks_Like_RootTask(t *testing.T) {
 						HasBudget("").
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasLastSuspendedReason(""),
-					// TODO: Parameters
+					resourceparametersassert.TaskDatasourceParameters(t, "snowflake_tasks.test").
+						HasAllDefaults(),
 				),
 			},
 			{
@@ -161,12 +163,14 @@ func TestAcc_Tasks_Limit(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
+			// Limit with prefix
 			{
 				Config: taskDatasourceLimitWithPrefix(2, prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "2"),
 				),
 			},
+			// Only limit
 			{
 				Config: taskDatasourceLimit(1),
 				Check: resource.ComposeTestCheckFunc(
