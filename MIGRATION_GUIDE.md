@@ -7,6 +7,39 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v0.98.0 ➞ v0.99.0
+
+### snowflake_task resource changes
+Changes:
+- `enabled` field changed to `started` and type changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values))
+- `shedule` field changed from single value to nested object that allows for specifying either minutes or cron
+
+Before:
+```terraform
+resource "snowflake_task" "example" {
+  # ...
+  schedule = "5 MINUTES"
+  # or
+  schedule = "USING SCHEDULE * * * * * UTC"
+  # ...
+}
+```
+After:
+```terraform
+resource "snowflake_task" "example" {
+  # ...
+  schedule {
+    minutes = 5
+    # or
+    using_cron = "* * * * * UTC"
+  }
+  # ...
+}
+```
+- All task parameters defined in [the Snowflake documentation](https://docs.snowflake.com/en/sql-reference/parameters) added into the top-level schema and removed `session_paramters` map.
+- `show_output` and `paramters` fields added for holding SHOW and SHOW PARAMETERS output (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
+- Added support for finalizer tasks with `finalize` field. It conflicts with `after` and `schedule` (see [finalizer tasks](https://docs.snowflake.com/en/user-guide/tasks-graphs#release-and-cleanup-of-task-graphs)).
+
 ## v0.97.0 ➞ v0.98.0
 
 ### snowflake_streams data source changes

@@ -446,7 +446,7 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 		return err
 	}
 
-	if currentTask.State == TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(id SchemaObjectIdentifier) bool {
+	if currentTask.IsStarted() && !slices.ContainsFunc(tasksToResume, func(id SchemaObjectIdentifier) bool {
 		return id.FullyQualifiedName() == currentTask.ID().FullyQualifiedName()
 	}) {
 		tasksToResume = append(tasksToResume, currentTask.ID())

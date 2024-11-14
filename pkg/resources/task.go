@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -65,11 +68,29 @@ var taskSchema = map[string]*schema.Schema{
 		ConflictsWith:    []string{"user_task_managed_initial_warehouse_size"},
 	},
 	"schedule": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("schedule"),
-		Description:      "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after)",
-		ConflictsWith:    []string{"finalize", "after"},
+		Type:          schema.TypeList,
+		Optional:      true,
+		MaxItems:      1,
+		Description:   "The schedule for periodically running the task. This can be a cron or interval in minutes. (Conflicts with finalize and after; when set, one of the sub-fields `minutes` or `using_cron` should be set)",
+		ConflictsWith: []string{"finalize", "after"},
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"minutes": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					Description:      "Specifies an interval (in minutes) of wait time inserted between runs of the task. Accepts positive integers only. (conflicts with `using_cron`)",
+					ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
+					ExactlyOneOf:     []string{"schedule.0.minutes", "schedule.0.using_cron"},
+				},
+				"using_cron": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Description:      "Specifies a cron expression and time zone for periodically running the task. Supports a subset of standard cron utility syntax. (conflicts with `minutes`)",
+					DiffSuppressFunc: ignoreCaseSuppressFunc,
+					ExactlyOneOf:     []string{"schedule.0.minutes", "schedule.0.using_cron"},
+				},
+			},
+		},
 	},
 	"config": {
 		Type:     schema.TypeString,
@@ -204,51 +225,44 @@ func ImportTask(ctx context.Context, d *schema.ResourceData, meta any) ([]*schem
 	return []*schema.ResourceData{d}, nil
 }
 
-func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
 	client := meta.(*provider.Context).Client
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
-	req := sdk.NewCreateTaskRequest(id, d.Get("sql_statement").(string))
 
+	req := sdk.NewCreateTaskRequest(id, d.Get("sql_statement").(string))
 	tasksToResume := make([]sdk.SchemaObjectIdentifier, 0)
 
-	if v, ok := d.GetOk("warehouse"); ok {
-		warehouseId, err := sdk.ParseAccountObjectIdentifier(v.(string))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		req.WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(warehouseId))
-	}
-
-	if v, ok := d.GetOk("schedule"); ok {
-		req.WithSchedule(v.(string))
-	}
-
-	if v, ok := d.GetOk("config"); ok {
-		req.WithConfig(v.(string))
-	}
-
-	if v := d.Get("allow_overlapping_execution").(string); v != BooleanDefault {
-		parsedBool, err := booleanStringToBool(v)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		req.WithAllowOverlappingExecution(parsedBool)
-	}
-
-	if v, ok := d.GetOk("error_integration"); ok {
-		notificationIntegrationId, err := sdk.ParseAccountObjectIdentifier(v.(string))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		req.WithErrorIntegration(notificationIntegrationId)
-	}
-
-	if v, ok := d.GetOk("comment"); ok {
-		req.WithComment(v.(string))
+	if errs := errors.Join(
+		attributeMappedValueCreate(d, "warehouse", &req.Warehouse, func(v any) (*sdk.CreateTaskWarehouseRequest, error) {
+			warehouseId, err := sdk.ParseAccountObjectIdentifier(v.(string))
+			if err != nil {
+				return nil, err
+			}
+			return sdk.NewCreateTaskWarehouseRequest().WithWarehouse(warehouseId), nil
+		}),
+		attributeMappedValueCreate(d, "schedule", &req.Schedule, func(v any) (*string, error) {
+			if len(v.([]any)) > 0 {
+				if minutes, ok := d.GetOk("schedule.0.minutes"); ok {
+					return sdk.String(fmt.Sprintf("%d MINUTE", minutes)), nil
+				}
+				if cron, ok := d.GetOk("schedule.0.using_cron"); ok {
+					return sdk.String(fmt.Sprintf("USING CRON %s", cron)), nil
+				}
+				return nil, fmt.Errorf("when setting a schedule either minutes or using_cron field should be set")
+			}
+			return nil, nil
+		}),
+		stringAttributeCreate(d, "config", &req.Config),
+		booleanStringAttributeCreate(d, "allow_overlapping_execution", &req.AllowOverlappingExecution),
+		accountObjectIdentifierAttributeCreate(d, "error_integration", &req.ErrorIntegration),
+		stringAttributeCreate(d, "comment", &req.Comment),
+		stringAttributeCreate(d, "when", &req.When),
+	); errs != nil {
+		return diag.FromErr(errs)
 	}
 
 	if v, ok := d.GetOk("finalize"); ok {
@@ -262,7 +276,7 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			return diag.FromErr(err)
 		}
 
-		if rootTask.State == sdk.TaskStateStarted {
+		if rootTask.IsStarted() {
 			if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTaskId).WithSuspend(true)); err != nil {
 				return diag.FromErr(sdk.JoinErrors(err))
 			}
@@ -290,10 +304,6 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		req.WithAfter(precedingTasks)
 	}
 
-	if v, ok := d.GetOk("when"); ok {
-		req.WithWhen(v.(string))
-	}
-
 	if parameterCreateDiags := handleTaskParametersCreate(d, req); len(parameterCreateDiags) > 0 {
 		return parameterCreateDiags
 	}
@@ -318,9 +328,11 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		// Else case not handled, because tasks are created as suspended (https://docs.snowflake.com/en/sql-reference/sql/create-task; "important" section)
 	}
 
-	if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-		log.Printf("[WARN] failed to resume tasks: %s", err)
-	}
+	defer func() {
+		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+			diags = append(diags, resumeTaskErrorDiag(id, "create", err))
+		}
+	}()
 
 	return ReadTask(false)(ctx, d, meta)
 }
@@ -342,8 +354,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		return diag.FromErr(sdk.JoinErrors(err))
 	}
 
-	if task.State == sdk.TaskStateStarted {
-		log.Printf("Suspending the task in if")
+	if task.IsStarted() {
 		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true)); err != nil {
 			return diag.FromErr(sdk.JoinErrors(err))
 		}
@@ -354,7 +365,6 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 
 	err = errors.Join(
 		accountObjectIdentifierAttributeUpdate(d, "warehouse", &set.Warehouse, &unset.Warehouse),
-		stringAttributeUpdate(d, "schedule", &set.Schedule, &unset.Schedule),
 		stringAttributeUpdate(d, "config", &set.Config, &unset.Config),
 		booleanStringAttributeUpdate(d, "allow_overlapping_execution", &set.AllowOverlappingExecution, &unset.AllowOverlappingExecution),
 		accountObjectIdentifierAttributeUpdate(d, "error_integration", &set.ErrorIntegration, &unset.ErrorIntegration),
@@ -362,6 +372,21 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if d.HasChange("schedule") {
+		_, newSchedule := d.GetChange("schedule")
+
+		if newSchedule != nil && len(newSchedule.([]any)) == 1 {
+			if _, newMinutes := d.GetChange("schedule.0.minutes"); newMinutes.(int) > 0 {
+				set.Schedule = sdk.String(fmt.Sprintf("%d MINUTE", newMinutes.(int)))
+			}
+			if _, newCron := d.GetChange("schedule.0.using_cron"); newCron.(string) != "" {
+				set.Schedule = sdk.String(fmt.Sprintf("USING CRON %s", newCron.(string)))
+			}
+		} else {
+			unset.Schedule = sdk.Bool(true)
+		}
 	}
 
 	if updateDiags := handleTaskParametersUpdate(d, set, unset); len(updateDiags) > 0 {
@@ -404,7 +429,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 				return diag.FromErr(err)
 			}
 
-			if rootTask.State == sdk.TaskStateStarted {
+			if rootTask.IsStarted() {
 				if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTaskId).WithSuspend(true)); err != nil {
 					return diag.FromErr(sdk.JoinErrors(err))
 				}
@@ -414,7 +439,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 				return diag.FromErr(err)
 			}
 
-			if rootTask.State == sdk.TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(identifier sdk.SchemaObjectIdentifier) bool {
+			if rootTask.IsStarted() && !slices.ContainsFunc(tasksToResume, func(identifier sdk.SchemaObjectIdentifier) bool {
 				return identifier.FullyQualifiedName() == rootTaskId.FullyQualifiedName()
 			}) {
 				tasksToResume = append(tasksToResume, rootTaskId)
@@ -429,7 +454,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 				return diag.FromErr(err)
 			}
 
-			if rootTask.State == sdk.TaskStateStarted {
+			if rootTask.IsStarted() {
 				if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(true)); err != nil {
 					return diag.FromErr(sdk.JoinErrors(err))
 				}
@@ -439,7 +464,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 				return diag.FromErr(err)
 			}
 
-			if rootTask.State == sdk.TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(identifier sdk.SchemaObjectIdentifier) bool {
+			if rootTask.IsStarted() && !slices.ContainsFunc(tasksToResume, func(identifier sdk.SchemaObjectIdentifier) bool {
 				return identifier.FullyQualifiedName() == rootTask.ID().FullyQualifiedName()
 			}) {
 				tasksToResume = append(tasksToResume, rootTask.ID())
@@ -493,14 +518,15 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	}
 
 	if d.Get("started").(bool) {
-		log.Printf("Resuming the task in handled update")
 		if err := waitForTaskStart(ctx, client, id); err != nil {
 			return diag.FromErr(fmt.Errorf("failed to resume task %s, err = %w", id.FullyQualifiedName(), err))
 		}
 	}
 	// We don't process the else case, because the task was already suspended at the beginning of the Update method.
+	tasksToResume = slices.DeleteFunc(tasksToResume, func(identifier sdk.SchemaObjectIdentifier) bool {
+		return identifier.FullyQualifiedName() == id.FullyQualifiedName()
+	})
 
-	log.Printf("Resuming the root tasks: %v", collections.Map(tasksToResume, sdk.SchemaObjectIdentifier.Name))
 	if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
 		log.Printf("[WARN] failed to resume tasks: %s", err)
 	}
@@ -550,32 +576,53 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 			}
 		}
 
-		warehouseId := ""
-		if task.Warehouse != nil {
-			warehouseId = task.Warehouse.Name()
-		}
-
-		errorIntegrationId := ""
-		if task.ErrorIntegration != nil {
-			errorIntegrationId = task.ErrorIntegration.Name()
-		}
-
-		finalizedRootTaskId := ""
-		if task.TaskRelations.FinalizedRootTask != nil {
-			finalizedRootTaskId = task.TaskRelations.FinalizedRootTask.FullyQualifiedName()
-		}
-
 		if errs := errors.Join(
-			d.Set("started", task.State == sdk.TaskStateStarted),
-			d.Set("warehouse", warehouseId),
-			d.Set("schedule", task.Schedule),
+			attributeMappedValueReadOrDefault(d, "finalize", task.TaskRelations.FinalizedRootTask, func(finalizedRootTask *sdk.SchemaObjectIdentifier) (string, error) {
+				return finalizedRootTask.FullyQualifiedName(), nil
+			}, nil),
+			attributeMappedValueReadOrDefault(d, "error_integration", task.ErrorIntegration, func(errorIntegration *sdk.AccountObjectIdentifier) (string, error) {
+				return errorIntegration.Name(), nil
+			}, nil),
+			attributeMappedValueReadOrDefault(d, "warehouse", task.Warehouse, func(warehouse *sdk.AccountObjectIdentifier) (string, error) {
+				return warehouse.Name(), nil
+			}, nil),
+			func() error {
+				upperSchedule := strings.ToUpper(task.Schedule)
+				switch {
+				case strings.Contains(upperSchedule, "USING CRON"):
+					// We have to do it this was because we want to get rid of the prefix and leave the casing as is (mostly because timezones like America/Los_Angeles are case-sensitive).
+					// That why the prefix trimming has to be done by slicing rather than using strings.TrimPrefix.
+					cron := task.Schedule[len("USING CRON "):]
+					if err := d.Set("schedule", []any{map[string]any{
+						"using_cron": cron,
+					}}); err != nil {
+						return err
+					}
+				case strings.Contains(upperSchedule, "MINUTE"):
+					minuteParts := strings.Split(upperSchedule, " ")
+					minutes, err := strconv.Atoi(minuteParts[0])
+					if err != nil {
+						return err
+					}
+
+					if err := d.Set("schedule", []any{map[string]any{
+						"minutes": minutes,
+					}}); err != nil {
+						return err
+					}
+				default:
+					if err := d.Set("schedule", nil); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(),
+			d.Set("started", task.IsStarted()),
 			d.Set("when", task.Condition),
 			d.Set("config", task.Config),
-			d.Set("error_integration", errorIntegrationId),
 			d.Set("comment", task.Comment),
 			d.Set("sql_statement", task.Definition),
 			d.Set("after", collections.Map(task.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName)),
-			d.Set("finalize", finalizedRootTaskId),
 			handleTaskParameterRead(d, taskParameters),
 			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 			d.Set(ShowOutputAttributeName, []map[string]any{schemas.TaskToSchema(task)}),
@@ -588,7 +635,7 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 	}
 }
 
-func DeleteTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func DeleteTask(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -598,7 +645,7 @@ func DeleteTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	tasksToResume, err := client.Tasks.SuspendRootTasks(ctx, id, id)
 	defer func() {
 		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-			log.Printf("[WARN] failed to resume tasks: %s", err)
+			diags = append(diags, resumeTaskErrorDiag(id, "delete", err))
 		}
 	}()
 	if err != nil {
@@ -612,6 +659,14 @@ func DeleteTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 
 	d.SetId("")
 	return nil
+}
+
+func resumeTaskErrorDiag(id sdk.SchemaObjectIdentifier, operation string, originalErr error) diag.Diagnostic {
+	return diag.Diagnostic{
+		Severity: diag.Warning,
+		Summary:  fmt.Sprintf("Failed to resume tasks in %s operation (id=%s)", operation, id.FullyQualifiedName()),
+		Detail:   fmt.Sprintf("Failed to resume some of the tasks with the following errors (tasks can be resumed by applying the same configuration again): %v", originalErr),
+	}
 }
 
 func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
