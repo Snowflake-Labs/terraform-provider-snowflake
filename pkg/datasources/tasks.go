@@ -59,7 +59,7 @@ func Tasks() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: ReadTasks,
 		Schema:      tasksSchema,
-		Description: "Datasource used to get details of filtered tasks. Filtering is aligned with the current possibilities for [SHOW TASKS](https://docs.snowflake.com/en/sql-reference/sql/show-tasks) query. The results of SHOW and SHOW PARAMETERS IN are encapsulated in one output collection `tasks`.",
+		Description: "Data source used to get details of filtered tasks. Filtering is aligned with the current possibilities for [SHOW TASKS](https://docs.snowflake.com/en/sql-reference/sql/show-tasks) query. The results of SHOW and SHOW PARAMETERS IN are encapsulated in one output collection `tasks`.",
 	}
 }
 

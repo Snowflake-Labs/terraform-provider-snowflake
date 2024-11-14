@@ -148,22 +148,21 @@ func handleLimitFrom(d *schema.ResourceData, setField **sdk.LimitFrom) {
 func handleIn(d *schema.ResourceData, setField **sdk.In) error {
 	if v, ok := d.GetOk("in"); ok {
 		in := v.([]any)[0].(map[string]any)
-		if v, ok := in["account"]; ok && v.(bool) {
+		accountValue, okAccount := in["account"]
+		databaseValue, okDatabase := in["database"]
+		schemaValue, okSchema := in["schema"]
+
+		switch {
+		case okAccount && accountValue.(bool):
 			*setField = &sdk.In{Account: sdk.Bool(true)}
-		}
-		if v, ok := in["database"]; ok {
-			if database := v.(string); database != "" {
-				*setField = &sdk.In{Database: sdk.NewAccountObjectIdentifier(database)}
+		case okDatabase && databaseValue.(string) != "":
+			*setField = &sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseValue.(string))}
+		case okSchema && schemaValue.(string) != "":
+			schemaId, err := sdk.ParseDatabaseObjectIdentifier(schemaValue.(string))
+			if err != nil {
+				return err
 			}
-		}
-		if v, ok := in["schema"]; ok {
-			if schema := v.(string); schema != "" {
-				schemaId, err := sdk.ParseDatabaseObjectIdentifier(schema)
-				if err != nil {
-					return err
-				}
-				*setField = &sdk.In{Schema: schemaId}
-			}
+			*setField = &sdk.In{Schema: schemaId}
 		}
 	}
 	return nil

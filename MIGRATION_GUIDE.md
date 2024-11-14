@@ -9,6 +9,28 @@ across different versions.
  
 ## v0.98.0 ➞ v0.99.0
 
+### snowflake_task resource changes
+
+Breaking changes:
+- `config` field now can be defined without $ signs
+
+Before:
+```terraform
+resource "snowflake_task" "config_example" {
+  # ...
+  config = "$$${\"my_config_key\":\"my_config_value\"}$$"
+  # ...
+}
+```
+After:
+```terraform
+resource "snowflake_task" "config_example" {
+  # ...
+  config = "{\"my_config_key\":\"my_config_value\"}"
+  # ...
+}
+```
+
 ### snowflake_tasks data source changes
 
 New filtering options:
@@ -25,7 +47,40 @@ New output fields
 
 Breaking changes:
 - `database` and `schema` are right now under `in` field
+
+Before:
+```terraform
+data "snowflake_tasks" "old_tasks" {
+  database = "<database_name>"
+  schema = "<schema_name>"
+}
+```
+After:
+```terraform
+data "snowflake_tasks" "new_tasks" {
+  in {
+    # for IN SCHEMA specify:
+    schema = "<database_name>.<schema_name>"
+    
+    # for IN DATABASE specify:
+    database = "<database_name>"
+  }
+}
+```
 - `tasks` field now organizes output of show under `show_output` field and the output of show parameters under `parameters` field.
+
+Before:
+```terraform
+output "simple_output" {
+  value = data.snowflake_tasks.test.tasks[0].name
+}
+```
+After:
+```terraform
+output "simple_output" {
+  value = data.snowflake_tasks.test.tasks[0].show_output[0].name
+}
+```
 
 Please adjust your Terraform configuration files.
 
