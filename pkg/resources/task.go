@@ -252,6 +252,7 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) (diags di
 				if cron, ok := d.GetOk("schedule.0.using_cron"); ok {
 					return sdk.String(fmt.Sprintf("USING CRON %s", cron)), nil
 				}
+				return nil, fmt.Errorf("when setting a schedule either minutes or using_cron field should be set")
 			}
 			return nil, nil
 		}),
