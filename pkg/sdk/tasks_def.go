@@ -245,6 +245,7 @@ var TasksDef = g.NewInterface(
 				"Unset",
 				g.NewQueryStruct("TaskUnset").
 					OptionalSQL("WAREHOUSE").
+					OptionalSQL("USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE").
 					OptionalSQL("SCHEDULE").
 					OptionalSQL("CONFIG").
 					OptionalSQL("ALLOW_OVERLAPPING_EXECUTION").
@@ -255,7 +256,7 @@ var TasksDef = g.NewInterface(
 					OptionalSQL("TASK_AUTO_RETRY_ATTEMPTS").
 					OptionalSQL("USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS").
 					OptionalSessionParametersUnset().
-					WithValidation(g.AtLeastOneValueSet, "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"),
+					WithValidation(g.AtLeastOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"),
 				g.ListOptions().SQL("UNSET"),
 			).
 			OptionalSetTags().

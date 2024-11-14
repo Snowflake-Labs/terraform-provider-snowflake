@@ -534,7 +534,7 @@ func TestInt_Tasks(t *testing.T) {
 		err := client.Tasks.CreateOrAlter(ctx, sdk.NewCreateOrAlterTaskRequest(id, sql).
 			WithWarehouse(*sdk.NewCreateTaskWarehouseRequest().WithWarehouse(testClientHelper().Ids.WarehouseId())).
 			WithSchedule("10 MINUTES").
-			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
+			WithConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
 			WithAllowOverlappingExecution(true).
 			WithUserTaskTimeoutMs(10).
 			WithSessionParameters(sessionParametersSet).
@@ -617,7 +617,7 @@ func TestInt_Tasks(t *testing.T) {
 			WithErrorIntegration(errorIntegration.ID()).
 			WithSessionParameters(sessionParametersSet).
 			WithSchedule("10 MINUTE").
-			WithConfig(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`).
+			WithConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
 			WithAllowOverlappingExecution(true).
 			WithUserTaskTimeoutMs(1000).
 			WithSuspendTaskAfterNumFailures(100).

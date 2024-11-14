@@ -33,3 +33,8 @@ func (t *TaskResourceAssert) HasNoScheduleSet() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("schedule.#", "0"))
 	return t
 }
+
+func (t *TaskResourceAssert) HasUserTaskManagedInitialWarehouseSizeEnum(size sdk.WarehouseSize) *TaskResourceAssert {
+	t.AddAssertion(assert.ValueSet("user_task_managed_initial_warehouse_size", string(size)))
+	return t
+}

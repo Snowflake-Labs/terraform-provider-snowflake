@@ -17,7 +17,7 @@ var tasksSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     true,
-		Description: "Runs SHOW PARAMETERS FOR TASK for each user returned by SHOW TASK. The output of describe is saved to the parameters field as a map. By default this value is set to true.",
+		Description: "Runs SHOW PARAMETERS FOR TASK for each task returned by SHOW TASK and saves the output to the parameters field as a map. By default this value is set to true.",
 	},
 	"like":        likeSchema,
 	"in":          extendedInSchema,
