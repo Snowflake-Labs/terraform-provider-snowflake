@@ -95,8 +95,9 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("foo").
-					HasMaskingPolicies(maskingPolicy.ID()),
+					HasCommentString("foo"),
+					assert.Check(resource.TestCheckResourceAttr(modelWithExtraFields.ResourceReference(), "masking_policies.#", "1")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithExtraFields.ResourceReference(), "masking_policies.*", maskingPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(modelWithExtraFields.ResourceReference(), "allowed_values.#", "3")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithExtraFields.ResourceReference(), "allowed_values.*", "foo")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithExtraFields.ResourceReference(), "allowed_values.*", "")),
@@ -118,7 +119,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			// external change
 			{
 				PreConfig: func() {
-					acc.TestClient().Tag.Alter(t, sdk.NewAlterTagRequest(id).WithAdd([]string{"new"}))
+					acc.TestClient().Tag.Alter(t, sdk.NewAlterTagRequest(id).WithDrop([]string{"foo"}))
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/complete"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, modelWithExtraFields),
@@ -127,8 +128,9 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("foo").
-					HasMaskingPolicies(maskingPolicy.ID()),
+					HasCommentString("foo"),
+					assert.Check(resource.TestCheckResourceAttr(modelWithExtraFields.ResourceReference(), "masking_policies.#", "1")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithExtraFields.ResourceReference(), "masking_policies.*", maskingPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(modelWithExtraFields.ResourceReference(), "allowed_values.#", "3")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithExtraFields.ResourceReference(), "allowed_values.*", "foo")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithExtraFields.ResourceReference(), "allowed_values.*", "")),
@@ -161,8 +163,9 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("foo").
-					HasMaskingPolicies(maskingPolicy.ID()),
+					HasCommentString("foo"),
+					assert.Check(resource.TestCheckResourceAttr(modelWithDifferentListOrder.ResourceReference(), "masking_policies.#", "1")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithDifferentListOrder.ResourceReference(), "masking_policies.*", maskingPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(modelWithDifferentListOrder.ResourceReference(), "allowed_values.#", "3")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithDifferentListOrder.ResourceReference(), "allowed_values.*", "foo")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithDifferentListOrder.ResourceReference(), "allowed_values.*", "")),
@@ -190,8 +193,9 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("bar").
-					HasMaskingPolicies(maskingPolicy2.ID()),
+					HasCommentString("bar"),
+					assert.Check(resource.TestCheckResourceAttr(modelWithDifferentValues.ResourceReference(), "masking_policies.#", "1")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithDifferentValues.ResourceReference(), "masking_policies.*", maskingPolicy2.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(modelWithDifferentValues.ResourceReference(), "allowed_values.#", "3")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithDifferentValues.ResourceReference(), "allowed_values.*", "abc")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithDifferentValues.ResourceReference(), "allowed_values.*", "")),
@@ -264,8 +268,9 @@ func TestAcc_Tag_complete(t *testing.T) {
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("foo").
-					HasMaskingPolicies(maskingPolicy.ID()),
+					HasCommentString("foo"),
+					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "masking_policies.#", "1")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "masking_policies.*", maskingPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "allowed_values.#", "3")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "allowed_values.*", "foo")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "allowed_values.*", "")),

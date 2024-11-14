@@ -57,7 +57,7 @@ var tagSchema = map[string]*schema.Schema{
 			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
 		Optional:    true,
-		Description: "Set of masking policies for the tag.",
+		Description: "Set of masking policies for the tag. A tag can support one masking policy for each data type.",
 	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 	ShowOutputAttributeName: {
@@ -115,8 +115,8 @@ func Tag() *schema.Resource {
 		Description:   "Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(streamOnTableSchema, ShowOutputAttributeName, "name", "comment", "allowed_values"),
-			ComputedIfAnyAttributeChanged(streamOnTableSchema, FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(tagSchema, ShowOutputAttributeName, "name", "comment", "allowed_values"),
+			ComputedIfAnyAttributeChanged(tagSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
 		Schema: tagSchema,

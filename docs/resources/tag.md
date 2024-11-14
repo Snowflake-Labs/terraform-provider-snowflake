@@ -55,7 +55,7 @@ resource "snowflake_tag" "tag" {
 
 - `allowed_values` (Set of String) Set of allowed values for the tag.
 - `comment` (String) Specifies a comment for the tag.
-- `masking_policies` (Set of String) Set of masking policies for the tag.
+- `masking_policies` (Set of String) Set of masking policies for the tag. A tag can support one masking policy for each data type.
 
 ### Read-Only
 
