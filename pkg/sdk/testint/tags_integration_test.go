@@ -284,6 +284,10 @@ func TestInt_TagsShowByID(t *testing.T) {
 	})
 }
 
+type IDProvider[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.TableColumnIdentifier] interface {
+	ID() T
+}
+
 func TestInt_TagsAssociations(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
@@ -305,13 +309,29 @@ func TestInt_TagsAssociations(t *testing.T) {
 		tag.ID(),
 	}
 
+	testTagSet := func(id sdk.ObjectIdentifier, objectType sdk.ObjectType) {
+		err := client.Tags.Set(ctx, sdk.NewSetTagRequest(objectType, id).WithSetTags(tags))
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
+		require.NoError(t, err)
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		err = client.Tags.Unset(ctx, sdk.NewUnsetTagRequest(objectType, id).WithUnsetTags(unsetTags))
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
+		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+	}
+
 	t.Run("TestInt_TagAssociationForAccount", func(t *testing.T) {
+		id := testClientHelper().Ids.AccountIdentifierWithLocator()
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			SetTag: tags,
 		})
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), testClientHelper().Ids.AccountIdentifierWithLocator(), sdk.ObjectTypeAccount)
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, returnedTagValue)
 
@@ -320,24 +340,36 @@ func TestInt_TagsAssociations(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), testClientHelper().Ids.AccountIdentifierWithLocator(), sdk.ObjectTypeAccount)
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
+		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+
+		// test tag sdk method
+		err = client.Tags.SetOnCurrentAccount(ctx, sdk.NewSetTagOnCurrentAccountRequest().WithSetTags(tags))
+		require.NoError(t, err)
+
+		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
+		require.NoError(t, err)
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		err = client.Tags.UnsetOnCurrentAccount(ctx, sdk.NewUnsetTagOnCurrentAccountRequest().WithUnsetTags(unsetTags))
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
 		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
 	})
 
 	accountObjectTestCases := []struct {
 		name        string
 		objectType  sdk.ObjectType
-		setupObject func() sdk.AccountObjectIdentifier
+		setupObject func() (IDProvider[sdk.AccountObjectIdentifier], func())
 		setTags     func(sdk.AccountObjectIdentifier, []sdk.TagAssociation) error
 		unsetTags   func(sdk.AccountObjectIdentifier, []sdk.ObjectIdentifier) error
 	}{
 		{
 			name:       "ApplicationPackage",
 			objectType: sdk.ObjectTypeApplicationPackage,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				appPackage, appPackageCleanup := testClientHelper().ApplicationPackage.CreateApplicationPackage(t)
-				t.Cleanup(appPackageCleanup)
-				return appPackage.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().ApplicationPackage.CreateApplicationPackage(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.ApplicationPackages.Alter(ctx, sdk.NewAlterApplicationPackageRequest(id).WithSetTags(tags))
@@ -349,10 +381,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "NormalDatabase",
 			objectType: sdk.ObjectTypeDatabase,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				db, dbCleanup := testClientHelper().Database.CreateDatabase(t)
-				t.Cleanup(dbCleanup)
-				return db.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().Database.CreateDatabase(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
@@ -368,10 +398,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "DatabaseFromShare",
 			objectType: sdk.ObjectTypeDatabase,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				db, dbCleanup := createDatabaseFromShare(t)
-				t.Cleanup(dbCleanup)
-				return db.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return createDatabaseFromShare(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
@@ -388,10 +416,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "ApiIntegration",
 			objectType: sdk.ObjectTypeIntegration,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().ApiIntegration.CreateApiIntegration(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().ApiIntegration.CreateApiIntegration(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.ApiIntegrations.Alter(ctx, sdk.NewAlterApiIntegrationRequest(id).WithSetTags(tags))
@@ -403,10 +429,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "NotificationIntegration",
 			objectType: sdk.ObjectTypeIntegration,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().NotificationIntegration.Create(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().NotificationIntegration.Create(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.NotificationIntegrations.Alter(ctx, sdk.NewAlterNotificationIntegrationRequest(id).WithSetTags(tags))
@@ -418,10 +442,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "StorageIntegration",
 			objectType: sdk.ObjectTypeIntegration,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().StorageIntegration.CreateS3(t, awsBucketUrl, awsRoleARN)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().StorageIntegration.CreateS3(t, awsBucketUrl, awsRoleARN)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).WithSetTags(tags))
@@ -433,10 +455,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "ApiAuthenticationWithClientCredentialsFlow",
 			objectType: sdk.ObjectTypeIntegration,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().SecurityIntegration.CreateApiAuthenticationWithClientCredentialsFlow(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().SecurityIntegration.CreateApiAuthenticationWithClientCredentialsFlow(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).WithSetTags(tags))
@@ -448,10 +468,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "ApiAuthenticationWithAuthorizationCodeGrantFlow",
 			objectType: sdk.ObjectTypeIntegration,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().SecurityIntegration.CreateApiAuthenticationWithAuthorizationCodeGrantFlow(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().SecurityIntegration.CreateApiAuthenticationWithAuthorizationCodeGrantFlow(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).WithSetTags(tags))
@@ -464,10 +482,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "ExternalOauth",
 			objectType: sdk.ObjectTypeIntegration,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().SecurityIntegration.CreateExternalOauth(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().SecurityIntegration.CreateExternalOauth(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.SecurityIntegrations.AlterExternalOauth(ctx, sdk.NewAlterExternalOauthSecurityIntegrationRequest(id).WithSetTags(tags))
@@ -479,10 +495,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "OauthForPartnerApplications",
 			objectType: sdk.ObjectTypeIntegration,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().SecurityIntegration.CreateOauthForPartnerApplications(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().SecurityIntegration.CreateOauthForPartnerApplications(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.SecurityIntegrations.AlterOauthForPartnerApplications(ctx, sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).WithSetTags(tags))
@@ -494,10 +508,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "OauthForCustomClients",
 			objectType: sdk.ObjectTypeIntegration,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().SecurityIntegration.CreateOauthForCustomClients(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().SecurityIntegration.CreateOauthForCustomClients(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.SecurityIntegrations.AlterOauthForCustomClients(ctx, sdk.NewAlterOauthForCustomClientsSecurityIntegrationRequest(id).WithSetTags(tags))
@@ -509,10 +521,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Saml2",
 			objectType: sdk.ObjectTypeIntegration,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().SecurityIntegration.CreateSaml2(t, testClientHelper().Ids.RandomAccountObjectIdentifier())
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().SecurityIntegration.CreateSaml2(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.SecurityIntegrations.AlterSaml2(ctx, sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithSetTags(tags))
@@ -524,10 +534,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Scim",
 			objectType: sdk.ObjectTypeIntegration,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().SecurityIntegration.CreateScim(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().SecurityIntegration.CreateScim(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.SecurityIntegrations.AlterScim(ctx, sdk.NewAlterScimSecurityIntegrationRequest(id).WithSetTags(tags))
@@ -539,10 +547,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Role",
 			objectType: sdk.ObjectTypeRole,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().Role.CreateRole(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().Role.CreateRole(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(id).WithSetTags(tags))
@@ -554,20 +560,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Share",
 			objectType: sdk.ObjectTypeShare,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().Share.CreateShare(t)
-				t.Cleanup(objectCleanup)
-				err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-					Database: testClientHelper().Ids.DatabaseId(),
-				}, object.ID())
-				require.NoError(t, err)
-				t.Cleanup(func() {
-					err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-						Database: testClientHelper().Ids.DatabaseId(),
-					}, object.ID())
-					require.NoError(t, err)
-				})
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return createShare(t, ctx, client)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Shares.Alter(ctx, id, &sdk.AlterShareOptions{
@@ -583,10 +577,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "User",
 			objectType: sdk.ObjectTypeUser,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().User.CreateUser(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().User.CreateUser(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
@@ -602,10 +594,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Warehouse",
 			objectType: sdk.ObjectTypeWarehouse,
-			setupObject: func() sdk.AccountObjectIdentifier {
-				object, objectCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.AccountObjectIdentifier], func()) {
+				return testClientHelper().Warehouse.CreateWarehouse(t)
 			},
 			setTags: func(id sdk.AccountObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Warehouses.Alter(ctx, id, &sdk.AlterWarehouseOptions{
@@ -622,7 +612,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 
 	for _, tc := range accountObjectTestCases {
 		t.Run(fmt.Sprintf("account object %s", tc.name), func(t *testing.T) {
-			id := tc.setupObject()
+			idProvider, cleanup := tc.setupObject()
+			t.Cleanup(cleanup)
+			id := idProvider.ID()
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
@@ -635,6 +627,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 
 			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
 			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+
+			// test object methods
+			testTagSet(id, tc.objectType)
 		})
 	}
 
@@ -670,17 +665,15 @@ func TestInt_TagsAssociations(t *testing.T) {
 	databaseObjectTestCases := []struct {
 		name        string
 		objectType  sdk.ObjectType
-		setupObject func() sdk.DatabaseObjectIdentifier
+		setupObject func() (IDProvider[sdk.DatabaseObjectIdentifier], func())
 		setTags     func(sdk.DatabaseObjectIdentifier, []sdk.TagAssociation) error
 		unsetTags   func(sdk.DatabaseObjectIdentifier, []sdk.ObjectIdentifier) error
 	}{
 		{
 			name:       "DatabaseRole",
 			objectType: sdk.ObjectTypeDatabaseRole,
-			setupObject: func() sdk.DatabaseObjectIdentifier {
-				databaseRole, cleanupDatabaseRole := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
-				t.Cleanup(cleanupDatabaseRole)
-				return databaseRole.ID()
+			setupObject: func() (IDProvider[sdk.DatabaseObjectIdentifier], func()) {
+				return testClientHelper().DatabaseRole.CreateDatabaseRole(t)
 			},
 			setTags: func(id sdk.DatabaseObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.DatabaseRoles.Alter(ctx, sdk.NewAlterDatabaseRoleRequest(id).WithSetTags(tags))
@@ -692,10 +685,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Schema",
 			objectType: sdk.ObjectTypeSchema,
-			setupObject: func() sdk.DatabaseObjectIdentifier {
-				schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
-				t.Cleanup(cleanupSchema)
-				return schema.ID()
+			setupObject: func() (IDProvider[sdk.DatabaseObjectIdentifier], func()) {
+				return testClientHelper().Schema.CreateSchema(t)
 			},
 			setTags: func(id sdk.DatabaseObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Schemas.Alter(ctx, id, &sdk.AlterSchemaOptions{
@@ -712,7 +703,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 
 	for _, tc := range databaseObjectTestCases {
 		t.Run(fmt.Sprintf("database object %s", tc.name), func(t *testing.T) {
-			id := tc.setupObject()
+			idProvider, cleanup := tc.setupObject()
+			t.Cleanup(cleanup)
+			id := idProvider.ID()
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
@@ -725,28 +718,24 @@ func TestInt_TagsAssociations(t *testing.T) {
 
 			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
 			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+
+			// test object methods
+			testTagSet(id, tc.objectType)
 		})
 	}
 
 	schemaObjectTestCases := []struct {
 		name        string
 		objectType  sdk.ObjectType
-		setupObject func() sdk.SchemaObjectIdentifier
+		setupObject func() (IDProvider[sdk.SchemaObjectIdentifier], func())
 		setTags     func(sdk.SchemaObjectIdentifier, []sdk.TagAssociation) error
 		unsetTags   func(sdk.SchemaObjectIdentifier, []sdk.ObjectIdentifier) error
 	}{
 		{
 			name:       "ExternalTable",
 			objectType: sdk.ObjectTypeExternalTable,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				stageID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-				stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
-				_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
-				t.Cleanup(stageCleanup)
-				object, objectCleanup := testClientHelper().ExternalTable.CreateWithLocation(t, stageLocation)
-				t.Cleanup(objectCleanup)
-
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return createExternalTable(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				setTags := make([]sdk.TagAssociationRequest, len(tags))
@@ -762,13 +751,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "MaterializedView",
 			objectType: sdk.ObjectTypeMaterializedView,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				table, tableCleanup := testClientHelper().Table.Create(t)
-				t.Cleanup(tableCleanup)
-				query := fmt.Sprintf(`SELECT * FROM %s`, table.ID().FullyQualifiedName())
-				object, objectCleanup := testClientHelper().MaterializedView.CreateMaterializedView(t, query, false)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return createMaterializedView(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(tags))
@@ -780,16 +764,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Pipe",
 			objectType: sdk.ObjectTypePipe,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				table, tableCleanup := testClientHelper().Table.Create(t)
-				t.Cleanup(tableCleanup)
-
-				stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
-				t.Cleanup(stageCleanup)
-
-				object, objectCleanup := testClientHelper().Pipe.CreatePipe(t, fmt.Sprintf("COPY INTO %s\nFROM @%s", table.ID().FullyQualifiedName(), stage.ID().FullyQualifiedName()))
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return createPipe(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Pipes.Alter(ctx, id, &sdk.AlterPipeOptions{
@@ -805,10 +781,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "MaskingPolicy",
 			objectType: sdk.ObjectTypeMaskingPolicy,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				object, objectCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
@@ -824,10 +798,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "RowAccessPolicy",
 			objectType: sdk.ObjectTypeRowAccessPolicy,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				object, objectCleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.RowAccessPolicies.Alter(ctx, sdk.NewAlterRowAccessPolicyRequest(id).WithSetTags(tags))
@@ -839,10 +811,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "SessionPolicy",
 			objectType: sdk.ObjectTypeSessionPolicy,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				object, objectCleanup := testClientHelper().SessionPolicy.CreateSessionPolicy(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return testClientHelper().SessionPolicy.CreateSessionPolicy(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.SessionPolicies.Alter(ctx, sdk.NewAlterSessionPolicyRequest(id).WithSetTags(tags))
@@ -854,10 +824,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Stage",
 			objectType: sdk.ObjectTypeStage,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				object, objectCleanup := testClientHelper().Stage.CreateStage(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return testClientHelper().Stage.CreateStage(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Stages.Alter(ctx, sdk.NewAlterStageRequest(id).WithSetTags(tags))
@@ -869,13 +837,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Stream",
 			objectType: sdk.ObjectTypeStream,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				table, cleanupTable := testClientHelper().Table.CreateInSchema(t, testClientHelper().Ids.SchemaId())
-				t.Cleanup(cleanupTable)
-
-				object, objectCleanup := testClientHelper().Stream.CreateOnTable(t, table.ID())
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return createStream(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithSetTags(tags))
@@ -887,10 +850,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "EventTable",
 			objectType: sdk.ObjectTypeEventTable,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				object, objectCleanup := testClientHelper().EventTable.Create(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return testClientHelper().EventTable.Create(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSetTags(tags))
@@ -902,11 +863,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Table",
 			objectType: sdk.ObjectTypeTable,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				object, objectCleanup := testClientHelper().Table.Create(t)
-				t.Cleanup(objectCleanup)
-
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return testClientHelper().Table.Create(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				setTags := make([]sdk.TagAssociationRequest, len(tags))
@@ -922,10 +880,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "Task",
 			objectType: sdk.ObjectTypeTask,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				object, objectCleanup := testClientHelper().Task.Create(t)
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return testClientHelper().Task.Create(t)
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSetTags(tags))
@@ -937,10 +893,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 		{
 			name:       "View",
 			objectType: sdk.ObjectTypeView,
-			setupObject: func() sdk.SchemaObjectIdentifier {
-				object, objectCleanup := testClientHelper().View.CreateView(t, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES")
-				t.Cleanup(objectCleanup)
-				return object.ID()
+			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
+				return testClientHelper().View.CreateView(t, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES")
 			},
 			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
 				return client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetTags(tags))
@@ -953,7 +907,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 
 	for _, tc := range schemaObjectTestCases {
 		t.Run(fmt.Sprintf("schema object %s", tc.name), func(t *testing.T) {
-			id := tc.setupObject()
+			idProvider, cleanup := tc.setupObject()
+			t.Cleanup(cleanup)
+			id := idProvider.ID()
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
@@ -966,22 +922,24 @@ func TestInt_TagsAssociations(t *testing.T) {
 
 			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
 			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+
+			// test object methods
+			testTagSet(id, tc.objectType)
 		})
 	}
 
 	columnTestCases := []struct {
 		name        string
-		setupObject func() sdk.TableColumnIdentifier
+		setupObject func() (sdk.TableColumnIdentifier, func())
 		setTags     func(sdk.TableColumnIdentifier, []sdk.TagAssociation) error
 		unsetTags   func(sdk.TableColumnIdentifier, []sdk.ObjectIdentifier) error
 	}{
 		{
 			name: "Table",
-			setupObject: func() sdk.TableColumnIdentifier {
+			setupObject: func() (sdk.TableColumnIdentifier, func()) {
 				object, objectCleanup := testClientHelper().Table.Create(t)
-				t.Cleanup(objectCleanup)
 				columnId := sdk.NewTableColumnIdentifier(object.ID().DatabaseName(), object.ID().SchemaName(), object.ID().Name(), "ID")
-				return columnId
+				return columnId, objectCleanup
 			},
 			setTags: func(id sdk.TableColumnIdentifier, tags []sdk.TagAssociation) error {
 				return client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id.SchemaObjectId()).WithColumnAction(sdk.NewTableColumnActionRequest().
@@ -994,11 +952,11 @@ func TestInt_TagsAssociations(t *testing.T) {
 		},
 		{
 			name: "View",
-			setupObject: func() sdk.TableColumnIdentifier {
+			setupObject: func() (sdk.TableColumnIdentifier, func()) {
 				object, objectCleanup := testClientHelper().View.CreateView(t, "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES")
 				t.Cleanup(objectCleanup)
 				columnId := sdk.NewTableColumnIdentifier(object.ID().DatabaseName(), object.ID().SchemaName(), object.ID().Name(), "ROLE_NAME")
-				return columnId
+				return columnId, objectCleanup
 			},
 			setTags: func(id sdk.TableColumnIdentifier, tags []sdk.TagAssociation) error {
 				return client.Views.Alter(ctx, sdk.NewAlterViewRequest(id.SchemaObjectId()).WithSetTagsOnColumn(
@@ -1015,7 +973,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 
 	for _, tc := range columnTestCases {
 		t.Run(fmt.Sprintf("column in %s", tc.name), func(t *testing.T) {
-			id := tc.setupObject()
+			id, cleanup := tc.setupObject()
+			t.Cleanup(cleanup)
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
@@ -1028,6 +987,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 
 			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeColumn)
 			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+
+			// test object methods
+			testTagSet(id, sdk.ObjectTypeColumn)
 		})
 	}
 
@@ -1102,96 +1064,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 
 			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
 			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+
+			// test object methods
+			testTagSet(id, tc.objectType)
 		})
 	}
-}
-
-func createDatabaseFromShare(t *testing.T) (*sdk.Database, func()) {
-	t.Helper()
-	client := testClient(t)
-	secondaryClient := testSecondaryClient(t)
-	ctx := testContext(t)
-
-	shareTest, shareCleanup := secondaryTestClientHelper().Share.CreateShare(t)
-	t.Cleanup(shareCleanup)
-
-	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
-	t.Cleanup(sharedDatabaseCleanup)
-
-	databaseId := sharedDatabase.ID()
-
-	err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-		Database: sharedDatabase.ID(),
-	}, shareTest.ID())
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		err := secondaryClient.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: sharedDatabase.ID(),
-		}, shareTest.ID())
-		require.NoError(t, err)
-	})
-
-	err = secondaryClient.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
-		IfExists: sdk.Bool(true),
-		Set: &sdk.ShareSet{
-			Accounts: []sdk.AccountIdentifier{
-				testClientHelper().Account.GetAccountIdentifier(t),
-			},
-		},
-	})
-	require.NoError(t, err)
-
-	err = client.Databases.CreateShared(ctx, databaseId, shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{})
-	require.NoError(t, err)
-
-	database, err := client.Databases.ShowByID(ctx, databaseId)
-	require.NoError(t, err)
-
-	return database, testClientHelper().Database.DropDatabaseFunc(t, database.ID())
-}
-
-func createDatabaseReplica(t *testing.T) (*sdk.Database, func()) {
-	t.Helper()
-	client := testClient(t)
-	secondaryClient := testSecondaryClient(t)
-	ctx := testContext(t)
-
-	sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
-	t.Cleanup(sharedDatabaseCleanup)
-
-	err := secondaryClient.Databases.AlterReplication(ctx, sharedDatabase.ID(), &sdk.AlterDatabaseReplicationOptions{
-		EnableReplication: &sdk.EnableReplication{
-			ToAccounts: []sdk.AccountIdentifier{
-				testClientHelper().Account.GetAccountIdentifier(t),
-			},
-			IgnoreEditionCheck: sdk.Bool(true),
-		},
-	})
-	require.NoError(t, err)
-
-	externalDatabaseId := sdk.NewExternalObjectIdentifier(secondaryTestClientHelper().Ids.AccountIdentifierWithLocator(), sharedDatabase.ID())
-	err = client.Databases.CreateSecondary(ctx, sharedDatabase.ID(), externalDatabaseId, &sdk.CreateSecondaryDatabaseOptions{})
-	require.NoError(t, err)
-
-	database, err := client.Databases.ShowByID(ctx, sharedDatabase.ID())
-	require.NoError(t, err)
-
-	return database, testClientHelper().Database.DropDatabaseFunc(t, sharedDatabase.ID())
-}
-
-func createApplicationPackage(t *testing.T) (*sdk.ApplicationPackage, func()) {
-	t.Helper()
-
-	stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
-	t.Cleanup(cleanupStage)
-
-	testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "manifest.yml", "")
-	testClientHelper().Stage.PutOnStageWithContent(t, stage.ID(), "setup.sql", "CREATE APPLICATION ROLE IF NOT EXISTS APP_HELLO_SNOWFLAKE;")
-
-	applicationPackage, cleanupApplicationPackage := testClientHelper().ApplicationPackage.CreateApplicationPackage(t)
-	t.Cleanup(cleanupApplicationPackage)
-
-	testClientHelper().ApplicationPackage.AddApplicationPackageVersion(t, applicationPackage.ID(), stage.ID(), "V01")
-
-	return applicationPackage, cleanupApplicationPackage
 }

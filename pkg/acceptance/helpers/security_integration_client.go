@@ -104,8 +104,9 @@ func (c *SecurityIntegrationClient) CreateOauthForCustomClients(t *testing.T) (*
 	return si, c.DropSecurityIntegrationFunc(t, request.GetName())
 }
 
-func (c *SecurityIntegrationClient) CreateSaml2(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.SecurityIntegration, func()) {
+func (c *SecurityIntegrationClient) CreateSaml2(t *testing.T) (*sdk.SecurityIntegration, func()) {
 	t.Helper()
+	id := c.ids.RandomAccountObjectIdentifier()
 	return c.CreateSaml2WithRequest(t, sdk.NewCreateSaml2SecurityIntegrationRequest(id, c.ids.Alpha(), "https://example.com", "Custom", random.GenerateX509(t)))
 }
 

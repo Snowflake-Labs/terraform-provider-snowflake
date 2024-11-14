@@ -73,7 +73,7 @@ var (
 	TagAssociationAllowedObjectTypesString = make([]string, len(TagAssociationAllowedObjectTypes))
 )
 
-func isTagAssociationAllowedObjectTypes(o ObjectType) bool {
+func canBeAssociatedWithTag(o ObjectType) bool {
 	return slices.Contains(TagAssociationAllowedObjectTypes, o)
 }
 

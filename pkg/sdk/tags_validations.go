@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -150,6 +151,12 @@ func (opts *setTagOptions) validate() error {
 	if !ValidObjectIdentifier(opts.objectName) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if !canBeAssociatedWithTag(opts.objectType) {
+		return fmt.Errorf("tagging for object type %s is not supported", opts.objectType)
+	}
+	if opts.objectType == ObjectTypeAccount {
+		return fmt.Errorf("tagging for object type ACCOUNT is not supported - use Tags.SetOnCurrentAccount instead")
+	}
 	return errors.Join(errs...)
 }
 
@@ -161,5 +168,25 @@ func (opts *unsetTagOptions) validate() error {
 	if !ValidObjectIdentifier(opts.objectName) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
+	if !canBeAssociatedWithTag(opts.objectType) {
+		return fmt.Errorf("tagging for object type %s is not supported", opts.objectType)
+	}
+	if opts.objectType == ObjectTypeAccount {
+		return fmt.Errorf("tagging for object type ACCOUNT is not supported - use Tags.UnsetOnCurrentAccount instead")
+	}
 	return errors.Join(errs...)
+}
+
+func (opts *setTagOnCurrentAccountOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	return nil
+}
+
+func (opts *unsetTagOnCurrentAccountOptions) validate() error {
+	if opts == nil {
+		return errors.Join(ErrNilOptions)
+	}
+	return nil
 }

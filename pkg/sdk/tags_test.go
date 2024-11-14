@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -370,6 +371,18 @@ func TestTagSet(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: unsupported object type", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.objectType = ObjectTypeSequence
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type SEQUENCE is not supported"))
+	})
+
+	t.Run("validation: unsupported account", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.objectType = ObjectTypeAccount
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type ACCOUNT is not supported - use Tags.SetOnCurrentAccount instead"))
+	})
+
 	t.Run("set with all optional", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetTags = []TagAssociation{
@@ -415,6 +428,18 @@ func TestTagUnset(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: unsupported object type", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.objectType = ObjectTypeSequence
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type SEQUENCE is not supported"))
+	})
+
+	t.Run("validation: unsupported account", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.objectType = ObjectTypeAccount
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type ACCOUNT is not supported - use Tags.UnsetOnCurrentAccount instead"))
+	})
+
 	t.Run("unset with all optional", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.UnsetTags = []ObjectIdentifier{
@@ -438,5 +463,47 @@ func TestTagUnset(t *testing.T) {
 		}
 		opts := request.toOpts()
 		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s MODIFY COLUMN "%s" UNSET TAG %s, %s`, opts.objectType, id.FullyQualifiedName(), objectId.Name(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
+	})
+}
+
+func TestTagSetOnCurrentAccount(t *testing.T) {
+	defaultOpts := func() *setTagOnCurrentAccountOptions {
+		return &setTagOnCurrentAccountOptions{}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		opts := (*setTagOptions)(nil)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("unset with all optional", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.SetTags = []TagAssociation{
+			{
+				Name:  NewAccountObjectIdentifier("tag1"),
+				Value: "value1",
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT SET TAG "tag1" = 'value1'`)
+	})
+}
+
+func TestTagUnsetOnCurrentAccount(t *testing.T) {
+	defaultOpts := func() *unsetTagOnCurrentAccountOptions {
+		return &unsetTagOnCurrentAccountOptions{}
+	}
+
+	t.Run("validation: nil options", func(t *testing.T) {
+		opts := (*unsetTagOptions)(nil)
+		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("unset with all optional", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.UnsetTags = []ObjectIdentifier{
+			NewAccountObjectIdentifier("tag1"),
+			NewAccountObjectIdentifier("tag2"),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT UNSET TAG "tag1", "tag2"`)
 	})
 }

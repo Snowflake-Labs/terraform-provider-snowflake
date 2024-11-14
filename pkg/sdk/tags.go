@@ -15,6 +15,8 @@ type Tags interface {
 	Undrop(ctx context.Context, request *UndropTagRequest) error
 	Set(ctx context.Context, request *SetTagRequest) error
 	Unset(ctx context.Context, request *UnsetTagRequest) error
+	SetOnCurrentAccount(ctx context.Context, request *SetTagOnCurrentAccountRequest) error
+	UnsetOnCurrentAccount(ctx context.Context, request *UnsetTagOnCurrentAccountRequest) error
 }
 
 type setTagOptions struct {
@@ -31,6 +33,18 @@ type unsetTagOptions struct {
 	objectName ObjectIdentifier   `ddl:"identifier"`
 	column     *string            `ddl:"parameter,no_equals,double_quotes" sql:"MODIFY COLUMN"`
 	UnsetTags  []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
+}
+
+type setTagOnCurrentAccountOptions struct {
+	alter   bool             `ddl:"static" sql:"ALTER"`
+	account bool             `ddl:"static" sql:"ACCOUNT"`
+	SetTags []TagAssociation `ddl:"keyword" sql:"SET TAG"`
+}
+
+type unsetTagOnCurrentAccountOptions struct {
+	alter     bool               `ddl:"static" sql:"ALTER"`
+	account   bool               `ddl:"static" sql:"ACCOUNT"`
+	UnsetTags []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
 }
 
 // createTagOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-tag

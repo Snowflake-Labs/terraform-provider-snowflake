@@ -110,7 +110,7 @@ type DatabaseRole struct {
 	OwnerRoleType          string
 }
 
-func (v DatabaseRole) ID() DatabaseObjectIdentifier {
+func (v *DatabaseRole) ID() DatabaseObjectIdentifier {
 	return NewDatabaseObjectIdentifier(v.DatabaseName, v.Name)
 }
 
