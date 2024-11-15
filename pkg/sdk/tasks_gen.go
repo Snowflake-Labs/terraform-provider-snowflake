@@ -209,6 +209,10 @@ func (v *Task) ID() SchemaObjectIdentifier {
 	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
+func (v *Task) IsStarted() bool {
+	return v.State == TaskStateStarted
+}
+
 // DescribeTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-task.
 type DescribeTaskOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"`

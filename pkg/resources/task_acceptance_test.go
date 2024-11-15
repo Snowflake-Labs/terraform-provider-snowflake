@@ -1,34 +1,34 @@
 package resources_test
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 // TODO(SNOW-1348116 - next pr): More tests for complicated DAGs
 // TODO(SNOW-1348116 - next pr): Test for stored procedures passed to sql_statement (decide on name)
-// TODO(SNOW-1348116 - next pr): Test with cron schedule
 // TODO(SNOW-1348116 - next pr): More test with external changes
 
 func TestAcc_Task_Basic(t *testing.T) {
@@ -59,13 +59,13 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasNameString(id.Name()).
 						HasStartedString(r.BooleanFalse).
 						HasWarehouseString("").
-						HasScheduleString("").
+						HasNoScheduleSet().
 						HasConfigString("").
 						HasAllowOverlappingExecutionString(r.BooleanDefault).
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, configModel.ResourceReference()).
@@ -77,7 +77,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse(sdk.NewAccountObjectIdentifier("")).
-						HasSchedule("").
+						HasNoSchedule().
 						HasPredecessors().
 						HasState(sdk.TaskStateSuspended).
 						HasDefinition(statement).
@@ -105,7 +105,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasNameString(id.Name()).
 						HasStartedString(r.BooleanFalse).
 						HasWarehouseString("").
-						HasScheduleString("").
+						HasNoScheduleSet().
 						HasConfigString("").
 						HasAllowOverlappingExecutionString(r.BooleanFalse).
 						HasErrorIntegrationString("").
@@ -136,7 +136,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
 	configModel := model.TaskWithId("test", id, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule("10 MINUTES").
+		WithScheduleMinutes(10).
 		WithConfigValue(configvariable.StringVariable(taskConfig)).
 		WithAllowOverlappingExecution(r.BooleanTrue).
 		WithErrorIntegration(errorNotificationIntegration.ID().Name()).
@@ -152,7 +152,8 @@ func TestAcc_Task_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -161,7 +162,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 						HasNameString(id.Name()).
 						HasStartedString(r.BooleanTrue).
 						HasWarehouseString(acc.TestClient().Ids.WarehouseId().Name()).
-						HasScheduleString("10 MINUTES").
+						HasScheduleMinutes(10).
 						HasConfigString(taskConfig).
 						HasAllowOverlappingExecutionString(r.BooleanTrue).
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
@@ -179,7 +180,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 						HasOwner(currentRole.Name()).
 						HasComment(comment).
 						HasWarehouse(acc.TestClient().Ids.WarehouseId()).
-						HasSchedule("10 MINUTES").
+						HasScheduleMinutes(10).
 						HasPredecessors().
 						HasState(sdk.TaskStateStarted).
 						HasDefinition(statement).
@@ -197,8 +198,10 @@ func TestAcc_Task_Complete(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: "snowflake_task.test",
-				ImportState:  true,
+				ResourceName:    "snowflake_task.test",
+				ImportState:     true,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedTaskResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -207,7 +210,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 						HasNameString(id.Name()).
 						HasStartedString(r.BooleanTrue).
 						HasWarehouseString(acc.TestClient().Ids.WarehouseId().Name()).
-						HasScheduleString("10 MINUTES").
+						HasScheduleMinutes(10).
 						HasConfigString(taskConfig).
 						HasAllowOverlappingExecutionString(r.BooleanTrue).
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
@@ -244,7 +247,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
 	completeConfigModel := model.TaskWithId("test", id, true, statement).
 		WithWarehouse(warehouse.ID().Name()).
-		WithSchedule("5 MINUTES").
+		WithScheduleMinutes(5).
 		WithConfigValue(configvariable.StringVariable(taskConfig)).
 		WithAllowOverlappingExecution(r.BooleanTrue).
 		WithErrorIntegration(errorNotificationIntegration.ID().Name()).
@@ -269,13 +272,13 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasNameString(id.Name()).
 						HasStartedString(r.BooleanFalse).
 						HasWarehouseString("").
-						HasScheduleString("").
+						HasNoScheduleSet().
 						HasConfigString("").
 						HasAllowOverlappingExecutionString(r.BooleanDefault).
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -287,7 +290,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse(sdk.NewAccountObjectIdentifier("")).
-						HasSchedule("").
+						HasNoSchedule().
 						HasPredecessors().
 						HasState(sdk.TaskStateSuspended).
 						HasDefinition(statement).
@@ -304,7 +307,8 @@ func TestAcc_Task_Updates(t *testing.T) {
 			},
 			// Set
 			{
-				Config: config.FromModel(t, completeConfigModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, completeConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, completeConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -313,13 +317,13 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasNameString(id.Name()).
 						HasStartedString(r.BooleanTrue).
 						HasWarehouseString(warehouse.ID().Name()).
-						HasScheduleString("5 MINUTES").
+						HasScheduleMinutes(5).
 						HasConfigString(taskConfig).
 						HasAllowOverlappingExecutionString(r.BooleanTrue).
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
 						HasCommentString(comment).
 						HasFinalizeString("").
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasWhenString(condition).
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, completeConfigModel.ResourceReference()).
@@ -331,7 +335,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwner(currentRole.Name()).
 						HasWarehouse(warehouse.ID()).
 						HasComment(comment).
-						HasSchedule("5 MINUTES").
+						HasScheduleMinutes(5).
 						HasPredecessors().
 						HasState(sdk.TaskStateStarted).
 						HasDefinition(statement).
@@ -357,13 +361,13 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasNameString(id.Name()).
 						HasStartedString(r.BooleanFalse).
 						HasWarehouseString("").
-						HasScheduleString("").
+						HasNoScheduleSet().
 						HasConfigString("").
 						HasAllowOverlappingExecutionString(r.BooleanDefault).
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIds().
+						HasAfterIdsInOrder().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -375,7 +379,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse(sdk.NewAccountObjectIdentifier("")).
-						HasSchedule("").
+						HasNoSchedule().
 						HasPredecessors().
 						HasState(sdk.TaskStateSuspended).
 						HasDefinition(statement).
@@ -394,6 +398,342 @@ func TestAcc_Task_Updates(t *testing.T) {
 	})
 }
 
+func TestAcc_Task_CronAndMinutes(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	minutes := 5
+	cron := "*/5 * * * * UTC"
+	configModelWithoutSchedule := model.TaskWithId("test", id, false, "SELECT 1")
+	configModelWithMinutes := model.TaskWithId("test", id, true, "SELECT 1").WithScheduleMinutes(minutes)
+	configModelWithCron := model.TaskWithId("test", id, true, "SELECT 1").WithScheduleCron(cron)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			// create with minutes
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithMinutes),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithMinutes.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanTrue).
+						HasScheduleMinutes(minutes).
+						HasSqlStatementString("SELECT 1"),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithMinutes.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleMinutes(minutes),
+				),
+			},
+			// Unset schedule (from minutes)
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanFalse).
+						HasNoScheduleSet().
+						HasSqlStatementString("SELECT 1"),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithoutSchedule.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasNoSchedule(),
+				),
+			},
+			// Create with cron
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithCron),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithCron.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanTrue).
+						HasScheduleCron(cron).
+						HasSqlStatementString("SELECT 1"),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithCron.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleCron(cron),
+				),
+			},
+			// Change to minutes
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithMinutes),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithMinutes.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanTrue).
+						HasScheduleMinutes(minutes).
+						HasSqlStatementString("SELECT 1"),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithMinutes.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleMinutes(minutes),
+				),
+			},
+			// Change back to cron
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithCron),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithCron.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanTrue).
+						HasScheduleCron(cron).
+						HasSqlStatementString("SELECT 1"),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithCron.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleCron(cron),
+				),
+			},
+			// Unset schedule (from cron)
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanFalse).
+						HasNoScheduleSet().
+						HasSqlStatementString("SELECT 1"),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithoutSchedule.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasNoSchedule(),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	minutes := 5
+	cron := "*/5 * * * * UTC"
+	configModelWithoutSchedule := model.TaskWithId("test", id, false, "SELECT 1")
+	configModelWithMinutes := model.TaskWithId("test", id, false, "SELECT 1").WithScheduleMinutes(minutes)
+	configModelWithCron := model.TaskWithId("test", id, false, "SELECT 1").WithScheduleCron(cron)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			// Create without a schedule
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasNoScheduleSet(),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithoutSchedule.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasNoSchedule(),
+				),
+			},
+			// External change - set minutes
+			{
+				PreConfig: func() {
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithSet(*sdk.NewTaskSetRequest().WithSchedule("5 MINUTES")))
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasNoScheduleSet(),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithoutSchedule.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasNoSchedule(),
+				),
+			},
+			// External change - set cron
+			{
+				PreConfig: func() {
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithSet(*sdk.NewTaskSetRequest().WithSchedule(fmt.Sprintf("USING CRON %s", cron))))
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasNoScheduleSet(),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithoutSchedule.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasNoSchedule(),
+				),
+			},
+			// Set minutes schedule
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithMinutes),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithMinutes.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasScheduleMinutes(minutes),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithMinutes.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleMinutes(minutes),
+				),
+			},
+			// External change - unset schedule
+			{
+				PreConfig: func() {
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithUnset(*sdk.NewTaskUnsetRequest().WithSchedule(true)))
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithMinutes),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithMinutes.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasScheduleMinutes(minutes),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithMinutes.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleMinutes(minutes),
+				),
+			},
+			// Set cron schedule
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithCron),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithCron.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasScheduleCron(cron),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithCron.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleCron(cron),
+				),
+			},
+			// External change - unset schedule
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithCron),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModelWithCron.ResourceReference()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasScheduleCron(cron),
+					resourceshowoutputassert.TaskShowOutput(t, configModelWithCron.ResourceReference()).
+						HasName(id.Name()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasScheduleCron(cron),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_ScheduleSchemaValidation(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config:      taskConfigInvalidScheduleSetMultipleOrEmpty(id, true),
+				ExpectError: regexp.MustCompile("\"schedule.0.minutes\": only one of `schedule.0.minutes,schedule.0.using_cron`"),
+			},
+			{
+				Config:      taskConfigInvalidScheduleSetMultipleOrEmpty(id, false),
+				ExpectError: regexp.MustCompile("\"schedule.0.minutes\": one of `schedule.0.minutes,schedule.0.using_cron`"),
+			},
+		},
+	})
+}
+
+func taskConfigInvalidScheduleSetMultipleOrEmpty(id sdk.SchemaObjectIdentifier, setMultiple bool) string {
+	var scheduleString string
+	scheduleBuffer := new(bytes.Buffer)
+	scheduleBuffer.WriteString("schedule {\n")
+	if setMultiple {
+		scheduleBuffer.WriteString("minutes = 10\n")
+		scheduleBuffer.WriteString("using_cron = \"*/5 * * * * UTC\"\n")
+	}
+	scheduleBuffer.WriteString("}\n")
+	scheduleString = scheduleBuffer.String()
+
+	return fmt.Sprintf(`
+resource "snowflake_task" "test" {
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	started = false
+	sql_statement = "SELECT 1"
+
+	%[4]s
+}`, id.DatabaseName(), id.SchemaName(), id.Name(), scheduleString)
+}
+
 func TestAcc_Task_AllParameters(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -401,9 +741,9 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
 	configModel := model.TaskWithId("test", id, true, statement).
-		WithSchedule("5 MINUTES")
+		WithScheduleMinutes(5)
 	configModelWithAllParametersSet := model.TaskWithId("test", id, true, statement).
-		WithSchedule("5 MINUTES").
+		WithScheduleMinutes(5).
 		WithSuspendTaskAfterNumFailures(15).
 		WithTaskAutoRetryAttempts(15).
 		WithUserTaskManagedInitialWarehouseSizeEnum(sdk.WarehouseSizeXSmall).
@@ -472,7 +812,8 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create with default values for all the parameters
 			{
-				Config: config.FromModel(t, configModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.TaskParameters(t, id).
 						HasAllDefaults().
@@ -483,8 +824,10 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 			},
 			// import when no parameter set
 			{
-				ResourceName: configModel.ResourceReference(),
-				ImportState:  true,
+				ResourceName:    configModel.ResourceReference(),
+				ImportState:     true,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceparametersassert.ImportedTaskResourceParameters(t, helpers.EncodeResourceIdentifier(id)).
 						HasAllDefaults(),
@@ -492,7 +835,8 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 			},
 			// set all parameters
 			{
-				Config: config.FromModel(t, configModelWithAllParametersSet),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithAllParametersSet),
 				Check: assert.AssertThat(t,
 					objectparametersassert.TaskParameters(t, id).
 						HasSuspendTaskAfterNumFailures(15).
@@ -614,8 +958,10 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 			},
 			// import when all parameters set
 			{
-				ResourceName: configModelWithAllParametersSet.ResourceReference(),
-				ImportState:  true,
+				ResourceName:    configModelWithAllParametersSet.ResourceReference(),
+				ImportState:     true,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithAllParametersSet),
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceparametersassert.ImportedTaskResourceParameters(t, helpers.EncodeResourceIdentifier(id)).
 						HasSuspendTaskAfterNumFailures(15).
@@ -679,7 +1025,8 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 			},
 			// unset all the parameters
 			{
-				Config: config.FromModel(t, configModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.TaskParameters(t, id).
 						HasAllDefaults().
@@ -699,9 +1046,9 @@ func TestAcc_Task_Enabled(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
 	configModelEnabled := model.TaskWithId("test", id, true, statement).
-		WithSchedule("5 MINUTES")
+		WithScheduleMinutes(5)
 	configModelDisabled := model.TaskWithId("test", id, false, statement).
-		WithSchedule("5 MINUTES")
+		WithScheduleMinutes(5)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -712,7 +1059,8 @@ func TestAcc_Task_Enabled(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModelDisabled),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelDisabled),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse),
@@ -721,7 +1069,8 @@ func TestAcc_Task_Enabled(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, configModelEnabled),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelEnabled),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModelEnabled.ResourceReference()).
 						HasStartedString(r.BooleanTrue),
@@ -730,7 +1079,8 @@ func TestAcc_Task_Enabled(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, configModelDisabled),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, configModelDisabled),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse),
@@ -742,7 +1092,6 @@ func TestAcc_Task_Enabled(t *testing.T) {
 	})
 }
 
-// TODO(SNOW-1348116 - analyze in next pr): This test may also be not deterministic and sometimes it fail when resuming a task while other task is modifying DAG (removing after)
 func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -750,25 +1099,24 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	id2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	schedule := "5 MINUTES"
 
-	firstTaskStandaloneModel := model.TaskWithId("main_task", id, true, statement).
-		WithSchedule(schedule).
+	firstTaskStandaloneModel := model.TaskWithId("root", id, true, statement).
+		WithScheduleMinutes(5).
 		WithSuspendTaskAfterNumFailures(1)
-	secondTaskStandaloneModel := model.TaskWithId("second_task", id2, true, statement).
-		WithSchedule(schedule)
+	secondTaskStandaloneModel := model.TaskWithId("child", id2, true, statement).
+		WithScheduleMinutes(5)
 
-	rootTaskModel := model.TaskWithId("main_task", id, true, statement).
-		WithSchedule(schedule).
+	rootTaskModel := model.TaskWithId("root", id, true, statement).
+		WithScheduleMinutes(5).
 		WithSuspendTaskAfterNumFailures(2)
-	childTaskModel := model.TaskWithId("second_task", id2, true, statement).
+	childTaskModel := model.TaskWithId("child", id2, true, statement).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(id.FullyQualifiedName())))
 	childTaskModel.SetDependsOn(rootTaskModel.ResourceReference())
 
-	firstTaskStandaloneModelDisabled := model.TaskWithId("main_task", id, false, statement).
-		WithSchedule(schedule)
-	secondTaskStandaloneModelDisabled := model.TaskWithId("second_task", id2, false, statement).
-		WithSchedule(schedule)
+	firstTaskStandaloneModelDisabled := model.TaskWithId("root", id, false, statement).
+		WithScheduleMinutes(5)
+	secondTaskStandaloneModelDisabled := model.TaskWithId("child", id2, false, statement).
+		WithScheduleMinutes(5)
 	secondTaskStandaloneModelDisabled.SetDependsOn(firstTaskStandaloneModelDisabled.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
@@ -780,36 +1128,38 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, firstTaskStandaloneModel) + config.FromModel(t, secondTaskStandaloneModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModel, secondTaskStandaloneModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, firstTaskStandaloneModel.ResourceReference()).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanTrue).
 						HasSuspendTaskAfterNumFailuresString("1"),
 					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModel.ResourceReference()).
-						HasSchedule(schedule).
+						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, secondTaskStandaloneModel.ResourceReference()).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModel.ResourceReference()).
-						HasSchedule(schedule).
+						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateStarted),
 				),
 			},
 			// Change the second task to run after the first one (creating a DAG)
 			{
-				Config: config.FromModel(t, rootTaskModel) + config.FromModel(t, childTaskModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskModel, childTaskModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, rootTaskModel.ResourceReference()).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanTrue).
 						HasSuspendTaskAfterNumFailuresString("2"),
 					resourceshowoutputassert.TaskShowOutput(t, rootTaskModel.ResourceReference()).
-						HasSchedule(schedule).
+						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
-						HasAfterIds(id).
+						HasAfterIdsInOrder(id).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
 						HasPredecessors(id).
@@ -818,20 +1168,21 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 			},
 			// Change tasks in DAG to standalone tasks (disabled to check if resuming/suspending works correctly)
 			{
-				Config: config.FromModel(t, firstTaskStandaloneModelDisabled) + config.FromModel(t, secondTaskStandaloneModelDisabled),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModelDisabled, secondTaskStandaloneModelDisabled),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, firstTaskStandaloneModelDisabled.ResourceReference()).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanFalse).
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModelDisabled.ResourceReference()).
-						HasSchedule(schedule).
+						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateSuspended),
 					resourceassert.TaskResource(t, secondTaskStandaloneModelDisabled.ResourceReference()).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanFalse),
 					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModelDisabled.ResourceReference()).
-						HasSchedule(schedule).
+						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateSuspended),
 				),
 			},
@@ -846,25 +1197,25 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 	rootTaskId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	finalizerTaskId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	schedule := "5 MINUTES"
+	schedule := 5
 
-	firstTaskStandaloneModel := model.TaskWithId("main_task", rootTaskId, true, statement).
-		WithSchedule(schedule).
+	firstTaskStandaloneModel := model.TaskWithId("root", rootTaskId, true, statement).
+		WithScheduleMinutes(schedule).
 		WithSuspendTaskAfterNumFailures(1)
-	secondTaskStandaloneModel := model.TaskWithId("second_task", finalizerTaskId, true, statement).
-		WithSchedule(schedule)
+	secondTaskStandaloneModel := model.TaskWithId("child", finalizerTaskId, true, statement).
+		WithScheduleMinutes(schedule)
 
-	rootTaskModel := model.TaskWithId("main_task", rootTaskId, true, statement).
-		WithSchedule(schedule).
+	rootTaskModel := model.TaskWithId("root", rootTaskId, true, statement).
+		WithScheduleMinutes(schedule).
 		WithSuspendTaskAfterNumFailures(2)
-	childTaskModel := model.TaskWithId("second_task", finalizerTaskId, true, statement).
+	childTaskModel := model.TaskWithId("child", finalizerTaskId, true, statement).
 		WithFinalize(rootTaskId.FullyQualifiedName())
 	childTaskModel.SetDependsOn(rootTaskModel.ResourceReference())
 
-	firstTaskStandaloneModelDisabled := model.TaskWithId("main_task", rootTaskId, false, statement).
-		WithSchedule(schedule)
-	secondTaskStandaloneModelDisabled := model.TaskWithId("second_task", finalizerTaskId, false, statement).
-		WithSchedule(schedule)
+	firstTaskStandaloneModelDisabled := model.TaskWithId("root", rootTaskId, false, statement).
+		WithScheduleMinutes(schedule)
+	secondTaskStandaloneModelDisabled := model.TaskWithId("child", finalizerTaskId, false, statement).
+		WithScheduleMinutes(schedule)
 	secondTaskStandaloneModelDisabled.SetDependsOn(firstTaskStandaloneModelDisabled.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
@@ -876,36 +1227,38 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, firstTaskStandaloneModel) + config.FromModel(t, secondTaskStandaloneModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModel, secondTaskStandaloneModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, firstTaskStandaloneModel.ResourceReference()).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanTrue).
 						HasSuspendTaskAfterNumFailuresString("1"),
 					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModel.ResourceReference()).
-						HasSchedule(schedule).
+						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, secondTaskStandaloneModel.ResourceReference()).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModel.ResourceReference()).
-						HasSchedule(schedule).
+						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateStarted),
 				),
 			},
 			// Change the second task to run after the first one (creating a DAG)
 			{
-				Config: config.FromModel(t, rootTaskModel) + config.FromModel(t, childTaskModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskModel, childTaskModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, rootTaskModel.ResourceReference()).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanTrue).
 						HasSuspendTaskAfterNumFailuresString("2"),
 					resourceshowoutputassert.TaskShowOutput(t, rootTaskModel.ResourceReference()).
-						HasSchedule(schedule).
-						// TODO(SNOW-1348116 - next pr): See why finalizer task is not populated
+						HasScheduleMinutes(schedule).
+						// TODO(SNOW-1348116 - next pr): Create ticket and report; this field in task relations seems to have mixed chances of appearing (needs deeper digging, doesn't affect the resource; could be removed for now)
 						// HasTaskRelations(sdk.TaskRelations{FinalizerTask: &finalizerTaskId}).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
@@ -917,21 +1270,22 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 			},
 			// Change tasks in DAG to standalone tasks (disabled to check if resuming/suspending works correctly)
 			{
-				Config: config.FromModel(t, firstTaskStandaloneModelDisabled) + config.FromModel(t, secondTaskStandaloneModelDisabled),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModelDisabled, secondTaskStandaloneModelDisabled),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, firstTaskStandaloneModelDisabled.ResourceReference()).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse).
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModelDisabled.ResourceReference()).
-						HasSchedule(schedule).
+						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
 					resourceassert.TaskResource(t, secondTaskStandaloneModelDisabled.ResourceReference()).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse),
 					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModelDisabled.ResourceReference()).
-						HasSchedule(schedule).
+						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
 				),
@@ -940,29 +1294,28 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 	})
 }
 
-// TODO(SNOW-1348116 - analyze in next pr): This test is not deterministic and sometimes it fails when resuming a task while other task is modifying DAG (removing after)
 func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	schedule := "5 MINUTES"
+	schedule := 5
 	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSuspendTaskAfterNumFailures(1)
 	childTaskConfigModel := model.TaskWithId("child", childId, true, statement).
-		WithSchedule(schedule)
+		WithScheduleMinutes(schedule)
 
 	rootTaskConfigModelAfterSuspendFailuresUpdate := model.TaskWithId("root", rootId, true, statement).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSuspendTaskAfterNumFailures(2)
 	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, true, statement).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName())))
 	childTaskConfigModelWithAfter.SetDependsOn(rootTaskConfigModelAfterSuspendFailuresUpdate.ResourceReference())
 
 	rootTaskConfigModelDisabled := model.TaskWithId("root", rootId, false, statement).
-		WithSchedule(schedule)
+		WithScheduleMinutes(schedule)
 	childTaskConfigModelDisabled := model.TaskWithId("child", childId, false, statement).
-		WithSchedule(schedule)
+		WithScheduleMinutes(schedule)
 	childTaskConfigModelDisabled.SetDependsOn(rootTaskConfigModelDisabled.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
@@ -974,58 +1327,62 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule).
-						HasAfterIds().
-						HasSuspendTaskAfterNumFailuresString("10"),
-					resourceassert.TaskResource(t, "snowflake_task.root").
-						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(schedule).
 						HasSuspendTaskAfterNumFailuresString("1"),
+					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
+						HasStartedString(r.BooleanTrue).
+						HasScheduleMinutes(schedule).
+						HasAfterIdsInOrder().
+						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
 			{
-				Config: config.FromModel(t, rootTaskConfigModelAfterSuspendFailuresUpdate) + config.FromModel(t, childTaskConfigModelWithAfter),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModelAfterSuspendFailuresUpdate, childTaskConfigModelWithAfter),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, rootTaskConfigModelAfterSuspendFailuresUpdate.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasScheduleString("").
-						HasAfterIds(rootId).
-						HasSuspendTaskAfterNumFailuresString("10"),
-					resourceassert.TaskResource(t, "snowflake_task.root").
-						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(schedule).
 						HasSuspendTaskAfterNumFailuresString("2"),
+					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
+						HasStartedString(r.BooleanTrue).
+						HasNoScheduleSet().
+						HasAfterIdsInOrder(rootId).
+						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModel),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule).
-						HasAfterIds().
-						HasSuspendTaskAfterNumFailuresString("10"),
-					resourceassert.TaskResource(t, "snowflake_task.root").
-						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(schedule).
 						HasSuspendTaskAfterNumFailuresString("1"),
+					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
+						HasStartedString(r.BooleanTrue).
+						HasScheduleMinutes(schedule).
+						HasAfterIdsInOrder().
+						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
 			{
-				Config: config.FromModel(t, rootTaskConfigModelDisabled) + config.FromModel(t, childTaskConfigModelDisabled),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModelDisabled, childTaskConfigModelDisabled),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, "snowflake_task.child").
+					resourceassert.TaskResource(t, rootTaskConfigModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse).
-						HasScheduleString(schedule).
-						HasAfterIds().
+						HasScheduleMinutes(schedule).
 						HasSuspendTaskAfterNumFailuresString("10"),
-					resourceassert.TaskResource(t, "snowflake_task.root").
+					resourceassert.TaskResource(t, childTaskConfigModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse).
-						HasScheduleString(schedule).
+						HasScheduleMinutes(schedule).
+						HasAfterIdsInOrder().
 						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
@@ -1040,24 +1397,22 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	schedule := "5 MINUTES"
+	schedule := 5
 
 	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSqlStatement(statement)
 
 	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithSqlStatement(statement)
-	childTaskConfigModelWithAfter.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	childTaskConfigModelWithoutAfter := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSqlStatement(statement)
-	childTaskConfigModelWithoutAfter.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1068,25 +1423,27 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithAfter),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithAfter),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule),
+						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId),
+						HasAfterIdsInOrder(rootId),
 				),
 			},
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithoutAfter),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutAfter),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule),
+						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(),
+						HasAfterIdsInOrder(),
 				),
 			},
 		},
@@ -1100,24 +1457,22 @@ func TestAcc_Task_WithFinalizer(t *testing.T) {
 	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	schedule := "5 MINUTES"
+	schedule := 5
 
 	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSqlStatement(statement)
 
 	childTaskConfigModelWithFinalizer := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithFinalize(rootId.FullyQualifiedName()).
 		WithSqlStatement(statement)
-	childTaskConfigModelWithFinalizer.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	childTaskConfigModelWithoutFinalizer := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSqlStatement(statement)
-	childTaskConfigModelWithoutFinalizer.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1128,22 +1483,24 @@ func TestAcc_Task_WithFinalizer(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithFinalizer),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithFinalizer),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule),
+						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(rootId.FullyQualifiedName()),
 				),
 			},
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithoutFinalizer),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutFinalizer),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule),
+						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(""),
@@ -1160,26 +1517,24 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	schedule := "5 MINUTES"
+	schedule := 5
 
 	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSqlStatement(statement)
 
 	childTaskConfigModelWithoutFinalizer := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithComment("abc").
 		WithSqlStatement(statement)
-	childTaskConfigModelWithoutFinalizer.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	childTaskConfigModelWithFinalizer := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithFinalize(rootId.FullyQualifiedName()).
 		WithComment("abc").
 		WithSqlStatement(statement)
-	childTaskConfigModelWithFinalizer.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1190,7 +1545,8 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithoutFinalizer),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutFinalizer),
 			},
 			// Set finalizer externally
 			{
@@ -1204,7 +1560,8 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithResume(true))
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(rootId).WithResume(true))
 				},
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithoutFinalizer),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutFinalizer),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
@@ -1216,7 +1573,8 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 			},
 			// Set finalizer in config
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithFinalizer),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithFinalizer),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
@@ -1233,12 +1591,13 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithSuspend(true))
 
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithUnsetFinalize(true))
-					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithSet(*sdk.NewTaskSetRequest().WithSchedule(schedule)))
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithSet(*sdk.NewTaskSetRequest().WithSchedule(fmt.Sprintf("%d minutes", schedule))))
 
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithResume(true))
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(rootId).WithResume(true))
 				},
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithFinalizer),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithFinalizer),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
@@ -1250,7 +1609,8 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 			},
 			// Unset finalizer in config
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithoutFinalizer),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutFinalizer),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
@@ -1271,26 +1631,24 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	schedule := "5 MINUTES"
+	schedule := 5
 
 	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSqlStatement(statement)
 
 	childTaskConfigModelWithoutAfter := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithComment("abc").
 		WithSqlStatement(statement)
-	childTaskConfigModelWithoutAfter.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	childTaskConfigModelWithAfter := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithComment("abc").
 		WithSqlStatement(statement)
-	childTaskConfigModelWithAfter.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1301,7 +1659,8 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithoutAfter),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutAfter),
 			},
 			// Set after externally
 			{
@@ -1315,11 +1674,12 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithResume(true))
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(rootId).WithResume(true))
 				},
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithoutAfter),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutAfter),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(),
+						HasAfterIdsInOrder(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
@@ -1327,11 +1687,12 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 			},
 			// Set after in config
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithAfter),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithAfter),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId),
+						HasAfterIdsInOrder(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
@@ -1344,16 +1705,17 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithSuspend(true))
 
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithRemoveAfter([]sdk.SchemaObjectIdentifier{rootId}))
-					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithSet(*sdk.NewTaskSetRequest().WithSchedule(schedule)))
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithSet(*sdk.NewTaskSetRequest().WithSchedule(fmt.Sprintf("%d MINUTES", schedule))))
 
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(childId).WithResume(true))
 					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(rootId).WithResume(true))
 				},
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithAfter),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithAfter),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId),
+						HasAfterIdsInOrder(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
@@ -1361,11 +1723,12 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 			},
 			// Unset after in config
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithoutAfter),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutAfter),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(),
+						HasAfterIdsInOrder(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
@@ -1382,11 +1745,11 @@ func TestAcc_Task_issue2207(t *testing.T) {
 	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	schedule := "5 MINUTES"
+	schedule := 5
 
 	rootTaskConfigModel := model.TaskWithId("root", rootId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSqlStatement(statement)
 
 	childTaskConfigModel := model.TaskWithId("child", childId, true, statement).
@@ -1394,14 +1757,12 @@ func TestAcc_Task_issue2207(t *testing.T) {
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithComment("abc").
 		WithSqlStatement(statement)
-	childTaskConfigModel.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	childTaskConfigModelWithDifferentComment := model.TaskWithId("child", childId, true, statement).
 		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
 		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName()))).
 		WithComment("def").
 		WithSqlStatement(statement)
-	childTaskConfigModelWithDifferentComment.SetDependsOn(rootTaskConfigModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1412,14 +1773,15 @@ func TestAcc_Task_issue2207(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModel),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule),
+						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId).
+						HasAfterIdsInOrder(rootId).
 						HasCommentString("abc"),
 				),
 			},
@@ -1430,14 +1792,15 @@ func TestAcc_Task_issue2207(t *testing.T) {
 						plancheck.ExpectResourceAction(childTaskConfigModelWithDifferentComment.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Config: config.FromModel(t, rootTaskConfigModel) + config.FromModel(t, childTaskConfigModelWithDifferentComment),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithDifferentComment),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasScheduleString(schedule),
+						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithDifferentComment.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIds(rootId).
+						HasAfterIdsInOrder(rootId).
 						HasCommentString("def"),
 				),
 			},
@@ -1451,15 +1814,15 @@ func TestAcc_Task_issue2036(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	schedule := "5 MINUTES"
+	schedule := 5
 	when := "TRUE"
 
 	taskConfigModelWithoutWhen := model.TaskWithId("test", id, true, statement).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSqlStatement(statement)
 
 	taskConfigModelWithWhen := model.TaskWithId("test", id, true, statement).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSqlStatement(statement).
 		WithWhen(when)
 
@@ -1473,7 +1836,8 @@ func TestAcc_Task_issue2036(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create without when
 			{
-				Config: config.FromModel(t, taskConfigModelWithoutWhen),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, taskConfigModelWithoutWhen),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, taskConfigModelWithoutWhen.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
@@ -1482,7 +1846,8 @@ func TestAcc_Task_issue2036(t *testing.T) {
 			},
 			// add when
 			{
-				Config: config.FromModel(t, taskConfigModelWithWhen),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, taskConfigModelWithWhen),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, taskConfigModelWithWhen.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
@@ -1491,7 +1856,8 @@ func TestAcc_Task_issue2036(t *testing.T) {
 			},
 			// remove when
 			{
-				Config: config.FromModel(t, taskConfigModelWithoutWhen),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, taskConfigModelWithoutWhen),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, taskConfigModelWithoutWhen.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
@@ -1511,9 +1877,9 @@ func TestAcc_Task_issue3113(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
-	schedule := "5 MINUTES"
+	schedule := 5
 	configModel := model.TaskWithId("test", id, true, statement).
-		WithSchedule(schedule).
+		WithScheduleMinutes(schedule).
 		WithSqlStatement(statement).
 		WithErrorIntegration(errorNotificationIntegration.ID().Name())
 
@@ -1539,7 +1905,8 @@ func TestAcc_Task_issue3113(t *testing.T) {
 					acc.TestClient().Task.DropFunc(t, id)()
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModel),
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables:          config.ConfigVariablesFromModel(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()),

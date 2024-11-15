@@ -36,7 +36,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasComment("").
 			HasWarehouse(warehouseId).
 			HasSchedule("").
-			HasPredecessors().
+			HasPredecessorsInAnyOrder().
 			HasState(sdk.TaskStateStarted).
 			HasDefinition(sql).
 			HasCondition("").
@@ -78,12 +78,12 @@ func TestInt_Tasks(t *testing.T) {
 			HasLastSuspendedOn("")
 
 		if predecessor != nil {
-			asserts.HasPredecessors(*predecessor)
+			asserts.HasPredecessorsInAnyOrder(*predecessor)
 			asserts.HasTaskRelations(sdk.TaskRelations{
 				Predecessors: []sdk.SchemaObjectIdentifier{*predecessor},
 			})
 		} else {
-			asserts.HasPredecessors()
+			asserts.HasPredecessorsInAnyOrder()
 			asserts.HasTaskRelations(sdk.TaskRelations{})
 		}
 
@@ -103,7 +103,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasOwner("").
 			HasComment("").
 			HasWarehouse(nil).
-			HasPredecessors().
+			HasPredecessorsInAnyOrder().
 			HasState("").
 			HasDefinition("").
 			HasCondition("").
