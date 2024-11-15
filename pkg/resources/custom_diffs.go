@@ -271,13 +271,15 @@ func RecreateWhenStreamIsStale() schema.CustomizeDiffFunc {
 	}
 }
 
-// TODO: [SNOW-1763442] unable to test now, as there is no test accounts with different regions
-// RecreateWhenSecondaryConnectionChangedExternally detects if the secondary connection was promoted externally to serve as primary.
-// If so, it sets the `is_primary` field to `false` which is our desired value for secondary_connection
-func RecreateWhenSecondaryConnectionPromotedExternally() schema.CustomizeDiffFunc {
-	return func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
-		if _, newValue := diff.GetChange("is_primary"); newValue.(bool) {
-			return diff.SetNew("is_primary", false)
+// RecreateWhenResourceBoolFieldChangedExternally recreates a resource when wantValue is different than value in boolField.
+func RecreateWhenResourceBoolFieldChangedExternally(boolField string, wantValue bool) schema.CustomizeDiffFunc {
+	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		if n := diff.Get(boolField); n != nil {
+			logging.DebugLogger.Printf("[DEBUG] new external value for %v: %v\n", boolField, n.(bool))
+
+			if n.(bool) != wantValue {
+				return errors.Join(diff.SetNew(boolField, wantValue), diff.ForceNew(boolField))
+			}
 		}
 		return nil
 	}

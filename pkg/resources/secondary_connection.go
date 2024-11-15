@@ -25,7 +25,7 @@ var secondaryConnectionSchema = map[string]*schema.Schema{
 	"is_primary": {
 		Type:        schema.TypeBool,
 		Computed:    true,
-		Description: "Indicates if the connection has been changed to primary. If change is detected, the secondary connection will be recreated.",
+		Description: "Indicates if the connection primary status has been changed. If change is detected, resource will be recreated.",
 	},
 	"as_replica_of": {
 		Type:             schema.TypeString,
@@ -56,11 +56,11 @@ func SecondaryConnection() *schema.Resource {
 		ReadContext:   ReadContextSecondaryConnection,
 		UpdateContext: UpdateContextSecondaryConnection,
 		DeleteContext: DeleteContextSecondaryConnection,
-		Description:   "Resource used to manage secondary connections. To promote secondary connection to primary check [migraton guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#connection-resources). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
+		Description:   "Resource used to manage secondary (replicated) connections. To manage primary connection check resource [snowflake_primary_connection](./primary_connection). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(secondaryConnectionSchema, ShowOutputAttributeName, "comment", "is_primary", "failover_allowed_to_accounts"),
-			RecreateWhenSecondaryConnectionPromotedExternally(),
+			ComputedIfAnyAttributeChanged(secondaryConnectionSchema, ShowOutputAttributeName, "comment", "is_primary"),
+			RecreateWhenResourceBoolFieldChangedExternally("is_primary", false),
 		),
 
 		Schema: secondaryConnectionSchema,

@@ -22,6 +22,11 @@ var primaryConnectionSchema = map[string]*schema.Schema{
 		Description:      blocklistedCharactersFieldDescription("String that specifies the identifier (i.e. name) for the connection. Must start with an alphabetic character and may only contain letters, decimal digits (0-9), and underscores (_). For a primary connection, the name must be unique across connection names and account names in the organization. "),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
+	"is_primary": {
+		Type:        schema.TypeBool,
+		Computed:    true,
+		Description: "Indicates if the connection is primary. When Terraform detects that the connection is not primary, the resource is recreated.",
+	},
 	"enable_failover_to_accounts": {
 		Type:        schema.TypeList,
 		Optional:    true,
@@ -55,10 +60,11 @@ func PrimaryConnection() *schema.Resource {
 		DeleteContext: DeleteContextPrimaryConnection,
 
 		CustomizeDiff: customdiff.All(
-			ComputedIfAnyAttributeChanged(primaryConnectionSchema, ShowOutputAttributeName, "comment", "failover_allowed_to_accounts"),
+			ComputedIfAnyAttributeChanged(primaryConnectionSchema, ShowOutputAttributeName, "comment", "is_primary", "enable_failover_to_accounts"),
+			RecreateWhenResourceBoolFieldChangedExternally("is_primary", true),
 		),
 
-		Description: "Resource used to manage primary (not replicated) connections. For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
+		Description: "Resource used to manage primary connections. For managing replicated connection check resource [snowflake_secondary_connection](./secondary_connection). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
 		Schema:      primaryConnectionSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportName[sdk.AccountObjectIdentifier],
@@ -137,6 +143,7 @@ func ReadContextPrimaryConnection(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	errs := errors.Join(
+		d.Set("is_primary", connection.IsPrimary),
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 		d.Set(ShowOutputAttributeName, []map[string]any{schemas.ConnectionToSchema(connection)}),
 		d.Set("comment", connection.Comment),
