@@ -10,14 +10,22 @@ import (
 	hclv1parser "github.com/hashicorp/hcl/json/parser"
 )
 
+var DefaultHclProvider = NewHclV1ConfigProvider(removeDoubleNewlines, unquoteDependsOnReferences)
+
 type HclProvider interface {
 	HclFromJson(json []byte) (string, error)
 }
 
-type hclV1ConfigProvider struct{}
+type HclFormatter func(string) (string, error)
 
-func NewHclV1ConfigProvider() HclProvider {
-	return &hclV1ConfigProvider{}
+type hclV1ConfigProvider struct {
+	formatters []HclFormatter
+}
+
+func NewHclV1ConfigProvider(formatters ...HclFormatter) HclProvider {
+	return &hclV1ConfigProvider{
+		formatters: formatters,
+	}
 }
 
 func (h *hclV1ConfigProvider) HclFromJson(json []byte) (string, error) {
@@ -26,13 +34,11 @@ func (h *hclV1ConfigProvider) HclFromJson(json []byte) (string, error) {
 		return "", err
 	}
 
-	hcl, err = formatResult(hcl)
-	if err != nil {
-		return "", err
-	}
-	hcl, err = fixDependsOn(hcl)
-	if err != nil {
-		return "", err
+	for _, formatter := range h.formatters {
+		hcl, err = formatter(hcl)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	return hcl, nil
@@ -58,12 +64,12 @@ func convertJsonToHclStringV1(jsonBytes []byte) (string, error) {
 	return string(formatted[:]), nil
 }
 
-func formatResult(input string) (string, error) {
+func removeDoubleNewlines(input string) (string, error) {
 	return fmt.Sprintf("%s", strings.ReplaceAll(input, "\n\n", "\n")), nil
 }
 
 // Based on https://developer.hashicorp.com/terraform/language/syntax/json#depends_on should be processed in a special way, but it isn't.
-func fixDependsOn(s string) (string, error) {
+func unquoteDependsOnReferences(s string) (string, error) {
 	dependsOnRegex := regexp.MustCompile(`("depends_on" = )(\["\w+\.\w+"(, "\w+\.\w+")*])`)
 	submatches := dependsOnRegex.FindStringSubmatch(s)
 	if len(submatches) < 2 {

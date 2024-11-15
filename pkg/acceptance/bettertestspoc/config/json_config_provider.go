@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+var DefaultJsonProvider = NewBasicJsonProvider()
+
 type JsonProvider interface {
 	JsonFromModel(model ResourceModel) ([]byte, error)
 }
