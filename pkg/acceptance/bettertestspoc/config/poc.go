@@ -14,12 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type ResourceJson struct {
+type resourceJson struct {
 	Resource map[string]map[string]ResourceModel `json:"resource"`
 }
 
-func ResourceJsonFrom(model ResourceModel) ResourceJson {
-	return ResourceJson{
+func resourceJsonFrom(model ResourceModel) resourceJson {
+	return resourceJson{
 		Resource: map[string]map[string]ResourceModel{
 			fmt.Sprintf("%s", model.Resource()): {
 				fmt.Sprintf("%s", model.ResourceName()): model,
@@ -31,7 +31,7 @@ func ResourceJsonFrom(model ResourceModel) ResourceJson {
 func FromModelPoc(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
-	modelJson := ResourceJsonFrom(model)
+	modelJson := resourceJsonFrom(model)
 
 	b, err := json.MarshalIndent(modelJson, "", "    ")
 	require.NoError(t, err)
@@ -39,6 +39,7 @@ func FromModelPoc(t *testing.T, model ResourceModel) string {
 
 	s, err := convertJsonToHclStringV1(b)
 	require.NoError(t, err)
+	t.Logf("Raw generated config:\n%s", s)
 
 	formatResult := func(input string) string {
 		return fmt.Sprintf("%s", strings.ReplaceAll(input, "\n\n", "\n"))
@@ -62,10 +63,11 @@ func FromModelPoc(t *testing.T, model ResourceModel) string {
 	}
 	final := fixDependsOn(formatted)
 
-	t.Logf("Generated config:\n%s", final)
+	t.Logf("Final generated config:\n%s", final)
 	return final
 }
 
+// TODO: extract and test
 func convertJsonToHclStringV1(jsonBytes []byte) (string, error) {
 	parsed, err := hclv1parser.Parse(jsonBytes)
 	if err != nil {
