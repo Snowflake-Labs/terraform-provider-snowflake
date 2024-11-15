@@ -35,18 +35,6 @@ type unsetTagOptions struct {
 	UnsetTags  []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
 }
 
-type setTagOnCurrentAccountOptions struct {
-	alter   bool             `ddl:"static" sql:"ALTER"`
-	account bool             `ddl:"static" sql:"ACCOUNT"`
-	SetTags []TagAssociation `ddl:"keyword" sql:"SET TAG"`
-}
-
-type unsetTagOnCurrentAccountOptions struct {
-	alter     bool               `ddl:"static" sql:"ALTER"`
-	account   bool               `ddl:"static" sql:"ACCOUNT"`
-	UnsetTags []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
-}
-
 // createTagOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-tag
 type createTagOptions struct {
 	create        bool                   `ddl:"static" sql:"CREATE"`

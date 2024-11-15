@@ -81,15 +81,15 @@ func (v *tags) Unset(ctx context.Context, request *UnsetTagRequest) error {
 }
 
 func (v *tags) SetOnCurrentAccount(ctx context.Context, request *SetTagOnCurrentAccountRequest) error {
-	// TODO [SNOW-1022645]: use query from resource sdk - similarly to https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/0e88e082282adf35f605c323569908a99bd406f9/pkg/acceptance/check_destroy.go#L67
-	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, opts)
+	return v.client.Accounts.Alter(ctx, &AlterAccountOptions{
+		SetTag: request.SetTags,
+	})
 }
 
 func (v *tags) UnsetOnCurrentAccount(ctx context.Context, request *UnsetTagOnCurrentAccountRequest) error {
-	// TODO [SNOW-1022645]: use query from resource sdk - similarly to https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/0e88e082282adf35f605c323569908a99bd406f9/pkg/acceptance/check_destroy.go#L67
-	opts := request.toOpts()
-	return validateAndExec(v.client, ctx, opts)
+	return v.client.Accounts.Alter(ctx, &AlterAccountOptions{
+		UnsetTag: request.UnsetTags,
+	})
 }
 
 func (s *CreateTagRequest) toOpts() *createTagOptions {
@@ -166,20 +166,6 @@ func (s *UnsetTagRequest) toOpts() *unsetTagOptions {
 			o.objectName = id.SchemaObjectId()
 			o.column = String(id.Name())
 		}
-	}
-	return o
-}
-
-func (s *SetTagOnCurrentAccountRequest) toOpts() *setTagOnCurrentAccountOptions {
-	o := &setTagOnCurrentAccountOptions{
-		SetTags: s.SetTags,
-	}
-	return o
-}
-
-func (s *UnsetTagOnCurrentAccountRequest) toOpts() *unsetTagOnCurrentAccountOptions {
-	o := &unsetTagOnCurrentAccountOptions{
-		UnsetTags: s.UnsetTags,
 	}
 	return o
 }

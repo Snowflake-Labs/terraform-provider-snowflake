@@ -102,6 +102,8 @@ func createApplicationPackage(t *testing.T) (*sdk.ApplicationPackage, func()) {
 func createShare(t *testing.T, ctx context.Context, client *sdk.Client) (*sdk.Share, func()) {
 	t.Helper()
 	object, objectCleanup := testClientHelper().Share.CreateShare(t)
+	t.Cleanup(objectCleanup)
+
 	err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
 		Database: testClientHelper().Ids.DatabaseId(),
 	}, object.ID())
@@ -111,7 +113,6 @@ func createShare(t *testing.T, ctx context.Context, client *sdk.Client) (*sdk.Sh
 			Database: testClientHelper().Ids.DatabaseId(),
 		}, object.ID())
 		require.NoError(t, err)
-		objectCleanup()
 	}
 	return object, cleanup
 }
@@ -119,28 +120,20 @@ func createShare(t *testing.T, ctx context.Context, client *sdk.Client) (*sdk.Sh
 func createPipe(t *testing.T) (*sdk.Pipe, func()) {
 	t.Helper()
 	table, tableCleanup := testClientHelper().Table.Create(t)
+	t.Cleanup(tableCleanup)
 
 	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
+	t.Cleanup(stageCleanup)
 
-	object, objectCleanup := testClientHelper().Pipe.CreatePipe(t, fmt.Sprintf("COPY INTO %s\nFROM @%s", table.ID().FullyQualifiedName(), stage.ID().FullyQualifiedName()))
-	cleanup := func() {
-		objectCleanup()
-		stageCleanup()
-		tableCleanup()
-	}
-	return object, cleanup
+	return testClientHelper().Pipe.CreatePipe(t, fmt.Sprintf("COPY INTO %s\nFROM @%s", table.ID().FullyQualifiedName(), stage.ID().FullyQualifiedName()))
 }
 
 func createMaterializedView(t *testing.T) (*sdk.MaterializedView, func()) {
 	t.Helper()
 	table, tableCleanup := testClientHelper().Table.Create(t)
+	t.Cleanup(tableCleanup)
 	query := fmt.Sprintf(`SELECT * FROM %s`, table.ID().FullyQualifiedName())
-	object, objectCleanup := testClientHelper().MaterializedView.CreateMaterializedView(t, query, false)
-	cleanup := func() {
-		objectCleanup()
-		tableCleanup()
-	}
-	return object, cleanup
+	return testClientHelper().MaterializedView.CreateMaterializedView(t, query, false)
 }
 
 func createStream(t *testing.T) (*sdk.Stream, func()) {
@@ -148,13 +141,7 @@ func createStream(t *testing.T) (*sdk.Stream, func()) {
 	table, tableCleanup := testClientHelper().Table.CreateInSchema(t, testClientHelper().Ids.SchemaId())
 	t.Cleanup(tableCleanup)
 
-	object, objectCleanup := testClientHelper().Stream.CreateOnTable(t, table.ID())
-	t.Cleanup(objectCleanup)
-	cleanup := func() {
-		objectCleanup()
-		tableCleanup()
-	}
-	return object, cleanup
+	return testClientHelper().Stream.CreateOnTable(t, table.ID())
 }
 
 func createExternalTable(t *testing.T) (*sdk.ExternalTable, func()) {
@@ -162,11 +149,7 @@ func createExternalTable(t *testing.T) (*sdk.ExternalTable, func()) {
 	stageID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
 	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
-	object, objectCleanup := testClientHelper().ExternalTable.CreateWithLocation(t, stageLocation)
-	cleanup := func() {
-		objectCleanup()
-		stageCleanup()
-	}
+	t.Cleanup(stageCleanup)
 
-	return object, cleanup
+	return testClientHelper().ExternalTable.CreateWithLocation(t, stageLocation)
 }

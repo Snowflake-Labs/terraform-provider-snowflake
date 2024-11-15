@@ -176,17 +176,3 @@ func (opts *unsetTagOptions) validate() error {
 	}
 	return errors.Join(errs...)
 }
-
-func (opts *setTagOnCurrentAccountOptions) validate() error {
-	if opts == nil {
-		return errors.Join(ErrNilOptions)
-	}
-	return nil
-}
-
-func (opts *unsetTagOnCurrentAccountOptions) validate() error {
-	if opts == nil {
-		return errors.Join(ErrNilOptions)
-	}
-	return nil
-}
