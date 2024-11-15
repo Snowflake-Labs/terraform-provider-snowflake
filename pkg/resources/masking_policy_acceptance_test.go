@@ -413,7 +413,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_94_1(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -427,7 +427,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_94_1(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_MaskingPolicy/basic"),
 				ConfigVariables:          tfconfig.ConfigVariablesFromModel(t, policyModel),
@@ -572,7 +572,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_95_0(t *testing.T) {
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.95.0",
@@ -597,7 +597,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_95_0(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_MaskingPolicy/complete"),
 				ConfigVariables:          tfconfig.ConfigVariablesFromModel(t, policyModel),

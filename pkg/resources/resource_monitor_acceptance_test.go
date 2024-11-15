@@ -529,7 +529,7 @@ func TestAcc_ResourceMonitor_Issue1990_RemovingResourceMonitorOutsideOfTerraform
 		Steps: []resource.TestStep{
 			// Create resource monitor
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.69.0",
@@ -565,7 +565,7 @@ func TestAcc_ResourceMonitor_Issue1990_RemovingResourceMonitorOutsideOfTerraform
 			},
 			// Same configuration, but it's the latest version of the provider (0.96.0 and above)
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, configModel),
 			},
@@ -601,7 +601,7 @@ func TestAcc_ResourceMonitor_Issue_TimestampInfinitePlan(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create resource monitor without the timestamps
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.90.0",
@@ -644,7 +644,7 @@ func TestAcc_ResourceMonitor_Issue_TimestampInfinitePlan(t *testing.T) {
 			},
 			// Create resource monitor without the timestamps
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, configModel),
 			},
@@ -682,7 +682,7 @@ func TestAcc_ResourceMonitor_Issue1500_CreatingWithOnlyTriggers(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create resource monitor with only triggers (old version)
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.90.0",
@@ -694,7 +694,7 @@ func TestAcc_ResourceMonitor_Issue1500_CreatingWithOnlyTriggers(t *testing.T) {
 			},
 			// Create resource monitor with only triggers (the latest version)
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, configModel),
 				ExpectError:              regexp.MustCompile("due to Snowflake limiltations you cannot create Resource Monitor with only triggers set"),
@@ -736,7 +736,7 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.90.0",
@@ -770,7 +770,7 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 			},
 			// Upgrade to the latest version
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, configModelWithCreditQuota),
 			},
@@ -906,7 +906,7 @@ func TestAcc_ResourceMonitor_SetForWarehouse(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.90.0",
@@ -926,7 +926,7 @@ resource "snowflake_resource_monitor" "test" {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config: fmt.Sprintf(`
 resource "snowflake_resource_monitor" "test" {

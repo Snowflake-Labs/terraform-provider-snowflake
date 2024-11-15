@@ -541,7 +541,7 @@ func TestAcc_SecondaryDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResour
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -554,7 +554,7 @@ func TestAcc_SecondaryDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResour
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   secondaryDatabaseConfigBasic(id.Name(), externalPrimaryId.FullyQualifiedName()),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -593,7 +593,7 @@ func TestAcc_SecondaryDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -608,7 +608,7 @@ func TestAcc_SecondaryDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   secondaryDatabaseConfigBasic(quotedId, unquotedExternalPrimaryId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

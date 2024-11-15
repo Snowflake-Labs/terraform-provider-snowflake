@@ -211,8 +211,8 @@ func ExternalProviderWithExactVersion(version string) map[string]resource.Extern
 	}
 }
 
-// SetV097CompatibleConfigPath sets a new config path in a relevant env variable for a file that is compatible with v0.97.
-func SetV097CompatibleConfigPathEnv(t *testing.T) func() {
+// SetV097CompatibleConfigPathEnvFunc sets a new config path in a relevant env variable for a file that is compatible with v0.97.
+func SetV097CompatibleConfigPathEnvFunc(t *testing.T) func() {
 	t.Helper()
 	return func() {
 		home, err := os.UserHomeDir()
@@ -222,8 +222,8 @@ func SetV097CompatibleConfigPathEnv(t *testing.T) func() {
 	}
 }
 
-// UnsetConfigPathEnv unsets a config path env
-func UnsetConfigPathEnv(t *testing.T) func() {
+// UnsetConfigPathEnvFunc unsets a config path env
+func UnsetConfigPathEnvFunc(t *testing.T) func() {
 	t.Helper()
 	return func() {
 		t.Setenv(snowflakeenvs.ConfigPath, "")

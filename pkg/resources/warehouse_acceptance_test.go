@@ -1452,7 +1452,7 @@ func TestAcc_Warehouse_migrateFromVersion092_withWarehouseSize(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -1466,7 +1466,7 @@ func TestAcc_Warehouse_migrateFromVersion092_withWarehouseSize(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1495,7 +1495,7 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration(t *t
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -1510,7 +1510,7 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration(t *t
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseFullMigrationConfig(id.Name(), false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1557,7 +1557,7 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration_bool
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -1574,7 +1574,7 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration_bool
 			},
 			// let's try to change the value of the parameter that was earlier a bool and now is a string
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1606,7 +1606,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_sam
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -1620,7 +1620,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_sam
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseFullDefaultConfig(id.Name(), ""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1654,7 +1654,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_noI
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -1668,7 +1668,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_noI
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseFullDefaultConfigWithQueryAccelerationMaxScaleFactorRemoved(id.Name(), ""),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1702,7 +1702,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_dif
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -1716,7 +1716,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_dif
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseFullDefaultConfigWithQueryAcceleration(id.Name(), "", true, 10),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1749,7 +1749,7 @@ func TestAcc_Warehouse_migrateFromVersion092_noConfigToFullConfig(t *testing.T) 
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -1763,7 +1763,7 @@ func TestAcc_Warehouse_migrateFromVersion092_noConfigToFullConfig(t *testing.T) 
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseFullDefaultConfigWithQueryAcceleration(id.Name(), "", true, 8),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1806,7 +1806,7 @@ func TestAcc_Warehouse_migrateFromVersion092_defaultsRemoved(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -1836,7 +1836,7 @@ func TestAcc_Warehouse_migrateFromVersion092_defaultsRemoved(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeXSmall)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1876,7 +1876,7 @@ func TestAcc_Warehouse_migrateFromVersion092_warehouseSizeCausingForceNew(t *tes
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.92.0",
@@ -1889,7 +1889,7 @@ func TestAcc_Warehouse_migrateFromVersion092_warehouseSizeCausingForceNew(t *tes
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseBasicConfig(id.Name()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1916,7 +1916,7 @@ func TestAcc_Warehouse_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *
 		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1929,7 +1929,7 @@ func TestAcc_Warehouse_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1952,7 +1952,7 @@ func TestAcc_Warehouse_IdentifierQuotingDiffSuppression(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Warehouse),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1967,7 +1967,7 @@ func TestAcc_Warehouse_IdentifierQuotingDiffSuppression(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   warehouseBasicConfig(quotedId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

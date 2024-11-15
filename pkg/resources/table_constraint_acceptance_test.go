@@ -232,7 +232,7 @@ func TestAcc_Table_issue2535_newConstraint(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.86.0",
@@ -255,7 +255,7 @@ func TestAcc_Table_issue2535_newConstraint(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   tableConstraintUniqueConfigUsingTableId(accName, acc.TestDatabaseName, acc.TestSchemaName, "|"),
 				ExpectError:              regexp.MustCompile(`.*Expected SchemaObjectIdentifier identifier type, but got:.*`),
@@ -284,7 +284,7 @@ func TestAcc_Table_issue2535_existingTable(t *testing.T) {
 		Steps: []resource.TestStep{
 			// reference done by table.id in 0.85.0
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.85.0",
@@ -309,7 +309,7 @@ func TestAcc_Table_issue2535_existingTable(t *testing.T) {
 			},
 			// fixed in the current version
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   tableConstraintUniqueConfigUsingFullyQualifiedName(accName, acc.TestDatabaseName, acc.TestSchemaName),
 				Check: resource.ComposeTestCheckFunc(

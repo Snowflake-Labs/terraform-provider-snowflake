@@ -232,7 +232,7 @@ func TestAcc_NotificationIntegration_migrateFromVersion085(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.85.0",
@@ -247,7 +247,7 @@ func TestAcc_NotificationIntegration_migrateFromVersion085(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   googleAutoConfigWithoutDirection(accName, gcpPubsubSubscriptionName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -278,7 +278,7 @@ func TestAcc_NotificationIntegration_migrateFromVersion085_explicitType(t *testi
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnv(t),
+				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.85.0",
@@ -291,7 +291,7 @@ func TestAcc_NotificationIntegration_migrateFromVersion085_explicitType(t *testi
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnv(t),
+				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   googleAutoConfig(accName, gcpPubsubSubscriptionName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
