@@ -138,7 +138,7 @@ func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("allowed_network_rule_list"); ok {
-		allowedNetworkRuleList, err := parseSchemaObjectIdentifierList(v)
+		allowedNetworkRuleList, err := parseSchemaObjectIdentifierSet(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -146,7 +146,7 @@ func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("blocked_network_rule_list"); ok {
-		blockedNetworkRuleList, err := parseSchemaObjectIdentifierList(v)
+		blockedNetworkRuleList, err := parseSchemaObjectIdentifierSet(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -315,7 +315,7 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("allowed_network_rule_list") {
 		if v, ok := d.GetOk("allowed_network_rule_list"); ok {
-			allowedNetworkRuleList, err := parseSchemaObjectIdentifierList(v)
+			allowedNetworkRuleList, err := parseSchemaObjectIdentifierSet(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -327,7 +327,7 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("blocked_network_rule_list") {
 		if v, ok := d.GetOk("blocked_network_rule_list"); ok {
-			blockedNetworkRuleList, err := parseSchemaObjectIdentifierList(v)
+			blockedNetworkRuleList, err := parseSchemaObjectIdentifierSet(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}

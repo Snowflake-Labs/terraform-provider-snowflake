@@ -71,11 +71,6 @@ func (t *TagResourceAssert) HasSchemaString(expected string) *TagResourceAssert 
 // Attribute empty checks //
 ////////////////////////////
 
-func (t *TagResourceAssert) HasNoAllowedValues() *TagResourceAssert {
-	t.AddAssertion(assert.ValueNotSet("allowed_values"))
-	return t
-}
-
 func (t *TagResourceAssert) HasNoComment() *TagResourceAssert {
 	t.AddAssertion(assert.ValueNotSet("comment"))
 	return t
@@ -88,11 +83,6 @@ func (t *TagResourceAssert) HasNoDatabase() *TagResourceAssert {
 
 func (t *TagResourceAssert) HasNoFullyQualifiedName() *TagResourceAssert {
 	t.AddAssertion(assert.ValueNotSet("fully_qualified_name"))
-	return t
-}
-
-func (t *TagResourceAssert) HasNoMaskingPolicy() *TagResourceAssert {
-	t.AddAssertion(assert.ValueNotSet("masking_policy"))
 	return t
 }
 

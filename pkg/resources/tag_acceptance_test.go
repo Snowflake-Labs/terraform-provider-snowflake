@@ -66,8 +66,8 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasCommentString("").
-					HasNoMaskingPolicy(),
-					assert.Check(resource.TestCheckResourceAttr(baseModel.ResourceReference(), "allowed_values.#", "0")),
+					HasNoMaskingPolicies().
+					HasNoAllowedValues(),
 					resourceshowoutputassert.TagShowOutput(t, baseModel.ResourceReference()).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
@@ -75,8 +75,8 @@ func TestAcc_Tag_basic(t *testing.T) {
 						HasSchemaName(id.SchemaName()).
 						HasComment("").
 						HasOwner(snowflakeroles.Accountadmin.Name()).
-						HasOwnerRoleType("ROLE"),
-					assert.Check(resource.TestCheckResourceAttr(baseModel.ResourceReference(), "show_output.0.allowed_values.#", "0")),
+						HasOwnerRoleType("ROLE").
+						HasNoAllowedValues(),
 				),
 			},
 			// import without optionals
@@ -223,8 +223,8 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasCommentString("").
-					HasNoMaskingPolicy(),
-					assert.Check(resource.TestCheckResourceAttr(baseModel.ResourceReference(), "allowed_values.#", "0")),
+					HasNoMaskingPolicies().
+					HasNoAllowedValues(),
 					resourceshowoutputassert.TagShowOutput(t, baseModel.ResourceReference()).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
@@ -232,8 +232,8 @@ func TestAcc_Tag_basic(t *testing.T) {
 						HasSchemaName(id.SchemaName()).
 						HasComment("").
 						HasOwner(snowflakeroles.Accountadmin.Name()).
-						HasOwnerRoleType("ROLE"),
-					assert.Check(resource.TestCheckResourceAttr(baseModel.ResourceReference(), "show_output.0.allowed_values.#", "0")),
+						HasOwnerRoleType("ROLE").
+						HasNoAllowedValues(),
 				),
 			},
 		},

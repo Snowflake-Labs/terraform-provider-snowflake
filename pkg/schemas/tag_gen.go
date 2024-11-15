@@ -34,6 +34,7 @@ var ShowTagSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"allowed_values": {
+		// Adjusted manually.
 		Type:     schema.TypeSet,
 		Elem:     &schema.Schema{Type: schema.TypeString},
 		Computed: true,

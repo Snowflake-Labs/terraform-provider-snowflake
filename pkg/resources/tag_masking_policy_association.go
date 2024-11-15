@@ -86,7 +86,7 @@ func TagMaskingPolicyAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Description:        "Attach a masking policy to a tag. Requires a current warehouse to be set. Either with SNOWFLAKE_WAREHOUSE env variable or in current session. If no warehouse is provided, a temporary warehouse will be created.",
-		DeprecationMessage: deprecatedResourceDescription(string(providerresources.TagAssociation)),
+		DeprecationMessage: deprecatedResourceDescription(string(providerresources.Tag)),
 	}
 }
 

@@ -7,14 +7,6 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0980--v0990) to use it.
 
--> **Note** `snowflake_user_password_policy_attachment` will be reworked in the following versions of the provider which may still affect this resource.
-
--> **Note** Attaching user policies will be handled in the following versions of the provider which may still affect this resource.
-
--> **Note** Other two user types are handled in separate resources: `snowflake_service_user` for user type `service` and `snowflake_legacy_service_user` for user type `legacy_service`.
-
--> **Note** External changes to `days_to_expiry`, `mins_to_unlock`, and `mins_to_bypass_mfa` are not currently handled by the provider (because the value changes continuously on Snowflake side after setting it).
-
 # snowflake_tag (Resource)
 
 Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag).
@@ -47,15 +39,15 @@ resource "snowflake_tag" "tag" {
 
 ### Required
 
-- `database` (String) The database in which to create the tag. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
-- `name` (String) Specifies the identifier for the tag; must be unique for the database in which the tag is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
-- `schema` (String) The schema in which to create the tag. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `database` (String) The database in which to create the tag. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `name` (String) Specifies the identifier for the tag; must be unique for the database in which the tag is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `schema` (String) The schema in which to create the tag. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 
 ### Optional
 
 - `allowed_values` (Set of String) Set of allowed values for the tag.
 - `comment` (String) Specifies a comment for the tag.
-- `masking_policies` (Set of String) Set of masking policies for the tag. A tag can support one masking policy for each data type.
+- `masking_policies` (Set of String) Set of masking policies for the tag. A tag can support one masking policy for each data type. If masking policies are assigned to the tag, before dropping the tag, the provider automatically unassigns them.
 
 ### Read-Only
 
@@ -84,5 +76,3 @@ Import is supported using the following syntax:
 ```shell
 terraform import snowflake_tag.example '"<database_name>"."<schema_name>"."<tag_name>"'
 ```
-
-Note: terraform plan+apply may be needed after successful import to fill out all the missing fields (like `password`) in state.

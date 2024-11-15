@@ -11,7 +11,7 @@ variable "name" {
 }
 
 variable "allowed_values" {
-  type = list(string)
+  type = set(string)
 }
 
 variable "comment" {
@@ -21,5 +21,5 @@ variable "comment" {
 
 variable "masking_policies" {
   default = null
-  type    = list(string)
+  type    = set(string)
 }

@@ -54,10 +54,10 @@ var tagSchema = map[string]*schema.Schema{
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
-			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
-		Optional:    true,
-		Description: "Set of masking policies for the tag. A tag can support one masking policy for each data type.",
+		Optional:         true,
+		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("masking_policies"),
+		Description:      "Set of masking policies for the tag. A tag can support one masking policy for each data type. If masking policies are assigned to the tag, before dropping the tag, the provider automatically unassigns them.",
 	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 	ShowOutputAttributeName: {
@@ -129,7 +129,7 @@ func Tag() *schema.Resource {
 				Version: 0,
 				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
 				Type:    cty.EmptyObject,
-				Upgrade: v0_98_0_TagStateUpgrader,
+				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
 	}
@@ -154,7 +154,7 @@ func CreateContextTag(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 	if v, ok := d.GetOk("masking_policies"); ok {
-		ids, err := parseSchemaObjectIdentifierList(v)
+		ids, err := parseSchemaObjectIdentifierSet(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
