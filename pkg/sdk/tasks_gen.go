@@ -145,14 +145,14 @@ type DropTaskOptions struct {
 
 // ShowTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-tasks.
 type ShowTaskOptions struct {
-	show       bool       `ddl:"static" sql:"SHOW"`
-	Terse      *bool      `ddl:"keyword" sql:"TERSE"`
-	tasks      bool       `ddl:"static" sql:"TASKS"`
-	Like       *Like      `ddl:"keyword" sql:"LIKE"`
-	In         *In        `ddl:"keyword" sql:"IN"`
-	StartsWith *string    `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
-	RootOnly   *bool      `ddl:"keyword" sql:"ROOT ONLY"`
-	Limit      *LimitFrom `ddl:"keyword" sql:"LIMIT"`
+	show       bool        `ddl:"static" sql:"SHOW"`
+	Terse      *bool       `ddl:"keyword" sql:"TERSE"`
+	tasks      bool        `ddl:"static" sql:"TASKS"`
+	Like       *Like       `ddl:"keyword" sql:"LIKE"`
+	In         *ExtendedIn `ddl:"keyword" sql:"IN"`
+	StartsWith *string     `ddl:"parameter,single_quotes,no_equals" sql:"STARTS WITH"`
+	RootOnly   *bool       `ddl:"keyword" sql:"ROOT ONLY"`
+	Limit      *LimitFrom  `ddl:"keyword" sql:"LIMIT"`
 }
 
 type taskDBRow struct {

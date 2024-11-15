@@ -15,7 +15,7 @@ output "like_output" {
   value = data.snowflake_tasks.like.tasks
 }
 
-# Filtering (in - account - database - schema)
+# Filtering (in - account - database - schema - application - application package)
 data "snowflake_tasks" "in_account" {
   in {
     account = true
@@ -34,11 +34,25 @@ data "snowflake_tasks" "in_schema" {
   }
 }
 
+data "snowflake_tasks" "in_application" {
+  in {
+    application = "<application_name>"
+  }
+}
+
+data "snowflake_tasks" "in_application_package" {
+  in {
+    application_package = "<application_package_name>"
+  }
+}
+
 output "in_output" {
   value = {
     "account" : data.snowflake_tasks.in_account.tasks,
     "database" : data.snowflake_tasks.in_database.tasks,
     "schema" : data.snowflake_tasks.in_schema.tasks,
+    "application" : data.snowflake_tasks.in_application.tasks,
+    "application_package" : data.snowflake_tasks.in_application_package.tasks,
   }
 }
 

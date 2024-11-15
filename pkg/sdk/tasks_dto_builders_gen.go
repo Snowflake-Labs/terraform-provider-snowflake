@@ -441,7 +441,7 @@ func (s *ShowTaskRequest) WithLike(Like Like) *ShowTaskRequest {
 	return s
 }
 
-func (s *ShowTaskRequest) WithIn(In In) *ShowTaskRequest {
+func (s *ShowTaskRequest) WithIn(In ExtendedIn) *ShowTaskRequest {
 	s.In = &In
 	return s
 }

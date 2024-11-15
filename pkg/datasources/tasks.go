@@ -20,7 +20,7 @@ var tasksSchema = map[string]*schema.Schema{
 		Description: "Runs SHOW PARAMETERS FOR TASK for each user returned by SHOW TASK. The output of describe is saved to the parameters field as a map. By default this value is set to true.",
 	},
 	"like":        likeSchema,
-	"in":          inSchema,
+	"in":          extendedInSchema,
 	"starts_with": startsWithSchema,
 	"root_only": {
 		Type:        schema.TypeBool,
@@ -68,7 +68,7 @@ func ReadTasks(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 	req := sdk.NewShowTaskRequest()
 
 	handleLike(d, &req.Like)
-	if err := handleIn(d, &req.In); err != nil {
+	if err := handleExtendedIn(d, &req.In); err != nil {
 		return diag.FromErr(err)
 	}
 	handleStartsWith(d, &req.StartsWith)

@@ -54,8 +54,10 @@ func (v *tasks) Show(ctx context.Context, request *ShowTaskRequest) ([]Task, err
 }
 
 func (v *tasks) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
-	tasks, err := v.Show(ctx, NewShowTaskRequest().WithIn(In{
-		Schema: id.SchemaId(),
+	tasks, err := v.Show(ctx, NewShowTaskRequest().WithIn(ExtendedIn{
+		In: In{
+			Schema: id.SchemaId(),
+		},
 	}).WithLike(Like{
 		Pattern: String(id.Name()),
 	}))
