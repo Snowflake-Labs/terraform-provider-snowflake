@@ -83,6 +83,19 @@ func Test_exploreHcl(t *testing.T) {
     }
   }
 }`,
+		`{
+  "resource": {
+    "some_resource": {
+      "name": {
+        "attribute_1": "123",
+		"name": "${other_resource.some_name.fully_qualified_name}",
+        "depends_on": [
+			"other_resource.some_name"
+		]
+      }
+    }
+  }
+}`,
 	}
 
 	for _, example := range examples {
