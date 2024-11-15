@@ -3,7 +3,10 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
@@ -130,5 +133,74 @@ func TestClient_NewClientDriverLoggingLevel(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, "trace", gosnowflake.GetLogger().GetLogLevel())
+	})
+}
+
+func TestClient_AdditionalMetadata(t *testing.T) {
+	client := defaultTestClient(t)
+
+	// needed for using information_schema
+	databaseId := randomAccountObjectIdentifier()
+	require.NoError(t, client.Databases.Create(context.Background(), databaseId, &CreateDatabaseOptions{}))
+	t.Cleanup(func() {
+		require.NoError(t, client.Databases.Drop(context.Background(), databaseId, &DropDatabaseOptions{}))
+	})
+
+	metadata := map[string]string{
+		"version": "v1.0.0",
+		"method":  "create",
+	}
+
+	assertQueryMetadata := func(t *testing.T, queryId string) {
+		t.Helper()
+		result, err := client.QueryUnsafe(context.Background(), fmt.Sprintf("SELECT QUERY_ID, QUERY_TEXT FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY(RESULT_LIMIT => 2)) WHERE QUERY_ID = '%s'", queryId))
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		require.Equal(t, queryId, *result[0]["QUERY_ID"])
+		var parsedMetadata map[string]string
+		queryText := (*result[0]["QUERY_TEXT"]).(string)
+		queryMetadata := strings.Split(queryText, fmt.Sprintf("--%s", DashboardTrackingPrefix))[1]
+		err = json.Unmarshal([]byte(queryMetadata), &parsedMetadata)
+		require.NoError(t, err)
+		require.Equal(t, metadata, parsedMetadata)
+	}
+
+	t.Run("query one", func(t *testing.T) {
+		queryIdChan := make(chan string, 1)
+		ctx := context.Background()
+		ctx = ContextWithMetadata(ctx, metadata)
+		ctx = gosnowflake.WithQueryIDChan(ctx, queryIdChan)
+		row := struct {
+			One int `db:"ONE"`
+		}{}
+		err := client.queryOne(ctx, &row, "SELECT 1 AS ONE")
+		require.NoError(t, err)
+
+		assertQueryMetadata(t, <-queryIdChan)
+	})
+
+	t.Run("query", func(t *testing.T) {
+		queryIdChan := make(chan string, 1)
+		ctx := context.Background()
+		ctx = ContextWithMetadata(ctx, metadata)
+		ctx = gosnowflake.WithQueryIDChan(ctx, queryIdChan)
+		var rows []struct {
+			One int `db:"ONE"`
+		}
+		err := client.query(ctx, &rows, "SELECT 1 AS ONE")
+		require.NoError(t, err)
+
+		assertQueryMetadata(t, <-queryIdChan)
+	})
+
+	t.Run("exec", func(t *testing.T) {
+		queryIdChan := make(chan string, 1)
+		ctx := context.Background()
+		ctx = ContextWithMetadata(ctx, metadata)
+		ctx = gosnowflake.WithQueryIDChan(ctx, queryIdChan)
+		_, err := client.exec(ctx, "SELECT 1")
+		require.NoError(t, err)
+
+		assertQueryMetadata(t, <-queryIdChan)
 	})
 }

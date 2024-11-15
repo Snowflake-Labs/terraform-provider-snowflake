@@ -15,7 +15,7 @@ import (
 // ExecForTests is an exact copy of exec (that is unexported), that some integration tests/helpers were using
 // TODO: remove after we have all usages covered by SDK (for now it means implementing stages, tables, and tags)
 func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, error) {
-	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	ctx = context.WithValue(ctx, SnowflakeAccountLocatorContextKey, c.accountLocator)
 	result, err := c.db.ExecContext(ctx, sql)
 	return result, decodeDriverError(err)
 }
@@ -23,14 +23,14 @@ func (c *Client) ExecForTests(ctx context.Context, sql string) (sql.Result, erro
 // QueryOneForTests is an exact copy of queryOne (that is unexported), that some integration tests/helpers were using
 // TODO: remove after introducing all resources using this
 func (c *Client) QueryOneForTests(ctx context.Context, dest interface{}, sql string) error {
-	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	ctx = context.WithValue(ctx, SnowflakeAccountLocatorContextKey, c.accountLocator)
 	return decodeDriverError(c.db.GetContext(ctx, dest, sql))
 }
 
 // QueryForTests is an exact copy of query (that is unexported), that some integration tests/helpers were using
 // TODO: remove after introducing all resources using this
 func (c *Client) QueryForTests(ctx context.Context, dest interface{}, sql string) error {
-	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	ctx = context.WithValue(ctx, SnowflakeAccountLocatorContextKey, c.accountLocator)
 	return decodeDriverError(c.db.SelectContext(ctx, dest, sql))
 }
 

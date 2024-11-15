@@ -10,6 +10,8 @@ import (
 	"testing"
 )
 
+// Research for basic object tracking done as part of SNOW-1737787
+
 // https://docs.snowflake.com/en/sql-reference/parameters#query-tag
 func TestInt_ContextQueryTags(t *testing.T) {
 	client := testClient(t)
@@ -64,7 +66,7 @@ func TestInt_QueryComment(t *testing.T) {
 
 	queryIdChan := make(chan string, 1)
 	metadata := `{"comment": "some comment"}`
-	_, err = client.QueryUnsafe(gosnowflake.WithQueryIDChan(ctx, queryIdChan), fmt.Sprintf(`SELECT 1; --%s`, metadata)) // TODO: Check in Snowhouse (check with Sebastian if this approach will be possible to query in snowhouse)
+	_, err = client.QueryUnsafe(gosnowflake.WithQueryIDChan(ctx, queryIdChan), fmt.Sprintf(`SELECT 1; --%s`, metadata))
 	require.NoError(t, err)
 	queryId := <-queryIdChan
 
@@ -74,12 +76,6 @@ func TestInt_QueryComment(t *testing.T) {
 	require.Equal(t, queryId, *result[0]["QUERY_ID"])
 	require.Equal(t, metadata, strings.Split((*result[0]["QUERY_TEXT"]).(string), "--")[1])
 }
-
-func TestInt_QueryComment_ClientSupport(t *testing.T) {
-
-}
-
-// - check comment characters (if they're valid characters etc.) - could be solved by receiving object and turning into e.g. JSON will be done at a lower level
 
 func TestInt_AppName(t *testing.T) {
 	// https://community.snowflake.com/s/article/How-to-see-application-name-added-in-the-connection-string-in-Snowsight
@@ -95,4 +91,4 @@ func TestInt_AppName(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TODO: trying to use connection parameters
+// TODO(SNOW-1805150): Document potential usage of connection string

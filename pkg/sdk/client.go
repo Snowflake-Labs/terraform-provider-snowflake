@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -132,7 +133,7 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 			logger := instrumentedsql.LoggerFunc(func(ctx context.Context, s string, kv ...interface{}) {
 				switch s {
 				case "sql-conn-query", "sql-conn-exec":
-					log.Printf("[DEBUG] %s: %v (%s)\n", s, kv, ctx.Value(snowflakeAccountLocatorContextKey))
+					log.Printf("[DEBUG] %s: %v (%s)\n", s, kv, ctx.Value(SnowflakeAccountLocatorContextKey))
 				default:
 					return
 				}
@@ -264,11 +265,17 @@ func (c *Client) Close() error {
 	return nil
 }
 
-type snowflakeAccountLocatorContext string
+type ContextKey string
 
 const (
-	snowflakeAccountLocatorContextKey snowflakeAccountLocatorContext = "snowflake_account_locator"
+	SnowflakeAccountLocatorContextKey ContextKey = "snowflake_account_locator"
+	MetadataContextKey                ContextKey = "metadata"
+	DashboardTrackingPrefix                      = "dashboard_tracking_"
 )
+
+func ContextWithMetadata(ctx context.Context, metadata map[string]string) context.Context {
+	return context.WithValue(ctx, MetadataContextKey, metadata)
+}
 
 // Exec executes a query that does not return rows.
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
@@ -277,7 +284,8 @@ func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 		log.Printf("[DEBUG] sql-conn-exec-dry: %v\n", sql)
 		return nil, nil
 	}
-	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	ctx = context.WithValue(ctx, SnowflakeAccountLocatorContextKey, c.accountLocator)
+	sql = appendQueryMetadata(ctx, sql)
 	result, err := c.db.ExecContext(ctx, sql)
 	return result, decodeDriverError(err)
 }
@@ -289,7 +297,8 @@ func (c *Client) query(ctx context.Context, dest interface{}, sql string) error 
 		log.Printf("[DEBUG] sql-conn-query-dry: %v\n", sql)
 		return nil
 	}
-	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	ctx = context.WithValue(ctx, SnowflakeAccountLocatorContextKey, c.accountLocator)
+	sql = appendQueryMetadata(ctx, sql)
 	return decodeDriverError(c.db.SelectContext(ctx, dest, sql))
 }
 
@@ -300,6 +309,20 @@ func (c *Client) queryOne(ctx context.Context, dest interface{}, sql string) err
 		log.Printf("[DEBUG] sql-conn-query-one-dry: %v\n", sql)
 		return nil
 	}
-	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	ctx = context.WithValue(ctx, SnowflakeAccountLocatorContextKey, c.accountLocator)
+	sql = appendQueryMetadata(ctx, sql)
 	return decodeDriverError(c.db.GetContext(ctx, dest, sql))
+}
+
+func appendQueryMetadata(ctx context.Context, query string) string {
+	if ctx.Value(MetadataContextKey) != nil {
+		metadataMap := ctx.Value(MetadataContextKey)
+		bytes, err := json.Marshal(metadataMap)
+		if err != nil {
+			log.Printf("[ERROR] failed to marshal the metadata: %v\n", err)
+		} else {
+			return fmt.Sprintf("%s --%s%s", query, DashboardTrackingPrefix, string(bytes))
+		}
+	}
+	return query
 }
