@@ -11,25 +11,8 @@ across different versions.
 
 ### snowflake_task resource changes
 
-Breaking changes:
-- `config` field now can be defined without $ signs
-
-Before:
-```terraform
-resource "snowflake_task" "config_example" {
-  # ...
-  config = "$$${\"my_config_key\":\"my_config_value\"}$$"
-  # ...
-}
-```
-After:
-```terraform
-resource "snowflake_task" "config_example" {
-  # ...
-  config = "{\"my_config_key\":\"my_config_value\"}"
-  # ...
-}
-```
+new fields:
+- `config` 
 
 ### snowflake_tasks data source changes
 

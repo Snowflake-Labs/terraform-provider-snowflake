@@ -3,10 +3,27 @@ package resourceshowoutputassert
 import (
 	"fmt"
 	"strconv"
+	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
+
+// TaskDatasourceShowOutput is a temporary workaround to have better show output assertions in data source acceptance tests.
+func TaskDatasourceShowOutput(t *testing.T, name string) *TaskShowOutputAssert {
+	t.Helper()
+
+	taskAssert := TaskShowOutputAssert{
+		ResourceAssert: assert.NewDatasourceAssert("data."+name, "show_output", "tasks.0."),
+	}
+	taskAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &taskAssert
+}
+
+func (t *TaskShowOutputAssert) HasErrorIntegrationEmpty() *TaskShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("error_integration", ""))
+	return t
+}
 
 func (t *TaskShowOutputAssert) HasCreatedOnNotEmpty() *TaskShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
