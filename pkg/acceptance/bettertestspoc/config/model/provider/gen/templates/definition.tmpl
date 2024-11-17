@@ -15,7 +15,7 @@ type {{ $modelName }} struct {
 // Basic builders (resource name and required) //
 /////////////////////////////////////////////////
 
-func {{ .Name }}(
+func {{ .Name }}Provider(
     {{ range .Attributes -}}
         {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
         {{ if .Required -}}
@@ -23,7 +23,7 @@ func {{ .Name }}(
         {{ end }}
     {{- end -}}
 ) {{ $modelName }} {
-    {{ $modelVar }} := {{ $modelName }}{ProviderModelMeta: &config.ProviderModelMeta(name: "{{ .Name }}")}
+    {{ $modelVar }} := {{ $modelName }}{ProviderModelMeta: config.DefaultProviderMeta("{{ $nameLowerCase }}")}
     {{ range .Attributes -}}
         {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
         {{ if .Required -}}
@@ -33,7 +33,7 @@ func {{ .Name }}(
     return {{ $modelVar }}
 }
 
-func {{ .Name }}(
+func {{ .Name }}ProviderAlias(
     alias string,
     {{ range .Attributes -}}
         {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
@@ -42,7 +42,7 @@ func {{ .Name }}(
         {{ end }}
     {{- end -}}
 ) {{ $modelName }} {
-    {{ $modelVar }} := {{ $modelName }}{ProviderModelMeta: &config.ProviderModelMeta(name: "{{ .Name }}", alias: alias)}
+    {{ $modelVar }} := {{ $modelName }}{ProviderModelMeta: config.ProviderMeta("{{ $nameLowerCase }}", alias)}
     {{ range .Attributes -}}
         {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
         {{ if .Required -}}
