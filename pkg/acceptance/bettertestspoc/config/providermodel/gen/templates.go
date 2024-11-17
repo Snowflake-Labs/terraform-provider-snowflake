@@ -4,8 +4,8 @@ import (
 	"text/template"
 
 	_ "embed"
+	resourcemodel "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model/gen"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model/gen"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 )
 
@@ -23,5 +23,5 @@ var (
 	)).Parse(definitionTemplateContent)
 
 	// TODO: builders temple reused for now
-	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, gen.BuildersTemplate}
+	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, resourcemodel.BuildersTemplate}
 )
