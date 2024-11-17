@@ -9,6 +9,7 @@ var DefaultJsonProvider = NewBasicJsonProvider()
 
 type JsonProvider interface {
 	ResourceJsonFromModel(model ResourceModel) ([]byte, error)
+	DatasourceJsonFromModel(model DatasourceModel) ([]byte, error)
 	ProviderJsonFromModel(model ProviderModel) ([]byte, error)
 	// Variable
 	// Output
@@ -37,6 +38,22 @@ func (p *basicJsonProvider) ResourceJsonFromModel(model ResourceModel) ([]byte, 
 
 type resourceJson struct {
 	Resource map[string]map[string]ResourceModel `json:"resource"`
+}
+
+func (p *basicJsonProvider) DatasourceJsonFromModel(model DatasourceModel) ([]byte, error) {
+	modelJson := datasourceJson{
+		Datasource: map[string]map[string]DatasourceModel{
+			fmt.Sprintf("%s", model.Datasource()): {
+				fmt.Sprintf("%s", model.DatasourceName()): model,
+			},
+		},
+	}
+
+	return json.MarshalIndent(modelJson, "", "    ")
+}
+
+type datasourceJson struct {
+	Datasource map[string]map[string]DatasourceModel `json:"data"`
 }
 
 func (p *basicJsonProvider) ProviderJsonFromModel(model ProviderModel) ([]byte, error) {

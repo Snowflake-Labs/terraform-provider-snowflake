@@ -33,11 +33,11 @@ func (m *DatasourceModelMeta) DatasourceName() string {
 	return m.name
 }
 
-func (m *DatasourceModelMeta) SetResourceName(name string) {
+func (m *DatasourceModelMeta) SetDatasourceName(name string) {
 	m.name = name
 }
 
-func (m *DatasourceModelMeta) ResourceReference() string {
+func (m *DatasourceModelMeta) DatasourceReference() string {
 	return fmt.Sprintf(`data.%s.%s`, m.datasource, m.name)
 }
 
@@ -53,7 +53,7 @@ func (m *DatasourceModelMeta) SetDependsOn(values ...string) {
 const DefaultDatasourceName = "test"
 
 func DatasourceDefaultMeta(datasource datasources.Datasource) *DatasourceModelMeta {
-	return &DatasourceModelMeta{name: DefaultResourceName, datasource: datasource}
+	return &DatasourceModelMeta{name: DefaultDatasourceName, datasource: datasource}
 }
 
 func DatasourceMeta(resourceName string, datasource datasources.Datasource) *DatasourceModelMeta {
