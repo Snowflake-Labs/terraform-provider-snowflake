@@ -20,6 +20,20 @@ func ResourceFromModelPoc(t *testing.T, model ResourceModel) string {
 	return hcl
 }
 
+func ProviderFromModelPoc(t *testing.T, model ProviderModel) string {
+	t.Helper()
+
+	json, err := DefaultJsonProvider.ProviderJsonFromModel(model)
+	require.NoError(t, err)
+	t.Logf("Generated json:\n%s", json)
+
+	hcl, err := DefaultHclProvider.HclFromJson(json)
+	require.NoError(t, err)
+	t.Logf("Generated config:\n%s", hcl)
+
+	return hcl
+}
+
 type ProviderModel interface {
 	ProviderName() string
 	Alias() string

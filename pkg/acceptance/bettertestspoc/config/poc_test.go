@@ -5,10 +5,11 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model/providermodel"
 	"github.com/stretchr/testify/require"
 )
 
-func Test_FromModelPoc(t *testing.T) {
+func Test_ResourceFromModelPoc(t *testing.T) {
 	t.Run("test basic", func(t *testing.T) {
 		someModel := Some("test", "Some Name")
 		expectedOutput := strings.TrimPrefix(`
@@ -49,6 +50,18 @@ func Test_FromModelPoc(t *testing.T) {
 `, "\n")
 
 		result := config.ResourceFromModelPoc(t, someModel)
+
+		require.Equal(t, expectedOutput, result)
+	})
+}
+
+func Test_ProviderFromModelPoc(t *testing.T) {
+	t.Run("test basic", func(t *testing.T) {
+		someModel := providermodel.SnowflakeProvider()
+		expectedOutput := strings.TrimPrefix(`
+"provider" "snowflake" {}
+`, "\n")
+		result := config.ProviderFromModelPoc(t, someModel)
 
 		require.Equal(t, expectedOutput, result)
 	})

@@ -163,10 +163,10 @@ clean-resource-model-builders: ## Clean resource model builders
 	rm -f ./pkg/acceptance/bettertestspoc/config/model/*_gen.go
 
 generate-provider-model-builders: ## Generate provider model builders
-	go generate ./pkg/acceptance/bettertestspoc/config/model/provider/generate.go
+	go generate ./pkg/acceptance/bettertestspoc/config/model/providermodel/generate.go
 
 clean-provider-model-builders: ## Clean provider model builders
-	rm -f ./pkg/acceptance/bettertestspoc/config/model/provider/*_gen.go
+	rm -f ./pkg/acceptance/bettertestspoc/config/model/providermodel/*_gen.go
 
 clean-all-assertions-and-config-models: clean-snowflake-object-assertions clean-snowflake-object-parameters-assertions clean-resource-assertions clean-resource-parameters-assertions clean-resource-show-output-assertions clean-resource-model-builders ## clean all generated assertions and config models
 
