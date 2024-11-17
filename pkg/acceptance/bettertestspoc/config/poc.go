@@ -56,10 +56,10 @@ func SnowflakeProviderAlias(alias string) SnowflakeProviderModel {
 	return SnowflakeProviderModel{ProviderModelMeta: &ProviderModelMeta{name: "snowflake", alias: alias}}
 }
 
-func (m *SnowflakeProviderModel) ProviderName() string {
+func (m *ProviderModelMeta) ProviderName() string {
 	return m.name
 }
 
-func (m *SnowflakeProviderModel) Alias() string {
+func (m *ProviderModelMeta) Alias() string {
 	return m.alias
 }
