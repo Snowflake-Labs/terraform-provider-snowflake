@@ -9,6 +9,12 @@ var DefaultJsonProvider = NewBasicJsonProvider()
 
 type JsonProvider interface {
 	ResourceJsonFromModel(model ResourceModel) ([]byte, error)
+	// Variable
+	// Output
+	// Locals
+	// Module
+	// Provider
+	// Terraform
 }
 
 type basicJsonProvider struct{}
