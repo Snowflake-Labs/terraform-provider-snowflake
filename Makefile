@@ -168,8 +168,14 @@ generate-provider-model-builders: ## Generate provider model builders
 clean-provider-model-builders: ## Clean provider model builders
 	rm -f ./pkg/acceptance/bettertestspoc/config/providermodel/*_gen.go
 
-clean-all-assertions-and-config-models: clean-snowflake-object-assertions clean-snowflake-object-parameters-assertions clean-resource-assertions clean-resource-parameters-assertions clean-resource-show-output-assertions clean-resource-model-builders clean-provider-model-builders ## clean all generated assertions and config models
+generate-datasource-model-builders: ## Generate datasource model builders
+	go generate ./pkg/acceptance/bettertestspoc/config/datasourcemodel/generate.go
 
-generate-all-assertions-and-config-models: generate-snowflake-object-assertions generate-snowflake-object-parameters-assertions generate-resource-assertions generate-resource-parameters-assertions generate-resource-show-output-assertions generate-resource-model-builders generate-provider-model-builders ## generate all assertions and config models
+clean-datasource-model-builders: ## Clean datasource model builders
+	rm -f ./pkg/acceptance/bettertestspoc/config/datasourcemodel/*_gen.go
+
+clean-all-assertions-and-config-models: clean-snowflake-object-assertions clean-snowflake-object-parameters-assertions clean-resource-assertions clean-resource-parameters-assertions clean-resource-show-output-assertions clean-resource-model-builders clean-provider-model-builders clean-datasource-model-builders ## clean all generated assertions and config models
+
+generate-all-assertions-and-config-models: generate-snowflake-object-assertions generate-snowflake-object-parameters-assertions generate-resource-assertions generate-resource-parameters-assertions generate-resource-show-output-assertions generate-resource-model-builders generate-provider-model-builders generate-datasource-model-builders ## generate all assertions and config models
 
 .PHONY: build-local clean-generator-poc dev-setup dev-cleanup docs docs-check fmt fmt-check fumpt help install lint lint-fix mod mod-check pre-push pre-push-check sweep test test-acceptance uninstall-tf
