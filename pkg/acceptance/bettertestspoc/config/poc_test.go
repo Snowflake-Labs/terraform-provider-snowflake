@@ -16,7 +16,7 @@ func Test_FromModelPoc(t *testing.T) {
   "name" = "Some Name"
 }
 `, "\n")
-		result := config.FromModelPoc(t, someModel)
+		result := config.ResourceFromModelPoc(t, someModel)
 
 		require.Equal(t, expectedOutput, result)
 	})
@@ -48,7 +48,7 @@ func Test_FromModelPoc(t *testing.T) {
 }
 `, "\n")
 
-		result := config.FromModelPoc(t, someModel)
+		result := config.ResourceFromModelPoc(t, someModel)
 
 		require.Equal(t, expectedOutput, result)
 	})

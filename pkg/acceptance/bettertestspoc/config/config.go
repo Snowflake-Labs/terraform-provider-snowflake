@@ -26,6 +26,7 @@ type ResourceModel interface {
 	ResourceReference() string
 	DependsOn() []string
 	SetDependsOn(values ...string)
+	// TODO: Provider (alias)
 }
 
 type ResourceModelMeta struct {
