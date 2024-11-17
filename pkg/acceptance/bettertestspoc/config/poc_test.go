@@ -14,7 +14,7 @@ func Test_ResourceFromModelPoc(t *testing.T) {
 	t.Run("test basic", func(t *testing.T) {
 		someModel := Some("test", "Some Name")
 		expectedOutput := strings.TrimPrefix(`
-"resource" "snowflake_share" "test" {
+resource "snowflake_share" "test" {
   "name" = "Some Name"
 }
 `, "\n")
@@ -33,7 +33,7 @@ func Test_ResourceFromModelPoc(t *testing.T) {
 				Item{IntField: 2, StringField: "second item"},
 			).WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
 		expectedOutput := strings.TrimPrefix(`
-"resource" "snowflake_share" "test" {
+resource "snowflake_share" "test" {
   "comment" = "Some Comment"
   "name" = "Some Name"
   "string_list" = ["a", "b", "a"]
@@ -60,7 +60,7 @@ func Test_DatasourceFromModelPoc(t *testing.T) {
 	t.Run("test basic", func(t *testing.T) {
 		someModel := datasourcemodel.Databases("test")
 		expectedOutput := strings.TrimPrefix(`
-"data" "snowflake_databases" "test" {}
+data "snowflake_databases" "test" {}
 `, "\n")
 		result := config.DatasourceFromModelPoc(t, someModel)
 
@@ -72,7 +72,7 @@ func Test_ProviderFromModelPoc(t *testing.T) {
 	t.Run("test basic", func(t *testing.T) {
 		someModel := providermodel.SnowflakeProvider()
 		expectedOutput := strings.TrimPrefix(`
-"provider" "snowflake" {}
+provider "snowflake" {}
 `, "\n")
 		result := config.ProviderFromModelPoc(t, someModel)
 

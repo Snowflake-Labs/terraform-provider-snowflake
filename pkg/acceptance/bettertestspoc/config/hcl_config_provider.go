@@ -10,7 +10,7 @@ import (
 	hclv1parser "github.com/hashicorp/hcl/json/parser"
 )
 
-var DefaultHclProvider = NewHclV1ConfigProvider(removeDoubleNewlines, unquoteDependsOnReferences)
+var DefaultHclProvider = NewHclV1ConfigProvider(unquoteBlockType, removeDoubleNewlines, unquoteDependsOnReferences)
 
 type HclProvider interface {
 	HclFromJson(json []byte) (string, error)
@@ -77,5 +77,16 @@ func unquoteDependsOnReferences(s string) (string, error) {
 	} else {
 		withoutQuotes := strings.ReplaceAll(submatches[2], `"`, "")
 		return dependsOnRegex.ReplaceAllString(s, fmt.Sprintf(`$1%s`, withoutQuotes)), nil
+	}
+}
+
+// For some reason, the resulting HCL does not unquote block types (i.e. `"resource"` instead of expected `resource`)
+func unquoteBlockType(s string) (string, error) {
+	blockTypeRegex := regexp.MustCompile(`"(resource|data|provider)"(( "\w+"){1,2} {)`)
+	submatches := blockTypeRegex.FindStringSubmatch(s)
+	if len(submatches) < 2 {
+		return s, nil
+	} else {
+		return blockTypeRegex.ReplaceAllString(s, fmt.Sprintf(`$1%s`, submatches[2])), nil
 	}
 }
