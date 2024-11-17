@@ -66,6 +66,19 @@ data "snowflake_databases" "test" {}
 
 		require.Equal(t, expectedOutput, result)
 	})
+
+	t.Run("test with depends on", func(t *testing.T) {
+		someModel := datasourcemodel.Databases("test").
+			WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
+		expectedOutput := strings.TrimPrefix(`
+data "snowflake_databases" "test" {
+  "depends_on" = [some_other_resource.some_name, other_resource.some_other_name, third_resource.third_name]
+}
+`, "\n")
+		result := config.DatasourceFromModelPoc(t, someModel)
+
+		require.Equal(t, expectedOutput, result)
+	})
 }
 
 func Test_ProviderFromModelPoc(t *testing.T) {
