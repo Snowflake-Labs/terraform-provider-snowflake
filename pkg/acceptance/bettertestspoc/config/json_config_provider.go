@@ -8,7 +8,7 @@ import (
 var DefaultJsonProvider = NewBasicJsonProvider()
 
 type JsonProvider interface {
-	JsonFromModel(model ResourceModel) ([]byte, error)
+	ResourceJsonFromModel(model ResourceModel) ([]byte, error)
 }
 
 type basicJsonProvider struct{}
@@ -17,7 +17,7 @@ func NewBasicJsonProvider() JsonProvider {
 	return &basicJsonProvider{}
 }
 
-func (p *basicJsonProvider) JsonFromModel(model ResourceModel) ([]byte, error) {
+func (p *basicJsonProvider) ResourceJsonFromModel(model ResourceModel) ([]byte, error) {
 	modelJson := resourceJson{
 		Resource: map[string]map[string]ResourceModel{
 			fmt.Sprintf("%s", model.Resource()): {
