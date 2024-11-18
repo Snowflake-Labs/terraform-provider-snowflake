@@ -21,7 +21,13 @@ func TestInt_ContextQueryTags(t *testing.T) {
 	require.NoError(t, err)
 
 	queryTag := "some query tag"
-	require.NoError(t, client.Parameters.SetSessionParameterOnAccount(ctx, sdk.SessionParameterQueryTag, queryTag))
+	require.NoError(t, client.Sessions.AlterSession(ctx, &sdk.AlterSessionOptions{
+		Set: &sdk.SessionSet{
+			SessionParameters: &sdk.SessionParameters{
+				QueryTag: sdk.String(queryTag),
+			},
+		},
+	}))
 	t.Cleanup(func() {
 		_, err = client.QueryUnsafe(ctx, "ALTER SESSION UNSET QUERY_TAG")
 		require.NoError(t, err)
