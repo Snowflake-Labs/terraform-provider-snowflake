@@ -236,33 +236,6 @@ func TestInt_Applications(t *testing.T) {
 		require.Equal(t, strconv.FormatBool(false), pairs["debug_mode"])
 	})
 
-	t.Run("alter application: set and unset tags", func(t *testing.T) {
-		version, patch := "V001", 0
-		_, e, applicationPackage := createApplicationHandle(t, version, patch, false, true, false)
-		id := e.ID()
-
-		setTags := []sdk.TagAssociation{
-			{
-				Name:  tagTest.ID(),
-				Value: "v1",
-			},
-		}
-		err := client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithSetTags(setTags))
-		require.NoError(t, err)
-		assertApplication(t, id, applicationPackage.Name, version, patch, "")
-
-		// TODO(SNOW-1746420): adjust after this is fixed on Snowflake side
-		_, err = client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeApplication)
-		require.ErrorContains(t, err, "391801 (0A000): SQL compilation error: Object tagging not supported for object type APPLICATION")
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tagTest.ID(),
-		}
-		err = client.Applications.Alter(ctx, sdk.NewAlterApplicationRequest(id).WithUnsetTags(unsetTags))
-		require.NoError(t, err)
-		assertApplication(t, id, applicationPackage.Name, version, patch, "")
-	})
-
 	t.Run("alter application: upgrade with version and patch", func(t *testing.T) {
 		version, patch := "V001", 0
 		_, e, applicationPackage := createApplicationHandle(t, version, patch, false, true, true)

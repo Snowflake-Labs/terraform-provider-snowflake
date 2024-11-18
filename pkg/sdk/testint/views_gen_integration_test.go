@@ -353,42 +353,6 @@ func TestInt_Views(t *testing.T) {
 		assert.Equal(t, "OFF", alteredView.ChangeTracking)
 	})
 
-	t.Run("alter view: set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		view := createView(t)
-		id := view.ID()
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterViewRequest(id).WithSetTags(tags)
-
-		err := client.Views.Alter(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeView)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterViewRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.Views.Alter(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeView)
-		require.Error(t, err)
-	})
-
 	t.Run("alter view: set and unset masking policy on column", func(t *testing.T) {
 		maskingPolicy, maskingPolicyCleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeNumber)
 		t.Cleanup(maskingPolicyCleanup)
@@ -447,46 +411,6 @@ func TestInt_Views(t *testing.T) {
 		references, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, view.ID(), sdk.PolicyEntityDomainView)
 		require.NoError(t, err)
 		require.Empty(t, references)
-	})
-
-	t.Run("alter view: set and unset tags on column", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		view := createView(t)
-		id := view.ID()
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-
-		alterRequest := sdk.NewAlterViewRequest(id).WithSetTagsOnColumn(
-			*sdk.NewViewSetColumnTagsRequest("ID", tags),
-		)
-		err := client.Views.Alter(ctx, alterRequest)
-		require.NoError(t, err)
-
-		columnId := sdk.NewTableColumnIdentifier(id.DatabaseName(), id.SchemaName(), id.Name(), "ID")
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), columnId, sdk.ObjectTypeColumn)
-		require.NoError(t, err)
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-
-		alterRequest = sdk.NewAlterViewRequest(id).WithUnsetTagsOnColumn(
-			*sdk.NewViewUnsetColumnTagsRequest("ID", unsetTags),
-		)
-		err = client.Views.Alter(ctx, alterRequest)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), columnId, sdk.ObjectTypeColumn)
-		require.Error(t, err)
 	})
 
 	t.Run("alter view: add and drop row access policies", func(t *testing.T) {

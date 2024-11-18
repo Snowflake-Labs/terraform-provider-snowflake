@@ -57,15 +57,39 @@ func (v *tags) Undrop(ctx context.Context, request *UndropTagRequest) error {
 }
 
 func (v *tags) Set(ctx context.Context, request *SetTagRequest) error {
+	objectType, err := normalizeGetTagObjectType(request.objectType)
+	if err != nil {
+		return err
+	}
+	request.objectType = objectType
+
 	// TODO [SNOW-1022645]: use query from resource sdk - similarly to https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/0e88e082282adf35f605c323569908a99bd406f9/pkg/acceptance/check_destroy.go#L67
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
 func (v *tags) Unset(ctx context.Context, request *UnsetTagRequest) error {
+	objectType, err := normalizeGetTagObjectType(request.objectType)
+	if err != nil {
+		return err
+	}
+	request.objectType = objectType
+
 	// TODO [SNOW-1022645]: use query from resource sdk - similarly to https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/0e88e082282adf35f605c323569908a99bd406f9/pkg/acceptance/check_destroy.go#L67
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *tags) SetOnCurrentAccount(ctx context.Context, request *SetTagOnCurrentAccountRequest) error {
+	return v.client.Accounts.Alter(ctx, &AlterAccountOptions{
+		SetTag: request.SetTags,
+	})
+}
+
+func (v *tags) UnsetOnCurrentAccount(ctx context.Context, request *UnsetTagOnCurrentAccountRequest) error {
+	return v.client.Accounts.Alter(ctx, &AlterAccountOptions{
+		UnsetTag: request.UnsetTags,
+	})
 }
 
 func (s *CreateTagRequest) toOpts() *createTagOptions {

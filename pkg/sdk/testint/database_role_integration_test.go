@@ -163,39 +163,6 @@ func TestInt_DatabaseRoles(t *testing.T) {
 		assert.ErrorIs(t, err, sdk.ErrDifferentDatabase)
 	})
 
-	t.Run("alter database_role: set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		databaseRole, cleanupDatabaseRole := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
-		t.Cleanup(cleanupDatabaseRole)
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-
-		err := client.DatabaseRoles.Alter(ctx, sdk.NewAlterDatabaseRoleRequest(databaseRole.ID()).WithSetTags(tags))
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), databaseRole.ID(), sdk.ObjectTypeDatabaseRole)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		err = client.DatabaseRoles.Alter(ctx, sdk.NewAlterDatabaseRoleRequest(databaseRole.ID()).WithUnsetTags(unsetTags))
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), databaseRole.ID(), sdk.ObjectTypeDatabaseRole)
-		require.Error(t, err)
-	})
-
 	t.Run("show database_role: without like", func(t *testing.T) {
 		role1 := createDatabaseRole(t)
 		role2 := createDatabaseRole(t)

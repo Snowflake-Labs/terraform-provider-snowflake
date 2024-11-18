@@ -121,6 +121,10 @@ type StorageIntegration struct {
 	CreatedOn   time.Time
 }
 
+func (v *StorageIntegration) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(v.Name)
+}
+
 // DescribeStorageIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-integration.
 type DescribeStorageIntegrationOptions struct {
 	describe           bool                    `ddl:"static" sql:"DESCRIBE"`

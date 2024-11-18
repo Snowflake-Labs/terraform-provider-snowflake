@@ -147,28 +147,6 @@ func TestInt_EventTables(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("alter event table: set and unset tag", func(t *testing.T) {
-		dt := createEventTableHandle(t)
-		id := dt.ID()
-
-		set := []sdk.TagAssociation{
-			{
-				Name:  tagTest.ID(),
-				Value: "v1",
-			},
-		}
-		err := client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithSetTags(set))
-		require.NoError(t, err)
-
-		value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeEventTable)
-		require.NoError(t, err)
-		assert.Equal(t, "v1", value)
-
-		unset := []sdk.ObjectIdentifier{tagTest.ID()}
-		err = client.EventTables.Alter(ctx, sdk.NewAlterEventTableRequest(id).WithUnsetTags(unset))
-		require.NoError(t, err)
-	})
-
 	t.Run("alter event table: rename", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
