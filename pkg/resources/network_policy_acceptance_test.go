@@ -479,7 +479,7 @@ func TestAcc_NetworkPolicy_Issue2236(t *testing.T) {
 				// Identifier quoting mismatch (no diff suppression)
 				ExpectNonEmptyPlan: true,
 				PreConfig: func() {
-					acc.SetV097CompatibleConfigPathEnvFunc(t)()
+					func() { acc.SetV097CompatibleConfigPathEnv(t) }()
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId)
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId2)
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId)
@@ -503,7 +503,7 @@ func TestAcc_NetworkPolicy_Issue2236(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config: networkPolicyConfigWithNetworkRules(
 					id.Name(),
@@ -556,7 +556,7 @@ func TestAcc_NetworkPolicy_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId
 		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -569,7 +569,7 @@ func TestAcc_NetworkPolicy_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   networkPolicyConfigBasic(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -592,7 +592,7 @@ func TestAcc_NetworkPolicy_WithQuotedName(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -607,7 +607,7 @@ func TestAcc_NetworkPolicy_WithQuotedName(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   networkPolicyConfigBasic(quotedId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

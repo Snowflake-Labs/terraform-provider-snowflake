@@ -504,7 +504,7 @@ func TestAcc_Provider_triValueBoolean(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig:         acc.SetV097CompatibleConfigPathEnvFunc(t),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: acc.ExternalProviderWithExactVersion("0.97.0"),
 				Config:            providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
 			},

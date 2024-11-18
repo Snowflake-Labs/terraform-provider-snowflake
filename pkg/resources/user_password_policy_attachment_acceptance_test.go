@@ -82,7 +82,7 @@ func TestAcc_UserPasswordPolicyAttachment_gh3005(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				Config:    userPasswordPolicyAttachmentConfigV087(userName, acc.TestDatabaseName, acc.TestSchemaName, passwordPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", userName),

@@ -465,7 +465,7 @@ func TestAcc_Schema_ManagePublicVersion_0_94_0(t *testing.T) {
 		Steps: []resource.TestStep{
 			// PUBLIC can not be created in v0.93
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.93.0",
@@ -544,7 +544,7 @@ func TestAcc_Schema_ManagePublicVersion_0_94_1(t *testing.T) {
 		Steps: []resource.TestStep{
 			// PUBLIC can not be created in v0.93
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.93.0",
@@ -555,7 +555,7 @@ func TestAcc_Schema_ManagePublicVersion_0_94_1(t *testing.T) {
 				ExpectError: regexp.MustCompile("Error: error creating schema PUBLIC"),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   schemav094WithPipeExecutionPaused(name, db.ID().Name(), true),
 				Check: resource.ComposeTestCheckFunc(
@@ -961,7 +961,7 @@ func TestAcc_Schema_migrateFromVersion093WithoutManagedAccess(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.93.0",
@@ -975,7 +975,7 @@ func TestAcc_Schema_migrateFromVersion093WithoutManagedAccess(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   schemav094(id.Name(), databaseId.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1005,7 +1005,7 @@ func TestAcc_Schema_migrateFromVersion093(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.93.0",
@@ -1023,7 +1023,7 @@ func TestAcc_Schema_migrateFromVersion093(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   schemav094WithManagedAccessAndDataRetentionTimeInDays(id.Name(), databaseId.Name(), true, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1111,7 +1111,7 @@ func TestAcc_Schema_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *tes
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1124,7 +1124,7 @@ func TestAcc_Schema_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *tes
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   schemaBasicConfig(id.DatabaseName(), id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1157,7 +1157,7 @@ func TestAcc_Schema_IdentifierQuotingDiffSuppression(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: acc.SetV097CompatibleConfigPathEnvFunc(t),
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1173,7 +1173,7 @@ func TestAcc_Schema_IdentifierQuotingDiffSuppression(t *testing.T) {
 				),
 			},
 			{
-				PreConfig:                acc.UnsetConfigPathEnvFunc(t),
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   schemaBasicConfig(quotedDatabaseName, quotedName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
