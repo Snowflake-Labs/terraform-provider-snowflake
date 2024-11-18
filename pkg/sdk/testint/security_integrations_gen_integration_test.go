@@ -889,6 +889,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 			externalOauthIssuer:                        newIssuer,
 			externalOauthAnyRoleMode:                   string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeDisable),
 			externalOauthRsaPublicKey:                  rsaKey,
+			externalOauthScopeMappingAttribute:         "scp",
 			externalOauthRsaPublicKey2:                 rsaKey,
 			externalOauthBlockedRolesList:              role1.Name,
 			externalOauthAudienceList:                  "foo",
