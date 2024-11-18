@@ -11,17 +11,21 @@ import (
 	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/snowflakedb/gosnowflake"
-	"github.com/stretchr/testify/assert"
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
-	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/snowflakedb/gosnowflake"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -648,243 +652,122 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 }
 
 func providerConfigWithAuthenticator(profile string, authenticator sdk.AuthenticationType) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	authenticator    = "%[2]s"
-}
-`, profile, authenticator) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithAuthenticator(string(authenticator))) + datasourceConfig(t)
 }
 
 func emptyProviderConfig() string {
-	return `
-provider "snowflake" {
-}` + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider()) + datasourceConfig(t)
 }
 
 func providerConfig(profile string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-}
-`, profile) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile)) + datasourceConfig(t)
 }
 
 func providerConfigWithRole(profile, role string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	role    = "%[2]s"
-}
-`, profile, role) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithRole(role)) + datasourceConfig(t)
 }
 
 func providerConfigWithWarehouse(profile, warehouse string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	warehouse    = "%[2]s"
-}
-`, profile, warehouse) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithWarehouse(warehouse)) + datasourceConfig(t)
 }
 
 func providerConfigWithClientStoreTemporaryCredential(profile, clientStoreTemporaryCredential string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	client_store_temporary_credential    = %[2]s
-}
-`, profile, clientStoreTemporaryCredential) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithClientStoreTemporaryCredential(clientStoreTemporaryCredential)) + datasourceConfig(t)
 }
 
 func providerConfigWithWarehouseAndDisabledValidation(profile, warehouse string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	warehouse    = "%[2]s"
-	validate_default_parameters = "false"
-}
-`, profile, warehouse) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithWarehouse(warehouse).WithValidateDefaultParameters("false")) + datasourceConfig(t)
 }
 
 func providerConfigWithProtocol(profile, protocol string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	protocol    = "%[2]s"
-}
-`, profile, protocol) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithProtocol(protocol)) + datasourceConfig(t)
 }
 
 func providerConfigWithPort(profile string, port int) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	port    = %[2]d
-}
-`, profile, port) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithPort(port)) + datasourceConfig(t)
 }
 
 func providerConfigWithAuthType(profile, authType string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	authenticator    = "%[2]s"
-}
-`, profile, authType) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithAuthenticator(authType)) + datasourceConfig(t)
 }
 
 func providerConfigWithOktaUrl(profile, oktaUrl string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	okta_url    = "%[2]s"
-}
-`, profile, oktaUrl) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithOktaUrl(oktaUrl)) + datasourceConfig(t)
 }
 
 func providerConfigWithTimeout(profile, timeoutName string, timeoutSeconds int) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	%[2]s    = %[3]d
-}
-`, profile, timeoutName, timeoutSeconds) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithLoginTimeout(timeoutSeconds)) + datasourceConfig(t)
 }
 
 func providerConfigWithTokenEndpoint(profile, tokenEndpoint string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	token_accessor {
-		token_endpoint = "%[2]s"
-		refresh_token = "refresh_token"
-		client_id = "client_id"
-		client_secret = "client_secret"
-		redirect_uri = "redirect_uri"
-	}
-}
-`, profile, tokenEndpoint) + datasourceConfig()
+	return config.ProviderFromModelPoc(
+		t,
+		providermodel.SnowflakeProvider().
+			WithProfile(profile).
+			WithTokenAccessorValue(
+				tfconfig.ObjectVariable(
+					map[string]tfconfig.Variable{
+						"token_endpoint": tfconfig.StringVariable(tokenEndpoint),
+						"refresh_token":  tfconfig.StringVariable("refresh_token"),
+						"client_id":      tfconfig.StringVariable("client_id"),
+						"client_secret":  tfconfig.StringVariable("client_secret"),
+						"redirect_uri":   tfconfig.StringVariable("redirect_uri"),
+					},
+				),
+			),
+	) + datasourceConfig(t)
 }
 
 func providerConfigWithLogLevel(profile, logLevel string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	driver_tracing    = "%[2]s"
-}
-`, profile, logLevel) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithDriverTracing(logLevel)) + datasourceConfig(t)
 }
 
 func providerConfigWithClientIp(profile, clientIp string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	client_ip    = "%[2]s"
-}
-`, profile, clientIp) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithClientIp(clientIp)) + datasourceConfig(t)
 }
 
 func providerConfigWithUser(user string, profile string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	user = "%[1]s"
-	profile = "%[2]s"
-}
-`, user, profile) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithUser(user)) + datasourceConfig(t)
 }
 
 func providerConfigWithUserAndPassword(user string, pass string, profile string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	user = "%[1]s"
-	password = "%[2]s"
-	profile = "%[3]s"
-}
-`, user, pass, profile) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithUser(user).WithPassword(pass)) + datasourceConfig(t)
 }
 
 func providerConfigWithNewAccountId(profile, orgName, accountName string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	account_name    = "%[2]s"
-	organization_name    = "%[3]s"
-}
-`, profile, accountName, orgName) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithAccountName(accountName).WithOrganizationName(orgName)) + datasourceConfig(t)
 }
 
 func providerConfigComplete(profile, user, password, orgName, accountName string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	user = "%[2]s"
-	password = "%[3]s"
-	organization_name = "%[4]s"
-	account_name = "%[5]s"
-	warehouse    = "SNOWFLAKE"
-}
-`, profile, user, password, orgName, accountName) + datasourceConfig()
+	return config.ProviderFromModelPoc(
+		t,
+		providermodel.SnowflakeProvider().
+			WithProfile(profile).
+			WithUser(user).
+			WithPassword(password).
+			WithOrganizationName(orgName).
+			WithAccountName(accountName).
+			WithWarehouse("SNOWFLAKE"),
+	) + datasourceConfig(t)
 }
 
-func datasourceConfig() string {
-	return fmt.Sprintf(`
-data snowflake_database "t" {
-	name = "%s"
-}`, acc.TestDatabaseName)
+func datasourceConfig(t *testing.T) string {
+	return config.ResourceFromModelPoc(t, model.Database("t", acc.TestDatabaseName))
 }
 
 func providerConfigAllFields(profile, orgName, accountName, user, password string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	organization_name = "%[2]s"
-	account_name = "%[3]s"
-	user = "%[4]s"
-	password = "%[5]s"
-	warehouse = "SNOWFLAKE"
-	protocol = "https"
-	port = "443"
-	role = "ACCOUNTADMIN"
-	validate_default_parameters = true
-	client_ip = "3.3.3.3"
-	authenticator = "snowflake"
-	okta_url = "https://example-tf.com"
-	login_timeout = 101
-	request_timeout = 201
-	jwt_expire_timeout = 301
-	client_timeout = 401
-	jwt_client_timeout = 501
-	external_browser_timeout = 601
-	insecure_mode = true
-	ocsp_fail_open = true
-	keep_session_alive = true
-	disable_telemetry = true
-	client_request_mfa_token = true
-	client_store_temporary_credential = true
-	disable_query_context_cache = true
-	include_retry_reason = true
-	max_retry_count = 3
-	driver_tracing = "info"
-	tmp_directory_path = "../../"
-	disable_console_login = true
-	params = {
-		foo = "piyo"
-	}
-}
-`, profile, orgName, accountName, user, password) + datasourceConfig()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().AllFields(profile, orgName, accountName, user, password)) + datasourceConfig(t)
 }
 
 // TODO(SNOW-1348325): Use parameter data source with `IN SESSION` filtering.
 func providerWithParamsConfig(profile string, statementTimeoutInSeconds int) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-    profile = "%[1]s"
-    params = {
-        statement_timeout_in_seconds = %[2]d
-    }
-}
-`, profile, statementTimeoutInSeconds) + unsafeExecuteShowSessionParameter()
+	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithParamsValue(
+		tfconfig.ObjectVariable(
+			map[string]tfconfig.Variable{
+				"statement_timeout_in_seconds": tfconfig.IntegerVariable(statementTimeoutInSeconds),
+			},
+		),
+	)) + unsafeExecuteShowSessionParameter()
 }
 
 func unsafeExecuteShowSessionParameter() string {

@@ -22,8 +22,8 @@ func {{ .Name }}Provider(
             {{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }},
         {{ end }}
     {{- end -}}
-) {{ $modelName }} {
-    {{ $modelVar }} := {{ $modelName }}{ProviderModelMeta: config.DefaultProviderMeta("{{ $nameLowerCase }}")}
+) *{{ $modelName }} {
+    {{ $modelVar }} := &{{ $modelName }}{ProviderModelMeta: config.DefaultProviderMeta("{{ $nameLowerCase }}")}
     {{ range .Attributes -}}
         {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
         {{ if .Required -}}
@@ -41,8 +41,8 @@ func {{ .Name }}ProviderAlias(
             {{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }},
         {{ end }}
     {{- end -}}
-) {{ $modelName }} {
-    {{ $modelVar }} := {{ $modelName }}{ProviderModelMeta: config.ProviderMeta("{{ $nameLowerCase }}", alias)}
+) *{{ $modelName }} {
+    {{ $modelVar }} := &{{ $modelName }}{ProviderModelMeta: config.ProviderMeta("{{ $nameLowerCase }}", alias)}
     {{ range .Attributes -}}
         {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
         {{ if .Required -}}

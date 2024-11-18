@@ -68,15 +68,15 @@ type SnowflakeModel struct {
 // Basic builders (resource name and required) //
 /////////////////////////////////////////////////
 
-func SnowflakeProvider() SnowflakeModel {
-	s := SnowflakeModel{ProviderModelMeta: config.DefaultProviderMeta("snowflake")}
+func SnowflakeProvider() *SnowflakeModel {
+	s := &SnowflakeModel{ProviderModelMeta: config.DefaultProviderMeta("snowflake")}
 	return s
 }
 
 func SnowflakeProviderAlias(
 	alias string,
-) SnowflakeModel {
-	s := SnowflakeModel{ProviderModelMeta: config.ProviderMeta("snowflake", alias)}
+) *SnowflakeModel {
+	s := &SnowflakeModel{ProviderModelMeta: config.ProviderMeta("snowflake", alias)}
 	return s
 }
 

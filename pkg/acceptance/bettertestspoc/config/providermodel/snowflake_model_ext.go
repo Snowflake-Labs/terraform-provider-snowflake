@@ -1,6 +1,10 @@
 package providermodel
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
+)
 
 // Based on https://medium.com/picus-security-engineering/custom-json-marshaller-in-go-and-common-pitfalls-c43fa774db05.
 func (m *SnowflakeModel) MarshalJSON() ([]byte, error) {
@@ -12,4 +16,46 @@ func (m *SnowflakeModel) MarshalJSON() ([]byte, error) {
 		AliasModelType: (*AliasModelType)(m),
 		Alias:          m.Alias(),
 	})
+}
+
+func (m *SnowflakeModel) AllFields(profile, orgName, accountName, user, password string) *SnowflakeModel {
+	return SnowflakeProvider().
+		WithProfile(profile).
+		WithOrganizationName(orgName).
+		WithAccountName(accountName).
+		WithUser(user).
+		WithPassword(password).
+		WithWarehouse("SNOWFLAKE").
+		WithProtocol("https").
+		WithPort(443).
+		WithRole("ACCOUNTADMIN").
+		WithValidateDefaultParameters("true").
+		WithClientIp("3.3.3.3").
+		WithAuthenticator("snowflake").
+		WithOktaUrl("https://example-tf.com").
+		WithLoginTimeout(101).
+		WithRequestTimeout(201).
+		WithJwtExpireTimeout(301).
+		WithClientTimeout(401).
+		WithJwtClientTimeout(501).
+		WithExternalBrowserTimeout(601).
+		WithInsecureMode(true).
+		WithOcspFailOpen("true").
+		WithKeepSessionAlive(true).
+		WithDisableTelemetry(true).
+		WithClientRequestMfaToken("true").
+		WithClientStoreTemporaryCredential("true").
+		WithDisableQueryContextCache(true).
+		WithIncludeRetryReason("true").
+		WithMaxRetryCount(3).
+		WithDriverTracing("info").
+		WithTmpDirectoryPath("../../").
+		WithDisableConsoleLogin("true").
+		WithParamsValue(
+			tfconfig.ObjectVariable(
+				map[string]tfconfig.Variable{
+					"foo": tfconfig.StringVariable("piyo"),
+				},
+			),
+		)
 }
