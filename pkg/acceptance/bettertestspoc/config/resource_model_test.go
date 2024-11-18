@@ -23,7 +23,8 @@ type SomeModel struct {
 	StringList tfconfig.Variable `json:"string_list,omitempty"`
 	StringSet  tfconfig.Variable `json:"string_set,omitempty"`
 	// contains list of Item
-	ObjectList tfconfig.Variable `json:"object_list,omitempty"`
+	ObjectList   tfconfig.Variable `json:"object_list,omitempty"`
+	SingleObject tfconfig.Variable `json:"single_object,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -77,6 +78,16 @@ func (m *SomeModel) WithObjectList(items ...Item) *SomeModel {
 		))
 	}
 	m.ObjectList = tfconfig.TupleVariable(variables...)
+	return m
+}
+
+func (m *SomeModel) WithSingleObject(a string, b int) *SomeModel {
+	m.SingleObject = tfconfig.ObjectVariable(
+		map[string]tfconfig.Variable{
+			"a": tfconfig.StringVariable(a),
+			"b": tfconfig.IntegerVariable(b),
+		},
+	)
 	return m
 }
 

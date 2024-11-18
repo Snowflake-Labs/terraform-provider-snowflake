@@ -31,7 +31,9 @@ resource "snowflake_share" "test" {
 			WithObjectList(
 				Item{IntField: 1, StringField: "first item"},
 				Item{IntField: 2, StringField: "second item"},
-			).WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
+			).
+			WithSingleObject("one", 2).
+			WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
 		expectedOutput := strings.TrimPrefix(`
 resource "snowflake_share" "test" {
   comment = "Some Comment"
@@ -45,6 +47,10 @@ resource "snowflake_share" "test" {
   object_list {
     int_field = 2
     string_field = "second item"
+  }
+  single_object {
+    a = "one"
+    b = 2
   }
   depends_on = [some_other_resource.some_name, other_resource.some_other_name, third_resource.third_name]
 }
