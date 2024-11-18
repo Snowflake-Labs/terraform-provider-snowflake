@@ -6,7 +6,10 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -17,14 +20,27 @@ import (
 
 func TestAcc_Databases_Complete(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
+	acc.TestAccPreCheck(t)
+
 	databaseName := acc.TestClient().Ids.Alpha()
 	comment := random.Comment()
+	secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 
-	configVariables := config.Variables{
-		"name":               config.StringVariable(databaseName),
-		"comment":            config.StringVariable(comment),
-		"account_identifier": config.StringVariable(acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()),
-	}
+	databaseModel := model.Database("test", databaseName).
+		WithComment(comment).
+		WithReplication(secondaryAccountId, true, true)
+	databasesModel := datasourcemodel.Databases("test").
+		WithLike(databaseName).
+		WithStartsWith(databaseName).
+		WithLimit(1).
+		WithDependsOn(databaseModel.ResourceReference())
+	databasesWithoutOptionalsModel := datasourcemodel.Databases("test").
+		WithLike(databaseName).
+		WithStartsWith(databaseName).
+		WithLimit(1).
+		WithDependsOn(databaseModel.ResourceReference()).
+		WithWithDescribe(false).
+		WithWithParameters(false)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -35,8 +51,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/optionals_set"),
-				ConfigVariables: configVariables,
+				Config: accconfig.ConfigFromModelsPoc(t, databaseModel, databasesModel),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "1"),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.show_output.0.created_on"),
@@ -77,8 +92,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Databases/optionals_unset"),
-				ConfigVariables: configVariables,
+				Config: accconfig.ConfigFromModelsPoc(t, databaseModel, databasesWithoutOptionalsModel),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "1"),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.show_output.0.created_on"),

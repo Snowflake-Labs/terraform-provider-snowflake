@@ -1,6 +1,10 @@
 package datasourcemodel
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
+)
 
 // Based on https://medium.com/picus-security-engineering/custom-json-marshaller-in-go-and-common-pitfalls-c43fa774db05.
 func (d *DatabasesModel) MarshalJSON() ([]byte, error) {
@@ -17,4 +21,12 @@ func (d *DatabasesModel) MarshalJSON() ([]byte, error) {
 func (d *DatabasesModel) WithDependsOn(values ...string) *DatabasesModel {
 	d.SetDependsOn(values...)
 	return d
+}
+
+func (d *DatabasesModel) WithLimit(rows int) *DatabasesModel {
+	return d.WithLimitValue(
+		tfconfig.ObjectVariable(map[string]tfconfig.Variable{
+			"rows": tfconfig.IntegerVariable(rows),
+		}),
+	)
 }
