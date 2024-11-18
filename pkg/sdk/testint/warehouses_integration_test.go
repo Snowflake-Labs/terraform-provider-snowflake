@@ -641,50 +641,6 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, 0, result.Queued)
 	})
 
-	t.Run("alter: set tags and unset tags", func(t *testing.T) {
-		// new warehouse created on purpose
-		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateWarehouse(t)
-		t.Cleanup(warehouseCleanup)
-
-		alterOptions := &sdk.AlterWarehouseOptions{
-			SetTag: []sdk.TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: "val",
-				},
-				{
-					Name:  tag2.ID(),
-					Value: "val2",
-				},
-			},
-		}
-		err := client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
-		require.NoError(t, err)
-
-		val, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
-		require.NoError(t, err)
-		require.Equal(t, "val", val)
-		val2, err := client.SystemFunctions.GetTag(ctx, tag2.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
-		require.NoError(t, err)
-		require.Equal(t, "val2", val2)
-
-		alterOptions = &sdk.AlterWarehouseOptions{
-			UnsetTag: []sdk.ObjectIdentifier{
-				tag.ID(),
-				tag2.ID(),
-			},
-		}
-		err = client.Warehouses.Alter(ctx, warehouse.ID(), alterOptions)
-		require.NoError(t, err)
-
-		val, err = client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
-		require.Error(t, err)
-		require.Equal(t, "", val)
-		val2, err = client.SystemFunctions.GetTag(ctx, tag2.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
-		require.Error(t, err)
-		require.Equal(t, "", val2)
-	})
-
 	t.Run("describe: when warehouse exists", func(t *testing.T) {
 		result, err := client.Warehouses.Describe(ctx, precreatedWarehouseId)
 		require.NoError(t, err)

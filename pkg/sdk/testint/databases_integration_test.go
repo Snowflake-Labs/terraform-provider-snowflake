@@ -337,11 +337,7 @@ func TestInt_DatabasesCreateSecondary(t *testing.T) {
 
 func TestInt_DatabasesAlter(t *testing.T) {
 	client := testClient(t)
-	secondaryClient := testSecondaryClient(t)
 	ctx := testContext(t)
-
-	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
-	t.Cleanup(tagCleanup)
 
 	assertDatabaseParameterEquals := func(t *testing.T, params []*sdk.Parameter, parameterName sdk.AccountParameter, expected string) {
 		t.Helper()
@@ -372,74 +368,11 @@ func TestInt_DatabasesAlter(t *testing.T) {
 		},
 		{
 			DatabaseType: "From Share",
-			CreateFn: func(t *testing.T) (*sdk.Database, func()) {
-				t.Helper()
-
-				shareTest, shareCleanup := secondaryTestClientHelper().Share.CreateShare(t)
-				t.Cleanup(shareCleanup)
-
-				sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
-				t.Cleanup(sharedDatabaseCleanup)
-
-				databaseId := sharedDatabase.ID()
-
-				err := secondaryClient.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-					Database: sharedDatabase.ID(),
-				}, shareTest.ID())
-				require.NoError(t, err)
-				t.Cleanup(func() {
-					err := secondaryClient.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-						Database: sharedDatabase.ID(),
-					}, shareTest.ID())
-					require.NoError(t, err)
-				})
-
-				err = secondaryClient.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
-					IfExists: sdk.Bool(true),
-					Set: &sdk.ShareSet{
-						Accounts: []sdk.AccountIdentifier{
-							testClientHelper().Account.GetAccountIdentifier(t),
-						},
-					},
-				})
-				require.NoError(t, err)
-
-				err = client.Databases.CreateShared(ctx, databaseId, shareTest.ExternalID(), &sdk.CreateSharedDatabaseOptions{})
-				require.NoError(t, err)
-
-				database, err := client.Databases.ShowByID(ctx, databaseId)
-				require.NoError(t, err)
-
-				return database, testClientHelper().Database.DropDatabaseFunc(t, database.ID())
-			},
+			CreateFn:     createDatabaseFromShare,
 		},
 		{
 			DatabaseType: "Replica",
-			CreateFn: func(t *testing.T) (*sdk.Database, func()) {
-				t.Helper()
-
-				sharedDatabase, sharedDatabaseCleanup := secondaryTestClientHelper().Database.CreateDatabase(t)
-				t.Cleanup(sharedDatabaseCleanup)
-
-				err := secondaryClient.Databases.AlterReplication(ctx, sharedDatabase.ID(), &sdk.AlterDatabaseReplicationOptions{
-					EnableReplication: &sdk.EnableReplication{
-						ToAccounts: []sdk.AccountIdentifier{
-							testClientHelper().Account.GetAccountIdentifier(t),
-						},
-						IgnoreEditionCheck: sdk.Bool(true),
-					},
-				})
-				require.NoError(t, err)
-
-				externalDatabaseId := sdk.NewExternalObjectIdentifier(secondaryTestClientHelper().Ids.AccountIdentifierWithLocator(), sharedDatabase.ID())
-				err = client.Databases.CreateSecondary(ctx, sharedDatabase.ID(), externalDatabaseId, &sdk.CreateSecondaryDatabaseOptions{})
-				require.NoError(t, err)
-
-				database, err := client.Databases.ShowByID(ctx, sharedDatabase.ID())
-				require.NoError(t, err)
-
-				return database, testClientHelper().Database.DropDatabaseFunc(t, sharedDatabase.ID())
-			},
+			CreateFn:     createDatabaseReplica,
 		},
 	}
 
@@ -583,38 +516,6 @@ func TestInt_DatabasesAlter(t *testing.T) {
 			database, err = client.Databases.ShowByID(ctx, databaseTest.ID())
 			require.NoError(t, err)
 			assert.Equal(t, "", database.Comment)
-		})
-
-		t.Run(fmt.Sprintf("Database: %s - setting and unsetting tags", testCase.DatabaseType), func(t *testing.T) {
-			if testCase.DatabaseType == "Replica" {
-				t.Skipf("Skipping database test because secondary databases cannot be modified")
-			}
-			databaseTest, databaseTestCleanup := testCase.CreateFn(t)
-			t.Cleanup(databaseTestCleanup)
-
-			err := client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
-				SetTag: []sdk.TagAssociation{
-					{
-						Name:  tagTest.ID(),
-						Value: "v1",
-					},
-				},
-			})
-			require.NoError(t, err)
-
-			value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), databaseTest.ID(), sdk.ObjectTypeDatabase)
-			require.NoError(t, err)
-			assert.Equal(t, "v1", value)
-
-			err = client.Databases.Alter(ctx, databaseTest.ID(), &sdk.AlterDatabaseOptions{
-				UnsetTag: []sdk.ObjectIdentifier{
-					tagTest.ID(),
-				},
-			})
-			require.NoError(t, err)
-
-			_, err = client.SystemFunctions.GetTag(ctx, tagTest.ID(), databaseTest.ID(), sdk.ObjectTypeDatabase)
-			require.Error(t, err)
 		})
 
 		t.Run(fmt.Sprintf("Database: %s - swap with another database", testCase.DatabaseType), func(t *testing.T) {

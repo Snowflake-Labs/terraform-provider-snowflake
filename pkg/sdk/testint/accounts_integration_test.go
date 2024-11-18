@@ -288,32 +288,4 @@ func TestInt_AccountAlter(t *testing.T) {
 		err = client.Accounts.Alter(ctx, opts)
 		require.NoError(t, err)
 	})
-
-	t.Run("set and unset tag", func(t *testing.T) {
-		tagTest1, tagCleanup1 := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup1)
-		tagTest2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup2)
-
-		opts := &sdk.AlterAccountOptions{
-			SetTag: []sdk.TagAssociation{
-				{
-					Name:  tagTest1.ID(),
-					Value: "abc",
-				},
-				{
-					Name:  tagTest2.ID(),
-					Value: "123",
-				},
-			},
-		}
-		err := client.Accounts.Alter(ctx, opts)
-		require.NoError(t, err)
-		tagValue, err := client.SystemFunctions.GetTag(ctx, tagTest1.ID(), testClientHelper().Ids.AccountIdentifierWithLocator(), sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Equal(t, "abc", tagValue)
-		tagValue, err = client.SystemFunctions.GetTag(ctx, tagTest2.ID(), testClientHelper().Ids.AccountIdentifierWithLocator(), sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Equal(t, "123", tagValue)
-	})
 }

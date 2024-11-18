@@ -211,44 +211,6 @@ func TestInt_Streams(t *testing.T) {
 		)
 	})
 
-	t.Run("Alter tags", func(t *testing.T) {
-		table, cleanupTable := testClientHelper().Table.CreateInSchema(t, schemaId)
-		t.Cleanup(cleanupTable)
-
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		req := sdk.NewCreateOnTableStreamRequest(id, table.ID())
-		err := client.Streams.CreateOnTable(ctx, req)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
-
-		tag, cleanupTag := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(cleanupTag)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStream)
-		require.Error(t, err)
-
-		err = client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithSetTags([]sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: "tag_value",
-			},
-		}))
-		require.NoError(t, err)
-
-		tagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStream)
-		require.NoError(t, err)
-		assert.Equal(t, "tag_value", tagValue)
-
-		err = client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithUnsetTags([]sdk.ObjectIdentifier{tag.ID()}))
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStream)
-		require.Error(t, err)
-
-		_, err = client.Streams.ShowByID(ctx, id)
-		require.NoError(t, err)
-	})
-
 	t.Run("Alter comment", func(t *testing.T) {
 		table, cleanupTable := testClientHelper().Table.CreateInSchema(t, schemaId)
 		t.Cleanup(cleanupTable)

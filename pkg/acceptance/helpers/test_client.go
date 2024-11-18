@@ -27,6 +27,7 @@ type TestClient struct {
 	DataMetricFunctionClient     *DataMetricFunctionClient
 	DataMetricFunctionReferences *DataMetricFunctionReferencesClient
 	DynamicTable                 *DynamicTableClient
+	EventTable                   *EventTableClient
 	ExternalAccessIntegration    *ExternalAccessIntegrationClient
 	ExternalFunction             *ExternalFunctionClient
 	ExternalTable                *ExternalTableClient
@@ -39,6 +40,7 @@ type TestClient struct {
 	MaterializedView             *MaterializedViewClient
 	NetworkPolicy                *NetworkPolicyClient
 	NetworkRule                  *NetworkRuleClient
+	NotificationIntegration      *NotificationIntegrationClient
 	Parameter                    *ParameterClient
 	PasswordPolicy               *PasswordPolicyClient
 	Pipe                         *PipeClient
@@ -54,6 +56,7 @@ type TestClient struct {
 	SessionPolicy                *SessionPolicyClient
 	Share                        *ShareClient
 	Stage                        *StageClient
+	StorageIntegration           *StorageIntegrationClient
 	Stream                       *StreamClient
 	Streamlit                    *StreamlitClient
 	Table                        *TableClient
@@ -96,6 +99,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		DataMetricFunctionClient:     NewDataMetricFunctionClient(context, idsGenerator),
 		DataMetricFunctionReferences: NewDataMetricFunctionReferencesClient(context),
 		DynamicTable:                 NewDynamicTableClient(context, idsGenerator),
+		EventTable:                   NewEventTableClient(context, idsGenerator),
 		ExternalAccessIntegration:    NewExternalAccessIntegrationClient(context, idsGenerator),
 		ExternalFunction:             NewExternalFunctionClient(context, idsGenerator),
 		ExternalTable:                NewExternalTableClient(context, idsGenerator),
@@ -108,6 +112,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		MaterializedView:             NewMaterializedViewClient(context, idsGenerator),
 		NetworkPolicy:                NewNetworkPolicyClient(context, idsGenerator),
 		NetworkRule:                  NewNetworkRuleClient(context, idsGenerator),
+		NotificationIntegration:      NewNotificationIntegrationClient(context, idsGenerator),
 		Parameter:                    NewParameterClient(context),
 		PasswordPolicy:               NewPasswordPolicyClient(context, idsGenerator),
 		Pipe:                         NewPipeClient(context, idsGenerator),
@@ -122,9 +127,10 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		SecurityIntegration:          NewSecurityIntegrationClient(context, idsGenerator),
 		SessionPolicy:                NewSessionPolicyClient(context, idsGenerator),
 		Share:                        NewShareClient(context, idsGenerator),
+		Stage:                        NewStageClient(context, idsGenerator),
+		StorageIntegration:           NewStorageIntegrationClient(context, idsGenerator),
 		Stream:                       NewStreamClient(context, idsGenerator),
 		Streamlit:                    NewStreamlitClient(context, idsGenerator),
-		Stage:                        NewStageClient(context, idsGenerator),
 		Table:                        NewTableClient(context, idsGenerator),
 		Tag:                          NewTagClient(context, idsGenerator),
 		Task:                         NewTaskClient(context, idsGenerator),

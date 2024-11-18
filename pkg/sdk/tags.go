@@ -15,6 +15,8 @@ type Tags interface {
 	Undrop(ctx context.Context, request *UndropTagRequest) error
 	Set(ctx context.Context, request *SetTagRequest) error
 	Unset(ctx context.Context, request *UnsetTagRequest) error
+	SetOnCurrentAccount(ctx context.Context, request *SetTagOnCurrentAccountRequest) error
+	UnsetOnCurrentAccount(ctx context.Context, request *UnsetTagOnCurrentAccountRequest) error
 }
 
 type setTagOptions struct {

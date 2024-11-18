@@ -445,60 +445,6 @@ func TestInt_Schemas(t *testing.T) {
 		})
 	})
 
-	t.Run("alter: set tags", func(t *testing.T) {
-		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
-		t.Cleanup(cleanupSchema)
-
-		tag, cleanupTag := testClientHelper().Tag.CreateTagInSchema(t, schema.ID())
-		t.Cleanup(cleanupTag)
-
-		tagValue := "tag-value"
-		err := client.Schemas.Alter(ctx, schema.ID(), &sdk.AlterSchemaOptions{
-			SetTag: []sdk.TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: tagValue,
-				},
-			},
-		})
-		require.NoError(t, err)
-
-		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), schema.ID(), sdk.ObjectTypeSchema)
-		require.NoError(t, err)
-		assert.Equal(t, tagValue, tv)
-	})
-
-	t.Run("alter: unset tags", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		schemaID := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
-		tagValue := random.String()
-		err := client.Schemas.Create(ctx, schemaID, &sdk.CreateSchemaOptions{
-			Tag: []sdk.TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: tagValue,
-				},
-			},
-		})
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			err = client.Schemas.Drop(ctx, schemaID, nil)
-			require.NoError(t, err)
-		})
-
-		err = client.Schemas.Alter(ctx, schemaID, &sdk.AlterSchemaOptions{
-			UnsetTag: []sdk.ObjectIdentifier{
-				tag.ID(),
-			},
-		})
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), schemaID, sdk.ObjectTypeSchema)
-		require.Error(t, err)
-	})
-
 	t.Run("alter: enable managed access", func(t *testing.T) {
 		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)

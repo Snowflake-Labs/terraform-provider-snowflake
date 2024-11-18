@@ -189,9 +189,6 @@ func TestInt_OtherFunctions(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
-	t.Cleanup(tagCleanup)
-
 	assertFunction := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, secure bool, withArguments bool) {
 		t.Helper()
 
@@ -358,32 +355,6 @@ func TestInt_OtherFunctions(t *testing.T) {
 
 		id := f.ID()
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetSecure(true))
-		require.NoError(t, err)
-		assertFunction(t, id, false, true)
-	})
-
-	t.Run("alter function: set and unset tags", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
-
-		id := f.ID()
-		setTags := []sdk.TagAssociation{
-			{
-				Name:  tagTest.ID(),
-				Value: "v1",
-			},
-		}
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetTags(setTags))
-		require.NoError(t, err)
-		assertFunction(t, id, false, true)
-
-		value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeFunction)
-		require.NoError(t, err)
-		assert.Equal(t, "v1", value)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tagTest.ID(),
-		}
-		err = client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})

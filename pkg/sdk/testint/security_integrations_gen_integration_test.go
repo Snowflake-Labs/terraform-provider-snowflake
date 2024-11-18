@@ -642,41 +642,6 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 	})
 
-	t.Run("AlterApiAuthenticationWithClientCredentialsFlow - set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		_, id := createApiAuthClientCred(t, nil)
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).WithSetTags(tags)
-
-		err := client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.SecurityIntegrations.AlterApiAuthenticationWithClientCredentialsFlow(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.Error(t, err)
-	})
-
 	t.Run("AlterApiAuthenticationWithAuthorizationCodeGrantFlow", func(t *testing.T) {
 		_, id := createApiAuthCodeGrant(t, nil)
 		setRequest := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).
@@ -726,41 +691,6 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
-	})
-
-	t.Run("AlterApiAuthenticationWithAuthorizationCodeGrantFlow - set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		_, id := createApiAuthCodeGrant(t, nil)
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).WithSetTags(tags)
-
-		err := client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.SecurityIntegrations.AlterApiAuthenticationWithAuthorizationCodeGrantFlow(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.Error(t, err)
 	})
 
 	t.Run("AlterApiAuthenticationWithJwtBearerFlow", func(t *testing.T) {
@@ -815,44 +745,6 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
-	})
-
-	t.Run("AlterApiAuthenticationWithJwtBearerFlow - set and unset tags", func(t *testing.T) {
-		// TODO [SNOW-1452191]: unskip
-		t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
-
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		_, id := createApiAuthJwtBearer(t, nil)
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).WithSetTags(tags)
-
-		err := client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.SecurityIntegrations.AlterApiAuthenticationWithJwtBearerFlow(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.Error(t, err)
 	})
 
 	t.Run("AlterExternalOauth with other options", func(t *testing.T) {
@@ -915,43 +807,6 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "EXTERNAL_OAUTH_AUDIENCE_LIST", Type: "List", Value: "", Default: "[]"})
 	})
 
-	t.Run("AlterExternalOauth - set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		_, id, _ := createExternalOauth(t, func(r *sdk.CreateExternalOauthSecurityIntegrationRequest) {
-			r.WithExternalOauthJwsKeysUrl([]sdk.JwsKeysUrl{{JwsKeyUrl: "http://example.com"}})
-		})
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterExternalOauthSecurityIntegrationRequest(id).WithSetTags(tags)
-
-		err := client.SecurityIntegrations.AlterExternalOauth(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterExternalOauthSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.SecurityIntegrations.AlterExternalOauth(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.Error(t, err)
-	})
-
 	t.Run("AlterOauthPartner", func(t *testing.T) {
 		_, id := createOauthPartner(t, func(r *sdk.CreateOauthForPartnerApplicationsSecurityIntegrationRequest) {
 			r.WithOauthRedirectUri("http://example.com")
@@ -1001,41 +856,6 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "false", Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_USE_SECONDARY_ROLES", Type: "String", Value: "NONE", Default: "NONE"})
-	})
-
-	t.Run("AlterOauthPartner - set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		_, id := createOauthPartner(t, nil)
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).WithSetTags(tags)
-
-		err := client.SecurityIntegrations.AlterOauthForPartnerApplications(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.SecurityIntegrations.AlterOauthForPartnerApplications(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.Error(t, err)
 	})
 
 	t.Run("AlterOauthCustom", func(t *testing.T) {
@@ -1102,41 +922,6 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "NETWORK_POLICY", Type: "String", Value: "", Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_RSA_PUBLIC_KEY_FP", Type: "String", Value: "", Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_RSA_PUBLIC_KEY_2_FP", Type: "String", Value: "", Default: ""})
-	})
-
-	t.Run("AlterOauthCustom - set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		_, id := createOauthCustom(t, nil)
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterOauthForCustomClientsSecurityIntegrationRequest(id).WithSetTags(tags)
-
-		err := client.SecurityIntegrations.AlterOauthForCustomClients(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterOauthForCustomClientsSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.SecurityIntegrations.AlterOauthForCustomClients(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.Error(t, err)
 	})
 
 	t.Run("AlterSAML2Integration", func(t *testing.T) {
@@ -1212,124 +997,6 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		setRequest := sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithRefreshSaml2SnowflakePrivateKey(true)
 		err := client.SecurityIntegrations.AlterSaml2(ctx, setRequest)
 		require.NoError(t, err)
-	})
-
-	t.Run("AlterSAML2Integration - set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		_, id, _ := createSAML2Integration(t, nil)
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithSetTags(tags)
-
-		err := client.SecurityIntegrations.AlterSaml2(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterSaml2SecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.SecurityIntegrations.AlterSaml2(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.Error(t, err)
-	})
-
-	t.Run("AlterSCIMIntegration", func(t *testing.T) {
-		_, id := createSCIMIntegration(t, nil)
-
-		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
-		t.Cleanup(networkPolicyCleanup)
-
-		setRequest := sdk.NewAlterScimSecurityIntegrationRequest(id).
-			WithSet(
-				*sdk.NewScimIntegrationSetRequest().
-					WithNetworkPolicy(networkPolicy.ID()).
-					WithEnabled(false).
-					WithSyncPassword(false).
-					WithComment(sdk.StringAllowEmpty{Value: "altered"}),
-			)
-		err := client.SecurityIntegrations.AlterScim(ctx, setRequest)
-		require.NoError(t, err)
-
-		details, err := client.SecurityIntegrations.Describe(ctx, id)
-		require.NoError(t, err)
-
-		assertSCIMDescribe(details, "false", networkPolicy.Name, "GENERIC_SCIM_PROVISIONER", "false", "altered")
-
-		unsetRequest := sdk.NewAlterScimSecurityIntegrationRequest(id).
-			WithUnset(
-				*sdk.NewScimIntegrationUnsetRequest().
-					WithEnabled(true).
-					WithNetworkPolicy(true).
-					WithSyncPassword(true),
-			)
-		err = client.SecurityIntegrations.AlterScim(ctx, unsetRequest)
-		require.NoError(t, err)
-
-		// check setting empty comment because of lacking UNSET COMMENT
-		// TODO(SNOW-1461780): change this to UNSET
-		setRequest = sdk.NewAlterScimSecurityIntegrationRequest(id).
-			WithSet(
-				*sdk.NewScimIntegrationSetRequest().
-					WithComment(sdk.StringAllowEmpty{Value: ""}),
-			)
-		err = client.SecurityIntegrations.AlterScim(ctx, setRequest)
-		require.NoError(t, err)
-
-		details, err = client.SecurityIntegrations.Describe(ctx, id)
-		require.NoError(t, err)
-
-		assertSCIMDescribe(details, "false", "", "GENERIC_SCIM_PROVISIONER", "true", "")
-	})
-
-	t.Run("AlterSCIMIntegration - set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		_, id := createSCIMIntegration(t, nil)
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterScimSecurityIntegrationRequest(id).WithSetTags(tags)
-
-		err := client.SecurityIntegrations.AlterScim(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterScimSecurityIntegrationRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.SecurityIntegrations.AlterScim(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.Error(t, err)
 	})
 
 	t.Run("Drop", func(t *testing.T) {
