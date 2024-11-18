@@ -10,7 +10,7 @@ import (
 	hclv1parser "github.com/hashicorp/hcl/json/parser"
 )
 
-var DefaultHclProvider = NewHclV1ConfigProvider(unquoteBlockType, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
+var DefaultHclProvider = NewHclV1ConfigProvider(unquoteBlockType, fixBlockArguments, unquoteArguments, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
 
 type HclProvider interface {
 	HclFromJson(json []byte) (string, error)
@@ -85,6 +85,12 @@ func unquoteDependsOnReferences(s string) (string, error) {
 func unquoteBlockType(s string) (string, error) {
 	blockTypeRegex := regexp.MustCompile(`"(resource|data|provider)"(( "\w+"){1,2} {)`)
 	return blockTypeRegex.ReplaceAllString(s, `$1$2`), nil
+}
+
+// For some reason, the resulting HCL uses `=` sign for lists of objects.
+func fixBlockArguments(s string) (string, error) {
+	argumentRegex := regexp.MustCompile(`( +)"(\w+)"( +)= ({\n)`)
+	return argumentRegex.ReplaceAllString(s, `$1$2$3$4`), nil
 }
 
 // For some reason, the resulting HCL does not unquote arguments.

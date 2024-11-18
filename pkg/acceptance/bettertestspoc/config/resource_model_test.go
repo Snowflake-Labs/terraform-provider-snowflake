@@ -76,7 +76,7 @@ func (m *SomeModel) WithObjectList(items ...Item) *SomeModel {
 			},
 		))
 	}
-	m.ObjectList = tfconfig.ListVariable(variables...)
+	m.ObjectList = tfconfig.TupleVariable(variables...)
 	return m
 }
 

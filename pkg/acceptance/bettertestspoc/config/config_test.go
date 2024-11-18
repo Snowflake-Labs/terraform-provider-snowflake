@@ -96,6 +96,24 @@ func Test_exploreHcl(t *testing.T) {
     }
   }
 }`,
+		`        {
+            "resource": {
+                "snowflake_share": {
+                    "test": {
+						"object_list": [
+							{
+								"int_field": 1,
+								"string_field": "first item"
+							},
+							{
+								"int_field": 2,
+								"string_field": "second item"
+							}
+                        ]
+                    }
+                }
+            }
+        }`,
 	}
 
 	for _, example := range examples {
