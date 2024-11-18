@@ -107,7 +107,7 @@ func (t *TagModel) WithFullyQualifiedNameValue(value tfconfig.Variable) *TagMode
 	return t
 }
 
-func (t *TagModel) WithMaskingPolicyValue(value tfconfig.Variable) *TagModel {
+func (t *TagModel) WithMaskingPoliciesValue(value tfconfig.Variable) *TagModel {
 	t.MaskingPolicies = value
 	return t
 }

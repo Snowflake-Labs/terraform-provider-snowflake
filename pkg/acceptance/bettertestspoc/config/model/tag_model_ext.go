@@ -5,11 +5,6 @@ import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 )
 
-func (t *TagModel) WithMaskingPoliciesValue(value tfconfig.Variable) *TagModel {
-	t.MaskingPolicies = value
-	return t
-}
-
 func (t *TagModel) WithAllowedValues(allowedValues ...string) *TagModel {
 	allowedValuesStringVariables := make([]tfconfig.Variable, len(allowedValues))
 	for i, v := range allowedValues {
