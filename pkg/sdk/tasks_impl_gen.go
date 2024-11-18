@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"slices"
 	"strings"
@@ -53,8 +54,10 @@ func (v *tasks) Show(ctx context.Context, request *ShowTaskRequest) ([]Task, err
 }
 
 func (v *tasks) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
-	tasks, err := v.Show(ctx, NewShowTaskRequest().WithIn(In{
-		Schema: id.SchemaId(),
+	tasks, err := v.Show(ctx, NewShowTaskRequest().WithIn(ExtendedIn{
+		In: In{
+			Schema: id.SchemaId(),
+		},
 	}).WithLike(Like{
 		Pattern: String(id.Name()),
 	}))
@@ -179,7 +182,6 @@ func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
 		IfNotExists:                             r.IfNotExists,
 		name:                                    r.name,
 		Schedule:                                r.Schedule,
-		Config:                                  r.Config,
 		AllowOverlappingExecution:               r.AllowOverlappingExecution,
 		SessionParameters:                       r.SessionParameters,
 		UserTaskTimeoutMs:                       r.UserTaskTimeoutMs,
@@ -200,6 +202,9 @@ func (r *CreateTaskRequest) toOpts() *CreateTaskOptions {
 			UserTaskManagedInitialWarehouseSize: r.Warehouse.UserTaskManagedInitialWarehouseSize,
 		}
 	}
+	if r.Config != nil {
+		opts.Config = String(fmt.Sprintf("$$%s$$", *r.Config))
+	}
 	return opts
 }
 
@@ -207,7 +212,6 @@ func (r *CreateOrAlterTaskRequest) toOpts() *CreateOrAlterTaskOptions {
 	opts := &CreateOrAlterTaskOptions{
 		name:                        r.name,
 		Schedule:                    r.Schedule,
-		Config:                      r.Config,
 		AllowOverlappingExecution:   r.AllowOverlappingExecution,
 		UserTaskTimeoutMs:           r.UserTaskTimeoutMs,
 		SessionParameters:           r.SessionParameters,
@@ -225,6 +229,9 @@ func (r *CreateOrAlterTaskRequest) toOpts() *CreateOrAlterTaskOptions {
 			Warehouse:                           r.Warehouse.Warehouse,
 			UserTaskManagedInitialWarehouseSize: r.Warehouse.UserTaskManagedInitialWarehouseSize,
 		}
+	}
+	if r.Config != nil {
+		opts.Config = String(fmt.Sprintf("$$%s$$", *r.Config))
 	}
 	return opts
 }
@@ -261,7 +268,6 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 			Warehouse:                               r.Set.Warehouse,
 			UserTaskManagedInitialWarehouseSize:     r.Set.UserTaskManagedInitialWarehouseSize,
 			Schedule:                                r.Set.Schedule,
-			Config:                                  r.Set.Config,
 			AllowOverlappingExecution:               r.Set.AllowOverlappingExecution,
 			UserTaskTimeoutMs:                       r.Set.UserTaskTimeoutMs,
 			SuspendTaskAfterNumFailures:             r.Set.SuspendTaskAfterNumFailures,
@@ -270,6 +276,9 @@ func (r *AlterTaskRequest) toOpts() *AlterTaskOptions {
 			SessionParameters:                       r.Set.SessionParameters,
 			TaskAutoRetryAttempts:                   r.Set.TaskAutoRetryAttempts,
 			UserTaskMinimumTriggerIntervalInSeconds: r.Set.UserTaskMinimumTriggerIntervalInSeconds,
+		}
+		if r.Set.Config != nil {
+			opts.Set.Config = String(fmt.Sprintf("$$%s$$", *r.Set.Config))
 		}
 	}
 	if r.Unset != nil {

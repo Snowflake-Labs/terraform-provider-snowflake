@@ -6,6 +6,66 @@ across different versions.
 
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
+ 
+## v0.98.0 ➞ v0.99.0
+
+### snowflake_task resource changes
+
+new fields:
+- `config` 
+
+### snowflake_tasks data source changes
+
+New filtering options:
+- `with_parameters`
+- `like`
+- `in`
+- `starts_with`
+- `root_only`
+- `limit`
+
+New output fields
+- `show_output`
+- `parameters`
+
+Breaking changes:
+- `database` and `schema` are right now under `in` field
+
+Before:
+```terraform
+data "snowflake_tasks" "old_tasks" {
+  database = "<database_name>"
+  schema = "<schema_name>"
+}
+```
+After:
+```terraform
+data "snowflake_tasks" "new_tasks" {
+  in {
+    # for IN SCHEMA specify:
+    schema = "<database_name>.<schema_name>"
+    
+    # for IN DATABASE specify:
+    database = "<database_name>"
+  }
+}
+```
+- `tasks` field now organizes output of show under `show_output` field and the output of show parameters under `parameters` field.
+
+Before:
+```terraform
+output "simple_output" {
+  value = data.snowflake_tasks.test.tasks[0].name
+}
+```
+After:
+```terraform
+output "simple_output" {
+  value = data.snowflake_tasks.test.tasks[0].show_output[0].name
+}
+```
+
+Please adjust your Terraform configuration files.
 
 ## v0.98.0 ➞ v0.99.0
 

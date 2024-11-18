@@ -133,7 +133,7 @@ type DropTaskRequest struct {
 type ShowTaskRequest struct {
 	Terse      *bool
 	Like       *Like
-	In         *In
+	In         *ExtendedIn
 	StartsWith *string
 	RootOnly   *bool
 	Limit      *LimitFrom

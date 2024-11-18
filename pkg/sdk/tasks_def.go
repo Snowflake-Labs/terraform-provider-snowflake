@@ -286,7 +286,7 @@ var TasksDef = g.NewInterface(
 			Terse().
 			SQL("TASKS").
 			OptionalLike().
-			OptionalIn().
+			OptionalExtendedIn().
 			OptionalStartsWith().
 			OptionalSQL("ROOT ONLY").
 			OptionalLimit(),

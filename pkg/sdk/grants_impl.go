@@ -519,7 +519,7 @@ func (v *grants) runOnAllTasks(ctx context.Context, inDatabase *AccountObjectIde
 		}
 	}
 
-	tasks, err := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(in))
+	tasks, err := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(ExtendedIn{In: in}))
 	if err != nil {
 		return err
 	}

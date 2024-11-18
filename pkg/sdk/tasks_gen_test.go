@@ -457,14 +457,34 @@ func TestTasks_Show(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "SHOW TASKS")
 	})
 
+	t.Run("in application", func(t *testing.T) {
+		opts := defaultOpts()
+		id := randomAccountObjectIdentifier()
+		opts.In = &ExtendedIn{
+			Application: id,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW TASKS IN APPLICATION %s", id.FullyQualifiedName())
+	})
+
+	t.Run("in application package", func(t *testing.T) {
+		opts := defaultOpts()
+		id := randomAccountObjectIdentifier()
+		opts.In = &ExtendedIn{
+			ApplicationPackage: id,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW TASKS IN APPLICATION PACKAGE %s", id.FullyQualifiedName())
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Terse = Bool(true)
 		opts.Like = &Like{
 			Pattern: String("myaccount"),
 		}
-		opts.In = &In{
-			Account: Bool(true),
+		opts.In = &ExtendedIn{
+			In: In{
+				Account: Bool(true),
+			},
 		}
 		opts.StartsWith = String("abc")
 		opts.RootOnly = Bool(true)
