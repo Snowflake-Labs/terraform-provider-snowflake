@@ -1082,6 +1082,7 @@ func TestAcc_Saml2Integration_migrateFromV0941_ensureSmoothUpgradeWithNewResourc
 		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1094,6 +1095,7 @@ func TestAcc_Saml2Integration_migrateFromV0941_ensureSmoothUpgradeWithNewResourc
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   saml2IntegrationBasicConfig(id.Name(), cert),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1117,6 +1119,7 @@ func TestAcc_Saml2Integration_IdentifierQuotingDiffSuppression(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1131,6 +1134,7 @@ func TestAcc_Saml2Integration_IdentifierQuotingDiffSuppression(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   saml2IntegrationBasicConfig(quotedId, cert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

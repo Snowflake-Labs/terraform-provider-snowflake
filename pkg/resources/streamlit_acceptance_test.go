@@ -449,6 +449,7 @@ func TestAcc_Streamlit_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *
 		CheckDestroy: acc.CheckDestroy(t, resources.Streamlit),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -461,6 +462,7 @@ func TestAcc_Streamlit_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   streamlitBasicConfig(id, stage.ID(), "main_file"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -501,6 +503,7 @@ func TestAcc_Streamlit_IdentifierQuotingDiffSuppression(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Streamlit),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -517,6 +520,7 @@ func TestAcc_Streamlit_IdentifierQuotingDiffSuppression(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   streamlitBasicConfigWithRawIdentifierValues(quotedDatabaseName, quotedSchemaName, quotedName, stage.ID().Name(), "main_file"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

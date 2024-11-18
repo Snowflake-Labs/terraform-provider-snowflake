@@ -31,7 +31,7 @@ func TestAcc_Provider_OktaAuth(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfigWithAuthenticator("okta", sdk.AuthenticationTypeOkta),
+				Config: providerConfigWithAuthenticator(testprofiles.Okta, sdk.AuthenticationTypeOkta),
 			},
 		},
 	})

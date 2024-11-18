@@ -217,6 +217,7 @@ func TestAcc_AccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t
 		CheckDestroy: acc.CheckDestroy(t, resources.AccountRole),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -229,6 +230,7 @@ func TestAcc_AccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   accountRoleBasicConfig(id.Name(), comment),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -252,6 +254,7 @@ func TestAcc_AccountRole_WithQuotedName(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.AccountRole),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -266,6 +269,7 @@ func TestAcc_AccountRole_WithQuotedName(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   accountRoleBasicConfig(quotedId, comment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
