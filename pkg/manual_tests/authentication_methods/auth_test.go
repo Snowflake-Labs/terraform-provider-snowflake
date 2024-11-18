@@ -1,15 +1,17 @@
 package manual
 
 import (
-	"fmt"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -31,7 +33,7 @@ func TestAcc_Provider_OktaAuth(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.Okta, sdk.AuthenticationTypeOkta),
+				Config: providerConfigWithAuthenticator(t, testprofiles.Okta, sdk.AuthenticationTypeOkta),
 			},
 		},
 	})
@@ -51,11 +53,11 @@ func TestAcc_Provider_UsernamePasswordMfaAuth(t *testing.T) {
 		Steps: []resource.TestStep{
 			// ensure MFA is checked here - accept login on your MFA device
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.Default, sdk.AuthenticationTypeUsernamePasswordMfa),
+				Config: providerConfigWithAuthenticator(t, testprofiles.Default, sdk.AuthenticationTypeUsernamePasswordMfa),
 			},
 			// check that MFA login is cached - this step should not require manual action
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.Default, sdk.AuthenticationTypeUsernamePasswordMfa),
+				Config: providerConfigWithAuthenticator(t, testprofiles.Default, sdk.AuthenticationTypeUsernamePasswordMfa),
 			},
 		},
 	})
@@ -75,28 +77,20 @@ func TestAcc_Provider_UsernamePasswordMfaAuthWithPasscode(t *testing.T) {
 		Steps: []resource.TestStep{
 			// ensure MFA is checked here - accept access to keychain on your device
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
+				Config: providerConfigWithAuthenticator(t, testprofiles.DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
 			},
 			// check that MFA login is cached - this step should not require manual action
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
+				Config: providerConfigWithAuthenticator(t, testprofiles.DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
 			},
 		},
 	})
 }
 
-func providerConfigWithAuthenticator(profile string, authenticator sdk.AuthenticationType) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	authenticator    = "%[2]s"
-}
-`, profile, authenticator) + datasourceConfig()
-}
-
-func datasourceConfig() string {
-	return `
-data snowflake_database "t" {
-	name = "SNOWFLAKE"
-}`
+func providerConfigWithAuthenticator(t *testing.T, profile string, authenticator sdk.AuthenticationType) string {
+	t.Helper()
+	return config.ConfigFromModelsPoc(t,
+		providermodel.SnowflakeProvider().WithProfile(profile).WithAuthenticator(string(authenticator)),
+		model.Database("t", "SNOWFLAKE"),
+	)
 }
