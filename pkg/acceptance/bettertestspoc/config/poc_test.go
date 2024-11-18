@@ -38,11 +38,11 @@ resource "snowflake_share" "test" {
   name = "Some Name"
   string_list = ["a", "b", "a"]
   string_set = ["a", "b", "c"]
-  object_list = {
+  object_list {
     int_field = 1
     string_field = "first item"
   }
-  object_list = {
+  object_list {
     int_field = 2
     string_field = "second item"
   }

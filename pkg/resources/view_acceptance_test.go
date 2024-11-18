@@ -19,6 +19,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -63,51 +64,26 @@ func TestAcc_View_basic(t *testing.T) {
 	otherStatement := fmt.Sprintf("SELECT foo, id FROM %s", table.ID().FullyQualifiedName())
 	comment := random.Comment()
 
-	// generators currently don't handle lists of objects, so use the old way
-	basicView := func(configStatement string) config.Variables {
-		return config.Variables{
-			"name":      config.StringVariable(id.Name()),
-			"database":  config.StringVariable(id.DatabaseName()),
-			"schema":    config.StringVariable(id.SchemaName()),
-			"statement": config.StringVariable(configStatement),
-			"column": config.SetVariable(
-				config.MapVariable(map[string]config.Variable{
-					"column_name": config.StringVariable("ID"),
-				}),
-				config.MapVariable(map[string]config.Variable{
-					"column_name": config.StringVariable("FOO"),
-				}),
-			),
-		}
-	}
-	basicViewWithIsRecursive := basicView(otherStatement)
-	basicViewWithIsRecursive["is_recursive"] = config.BoolVariable(true)
+	columnNames := []string{"ID", "FOO"}
+	basicViewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithColumnNames(columnNames...)
+	viewModelRecursiveWithOtherStatement := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), otherStatement).WithColumnNames(columnNames...).WithIsRecursive(provider.BooleanTrue)
+	viewModelWithOtherStatement := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), otherStatement).WithColumnNames(columnNames...)
 
-	// generators currently don't handle lists of objects, so use the old way
-	basicUpdate := func(rap, ap, functionId sdk.SchemaObjectIdentifier, statement, cron string, scheduleStatus sdk.DataMetricScheduleStatusOption) config.Variables {
-		return config.Variables{
-			"name":                            config.StringVariable(id.Name()),
-			"database":                        config.StringVariable(id.DatabaseName()),
-			"schema":                          config.StringVariable(id.SchemaName()),
-			"statement":                       config.StringVariable(statement),
-			"row_access_policy":               config.StringVariable(rap.FullyQualifiedName()),
-			"row_access_policy_on":            config.ListVariable(config.StringVariable("ID")),
-			"aggregation_policy":              config.StringVariable(ap.FullyQualifiedName()),
-			"aggregation_policy_entity_key":   config.ListVariable(config.StringVariable("ID")),
-			"data_metric_function":            config.StringVariable(functionId.FullyQualifiedName()),
-			"data_metric_function_on":         config.ListVariable(config.StringVariable("ID")),
-			"data_metric_schedule_using_cron": config.StringVariable(cron),
-			"comment":                         config.StringVariable(comment),
-			"schedule_status":                 config.StringVariable(string(scheduleStatus)),
-			"column": config.SetVariable(
-				config.MapVariable(map[string]config.Variable{
-					"column_name": config.StringVariable("ID"),
-				}),
-				config.MapVariable(map[string]config.Variable{
-					"column_name": config.StringVariable("FOO"),
-				}),
-			),
-		}
+	updatedViewModel := func(
+		rowAccessPolicyId sdk.SchemaObjectIdentifier,
+		aggregationPolicyId sdk.SchemaObjectIdentifier,
+		dataMetricFunctionId sdk.SchemaObjectIdentifier,
+		statement string,
+		cron string,
+		scheduleStatus sdk.DataMetricScheduleStatusOption,
+	) *model.ViewModel {
+		return model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).
+			WithRowAccessPolicy(rowAccessPolicyId, "ID").
+			WithAggregationPolicy(aggregationPolicyId, "ID").
+			WithDataMetricFunction(dataMetricFunctionId, "ID", scheduleStatus).
+			WithDataMetricSchedule(cron).
+			WithComment(comment).
+			WithColumnNames(columnNames...)
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -119,8 +95,7 @@ func TestAcc_View_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
-				ConfigVariables: basicView(statement),
+				Config: accconfig.ResourceFromModelPoc(t, basicViewModel),
 				Check: assert.AssertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
@@ -132,10 +107,9 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// import - without optionals
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
-				ConfigVariables: basicView(statement),
-				ResourceName:    "snowflake_view.test",
-				ImportState:     true,
+				Config:       accconfig.ResourceFromModelPoc(t, basicViewModel),
+				ResourceName: "snowflake_view.test",
+				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedViewResource(t, resourceId).
 						HasNameString(id.Name()).
@@ -158,8 +132,7 @@ func TestAcc_View_basic(t *testing.T) {
 						},
 					})))
 				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
-				ConfigVariables: basicView(statement),
+				Config: accconfig.ResourceFromModelPoc(t, basicViewModel),
 				Check: assert.AssertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
@@ -174,8 +147,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// set other fields
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, functionId, statement, cron, sdk.DataMetricScheduleStatusStarted),
+				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, statement, cron, sdk.DataMetricScheduleStatusStarted)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
@@ -206,8 +178,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// change policies and dmfs
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusStarted),
+				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusStarted)),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -234,8 +205,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// change dmf status
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusSuspended),
+				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusSuspended)),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -262,8 +232,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// change statement and policies
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted),
+				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -292,8 +261,7 @@ func TestAcc_View_basic(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().View.RecreateView(t, id, statement)
 				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted),
+				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -323,8 +291,7 @@ func TestAcc_View_basic(t *testing.T) {
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithDropAllRowAccessPolicies(true))
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetAggregationPolicy(*sdk.NewViewUnsetAggregationPolicyRequest()))
 				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted),
+				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -350,10 +317,9 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// import - with optionals
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_update"),
-				ConfigVariables: basicUpdate(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted),
-				ResourceName:    "snowflake_view.test",
-				ImportState:     true,
+				Config:       accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
+				ResourceName: "snowflake_view.test",
+				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
 					resourceassert.ImportedViewResource(t, resourceId).
 						HasNameString(id.Name()).
@@ -376,9 +342,8 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// unset
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
-				ConfigVariables: basicView(otherStatement),
-				ResourceName:    "snowflake_view.test",
+				Config:       accconfig.ResourceFromModelPoc(t, viewModelWithOtherStatement),
+				ResourceName: "snowflake_view.test",
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -393,8 +358,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// recreate - change is_recursive
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_is_recursive"),
-				ConfigVariables: basicViewWithIsRecursive,
+				Config: accconfig.ResourceFromModelPoc(t, viewModelRecursiveWithOtherStatement),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
