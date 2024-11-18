@@ -496,7 +496,7 @@ func TestInt_Tasks(t *testing.T) {
 		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), task.ID(), sdk.ObjectTypeTask)
 		require.NoError(t, err)
 
-		assert.Equal(t, "v1", returnedTagValue)
+		assert.Equal(t, sdk.Pointer("v1"), returnedTagValue)
 	})
 
 	t.Run("clone task: default", func(t *testing.T) {

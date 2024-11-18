@@ -155,6 +155,7 @@ func (s *SetTagRequest) toOpts() *setTagOptions {
 func (s *UnsetTagRequest) toOpts() *unsetTagOptions {
 	o := &unsetTagOptions{
 		objectType: s.objectType,
+		IfExists:   s.IfExists,
 		objectName: s.objectName,
 		UnsetTags:  s.UnsetTags,
 	}

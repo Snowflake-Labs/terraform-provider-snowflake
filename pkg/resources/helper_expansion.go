@@ -27,6 +27,19 @@ func expandStringList(configured []interface{}) []string {
 	return vs
 }
 
+func expandStringListWithMapping[T any](configured []any, mapping func(string) (T, error)) ([]T, error) {
+	stringList := expandStringList(configured)
+	vs := make([]T, 0, len(configured))
+	for _, v := range stringList {
+		val, err := mapping(v)
+		if err != nil {
+			return nil, err
+		}
+		vs = append(vs, val)
+	}
+	return vs, nil
+}
+
 func expandStringListAllowEmpty(configured []interface{}) []string {
 	// Allow empty values during expansion
 	vs := make([]string, 0, len(configured))

@@ -7,10 +7,8 @@ resource "snowflake_tag" "test" {
 }
 
 resource "snowflake_tag_association" "test" {
-  object_identifier {
-    name = var.database
-  }
-  object_type = "DATABASE"
-  tag_id      = snowflake_tag.test.id
-  tag_value   = "finance"
+  object_identifier = [var.database]
+  object_type       = "DATABASE"
+  tag_id            = snowflake_tag.test.fully_qualified_name
+  tag_value         = "finance"
 }

@@ -22,6 +22,7 @@ type UnsetTagRequest struct {
 	objectType ObjectType       // required
 	objectName ObjectIdentifier // required
 
+	IfExists  *bool
 	UnsetTags []ObjectIdentifier
 }
 

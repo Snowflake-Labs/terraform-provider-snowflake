@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -17,11 +18,11 @@ import (
 )
 
 func TestAcc_TagAssociation(t *testing.T) {
-	tagName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name": config.StringVariable(tagName),
+			"tag_name": config.StringVariable(tagId.Name()),
 			"database": config.StringVariable(acc.TestDatabaseName),
 			"schema":   config.StringVariable(acc.TestSchemaName),
 		}
@@ -38,8 +39,26 @@ func TestAcc_TagAssociation(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/basic"),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", helpers.EncodeSnowflakeID(tagId.FullyQualifiedName(), "finance", string("DATABASE"))),
 					resource.TestCheckResourceAttr(resourceName, "object_type", "DATABASE"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+					resource.TestCheckResourceAttr(resourceName, "object_identifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_identifier.0", acc.TestClient().Ids.SchemaId().FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_value", "finance"),
+				),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().Tag.Unset(t, "DATABASE", sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), []sdk.ObjectIdentifier{tagId})
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/basic"),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", helpers.EncodeSnowflakeID(tagId.FullyQualifiedName(), "finance", string("DATABASE"))),
+					resource.TestCheckResourceAttr(resourceName, "object_type", "DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "object_identifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_identifier.0", acc.TestClient().Ids.SchemaId().FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "tag_value", "finance"),
 				),
 			},
@@ -48,13 +67,15 @@ func TestAcc_TagAssociation(t *testing.T) {
 }
 
 func TestAcc_TagAssociationSchema(t *testing.T) {
-	tagName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	schemaId := acc.TestClient().Ids.SchemaId()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name": config.StringVariable(tagName),
-			"database": config.StringVariable(acc.TestDatabaseName),
-			"schema":   config.StringVariable(acc.TestSchemaName),
+			"tag_name":                    config.StringVariable(tagId.Name()),
+			"database":                    config.StringVariable(acc.TestDatabaseName),
+			"schema":                      config.StringVariable(acc.TestSchemaName),
+			"schema_fully_qualified_name": config.StringVariable(schemaId.FullyQualifiedName()),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -69,7 +90,12 @@ func TestAcc_TagAssociationSchema(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/schema"),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "object_type", "SCHEMA"),
+					resource.TestCheckResourceAttr(resourceName, "id", helpers.EncodeSnowflakeID(tagId.FullyQualifiedName(), "TAG_VALUE", string(sdk.ObjectTypeSchema))),
+					resource.TestCheckResourceAttr(resourceName, "object_type", string(sdk.ObjectTypeSchema)),
+					resource.TestCheckResourceAttr(resourceName, "object_identifier.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "object_identifier.*", schemaId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_value", "TAG_VALUE"),
 				),
 			},
 		},
@@ -77,15 +103,18 @@ func TestAcc_TagAssociationSchema(t *testing.T) {
 }
 
 func TestAcc_TagAssociationColumn(t *testing.T) {
-	tagName := acc.TestClient().Ids.Alpha()
-	tableName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	columnId := sdk.NewTableColumnIdentifier(tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), "column")
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name":   config.StringVariable(tagName),
-			"table_name": config.StringVariable(tableName),
-			"database":   config.StringVariable(acc.TestDatabaseName),
-			"schema":     config.StringVariable(acc.TestSchemaName),
+			"tag_name":                    config.StringVariable(tagId.Name()),
+			"table_name":                  config.StringVariable(tableId.Name()),
+			"database":                    config.StringVariable(acc.TestDatabaseName),
+			"schema":                      config.StringVariable(acc.TestSchemaName),
+			"column":                      config.StringVariable("column"),
+			"column_fully_qualified_name": config.StringVariable(columnId.FullyQualifiedName()),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -100,13 +129,13 @@ func TestAcc_TagAssociationColumn(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/column"),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+					resource.TestCheckResourceAttr(resourceName, "id", helpers.EncodeSnowflakeID(tagId.FullyQualifiedName(), "TAG_VALUE", string(sdk.ObjectTypeColumn))),
+					resource.TestCheckResourceAttr(resourceName, "object_type", string(sdk.ObjectTypeColumn)),
+					resource.TestCheckResourceAttr(resourceName, "object_identifier.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "object_identifier.*", columnId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "tag_value", "TAG_VALUE"),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.column_name", tableName)),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName)),
+				),
 			},
 		},
 	})
@@ -195,8 +224,11 @@ func testAccCheckTableColumnTagAssociation(tagID sdk.SchemaObjectIdentifier, obj
 		if err != nil {
 			return err
 		}
-		if tagValue != tv {
-			return fmt.Errorf("expected tag value %s, got %s", tagValue, tv)
+		if tv == nil {
+			return fmt.Errorf("expected tag value %s, got nil", tagValue)
+		}
+		if tagValue != *tv {
+			return fmt.Errorf("expected tag value %s, got %s", tagValue, *tv)
 		}
 		return nil
 	}
@@ -239,29 +271,32 @@ func TestAcc_TagAssociationAccountIssues1910(t *testing.T) {
 }
 
 func TestAcc_TagAssociationIssue1926(t *testing.T) {
-	tagName := acc.TestClient().Ids.Alpha()
-	tableName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	columnId1 := sdk.NewTableColumnIdentifier(tableId1.DatabaseName(), tableId1.SchemaName(), tableId1.Name(), "init")
 	resourceName := "snowflake_tag_association.test"
-	columnName := "test.column"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name":    config.StringVariable(tagName),
-			"table_name":  config.StringVariable(tableName),
-			"column_name": config.StringVariable(columnName),
-			"database":    config.StringVariable(acc.TestDatabaseName),
-			"schema":      config.StringVariable(acc.TestSchemaName),
+			"tag_name":                    config.StringVariable(tagId.Name()),
+			"table_name":                  config.StringVariable(tableId1.Name()),
+			"column_name":                 config.StringVariable(columnId1.Name()),
+			"column_fully_qualified_name": config.StringVariable(columnId1.FullyQualifiedName()),
+			"database":                    config.StringVariable(acc.TestDatabaseName),
+			"schema":                      config.StringVariable(acc.TestSchemaName),
 		}
 	}
 
 	m2 := m()
-	tableName2 := "table.test"
-	columnName2 := "column"
-	columnName3 := "column.test"
-	m2["table_name"] = config.StringVariable(tableName2)
-	m2["column_name"] = config.StringVariable(columnName2)
+	tableId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix("table.test")
+	columnId2 := sdk.NewTableColumnIdentifier(tableId2.DatabaseName(), tableId2.SchemaName(), tableId2.Name(), "column")
+	columnId3 := sdk.NewTableColumnIdentifier(tableId2.DatabaseName(), tableId2.SchemaName(), tableId2.Name(), "column.test")
+	m2["table_name"] = config.StringVariable(tableId2.Name())
+	m2["column_name"] = config.StringVariable(columnId2.Name())
+	m2["column_fully_qualified_name"] = config.StringVariable(columnId2.FullyQualifiedName())
 	m3 := m()
-	m3["table_name"] = config.StringVariable(tableName2)
-	m3["column_name"] = config.StringVariable(columnName3)
+	m3["table_name"] = config.StringVariable(tableId2.Name())
+	m3["column_name"] = config.StringVariable(columnId3.Name())
+	m3["column_fully_qualified_name"] = config.StringVariable(columnId3.FullyQualifiedName())
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -274,43 +309,52 @@ func TestAcc_TagAssociationIssue1926(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
-					resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName, columnName)),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "id", helpers.EncodeSnowflakeID(tagId.FullyQualifiedName(), "TAG_VALUE", string(sdk.ObjectTypeColumn))),
+					resource.TestCheckResourceAttr(resourceName, "object_type", string(sdk.ObjectTypeColumn)),
+					resource.TestCheckResourceAttr(resourceName, "object_identifier.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "object_identifier.*", columnId1.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_value", "TAG_VALUE"),
 				),
 			},
-			/*
-				todo: (SNOW-1205719) uncomment this
-				{
-					ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
-					ConfigVariables: m2,
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
-						resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
-						resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
-						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
-						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName2, columnName2)),
-						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
-						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
-					),
-				},
-				{
-					ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
-					ConfigVariables: m3,
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
-						resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
-						resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
-						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
-						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName2, columnName3)),
-						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
-						resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
-					),
-				},*/
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
+				ConfigVariables: m2,
+				Check: resource.ComposeTestCheckFunc(
+					// resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
+					// resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+					// resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
+					// resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
+					// resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName2, columnName2)),
+					// resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
+					// resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "id", helpers.EncodeSnowflakeID(tagId.FullyQualifiedName(), "TAG_VALUE", string(sdk.ObjectTypeColumn))),
+					resource.TestCheckResourceAttr(resourceName, "object_type", string(sdk.ObjectTypeColumn)),
+					resource.TestCheckResourceAttr(resourceName, "object_identifier.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "object_identifier.*", columnId2.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_value", "TAG_VALUE"),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/issue1926"),
+				ConfigVariables: m3,
+				Check: resource.ComposeTestCheckFunc(
+					// resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
+					// resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+					// resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
+					// resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
+					// resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName2, columnName3)),
+					// resource.TestCheckResourceAttr(resourceName, "object_identifier.0.database", acc.TestDatabaseName),
+					// resource.TestCheckResourceAttr(resourceName, "object_identifier.0.schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr(resourceName, "id", helpers.EncodeSnowflakeID(tagId.FullyQualifiedName(), "TAG_VALUE", string(sdk.ObjectTypeColumn))),
+					resource.TestCheckResourceAttr(resourceName, "object_type", string(sdk.ObjectTypeColumn)),
+					resource.TestCheckResourceAttr(resourceName, "object_identifier.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "object_identifier.*", columnId3.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_value", "TAG_VALUE"),
+				),
+			},
 		},
 	})
 }

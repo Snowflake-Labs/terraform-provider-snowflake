@@ -52,6 +52,14 @@ func (c *TagClient) CreateWithRequest(t *testing.T, req *sdk.CreateTagRequest) (
 	return tag, c.DropTagFunc(t, req.GetName())
 }
 
+func (c *TagClient) Unset(t *testing.T, objectType sdk.ObjectType, id sdk.ObjectIdentifier, unsetTags []sdk.ObjectIdentifier) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Unset(ctx, sdk.NewUnsetTagRequest(objectType, id).WithUnsetTags(unsetTags))
+	require.NoError(t, err)
+}
+
 func (c *TagClient) DropTagFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()

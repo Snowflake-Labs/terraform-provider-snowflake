@@ -8,17 +8,18 @@ resource "snowflake_table" "test" {
   database = var.database
   schema   = var.schema
   column {
+    name = "DUMMY"
+    type = "VARIANT"
+  }
+  column {
     name = var.column_name
     type = "VARIANT"
   }
 }
 resource "snowflake_tag_association" "test" {
-  object_identifier {
-    database = var.database
-    schema   = var.schema
-    name     = "${snowflake_table.test.name}.${snowflake_table.test.column[0].name}"
-  }
-  object_type = "COLUMN"
-  tag_id      = snowflake_tag.test.id
-  tag_value   = "v1"
+  object_identifier = [var.column_fully_qualified_name]
+  object_type       = "COLUMN"
+  tag_id            = snowflake_tag.test.fully_qualified_name
+  tag_value         = "TAG_VALUE"
+  depends_on        = [snowflake_table.test]
 }

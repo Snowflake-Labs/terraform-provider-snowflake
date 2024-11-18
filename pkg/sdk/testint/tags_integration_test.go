@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(SNOW-1813223): cleanup tests
 func TestInt_Tags(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -320,8 +321,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 		err = client.Tags.Unset(ctx, sdk.NewUnsetTagRequest(objectType, id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
-		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
+		require.NoError(t, err)
+		assert.Nil(t, returnedTagValue)
 	}
 
 	t.Run("TestInt_TagAssociationForAccount", func(t *testing.T) {
@@ -340,8 +342,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
+		require.NoError(t, err)
+		assert.Nil(t, returnedTagValue)
 
 		// test tag sdk method
 		err = client.Tags.SetOnCurrentAccount(ctx, sdk.NewSetTagOnCurrentAccountRequest().WithSetTags(tags))
@@ -354,8 +357,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 		err = client.Tags.UnsetOnCurrentAccount(ctx, sdk.NewUnsetTagOnCurrentAccountRequest().WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
+		require.NoError(t, err)
+		assert.Nil(t, returnedTagValue)
 	})
 
 	accountObjectTestCases := []struct {
@@ -625,8 +629,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+			returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
+			require.NoError(t, err)
+			assert.Nil(t, returnedTagValue)
 
 			// test object methods
 			testTagSet(id, tc.objectType)
@@ -716,8 +721,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+			returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
+			require.NoError(t, err)
+			assert.Nil(t, returnedTagValue)
 
 			// test object methods
 			testTagSet(id, tc.objectType)
@@ -920,8 +926,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+			returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
+			require.NoError(t, err)
+			assert.Nil(t, returnedTagValue)
 
 			// test object methods
 			testTagSet(id, tc.objectType)
@@ -985,8 +992,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeColumn)
-			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+			returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeColumn)
+			require.NoError(t, err)
+			assert.Nil(t, returnedTagValue)
 
 			// test object methods
 			testTagSet(id, sdk.ObjectTypeColumn)
@@ -1062,8 +1070,9 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+			returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
+			require.NoError(t, err)
+			assert.Nil(t, returnedTagValue)
 
 			// test object methods
 			testTagSet(id, tc.objectType)
