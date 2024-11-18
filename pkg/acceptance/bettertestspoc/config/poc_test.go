@@ -15,7 +15,7 @@ func Test_ResourceFromModelPoc(t *testing.T) {
 		someModel := Some("test", "Some Name")
 		expectedOutput := strings.TrimPrefix(`
 resource "snowflake_share" "test" {
-  "name" = "Some Name"
+  name = "Some Name"
 }
 `, "\n")
 		result := config.ResourceFromModelPoc(t, someModel)
@@ -34,19 +34,19 @@ resource "snowflake_share" "test" {
 			).WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
 		expectedOutput := strings.TrimPrefix(`
 resource "snowflake_share" "test" {
-  "comment" = "Some Comment"
-  "name" = "Some Name"
-  "string_list" = ["a", "b", "a"]
-  "string_set" = ["a", "b", "c"]
-  "object_list" = {
-    "int_field" = 1
-    "string_field" = "first item"
+  comment = "Some Comment"
+  name = "Some Name"
+  string_list = ["a", "b", "a"]
+  string_set = ["a", "b", "c"]
+  object_list = {
+    int_field = 1
+    string_field = "first item"
   }
-  "object_list" = {
-    "int_field" = 2
-    "string_field" = "second item"
+  object_list = {
+    int_field = 2
+    string_field = "second item"
   }
-  "depends_on" = [some_other_resource.some_name, other_resource.some_other_name, third_resource.third_name]
+  depends_on = [some_other_resource.some_name, other_resource.some_other_name, third_resource.third_name]
 }
 `, "\n")
 
@@ -72,7 +72,7 @@ data "snowflake_databases" "test" {}
 			WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
 		expectedOutput := strings.TrimPrefix(`
 data "snowflake_databases" "test" {
-  "depends_on" = [some_other_resource.some_name, other_resource.some_other_name, third_resource.third_name]
+  depends_on = [some_other_resource.some_name, other_resource.some_other_name, third_resource.third_name]
 }
 `, "\n")
 		result := config.DatasourceFromModelPoc(t, someModel)

@@ -10,7 +10,7 @@ import (
 	hclv1parser "github.com/hashicorp/hcl/json/parser"
 )
 
-var DefaultHclProvider = NewHclV1ConfigProvider(unquoteBlockType, removeDoubleNewlines, unquoteDependsOnReferences)
+var DefaultHclProvider = NewHclV1ConfigProvider(unquoteBlockType, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
 
 type HclProvider interface {
 	HclFromJson(json []byte) (string, error)
@@ -70,7 +70,8 @@ func removeDoubleNewlines(input string) (string, error) {
 
 // Based on https://developer.hashicorp.com/terraform/language/syntax/json#depends_on should be processed in a special way, but it isn't.
 func unquoteDependsOnReferences(s string) (string, error) {
-	dependsOnRegex := regexp.MustCompile(`("depends_on" = )(\["\w+\.\w+"(, "\w+\.\w+")*])`)
+	dependsOnRegex := regexp.MustCompile(`("?depends_on"? = )(\["\w+\.\w+"(, "\w+\.\w+")*])`)
+	// TODO: use FindAllStringSubmatch
 	submatches := dependsOnRegex.FindStringSubmatch(s)
 	if len(submatches) < 2 {
 		return s, nil
@@ -83,10 +84,11 @@ func unquoteDependsOnReferences(s string) (string, error) {
 // For some reason, the resulting HCL does not unquote block types (i.e. `"resource"` instead of expected `resource`)
 func unquoteBlockType(s string) (string, error) {
 	blockTypeRegex := regexp.MustCompile(`"(resource|data|provider)"(( "\w+"){1,2} {)`)
-	submatches := blockTypeRegex.FindStringSubmatch(s)
-	if len(submatches) < 2 {
-		return s, nil
-	} else {
-		return blockTypeRegex.ReplaceAllString(s, fmt.Sprintf(`$1%s`, submatches[2])), nil
-	}
+	return blockTypeRegex.ReplaceAllString(s, `$1$2`), nil
+}
+
+// For some reason, the resulting HCL does not unquote arguments.
+func unquoteArguments(s string) (string, error) {
+	argumentRegex := regexp.MustCompile(`( +)"(\w+)"( +=)`)
+	return argumentRegex.ReplaceAllString(s, `$1$2$3`), nil
 }
