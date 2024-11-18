@@ -45,6 +45,10 @@ func TestInt_GetTag(t *testing.T) {
 		require.Error(t, err)
 		assert.Equal(t, "", s)
 	})
+	t.Run("unsupported object type", func(t *testing.T) {
+		_, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), testClientHelper().Ids.RandomAccountObjectIdentifier(), sdk.ObjectTypeSequence)
+		require.ErrorContains(t, err, "tagging for object type SEQUENCE is not supported")
+	})
 }
 
 func TestInt_PipeStatus(t *testing.T) {

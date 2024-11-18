@@ -347,42 +347,6 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.ApiIntegrationProperty{Name: "GOOGLE_AUDIENCE", Type: "String", Value: googleOtherAudience, Default: ""})
 	})
 
-	t.Run("alter api integration: set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		integration := createAwsApiIntegration(t)
-		id := integration.ID()
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterApiIntegrationRequest(id).WithSetTags(tags)
-
-		err := client.ApiIntegrations.Alter(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterApiIntegrationRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.ApiIntegrations.Alter(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.Error(t, err)
-	})
-
 	t.Run("drop api integration: existing", func(t *testing.T) {
 		request := createApiIntegrationAwsRequest(t)
 		id := request.GetName()

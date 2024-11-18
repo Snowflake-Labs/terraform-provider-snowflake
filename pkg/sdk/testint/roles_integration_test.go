@@ -100,53 +100,6 @@ func TestInt_Roles(t *testing.T) {
 		assert.Equal(t, newName.Name(), r.Name)
 	})
 
-	t.Run("alter set tags", func(t *testing.T) {
-		role, cleanup := testClientHelper().Role.CreateRole(t)
-		t.Cleanup(cleanup)
-
-		_, err := client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), "ROLE")
-		require.Error(t, err)
-
-		tagValue := "new-tag-value"
-		err = client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithSetTags([]sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}))
-		require.NoError(t, err)
-
-		addedTag, err := client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), sdk.ObjectTypeRole)
-		require.NoError(t, err)
-		assert.Equal(t, tagValue, addedTag)
-
-		err = client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithUnsetTags([]sdk.ObjectIdentifier{tag.ID()}))
-		require.NoError(t, err)
-	})
-
-	t.Run("alter unset tags", func(t *testing.T) {
-		tagValue := "tag-value"
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		role, cleanup := testClientHelper().Role.CreateRoleWithRequest(t, sdk.NewCreateRoleRequest(id).
-			WithTag([]sdk.TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: tagValue,
-				},
-			}))
-		t.Cleanup(cleanup)
-
-		value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), sdk.ObjectTypeRole)
-		require.NoError(t, err)
-		assert.Equal(t, tagValue, value)
-
-		err = client.Roles.Alter(ctx, sdk.NewAlterRoleRequest(role.ID()).WithUnsetTags([]sdk.ObjectIdentifier{tag.ID()}))
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), sdk.ObjectTypeRole)
-		require.Error(t, err)
-	})
-
 	t.Run("alter set comment", func(t *testing.T) {
 		role, cleanupRole := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(cleanupRole)

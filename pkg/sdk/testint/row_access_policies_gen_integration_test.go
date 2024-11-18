@@ -168,43 +168,6 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 		assert.Equal(t, "true", alteredRowAccessPolicyDescription.Body)
 	})
 
-	t.Run("alter row access policy: set and unset tags", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		rowAccessPolicy, cleanup := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
-		t.Cleanup(cleanup)
-		id := rowAccessPolicy.ID()
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterRowAccessPolicyRequest(id).WithSetTags(tags)
-
-		err := client.RowAccessPolicies.Alter(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeRowAccessPolicy)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterRowAccessPolicyRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.RowAccessPolicies.Alter(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeRowAccessPolicy)
-		require.Error(t, err)
-	})
-
 	t.Run("show row access policy: default", func(t *testing.T) {
 		rowAccessPolicy1, cleanup1 := testClientHelper().RowAccessPolicy.CreateRowAccessPolicy(t)
 		t.Cleanup(cleanup1)

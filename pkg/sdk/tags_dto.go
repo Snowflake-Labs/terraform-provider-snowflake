@@ -25,6 +25,14 @@ type UnsetTagRequest struct {
 	UnsetTags []ObjectIdentifier
 }
 
+type SetTagOnCurrentAccountRequest struct {
+	SetTags []TagAssociation
+}
+
+type UnsetTagOnCurrentAccountRequest struct {
+	UnsetTags []ObjectIdentifier
+}
+
 type CreateTagRequest struct {
 	orReplace   *bool
 	ifNotExists *bool

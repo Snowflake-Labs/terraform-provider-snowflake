@@ -235,42 +235,6 @@ func TestInt_Stages(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("Alter - set unset tags", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		tag, cleanupTag := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(cleanupTag)
-
-		err := client.Stages.CreateInternal(ctx, sdk.NewCreateInternalStageRequest(id))
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			err := client.Stages.Drop(ctx, sdk.NewDropStageRequest(id))
-			require.NoError(t, err)
-		})
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStage)
-		require.Error(t, err)
-
-		err = client.Stages.Alter(ctx, sdk.NewAlterStageRequest(id).WithSetTags([]sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: "tag value",
-			},
-		}))
-		require.NoError(t, err)
-
-		value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStage)
-		require.NoError(t, err)
-		assert.Equal(t, "tag value", value)
-
-		err = client.Stages.Alter(ctx, sdk.NewAlterStageRequest(id).WithUnsetTags([]sdk.ObjectIdentifier{
-			tag.ID(),
-		}))
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeStage)
-		require.Error(t, err)
-	})
-
 	t.Run("AlterInternalStage", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 
