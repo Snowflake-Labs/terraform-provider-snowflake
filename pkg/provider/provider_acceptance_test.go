@@ -652,55 +652,55 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 }
 
 func providerConfigWithAuthenticator(profile string, authenticator sdk.AuthenticationType) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithAuthenticator(string(authenticator))) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithAuthenticator(string(authenticator)), datasourceModel())
 }
 
 func emptyProviderConfig() string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider()) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider(), datasourceModel())
 }
 
 func providerConfig(profile string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile), datasourceModel())
 }
 
 func providerConfigWithRole(profile, role string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithRole(role)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithRole(role), datasourceModel())
 }
 
 func providerConfigWithWarehouse(profile, warehouse string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithWarehouse(warehouse)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithWarehouse(warehouse), datasourceModel())
 }
 
 func providerConfigWithClientStoreTemporaryCredential(profile, clientStoreTemporaryCredential string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithClientStoreTemporaryCredential(clientStoreTemporaryCredential)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithClientStoreTemporaryCredential(clientStoreTemporaryCredential), datasourceModel())
 }
 
 func providerConfigWithWarehouseAndDisabledValidation(profile, warehouse string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithWarehouse(warehouse).WithValidateDefaultParameters("false")) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithWarehouse(warehouse).WithValidateDefaultParameters("false"), datasourceModel())
 }
 
 func providerConfigWithProtocol(profile, protocol string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithProtocol(protocol)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithProtocol(protocol), datasourceModel())
 }
 
 func providerConfigWithPort(profile string, port int) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithPort(port)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithPort(port), datasourceModel())
 }
 
 func providerConfigWithAuthType(profile, authType string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithAuthenticator(authType)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithAuthenticator(authType), datasourceModel())
 }
 
 func providerConfigWithOktaUrl(profile, oktaUrl string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithOktaUrl(oktaUrl)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithOktaUrl(oktaUrl), datasourceModel())
 }
 
 func providerConfigWithTimeout(profile, timeoutName string, timeoutSeconds int) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithLoginTimeout(timeoutSeconds)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithLoginTimeout(timeoutSeconds), datasourceModel())
 }
 
 func providerConfigWithTokenEndpoint(profile, tokenEndpoint string) string {
-	return config.ProviderFromModelPoc(
+	return config.ConfigFromModelsPoc(
 		t,
 		providermodel.SnowflakeProvider().
 			WithProfile(profile).
@@ -715,31 +715,32 @@ func providerConfigWithTokenEndpoint(profile, tokenEndpoint string) string {
 					},
 				),
 			),
-	) + datasourceConfig(t)
+		datasourceModel(),
+	)
 }
 
 func providerConfigWithLogLevel(profile, logLevel string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithDriverTracing(logLevel)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithDriverTracing(logLevel), datasourceModel())
 }
 
 func providerConfigWithClientIp(profile, clientIp string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithClientIp(clientIp)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithClientIp(clientIp), datasourceModel())
 }
 
 func providerConfigWithUser(user string, profile string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithUser(user)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithUser(user), datasourceModel())
 }
 
 func providerConfigWithUserAndPassword(user string, pass string, profile string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithUser(user).WithPassword(pass)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithUser(user).WithPassword(pass), datasourceModel())
 }
 
 func providerConfigWithNewAccountId(profile, orgName, accountName string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithAccountName(accountName).WithOrganizationName(orgName)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithAccountName(accountName).WithOrganizationName(orgName), datasourceModel())
 }
 
 func providerConfigComplete(profile, user, password, orgName, accountName string) string {
-	return config.ProviderFromModelPoc(
+	return config.ConfigFromModelsPoc(
 		t,
 		providermodel.SnowflakeProvider().
 			WithProfile(profile).
@@ -748,20 +749,21 @@ func providerConfigComplete(profile, user, password, orgName, accountName string
 			WithOrganizationName(orgName).
 			WithAccountName(accountName).
 			WithWarehouse("SNOWFLAKE"),
-	) + datasourceConfig(t)
+		datasourceModel(),
+	)
 }
 
-func datasourceConfig(t *testing.T) string {
-	return config.ResourceFromModelPoc(t, model.Database("t", acc.TestDatabaseName))
+func datasourceModel() config.ResourceModel {
+	return model.Database("t", acc.TestDatabaseName)
 }
 
 func providerConfigAllFields(profile, orgName, accountName, user, password string) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().AllFields(profile, orgName, accountName, user, password)) + datasourceConfig(t)
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().AllFields(profile, orgName, accountName, user, password), datasourceModel())
 }
 
 // TODO(SNOW-1348325): Use parameter data source with `IN SESSION` filtering.
 func providerWithParamsConfig(profile string, statementTimeoutInSeconds int) string {
-	return config.ProviderFromModelPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithParamsValue(
+	return config.ConfigFromModelsPoc(t, providermodel.SnowflakeProvider().WithProfile(profile).WithParamsValue(
 		tfconfig.ObjectVariable(
 			map[string]tfconfig.Variable{
 				"statement_timeout_in_seconds": tfconfig.IntegerVariable(statementTimeoutInSeconds),
