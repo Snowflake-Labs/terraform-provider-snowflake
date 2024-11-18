@@ -327,7 +327,7 @@ func DeleteContextTag(ctx context.Context, d *schema.ResourceData, meta any) dia
 			return diag.FromErr(err)
 		}
 	}
-	if err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id)); err != nil {
+	if err := client.Tags.Drop(ctx, sdk.NewDropTagRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")

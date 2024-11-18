@@ -36,18 +36,18 @@ func TestAcc_Tag_basic(t *testing.T) {
 
 	modelWithExtraFields := model.Tag("test", id.DatabaseName(), id.Name(), id.SchemaName()).
 		WithComment("foo").
-		WithAllowedValuesValue(tfconfig.ListVariable(tfconfig.StringVariable("foo"), tfconfig.StringVariable(""), tfconfig.StringVariable("bar"))).
-		WithMaskingPoliciesValue(tfconfig.ListVariable(tfconfig.StringVariable(maskingPolicy.ID().FullyQualifiedName())))
+		WithAllowedValues("foo", "", "bar").
+		WithMaskingPolicies(maskingPolicy.ID())
 
 	modelWithDifferentListOrder := model.Tag("test", id.DatabaseName(), id.Name(), id.SchemaName()).
 		WithComment("foo").
-		WithAllowedValuesValue(tfconfig.ListVariable(tfconfig.StringVariable(""), tfconfig.StringVariable("bar"), tfconfig.StringVariable("foo"))).
-		WithMaskingPoliciesValue(tfconfig.ListVariable(tfconfig.StringVariable(maskingPolicy.ID().FullyQualifiedName())))
+		WithAllowedValues("", "bar", "foo").
+		WithMaskingPolicies(maskingPolicy.ID())
 
 	modelWithDifferentValues := model.Tag("test", id.DatabaseName(), id.Name(), id.SchemaName()).
 		WithComment("bar").
-		WithAllowedValuesValue(tfconfig.ListVariable(tfconfig.StringVariable("abc"), tfconfig.StringVariable("def"), tfconfig.StringVariable(""))).
-		WithMaskingPoliciesValue(tfconfig.ListVariable(tfconfig.StringVariable(maskingPolicy2.ID().FullyQualifiedName())))
+		WithAllowedValues("abc", "def", "").
+		WithMaskingPolicies(maskingPolicy2.ID())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -88,8 +88,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			},
 			// set all fields
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/complete"),
-				ConfigVariables: config.ConfigVariablesFromModel(t, modelWithExtraFields),
+				Config: config.FromModel(t, modelWithExtraFields),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithExtraFields.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -121,8 +120,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().Tag.Alter(t, sdk.NewAlterTagRequest(id).WithDrop([]string{"foo"}))
 				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/complete"),
-				ConfigVariables: config.ConfigVariablesFromModel(t, modelWithExtraFields),
+				Config: config.FromModel(t, modelWithExtraFields),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithExtraFields.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -151,8 +149,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			},
 			// different set ordering
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/complete"),
-				ConfigVariables: config.ConfigVariablesFromModel(t, modelWithDifferentListOrder),
+				Config: config.FromModel(t, modelWithDifferentListOrder),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(modelWithDifferentListOrder.ResourceReference(), plancheck.ResourceActionNoop),
@@ -186,8 +183,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			},
 			// change some values
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/complete"),
-				ConfigVariables: config.ConfigVariablesFromModel(t, modelWithDifferentValues),
+				Config: config.FromModel(t, modelWithDifferentValues),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithDifferentValues.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -223,8 +219,8 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasCommentString("").
-					HasNoMaskingPolicies().
-					HasNoAllowedValues(),
+					HasMaskingPoliciesLength(0).
+					HasAllowedValuesLength(0),
 					resourceshowoutputassert.TagShowOutput(t, baseModel.ResourceReference()).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
@@ -261,8 +257,7 @@ func TestAcc_Tag_complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Tag),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tag/complete"),
-				ConfigVariables: config.ConfigVariablesFromModel(t, model),
+				Config: config.FromModel(t, model),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -290,8 +285,7 @@ func TestAcc_Tag_complete(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_Tag/complete"),
-				ConfigVariables:   config.ConfigVariablesFromModel(t, model),
+				Config:            config.FromModel(t, model),
 				ResourceName:      model.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -366,8 +360,7 @@ func TestAcc_Tag_migrateFromVersion_0_98_0(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Tag/complete"),
-				ConfigVariables:          config.ConfigVariablesFromModel(t, model),
+				Config:                   config.FromModel(t, model),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionNoop),

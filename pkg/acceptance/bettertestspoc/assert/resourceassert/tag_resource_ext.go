@@ -1,13 +1,17 @@
 package resourceassert
 
-import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+import (
+	"fmt"
 
-func (t *TagResourceAssert) HasNoMaskingPolicies() *TagResourceAssert {
-	t.AddAssertion(assert.ValueSet("masking_policies.#", "0"))
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+)
+
+func (t *TagResourceAssert) HasMaskingPoliciesLength(len int) *TagResourceAssert {
+	t.AddAssertion(assert.ValueSet("masking_policies.#", fmt.Sprintf("%d", len)))
 	return t
 }
 
-func (t *TagResourceAssert) HasNoAllowedValues() *TagResourceAssert {
-	t.AddAssertion(assert.ValueSet("allowed_values.#", "0"))
+func (t *TagResourceAssert) HasAllowedValuesLength(len int) *TagResourceAssert {
+	t.AddAssertion(assert.ValueSet("allowed_values.#", fmt.Sprintf("%d", len)))
 	return t
 }
