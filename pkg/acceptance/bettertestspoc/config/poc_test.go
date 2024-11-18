@@ -58,24 +58,24 @@ resource "snowflake_share" "test" {
 
 func Test_DatasourceFromModelPoc(t *testing.T) {
 	t.Run("test basic", func(t *testing.T) {
-		someModel := datasourcemodel.Databases("test")
+		datasourceModel := datasourcemodel.Databases("test")
 		expectedOutput := strings.TrimPrefix(`
 data "snowflake_databases" "test" {}
 `, "\n")
-		result := config.DatasourceFromModelPoc(t, someModel)
+		result := config.DatasourceFromModelPoc(t, datasourceModel)
 
 		require.Equal(t, expectedOutput, result)
 	})
 
 	t.Run("test with depends on", func(t *testing.T) {
-		someModel := datasourcemodel.Databases("test").
+		datasourceModel := datasourcemodel.Databases("test").
 			WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
 		expectedOutput := strings.TrimPrefix(`
 data "snowflake_databases" "test" {
   depends_on = [some_other_resource.some_name, other_resource.some_other_name, third_resource.third_name]
 }
 `, "\n")
-		result := config.DatasourceFromModelPoc(t, someModel)
+		result := config.DatasourceFromModelPoc(t, datasourceModel)
 
 		require.Equal(t, expectedOutput, result)
 	})
@@ -83,11 +83,31 @@ data "snowflake_databases" "test" {
 
 func Test_ProviderFromModelPoc(t *testing.T) {
 	t.Run("test basic", func(t *testing.T) {
-		someModel := providermodel.SnowflakeProvider()
+		providerModel := providermodel.SnowflakeProvider()
 		expectedOutput := strings.TrimPrefix(`
 provider "snowflake" {}
 `, "\n")
-		result := config.ProviderFromModelPoc(t, someModel)
+		result := config.ProviderFromModelPoc(t, providerModel)
+
+		require.Equal(t, expectedOutput, result)
+	})
+}
+
+func Test_ConfigFromModelsPoc(t *testing.T) {
+	t.Run("test basic", func(t *testing.T) {
+		providerModel := providermodel.SnowflakeProvider()
+		someModel := Some("test", "Some Name")
+		datasourceModel := datasourcemodel.Databases("test")
+		expectedOutput := strings.TrimPrefix(`
+provider "snowflake" {}
+
+resource "snowflake_share" "test" {
+  name = "Some Name"
+}
+
+data "snowflake_databases" "test" {}
+`, "\n")
+		result := config.ConfigFromModelsPoc(t, providerModel, someModel, datasourceModel)
 
 		require.Equal(t, expectedOutput, result)
 	})

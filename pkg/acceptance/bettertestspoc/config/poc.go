@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -46,4 +47,27 @@ func ProviderFromModelPoc(t *testing.T, model ProviderModel) string {
 	t.Logf("Generated config:\n%s", hcl)
 
 	return hcl
+}
+
+// TODO: have a common interface for all models
+func ConfigFromModelsPoc(t *testing.T, models ...any) string {
+	t.Helper()
+
+	var sb strings.Builder
+	for i, model := range models {
+		switch m := model.(type) {
+		case ResourceModel:
+			sb.WriteString(ResourceFromModelPoc(t, m))
+		case DatasourceModel:
+			sb.WriteString(DatasourceFromModelPoc(t, m))
+		case ProviderModel:
+			sb.WriteString(ProviderFromModelPoc(t, m))
+		default:
+			t.Fatalf("unknown model: %T", model)
+		}
+		if i < len(models)-1 {
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
 }
