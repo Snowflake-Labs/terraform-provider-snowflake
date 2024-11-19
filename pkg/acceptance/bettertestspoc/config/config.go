@@ -54,7 +54,7 @@ func ProviderFromModel(t *testing.T, model ProviderModel) string {
 	return hcl
 }
 
-// TODO: have a common interface for all models
+// TODO [SNOW-1501905]: have a common interface for all models
 func FromModels(t *testing.T, models ...any) string {
 	t.Helper()
 
@@ -81,6 +81,8 @@ func FromModels(t *testing.T, models ...any) string {
 // Current implementation is really straightforward but it could be improved and tested. It may not handle all cases (like objects, lists, sets) correctly.
 // TODO [SNOW-1501905]: use reflection to build config directly from model struct (or some other different way)
 // TODO [SNOW-1501905]: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
+//
+// Deprecated: in favor of ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels.
 func FromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
@@ -107,6 +109,9 @@ func FromModel(t *testing.T, model ResourceModel) string {
 	return s
 }
 
+// FromModelsDeprecated allows to combine multiple resource models.
+//
+// Deprecated: in favor of FromModels.
 func FromModelsDeprecated(t *testing.T, models ...ResourceModel) string {
 	t.Helper()
 	var sb strings.Builder
@@ -118,6 +123,8 @@ func FromModelsDeprecated(t *testing.T, models ...ResourceModel) string {
 
 // ConfigVariablesFromModel constructs config.Variables needed in acceptance tests that are using ConfigVariables in
 // combination with ConfigDirectory. It's necessary for cases not supported by FromModel, like lists of objects.
+//
+// Deprecated: in favor of ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels.
 func ConfigVariablesFromModel(t *testing.T, model ResourceModel) tfconfig.Variables {
 	t.Helper()
 	variables := make(tfconfig.Variables)
