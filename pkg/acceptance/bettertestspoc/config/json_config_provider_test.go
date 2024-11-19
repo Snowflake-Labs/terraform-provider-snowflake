@@ -13,7 +13,27 @@ import (
 func Test_JsonConfigProvider(t *testing.T) {
 
 	t.Run("test resource json config", func(t *testing.T) {
-		model := Some("some_name", "abc")
+		model := Some("some_name", "abc").WithDependsOn("abc.def")
+		expectedResult := `{
+    "resource": {
+        "snowflake_share": {
+            "some_name": {
+                "name": "abc",
+                "depends_on": [
+                    "abc.def"
+                ]
+            }
+        }
+    }
+}`
+
+		result, err := config.DefaultJsonConfigProvider.ResourceJsonFromModel(model)
+		require.NoError(t, err)
+		assert.Equal(t, expectedResult, string(result[:]))
+	})
+
+	t.Run("test resource json config when proper marshaller is absent", func(t *testing.T) {
+		model := SomeOther("some_name", "abc").WithDependsOn("abc.def")
 		expectedResult := `{
     "resource": {
         "snowflake_share": {

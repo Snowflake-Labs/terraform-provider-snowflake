@@ -107,3 +107,32 @@ func (m *SomeModel) MarshalJSON() ([]byte, error) {
 		DependsOn: m.DependsOn(),
 	})
 }
+
+// SomeOtherModel is an example model struct similar to the ones being generated for our resources.
+// It does not contain a proper marshaller to fail the test with depends_on.
+type SomeOtherModel struct {
+	Comment tfconfig.Variable `json:"comment,omitempty"`
+	Name    tfconfig.Variable `json:"name,omitempty"`
+
+	*config.ResourceModelMeta
+}
+
+func SomeOther(
+	resourceName string,
+	name string,
+) *SomeOtherModel {
+	// resources enum is closed so using one of the existing ones
+	d := &SomeOtherModel{ResourceModelMeta: config.Meta(resourceName, resources.Share)}
+	d.WithName(name)
+	return d
+}
+
+func (m *SomeOtherModel) WithName(name string) *SomeOtherModel {
+	m.Name = tfconfig.StringVariable(name)
+	return m
+}
+
+func (m *SomeOtherModel) WithDependsOn(values ...string) *SomeOtherModel {
+	m.SetDependsOn(values...)
+	return m
+}
