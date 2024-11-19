@@ -12,6 +12,71 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func ResourceFromModel(t *testing.T, model ResourceModel) string {
+	t.Helper()
+
+	resourceJson, err := DefaultJsonProvider.ResourceJsonFromModel(model)
+	require.NoError(t, err)
+	t.Logf("Generated json:\n%s", resourceJson)
+
+	hcl, err := DefaultHclProvider.HclFromJson(resourceJson)
+	require.NoError(t, err)
+	t.Logf("Generated config:\n%s", hcl)
+
+	return hcl
+}
+
+func DatasourceFromModel(t *testing.T, model DatasourceModel) string {
+	t.Helper()
+
+	datasourceJson, err := DefaultJsonProvider.DatasourceJsonFromModel(model)
+	require.NoError(t, err)
+	t.Logf("Generated json:\n%s", datasourceJson)
+
+	hcl, err := DefaultHclProvider.HclFromJson(datasourceJson)
+	require.NoError(t, err)
+	t.Logf("Generated config:\n%s", hcl)
+
+	return hcl
+}
+
+func ProviderFromModel(t *testing.T, model ProviderModel) string {
+	t.Helper()
+
+	providerJson, err := DefaultJsonProvider.ProviderJsonFromModel(model)
+	require.NoError(t, err)
+	t.Logf("Generated json:\n%s", providerJson)
+
+	hcl, err := DefaultHclProvider.HclFromJson(providerJson)
+	require.NoError(t, err)
+	t.Logf("Generated config:\n%s", hcl)
+
+	return hcl
+}
+
+// TODO: have a common interface for all models
+func FromModels(t *testing.T, models ...any) string {
+	t.Helper()
+
+	var sb strings.Builder
+	for i, model := range models {
+		switch m := model.(type) {
+		case ResourceModel:
+			sb.WriteString(ResourceFromModel(t, m))
+		case DatasourceModel:
+			sb.WriteString(DatasourceFromModel(t, m))
+		case ProviderModel:
+			sb.WriteString(ProviderFromModel(t, m))
+		default:
+			t.Fatalf("unknown model: %T", model)
+		}
+		if i < len(models)-1 {
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
+}
+
 // FromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
 // Current implementation is really straightforward but it could be improved and tested. It may not handle all cases (like objects, lists, sets) correctly.
 // TODO [SNOW-1501905]: use reflection to build config directly from model struct (or some other different way)
@@ -42,7 +107,7 @@ func FromModel(t *testing.T, model ResourceModel) string {
 	return s
 }
 
-func FromModels(t *testing.T, models ...ResourceModel) string {
+func FromModelsDeprecated(t *testing.T, models ...ResourceModel) string {
 	t.Helper()
 	var sb strings.Builder
 	for _, model := range models {

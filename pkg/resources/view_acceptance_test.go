@@ -95,7 +95,7 @@ func TestAcc_View_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				Config: accconfig.ResourceFromModelPoc(t, basicViewModel),
+				Config: accconfig.ResourceFromModel(t, basicViewModel),
 				Check: assert.AssertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
@@ -107,7 +107,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// import - without optionals
 			{
-				Config:       accconfig.ResourceFromModelPoc(t, basicViewModel),
+				Config:       accconfig.ResourceFromModel(t, basicViewModel),
 				ResourceName: "snowflake_view.test",
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
@@ -132,7 +132,7 @@ func TestAcc_View_basic(t *testing.T) {
 						},
 					})))
 				},
-				Config: accconfig.ResourceFromModelPoc(t, basicViewModel),
+				Config: accconfig.ResourceFromModel(t, basicViewModel),
 				Check: assert.AssertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
@@ -147,7 +147,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// set other fields
 			{
-				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, statement, cron, sdk.DataMetricScheduleStatusStarted)),
+				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, statement, cron, sdk.DataMetricScheduleStatusStarted)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
@@ -178,7 +178,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// change policies and dmfs
 			{
-				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusStarted)),
+				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusStarted)),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -205,7 +205,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// change dmf status
 			{
-				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusSuspended)),
+				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusSuspended)),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -232,7 +232,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// change statement and policies
 			{
-				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
+				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -261,7 +261,7 @@ func TestAcc_View_basic(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().View.RecreateView(t, id, statement)
 				},
-				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
+				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -291,7 +291,7 @@ func TestAcc_View_basic(t *testing.T) {
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithDropAllRowAccessPolicies(true))
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetAggregationPolicy(*sdk.NewViewUnsetAggregationPolicyRequest()))
 				},
-				Config: accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
+				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
@@ -317,7 +317,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// import - with optionals
 			{
-				Config:       accconfig.ResourceFromModelPoc(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
+				Config:       accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
 				ResourceName: "snowflake_view.test",
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
@@ -342,7 +342,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// unset
 			{
-				Config:       accconfig.ResourceFromModelPoc(t, viewModelWithOtherStatement),
+				Config:       accconfig.ResourceFromModel(t, viewModelWithOtherStatement),
 				ResourceName: "snowflake_view.test",
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
@@ -358,7 +358,7 @@ func TestAcc_View_basic(t *testing.T) {
 			},
 			// recreate - change is_recursive
 			{
-				Config: accconfig.ResourceFromModelPoc(t, viewModelRecursiveWithOtherStatement),
+				Config: accconfig.ResourceFromModel(t, viewModelRecursiveWithOtherStatement),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).

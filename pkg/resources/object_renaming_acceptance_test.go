@@ -318,7 +318,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
+				Config: config.FromModelsDeprecated(t, databaseConfigModel, schemaModelConfig),
 			},
 			{
 				// This step has inconsistent results, and it depends on the Terraform execution order which seems to be non-deterministic in this case
@@ -333,7 +333,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
 					},
 				},
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
+				Config: config.FromModelsDeprecated(t, databaseConfigModel, schemaModelConfig),
 				// ExpectError: regexp.MustCompile("does not exist or not authorized"),
 			},
 		},
@@ -362,7 +362,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, schemaModelConfig, databaseConfigModel),
+				Config: config.FromModelsDeprecated(t, schemaModelConfig, databaseConfigModel),
 			},
 			{
 				PreConfig: func() {
@@ -376,7 +376,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
 					},
 				},
-				Config:      config.FromModels(t, schemaModelConfig, databaseConfigModel),
+				Config:      config.FromModelsDeprecated(t, schemaModelConfig, databaseConfigModel),
 				ExpectError: regexp.MustCompile("does not exist or not authorized"),
 			},
 		},

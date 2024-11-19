@@ -51,7 +51,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.ConfigFromModelsPoc(t, databaseModel, databasesModel),
+				Config: accconfig.FromModels(t, databaseModel, databasesModel),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "1"),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.show_output.0.created_on"),
@@ -92,7 +92,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 				),
 			},
 			{
-				Config: accconfig.ConfigFromModelsPoc(t, databaseModel, databasesWithoutOptionalsModel),
+				Config: accconfig.FromModels(t, databaseModel, databasesWithoutOptionalsModel),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_databases.test", "databases.#", "1"),
 					resource.TestCheckResourceAttrSet("data.snowflake_databases.test", "databases.0.show_output.0.created_on"),
