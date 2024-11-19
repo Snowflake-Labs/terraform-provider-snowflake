@@ -105,3 +105,10 @@ func unquoteDependsOnReferences(s string) (string, error) {
 		return dependsOnRegex.ReplaceAllString(s, fmt.Sprintf(`$1%s`, withoutQuotes)), nil
 	}
 }
+
+// fixBlockArguments messes with schema.TypeMap. We use it only in the provider (will be replaced) and in the old resources.
+// TODO [SNOW-1501905]: remove this workaround after replacing schema.TypeMap everywhere or make it wiser (e.g. during generation we could programmatically gather all schema.TypeMap and use this workaround only for them)
+func revertEqualSignForMapTypeAttributes(s string) (string, error) {
+	argumentRegex := regexp.MustCompile(`( +)(params|sessions_params)( +)({\n)`)
+	return argumentRegex.ReplaceAllString(s, `$1$2$3= $4`), nil
+}

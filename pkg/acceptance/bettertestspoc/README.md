@@ -346,7 +346,7 @@ it will result in:
         	Test:       	TestInt_Warehouses/create:_complete
 ```
 
-## Known limitations/planned improvements
+## Planned improvements
 - Test all the utilities for assertion/model construction (public interfaces, methods, functions).
 - Verify if all the config types are supported.
 - Consider a better implementation for the model conversion to config (TODO left in `config/config.go`).
@@ -395,3 +395,24 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - rename ResourceSchemaDetails (because it is used for the datasources and provider too)
 - consider duplicating the builders template from resource (currently same template used for datasources and provider)
 - consider merging ResourceModel with DatasourceModel (currently the implementation is really similar)
+- remove schema.TypeMap workaround or make it wiser (e.g. during generation we could programmatically gather all schema.TypeMap and use this workaround only for them)
+
+## Known limitations
+- generating provider config may misbehave when used only with one object/map paramter (like `params`), e.g.:
+```json
+{
+  "provider": {
+    "snowflake": {
+      "params": {
+        "statement_timeout_in_seconds": 31337
+      }
+    }
+  }
+}
+```
+will be converted to HCL:
+```hcl
+provider "snowflake" "params" {
+  statement_timeout_in_seconds = 31337
+}
+```

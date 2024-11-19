@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel"
@@ -131,6 +133,25 @@ provider "snowflake" {
 provider "snowflake" {
   profile = "some_profile"
   user = "some user"
+}
+`, "\n")
+		result := config.ProviderFromModel(t, providerModel)
+
+		require.Equal(t, expectedOutput, result)
+	})
+
+	t.Run("test with parameters map", func(t *testing.T) {
+		providerModel := providermodel.SnowflakeProvider().WithProfile("some_profile").WithParamsValue(
+			tfconfig.MapVariable(map[string]tfconfig.Variable{
+				"statement_timeout_in_seconds": tfconfig.IntegerVariable(31337),
+			}),
+		)
+		expectedOutput := strings.TrimPrefix(`
+provider "snowflake" {
+  params = {
+    statement_timeout_in_seconds = 31337
+  }
+  profile = "some_profile"
 }
 `, "\n")
 		result := config.ProviderFromModel(t, providerModel)

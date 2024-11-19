@@ -64,6 +64,8 @@ func ProviderFromModel(t *testing.T, model ProviderModel) string {
 
 	hcl, err := DefaultHclConfigProvider.HclFromJson(providerJson)
 	require.NoError(t, err)
+	hcl, err = revertEqualSignForMapTypeAttributes(hcl)
+	require.NoError(t, err)
 	t.Logf("Generated config:\n%s", hcl)
 
 	return hcl
