@@ -8,7 +8,7 @@ import (
 
 // DatasourceModel is the base interface all of our datasource config models will implement.
 // To allow easy implementation, DatasourceModelMeta can be embedded inside the struct (and the struct will automatically implement it).
-// TODO: currently the implementation is really similar to the ResourceModel; maybe we can merge these two?
+// TODO [SNOW-1501905]: consider merging ResourceModel with DatasourceModel (currently the implementation is really similar)
 type DatasourceModel interface {
 	Datasource() datasources.Datasource
 	DatasourceName() string
@@ -16,7 +16,6 @@ type DatasourceModel interface {
 	DatasourceReference() string
 	DependsOn() []string
 	SetDependsOn(values ...string)
-	// TODO: Provider (alias)
 }
 
 type DatasourceModelMeta struct {

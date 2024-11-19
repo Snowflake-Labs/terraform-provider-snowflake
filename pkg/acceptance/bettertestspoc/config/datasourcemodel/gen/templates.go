@@ -22,6 +22,6 @@ var (
 		genhelpers.SnakeCaseToCamel,
 	)).Parse(definitionTemplateContent)
 
-	// TODO: builders temple reused for now
+	// TODO [SNOW-1501905]: consider duplicating the builders template from resource (currently same template used for datasources and provider)
 	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, resourcemodel.BuildersTemplate}
 )

@@ -7,15 +7,11 @@ import (
 
 var DefaultJsonProvider = NewBasicJsonProvider()
 
+// TODO [SNOW-1501905]: add config builders for other block types (Variable, Output, Localsl, Module, Terraform)
 type JsonProvider interface {
 	ResourceJsonFromModel(model ResourceModel) ([]byte, error)
 	DatasourceJsonFromModel(model DatasourceModel) ([]byte, error)
 	ProviderJsonFromModel(model ProviderModel) ([]byte, error)
-	// Variable
-	// Output
-	// Locals
-	// Module
-	// Terraform
 }
 
 type basicJsonProvider struct{}

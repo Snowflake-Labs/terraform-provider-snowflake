@@ -11,7 +11,7 @@ type DatasourceSchemaDef struct {
 	schema map[string]*schema.Schema
 }
 
-// TODO: rename ResourceSchemaDetails?
+// TODO [SNOW-1501905]: rename ResourceSchemaDetails (because it is used for the datasources and provider too)
 func GetDatasourceSchemaDetails() []genhelpers.ResourceSchemaDetails {
 	allDatasourcesSchemas := allDatasourcesSchemaDefs
 	allDatasourcesSchemasDetails := make([]genhelpers.ResourceSchemaDetails, len(allDatasourcesSchemas))

@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// ResourceFromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
+// Current implementation is an improved implementation using two steps:
+// - .tf.json generation
+// - conversion to HCL using hcl v1 lib
+// It is still not ideal. HCL v2 should be considered.
 func ResourceFromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
@@ -26,6 +31,11 @@ func ResourceFromModel(t *testing.T, model ResourceModel) string {
 	return hcl
 }
 
+// DatasourceFromModel should be used in terraform acceptance tests for Config attribute to get string config from DatasourceModel.
+// Current implementation is an improved implementation using two steps:
+// - .tf.json generation
+// - conversion to HCL using hcl v1 lib
+// It is still not ideal. HCL v2 should be considered.
 func DatasourceFromModel(t *testing.T, model DatasourceModel) string {
 	t.Helper()
 
@@ -40,6 +50,11 @@ func DatasourceFromModel(t *testing.T, model DatasourceModel) string {
 	return hcl
 }
 
+// ProviderFromModel should be used in terraform acceptance tests for Config attribute to get string config from ProviderModel.
+// Current implementation is an improved implementation using two steps:
+// - .tf.json generation
+// - conversion to HCL using hcl v1 lib
+// It is still not ideal. HCL v2 should be considered.
 func ProviderFromModel(t *testing.T, model ProviderModel) string {
 	t.Helper()
 
@@ -54,7 +69,8 @@ func ProviderFromModel(t *testing.T, model ProviderModel) string {
 	return hcl
 }
 
-// TODO [SNOW-1501905]: have a common interface for all models
+// FromModels allows to combine multiple models.
+// TODO [SNOW-1501905]: introduce some common interface for all three existing models (ResourceModel, DatasourceModel, and ProviderModel)
 func FromModels(t *testing.T, models ...any) string {
 	t.Helper()
 
@@ -81,6 +97,8 @@ func FromModels(t *testing.T, models ...any) string {
 // Current implementation is really straightforward but it could be improved and tested. It may not handle all cases (like objects, lists, sets) correctly.
 // TODO [SNOW-1501905]: use reflection to build config directly from model struct (or some other different way)
 // TODO [SNOW-1501905]: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
+// TODO [SNOW-1501905]: add generating MarshalJSON() function
+// TODO [SNOW-1501905]: migrate resources to new config generation method (above needed first)
 //
 // Deprecated: in favor of ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels.
 func FromModel(t *testing.T, model ResourceModel) string {

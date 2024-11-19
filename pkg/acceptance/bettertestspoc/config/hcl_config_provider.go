@@ -93,9 +93,9 @@ func removeDoubleNewlines(input string) (string, error) {
 
 // Based on https://developer.hashicorp.com/terraform/language/syntax/json#depends_on should be processed in a special way, but it isn't.
 // Check experiments subpackage for details.
+// TODO [SNOW-1501905]: use FindAllStringSubmatch or fix this method in other way
 func unquoteDependsOnReferences(s string) (string, error) {
 	dependsOnRegex := regexp.MustCompile(`("?depends_on"? = )(\["\w+\.\w+(.\w+)?"(, "\w+\.\w+(.\w+)?")*])`)
-	// TODO: use FindAllStringSubmatch
 	submatches := dependsOnRegex.FindStringSubmatch(s)
 	if len(submatches) < 2 {
 		return s, nil
