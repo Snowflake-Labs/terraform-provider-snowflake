@@ -11,7 +11,7 @@ import (
 // TODO [SNOW-1501905]: add a convenience method to use multiple configs from multiple models
 // TODO [SNOW-1501905]: add provider to resource/datasource models (use in the grant_ownership_acceptance_test)
 
-// ResourceModel is the base interface all of our config models will implement.
+// ResourceModel is the base interface all of our resource config models will implement.
 // To allow easy implementation, ResourceModelMeta can be embedded inside the struct (and the struct will automatically implement it).
 type ResourceModel interface {
 	Resource() resources.Resource

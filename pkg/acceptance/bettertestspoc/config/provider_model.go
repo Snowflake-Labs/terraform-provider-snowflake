@@ -1,5 +1,7 @@
 package config
 
+// ProviderModel is the base interface all of our provider config models will implement.
+// To allow easy implementation, ProviderModelMeta can be embedded inside the struct (and the struct will automatically implement it).
 type ProviderModel interface {
 	ProviderName() string
 	Alias() string

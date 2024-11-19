@@ -7,6 +7,7 @@ import (
 
 var DefaultJsonProvider = NewBasicJsonProvider()
 
+// JsonProvider defines methods to generate .tf.json configs.
 // TODO [SNOW-1501905]: add config builders for other block types (Variable, Output, Localsl, Module, Terraform)
 type JsonProvider interface {
 	ResourceJsonFromModel(model ResourceModel) ([]byte, error)

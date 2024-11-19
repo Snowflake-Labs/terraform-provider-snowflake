@@ -12,6 +12,7 @@ import (
 
 var DefaultHclProvider = NewHclV1ConfigProvider(unquoteBlockType, fixBlockArguments, unquoteArguments, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
 
+// HclProvider defines methods to generate .tf config from .tf.json configs.
 type HclProvider interface {
 	HclFromJson(json []byte) (string, error)
 }
