@@ -99,8 +99,7 @@ func FromModels(t *testing.T, models ...any) string {
 // TODO [SNOW-1501905]: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
 // TODO [SNOW-1501905]: add generating MarshalJSON() function
 // TODO [SNOW-1501905]: migrate resources to new config generation method (above needed first)
-//
-// Deprecated: in favor of ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels.
+// Use ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels instead.
 func FromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
@@ -128,8 +127,7 @@ func FromModel(t *testing.T, model ResourceModel) string {
 }
 
 // FromModelsDeprecated allows to combine multiple resource models.
-//
-// Deprecated: in favor of FromModels.
+// Use FromModels instead.
 func FromModelsDeprecated(t *testing.T, models ...ResourceModel) string {
 	t.Helper()
 	var sb strings.Builder
@@ -141,8 +139,7 @@ func FromModelsDeprecated(t *testing.T, models ...ResourceModel) string {
 
 // ConfigVariablesFromModel constructs config.Variables needed in acceptance tests that are using ConfigVariables in
 // combination with ConfigDirectory. It's necessary for cases not supported by FromModel, like lists of objects.
-//
-// Deprecated: in favor of ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels.
+// Use ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels instead.
 func ConfigVariablesFromModel(t *testing.T, model ResourceModel) tfconfig.Variables {
 	t.Helper()
 	variables := make(tfconfig.Variables)
