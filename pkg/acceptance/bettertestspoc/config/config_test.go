@@ -73,6 +73,21 @@ data "snowflake_databases" "test" {}
 		require.Equal(t, expectedOutput, result)
 	})
 
+	t.Run("test with some arguments", func(t *testing.T) {
+		datasourceModel := datasourcemodel.Databases("test").WithLike("some").WithLimit(1)
+		expectedOutput := strings.TrimPrefix(`
+data "snowflake_databases" "test" {
+  like = "some"
+  limit {
+    rows = 1
+  }
+}
+`, "\n")
+		result := config.DatasourceFromModelPoc(t, datasourceModel)
+
+		require.Equal(t, expectedOutput, result)
+	})
+
 	t.Run("test with depends on", func(t *testing.T) {
 		datasourceModel := datasourcemodel.Databases("test").
 			WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
@@ -97,13 +112,39 @@ provider "snowflake" {}
 
 		require.Equal(t, expectedOutput, result)
 	})
+
+	t.Run("test with alias", func(t *testing.T) {
+		providerModel := providermodel.SnowflakeProviderAlias("other_name")
+		expectedOutput := strings.TrimPrefix(`
+provider "snowflake" {
+  alias = "other_name"
+}
+`, "\n")
+		result := config.ProviderFromModelPoc(t, providerModel)
+
+		require.Equal(t, expectedOutput, result)
+	})
+
+	t.Run("test with some attributes", func(t *testing.T) {
+		providerModel := providermodel.SnowflakeProvider().WithProfile("some_profile").WithUser("some user")
+		expectedOutput := strings.TrimPrefix(`
+provider "snowflake" {
+  profile = "some_profile"
+  user = "some user"
+}
+`, "\n")
+		result := config.ProviderFromModelPoc(t, providerModel)
+
+		require.Equal(t, expectedOutput, result)
+	})
 }
 
 func Test_ConfigFromModelsPoc(t *testing.T) {
 	t.Run("test basic", func(t *testing.T) {
 		providerModel := providermodel.SnowflakeProvider()
 		someModel := Some("test", "Some Name")
-		datasourceModel := datasourcemodel.Databases("test")
+		datasourceModel := datasourcemodel.Databases("test").WithDependsOn(someModel.ResourceReference())
+		someOtherModel := Some("test2", "Some Name 2").WithDependsOn(datasourceModel.DatasourceReference())
 		expectedOutput := strings.TrimPrefix(`
 provider "snowflake" {}
 
@@ -111,9 +152,16 @@ resource "snowflake_share" "test" {
   name = "Some Name"
 }
 
-data "snowflake_databases" "test" {}
+data "snowflake_databases" "test" {
+  depends_on = [snowflake_share.test]
+}
+
+resource "snowflake_share" "test2" {
+  name = "Some Name 2"
+  depends_on = [data.snowflake_databases.test]
+}
 `, "\n")
-		result := config.ConfigFromModelsPoc(t, providerModel, someModel, datasourceModel)
+		result := config.ConfigFromModelsPoc(t, providerModel, someModel, datasourceModel, someOtherModel)
 
 		require.Equal(t, expectedOutput, result)
 	})

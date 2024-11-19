@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_exploreHclV1(t *testing.T) {
+func Test_HclProvider(t *testing.T) {
 
 	// This test shows that all issues from the experiments package were resolved using formatters.
 	t.Run("test default hcl provider", func(t *testing.T) {
@@ -38,7 +38,8 @@ func Test_exploreHclV1(t *testing.T) {
                         },
                         "depends_on": [
                             "some_other_resource.some_name",
-                            "other_resource.some_other_name"
+                            "other_resource.some_other_name",
+							"data.some_datasource.some_fancy_datasource"
                         ]
                     }
                 }
@@ -62,7 +63,7 @@ func Test_exploreHclV1(t *testing.T) {
     prop1 = 1
     prop2 = "two"
   }
-  depends_on = [some_other_resource.some_name, other_resource.some_other_name]
+  depends_on = [some_other_resource.some_name, other_resource.some_other_name, data.some_datasource.some_fancy_datasource]
 }
 `
 
