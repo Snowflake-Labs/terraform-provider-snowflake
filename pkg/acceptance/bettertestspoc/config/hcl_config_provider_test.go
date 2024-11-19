@@ -67,7 +67,7 @@ func Test_HclProvider(t *testing.T) {
 }
 `
 
-		result, err := config.DefaultHclProvider.HclFromJson([]byte(resourceJson))
+		result, err := config.DefaultHclConfigProvider.HclFromJson([]byte(resourceJson))
 		require.NoError(t, err)
 		assert.Equal(t, expectedResult, result)
 

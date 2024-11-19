@@ -5,23 +5,23 @@ import (
 	"fmt"
 )
 
-var DefaultJsonProvider = NewBasicJsonProvider()
+var DefaultJsonConfigProvider = NewBasicJsonConfigProvider()
 
-// JsonProvider defines methods to generate .tf.json configs.
+// JsonConfigProvider defines methods to generate .tf.json configs.
 // TODO [SNOW-1501905]: add config builders for other block types (Variable, Output, Localsl, Module, Terraform)
-type JsonProvider interface {
+type JsonConfigProvider interface {
 	ResourceJsonFromModel(model ResourceModel) ([]byte, error)
 	DatasourceJsonFromModel(model DatasourceModel) ([]byte, error)
 	ProviderJsonFromModel(model ProviderModel) ([]byte, error)
 }
 
-type basicJsonProvider struct{}
+type basicJsonConfigProvider struct{}
 
-func NewBasicJsonProvider() JsonProvider {
-	return &basicJsonProvider{}
+func NewBasicJsonConfigProvider() JsonConfigProvider {
+	return &basicJsonConfigProvider{}
 }
 
-func (p *basicJsonProvider) ResourceJsonFromModel(model ResourceModel) ([]byte, error) {
+func (p *basicJsonConfigProvider) ResourceJsonFromModel(model ResourceModel) ([]byte, error) {
 	modelJson := resourceJson{
 		Resource: map[string]map[string]ResourceModel{
 			fmt.Sprintf("%s", model.Resource()): {
@@ -37,7 +37,7 @@ type resourceJson struct {
 	Resource map[string]map[string]ResourceModel `json:"resource"`
 }
 
-func (p *basicJsonProvider) DatasourceJsonFromModel(model DatasourceModel) ([]byte, error) {
+func (p *basicJsonConfigProvider) DatasourceJsonFromModel(model DatasourceModel) ([]byte, error) {
 	modelJson := datasourceJson{
 		Datasource: map[string]map[string]DatasourceModel{
 			fmt.Sprintf("%s", model.Datasource()): {
@@ -53,7 +53,7 @@ type datasourceJson struct {
 	Datasource map[string]map[string]DatasourceModel `json:"data"`
 }
 
-func (p *basicJsonProvider) ProviderJsonFromModel(model ProviderModel) ([]byte, error) {
+func (p *basicJsonConfigProvider) ProviderJsonFromModel(model ProviderModel) ([]byte, error) {
 	modelJson := providerJson{
 		Provider: map[string]ProviderModel{
 			fmt.Sprintf("%s", model.ProviderName()): model,

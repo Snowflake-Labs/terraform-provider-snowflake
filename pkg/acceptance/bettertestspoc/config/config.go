@@ -20,11 +20,11 @@ import (
 func ResourceFromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
-	resourceJson, err := DefaultJsonProvider.ResourceJsonFromModel(model)
+	resourceJson, err := DefaultJsonConfigProvider.ResourceJsonFromModel(model)
 	require.NoError(t, err)
 	t.Logf("Generated json:\n%s", resourceJson)
 
-	hcl, err := DefaultHclProvider.HclFromJson(resourceJson)
+	hcl, err := DefaultHclConfigProvider.HclFromJson(resourceJson)
 	require.NoError(t, err)
 	t.Logf("Generated config:\n%s", hcl)
 
@@ -39,11 +39,11 @@ func ResourceFromModel(t *testing.T, model ResourceModel) string {
 func DatasourceFromModel(t *testing.T, model DatasourceModel) string {
 	t.Helper()
 
-	datasourceJson, err := DefaultJsonProvider.DatasourceJsonFromModel(model)
+	datasourceJson, err := DefaultJsonConfigProvider.DatasourceJsonFromModel(model)
 	require.NoError(t, err)
 	t.Logf("Generated json:\n%s", datasourceJson)
 
-	hcl, err := DefaultHclProvider.HclFromJson(datasourceJson)
+	hcl, err := DefaultHclConfigProvider.HclFromJson(datasourceJson)
 	require.NoError(t, err)
 	t.Logf("Generated config:\n%s", hcl)
 
@@ -58,11 +58,11 @@ func DatasourceFromModel(t *testing.T, model DatasourceModel) string {
 func ProviderFromModel(t *testing.T, model ProviderModel) string {
 	t.Helper()
 
-	providerJson, err := DefaultJsonProvider.ProviderJsonFromModel(model)
+	providerJson, err := DefaultJsonConfigProvider.ProviderJsonFromModel(model)
 	require.NoError(t, err)
 	t.Logf("Generated json:\n%s", providerJson)
 
-	hcl, err := DefaultHclProvider.HclFromJson(providerJson)
+	hcl, err := DefaultHclConfigProvider.HclFromJson(providerJson)
 	require.NoError(t, err)
 	t.Logf("Generated config:\n%s", hcl)
 

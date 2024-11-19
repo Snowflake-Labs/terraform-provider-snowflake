@@ -22,7 +22,7 @@ import (
 //
 // Because of the above, the current implementation using json generation and later conversion to HCL using hcl v1
 // introduces formatters tackling the issues above. This is not the perfect solution but it's fast and will work in the meantime.
-// Check: config.DefaultHclProvider.
+// Check: config.DefaultHclConfigProvider.
 //
 // References:
 // - https://developer.hashicorp.com/terraform/language/syntax/json

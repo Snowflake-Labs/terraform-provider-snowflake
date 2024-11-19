@@ -10,10 +10,10 @@ import (
 	hclv1parser "github.com/hashicorp/hcl/json/parser"
 )
 
-var DefaultHclProvider = NewHclV1ConfigProvider(unquoteBlockType, fixBlockArguments, unquoteArguments, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
+var DefaultHclConfigProvider = NewHclV1ConfigProvider(unquoteBlockType, fixBlockArguments, unquoteArguments, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
 
-// HclProvider defines methods to generate .tf config from .tf.json configs.
-type HclProvider interface {
+// HclConfigProvider defines methods to generate .tf config from .tf.json configs.
+type HclConfigProvider interface {
 	HclFromJson(json []byte) (string, error)
 }
 
@@ -23,7 +23,7 @@ type hclV1ConfigProvider struct {
 	formatters []HclFormatter
 }
 
-func NewHclV1ConfigProvider(formatters ...HclFormatter) HclProvider {
+func NewHclV1ConfigProvider(formatters ...HclFormatter) HclConfigProvider {
 	return &hclV1ConfigProvider{
 		formatters: formatters,
 	}
