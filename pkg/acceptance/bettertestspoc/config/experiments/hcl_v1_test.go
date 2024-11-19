@@ -76,7 +76,8 @@ func Test_exploreHclV1(t *testing.T) {
 							"prop2": "two"
 						},
                         "depends_on": [
-                            "other_resource.some_name"
+                            "some_other_resource.some_name",
+                            "other_resource.some_other_name"
                         ]
                     }
                 }
@@ -111,7 +112,7 @@ func Test_exploreHclV1(t *testing.T) {
     "prop2" = "two"
   }
 
-  "depends_on" = ["other_resource.some_name"]
+  "depends_on" = ["some_other_resource.some_name", "other_resource.some_other_name"]
 }
 `
 
