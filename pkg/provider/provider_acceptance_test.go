@@ -15,7 +15,7 @@ import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
@@ -674,8 +674,8 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 	})
 }
 
-func datasourceModel() config.ResourceModel {
-	return model.Database("t", acc.TestDatabaseName)
+func datasourceModel() config.DatasourceModel {
+	return datasourcemodel.Databases("t").WithLike(acc.TestDatabaseName)
 }
 
 func unsafeExecuteShowSessionParameter() string {

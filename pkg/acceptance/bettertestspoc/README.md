@@ -388,7 +388,6 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
     2. `testing` is a package name that makes Go think that we want to have unnamed parameter there, but we just didn't generate the type for that field in the function argument.
 - generate assertions checking that time is not empty - we often do not compare time fields by value, but check if they are set
 - utilize `ContainsExactlyInAnyOrder` function in `pkg/acceptance/bettertestspoc/assert/commons.go` to create asserts on collections that are order independent
-- support generating provider config and use generated configs in `pkg/provider/provider_acceptance_test.go`
 - add config builders for other block types (Variable, Output, Locals, Module, Terraform)
 - add provider to resource/datasource models (use in the grant_ownership_acceptance_test)
 - explore HCL v2 in more detail (especially struct tags generation; probably with migration to plugin framework because of schema models)
