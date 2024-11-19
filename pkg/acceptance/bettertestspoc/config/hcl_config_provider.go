@@ -64,11 +64,35 @@ func convertJsonToHclStringV1(jsonBytes []byte) (string, error) {
 	return string(formatted[:]), nil
 }
 
+// Conversion to HCL using hcl v1 does not unquote block types (i.e. `"resource"` instead of expected `resource`).
+// Check experiments subpackage for details.
+func unquoteBlockType(s string) (string, error) {
+	blockTypeRegex := regexp.MustCompile(`"(resource|data|provider)"(( "\w+"){1,2} {)`)
+	return blockTypeRegex.ReplaceAllString(s, `$1$2`), nil
+}
+
+// Conversion to HCL using hcl v1 uses `=` sign for objects and lists of objects.
+// Check experiments subpackage for details.
+func fixBlockArguments(s string) (string, error) {
+	argumentRegex := regexp.MustCompile(`( +)"(\w+)"( +)= ({\n)`)
+	return argumentRegex.ReplaceAllString(s, `$1$2$3$4`), nil
+}
+
+// Conversion to HCL using hcl v1  does not unquote arguments.
+// Check experiments subpackage for details.
+func unquoteArguments(s string) (string, error) {
+	argumentRegex := regexp.MustCompile(`( +)"(\w+)"( +=)`)
+	return argumentRegex.ReplaceAllString(s, `$1$2$3`), nil
+}
+
+// Conversion to HCL using hcl v1 leaves double newlines between each attribute.
+// Check experiments subpackage for details.
 func removeDoubleNewlines(input string) (string, error) {
 	return fmt.Sprintf("%s", strings.ReplaceAll(input, "\n\n", "\n")), nil
 }
 
 // Based on https://developer.hashicorp.com/terraform/language/syntax/json#depends_on should be processed in a special way, but it isn't.
+// Check experiments subpackage for details.
 func unquoteDependsOnReferences(s string) (string, error) {
 	dependsOnRegex := regexp.MustCompile(`("?depends_on"? = )(\["\w+\.\w+"(, "\w+\.\w+")*])`)
 	// TODO: use FindAllStringSubmatch
@@ -79,22 +103,4 @@ func unquoteDependsOnReferences(s string) (string, error) {
 		withoutQuotes := strings.ReplaceAll(submatches[2], `"`, "")
 		return dependsOnRegex.ReplaceAllString(s, fmt.Sprintf(`$1%s`, withoutQuotes)), nil
 	}
-}
-
-// For some reason, the resulting HCL does not unquote block types (i.e. `"resource"` instead of expected `resource`)
-func unquoteBlockType(s string) (string, error) {
-	blockTypeRegex := regexp.MustCompile(`"(resource|data|provider)"(( "\w+"){1,2} {)`)
-	return blockTypeRegex.ReplaceAllString(s, `$1$2`), nil
-}
-
-// For some reason, the resulting HCL uses `=` sign for lists of objects.
-func fixBlockArguments(s string) (string, error) {
-	argumentRegex := regexp.MustCompile(`( +)"(\w+)"( +)= ({\n)`)
-	return argumentRegex.ReplaceAllString(s, `$1$2$3$4`), nil
-}
-
-// For some reason, the resulting HCL does not unquote arguments.
-func unquoteArguments(s string) (string, error) {
-	argumentRegex := regexp.MustCompile(`( +)"(\w+)"( +=)`)
-	return argumentRegex.ReplaceAllString(s, `$1$2$3`), nil
 }
