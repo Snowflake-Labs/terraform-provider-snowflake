@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"log"
 	"slices"
 	"strings"
@@ -89,23 +91,24 @@ var schemaSchema = map[string]*schema.Schema{
 // Schema returns a pointer to the resource representing a schema.
 func Schema() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSchema,
-		ReadContext:   ReadContextSchema(true),
-		UpdateContext: UpdateContextSchema,
-		DeleteContext: DeleteContextSchema,
+		CreateContext: CommonCreateWrapper(resources.Schema, CreateContextSchema),
+		ReadContext:   CommonReadWrapper(resources.Schema, ReadContextSchema(true)),
+		UpdateContext: CommonUpdateWrapper(resources.Schema, UpdateContextSchema),
+		DeleteContext: CommonDeleteWrapper(resources.Schema, DeleteContextSchema),
 		Description:   "Resource used to manage schema objects. For more information, check [schema documentation](https://docs.snowflake.com/en/sql-reference/sql/create-schema).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: CommonCustomDiffWrapper(resources.Schema, customdiff.All(
 			ComputedIfAnyAttributeChanged(schemaSchema, ShowOutputAttributeName, "name", "comment", "with_managed_access", "is_transient"),
 			ComputedIfAnyAttributeChanged(schemaSchema, DescribeOutputAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(schemaSchema, FullyQualifiedNameAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(schemaParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllSchemaParameters), strings.ToLower)...),
+			// TODO(SNOW-1804424 - next pr): handle custom context in parameters customdiff
 			schemaParametersCustomDiff,
-		),
+		)),
 
 		Schema: collections.MergeMaps(schemaSchema, schemaParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportSchema,
+			StateContext: CommonImportWrapper(resources.Schema, ImportSchema),
 		},
 
 		SchemaVersion: 2,
@@ -128,6 +131,7 @@ func Schema() *schema.Resource {
 
 func ImportSchema(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	log.Printf("[DEBUG] Starting schema import")
+	ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resources.Schema, tracking.ImportOperation))
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
 	if err != nil {

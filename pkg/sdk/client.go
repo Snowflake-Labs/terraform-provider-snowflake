@@ -3,8 +3,8 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"log"
 	"os"
 	"slices"
@@ -267,15 +267,7 @@ func (c *Client) Close() error {
 
 type ContextKey string
 
-const (
-	SnowflakeAccountLocatorContextKey ContextKey = "snowflake_account_locator"
-	MetadataContextKey                ContextKey = "metadata"
-	DashboardTrackingPrefix                      = "dashboard_tracking_"
-)
-
-func ContextWithMetadata(ctx context.Context, metadata map[string]string) context.Context {
-	return context.WithValue(ctx, MetadataContextKey, metadata)
-}
+const SnowflakeAccountLocatorContextKey ContextKey = "snowflake_account_locator"
 
 // Exec executes a query that does not return rows.
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
@@ -314,15 +306,14 @@ func (c *Client) queryOne(ctx context.Context, dest interface{}, sql string) err
 	return decodeDriverError(c.db.GetContext(ctx, dest, sql))
 }
 
-func appendQueryMetadata(ctx context.Context, query string) string {
-	if ctx.Value(MetadataContextKey) != nil {
-		metadataMap := ctx.Value(MetadataContextKey)
-		bytes, err := json.Marshal(metadataMap)
+func appendQueryMetadata(ctx context.Context, sql string) string {
+	if metadata, ok := tracking.FromContext(ctx); ok {
+		newSql, err := tracking.AppendMetadataToSql(sql, metadata)
 		if err != nil {
-			log.Printf("[ERROR] failed to marshal the metadata: %v\n", err)
-		} else {
-			return fmt.Sprintf("%s --%s%s", query, DashboardTrackingPrefix, string(bytes))
+			log.Printf("[ERROR] failed to append metadata tracking: %v\n", err)
+			return sql
 		}
+		return newSql
 	}
-	return query
+	return sql
 }

@@ -2,6 +2,9 @@ package resources
 
 import (
 	"context"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"regexp"
 	"strings"
 
@@ -100,4 +103,46 @@ func ImportName[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | s
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func CommonImportWrapper(resourceName resources.ResourceName, importImplementation schema.StateContextFunc) schema.StateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.ImportOperation))
+		return importImplementation(ctx, d, meta)
+	}
+}
+
+func CommonCreateWrapper(resourceName resources.ResourceName, createImplementation schema.CreateContextFunc) schema.CreateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.CreateOperation))
+		return createImplementation(ctx, d, meta)
+	}
+}
+
+func CommonReadWrapper(resourceName resources.ResourceName, readImplementation schema.ReadContextFunc) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.ReadOperation))
+		return readImplementation(ctx, d, meta)
+	}
+}
+
+func CommonUpdateWrapper(resourceName resources.ResourceName, updateImplementation schema.UpdateContextFunc) schema.UpdateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.UpdateOperation))
+		return updateImplementation(ctx, d, meta)
+	}
+}
+
+func CommonDeleteWrapper(resourceName resources.ResourceName, deleteImplementation schema.DeleteContextFunc) schema.DeleteContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.DeleteOperation))
+		return deleteImplementation(ctx, d, meta)
+	}
+}
+
+func CommonCustomDiffWrapper(resourceName resources.ResourceName, customdiffImplementation schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.CustomDiffOperation))
+		return customdiffImplementation(ctx, diff, meta)
+	}
 }
