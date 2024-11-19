@@ -4,6 +4,7 @@ import (
 	"text/template"
 
 	_ "embed"
+
 	resourcemodel "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model/gen"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"

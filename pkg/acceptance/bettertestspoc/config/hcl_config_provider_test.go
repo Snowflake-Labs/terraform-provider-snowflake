@@ -10,7 +10,6 @@ import (
 )
 
 func Test_HclProvider(t *testing.T) {
-
 	// This test shows that all issues from the experiments package were resolved using formatters.
 	t.Run("test default hcl provider", func(t *testing.T) {
 		resourceJson := `{

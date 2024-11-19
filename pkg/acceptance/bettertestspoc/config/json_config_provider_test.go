@@ -1,17 +1,16 @@
 package config_test
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_JsonConfigProvider(t *testing.T) {
-
 	t.Run("test resource json config", func(t *testing.T) {
 		model := Some("some_name", "abc").WithDependsOn("abc.def")
 		expectedResult := `{
@@ -29,7 +28,7 @@ func Test_JsonConfigProvider(t *testing.T) {
 
 		result, err := config.DefaultJsonConfigProvider.ResourceJsonFromModel(model)
 		require.NoError(t, err)
-		assert.Equal(t, expectedResult, string(result[:]))
+		assert.Equal(t, expectedResult, string(result))
 	})
 
 	t.Run("test resource json config when proper marshaller is absent", func(t *testing.T) {
@@ -46,7 +45,7 @@ func Test_JsonConfigProvider(t *testing.T) {
 
 		result, err := config.DefaultJsonConfigProvider.ResourceJsonFromModel(model)
 		require.NoError(t, err)
-		assert.Equal(t, expectedResult, string(result[:]))
+		assert.Equal(t, expectedResult, string(result))
 	})
 
 	t.Run("test datasource json config", func(t *testing.T) {
@@ -61,7 +60,7 @@ func Test_JsonConfigProvider(t *testing.T) {
 
 		result, err := config.DefaultJsonConfigProvider.DatasourceJsonFromModel(model)
 		require.NoError(t, err)
-		assert.Equal(t, expectedResult, string(result[:]))
+		assert.Equal(t, expectedResult, string(result))
 	})
 
 	t.Run("test provider json config", func(t *testing.T) {
@@ -74,6 +73,6 @@ func Test_JsonConfigProvider(t *testing.T) {
 
 		result, err := config.DefaultJsonConfigProvider.ProviderJsonFromModel(model)
 		require.NoError(t, err)
-		assert.Equal(t, expectedResult, string(result[:]))
+		assert.Equal(t, expectedResult, string(result))
 	})
 }

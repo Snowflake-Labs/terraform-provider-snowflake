@@ -31,7 +31,6 @@ import (
 // - https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on
 // TODO [SNOW-1501905]: explore HCL v2 in more detail (especially struct tags generation; probably with migration to plugin framework because of schema models)
 func Test_exploreHclV1(t *testing.T) {
-
 	convertJsonToHclStringV1 := func(json string) (string, error) {
 		parsed, err := hclv1parser.Parse([]byte(json))
 		if err != nil {
@@ -49,7 +48,7 @@ func Test_exploreHclV1(t *testing.T) {
 			return "", err
 		}
 
-		return string(formatted[:]), nil
+		return string(formatted), nil
 	}
 
 	t.Run("test HCL v1", func(t *testing.T) {

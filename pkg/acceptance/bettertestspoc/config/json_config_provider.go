@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 var DefaultJsonConfigProvider = NewBasicJsonConfigProvider()
@@ -24,8 +23,8 @@ func NewBasicJsonConfigProvider() JsonConfigProvider {
 func (p *basicJsonConfigProvider) ResourceJsonFromModel(model ResourceModel) ([]byte, error) {
 	modelJson := resourceJson{
 		Resource: map[string]map[string]ResourceModel{
-			fmt.Sprintf("%s", model.Resource()): {
-				fmt.Sprintf("%s", model.ResourceName()): model,
+			model.Resource().String(): {
+				model.ResourceName(): model,
 			},
 		},
 	}
@@ -40,8 +39,8 @@ type resourceJson struct {
 func (p *basicJsonConfigProvider) DatasourceJsonFromModel(model DatasourceModel) ([]byte, error) {
 	modelJson := datasourceJson{
 		Datasource: map[string]map[string]DatasourceModel{
-			fmt.Sprintf("%s", model.Datasource()): {
-				fmt.Sprintf("%s", model.DatasourceName()): model,
+			model.Datasource().String(): {
+				model.DatasourceName(): model,
 			},
 		},
 	}
@@ -56,7 +55,7 @@ type datasourceJson struct {
 func (p *basicJsonConfigProvider) ProviderJsonFromModel(model ProviderModel) ([]byte, error) {
 	modelJson := providerJson{
 		Provider: map[string]ProviderModel{
-			fmt.Sprintf("%s", model.ProviderName()): model,
+			model.ProviderName(): model,
 		},
 	}
 

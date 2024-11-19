@@ -62,7 +62,7 @@ func convertJsonToHclStringV1(jsonBytes []byte) (string, error) {
 		return "", err
 	}
 
-	return string(formatted[:]), nil
+	return string(formatted), nil
 }
 
 // Conversion to HCL using hcl v1 does not unquote block types (i.e. `"resource"` instead of expected `resource`).
@@ -89,7 +89,7 @@ func unquoteArguments(s string) (string, error) {
 // Conversion to HCL using hcl v1 leaves double newlines between each attribute.
 // Check experiments subpackage for details.
 func removeDoubleNewlines(input string) (string, error) {
-	return fmt.Sprintf("%s", strings.ReplaceAll(input, "\n\n", "\n")), nil
+	return strings.ReplaceAll(input, "\n\n", "\n"), nil
 }
 
 // Based on https://developer.hashicorp.com/terraform/language/syntax/json#depends_on should be processed in a special way, but it isn't.
