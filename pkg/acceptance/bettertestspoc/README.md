@@ -23,7 +23,7 @@ It contains the following packages:
   - resource parameters assertions (generated in subpackage `resourceparametersassert`)
   - show output assertions (generated in subpackage `resourceshowoutputassert`)
 
-- `config` - the new `ResourceModel` abstraction resides here. It provides models for objects and the builder methods allowing better config preparation in the acceptance tests.
+- `config` - the new model abstractions (`ResourceModel`, `DatasourceModel`, and `ProviderModel`) reside here. They provide models for objects and the builder methods allowing better config preparation in the acceptance tests.
 It aims to be more readable than using `Config:` with hardcoded string or `ConfigFile:` for file that is not directly reachable from the test body. Also, it should be easier to reuse the models and prepare convenience extension methods. The models are already generated.
 
 ## How it works
@@ -97,17 +97,53 @@ Resource config model builders can be generated automatically. For object `abc` 
 - add object you want to generate to `allResourceSchemaDefs` slice in the `assert/resourceassert/gen/resource_schema_def.go`
 - to add custom (not generated) config builder methods create file `warehouse_model_ext` in the `config/model` package. Example would be:
 ```go
-func BasicWarehouseModel(
+func BasicAbcModel(
 	name string,
 	comment string,
-) *WarehouseModel {
-	return WarehouseWithDefaultMeta(name).WithComment(comment)
+) *AbcModel {
+	return AbcWithDefaultMeta(name).WithComment(comment)
 }
 
-func (w *WarehouseModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) *WarehouseModel {
+func (w *AbcModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) *AbcModel {
 	return w.WithWarehouseSize(string(warehouseSize))
 }
 ```
+
+### Adding new datasource config model builders
+Data source config model builders can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allDatasourcesSchemaDefs` slice in the `config/datasourcemodel/gen/datasource_schema_def.go`
+- to add custom (not generated) config builder methods create file `abc_model_ext` in the `config/datasourcemodel` package. Example would be:
+```go
+func BasicAbcModel(
+	name string,
+	comment string,
+) *AbcModel {
+	return AbcWithDefaultMeta(name).WithComment(comment)
+}
+
+func (w *AbcModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) *AbcModel {
+	return w.WithWarehouseSize(string(warehouseSize))
+}
+```
+
+### Adding new provider config model builders
+Provider config model builders can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allProviderSchemaDefs` slice in the `config/providermodel/gen/provider_schema_def.go`
+- to add custom (not generated) config builder methods create file `abc_model_ext` in the `config/providermodel` package. Example would be:
+```go
+func BasicAbcModel(
+	name string,
+	comment string,
+) *AbcModel {
+	return AbcWithDefaultMeta(name).WithComment(comment)
+}
+
+func (w *AbcModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) *AbcModel {
+	return w.WithWarehouseSize(string(warehouseSize))
+}
+```
+
+*Note*: our provider's config is already generated, so there should not be a need to generate any more providers (the regeneration or adding custom methods are still expected).
 
 ### Running the generators
 Each of the above assertion types/config models has its own generator and cleanup entry in our Makefile.
@@ -353,3 +389,10 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - generate assertions checking that time is not empty - we often do not compare time fields by value, but check if they are set
 - utilize `ContainsExactlyInAnyOrder` function in `pkg/acceptance/bettertestspoc/assert/commons.go` to create asserts on collections that are order independent
 - support generating provider config and use generated configs in `pkg/provider/provider_acceptance_test.go`
+- add config builders for other block types (Variable, Output, Locals, Module, Terraform)
+- add provider to resource/datasource models (use in the grant_ownership_acceptance_test)
+- explore HCL v2 in more detail (especially struct tags generation; probably with migration to plugin framework because of schema models)
+- introduce some common interface for all three existing models (ResourceModel, DatasourceModel, and ProviderModel)
+- rename ResourceSchemaDetails (because it is used for the datasources and provider too)
+- consider duplicating the builders template from resource (currently same template used for datasources and provider)
+- consider merging ResourceModel with DatasourceModel (currently the implementation is really similar)
