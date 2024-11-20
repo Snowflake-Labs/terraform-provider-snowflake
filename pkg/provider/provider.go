@@ -135,8 +135,8 @@ func Provider() *schema.Provider {
 				Type:             schema.TypeString,
 				Description:      envNameFieldDescription(fmt.Sprintf("Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid options are: %v. Value `JWT` is deprecated and will be removed in future releases.", docs.PossibleValuesListed(sdk.AllAuthenticationTypes)), snowflakeenvs.Authenticator),
 				Optional:         true,
-				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Authenticator, string(sdk.AuthenticationTypeSnowflake)),
-				ValidateDiagFunc: validators.NormalizeValidation(sdk.ToAuthenticatorType),
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Authenticator, string(sdk.AuthenticationTypeInvalid)),
+				ValidateDiagFunc: validators.NormalizeValidation(sdk.ToExtendedAuthenticatorType),
 			},
 			"passcode": {
 				Type:          schema.TypeString,
@@ -718,13 +718,11 @@ func getDriverConfigFromTerraform(s *schema.ResourceData) (*gosnowflake.Config, 
 		handleIntAttribute(s, "port", &config.Port),
 		// authenticator
 		func() error {
-			if v, ok := s.GetOk("authenticator"); ok && v.(string) != "" {
-				authType, err := sdk.ToAuthenticatorType(v.(string))
-				if err != nil {
-					return err
-				}
-				config.Authenticator = authType
+			authType, err := sdk.ToExtendedAuthenticatorType(s.Get("authenticator").(string))
+			if err != nil {
+				return err
 			}
+			config.Authenticator = authType
 			return nil
 		}(),
 		handleStringField(s, "passcode", &config.Passcode),

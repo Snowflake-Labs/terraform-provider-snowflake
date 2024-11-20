@@ -110,7 +110,8 @@ func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config
 	if baseConfig.Port == 0 {
 		baseConfig.Port = mergeConfig.Port
 	}
-	if baseConfig.Authenticator == 0 {
+	// TODO [this PR]: extract gosnowflake.AuthType(-1)
+	if baseConfig.Authenticator == gosnowflake.AuthType(-1) {
 		baseConfig.Authenticator = mergeConfig.Authenticator
 	}
 	if baseConfig.Passcode == "" {
@@ -414,6 +415,8 @@ const (
 	AuthenticationTypeJwt                 AuthenticationType = "SNOWFLAKE_JWT"
 	AuthenticationTypeTokenAccessor       AuthenticationType = "TOKENACCESSOR"
 	AuthenticationTypeUsernamePasswordMfa AuthenticationType = "USERNAMEPASSWORDMFA"
+
+	AuthenticationTypeInvalid AuthenticationType = ""
 )
 
 var AllAuthenticationTypes = []AuthenticationType{
@@ -445,6 +448,17 @@ func ToAuthenticatorType(s string) (gosnowflake.AuthType, error) {
 		return gosnowflake.AuthTypeUsernamePasswordMFA, nil
 	default:
 		return gosnowflake.AuthType(0), fmt.Errorf("invalid authenticator type: %s", s)
+	}
+}
+
+// TODO [this PR]: test
+func ToExtendedAuthenticatorType(s string) (gosnowflake.AuthType, error) {
+	switch strings.ToUpper(s) {
+	case string(AuthenticationTypeInvalid):
+		// TODO [this PR]: extract gosnowflake.AuthType(-1)
+		return gosnowflake.AuthType(-1), nil
+	default:
+		return ToAuthenticatorType(s)
 	}
 }
 

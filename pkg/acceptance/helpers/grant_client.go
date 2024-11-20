@@ -129,6 +129,34 @@ func (c *GrantClient) RevokePrivilegesOnDatabaseFromDatabaseRole(
 	require.NoError(t, err)
 }
 
+func (c *GrantClient) GrantPrivilegesOnAccountObjectToAccountRole(
+	t *testing.T,
+	accountRoleId sdk.AccountObjectIdentifier,
+	accountLevelObjectId sdk.AccountObjectIdentifier,
+	privileges []sdk.AccountObjectPrivilege,
+	withGrantOption bool,
+) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().GrantPrivilegesToAccountRole(
+		ctx,
+		&sdk.AccountRoleGrantPrivileges{
+			AccountObjectPrivileges: privileges,
+		},
+		&sdk.AccountRoleGrantOn{
+			AccountObject: &sdk.GrantOnAccountObject{
+				Database: sdk.Pointer(accountLevelObjectId),
+			},
+		},
+		accountRoleId,
+		&sdk.GrantPrivilegesToAccountRoleOptions{
+			WithGrantOption: sdk.Bool(withGrantOption),
+		},
+	)
+	require.NoError(t, err)
+}
+
 func (c *GrantClient) GrantPrivilegesOnDatabaseToDatabaseRole(
 	t *testing.T,
 	databaseRoleId sdk.DatabaseObjectIdentifier,
