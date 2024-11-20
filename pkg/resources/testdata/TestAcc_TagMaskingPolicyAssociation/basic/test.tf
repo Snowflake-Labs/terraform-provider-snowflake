@@ -1,9 +1,11 @@
+
 resource "snowflake_tag" "test" {
-  name           = var.name
-  database       = var.database
-  schema         = var.schema
-  comment        = var.comment
-  allowed_values = ["alv1", "alv2"]
+  name             = var.name
+  database         = var.database
+  schema           = var.schema
+  comment          = var.comment
+  masking_policies = [snowflake_masking_policy.test.fully_qualified_name]
+  allowed_values   = ["alv1", "alv2"]
 }
 
 resource "snowflake_masking_policy" "test" {

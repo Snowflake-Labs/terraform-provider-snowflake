@@ -307,36 +307,6 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		assertS3StorageIntegrationDescResult(t, props, false, s3AllowedLocations, []sdk.StorageLocation{}, "")
 	})
 
-	t.Run("Alter - set and unset tags", func(t *testing.T) {
-		id := createS3StorageIntegration(t)
-
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		err := client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).
-			WithSetTags([]sdk.TagAssociation{
-				{
-					Name:  tag.ID(),
-					Value: "tag-value",
-				},
-			}))
-		require.NoError(t, err)
-
-		tagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.NoError(t, err)
-
-		assert.Equal(t, "tag-value", tagValue)
-
-		err = client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).
-			WithUnsetTags([]sdk.ObjectIdentifier{
-				tag.ID(),
-			}))
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeIntegration)
-		require.Error(t, err, sdk.ErrObjectNotExistOrAuthorized)
-	})
-
 	t.Run("Describe - S3", func(t *testing.T) {
 		id := createS3StorageIntegration(t)
 

@@ -58,10 +58,9 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 
 	t.Run("Create - complete", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		saml2Id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		comment := random.Comment()
 
-		_, cleanupSamlIntegration := testClientHelper().SecurityIntegration.CreateSaml2(t, saml2Id)
+		samlIntegration, cleanupSamlIntegration := testClientHelper().SecurityIntegration.CreateSaml2(t)
 		t.Cleanup(cleanupSamlIntegration)
 
 		err := client.AuthenticationPolicies.Create(ctx, sdk.NewCreateAuthenticationPolicyRequest(id).
@@ -72,7 +71,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 				{Method: sdk.MfaAuthenticationMethodsSaml},
 			}).
 			WithSecurityIntegrations([]sdk.SecurityIntegrationsOption{
-				{Name: saml2Id},
+				{Name: samlIntegration.ID()},
 			}).
 			WithClientTypes([]sdk.ClientTypes{
 				{ClientType: sdk.ClientTypesDrivers},
@@ -93,19 +92,18 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 		assertProperty(t, desc, "COMMENT", comment)
 		assertProperty(t, desc, "MFA_ENROLLMENT", "OPTIONAL")
 		assertProperty(t, desc, "MFA_AUTHENTICATION_METHODS", "[PASSWORD, SAML]")
-		assertProperty(t, desc, "SECURITY_INTEGRATIONS", fmt.Sprintf("[%s]", saml2Id.Name()))
+		assertProperty(t, desc, "SECURITY_INTEGRATIONS", fmt.Sprintf("[%s]", samlIntegration.ID().Name()))
 		assertProperty(t, desc, "CLIENT_TYPES", "[DRIVERS, SNOWSQL]")
 		assertProperty(t, desc, "AUTHENTICATION_METHODS", "[PASSWORD, SAML]")
 	})
 
 	t.Run("Alter - set and unset properties", func(t *testing.T) {
-		saml2Id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		comment := random.Comment()
 
 		authenticationPolicy, cleanupAuthPolicy := testClientHelper().AuthenticationPolicy.Create(t)
 		t.Cleanup(cleanupAuthPolicy)
 
-		_, cleanupSamlIntegration := testClientHelper().SecurityIntegration.CreateSaml2(t, saml2Id)
+		samlIntegration, cleanupSamlIntegration := testClientHelper().SecurityIntegration.CreateSaml2(t)
 		t.Cleanup(cleanupSamlIntegration)
 
 		err := client.AuthenticationPolicies.Alter(ctx, sdk.NewAlterAuthenticationPolicyRequest(authenticationPolicy.ID()).
@@ -117,7 +115,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 					{Method: sdk.MfaAuthenticationMethodsSaml},
 				}).
 				WithSecurityIntegrations([]sdk.SecurityIntegrationsOption{
-					{Name: saml2Id},
+					{Name: samlIntegration.ID()},
 				}).
 				WithClientTypes([]sdk.ClientTypes{
 					{ClientType: sdk.ClientTypesDrivers},
@@ -136,7 +134,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 		assertProperty(t, desc, "COMMENT", comment)
 		assertProperty(t, desc, "MFA_ENROLLMENT", "REQUIRED")
 		assertProperty(t, desc, "MFA_AUTHENTICATION_METHODS", "[PASSWORD, SAML]")
-		assertProperty(t, desc, "SECURITY_INTEGRATIONS", fmt.Sprintf("[%s]", saml2Id.Name()))
+		assertProperty(t, desc, "SECURITY_INTEGRATIONS", fmt.Sprintf("[%s]", samlIntegration.ID().Name()))
 		assertProperty(t, desc, "CLIENT_TYPES", "[DRIVERS, SNOWSQL, SNOWFLAKE_UI]")
 		assertProperty(t, desc, "AUTHENTICATION_METHODS", "[PASSWORD, SAML]")
 

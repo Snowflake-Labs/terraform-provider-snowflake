@@ -61,6 +61,10 @@ type CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationReq
 	Comment                     *string
 }
 
+func (r *CreateApiAuthenticationWithAuthorizationCodeGrantFlowSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
+}
+
 type CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest struct {
 	OrReplace                  *bool
 	IfNotExists                *bool
@@ -76,6 +80,10 @@ type CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest struct {
 	OauthAccessTokenValidity   *int
 	OauthRefreshTokenValidity  *int
 	Comment                    *string
+}
+
+func (r *CreateApiAuthenticationWithJwtBearerFlowSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
 }
 
 type CreateExternalOauthSecurityIntegrationRequest struct {
@@ -97,6 +105,10 @@ type CreateExternalOauthSecurityIntegrationRequest struct {
 	ExternalOauthScopeDelimiter                *string
 	ExternalOauthScopeMappingAttribute         *string
 	Comment                                    *string
+}
+
+func (r *CreateExternalOauthSecurityIntegrationRequest) GetName() AccountObjectIdentifier {
+	return r.name
 }
 
 type BlockedRolesListRequest struct {

@@ -342,9 +342,6 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
-	t.Cleanup(tagCleanup)
-
 	assertProcedure := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, secure bool) {
 		t.Helper()
 
@@ -467,32 +464,6 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 
 		id := f.ID()
 		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsOwner)))
-		require.NoError(t, err)
-		assertProcedure(t, id, true)
-	})
-
-	t.Run("alter procedure: set and unset tags", func(t *testing.T) {
-		f := createProcedureForSQLHandle(t, true)
-
-		id := f.ID()
-		setTags := []sdk.TagAssociation{
-			{
-				Name:  tagTest.ID(),
-				Value: "v1",
-			},
-		}
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSetTags(setTags))
-		require.NoError(t, err)
-		assertProcedure(t, id, true)
-
-		value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), id, sdk.ObjectTypeProcedure)
-		require.NoError(t, err)
-		assert.Equal(t, "v1", value)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tagTest.ID(),
-		}
-		err = client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})

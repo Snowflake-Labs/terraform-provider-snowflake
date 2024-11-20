@@ -1350,6 +1350,7 @@ func TestAcc_User_migrateFromVersion094_noDefaultSecondaryRolesSet(t *testing.T)
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1363,6 +1364,7 @@ func TestAcc_User_migrateFromVersion094_noDefaultSecondaryRolesSet(t *testing.T)
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1395,6 +1397,7 @@ func TestAcc_User_migrateFromVersion094_defaultSecondaryRolesSet(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1413,6 +1416,7 @@ resource "snowflake_user" "test" {
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, userModelWithOptionAll),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1669,6 +1673,7 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_enabled
 			{
 				PreConfig: func() {
 					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
+					func() { acc.SetV097CompatibleConfigPathEnv(t) }()
 				},
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
@@ -1685,6 +1690,7 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_enabled
 			{
 				PreConfig: func() {
 					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
+					func() { acc.UnsetConfigPathEnv(t) }()
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, userModel),
@@ -1724,7 +1730,8 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_disable
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: config.FromModel(t, userModel),
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				Config:    config.FromModel(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
@@ -1733,6 +1740,7 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_disable
 			{
 				PreConfig: func() {
 					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
+					func() { acc.UnsetConfigPathEnv(t) }()
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModel(t, userModel),

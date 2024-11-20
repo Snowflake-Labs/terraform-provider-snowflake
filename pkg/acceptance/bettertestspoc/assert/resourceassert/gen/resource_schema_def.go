@@ -105,4 +105,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "SecondaryConnection",
 		schema: resources.SecondaryConnection().Schema,
 	},
+	{
+		name:   "Tag",
+		schema: resources.Tag().Schema,
+	},
 }

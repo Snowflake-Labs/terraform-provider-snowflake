@@ -17,11 +17,11 @@ import (
 )
 
 func TestAcc_TagAssociation(t *testing.T) {
-	tagName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name": config.StringVariable(tagName),
+			"tag_name": config.StringVariable(tagId.Name()),
 			"database": config.StringVariable(acc.TestDatabaseName),
 			"schema":   config.StringVariable(acc.TestSchemaName),
 		}
@@ -39,7 +39,7 @@ func TestAcc_TagAssociation(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "object_type", "DATABASE"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "tag_value", "finance"),
 				),
 			},
@@ -48,11 +48,11 @@ func TestAcc_TagAssociation(t *testing.T) {
 }
 
 func TestAcc_TagAssociationSchema(t *testing.T) {
-	tagName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name": config.StringVariable(tagName),
+			"tag_name": config.StringVariable(tagId.Name()),
 			"database": config.StringVariable(acc.TestDatabaseName),
 			"schema":   config.StringVariable(acc.TestSchemaName),
 		}
@@ -77,12 +77,12 @@ func TestAcc_TagAssociationSchema(t *testing.T) {
 }
 
 func TestAcc_TagAssociationColumn(t *testing.T) {
-	tagName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	tableName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name":   config.StringVariable(tagName),
+			"tag_name":   config.StringVariable(tagId.Name()),
 			"table_name": config.StringVariable(tableName),
 			"database":   config.StringVariable(acc.TestDatabaseName),
 			"schema":     config.StringVariable(acc.TestSchemaName),
@@ -101,7 +101,7 @@ func TestAcc_TagAssociationColumn(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "tag_value", "TAG_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.column_name", tableName)),
@@ -113,12 +113,12 @@ func TestAcc_TagAssociationColumn(t *testing.T) {
 }
 
 func TestAcc_TagAssociationIssue1202(t *testing.T) {
-	tagName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	tableName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name":   config.StringVariable(tagName),
+			"tag_name":   config.StringVariable(tagId.Name()),
 			"table_name": config.StringVariable(tableName),
 			"database":   config.StringVariable(acc.TestDatabaseName),
 			"schema":     config.StringVariable(acc.TestSchemaName),
@@ -137,7 +137,7 @@ func TestAcc_TagAssociationIssue1202(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "object_type", "TABLE"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
 				),
 			},
@@ -147,7 +147,6 @@ func TestAcc_TagAssociationIssue1202(t *testing.T) {
 
 func TestAcc_TagAssociationIssue1909(t *testing.T) {
 	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	tagName := tagId.Name()
 	tableName := acc.TestClient().Ids.Alpha()
 	tableName2 := acc.TestClient().Ids.Alpha()
 	columnName := "test.column"
@@ -156,7 +155,7 @@ func TestAcc_TagAssociationIssue1909(t *testing.T) {
 	objectID2 := sdk.NewTableColumnIdentifier(acc.TestDatabaseName, acc.TestSchemaName, tableName2, columnName)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name":    config.StringVariable(tagName),
+			"tag_name":    config.StringVariable(tagId.Name()),
 			"table_name":  config.StringVariable(tableName),
 			"table_name2": config.StringVariable(tableName2),
 			"column_name": config.StringVariable("test.column"),
@@ -177,7 +176,7 @@ func TestAcc_TagAssociationIssue1909(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
 					testAccCheckTableColumnTagAssociation(tagId, objectID, "v1"),
 					testAccCheckTableColumnTagAssociation(tagId, objectID2, "v1"),
@@ -205,12 +204,12 @@ func testAccCheckTableColumnTagAssociation(tagID sdk.SchemaObjectIdentifier, obj
 func TestAcc_TagAssociationAccountIssues1910(t *testing.T) {
 	// todo: use role with ORGADMIN in CI (SNOW-1165821)
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
-	tagName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	accountName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name":     config.StringVariable(tagName),
+			"tag_name":     config.StringVariable(tagId.Name()),
 			"account_name": config.StringVariable(accountName),
 			"database":     config.StringVariable(acc.TestDatabaseName),
 			"schema":       config.StringVariable(acc.TestSchemaName),
@@ -230,7 +229,7 @@ func TestAcc_TagAssociationAccountIssues1910(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "object_type", "ACCOUNT"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.Name()),
 					resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
 				),
 			},
@@ -239,13 +238,13 @@ func TestAcc_TagAssociationAccountIssues1910(t *testing.T) {
 }
 
 func TestAcc_TagAssociationIssue1926(t *testing.T) {
-	tagName := acc.TestClient().Ids.Alpha()
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	tableName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
 	columnName := "test.column"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"tag_name":    config.StringVariable(tagName),
+			"tag_name":    config.StringVariable(tagId.Name()),
 			"table_name":  config.StringVariable(tableName),
 			"column_name": config.StringVariable(columnName),
 			"database":    config.StringVariable(acc.TestDatabaseName),
@@ -275,7 +274,7 @@ func TestAcc_TagAssociationIssue1926(t *testing.T) {
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "object_type", "COLUMN"),
-					resource.TestCheckResourceAttr(resourceName, "tag_id", fmt.Sprintf("%s|%s|%s", acc.TestDatabaseName, acc.TestSchemaName, tagName)),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "tag_value", "v1"),
 					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "object_identifier.0.name", fmt.Sprintf("%s.%s", tableName, columnName)),
