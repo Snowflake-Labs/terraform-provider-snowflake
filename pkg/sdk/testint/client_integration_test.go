@@ -3,6 +3,7 @@ package testint
 import (
 	"context"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -10,17 +11,12 @@ import (
 
 func TestInt_Client_AdditionalMetadata(t *testing.T) {
 	client := testClient(t)
-
-	metadata := tracking.Metadata{
-		Version:   "v1.0.0",
-		Resource:  "database",
-		Operation: tracking.CreateOperation,
-	}
+	metadata := tracking.NewMetadata("v1.13.1002-rc-test", resources.Database, tracking.CreateOperation)
 
 	assertQueryMetadata := func(t *testing.T, queryId string) {
 		t.Helper()
 		queryText := testClientHelper().InformationSchema.GetQueryTextByQueryId(t, queryId)
-		parsedMetadata, err := tracking.ParseMetadataFromSql(queryText)
+		parsedMetadata, err := tracking.ParseMetadata(queryText)
 		require.NoError(t, err)
 		require.Equal(t, metadata, parsedMetadata)
 	}

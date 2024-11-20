@@ -17,39 +17,56 @@ func TestInt_ContextQueryTags(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	sessionId, err := client.ContextFunctions.CurrentSession(ctx)
-	require.NoError(t, err)
+	// set query_tag on user level
+	userQueryTag := "user query tag"
+	testClientHelper().User.AlterCurrentUser(t, &sdk.AlterUserOptions{
+		Set: &sdk.UserSet{
+			SessionParameters: &sdk.SessionParameters{
+				QueryTag: sdk.String(userQueryTag),
+			},
+		},
+	})
+	t.Cleanup(func() {
+		testClientHelper().User.AlterCurrentUser(t, &sdk.AlterUserOptions{
+			Unset: &sdk.UserUnset{
+				SessionParameters: &sdk.SessionParametersUnset{
+					QueryTag: sdk.Bool(true),
+				},
+			},
+		})
+	})
+	queryId := executeQueryAndReturnQueryId(t, context.Background(), client)
+	queryTagResult := testClientHelper().InformationSchema.GetQueryTagByQueryId(t, queryId)
+	require.Equal(t, userQueryTag, queryTagResult)
 
-	queryTag := "some query tag"
+	// set query_tag on session level
+	sessionQueryTag := "session query tag"
 	require.NoError(t, client.Sessions.AlterSession(ctx, &sdk.AlterSessionOptions{
 		Set: &sdk.SessionSet{
 			SessionParameters: &sdk.SessionParameters{
-				QueryTag: sdk.String(queryTag),
+				QueryTag: sdk.String(sessionQueryTag),
 			},
 		},
 	}))
 	t.Cleanup(func() {
-		_, err = client.QueryUnsafe(ctx, "ALTER SESSION UNSET QUERY_TAG")
-		require.NoError(t, err)
+		require.NoError(t, client.Sessions.AlterSession(ctx, &sdk.AlterSessionOptions{
+			Unset: &sdk.SessionUnset{
+				SessionParametersUnset: &sdk.SessionParametersUnset{
+					QueryTag: sdk.Bool(true),
+				},
+			},
+		}))
 	})
+	queryId = executeQueryAndReturnQueryId(t, context.Background(), client)
+	queryTagResult = testClientHelper().InformationSchema.GetQueryTagByQueryId(t, queryId)
+	require.Equal(t, sessionQueryTag, queryTagResult)
 
-	queryId := executeQueryAndReturnQueryId(t, context.Background(), client)
-
-	result, err := client.QueryUnsafe(ctx, fmt.Sprintf("SELECT QUERY_ID, QUERY_TAG FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY_BY_SESSION(SESSION_ID => %s, RESULT_LIMIT => 2)) WHERE QUERY_ID = '%s'", sessionId, queryId))
-	require.NoError(t, err)
-	require.Len(t, result, 1)
-	require.Equal(t, queryId, *result[0]["QUERY_ID"])
-	require.Equal(t, queryTag, *result[0]["QUERY_TAG"])
-
-	newQueryTag := "some other query tag"
-	ctxWithQueryTag := gosnowflake.WithQueryTag(context.Background(), newQueryTag)
-	newQueryId := executeQueryAndReturnQueryId(t, ctxWithQueryTag, client)
-
-	result, err = client.QueryUnsafe(ctx, fmt.Sprintf("SELECT QUERY_ID, QUERY_TAG FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY_BY_SESSION(SESSION_ID => %s, RESULT_LIMIT => 2)) WHERE QUERY_ID = '%s'", sessionId, newQueryId))
-	require.NoError(t, err)
-	require.Len(t, result, 1)
-	require.Equal(t, newQueryId, *result[0]["QUERY_ID"])
-	require.Equal(t, newQueryTag, *result[0]["QUERY_TAG"])
+	// set query_tag on query level
+	perQueryQueryTag := "per-query query tag"
+	ctxWithQueryTag := gosnowflake.WithQueryTag(context.Background(), perQueryQueryTag)
+	queryId = executeQueryAndReturnQueryId(t, ctxWithQueryTag, client)
+	queryTagResult = testClientHelper().InformationSchema.GetQueryTagByQueryId(t, queryId)
+	require.Equal(t, perQueryQueryTag, queryTagResult)
 }
 
 func executeQueryAndReturnQueryId(t *testing.T, ctx context.Context, client *sdk.Client) string {
@@ -67,20 +84,14 @@ func TestInt_QueryComment(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	sessionId, err := client.ContextFunctions.CurrentSession(ctx)
-	require.NoError(t, err)
-
 	queryIdChan := make(chan string, 1)
 	metadata := `{"comment": "some comment"}`
-	_, err = client.QueryUnsafe(gosnowflake.WithQueryIDChan(ctx, queryIdChan), fmt.Sprintf(`SELECT 1; --%s`, metadata))
+	_, err := client.QueryUnsafe(gosnowflake.WithQueryIDChan(ctx, queryIdChan), fmt.Sprintf(`SELECT 1; --%s`, metadata))
 	require.NoError(t, err)
 	queryId := <-queryIdChan
 
-	result, err := client.QueryUnsafe(ctx, fmt.Sprintf("SELECT QUERY_ID, QUERY_TEXT FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY_BY_SESSION(SESSION_ID => %s, RESULT_LIMIT => 2)) WHERE QUERY_ID = '%s'", sessionId, queryId))
-	require.NoError(t, err)
-	require.Len(t, result, 1)
-	require.Equal(t, queryId, *result[0]["QUERY_ID"])
-	require.Equal(t, metadata, strings.Split((*result[0]["QUERY_TEXT"]).(string), "--")[1])
+	queryText := testClientHelper().InformationSchema.GetQueryTextByQueryId(t, queryId)
+	require.Equal(t, metadata, strings.Split(queryText, "--")[1])
 }
 
 func TestInt_AppName(t *testing.T) {

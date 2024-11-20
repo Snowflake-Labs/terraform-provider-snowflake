@@ -2,15 +2,16 @@ package tracking
 
 import (
 	"context"
+	"errors"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 )
 
 const (
-	ProviderVersion string = "v0.98.0" // TODO(SNOW-1814934): Currently hardcoded, make it computed
+	ProviderVersion string = "v0.99.0" // TODO(SNOW-1814934): Currently hardcoded, make it computed
 	MetadataPrefix  string = "terraform_provider_usage_tracking"
 )
 
-type key int
+type key struct{}
 
 var metadataContextKey key
 
@@ -26,23 +27,37 @@ const (
 )
 
 type Metadata struct {
-	Version   string                 `json:"version,omitempty"`
-	Resource  resources.ResourceName `json:"resource,omitempty"`
-	Operation Operation              `json:"operation,omitempty"`
+	Version   string    `json:"version,omitempty"`
+	Resource  string    `json:"resource,omitempty"`
+	Operation Operation `json:"operation,omitempty"`
 }
 
-func NewMetadata(version string, resourceName resources.ResourceName, operation Operation) Metadata {
+func (m Metadata) validate() error {
+	errs := make([]error, 0)
+	if m.Version == "" {
+		errs = append(errs, errors.New("version for metadata should not be empty"))
+	}
+	if m.Resource == "" {
+		errs = append(errs, errors.New("resource name for metadata should not be empty"))
+	}
+	if m.Operation == "" {
+		errs = append(errs, errors.New("operation for metadata should not be empty"))
+	}
+	return errors.Join(errs...)
+}
+
+func NewMetadata(version string, resource resources.Resource, operation Operation) Metadata {
 	return Metadata{
 		Version:   version,
-		Resource:  resourceName,
+		Resource:  resource.String(),
 		Operation: operation,
 	}
 }
 
-func NewVersionedMetadata(resourceName resources.ResourceName, operation Operation) Metadata {
+func NewVersionedMetadata(resource resources.Resource, operation Operation) Metadata {
 	return Metadata{
 		Version:   ProviderVersion,
-		Resource:  resourceName,
+		Resource:  resource.String(),
 		Operation: operation,
 	}
 }

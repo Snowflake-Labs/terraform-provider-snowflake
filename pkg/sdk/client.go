@@ -308,7 +308,7 @@ func (c *Client) queryOne(ctx context.Context, dest interface{}, sql string) err
 
 func appendQueryMetadata(ctx context.Context, sql string) string {
 	if metadata, ok := tracking.FromContext(ctx); ok {
-		newSql, err := tracking.AppendMetadataToSql(sql, metadata)
+		newSql, err := tracking.AppendMetadata(sql, metadata)
 		if err != nil {
 			log.Printf("[ERROR] failed to append metadata tracking: %v\n", err)
 			return sql

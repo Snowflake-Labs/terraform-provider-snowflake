@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"log"
 	"slices"
@@ -91,13 +90,13 @@ var schemaSchema = map[string]*schema.Schema{
 // Schema returns a pointer to the resource representing a schema.
 func Schema() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CommonCreateWrapper(resources.Schema, CreateContextSchema),
-		ReadContext:   CommonReadWrapper(resources.Schema, ReadContextSchema(true)),
-		UpdateContext: CommonUpdateWrapper(resources.Schema, UpdateContextSchema),
-		DeleteContext: CommonDeleteWrapper(resources.Schema, DeleteContextSchema),
+		CreateContext: TrackingCreateWrapper(resources.Schema, CreateContextSchema),
+		ReadContext:   TrackingReadWrapper(resources.Schema, ReadContextSchema(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.Schema, UpdateContextSchema),
+		DeleteContext: TrackingDeleteWrapper(resources.Schema, DeleteContextSchema),
 		Description:   "Resource used to manage schema objects. For more information, check [schema documentation](https://docs.snowflake.com/en/sql-reference/sql/create-schema).",
 
-		CustomizeDiff: CommonCustomDiffWrapper(resources.Schema, customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Schema, customdiff.All(
 			ComputedIfAnyAttributeChanged(schemaSchema, ShowOutputAttributeName, "name", "comment", "with_managed_access", "is_transient"),
 			ComputedIfAnyAttributeChanged(schemaSchema, DescribeOutputAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(schemaSchema, FullyQualifiedNameAttributeName, "name"),
@@ -108,7 +107,7 @@ func Schema() *schema.Resource {
 
 		Schema: collections.MergeMaps(schemaSchema, schemaParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: CommonImportWrapper(resources.Schema, ImportSchema),
+			StateContext: TrackingImportWrapper(resources.Schema, ImportSchema),
 		},
 
 		SchemaVersion: 2,
@@ -131,7 +130,6 @@ func Schema() *schema.Resource {
 
 func ImportSchema(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	log.Printf("[DEBUG] Starting schema import")
-	ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resources.Schema, tracking.ImportOperation))
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseDatabaseObjectIdentifier(d.Id())
 	if err != nil {

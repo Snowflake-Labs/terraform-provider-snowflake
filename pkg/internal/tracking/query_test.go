@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestAppendMetadataToSql(t *testing.T) {
+func TestAppendMetadata(t *testing.T) {
 	metadata := NewMetadata("123", resources.Account, CreateOperation)
 	sql := "SELECT 1"
 
@@ -17,33 +17,36 @@ func TestAppendMetadataToSql(t *testing.T) {
 
 	expectedSql := fmt.Sprintf("%s --%s %s", sql, MetadataPrefix, string(bytes))
 
-	newSql, err := AppendMetadataToSql(sql, metadata)
+	newSql, err := AppendMetadata(sql, metadata)
 	require.NoError(t, err)
 	require.Equal(t, expectedSql, newSql)
 }
 
-func TestParseMetadataFromSql(t *testing.T) {
+func TestParseMetadata(t *testing.T) {
 	metadata := NewMetadata("123", resources.Account, CreateOperation)
-	sql, err := AppendMetadataToSql("SELECT 1", metadata)
+	bytes, err := json.Marshal(metadata)
 	require.NoError(t, err)
+	sql := fmt.Sprintf("SELECT 1 --%s %s", MetadataPrefix, string(bytes))
 
-	parsedMetadata, err := ParseMetadataFromSql(sql)
+	parsedMetadata, err := ParseMetadata(sql)
 	require.NoError(t, err)
 	require.Equal(t, metadata, parsedMetadata)
 }
 
-func TestParseInvalidMetadataKeysFromSql(t *testing.T) {
+func TestParseInvalidMetadataKeys(t *testing.T) {
 	sql := fmt.Sprintf(`SELECT 1 --%s {"key": "value"}`, MetadataPrefix)
 
-	parsedMetadata, err := ParseMetadataFromSql(sql)
-	require.NoError(t, err)
+	parsedMetadata, err := ParseMetadata(sql)
+	require.ErrorContains(t, err, "version for metadata should not be empty")
+	require.ErrorContains(t, err, "resource name for metadata should not be empty")
+	require.ErrorContains(t, err, "operation for metadata should not be empty")
 	require.Equal(t, Metadata{}, parsedMetadata)
 }
 
-func TestParseInvalidMetadataJsonFromSql(t *testing.T) {
+func TestParseInvalidMetadataJson(t *testing.T) {
 	sql := fmt.Sprintf(`SELECT 1 --%s "key": "value"`, MetadataPrefix)
 
-	parsedMetadata, err := ParseMetadataFromSql(sql)
+	parsedMetadata, err := ParseMetadata(sql)
 	require.ErrorContains(t, err, "failed to unmarshal metadata from sql")
 	require.Equal(t, Metadata{}, parsedMetadata)
 }
@@ -55,7 +58,7 @@ func TestParseMetadataFromInvalidSqlCommentPrefix(t *testing.T) {
 	bytes, err := json.Marshal(metadata)
 	require.NoError(t, err)
 
-	parsedMetadata, err := ParseMetadataFromSql(fmt.Sprintf("%s --invalid_prefix %s", sql, string(bytes)))
+	parsedMetadata, err := ParseMetadata(fmt.Sprintf("%s --invalid_prefix %s", sql, string(bytes)))
 	require.ErrorContains(t, err, "failed to parse metadata from sql")
 	require.Equal(t, Metadata{}, parsedMetadata)
 }
