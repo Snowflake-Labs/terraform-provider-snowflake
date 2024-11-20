@@ -320,20 +320,28 @@ func TestInt_TagsAssociations(t *testing.T) {
 		tag.ID(),
 	}
 
+	assertTagSet := func(id sdk.ObjectIdentifier, objectType sdk.ObjectType) {
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
+		require.NoError(t, err)
+		assert.Equal(t, sdk.Pointer(tagValue), returnedTagValue)
+	}
+
+	assertTagUnset := func(id sdk.ObjectIdentifier, objectType sdk.ObjectType) {
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
+		require.NoError(t, err)
+		assert.Nil(t, returnedTagValue)
+	}
+
 	testTagSet := func(id sdk.ObjectIdentifier, objectType sdk.ObjectType) {
 		err := client.Tags.Set(ctx, sdk.NewSetTagRequest(objectType, id).WithSetTags(tags))
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
-		require.NoError(t, err)
-		assert.Equal(t, sdk.Pointer(tagValue), returnedTagValue)
+		assertTagSet(id, objectType)
 
 		err = client.Tags.Unset(ctx, sdk.NewUnsetTagRequest(objectType, id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 
-		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
-		require.NoError(t, err)
-		assert.Nil(t, returnedTagValue)
+		assertTagUnset(id, objectType)
 	}
 
 	t.Run("TestInt_TagAssociationForAccount_locator", func(t *testing.T) {
@@ -343,33 +351,25 @@ func TestInt_TagsAssociations(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Equal(t, tagValue, returnedTagValue)
+		assertTagSet(id, sdk.ObjectTypeAccount)
 
 		err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			UnsetTag: unsetTags,
 		})
 		require.NoError(t, err)
 
-		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Nil(t, returnedTagValue)
+		assertTagUnset(id, sdk.ObjectTypeAccount)
 
 		// test tag sdk method
 		err = client.Tags.SetOnCurrentAccount(ctx, sdk.NewSetTagOnCurrentAccountRequest().WithSetTags(tags))
 		require.NoError(t, err)
 
-		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Equal(t, tagValue, returnedTagValue)
+		assertTagSet(id, sdk.ObjectTypeAccount)
 
 		err = client.Tags.UnsetOnCurrentAccount(ctx, sdk.NewUnsetTagOnCurrentAccountRequest().WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 
-		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Nil(t, returnedTagValue)
+		assertTagUnset(id, sdk.ObjectTypeAccount)
 	})
 
 	t.Run("TestInt_TagAssociationForAccount", func(t *testing.T) {
@@ -381,16 +381,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 		err := client.Tags.Set(ctx, sdk.NewSetTagRequest(sdk.ObjectTypeAccount, id).WithSetTags(tags))
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Equal(t, sdk.Pointer(tagValue), returnedTagValue)
+		assertTagSet(id, sdk.ObjectTypeAccount)
 
 		err = client.Tags.UnsetOnCurrentAccount(ctx, sdk.NewUnsetTagOnCurrentAccountRequest().WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 
-		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Nil(t, returnedTagValue)
+		assertTagUnset(id, sdk.ObjectTypeAccount)
 	})
 
 	accountObjectTestCases := []struct {
@@ -653,16 +649,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
-			returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Equal(t, tagValue, returnedTagValue)
+			assertTagSet(id, tc.objectType)
 
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Nil(t, returnedTagValue)
+			assertTagUnset(id, tc.objectType)
 
 			// test object methods
 			testTagSet(id, tc.objectType)
@@ -745,16 +737,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
-			returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Equal(t, tagValue, returnedTagValue)
+			assertTagSet(id, tc.objectType)
 
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Nil(t, returnedTagValue)
+			assertTagUnset(id, tc.objectType)
 
 			// test object methods
 			testTagSet(id, tc.objectType)
@@ -933,16 +921,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
-			returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Equal(t, tagValue, returnedTagValue)
+			assertTagSet(id, tc.objectType)
 
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Nil(t, returnedTagValue)
+			assertTagUnset(id, tc.objectType)
 
 			// test object methods
 			testTagSet(id, tc.objectType)
@@ -958,9 +942,7 @@ func TestInt_TagsAssociations(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeMaskingPolicy)
-		require.NoError(t, err)
-		assert.Equal(t, sdk.Pointer(tagValue), returnedTagValue)
+		assertTagSet(id, sdk.ObjectTypeMaskingPolicy)
 
 		// assert that setting masking policy does not apply the tag on the masking policy
 		refs, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, tag.ID(), sdk.PolicyEntityDomainTag)
@@ -972,9 +954,7 @@ func TestInt_TagsAssociations(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeMaskingPolicy)
-		require.NoError(t, err)
-		assert.Nil(t, returnedTagValue)
+		assertTagUnset(id, sdk.ObjectTypeMaskingPolicy)
 
 		// test object methods
 		testTagSet(id, sdk.ObjectTypeMaskingPolicy)
@@ -1030,16 +1010,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
-			returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeColumn)
-			require.NoError(t, err)
-			assert.Equal(t, tagValue, returnedTagValue)
+			assertTagSet(id, sdk.ObjectTypeColumn)
 
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeColumn)
-			require.NoError(t, err)
-			assert.Nil(t, returnedTagValue)
+			assertTagUnset(id, sdk.ObjectTypeColumn)
 
 			// test object methods
 			testTagSet(id, sdk.ObjectTypeColumn)
@@ -1108,16 +1084,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
-			returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Equal(t, tagValue, returnedTagValue)
+			assertTagSet(id, tc.objectType)
 
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Nil(t, returnedTagValue)
+			assertTagUnset(id, tc.objectType)
 
 			// test object methods
 			testTagSet(id, tc.objectType)

@@ -216,7 +216,7 @@ func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 			return diag.FromErr(err)
 		}
 
-		_, _, commonIds := ListDiffWithCommon(oldIds, newIds)
+		_, _, commonIds := ListDiffWithCommonItems(oldIds, newIds)
 
 		for _, id := range commonIds {
 			request := sdk.NewSetTagRequest(objectType, id).WithSetTags([]sdk.TagAssociation{

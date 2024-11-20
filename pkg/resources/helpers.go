@@ -310,30 +310,16 @@ func JoinDiags(diagnostics ...diag.Diagnostics) diag.Diagnostics {
 	return result
 }
 
-// ListDiff Compares two lists (before and after), then compares and returns two lists that include
+// ListDiff compares two lists (before and after), then compares and returns two lists that include
 // added and removed items between those lists.
 func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed []T) {
-	added = make([]T, 0)
-	removed = make([]T, 0)
-
-	for _, beforeItem := range beforeList {
-		if !slices.Contains(afterList, beforeItem) {
-			removed = append(removed, beforeItem)
-		}
-	}
-
-	for _, afterItem := range afterList {
-		if !slices.Contains(beforeList, afterItem) {
-			added = append(added, afterItem)
-		}
-	}
-
-	return added, removed
+	added, removed, _ = ListDiffWithCommonItems(beforeList, afterList)
+	return
 }
 
-// ListDiffWithCommon Compares two lists (before and after), then compares and returns three lists that include
+// ListDiffWithCommonItems compares two lists (before and after), then compares and returns three lists that include
 // added, removed and common items between those lists.
-func ListDiffWithCommon[T comparable](beforeList []T, afterList []T) (added []T, removed []T, common []T) {
+func ListDiffWithCommonItems[T comparable](beforeList []T, afterList []T) (added []T, removed []T, common []T) {
 	added = make([]T, 0)
 	removed = make([]T, 0)
 	common = make([]T, 0)
