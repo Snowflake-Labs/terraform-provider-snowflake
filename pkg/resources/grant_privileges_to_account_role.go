@@ -1183,6 +1183,9 @@ func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) (id 
 		case on.AccountObject.ReplicationGroup != nil:
 			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeReplicationGroup
 			onAccountObjectGrantData.ObjectName = *on.AccountObject.ReplicationGroup
+		case on.AccountObject.ComputePool != nil:
+			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeComputePool
+			onAccountObjectGrantData.ObjectName = *on.AccountObject.ComputePool
 		case on.AccountObject.ExternalVolume != nil:
 			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeExternalVolume
 			onAccountObjectGrantData.ObjectName = *on.AccountObject.ExternalVolume

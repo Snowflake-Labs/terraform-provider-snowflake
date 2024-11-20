@@ -6,31 +6,34 @@ terraform {
   }
 }
 
+# A simple configuration of the provider with a default authentication.
+# A default value for `authenticator` is `snowflake`, enabling authentication with `user` and `password`.
 provider "snowflake" {
-  account                = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT env var
-  username               = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
-  password               = "..."
-  authenticator          = "..." # required if not using password as auth method
-  oauth_access_token     = "..."
-  private_key_path       = "..."
-  private_key            = "..."
-  private_key_passphrase = "..."
-  oauth_refresh_token    = "..."
-  oauth_client_id        = "..."
-  oauth_client_secret    = "..."
-  oauth_endpoint         = "..."
-  oauth_redirect_url     = "..."
+  organization_name = "..." # required if not using profile. Can also be set via SNOWFLAKE_ORGANIZATION_NAME env var
+  account_name      = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT_NAME env var
+  user              = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
+  password          = "..."
 
   // optional
-  region    = "..." # required if using legacy format for account identifier
   role      = "..."
   host      = "..."
   warehouse = "..."
-  session_params = {
+  params = {
     query_tag = "..."
   }
 }
 
+# A simple configuration of the provider with private key authentication.
+provider "snowflake" {
+  organization_name      = "..." # required if not using profile. Can also be set via SNOWFLAKE_ORGANIZATION_NAME env var
+  account_name           = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT_NAME env var
+  user                   = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
+  authenticator          = "SNOWFLAKE_JWT"
+  private_key            = "-----BEGIN ENCRYPTED PRIVATE KEY-----..."
+  private_key_passphrase = "passphrase"
+}
+
+# By using the `profile` field, missing fields will be populated from ~/.snowflake/config TOML file
 provider "snowflake" {
   profile = "securityadmin"
 }

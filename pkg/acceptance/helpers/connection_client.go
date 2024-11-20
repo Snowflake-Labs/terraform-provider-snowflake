@@ -2,6 +2,8 @@ package helpers
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -46,7 +48,7 @@ func (c *ConnectionClient) CreateReplication(t *testing.T, id sdk.AccountObjectI
 	return connection, c.DropFunc(t, id)
 }
 
-func (c *ConnectionClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, req *sdk.AlterConnectionRequest) {
+func (c *ConnectionClient) Alter(t *testing.T, req *sdk.AlterConnectionRequest) {
 	t.Helper()
 	ctx := context.Background()
 
@@ -69,4 +71,8 @@ func (c *ConnectionClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*
 	ctx := context.Background()
 
 	return c.client().ShowByID(ctx, id)
+}
+
+func (c *ConnectionClient) GetConnectionUrl(organizationName, objectName string) string {
+	return strings.ToLower(fmt.Sprintf("%s-%s.snowflakecomputing.com", organizationName, objectName))
 }

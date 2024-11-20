@@ -17,6 +17,7 @@ type TestClient struct {
 	ApplicationPackage           *ApplicationPackageClient
 	AuthenticationPolicy         *AuthenticationPolicyClient
 	BcrBundles                   *BcrBundlesClient
+	ComputePool                  *ComputePoolClient
 	Connection                   *ConnectionClient
 	Context                      *ContextClient
 	CortexSearchService          *CortexSearchServiceClient
@@ -26,6 +27,7 @@ type TestClient struct {
 	DataMetricFunctionClient     *DataMetricFunctionClient
 	DataMetricFunctionReferences *DataMetricFunctionReferencesClient
 	DynamicTable                 *DynamicTableClient
+	EventTable                   *EventTableClient
 	ExternalAccessIntegration    *ExternalAccessIntegrationClient
 	ExternalFunction             *ExternalFunctionClient
 	ExternalTable                *ExternalTableClient
@@ -54,6 +56,7 @@ type TestClient struct {
 	SessionPolicy                *SessionPolicyClient
 	Share                        *ShareClient
 	Stage                        *StageClient
+	StorageIntegration           *StorageIntegrationClient
 	Stream                       *StreamClient
 	Streamlit                    *StreamlitClient
 	Table                        *TableClient
@@ -86,6 +89,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		ApplicationPackage:           NewApplicationPackageClient(context, idsGenerator),
 		AuthenticationPolicy:         NewAuthenticationPolicyClient(context, idsGenerator),
 		BcrBundles:                   NewBcrBundlesClient(context),
+		ComputePool:                  NewComputePoolClient(context, idsGenerator),
 		Connection:                   NewConnectionClient(context, idsGenerator),
 		Context:                      NewContextClient(context),
 		CortexSearchService:          NewCortexSearchServiceClient(context, idsGenerator),
@@ -95,6 +99,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		DataMetricFunctionClient:     NewDataMetricFunctionClient(context, idsGenerator),
 		DataMetricFunctionReferences: NewDataMetricFunctionReferencesClient(context),
 		DynamicTable:                 NewDynamicTableClient(context, idsGenerator),
+		EventTable:                   NewEventTableClient(context, idsGenerator),
 		ExternalAccessIntegration:    NewExternalAccessIntegrationClient(context, idsGenerator),
 		ExternalFunction:             NewExternalFunctionClient(context, idsGenerator),
 		ExternalTable:                NewExternalTableClient(context, idsGenerator),
@@ -122,9 +127,10 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		SecurityIntegration:          NewSecurityIntegrationClient(context, idsGenerator),
 		SessionPolicy:                NewSessionPolicyClient(context, idsGenerator),
 		Share:                        NewShareClient(context, idsGenerator),
+		Stage:                        NewStageClient(context, idsGenerator),
+		StorageIntegration:           NewStorageIntegrationClient(context, idsGenerator),
 		Stream:                       NewStreamClient(context, idsGenerator),
 		Streamlit:                    NewStreamlitClient(context, idsGenerator),
-		Stage:                        NewStageClient(context, idsGenerator),
 		Table:                        NewTableClient(context, idsGenerator),
 		Tag:                          NewTagClient(context, idsGenerator),
 		Task:                         NewTaskClient(context, idsGenerator),

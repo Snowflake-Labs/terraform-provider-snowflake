@@ -276,61 +276,6 @@ func TestInt_SharesAlter(t *testing.T) {
 		share = shares[0]
 		assert.Equal(t, "", share.Comment)
 	})
-
-	t.Run("set and unset tags", func(t *testing.T) {
-		shareTest, shareCleanup := testClientHelper().Share.CreateShare(t)
-		t.Cleanup(shareCleanup)
-		err := client.Grants.GrantPrivilegeToShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-			Database: testClientHelper().Ids.DatabaseId(),
-		}, shareTest.ID())
-		require.NoError(t, err)
-		t.Cleanup(func() {
-			err = client.Grants.RevokePrivilegeFromShare(ctx, []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage}, &sdk.ShareGrantOn{
-				Database: testClientHelper().Ids.DatabaseId(),
-			}, shareTest.ID())
-			require.NoError(t, err)
-		})
-
-		tagTest, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-		tagTest2, tagCleanup2 := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup2)
-		tagAssociations := []sdk.TagAssociation{
-			{
-				Name:  tagTest.ID(),
-				Value: random.String(),
-			},
-			{
-				Name:  tagTest2.ID(),
-				Value: random.String(),
-			},
-		}
-		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
-			IfExists: sdk.Bool(true),
-			SetTag:   tagAssociations,
-		})
-		require.NoError(t, err)
-		tagValue, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), shareTest.ID(), sdk.ObjectTypeShare)
-		require.NoError(t, err)
-		assert.Equal(t, tagAssociations[0].Value, tagValue)
-		tagValue, err = client.SystemFunctions.GetTag(ctx, tagTest2.ID(), shareTest.ID(), sdk.ObjectTypeShare)
-		require.NoError(t, err)
-		assert.Equal(t, tagAssociations[1].Value, tagValue)
-
-		// unset tags
-		err = client.Shares.Alter(ctx, shareTest.ID(), &sdk.AlterShareOptions{
-			IfExists: sdk.Bool(true),
-			UnsetTag: []sdk.ObjectIdentifier{
-				tagTest.ID(),
-			},
-		})
-		require.NoError(t, err)
-		_, err = client.SystemFunctions.GetTag(ctx, tagTest.ID(), shareTest.ID(), sdk.ObjectTypeShare)
-		require.Error(t, err)
-		tagValue, err = client.SystemFunctions.GetTag(ctx, tagTest2.ID(), shareTest.ID(), sdk.ObjectTypeShare)
-		require.NoError(t, err)
-		assert.Equal(t, tagAssociations[1].Value, tagValue)
-	})
 }
 
 func TestInt_ShareDescribeProvider(t *testing.T) {

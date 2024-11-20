@@ -104,6 +104,9 @@ func Test_Sweeper_NukeStaleObjects(t *testing.T) {
 	})
 
 	// TODO [SNOW-867247]: nuke stale objects (e.g. created more than 2 weeks ago)
+
+	// TODO [SNOW-867247]: nuke external oauth integrations because of errors like
+	// Error: 003524 (22023): SQL execution error: An integration with the given issuer already exists for this account
 }
 
 // TODO [SNOW-867247]: generalize nuke methods (sweepers too)

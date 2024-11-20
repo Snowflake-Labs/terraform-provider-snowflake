@@ -2,6 +2,7 @@ package random
 
 import (
 	"bytes"
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/youmark/pkcs8"
 )
 
 // GenerateX509 returns base64 encoded certificate on a single line without the leading -----BEGIN CERTIFICATE----- and ending -----END CERTIFICATE----- markers.
@@ -43,13 +45,48 @@ func GenerateX509(t *testing.T) string {
 // GenerateRSAPublicKey returns an RSA public key without BEGIN and END markers, and key's hash.
 func GenerateRSAPublicKey(t *testing.T) (string, string) {
 	t.Helper()
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
+	key := GenerateRSAPrivateKey(t)
 
 	pub := key.Public()
 	b, err := x509.MarshalPKIXPublicKey(pub.(*rsa.PublicKey))
 	require.NoError(t, err)
 	return encode(t, "RSA PUBLIC KEY", b), hash(t, b)
+}
+
+// GenerateRSAPrivateKey returns an RSA private key.
+func GenerateRSAPrivateKey(t *testing.T) *rsa.PrivateKey {
+	t.Helper()
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	return key
+}
+
+// GenerateRSAPrivateKeyEncrypted returns a PEM-encoded pair of unencrypted and encrypted key with a given password
+func GenerateRSAPrivateKeyEncrypted(t *testing.T, password string) (unencrypted, encrypted string) {
+	t.Helper()
+	rsaPrivateKey := GenerateRSAPrivateKey(t)
+	unencryptedDer, err := x509.MarshalPKCS8PrivateKey(rsaPrivateKey)
+	require.NoError(t, err)
+	privBlock := pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: unencryptedDer,
+	}
+	unencrypted = string(pem.EncodeToMemory(&privBlock))
+
+	encryptedDer, err := pkcs8.MarshalPrivateKey(rsaPrivateKey, []byte(password), &pkcs8.Opts{
+		Cipher: pkcs8.AES256CBC,
+		KDFOpts: pkcs8.PBKDF2Opts{
+			SaltSize: 16, IterationCount: 2000, HMACHash: crypto.SHA256,
+		},
+	})
+	require.NoError(t, err)
+	privEncryptedBlock := pem.Block{
+		Type:  "ENCRYPTED PRIVATE KEY",
+		Bytes: encryptedDer,
+	}
+	encrypted = string(pem.EncodeToMemory(&privEncryptedBlock))
+
+	return
 }
 
 func hash(t *testing.T, b []byte) string {

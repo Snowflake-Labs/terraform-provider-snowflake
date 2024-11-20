@@ -6,11 +6,12 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 var (
-	SecurityIntegrationDescribeSchema = helpers.MergeMaps(
+	SecurityIntegrationDescribeSchema = collections.MergeMaps(
 		DescribeApiAuthSecurityIntegrationSchema,
 		DescribeExternalOauthSecurityIntegrationSchema,
 		DescribeOauthIntegrationForCustomClients,

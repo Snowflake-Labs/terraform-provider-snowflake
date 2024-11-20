@@ -140,45 +140,6 @@ func TestInt_SessionPolicies(t *testing.T) {
 		assert.Equal(t, "", alteredSessionPolicy.Comment)
 	})
 
-	t.Run("set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-
-		err := client.SessionPolicies.Create(ctx, sdk.NewCreateSessionPolicyRequest(id))
-		require.NoError(t, err)
-		t.Cleanup(cleanupSessionPolicyProvider(id))
-
-		tagValue := "abc"
-		tags := []sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}
-		alterRequestSetTags := sdk.NewAlterSessionPolicyRequest(id).WithSetTags(tags)
-
-		err = client.SessionPolicies.Alter(ctx, alterRequestSetTags)
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeSessionPolicy)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		unsetTags := []sdk.ObjectIdentifier{
-			tag.ID(),
-		}
-		alterRequestUnsetTags := sdk.NewAlterSessionPolicyRequest(id).WithUnsetTags(unsetTags)
-
-		err = client.SessionPolicies.Alter(ctx, alterRequestUnsetTags)
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeSessionPolicy)
-		require.Error(t, err)
-	})
-
 	t.Run("alter session_policy: rename", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 

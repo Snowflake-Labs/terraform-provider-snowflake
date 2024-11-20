@@ -41,3 +41,5 @@ Import is supported using the following syntax:
 
 {{ codefile "shell" (printf "examples/resources/%s/import.sh" .Name)}}
 {{- end }}
+
+Note: terraform plan+apply may be needed after successful import to fill out all the missing fields (like `password`) in state.

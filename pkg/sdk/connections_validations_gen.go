@@ -29,6 +29,11 @@ func (opts *AlterConnectionOptions) validate() error {
 	if !exactlyOneValueSet(opts.EnableConnectionFailover, opts.DisableConnectionFailover, opts.Primary, opts.Set, opts.Unset) {
 		errs = append(errs, errExactlyOneOf("AlterConnectionOptions", "EnableConnectionFailover", "DisableConnectionFailover", "Primary", "Set", "Unset"))
 	}
+	if valueSet(opts.EnableConnectionFailover) {
+		if !anyValueSet(opts.EnableConnectionFailover.ToAccounts) {
+			errs = append(errs, errAtLeastOneOf("AlterConnectionOptions.EnableConnectionFailover", "ToAccounts"))
+		}
+	}
 	if valueSet(opts.Set) {
 		if !anyValueSet(opts.Set.Comment) {
 			errs = append(errs, errAtLeastOneOf("AlterConnectionOptions.Set", "Comment"))

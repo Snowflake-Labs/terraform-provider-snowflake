@@ -103,7 +103,7 @@ func Schema() *schema.Resource {
 			schemaParametersCustomDiff,
 		),
 
-		Schema: helpers.MergeMaps(schemaSchema, schemaParametersSchema),
+		Schema: collections.MergeMaps(schemaSchema, schemaParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportSchema,
 		},

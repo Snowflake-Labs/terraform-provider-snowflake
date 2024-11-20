@@ -136,283 +136,166 @@ const (
 	NoDependency        DependencyType = "no_dependency"
 )
 
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithImplicitDependency(t *testing.T) {
+func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
+	testCases := []struct {
+		Dependency                             DependencyType
+		IsRenamedDatabaseReferencedAfterRename bool
+	}{
+		{Dependency: ImplicitDependency},
+		// Error happens during schema's Read operation and then Delete operation (schema cannot be removed).
+		// Not able to handle the error produced by Delete operation that results in test always failing
+		// {Dependency: NoDependency, IsRenamedDatabaseReferencedAfterRename: false},
+		// {Dependency: NoDependency, IsRenamedDatabaseReferencedAfterRename: true},
+		// {Dependency: DependsOnDependency, IsRenamedDatabaseReferencedAfterRename: false},
+		// {Dependency: DependsOnDependency, IsRenamedDatabaseReferencedAfterRename: true},
+	}
 
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("TestAcc_ dependency: %s", testCase.Dependency), func(t *testing.T) {
+			databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+			newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+			schemaName := acc.TestClient().Ids.Alpha()
 
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModel(t, databaseConfigModel) + configSchemaWithDatabaseReference(databaseConfigModel.ResourceReference(), schemaName),
-			},
-			{
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
+			databaseConfigModel := model.Database("test", databaseId.Name())
+			databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
+
+			var schemaConfigAfterRename string
+			var preApplyChecksAfterRename []plancheck.PlanCheck
+
+			switch testCase.Dependency {
+			case ImplicitDependency:
+				schemaConfigAfterRename = configSchemaWithReferences(t, databaseConfigModelWithNewId.ResourceReference(), testCase.Dependency, databaseId.Name(), schemaName)
+				preApplyChecksAfterRename = []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionUpdate),
+					plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionDestroyBeforeCreate),
+				}
+			case DependsOnDependency, NoDependency:
+				if testCase.IsRenamedDatabaseReferencedAfterRename {
+					schemaConfigAfterRename = configSchemaWithReferences(t, databaseConfigModelWithNewId.ResourceReference(), testCase.Dependency, newDatabaseId.Name(), schemaName)
+					preApplyChecksAfterRename = []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionUpdate),
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionDestroyBeforeCreate),
-					},
-				},
-				Config: config.FromModel(t, databaseConfigModelWithNewId) + configSchemaWithDatabaseReference(databaseConfigModelWithNewId.ResourceReference(), schemaName),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithoutDependency_AfterRenameSchemaReferencingOldDatabaseName(t *testing.T) {
-	// Error happens during schema's Read operation and then Delete operation (schema cannot be removed).
-	t.Skip("Not able to handle the error produced by Delete operation that results in test always failing")
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
-
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
+					}
+				} else {
+					schemaConfigAfterRename = configSchemaWithReferences(t, databaseConfigModelWithNewId.ResourceReference(), testCase.Dependency, databaseId.Name(), schemaName)
+					preApplyChecksAfterRename = []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionUpdate),
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionNoop),
+					}
+				}
+			}
+
+			resource.Test(t, resource.TestCase{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+					tfversion.RequireAbove(tfversion.Version1_5_0),
+				},
+				CheckDestroy: acc.CheckDestroy(t, resources.Schema),
+				Steps: []resource.TestStep{
+					{
+						Config: config.FromModel(t, databaseConfigModel) + configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), testCase.Dependency, databaseId.Name(), schemaName),
+					},
+					{
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PreApply: preApplyChecksAfterRename,
+						},
+						Config: config.FromModel(t, databaseConfigModelWithNewId) + schemaConfigAfterRename,
 					},
 				},
-				Config:      config.FromModels(t, databaseConfigModelWithNewId, schemaModelConfig),
-				ExpectError: regexp.MustCompile("does not exist or not authorized"),
-			},
-		},
-	})
+			})
+		})
+	}
 }
 
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithoutDependency_AfterRenameSchemaReferencingNewDatabaseName(t *testing.T) {
-	// Error happens during schema's Read operation and then Delete operation (schema cannot be removed).
-	t.Skip("Not able to handle the error produced by Delete operation that results in test always failing")
+func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
+	testCases := []struct {
+		Dependency                                       DependencyType
+		IsRenamedDatabaseReferencedAfterRenameInDatabase bool
+		IsRenamedDatabaseReferencedAfterRenameInSchema   bool
+		ExpectedError                                    *regexp.Regexp
+	}{
+		// errors with already exists happen, because we try to create databases or schemas when there's already an existing object in Snowflake with the same name.
+		{Dependency: ImplicitDependency, IsRenamedDatabaseReferencedAfterRenameInDatabase: false},
+		{Dependency: ImplicitDependency, IsRenamedDatabaseReferencedAfterRenameInDatabase: true, ExpectedError: regexp.MustCompile(`Object '.*' already exists`)},
 
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
+		{Dependency: NoDependency, IsRenamedDatabaseReferencedAfterRenameInDatabase: false, IsRenamedDatabaseReferencedAfterRenameInSchema: true, ExpectedError: regexp.MustCompile("Failed to create schema")},
+		{Dependency: NoDependency, IsRenamedDatabaseReferencedAfterRenameInDatabase: true, IsRenamedDatabaseReferencedAfterRenameInSchema: false, ExpectedError: regexp.MustCompile(`Object '.*' already exists`)},
+		{Dependency: NoDependency, IsRenamedDatabaseReferencedAfterRenameInDatabase: true, IsRenamedDatabaseReferencedAfterRenameInSchema: true, ExpectedError: regexp.MustCompile(`Object '.*' already exists`)},
 
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-	schemaModelConfigWithNewDatabaseId := model.Schema("test", newDatabaseId.Name(), schemaName)
+		{Dependency: DependsOnDependency, IsRenamedDatabaseReferencedAfterRenameInDatabase: false, IsRenamedDatabaseReferencedAfterRenameInSchema: false},
+		{Dependency: DependsOnDependency, IsRenamedDatabaseReferencedAfterRenameInDatabase: false, IsRenamedDatabaseReferencedAfterRenameInSchema: true, ExpectedError: regexp.MustCompile("Failed to create schema")},
+		{Dependency: DependsOnDependency, IsRenamedDatabaseReferencedAfterRenameInDatabase: true, IsRenamedDatabaseReferencedAfterRenameInSchema: false, ExpectedError: regexp.MustCompile(`Object '.*' already exists`)},
+		{Dependency: DependsOnDependency, IsRenamedDatabaseReferencedAfterRenameInDatabase: true, IsRenamedDatabaseReferencedAfterRenameInSchema: true, ExpectedError: regexp.MustCompile(`Object '.*' already exists`)},
+	}
 
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionUpdate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionDestroyBeforeCreate),
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("TestAcc_ dependency: %s, is using new database name in dataabse resource: %t, in schema resource: %t", testCase.Dependency, testCase.IsRenamedDatabaseReferencedAfterRenameInDatabase, testCase.IsRenamedDatabaseReferencedAfterRenameInSchema), func(t *testing.T) {
+			databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+			newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+			schemaName := acc.TestClient().Ids.Alpha()
+
+			databaseConfigModel := model.Database("test", databaseId.Name())
+			databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
+
+			var databaseConfigAfterRename string
+			var schemaConfigAfterRename string
+
+			if testCase.IsRenamedDatabaseReferencedAfterRenameInDatabase {
+				databaseConfigAfterRename = config.FromModel(t, databaseConfigModelWithNewId)
+			} else {
+				databaseConfigAfterRename = config.FromModel(t, databaseConfigModel)
+			}
+
+			switch testCase.Dependency {
+			case ImplicitDependency:
+				schemaConfigAfterRename = configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), testCase.Dependency, "", schemaName)
+			case DependsOnDependency, NoDependency:
+				if testCase.IsRenamedDatabaseReferencedAfterRenameInSchema {
+					schemaConfigAfterRename = configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), testCase.Dependency, newDatabaseId.Name(), schemaName)
+				} else {
+					schemaConfigAfterRename = configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), testCase.Dependency, databaseId.Name(), schemaName)
+				}
+			}
+
+			resource.Test(t, resource.TestCase{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+					tfversion.RequireAbove(tfversion.Version1_5_0),
+				},
+				CheckDestroy: acc.CheckDestroy(t, resources.Schema),
+				Steps: []resource.TestStep{
+					{
+						Config: config.FromModel(t, databaseConfigModel) + configSchemaWithDatabaseReference(databaseConfigModel.ResourceReference(), schemaName),
+					},
+					{
+						PreConfig: func() {
+							acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{
+								NewName: &newDatabaseId,
+							})
+							t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
+						},
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PreApply: []plancheck.PlanCheck{
+								// Creates are expected, because in refresh Read before apply the database is removing the unknown database from the state using d.SetId("") after failed ShowByID
+								plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
+								plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
+							},
+						},
+						Config:      databaseConfigAfterRename + schemaConfigAfterRename,
+						ExpectError: testCase.ExpectedError,
 					},
 				},
-				Config:      config.FromModels(t, databaseConfigModelWithNewId, schemaModelConfigWithNewDatabaseId),
-				ExpectError: regexp.MustCompile("does not exist or not authorized"),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithDependsOn_AfterRenameSchemaReferencingOldDatabaseName(t *testing.T) {
-	// Error happens during schema's Read operation and then Delete operation (schema cannot be removed).
-	t.Skip("Not able to handle the error produced by Delete operation that results in test always failing")
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
-
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-	schemaModelConfig.SetDependsOn(databaseConfigModel.ResourceReference())
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionUpdate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionNoop),
-					},
-				},
-				Config:      config.FromModels(t, databaseConfigModelWithNewId, schemaModelConfig),
-				ExpectError: regexp.MustCompile("does not exist or not authorized"),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally_WithDependsOn_AfterRenameSchemaReferencingNewDatabaseName(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
-
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-	schemaModelConfig.SetDependsOn(databaseConfigModel.ResourceReference())
-	schemaModelConfigWithNewDatabaseId := model.Schema("test", newDatabaseId.Name(), schemaName)
-	schemaModelConfigWithNewDatabaseId.SetDependsOn(databaseConfigModelWithNewId.ResourceReference())
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionUpdate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionDestroyBeforeCreate),
-					},
-				},
-				Config: config.FromModels(t, databaseConfigModelWithNewId, schemaModelConfigWithNewDatabaseId),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithImplicitDependency_DatabaseHoldingTheOldNameInConfig(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModel(t, databaseConfigModel) + configSchemaWithDatabaseReference(databaseConfigModel.ResourceReference(), schemaName),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{
-						NewName: &newDatabaseId,
-					})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
-					},
-				},
-				Config: config.FromModel(t, databaseConfigModel) + configSchemaWithDatabaseReference(databaseConfigModel.ResourceReference(), schemaName),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithImplicitDependency_DatabaseHoldingTheNewNameInConfig(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModel(t, databaseConfigModel) + configSchemaWithDatabaseReference(databaseConfigModel.ResourceReference(), schemaName),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{
-						NewName: &newDatabaseId,
-					})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate), // Create is expected, because in refresh Read before apply the database is removing the unknown database from the state using d.SetId("") after failed ShowByID
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),   // Create is expected, because in refresh Read before apply the schema is removing the unknown schema from the state using d.SetId("") after failed ShowByID
-					},
-				},
-				Config:      config.FromModel(t, databaseConfigModelWithNewId) + configSchemaWithDatabaseReference(databaseConfigModelWithNewId.ResourceReference(), schemaName),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`Object '%s' already exists`, newDatabaseId.Name())),
-			},
-		},
-	})
+			})
+		})
+	}
 }
 
 func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_AfterRenameDatabaseReferencingOldNameAndSchemaReferencingOldDatabaseName(t *testing.T) {
@@ -500,380 +383,64 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 	})
 }
 
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_AfterRenameDatabaseReferencingOldNameAndSchemaReferencingNewDatabaseName(t *testing.T) {
+func TestAcc_ShallowHierarchy_IsNotInConfig_RenamedExternally(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
+	testCases := []struct {
+		IsReferencingNewDatabaseName bool
+		ExpectedError                *regexp.Regexp
+	}{
+		{IsReferencingNewDatabaseName: false, ExpectedError: regexp.MustCompile("object does not exist or not authorized")},
+		{IsReferencingNewDatabaseName: true, ExpectedError: regexp.MustCompile("Failed to create schema")}, // already exists
+	}
 
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-	schemaModelConfigWithNewDatabaseId := model.Schema("test", newDatabaseId.Name(), schemaName)
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("TestAcc_ referencing new database name: %t", testCase.IsReferencingNewDatabaseName), func(t *testing.T) {
+			databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+			newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+			schemaName := acc.TestClient().Ids.Alpha()
+			schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
 
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
+			var schemaConfigAfterRename string
+			if testCase.IsReferencingNewDatabaseName {
+				schemaConfigAfterRename = configSchemaWithReferences(t, "", NoDependency, newDatabaseId.Name(), schemaName)
+			} else {
+				schemaConfigAfterRename = configSchemaWithReferences(t, "", NoDependency, databaseId.Name(), schemaName)
+			}
+
+			resource.Test(t, resource.TestCase{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+					tfversion.RequireAbove(tfversion.Version1_5_0),
 				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
+				CheckDestroy: acc.CheckDestroy(t, resources.Schema),
+				Steps: []resource.TestStep{
+					{
+						PreConfig: func() {
+							_, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
+							t.Cleanup(databaseCleanup)
+						},
+						Config: config.FromModel(t, schemaModelConfig),
+					},
+					{
+						PreConfig: func() {
+							acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
+							t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
+						},
+						ConfigPlanChecks: resource.ConfigPlanChecks{
+							PreApply: []plancheck.PlanCheck{
+								plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
+							},
+						},
+						Config:      schemaConfigAfterRename,
+						ExpectError: testCase.ExpectedError,
 					},
 				},
-				Config:      config.FromModels(t, databaseConfigModel, schemaModelConfigWithNewDatabaseId),
-				ExpectError: regexp.MustCompile("Failed to create schema"), // already exists (because we try to create a schema on the renamed database that already has the schema that was previously created by terraform and wasn't removed)
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_AfterRenameDatabaseReferencingNewNameAndSchemaReferencingOldDatabaseName(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
-					},
-				},
-				Config:      config.FromModels(t, databaseConfigModelWithNewId, schemaModelConfig),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`Object '%s' already exists`, newDatabaseId.Name())),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_AfterRenameDatabaseReferencingNewNameAndSchemaReferencingNewDatabaseName(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-	schemaModelConfigWithNewDatabaseId := model.Schema("test", newDatabaseId.Name(), schemaName)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
-					},
-				},
-				Config:      config.FromModels(t, databaseConfigModelWithNewId, schemaModelConfigWithNewDatabaseId),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`Object '%s' already exists`, newDatabaseId.Name())),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRenameDatabaseReferencingOldNameAndSchemaReferencingOldDatabaseName(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-	schemaModelConfig.SetDependsOn(databaseConfigModel.ResourceReference())
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				PreConfig: func() {
-					newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
-					},
-				},
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRenameDatabaseReferencingOldNameAndSchemaReferencingNewDatabaseName(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-	schemaModelConfig.SetDependsOn(databaseConfigModel.ResourceReference())
-	schemaModelConfigWithNewDatabaseId := model.Schema("test", newDatabaseId.Name(), schemaName)
-	schemaModelConfigWithNewDatabaseId.SetDependsOn(databaseConfigModel.ResourceReference())
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
-					},
-				},
-				Config:      config.FromModels(t, databaseConfigModel, schemaModelConfigWithNewDatabaseId),
-				ExpectError: regexp.MustCompile("Failed to create schema"), // already exists
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRenameDatabaseReferencingNewNameAndSchemaReferencingOldDatabaseName(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-	schemaModelConfig.SetDependsOn(databaseConfigModel.ResourceReference())
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
-					},
-				},
-				Config:      config.FromModels(t, databaseConfigModelWithNewId, schemaModelConfig),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`Object '%s' already exists`, newDatabaseId.Name())),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithDependsOn_AfterRenameDatabaseReferencingNewNameAndSchemaReferencingNewDatabaseName(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-
-	databaseConfigModel := model.Database("test", databaseId.Name())
-	databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-	schemaModelConfig.SetDependsOn(databaseConfigModel.ResourceReference())
-	schemaModelConfigWithNewDatabaseId := model.Schema("test", newDatabaseId.Name(), schemaName)
-	schemaModelConfigWithNewDatabaseId.SetDependsOn(databaseConfigModelWithNewId.ResourceReference())
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_database.test", plancheck.ResourceActionCreate),
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
-					},
-				},
-				Config:      config.FromModels(t, databaseConfigModelWithNewId, schemaModelConfigWithNewDatabaseId),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`Object '%s' already exists`, newDatabaseId.Name())),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsNotInConfig_RenamedExternally_ReferencingOldName(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				PreConfig: func() {
-					_, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
-					t.Cleanup(databaseCleanup)
-				},
-				Config: config.FromModel(t, schemaModelConfig),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
-					},
-				},
-				Config:      config.FromModel(t, schemaModelConfig),
-				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
-			},
-		},
-	})
-}
-
-func TestAcc_ShallowHierarchy_IsNotInConfig_RenamedExternally_ReferencingNewName(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableObjectRenamingTest)
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaName := acc.TestClient().Ids.Alpha()
-	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
-	schemaModelConfigWithNewDatabaseId := model.Schema("test", newDatabaseId.Name(), schemaName)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
-		Steps: []resource.TestStep{
-			{
-				PreConfig: func() {
-					_, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
-					t.Cleanup(databaseCleanup)
-				},
-				Config: config.FromModel(t, schemaModelConfig),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().Database.Alter(t, databaseId, &sdk.AlterDatabaseOptions{NewName: &newDatabaseId})
-					t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, newDatabaseId))
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
-					},
-				},
-				Config:      config.FromModel(t, schemaModelConfigWithNewDatabaseId),
-				ExpectError: regexp.MustCompile("Failed to create schema"), // already exists
-			},
-		},
-	})
+			})
+		})
+	}
 }
 
 func configSchemaWithDatabaseReference(databaseReference string, schemaName string) string {

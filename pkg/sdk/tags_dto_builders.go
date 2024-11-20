@@ -24,6 +24,24 @@ func (s *UnsetTagRequest) WithUnsetTags(tags []ObjectIdentifier) *UnsetTagReques
 	return s
 }
 
+func NewSetTagOnCurrentAccountRequest() *SetTagOnCurrentAccountRequest {
+	return &SetTagOnCurrentAccountRequest{}
+}
+
+func (s *SetTagOnCurrentAccountRequest) WithSetTags(tags []TagAssociation) *SetTagOnCurrentAccountRequest {
+	s.SetTags = tags
+	return s
+}
+
+func NewUnsetTagOnCurrentAccountRequest() *UnsetTagOnCurrentAccountRequest {
+	return &UnsetTagOnCurrentAccountRequest{}
+}
+
+func (s *UnsetTagOnCurrentAccountRequest) WithUnsetTags(tags []ObjectIdentifier) *UnsetTagOnCurrentAccountRequest {
+	s.UnsetTags = tags
+	return s
+}
+
 func NewCreateTagRequest(name SchemaObjectIdentifier) *CreateTagRequest {
 	s := CreateTagRequest{}
 	s.name = name

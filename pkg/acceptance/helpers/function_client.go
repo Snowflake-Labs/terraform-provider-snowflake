@@ -64,12 +64,20 @@ func (c *FunctionClient) CreateWithRequest(t *testing.T, id sdk.SchemaObjectIden
 	err := c.client().CreateForSQL(ctx, req.WithArguments(argumentRequests))
 	require.NoError(t, err)
 
-	t.Cleanup(func() {
-		require.NoError(t, c.context.client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id).WithIfExists(true)))
-	})
+	t.Cleanup(c.DropFunctionFunc(t, id))
 
 	function, err := c.client().ShowByID(ctx, id)
 	require.NoError(t, err)
 
 	return function
+}
+
+func (c *FunctionClient) DropFunctionFunc(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	return func() {
+		err := c.client().Drop(ctx, sdk.NewDropFunctionRequest(id).WithIfExists(true))
+		require.NoError(t, err)
+	}
 }

@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -31,7 +32,7 @@ var secretClientCredentialsSchema = func() map[string]*schema.Schema {
 			Description: "Specifies a list of scopes to use when making a request from the OAuth server by a role with USAGE on the integration during the OAuth client credentials flow.",
 		},
 	}
-	return helpers.MergeMaps(secretCommonSchema, secretClientCredentials)
+	return collections.MergeMaps(secretCommonSchema, secretClientCredentials)
 }()
 
 func SecretWithClientCredentials() *schema.Resource {

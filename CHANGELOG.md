@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.98.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.97.0...v0.98.0) (2024-11-08)
+
+
+### 🎉 **What's new:**
+
+* Add authentication policy resource ([#3098](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3098)) ([ddea819](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ddea819cb9d0dd7918e0f4bbdaa0a2204da7b8b5))
+* Add Resource for External Volumes ([#3106](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3106)) ([64ba674](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/64ba6747f9b2364a1f84a43242472af3c4ebeca7))
+* Add stream on directory table ([#3129](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3129)) ([4391473](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/439147392436b9427e31ea578cc5bb971189a932))
+* Add stream on view ([#3150](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3150)) ([494af6d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/494af6dd19d1098d76e7ea0451d1e144138c7a29))
+* Connection datasource ([#3173](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3173)) ([4127b3f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4127b3f782660772b77a72f9b38dafc728254de3))
+* Connection resource ([#3162](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3162)) ([5aef117](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5aef117f415f238a0e786b9a063d44fadeb879e5))
+* Rework config hierarchy ([#3166](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3166)) ([04cd9f0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/04cd9f04f1713b47f50c1931fd8955665ea8cbcc))
+* Rework provider configuration fields ([#3152](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3152)) ([fd6af43](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fd6af43d5e50e83d247333e4a0edf85008538a9e))
+* Rework streams data source ([#3151](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3151)) ([b18bf30](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b18bf30eee1b86e1f85c52e36122e9fa052053bd))
+* SDK Connection ([#3155](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3155)) ([bd11e0f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/bd11e0f5eab8fe420f8af6644f4c1eb90910e69a))
+* Secret resource ([#3110](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3110)) ([16a812d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/16a812dae20d59f31457790dcd99db03db697051))
+* Secrets datasource ([#3131](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3131)) ([8110138](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/811013887cdf1a6624c93481f18e12a183865463))
+* Upgrade tag SDK ([#3126](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3126)) ([893b288](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/893b288f91ee3d31c875f2e38c7346fe362632e6))
+
+
+### 🔧 **Misc**
+
+* Add a company name field to the issue templates ([#3182](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3182)) ([0d3248a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0d3248a2cb5323f94d8a984aaabe60857041fc3b))
+* Add object renaming research summary ([#3172](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3172)) ([721ee40](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/721ee40d6954254fc1f45eec50a7098b45d1afc3))
+* Add tests to 3117 and bump build time ([#3133](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3133)) ([ca90fde](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/ca90fdefc18f6c77627e602df46650e17cb54eaa))
+* Detect changes in lists and sets ([#3147](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3147)) ([c3edb79](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c3edb79758e152a60370fcaa251fdbbdda9bcc56))
+* Exclude methods from test function checks in architest ([#3174](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3174)) ([edc46cc](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/edc46cc29fa9d0f19f5f62f04de71c5a56e4b902))
+* join object renaming tests into parameterized ones ([#3154](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3154)) ([be13502](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/be13502d7fc67c896ee1387297bddad904f515b0))
+* New roadmap entry ([#3158](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3158)) ([d83cdde](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d83cdde59a5fb98fea5d31e5017869f841c678cb))
+* Test more authentication methods ([#3178](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3178)) ([d345cd2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d345cd291170db27e7ba1b83d69e613938fd9538))
+* Test support for object renaming ([#3130](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3130)) ([d665419](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d6654195c099b81969bb8043e98771cf199ee0f4))
+
+
+### 🐛 **Bug fixes:**
+
+* Apply various fixes ([#3176](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3176)) ([55591da](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/55591da967db58a3ef11e3e454101e27ca7abb42))
+* Connection and secret-datasource tests ([#3177](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3177)) ([167de4b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/167de4be15530d481b6e46953a7984d1b2777899))
+* Fix grant import docs ([#3183](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3183)) ([94ac910](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/94ac910f490a4cc3d9975e073e7503781bab2ffd))
+* Fix main ([#3157](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3157)) ([89b9705](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/89b9705d2af43aad3f0e098e3b8af7ced0b3d406))
+* Fix main ([#3160](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3160)) ([5b7412f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5b7412fe00a3620d1428d61ce30f51232eccf213))
+* Fix main ([#3186](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3186)) ([59a0a26](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/59a0a2699cbbb0a18517b607e736a04b62f6c3ba))
+* Fix user resource import ([#3181](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3181)) ([34bbbc1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/34bbbc18b61ce1224c4f8607a12a9f6dfd95c958))
+* handle external change of secret type ([#3141](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3141)) ([649b839](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/649b8397987d13fa53c67729a81dc7fceef218a7))
+* Handle external type changes in stream resources ([#3164](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3164)) ([9fd8f88](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9fd8f887401c0931bbbd18d3b3c4d770b8410fd4))
+* merge diffs on test clients ([#3149](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3149)) ([0f06b4a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0f06b4a063c9a9f9922aa4d83c47935d09757571))
+* Skip connection data source acc test ([#3184](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3184)) ([2942374](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2942374f668b4bdc48f81c7580262fc1c6473179))
+
 ## [0.97.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.96.0...v0.97.0) (2024-10-10)
 
 

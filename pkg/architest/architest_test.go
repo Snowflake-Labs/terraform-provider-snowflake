@@ -120,6 +120,7 @@ func Test_Files(t *testing.T) {
 		expectedMethodNames []string
 	}{
 		{filePath: "testdata/dir1/sample1.go", expectedMethodNames: []string{}},
+		// object methods are skipped
 		{filePath: "testdata/dir1/sample2.go", expectedMethodNames: []string{"A"}},
 	}
 	for _, tt := range tests1 {

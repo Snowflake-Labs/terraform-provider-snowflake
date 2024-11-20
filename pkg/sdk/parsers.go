@@ -52,3 +52,18 @@ func ParseCommaSeparatedSchemaObjectIdentifierArray(value string) ([]SchemaObjec
 	}
 	return ids, nil
 }
+
+// ParseCommaSeparatedAccountIdentifierArray can be used to parse Snowflake output containing a list of account identifiers
+// in the format of ["organization1.account1", "organization2.account2", ...],
+func ParseCommaSeparatedAccountIdentifierArray(value string) ([]AccountIdentifier, error) {
+	idsRaw := ParseCommaSeparatedStringArray(value, false)
+	ids := make([]AccountIdentifier, len(idsRaw))
+	for i := range idsRaw {
+		id, err := ParseAccountIdentifier(idsRaw[i])
+		if err != nil {
+			return nil, err
+		}
+		ids[i] = id
+	}
+	return ids, nil
+}

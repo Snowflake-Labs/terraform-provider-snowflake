@@ -6,6 +6,8 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -92,6 +94,32 @@ func TestAcc_Grants_On_SchemaObject(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/SchemaObject"),
+				ConfigVariables: configVariables,
+				Check:           checkAtLeastOneGrantPresent(),
+			},
+		},
+	})
+}
+
+func TestAcc_Grants_On_SchemaObject_WithArguments(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	function := acc.TestClient().Function.Create(t, sdk.DataTypeVARCHAR)
+	configVariables := config.Variables{
+		"fully_qualified_function_name": config.StringVariable(function.ID().FullyQualifiedName()),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/SchemaObject_WithArguments"),
 				ConfigVariables: configVariables,
 				Check:           checkAtLeastOneGrantPresent(),
 			},

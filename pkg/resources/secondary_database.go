@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -55,7 +56,7 @@ func SecondaryDatabase() *schema.Resource {
 			databaseParametersCustomDiff,
 			ComputedIfAnyAttributeChanged(secondaryDatabaseSchema, FullyQualifiedNameAttributeName, "name"),
 		),
-		Schema: helpers.MergeMaps(secondaryDatabaseSchema, databaseParametersSchema),
+		Schema: collections.MergeMaps(secondaryDatabaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportName[sdk.AccountObjectIdentifier],
 		},

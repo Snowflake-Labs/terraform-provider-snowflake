@@ -5,6 +5,8 @@ description: |-
   
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. To migrate from older grant resources please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#migration-from-old-grant-resources-to-new-ones).
+
 # snowflake_grant_account_role (Resource)
 
 
@@ -73,5 +75,5 @@ Import is supported using the following syntax:
 
 ```shell
 # format is role_name (string) | grantee_object_type (ROLE|USER) | grantee_name (string)
-terraform import "\"test_role\"|ROLE|\"test_parent_role\""
+terraform import snowflake_grant_account_role.example '"test_role"|ROLE|"test_parent_role"'
 ```

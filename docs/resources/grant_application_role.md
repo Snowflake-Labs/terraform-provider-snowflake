@@ -5,6 +5,8 @@ description: |-
   
 ---
 
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. To migrate from older grant resources please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#migration-from-old-grant-resources-to-new-ones).
+
 # snowflake_grant_application_role (Resource)
 
 
@@ -65,5 +67,5 @@ Import is supported using the following syntax:
 
 ```shell
 # format is application_role_name (string) | object_type (ACCOUNT_ROLE|APPLICATION) | grantee_name (string)
-terraform import "\"my_application\".\"app_role_1\"|ACCOUNT_ROLE|\"my_role\""
+terraform import snowflake_grant_application_role.example '"my_application"."app_role_1"|ACCOUNT_ROLE|"my_role"'
 ```

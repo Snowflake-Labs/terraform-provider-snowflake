@@ -29,7 +29,7 @@ var apiAuthJwtBearerSchema = func() map[string]*schema.Schema {
 			Required: true,
 		},
 	}
-	return helpers.MergeMaps(apiAuthCommonSchema, apiAuthJwtBearer)
+	return collections.MergeMaps(apiAuthCommonSchema, apiAuthJwtBearer)
 }()
 
 func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {

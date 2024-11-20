@@ -20,13 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-const (
-	secretWithClientCredentials      = "snowflake_secret_with_client_credentials"
-	secretWithAuthorizationCodeGrant = "snowflake_secret_with_authorization_code_grant"
-	secretWithBasicAuthentication    = "snowflake_secret_with_basic_authentication"
-	secretWithGenericString          = "snowflake_secret_with_generic_string"
-)
-
 func TestAcc_Secrets_WithClientCredentials(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -42,7 +35,7 @@ func TestAcc_Secrets_WithClientCredentials(t *testing.T) {
 
 	secretModel := model.SecretWithClientCredentials("test", integrationId.Name(), id.DatabaseName(), id.SchemaName(), id.Name(), []string{"username", "test_scope"})
 
-	dataSecretsClientCredentials := accConfig.FromModel(t, secretModel) + secretsData(secretWithClientCredentials)
+	dataSecretsClientCredentials := accConfig.FromModel(t, secretModel) + secretsData(secretModel, id)
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -97,7 +90,7 @@ func TestAcc_Secrets_WithAuthorizationCodeGrant(t *testing.T) {
 
 	secretModel := model.SecretWithAuthorizationCodeGrant("test", integrationId.Name(), id.DatabaseName(), id.SchemaName(), id.Name(), "test_token", time.Now().Add(24*time.Hour).Format(time.DateTime)).WithComment("test_comment")
 
-	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithAuthorizationCodeGrant)
+	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretModel, id)
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -138,7 +131,7 @@ func TestAcc_Secrets_WithBasicAuthentication(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	secretModel := model.SecretWithBasicAuthentication("test", id.DatabaseName(), id.Name(), "test_passwd", id.SchemaName(), "test_username")
-	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithBasicAuthentication)
+	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretModel, id)
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -179,7 +172,7 @@ func TestAcc_Secrets_WithGenericString(t *testing.T) {
 
 	secretModel := model.SecretWithGenericString("test", id.DatabaseName(), id.Name(), id.SchemaName(), "test_secret_string")
 
-	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretWithGenericString)
+	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretModel, id)
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -216,11 +209,14 @@ func TestAcc_Secrets_WithGenericString(t *testing.T) {
 	})
 }
 
-func secretsData(secretResourceName string) string {
+func secretsData(secretModel accConfig.ResourceModel, secretId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
     data "snowflake_secrets" "test" {
         depends_on = [%s.test]
-    }`, secretResourceName)
+        in { 
+            database = %s 
+        }
+    }`, secretModel.Resource(), secretId.DatabaseId().FullyQualifiedName())
 }
 
 func TestAcc_Secrets_Filtering(t *testing.T) {
@@ -309,6 +305,23 @@ func TestAcc_Secrets_Filtering(t *testing.T) {
 	})
 }
 
+func TestAcc_Secrets_EmptyIn(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config:      secretDatasourceEmptyIn(),
+				ExpectError: regexp.MustCompile("Invalid combination of arguments"),
+			},
+		},
+	})
+}
+
 func datasourceWithLikeMultipleSecretTypes(like string) string {
 	return fmt.Sprintf(`
     data "snowflake_secrets" "test" {
@@ -338,23 +351,6 @@ func secretDatasourceInAccountWithLike(prefix string) string {
         like = "%s"
     }
 `, prefix)
-}
-
-func TestAcc_Secrets_EmptyIn(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: nil,
-		Steps: []resource.TestStep{
-			{
-				Config:      secretDatasourceEmptyIn(),
-				ExpectError: regexp.MustCompile("Invalid combination of arguments"),
-			},
-		},
-	})
 }
 
 func secretDatasourceEmptyIn() string {

@@ -22,12 +22,12 @@ type AlterConnectionRequest struct {
 	EnableConnectionFailover  *EnableConnectionFailoverRequest
 	DisableConnectionFailover *DisableConnectionFailoverRequest
 	Primary                   *bool
-	Set                       *SetRequest
-	Unset                     *UnsetRequest
+	Set                       *ConnectionSetRequest
+	Unset                     *ConnectionUnsetRequest
 }
 
 type EnableConnectionFailoverRequest struct {
-	ToAccounts []AccountIdentifier
+	ToAccounts []AccountIdentifier // required
 }
 
 type DisableConnectionFailoverRequest struct {
@@ -35,14 +35,14 @@ type DisableConnectionFailoverRequest struct {
 }
 
 type ToAccountsRequest struct {
-	Accounts []AccountIdentifier
+	Accounts []AccountIdentifier // required
 }
 
-type SetRequest struct {
+type ConnectionSetRequest struct {
 	Comment *string
 }
 
-type UnsetRequest struct {
+type ConnectionUnsetRequest struct {
 	Comment *bool
 }
 

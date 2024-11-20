@@ -74,7 +74,7 @@ test-architecture: ## check architecture constraints between packages
 	go test ./pkg/architests/... -v
 
 test-client: ## runs test that checks sdk.Client without instrumentedsql
-	SF_TF_NO_INSTRUMENTED_SQL=1 SF_TF_GOSNOWFLAKE_LOG_LEVEL=debug go test ./pkg/sdk/internal/client/... -v
+	SF_TF_NO_INSTRUMENTED_SQL=1 go test ./pkg/sdk/internal/client/... -v
 
 test-object-renaming: ## runs tests in object_renaming_acceptance_test.go
 	TEST_SF_TF_ENABLE_OBJECT_RENAMING=1 go test ./pkg/resources/object_renaming_acceptace_test.go -v

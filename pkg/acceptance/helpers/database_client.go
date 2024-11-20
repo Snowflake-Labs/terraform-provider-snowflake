@@ -48,14 +48,6 @@ func (c *DatabaseClient) CreateDatabaseWithOptions(t *testing.T, id sdk.AccountO
 	return database, c.DropDatabaseFunc(t, id)
 }
 
-func (c *DatabaseClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.AlterDatabaseOptions) {
-	t.Helper()
-	ctx := context.Background()
-
-	err := c.client().Alter(ctx, id, opts)
-	require.NoError(t, err)
-}
-
 func (c *DatabaseClient) DropDatabaseFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	return func() { require.NoError(t, c.DropDatabase(t, id)) }
@@ -191,4 +183,12 @@ func (c *DatabaseClient) ShowAllReplicationDatabases(t *testing.T) ([]sdk.Replic
 	ctx := context.Background()
 
 	return c.context.client.ReplicationFunctions.ShowReplicationDatabases(ctx, nil)
+}
+
+func (c *DatabaseClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.AlterDatabaseOptions) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Alter(ctx, id, opts)
+	require.NoError(t, err)
 }

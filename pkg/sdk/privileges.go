@@ -48,6 +48,7 @@ const (
 	GlobalPrivilegeManageOrganizationSupportCases GlobalPrivilege = "MANAGE ORGANIZATION SUPPORT CASES"
 	GlobalPrivilegeManageUserSupportCases         GlobalPrivilege = "MANAGE USER SUPPORT CASES"
 	GlobalPrivilegeManageWarehouses               GlobalPrivilege = "MANAGE WAREHOUSES"
+	GlobalPrivilegeManageShareTarget              GlobalPrivilege = "MANAGE SHARE TARGET"
 
 	GlobalPrivilegeModifyLogLevel          GlobalPrivilege = "MODIFY LOG LEVEL"
 	GlobalPrivilegeModifyTraceLevel        GlobalPrivilege = "MODIFY TRACE LEVEL"

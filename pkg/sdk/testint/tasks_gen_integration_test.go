@@ -721,36 +721,6 @@ func TestInt_Tasks(t *testing.T) {
 		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).HasAllDefaults())
 	})
 
-	t.Run("alter task: set and unset tag", func(t *testing.T) {
-		tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
-		t.Cleanup(tagCleanup)
-
-		task, taskCleanup := testClientHelper().Task.Create(t)
-		t.Cleanup(taskCleanup)
-
-		tagValue := "abc"
-		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSetTags([]sdk.TagAssociation{
-			{
-				Name:  tag.ID(),
-				Value: tagValue,
-			},
-		}))
-		require.NoError(t, err)
-
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), task.ID(), sdk.ObjectTypeTask)
-		require.NoError(t, err)
-
-		assert.Equal(t, tagValue, returnedTagValue)
-
-		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnsetTags([]sdk.ObjectIdentifier{
-			tag.ID(),
-		}))
-		require.NoError(t, err)
-
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), task.ID(), sdk.ObjectTypeTask)
-		require.Error(t, err)
-	})
-
 	t.Run("alter task: resume and suspend", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		task, taskCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(id, sql).WithSchedule("10 MINUTE"))

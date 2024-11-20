@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -56,7 +57,7 @@ func SharedDatabase() *schema.Resource {
 			ComputedIfAnyAttributeChanged(sharedDatabaseSchema, FullyQualifiedNameAttributeName, "name"),
 		),
 
-		Schema: helpers.MergeMaps(sharedDatabaseSchema, sharedDatabaseParametersSchema),
+		Schema: collections.MergeMaps(sharedDatabaseSchema, sharedDatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportName[sdk.AccountObjectIdentifier],
 		},

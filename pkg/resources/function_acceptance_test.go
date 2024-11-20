@@ -203,6 +203,7 @@ func TestAcc_Function_migrateFromVersion085(t *testing.T) {
 		// Added as subtask SNOW-1057066 to SNOW-926148.
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.85.0",
@@ -350,6 +351,7 @@ func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Function),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -362,6 +364,7 @@ func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   functionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
@@ -410,6 +413,7 @@ func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950_WithoutArguments(t 
 		CheckDestroy: acc.CheckDestroy(t, resources.Function),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -422,6 +426,7 @@ func TestAcc_Function_EnsureSmoothResourceIdMigrationToV0950_WithoutArguments(t 
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   functionConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(

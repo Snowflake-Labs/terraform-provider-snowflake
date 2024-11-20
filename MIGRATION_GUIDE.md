@@ -100,7 +100,62 @@ resource "snowflake_task" "example" {
 - `show_output` and `paramters` fields added for holding SHOW and SHOW PARAMETERS output (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
 - Added support for finalizer tasks with `finalize` field. It conflicts with `after` and `schedule` (see [finalizer tasks](https://docs.snowflake.com/en/user-guide/tasks-graphs#release-and-cleanup-of-task-graphs)).
 
+## v0.98.0 ➞ v0.99.0
+
+### snowflake_tag_masking_policy_association deprecation
+`snowflake_tag_masking_policy_association` is now deprecated in favor of `snowflake_tag` with a new `masking_policy` field. It will be removed with the v1 release. Please adjust your configuration files.
+
+### snowflake_tag resource changes
+New fields:
+  - `masking_policies` field that holds the associated masking policies.
+  - `show_output` field that holds the response from SHOW TAGS.
+
+#### *(breaking change)* Changed fields in snowflake_masking_policy resource
+Changed fields:
+  - `name` is now not marked as ForceNew. When this value is changed, the resource is renamed with `ALTER TAG`, instead of being recreated.
+  - `allowed_values` type was changed from list to set. This causes different ordering to be ignored.
+State will be migrated automatically.
+
+#### *(breaking change)* Identifiers related changes
+During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag#import)).
+
+Also, we added diff suppress function that prevents Terraform from showing differences, when only quoting is different.
+
+No change is required, the state will be migrated automatically.
+
 ## v0.97.0 ➞ v0.98.0
+
+### *(new feature)* snowflake_connections datasource
+Added a new datasource enabling querying and filtering connections. Notes:
+- all results are stored in `connections` field.
+- `like` field enables connections filtering.
+- SHOW CONNECTIONS output is enclosed in `show_output` field inside `connections`.
+  It's important to limit the records and calls to Snowflake to the minimum. That's why we recommend assessing which information you need from the data source and then providing strong filters and turning off additional fields for better plan performance.
+
+
+### *(new feature)* connection resources
+
+Added a new resources for managing connections. We decided to split connection into two separate resources based on whether the connection is a primary or replicated (secondary). i.e.:
+
+- `snowflake_primary_connection` is used to manage primary connection, with ability to enable failover to other accounts.
+- `snowflake_secondary_connection` is used to manage replicated (secondary) connection.
+
+To promote `snowflake_secondary_connection` to `snowflake_primary_connection`, resources need to be removed from the state, altered manually using:
+```
+ALTER CONNECTION <name> PRIMARY;
+```
+and then imported again, now as `snowflake_primary_connection`.
+
+To demote `snowflake_primary_connection` back to `snowflake_secondary_connection`, resources need to be removed from the state, re-created manually using:
+```
+CREATE CONNECTION <name> AS REPLICA OF <organization_name>.<account_name>.<connection_name>;
+```
+and then imported as `snowflake_secondary_connection`.
+
+For guidance on removing and importing resources into the state check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+
+See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-connection).
 
 ### snowflake_streams data source changes
 New filtering options:
@@ -122,6 +177,31 @@ Please adjust your Terraform configuration files.
 
 ### *(behavior change)* Provider configuration rework
 On our road to v1, we have decided to rework configuration to address the most common issues (see a [roadmap entry](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#providers-configuration-rework)). We have created a list of topics we wanted to address before v1. We will prepare an announcement soon. The following subsections describe the things addressed in the v0.98.0.
+
+#### *(behavior change)* new fields
+We have added new fields to match the ones in [the driver](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#Config) and to simplify setting account name. Specifically:
+- `include_retry_reason`, `max_retry_count`, `driver_tracing`, `tmp_directory_path` and `disable_console_login` are the new fields that are supported in the driver
+- `disable_saml_url_check` will be added to the provider after upgrading the driver
+- `account_name` and `organization_name` were added to improve handling account names. Read more in [docs](https://docs.snowflake.com/en/user-guide/admin-account-identifier#using-an-account-name-as-an-identifier).
+
+#### *(behavior change)* changed configuration of driver log level
+To be more consistent with other configuration options, we have decided to add `driver_tracing` to the configuration schema. This value can also be configured by `SNOWFLAKE_DRIVER_TRACING` environmental variable and by `drivertracing` field in the TOML file. The previous `SF_TF_GOSNOWFLAKE_LOG_LEVEL` environmental variable is not supported now, and was removed from the provider.
+
+#### *(behavior change)* deprecated fields
+Because of new fields `account_name` and `organization_name`, `account` is now deprecated. It will be removed with the v1 release. Please adjust your configurations from
+```terraform
+provider "snowflake" {
+	account = "ORGANIZATION-ACCOUNT"
+}
+```
+
+to
+```terraform
+provider "snowflake" {
+	organization_name = "ORGANIZATION"
+	account_name    = "ACCOUNT"
+}
+```
 
 #### *(behavior change)* changed behavior of some fields
 For the fields that are not deprecated, we focused on improving validations and documentation. Also, we adjusted some fields to match our [driver's](https://github.com/snowflakedb/gosnowflake) defaults. Specifically:
@@ -210,6 +290,26 @@ This segregation was based on the secret flows in CREATE SECRET. i.e.:
 
 
 See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-secret).
+
+### *(bugfix)* Handle BCR Bundle 2024_08 in snowflake_user resource
+
+[bcr 2024_08](https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798) changed the "empty" response in the `SHOW USERS` query. This provider version adapts to the new result types; it should be used if you want to have 2024_08 Bundle enabled on your account.
+
+Note: Because [bcr 2024_07](https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_07/bcr-1692) changes the way how the `default_secondary_roles` attribute behaves, drift may be reported when enabling 2024_08 Bundle. Check [Handling default secondary roles](#breaking-change-handling-default-secondary-roles) for more context.
+
+Connected issues: [#3125](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125)
+
+### *(bugfix)* Handle user import correctly
+
+#### Context before the change
+
+Password is empty after the `snowflake_user` import; we can't read it from the config or from Snowflake.
+During the next terraform plan+apply it's updated to the "same" value.
+It results in an error on Snowflake side: `New password rejected by current password policy. Reason: 'PRIOR_USE'.`
+
+#### After the change
+
+The error will be ignored on the provider side (after all, it means that the password in state is the same as on Snowflake side). Still, plan+apply is needed after importing user.
 
 ## v0.96.0 ➞ v0.97.0
 

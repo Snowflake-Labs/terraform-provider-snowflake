@@ -18,6 +18,12 @@ body:
         Documentation edits are generally a bit less involved, so are often a great entrypoint if you've ever been interested in contributing!
         If you would like to contribute to the project, please let us know and refer to the [contribution guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md) for tips on getting started.
 
+  - id: company-name
+    type: input
+    attributes:
+      label: Company Name
+      description: Optional field. Providing this information allows us to communicate faster which may lead to faster issue resolution.
+
   - id: object_type
     type: dropdown
     attributes:

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -26,7 +27,7 @@ var streamOnDirectoryTableSchema = func() map[string]*schema.Schema {
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},
 	}
-	return helpers.MergeMaps(streamCommonSchema, streamOnDirectoryTable)
+	return collections.MergeMaps(streamCommonSchema, streamOnDirectoryTable)
 }()
 
 func StreamOnDirectoryTable() *schema.Resource {

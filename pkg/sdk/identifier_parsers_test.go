@@ -80,25 +80,34 @@ func Test_ParseIdentifierString(t *testing.T) {
 		require.ErrorContains(t, err, `unable to parse identifier: "ab""c".def, currently identifiers containing double quotes are not supported in the provider`)
 	})
 
-	t.Run("returns error when identifier contains opening parenthesis", func(t *testing.T) {
+	t.Run("returns parts correctly when identifier contains opening parenthesis", func(t *testing.T) {
 		input := `"ab(c".def`
-		_, err := ParseIdentifierString(input)
+		expected := []string{"ab(c", "def"}
 
-		require.ErrorContains(t, err, `unable to parse identifier: "ab(c".def, currently identifiers containing opening and closing parentheses '()' are not supported in the provider`)
+		parts, err := ParseIdentifierString(input)
+
+		require.NoError(t, err)
+		containsAll(t, parts, expected)
 	})
 
-	t.Run("returns error when identifier contains closing parenthesis", func(t *testing.T) {
+	t.Run("returns parts correctly when identifier contains closing parenthesis", func(t *testing.T) {
 		input := `"ab)c".def`
-		_, err := ParseIdentifierString(input)
+		expected := []string{"ab)c", "def"}
 
-		require.ErrorContains(t, err, `unable to parse identifier: "ab)c".def, currently identifiers containing opening and closing parentheses '()' are not supported in the provider`)
+		parts, err := ParseIdentifierString(input)
+
+		require.NoError(t, err)
+		containsAll(t, parts, expected)
 	})
 
-	t.Run("returns error when identifier contains opening and closing parentheses", func(t *testing.T) {
+	t.Run("returns parts correctly when identifier contains opening and closing parentheses", func(t *testing.T) {
 		input := `"ab()c".def`
-		_, err := ParseIdentifierString(input)
+		expected := []string{"ab()c", "def"}
 
-		require.ErrorContains(t, err, `unable to parse identifier: "ab()c".def, currently identifiers containing opening and closing parentheses '()' are not supported in the provider`)
+		parts, err := ParseIdentifierString(input)
+
+		require.NoError(t, err)
+		containsAll(t, parts, expected)
 	})
 
 	t.Run("returns parts correctly with dots inside", func(t *testing.T) {

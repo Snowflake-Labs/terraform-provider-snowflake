@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -30,7 +31,7 @@ var secretBasicAuthenticationSchema = func() map[string]*schema.Schema {
 			Description: externalChangesNotDetectedFieldDescription("Specifies the password value to store in the secret."),
 		},
 	}
-	return helpers.MergeMaps(secretCommonSchema, secretBasicAuthentication)
+	return collections.MergeMaps(secretCommonSchema, secretBasicAuthentication)
 }()
 
 func SecretWithBasicAuthentication() *schema.Resource {

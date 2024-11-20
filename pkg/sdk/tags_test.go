@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -370,6 +371,18 @@ func TestTagSet(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: unsupported object type", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.objectType = ObjectTypeSequence
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type SEQUENCE is not supported"))
+	})
+
+	t.Run("validation: unsupported account", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.objectType = ObjectTypeAccount
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type ACCOUNT is not supported - use Tags.SetOnCurrentAccount instead"))
+	})
+
 	t.Run("set with all optional", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetTags = []TagAssociation{
@@ -413,6 +426,18 @@ func TestTagUnset(t *testing.T) {
 		opts := defaultOpts()
 		opts.objectName = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: unsupported object type", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.objectType = ObjectTypeSequence
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type SEQUENCE is not supported"))
+	})
+
+	t.Run("validation: unsupported account", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.objectType = ObjectTypeAccount
+		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type ACCOUNT is not supported - use Tags.UnsetOnCurrentAccount instead"))
 	})
 
 	t.Run("unset with all optional", func(t *testing.T) {
