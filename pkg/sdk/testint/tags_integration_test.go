@@ -155,6 +155,16 @@ func TestInt_Tags(t *testing.T) {
 		err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithSet(set))
 		require.NoError(t, err)
 
+		ref, err := testClientHelper().PolicyReferences.GetPolicyReference(t, tag.ID(), sdk.PolicyEntityDomainTag)
+		require.NoError(t, err)
+		assert.Equal(t, policyTest.ID().Name(), ref.PolicyName)
+		assert.Equal(t, sdk.PolicyKindMaskingPolicy, ref.PolicyKind)
+
+		// assert that setting masking policy does not apply the tag on the masking policy
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, id, policyTest.ID(), sdk.ObjectTypeMaskingPolicy)
+		require.NoError(t, err)
+		assert.Nil(t, returnedTagValue)
+
 		unset := sdk.NewTagUnsetRequest().WithMaskingPolicies(policies)
 		err = client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithUnset(unset))
 		require.NoError(t, err)
@@ -316,7 +326,7 @@ func TestInt_TagsAssociations(t *testing.T) {
 
 		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
 		require.NoError(t, err)
-		assert.Equal(t, tagValue, returnedTagValue)
+		assert.Equal(t, sdk.Pointer(tagValue), returnedTagValue)
 
 		err = client.Tags.Unset(ctx, sdk.NewUnsetTagRequest(objectType, id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
@@ -326,7 +336,7 @@ func TestInt_TagsAssociations(t *testing.T) {
 		assert.Nil(t, returnedTagValue)
 	}
 
-	t.Run("TestInt_TagAssociationForAccount", func(t *testing.T) {
+	t.Run("TestInt_TagAssociationForAccount_locator", func(t *testing.T) {
 		id := testClientHelper().Ids.AccountIdentifierWithLocator()
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			SetTag: tags,
@@ -353,6 +363,27 @@ func TestInt_TagsAssociations(t *testing.T) {
 		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
 		require.NoError(t, err)
 		assert.Equal(t, tagValue, returnedTagValue)
+
+		err = client.Tags.UnsetOnCurrentAccount(ctx, sdk.NewUnsetTagOnCurrentAccountRequest().WithUnsetTags(unsetTags))
+		require.NoError(t, err)
+
+		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
+		require.NoError(t, err)
+		assert.Nil(t, returnedTagValue)
+	})
+
+	t.Run("TestInt_TagAssociationForAccount", func(t *testing.T) {
+		accountName := testClientHelper().Context.CurrentAccountName(t)
+		organizationName := testClientHelper().Context.CurrentOrganizationName(t)
+		id := sdk.NewAccountIdentifier(organizationName, accountName)
+
+		// test tag sdk method
+		err := client.Tags.Set(ctx, sdk.NewSetTagRequest(sdk.ObjectTypeAccount, id).WithSetTags(tags))
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
+		require.NoError(t, err)
+		assert.Equal(t, sdk.Pointer(tagValue), returnedTagValue)
 
 		err = client.Tags.UnsetOnCurrentAccount(ctx, sdk.NewUnsetTagOnCurrentAccountRequest().WithUnsetTags(unsetTags))
 		require.NoError(t, err)
@@ -785,23 +816,6 @@ func TestInt_TagsAssociations(t *testing.T) {
 			},
 		},
 		{
-			name:       "MaskingPolicy",
-			objectType: sdk.ObjectTypeMaskingPolicy,
-			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
-				return testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
-			},
-			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
-				return client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
-					SetTag: tags,
-				})
-			},
-			unsetTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.ObjectIdentifier) error {
-				return client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
-					UnsetTag: tags,
-				})
-			},
-		},
-		{
 			name:       "RowAccessPolicy",
 			objectType: sdk.ObjectTypeRowAccessPolicy,
 			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
@@ -934,6 +948,37 @@ func TestInt_TagsAssociations(t *testing.T) {
 			testTagSet(id, tc.objectType)
 		})
 	}
+
+	t.Run("schema object MaskingPolicy", func(t *testing.T) {
+		maskingPolicy, cleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
+		t.Cleanup(cleanup)
+		id := maskingPolicy.ID()
+		err := client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
+			SetTag: tags,
+		})
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeMaskingPolicy)
+		require.NoError(t, err)
+		assert.Equal(t, sdk.Pointer(tagValue), returnedTagValue)
+
+		// assert that setting masking policy does not apply the tag on the masking policy
+		refs, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, tag.ID(), sdk.PolicyEntityDomainTag)
+		require.NoError(t, err)
+		assert.Len(t, refs, 0)
+
+		err = client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
+			UnsetTag: unsetTags,
+		})
+		require.NoError(t, err)
+
+		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeMaskingPolicy)
+		require.NoError(t, err)
+		assert.Nil(t, returnedTagValue)
+
+		// test object methods
+		testTagSet(id, sdk.ObjectTypeMaskingPolicy)
+	})
 
 	columnTestCases := []struct {
 		name        string

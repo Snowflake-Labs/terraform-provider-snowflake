@@ -33,6 +33,26 @@ func (c *ContextClient) CurrentAccount(t *testing.T) string {
 	return currentAccount
 }
 
+func (c *ContextClient) CurrentAccountName(t *testing.T) string {
+	t.Helper()
+	ctx := context.Background()
+
+	accountName, err := c.client().CurrentAccountName(ctx)
+	require.NoError(t, err)
+
+	return accountName
+}
+
+func (c *ContextClient) CurrentOrganizationName(t *testing.T) string {
+	t.Helper()
+	ctx := context.Background()
+
+	orgName, err := c.client().CurrentOrganizationName(ctx)
+	require.NoError(t, err)
+
+	return orgName
+}
+
 func (c *ContextClient) CurrentRole(t *testing.T) sdk.AccountObjectIdentifier {
 	t.Helper()
 	ctx := context.Background()

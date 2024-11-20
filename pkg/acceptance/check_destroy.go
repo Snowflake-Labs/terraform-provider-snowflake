@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -484,6 +485,55 @@ func CheckUserAuthenticationPolicyAttachmentDestroy(t *testing.T) func(*terrafor
 			}
 			if len(policyReferences) > 0 {
 				return fmt.Errorf("user authentication policy attachment %v still exists", policyReferences[0].PolicyName)
+			}
+		}
+		return nil
+	}
+}
+
+// CheckTagValueEmpty is a custom check that should be later incorporated into generic CheckDestroy
+func CheckTagValueEmpty(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_tag_association" {
+				continue
+			}
+			objectType := sdk.ObjectType(rs.Primary.Attributes["object_type"])
+			tagId, err := sdk.ParseSchemaObjectIdentifier(rs.Primary.Attributes["tag_id"])
+			if err != nil {
+				return err
+			}
+			idLen, err := strconv.Atoi(rs.Primary.Attributes["object_identifiers.#"])
+			if err != nil {
+				return err
+			}
+			for i := 0; i < idLen; i++ {
+				idRaw := rs.Primary.Attributes[fmt.Sprintf("object_identifiers.%d", i)]
+				var id sdk.ObjectIdentifier
+				if objectType == sdk.ObjectTypeAccount {
+					id, err = sdk.ParseAccountIdentifier(idRaw)
+					if err != nil {
+						return fmt.Errorf("invalid account id: %w", err)
+					}
+				} else {
+					id, err = sdk.ParseObjectIdentifierString(idRaw)
+					if err != nil {
+						return fmt.Errorf("invalid object id: %w", err)
+					}
+				}
+				tag, err := TestClient().Tag.GetTag(t, tagId, id, objectType)
+				if err != nil {
+					if strings.Contains(err.Error(), "does not exist or not authorized") {
+						// Note: this can happen if the object has been deleted as well; in this case, ignore the error
+						continue
+					}
+					return err
+				}
+				if tag != nil {
+					return fmt.Errorf("tag %s for object %s expected to be empty, got %s", tagId.FullyQualifiedName(), id.FullyQualifiedName(), *tag)
+				}
 			}
 		}
 		return nil

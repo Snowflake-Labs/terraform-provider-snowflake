@@ -2,6 +2,9 @@ package resources
 
 import (
 	"slices"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 // borrowed from https://github.com/terraform-providers/terraform-provider-aws/blob/master/aws/structure.go#L924:6
@@ -17,27 +20,11 @@ func expandIntList(configured []interface{}) []int {
 }
 
 func expandStringList(configured []interface{}) []string {
-	vs := make([]string, 0, len(configured))
-	for _, v := range configured {
-		val, ok := v.(string)
-		if ok && val != "" {
-			vs = append(vs, val)
-		}
-	}
-	return vs
+	return helpers.ExpandStringList(configured)
 }
 
-func expandStringListWithMapping[T any](configured []any, mapping func(string) (T, error)) ([]T, error) {
-	stringList := expandStringList(configured)
-	vs := make([]T, 0, len(configured))
-	for _, v := range stringList {
-		val, err := mapping(v)
-		if err != nil {
-			return nil, err
-		}
-		vs = append(vs, val)
-	}
-	return vs, nil
+func ExpandObjectIdentifierSet(configured []any, objectType sdk.ObjectType) ([]sdk.ObjectIdentifier, error) {
+	return helpers.ExpandObjectIdentifierSet(configured, objectType)
 }
 
 func expandStringListAllowEmpty(configured []interface{}) []string {

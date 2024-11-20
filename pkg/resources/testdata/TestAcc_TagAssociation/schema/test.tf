@@ -6,7 +6,7 @@ resource "snowflake_tag" "test" {
 }
 
 resource "snowflake_tag_association" "test" {
-  object_identifier = [var.schema_fully_qualified_name]
+  object_identifiers = [var.schema_fully_qualified_name]
 
   object_type = "SCHEMA"
   tag_id      = snowflake_tag.test.fully_qualified_name

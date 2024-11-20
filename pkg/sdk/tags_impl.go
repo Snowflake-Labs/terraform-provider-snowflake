@@ -149,6 +149,12 @@ func (s *SetTagRequest) toOpts() *setTagOptions {
 			o.column = String(id.Name())
 		}
 	}
+	if o.objectType == ObjectTypeAccount {
+		id, ok := o.objectName.(AccountIdentifier)
+		if ok {
+			o.objectName = NewAccountIdentifierFromFullyQualifiedName(id.AccountName())
+		}
+	}
 	return o
 }
 
@@ -166,6 +172,12 @@ func (s *UnsetTagRequest) toOpts() *unsetTagOptions {
 			o.objectType = ObjectTypeTable
 			o.objectName = id.SchemaObjectId()
 			o.column = String(id.Name())
+		}
+	}
+	if o.objectType == ObjectTypeAccount {
+		id, ok := o.objectName.(AccountIdentifier)
+		if ok {
+			o.objectName = NewAccountIdentifierFromFullyQualifiedName(id.AccountName())
 		}
 	}
 	return o

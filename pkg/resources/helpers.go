@@ -316,17 +316,41 @@ func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed [
 	added = make([]T, 0)
 	removed = make([]T, 0)
 
-	for _, privilegeBeforeChange := range beforeList {
-		if !slices.Contains(afterList, privilegeBeforeChange) {
-			removed = append(removed, privilegeBeforeChange)
+	for _, beforeItem := range beforeList {
+		if !slices.Contains(afterList, beforeItem) {
+			removed = append(removed, beforeItem)
 		}
 	}
 
-	for _, privilegeAfterChange := range afterList {
-		if !slices.Contains(beforeList, privilegeAfterChange) {
-			added = append(added, privilegeAfterChange)
+	for _, afterItem := range afterList {
+		if !slices.Contains(beforeList, afterItem) {
+			added = append(added, afterItem)
 		}
 	}
 
 	return added, removed
+}
+
+// ListDiffWithCommon Compares two lists (before and after), then compares and returns three lists that include
+// added, removed and common items between those lists.
+func ListDiffWithCommon[T comparable](beforeList []T, afterList []T) (added []T, removed []T, common []T) {
+	added = make([]T, 0)
+	removed = make([]T, 0)
+	common = make([]T, 0)
+
+	for _, beforeItem := range beforeList {
+		if !slices.Contains(afterList, beforeItem) {
+			removed = append(removed, beforeItem)
+		} else {
+			common = append(common, beforeItem)
+		}
+	}
+
+	for _, afterItem := range afterList {
+		if !slices.Contains(beforeList, afterItem) {
+			added = append(added, afterItem)
+		}
+	}
+
+	return added, removed, common
 }

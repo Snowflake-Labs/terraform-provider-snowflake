@@ -304,6 +304,7 @@ func DeleteRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any
 
 	client := meta.(*provider.Context).Client
 
+	// TODO(SNOW-1818849): unassign policies before dropping
 	err = client.RowAccessPolicies.Drop(ctx, sdk.NewDropRowAccessPolicyRequest(id).WithIfExists(sdk.Pointer(true)))
 	if err != nil {
 		return diag.Diagnostics{

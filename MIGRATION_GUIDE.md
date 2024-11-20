@@ -7,6 +7,46 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v0.98.0 ➞ v0.99.0
+
+### snowflake_tag_association resource changes
+#### *(behavior change)* new id format
+In order to provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type like the following:
+```
+```
+
+The state is migrated automatically. There is no need to adjust configuration files, unless you use resource id like `snowflake_tag_association.example.id`.
+
+
+#### *(behavior change)* changed fields
+Behavior of some fields was changed:
+- `object_identifier` was renamed to `object_identifiers` and it is now a set of fully qualified names. Change your configurations from
+```
+resource "snowflake_tag_association" "table_association" {
+  object_identifier {
+    name     = snowflake_table.test.name
+    database = snowflake_database.test.name
+    schema   = snowflake_schema.test.name
+  }
+  object_type = "TABLE"
+  tag_id      = snowflake_tag.test.fully_qualified_name
+  tag_value   = "engineering"
+}
+```
+to
+```
+resource "snowflake_tag_association" "table_association" {
+  object_identifiers = [snowflake_table.test.fully_qualified_name]
+  object_type = "TABLE"
+  tag_id      = snowflake_tag.test.fully_qualified_name
+  tag_value   = "engineering"
+}
+```
+- `tag_id`  has now suppressed identifier quoting to prevent issues with Terraform showing permament differences, like [this one](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2982)
+- `object_type` and `tag_id` are now marked as ForceNew
+
+The state is migrated automatically. Please adjust your configuration files.
+
 ## v0.97.0 ➞ v0.98.0
 
 ### *(new feature)* snowflake_connections datasource

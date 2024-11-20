@@ -154,9 +154,6 @@ func (opts *setTagOptions) validate() error {
 	if !canBeAssociatedWithTag(opts.objectType) {
 		return fmt.Errorf("tagging for object type %s is not supported", opts.objectType)
 	}
-	if opts.objectType == ObjectTypeAccount {
-		return fmt.Errorf("tagging for object type ACCOUNT is not supported - use Tags.SetOnCurrentAccount instead")
-	}
 	return errors.Join(errs...)
 }
 
@@ -170,9 +167,6 @@ func (opts *unsetTagOptions) validate() error {
 	}
 	if !canBeAssociatedWithTag(opts.objectType) {
 		return fmt.Errorf("tagging for object type %s is not supported", opts.objectType)
-	}
-	if opts.objectType == ObjectTypeAccount {
-		return fmt.Errorf("tagging for object type ACCOUNT is not supported - use Tags.UnsetOnCurrentAccount instead")
 	}
 	return errors.Join(errs...)
 }

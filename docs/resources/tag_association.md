@@ -2,12 +2,14 @@
 page_title: "snowflake_tag_association Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Resource used to manage tag associations. For more information, check object tagging documentation https://docs.snowflake.com/en/user-guide/object-tagging.
 ---
+
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0980--v0990) to use it.
 
 # snowflake_tag_association (Resource)
 
-
+Resource used to manage tag associations. For more information, check [object tagging documentation](https://docs.snowflake.com/en/user-guide/object-tagging).
 
 ## Example Usage
 
@@ -29,12 +31,10 @@ resource "snowflake_tag" "test" {
 }
 
 resource "snowflake_tag_association" "db_association" {
-  object_identifier {
-    name = snowflake_database.test.name
-  }
-  object_type = "DATABASE"
-  tag_id      = snowflake_tag.test.id
-  tag_value   = "finance"
+  object_identifiers = [snowflake_database.test.fully_qualified_name]
+  object_type        = "DATABASE"
+  tag_id             = snowflake_tag.test.fully_qualified_name
+  tag_value          = "finance"
 }
 
 resource "snowflake_table" "test" {
@@ -53,28 +53,26 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_tag_association" "table_association" {
-  object_identifier {
-    name     = snowflake_table.test.name
-    database = snowflake_database.test.name
-    schema   = snowflake_schema.test.name
-  }
-  object_type = "TABLE"
-  tag_id      = snowflake_tag.test.id
-  tag_value   = "engineering"
+  object_identifiers = [snowflake_table.test.fully_qualified_name]
+  object_type        = "TABLE"
+  tag_id             = snowflake_tag.test.fully_qualified_name
+  tag_value          = "engineering"
 }
 
 resource "snowflake_tag_association" "column_association" {
-  object_identifier {
-    name     = "${snowflake_table.test.name}.column_name"
-    database = snowflake_database.test.name
-    schema   = snowflake_schema.test.name
-  }
-  object_type = "COLUMN"
-  tag_id      = snowflake_tag.test.id
-  tag_value   = "engineering"
+  object_identifiers = [snowflake_database.test.fully_qualified_name]
+  object_type        = "COLUMN"
+  tag_id             = snowflake_tag.test.fully_qualified_name
+  tag_value          = "engineering"
+}
+
+resource "snowflake_tag_association" "account_association" {
+  object_identifiers = ["\"ORGANIZATION_NAME\".\"ACCOUNT_NAME\""]
+  object_type        = "ACCOUNT"
+  tag_id             = snowflake_tag.test.fully_qualified_name
+  tag_value          = "engineering"
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
@@ -83,9 +81,9 @@ resource "snowflake_tag_association" "column_association" {
 
 ### Required
 
-- `object_identifier` (Block List, Min: 1) Specifies the object identifier for the tag association. (see [below for nested schema](#nestedblock--object_identifier))
+- `object_identifiers` (Set of String) Specifies the object identifiers for the tag association.
 - `object_type` (String) Specifies the type of object to add a tag. Allowed object types: [ACCOUNT APPLICATION APPLICATION PACKAGE DATABASE FAILOVER GROUP INTEGRATION NETWORK POLICY REPLICATION GROUP ROLE SHARE USER WAREHOUSE DATABASE ROLE SCHEMA ALERT SNOWFLAKE.CORE.BUDGET SNOWFLAKE.ML.CLASSIFICATION EXTERNAL FUNCTION EXTERNAL TABLE FUNCTION GIT REPOSITORY ICEBERG TABLE MATERIALIZED VIEW PIPE MASKING POLICY PASSWORD POLICY ROW ACCESS POLICY SESSION POLICY PRIVACY POLICY PROCEDURE STAGE STREAM TABLE TASK VIEW COLUMN EVENT TABLE].
-- `tag_id` (String) Specifies the identifier for the tag. Note: format must follow: "databaseName"."schemaName"."tagName" or "databaseName.schemaName.tagName" or "databaseName|schemaName.tagName" (snowflake_tag.tag.id)
+- `tag_id` (String) Specifies the identifier for the tag.
 - `tag_value` (String) Specifies the value of the tag, (e.g. 'finance' or 'engineering')
 
 ### Optional
@@ -98,19 +96,6 @@ resource "snowflake_tag_association" "column_association" {
 
 - `id` (String) The ID of this resource.
 
-<a id="nestedblock--object_identifier"></a>
-### Nested Schema for `object_identifier`
-
-Required:
-
-- `name` (String) Name of the object to associate the tag with.
-
-Optional:
-
-- `database` (String) Name of the database that the object was created in.
-- `schema` (String) Name of the schema that the object was created in.
-
-
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
 
@@ -120,9 +105,10 @@ Optional:
 
 ## Import
 
+~> **Note** Due to technical limitations of Terraform SDK, `object_identifiers` are not set during import state. Please run `terraform refresh` after importing to get this field populated.
+
 Import is supported using the following syntax:
 
 ```shell
-# format is dbName.schemaName.tagName or dbName.schemaName.tagName
-terraform import snowflake_tag_association.example 'dbName.schemaName.tagName'
+terraform import snowflake_tag_association.example '"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE'
 ```

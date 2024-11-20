@@ -60,6 +60,14 @@ func (c *TagClient) Unset(t *testing.T, objectType sdk.ObjectType, id sdk.Object
 	require.NoError(t, err)
 }
 
+func (c *TagClient) GetTag(t *testing.T, tagId sdk.SchemaObjectIdentifier, objectId sdk.ObjectIdentifier, objectType sdk.ObjectType) (*string, error) {
+	t.Helper()
+	ctx := context.Background()
+	client := c.context.client.SystemFunctions
+
+	return client.GetTag(ctx, tagId, objectId, objectType)
+}
+
 func (c *TagClient) DropTagFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()

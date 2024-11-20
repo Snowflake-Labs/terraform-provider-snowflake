@@ -2,16 +2,19 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
@@ -22,9 +25,9 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the object identifier for the tag association.",
 		ForceNew:    true,
-		Deprecated:  "Use `object_identifier` instead",
+		Deprecated:  "Use `object_identifiers` instead",
 	},
-	"object_identifier": {
+	"object_identifiers": {
 		Type:        schema.TypeSet,
 		MinItems:    1,
 		Required:    true,
@@ -32,7 +35,7 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
-		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("object_identifier"),
+		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("object_identifiers"),
 	},
 	"object_type": {
 		Type:         schema.TypeString,
@@ -52,7 +55,6 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Specifies the value of the tag, (e.g. 'finance' or 'engineering')",
-		ForceNew:    true,
 	},
 	"skip_validation": {
 		Type:        schema.TypeBool,
@@ -65,6 +67,8 @@ var tagAssociationSchema = map[string]*schema.Schema{
 // TagAssociation returns a pointer to the resource representing a schema.
 func TagAssociation() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		CreateContext: CreateContextTagAssociation,
 		ReadContext:   ReadContextTagAssociation,
 		UpdateContext: UpdateContextTagAssociation,
@@ -73,12 +77,40 @@ func TagAssociation() *schema.Resource {
 
 		Schema: tagAssociationSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: ImportTagAssociation,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(70 * time.Minute),
 		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0_98_0_TagAssociationStateUpgrader,
+			},
+		},
 	}
+}
+
+func ImportTagAssociation(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	log.Printf("[DEBUG] Starting tag association import")
+	idParts := helpers.ParseResourceIdentifier(d.Id())
+	if len(idParts) != 3 {
+		return nil, fmt.Errorf("invalid resource id: expected 3 arguments, but got %d", len(idParts))
+	}
+
+	if err := d.Set("tag_id", idParts[0]); err != nil {
+		return nil, err
+	}
+	if err := d.Set("tag_value", idParts[1]); err != nil {
+		return nil, err
+	}
+	if err := d.Set("object_type", idParts[2]); err != nil {
+		return nil, err
+	}
+	return []*schema.ResourceData{d}, nil
 }
 
 func TagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectIdentifier, []sdk.ObjectIdentifier, sdk.ObjectType, error) {
@@ -90,15 +122,11 @@ func TagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectI
 
 	objectType := sdk.ObjectType(d.Get("object_type").(string))
 
-	idsRaw := expandStringList(d.Get("object_identifier").(*schema.Set).List())
-	ids := make([]sdk.ObjectIdentifier, len(idsRaw))
-	for i, idRaw := range idsRaw {
-		id, err := sdk.ParseObjectIdentifierString(idRaw)
-		if err != nil {
-			return sdk.SchemaObjectIdentifier{}, nil, "", fmt.Errorf("invalid object id: %w", err)
-		}
-		ids[i] = id
+	ids, err := ExpandObjectIdentifierSet(d.Get("object_identifiers").(*schema.Set).List(), objectType)
+	if err != nil {
+		return sdk.SchemaObjectIdentifier{}, nil, "", err
 	}
+
 	return tagId, ids, objectType, nil
 }
 
@@ -138,7 +166,7 @@ func CreateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 	}
-	d.SetId(helpers.EncodeSnowflakeID(tagId.FullyQualifiedName(), tagValue, string(objectType)))
+	d.SetId(helpers.EncodeResourceIdentifier(tagId.FullyQualifiedName(), tagValue, string(objectType)))
 	return ReadContextTagAssociation(ctx, d, meta)
 }
 
@@ -160,7 +188,7 @@ func ReadContextTagAssociation(ctx context.Context, d *schema.ResourceData, meta
 			correctObjectIds = append(correctObjectIds, oid.FullyQualifiedName())
 		}
 	}
-	if err := d.Set("object_identifier", correctObjectIds); err != nil {
+	if err := d.Set("object_identifiers", correctObjectIds); err != nil {
 		return diag.FromErr(err)
 	}
 	return nil
@@ -172,20 +200,52 @@ func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	tagValue := d.Get("tag_value").(string)
-	if d.HasChange("object_identifier") {
-		o, n := d.GetChange("object_identifier")
-
-		oldAllowedValues, err := expandStringListWithMapping(o.(*schema.Set).List(), sdk.ParseObjectIdentifierString)
+	if d.HasChange("tag_value") {
+		o, n := d.GetChange("object_identifiers")
+		tagValue := d.Get("tag_value").(string)
+		// Set only on old ids, because:
+		// - for the new ids we will set the new tag value below
+		// - for the removed ids we will unset the tag below
+		// So here we set only for the ids that don't change
+		oldIds, err := ExpandObjectIdentifierSet(o.(*schema.Set).List(), objectType)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		newAllowedValues, err := expandStringListWithMapping(n.(*schema.Set).List(), sdk.ParseObjectIdentifierString)
+		newIds, err := ExpandObjectIdentifierSet(n.(*schema.Set).List(), objectType)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		addedids, removedids := ListDiff(oldAllowedValues, newAllowedValues)
+		_, _, commonIds := ListDiffWithCommon(oldIds, newIds)
+
+		for _, id := range commonIds {
+			request := sdk.NewSetTagRequest(objectType, id).WithSetTags([]sdk.TagAssociation{
+				{
+					Name:  tagId,
+					Value: tagValue,
+				},
+			})
+			if err := client.Tags.Set(ctx, request); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		d.SetId(helpers.EncodeResourceIdentifier(tagId.FullyQualifiedName(), tagValue, string(objectType)))
+	}
+	if d.HasChange("object_identifiers") {
+		tagValue := d.Get("tag_value").(string)
+
+		o, n := d.GetChange("object_identifiers")
+
+		oldIds, err := ExpandObjectIdentifierSet(o.(*schema.Set).List(), objectType)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		newIds, err := ExpandObjectIdentifierSet(n.(*schema.Set).List(), objectType)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		addedids, removedids := ListDiff(oldIds, newIds)
 
 		for _, id := range addedids {
 			request := sdk.NewSetTagRequest(objectType, id).WithSetTags([]sdk.TagAssociation{
@@ -200,12 +260,20 @@ func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		for _, id := range removedids {
+			if objectType == sdk.ObjectTypeColumn {
+				skip, err := skipColumnIfDoesNotExist(ctx, client, id)
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				if skip {
+					continue
+				}
+			}
 			request := sdk.NewUnsetTagRequest(objectType, id).WithUnsetTags([]sdk.ObjectIdentifier{tagId}).WithIfExists(true)
 			if err := client.Tags.Unset(ctx, request); err != nil {
 				return diag.FromErr(err)
 			}
 		}
-
 	}
 
 	return ReadContextTagAssociation(ctx, d, meta)
@@ -213,16 +281,53 @@ func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 
 func DeleteContextTagAssociation(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	tid, ids, ot, err := TagIdentifierAndObjectIdentifier(d)
+	tagId, ids, objectType, err := TagIdentifierAndObjectIdentifier(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	for _, oid := range ids {
-		request := sdk.NewUnsetTagRequest(ot, oid).WithUnsetTags([]sdk.ObjectIdentifier{tid}).WithIfExists(true)
+	for _, id := range ids {
+		if objectType == sdk.ObjectTypeColumn {
+			skip, err := skipColumnIfDoesNotExist(ctx, client, id)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if skip {
+				continue
+			}
+		}
+		request := sdk.NewUnsetTagRequest(objectType, id).WithUnsetTags([]sdk.ObjectIdentifier{tagId}).WithIfExists(true)
 		if err := client.Tags.Unset(ctx, request); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 	d.SetId("")
 	return nil
+}
+
+// we need to skip the column manually, because ALTER COLUMN lacks IF EXISTS
+func skipColumnIfDoesNotExist(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) (bool, error) {
+	columnId, ok := id.(sdk.TableColumnIdentifier)
+	if !ok {
+		return false, errors.New("invalid column identifier")
+	}
+	// TODO [SNOW-1007542]: use SHOW COLUMNS
+	_, err := client.Tables.ShowByID(ctx, columnId.SchemaObjectId())
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			log.Printf("[DEBUG] table %s not found, skipping\n", columnId.SchemaObjectId())
+			return true, nil
+		}
+		return false, err
+	}
+	columns, err := client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(columnId.SchemaObjectId()))
+	if err != nil {
+		return false, err
+	}
+	if _, err := collections.FindFirst(columns, func(c sdk.TableColumnDetails) bool {
+		return c.Name == columnId.Name()
+	}); err != nil {
+		log.Printf("[DEBUG] column %s not found in table %s, skipping\n", columnId.Name(), columnId.SchemaObjectId())
+		return true, nil
+	}
+	return false, nil
 }

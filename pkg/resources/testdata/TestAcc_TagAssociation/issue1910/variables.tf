@@ -2,7 +2,7 @@ variable "tag_name" {
   type = string
 }
 
-variable "account_name" {
+variable "account_fully_qualified_name" {
   type = string
 }
 
