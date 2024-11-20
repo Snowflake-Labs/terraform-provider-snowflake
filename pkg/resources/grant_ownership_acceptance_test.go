@@ -884,7 +884,7 @@ resource "snowflake_grant_account_role" "test" {
 }
 `, accountRoleName, databaseName, userName)
 
-	// TODO: build these configs from builders
+	// TODO [SNOW-1501905]: build these configs from builders
 	secondaryProviderConfig := fmt.Sprintf(`
 provider "snowflake" {
   profile = "default"

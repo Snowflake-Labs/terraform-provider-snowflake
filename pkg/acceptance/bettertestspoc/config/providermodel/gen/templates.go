@@ -23,6 +23,6 @@ var (
 		genhelpers.SnakeCaseToCamel,
 	)).Parse(definitionTemplateContent)
 
-	// TODO [SNOW-1501905]: consider duplicating the builders template from resource (currently same template used for datasources and provider)
+	// TODO [SNOW-1501905]: consider duplicating the builders template from resource (currently same template used for datasources and provider which limits the customization possibilities for just one block type)
 	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, resourcemodel.BuildersTemplate}
 )

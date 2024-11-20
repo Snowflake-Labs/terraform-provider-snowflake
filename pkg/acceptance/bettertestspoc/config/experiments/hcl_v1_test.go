@@ -29,7 +29,7 @@ import (
 // - https://github.com/hashicorp/hcl/blob/56a9aee5207dbaed7f061cd926b96fc159d26ea0/json/spec.md
 // - https://developer.hashicorp.com/terraform/language/resources/syntax
 // - https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on
-// TODO [SNOW-1501905]: explore HCL v2 in more detail (especially struct tags generation; probably with migration to plugin framework because of schema models)
+// TODO [SNOW-1501905]: explore HCL v2 in more detail (especially struct tags generation; probably with migration to plugin framework because of schema models); ref: https://github.com/hashicorp/hcl/blob/bee2dc2e75f7528ad85777b7a013c13796426bd6/gohcl/encode_test.go#L48
 func Test_exploreHclV1(t *testing.T) {
 	convertJsonToHclStringV1 := func(json string) (string, error) {
 		parsed, err := hclv1parser.Parse([]byte(json))

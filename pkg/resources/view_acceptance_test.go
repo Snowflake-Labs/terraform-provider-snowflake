@@ -97,7 +97,7 @@ func TestAcc_View_basic(t *testing.T) {
 			{
 				Config: accconfig.ResourceFromModel(t, basicViewModel),
 				Check: assert.AssertThat(t,
-					resourceassert.ViewResource(t, "snowflake_view.test").
+					resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasStatementString(statement).
 						HasDatabaseString(id.DatabaseName()).
@@ -108,7 +108,7 @@ func TestAcc_View_basic(t *testing.T) {
 			// import - without optionals
 			{
 				Config:       accconfig.ResourceFromModel(t, basicViewModel),
-				ResourceName: "snowflake_view.test",
+				ResourceName: basicViewModel.ResourceReference(),
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedViewResource(t, resourceId).
@@ -134,7 +134,7 @@ func TestAcc_View_basic(t *testing.T) {
 				},
 				Config: accconfig.ResourceFromModel(t, basicViewModel),
 				Check: assert.AssertThat(t,
-					resourceassert.ViewResource(t, "snowflake_view.test").
+					resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasStatementString(statement).
 						HasDatabaseString(id.DatabaseName()).
@@ -150,10 +150,10 @@ func TestAcc_View_basic(t *testing.T) {
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, statement, cron, sdk.DataMetricScheduleStatusStarted)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(basicViewModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
@@ -163,23 +163,23 @@ func TestAcc_View_basic(t *testing.T) {
 					HasRowAccessPolicyLength(1).
 					HasDataMetricScheduleLength(1).
 					HasDataMetricFunctionLength(1),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.using_cron", cron)),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.0", "ID")),
 				),
 			},
 			// change policies and dmfs
 			{
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusStarted)),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
@@ -189,24 +189,24 @@ func TestAcc_View_basic(t *testing.T) {
 					HasRowAccessPolicyLength(1).
 					HasDataMetricScheduleLength(1).
 					HasDataMetricFunctionLength(1),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy2.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy2.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron2)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.schedule_status", string(sdk.DataMetricScheduleStatusStarted))),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", function2Id.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.policy_name", aggregationPolicy2.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.policy_name", rowAccessPolicy2.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.using_cron", cron2)),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.schedule_status", string(sdk.DataMetricScheduleStatusStarted))),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.function_name", function2Id.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.0", "ID")),
 				),
 			},
 			// change dmf status
 			{
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusSuspended)),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
@@ -216,24 +216,24 @@ func TestAcc_View_basic(t *testing.T) {
 					HasRowAccessPolicyLength(1).
 					HasDataMetricScheduleLength(1).
 					HasDataMetricFunctionLength(1),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy2.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy2.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron2)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.schedule_status", string(sdk.DataMetricScheduleStatusSuspended))),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", function2Id.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.policy_name", aggregationPolicy2.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.policy_name", rowAccessPolicy2.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.using_cron", cron2)),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.schedule_status", string(sdk.DataMetricScheduleStatusSuspended))),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.function_name", function2Id.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.0", "ID")),
 				),
 			},
 			// change statement and policies
 			{
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
@@ -243,17 +243,17 @@ func TestAcc_View_basic(t *testing.T) {
 					HasRowAccessPolicyLength(1).
 					HasDataMetricScheduleLength(1).
 					HasDataMetricFunctionLength(1),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.using_cron", cron)),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.0", "ID")),
 				),
 			},
 			// change statements externally
@@ -262,7 +262,7 @@ func TestAcc_View_basic(t *testing.T) {
 					acc.TestClient().View.RecreateView(t, id, statement)
 				},
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
@@ -272,17 +272,17 @@ func TestAcc_View_basic(t *testing.T) {
 					HasRowAccessPolicyLength(1).
 					HasDataMetricScheduleLength(1).
 					HasDataMetricFunctionLength(1),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.using_cron", cron)),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.0", "ID")),
 				),
 			},
 			// unset policies externally
@@ -292,7 +292,7 @@ func TestAcc_View_basic(t *testing.T) {
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetAggregationPolicy(*sdk.NewViewUnsetAggregationPolicyRequest()))
 				},
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
@@ -302,23 +302,23 @@ func TestAcc_View_basic(t *testing.T) {
 					HasRowAccessPolicyLength(1).
 					HasDataMetricScheduleLength(1).
 					HasDataMetricFunctionLength(1),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "aggregation_policy.0.entity_key.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "row_access_policy.0.on.0", "ID")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.using_cron", cron)),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_schedule.0.minutes", "0")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr("snowflake_view.test", "data_metric_function.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "aggregation_policy.0.entity_key.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "row_access_policy.0.on.0", "ID")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.using_cron", cron)),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_schedule.0.minutes", "0")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(basicViewModel.ResourceReference(), "data_metric_function.0.on.0", "ID")),
 				),
 			},
 			// import - with optionals
 			{
 				Config:       accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
-				ResourceName: "snowflake_view.test",
+				ResourceName: basicViewModel.ResourceReference(),
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
 					resourceassert.ImportedViewResource(t, resourceId).
@@ -343,8 +343,8 @@ func TestAcc_View_basic(t *testing.T) {
 			// unset
 			{
 				Config:       accconfig.ResourceFromModel(t, viewModelWithOtherStatement),
-				ResourceName: "snowflake_view.test",
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				ResourceName: basicViewModel.ResourceReference(),
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
@@ -359,7 +359,7 @@ func TestAcc_View_basic(t *testing.T) {
 			// recreate - change is_recursive
 			{
 				Config: accconfig.ResourceFromModel(t, viewModelRecursiveWithOtherStatement),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).

@@ -121,8 +121,12 @@ func BasicAbcModel(
 	return AbcWithDefaultMeta(name).WithComment(comment)
 }
 
-func (w *AbcModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) *AbcModel {
-	return w.WithWarehouseSize(string(warehouseSize))
+func (d *AbcModel) WithLimit(rows int) *AbcModel {
+    return d.WithLimitValue(
+        tfconfig.ObjectVariable(map[string]tfconfig.Variable{
+            "rows": tfconfig.IntegerVariable(rows),
+        }),
+    )
 }
 ```
 
@@ -351,7 +355,7 @@ it will result in:
 - Verify if all the config types are supported.
 - Consider a better implementation for the model conversion to config (TODO left in `config/config.go`).
 - Support additional methods for references in models (TODO left in `config/config.go`).
-- Support depends_on in models so that it can be chained like other resource fields (TODO left in `config/config.go`).
+- Generate depends_on for all compatible models. Consider exporting it in meta (discussion: https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/3207#discussion_r1850053618).
 - Add a convenience function to concatenate multiple models (TODO left in `config/config.go`).
 - Add function to support using `ConfigFile:` in the acceptance tests (TODO left in `config/config.go`).
 - Replace `acceptance/snowflakechecks` with the new proposed Snowflake objects assertions.
@@ -390,10 +394,10 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - utilize `ContainsExactlyInAnyOrder` function in `pkg/acceptance/bettertestspoc/assert/commons.go` to create asserts on collections that are order independent
 - add config builders for other block types (Variable, Output, Locals, Module, Terraform)
 - add provider to resource/datasource models (use in the grant_ownership_acceptance_test)
-- explore HCL v2 in more detail (especially struct tags generation; probably with migration to plugin framework because of schema models)
+- explore HCL v2 in more detail (especially struct tags generation; probably with migration to plugin framework because of schema models); ref: https://github.com/hashicorp/hcl/blob/bee2dc2e75f7528ad85777b7a013c13796426bd6/gohcl/encode_test.go#L48
 - introduce some common interface for all three existing models (ResourceModel, DatasourceModel, and ProviderModel)
 - rename ResourceSchemaDetails (because it is used for the datasources and provider too)
-- consider duplicating the builders template from resource (currently same template used for datasources and provider)
+- consider duplicating the builders template from resource (currently same template used for datasources and provider which limits the customization possibilities for just one block type)
 - consider merging ResourceModel with DatasourceModel (currently the implementation is really similar)
 - remove schema.TypeMap workaround or make it wiser (e.g. during generation we could programmatically gather all schema.TypeMap and use this workaround only for them)
 
