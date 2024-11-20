@@ -116,8 +116,8 @@ func (s *AlterTagRequest) toOpts() *alterTagOptions {
 
 func (s *ShowTagRequest) toOpts() *showTagOptions {
 	return &showTagOptions{
-		Like: s.like,
-		In:   s.in,
+		Like: s.Like,
+		In:   s.In,
 	}
 }
 

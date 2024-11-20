@@ -195,14 +195,14 @@ func NewShowTagRequest() *ShowTagRequest {
 }
 
 func (s *ShowTagRequest) WithLike(pattern string) *ShowTagRequest {
-	s.like = &Like{
+	s.Like = &Like{
 		Pattern: String(pattern),
 	}
 	return s
 }
 
 func (s *ShowTagRequest) WithIn(in *ExtendedIn) *ShowTagRequest {
-	s.in = in
+	s.In = in
 	return s
 }
 
