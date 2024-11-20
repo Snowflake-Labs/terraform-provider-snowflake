@@ -426,12 +426,10 @@ func TestAcc_TagAssociationIssue1926(t *testing.T) {
 	})
 }
 
-func TestAcc_Tag_migrateFromVersion_0_98_0(t *testing.T) {
+func TestAcc_TagAssociation_migrateFromVersion_0_98_0(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	// tag, tagCleanup := acc.TestClient().Tag.CreateTag(t)
-	// t.Cleanup(tagCleanuop)
 	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_tag_association.test"
 	schemaId := acc.TestClient().Ids.SchemaId()

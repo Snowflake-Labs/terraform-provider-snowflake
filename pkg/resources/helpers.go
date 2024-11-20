@@ -354,3 +354,17 @@ func ListDiffWithCommon[T comparable](beforeList []T, afterList []T) (added []T,
 
 	return added, removed, common
 }
+
+// parseSchemaObjectIdentifierSet is a helper function to parse a given schema object identifier list from ResourceData.
+func parseSchemaObjectIdentifierSet(v any) ([]sdk.SchemaObjectIdentifier, error) {
+	idsRaw := expandStringList(v.(*schema.Set).List())
+	ids := make([]sdk.SchemaObjectIdentifier, len(idsRaw))
+	for i, idRaw := range idsRaw {
+		id, err := sdk.ParseSchemaObjectIdentifier(idRaw)
+		if err != nil {
+			return nil, err
+		}
+		ids[i] = id
+	}
+	return ids, nil
+}

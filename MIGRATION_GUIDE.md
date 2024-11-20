@@ -47,6 +47,28 @@ resource "snowflake_tag_association" "table_association" {
 
 The state is migrated automatically. Please adjust your configuration files.
 
+### snowflake_tag_masking_policy_association deprecation
+`snowflake_tag_masking_policy_association` is now deprecated in favor of `snowflake_tag` with a new `masking_policy` field. It will be removed with the v1 release. Please adjust your configuration files.
+
+### snowflake_tag resource changes
+New fields:
+  - `masking_policies` field that holds the associated masking policies.
+  - `show_output` field that holds the response from SHOW TAGS.
+
+#### *(breaking change)* Changed fields in snowflake_masking_policy resource
+Changed fields:
+  - `name` is now not marked as ForceNew. When this value is changed, the resource is renamed with `ALTER TAG`, instead of being recreated.
+  - `allowed_values` type was changed from list to set. This causes different ordering to be ignored.
+State will be migrated automatically.
+
+#### *(breaking change)* Identifiers related changes
+During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag#import)).
+
+Also, we added diff suppress function that prevents Terraform from showing differences, when only quoting is different.
+
+No change is required, the state will be migrated automatically.
+
 ## v0.97.0 ➞ v0.98.0
 
 ### *(new feature)* snowflake_connections datasource

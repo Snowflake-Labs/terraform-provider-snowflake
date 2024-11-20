@@ -212,6 +212,7 @@ func TestAcc_Procedure_migrateFromVersion085(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.85.0",
@@ -276,6 +277,7 @@ func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.89.0",
@@ -292,6 +294,7 @@ func TestAcc_Procedure_proveArgsPermanentDiff(t *testing.T) {
 				},
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   sqlProcedureConfigArgsPermanentDiff(acc.TestDatabaseName, acc.TestSchemaName, name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -319,6 +322,7 @@ func TestAcc_Procedure_returnTypePermanentDiff(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.89.0",
@@ -335,6 +339,7 @@ func TestAcc_Procedure_returnTypePermanentDiff(t *testing.T) {
 				},
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   sqlProcedureConfigReturnTypePermanentDiff(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
@@ -408,6 +413,7 @@ func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -420,6 +426,7 @@ func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   procedureConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
@@ -472,6 +479,7 @@ func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950_WithoutArguments(t
 		CheckDestroy: acc.CheckDestroy(t, resources.Function),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -484,6 +492,7 @@ func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950_WithoutArguments(t
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   procedureConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
@@ -523,6 +532,7 @@ func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950_ArgumentSynonyms(t
 		CheckDestroy: acc.CheckDestroy(t, resources.Procedure),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -535,6 +545,7 @@ func TestAcc_Procedure_EnsureSmoothResourceIdMigrationToV0950_ArgumentSynonyms(t
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   procedureConfigWithArgumentSynonyms(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(

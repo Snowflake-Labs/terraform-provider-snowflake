@@ -1,15 +1,16 @@
-resource "snowflake_database" "database" {
-  name = "database"
-}
-
-resource "snowflake_schema" "schema" {
-  name     = "schema"
-  database = snowflake_database.database.name
-}
-
+# basic resource
 resource "snowflake_tag" "tag" {
-  name           = "cost_center"
-  database       = snowflake_database.database.name
-  schema         = snowflake_schema.schema.name
-  allowed_values = ["finance", "engineering"]
+  name     = "tag"
+  database = "database"
+  schema   = "schema"
+}
+
+# complete resource
+resource "snowflake_tag" "tag" {
+  name             = "tag"
+  database         = "database"
+  schema           = "schema"
+  comment          = "comment"
+  allowed_values   = ["finance", "engineering", ""]
+  masking_policies = [snowfalke_masking_policy.masking_policy.fully_qualified_name]
 }

@@ -138,7 +138,7 @@ func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("allowed_network_rule_list"); ok {
-		allowedNetworkRuleList, err := parseNetworkRulesList(v)
+		allowedNetworkRuleList, err := parseSchemaObjectIdentifierSet(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -146,7 +146,7 @@ func CreateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("blocked_network_rule_list"); ok {
-		blockedNetworkRuleList, err := parseNetworkRulesList(v)
+		blockedNetworkRuleList, err := parseSchemaObjectIdentifierSet(v)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -315,7 +315,7 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("allowed_network_rule_list") {
 		if v, ok := d.GetOk("allowed_network_rule_list"); ok {
-			allowedNetworkRuleList, err := parseNetworkRulesList(v)
+			allowedNetworkRuleList, err := parseSchemaObjectIdentifierSet(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -327,7 +327,7 @@ func UpdateContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("blocked_network_rule_list") {
 		if v, ok := d.GetOk("blocked_network_rule_list"); ok {
-			blockedNetworkRuleList, err := parseNetworkRulesList(v)
+			blockedNetworkRuleList, err := parseSchemaObjectIdentifierSet(v)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -399,18 +399,4 @@ func parseIPList(v interface{}) []sdk.IPRequest {
 		ipRequests[i] = *sdk.NewIPRequest(v)
 	}
 	return ipRequests
-}
-
-// parseNetworkRulesList is a helper function to parse a given network rule list from ResourceData.
-func parseNetworkRulesList(v interface{}) ([]sdk.SchemaObjectIdentifier, error) {
-	networkRules := expandStringList(v.(*schema.Set).List())
-	networkRuleIdentifiers := make([]sdk.SchemaObjectIdentifier, len(networkRules))
-	for i, networkRuleFullyQualifiedName := range networkRules {
-		networkRuleId, err := sdk.ParseSchemaObjectIdentifier(networkRuleFullyQualifiedName)
-		if err != nil {
-			return nil, err
-		}
-		networkRuleIdentifiers[i] = networkRuleId
-	}
-	return networkRuleIdentifiers, nil
 }

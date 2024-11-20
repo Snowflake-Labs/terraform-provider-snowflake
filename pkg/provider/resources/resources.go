@@ -63,6 +63,7 @@ const (
 	Streamlit                                              resource = "snowflake_streamlit"
 	Table                                                  resource = "snowflake_table"
 	Tag                                                    resource = "snowflake_tag"
+	TagAssociation                                         resource = "snowflake_tag_association"
 	Task                                                   resource = "snowflake_task"
 	User                                                   resource = "snowflake_user"
 	View                                                   resource = "snowflake_view"

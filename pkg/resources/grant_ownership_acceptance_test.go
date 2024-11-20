@@ -1360,6 +1360,7 @@ func TestAcc_GrantOwnership_migrateFromV0941_ensureSmoothUpgradeWithNewResourceI
 		},
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1372,6 +1373,7 @@ func TestAcc_GrantOwnership_migrateFromV0941_ensureSmoothUpgradeWithNewResourceI
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantOwnershipOnTableBasicConfig(acc.TestDatabaseName, acc.TestSchemaName, tableId.Name(), accountRoleId.Name(), escapedFullyQualifiedName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1434,6 +1436,7 @@ func TestAcc_GrantOwnership_IdentifierQuotingDiffSuppression(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -1447,6 +1450,7 @@ func TestAcc_GrantOwnership_IdentifierQuotingDiffSuppression(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   grantOwnershipOnTableBasicConfigWithManagedDatabaseAndSchema(databaseId.Name(), schemaId.Name(), tableId.Name(), accountRoleId.Name(), unescapedFullyQualifiedName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

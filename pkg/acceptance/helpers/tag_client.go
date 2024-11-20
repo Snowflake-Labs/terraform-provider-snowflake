@@ -68,6 +68,13 @@ func (c *TagClient) GetTag(t *testing.T, tagId sdk.SchemaObjectIdentifier, objec
 	return client.GetTag(ctx, tagId, objectId, objectType)
 }
 
+func (c *TagClient) Alter(t *testing.T, req *sdk.AlterTagRequest) {
+	t.Helper()
+	ctx := context.Background()
+	err := c.client().Alter(ctx, req)
+	require.NoError(t, err)
+}
+
 func (c *TagClient) DropTagFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()

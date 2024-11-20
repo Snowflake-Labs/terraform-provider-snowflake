@@ -71,11 +71,6 @@ func (t *TagShowOutputAssert) HasComment(expected string) *TagShowOutputAssert {
 	return t
 }
 
-// func (t *TagShowOutputAssert) HasAllowedValues(expected []string) *TagShowOutputAssert {
-// 	t.AddAssertion(assert.ResourceShowOutputValueSet("allowed_values", expected))
-// 	return t
-// }
-
 func (t *TagShowOutputAssert) HasOwnerRoleType(expected string) *TagShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", expected))
 	return t

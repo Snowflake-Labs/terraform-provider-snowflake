@@ -14,6 +14,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/snowflakedb/gosnowflake"
+	"github.com/stretchr/testify/require"
 )
 
 const AcceptanceTestPrefix = "acc_test_"
@@ -207,4 +209,19 @@ func ExternalProviderWithExactVersion(version string) map[string]resource.Extern
 			Source:            "Snowflake-Labs/snowflake",
 		},
 	}
+}
+
+// SetV097CompatibleConfigPathEnv sets a new config path in a relevant env variable for a file that is compatible with v0.97.
+func SetV097CompatibleConfigPathEnv(t *testing.T) {
+	t.Helper()
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	configPath := filepath.Join(home, ".snowflake", "config_v097_compatible")
+	t.Setenv(snowflakeenvs.ConfigPath, configPath)
+}
+
+// UnsetConfigPathEnv unsets a config path env
+func UnsetConfigPathEnv(t *testing.T) {
+	t.Helper()
+	t.Setenv(snowflakeenvs.ConfigPath, "")
 }

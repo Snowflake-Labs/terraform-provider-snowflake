@@ -682,6 +682,7 @@ func TestAcc_OauthIntegrationForCustomClients_migrateFromV0941_ensureSmoothUpgra
 		CheckDestroy: acc.CheckDestroy(t, resourcenames.OauthIntegrationForCustomClients),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -694,6 +695,7 @@ func TestAcc_OauthIntegrationForCustomClients_migrateFromV0941_ensureSmoothUpgra
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   oauthIntegrationForCustomClientsBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -716,6 +718,7 @@ func TestAcc_OauthIntegrationForCustomClients_WithQuotedName(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resourcenames.OauthIntegrationForCustomClients),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.94.1",
@@ -730,6 +733,7 @@ func TestAcc_OauthIntegrationForCustomClients_WithQuotedName(t *testing.T) {
 				),
 			},
 			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   oauthIntegrationForCustomClientsBasicConfig(quotedId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
