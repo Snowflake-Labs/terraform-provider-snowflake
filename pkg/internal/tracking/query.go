@@ -22,7 +22,7 @@ func ParseMetadata(sql string) (Metadata, error) {
 	}
 	var metadata Metadata
 	if err := json.Unmarshal([]byte(strings.TrimSpace(parts[1])), &metadata); err != nil {
-		return Metadata{}, fmt.Errorf("failed to unmarshal metadata from sql: %s, err = %s", sql, err)
+		return Metadata{}, fmt.Errorf("failed to unmarshal metadata from sql: %s, err = %w", sql, err)
 	}
 	if err := metadata.validate(); err != nil {
 		return Metadata{}, err

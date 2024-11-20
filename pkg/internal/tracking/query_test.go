@@ -3,9 +3,10 @@ package tracking
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestAppendMetadata(t *testing.T) {

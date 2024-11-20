@@ -2,9 +2,10 @@ package tracking
 
 import (
 	"context"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_Context(t *testing.T) {

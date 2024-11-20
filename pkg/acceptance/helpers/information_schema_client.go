@@ -3,9 +3,10 @@ package helpers
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type InformationSchemaClient struct {

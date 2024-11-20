@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"log"
 	"os"
 	"slices"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/jmoiron/sqlx"

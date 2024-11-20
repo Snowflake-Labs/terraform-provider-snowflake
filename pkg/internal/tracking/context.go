@@ -3,6 +3,7 @@ package tracking
 import (
 	"context"
 	"errors"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 )
 

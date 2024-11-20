@@ -3,11 +3,12 @@ package testint
 import (
 	"context"
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
-	"strings"
-	"testing"
 )
 
 // Research for basic object tracking done as part of SNOW-1737787
@@ -70,6 +71,7 @@ func TestInt_ContextQueryTags(t *testing.T) {
 }
 
 func executeQueryAndReturnQueryId(t *testing.T, ctx context.Context, client *sdk.Client) string {
+	t.Helper()
 	queryIdChan := make(chan string, 1)
 	ctx = gosnowflake.WithQueryIDChan(ctx, queryIdChan)
 

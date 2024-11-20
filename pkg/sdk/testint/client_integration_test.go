@@ -2,11 +2,12 @@ package testint
 
 import (
 	"context"
+	"testing"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInt_Client_AdditionalMetadata(t *testing.T) {
