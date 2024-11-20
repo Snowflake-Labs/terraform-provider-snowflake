@@ -34,7 +34,9 @@ var ShowTagSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"allowed_values": {
-		Type:     schema.TypeInvalid,
+		// Adjusted manually.
+		Type:     schema.TypeSet,
+		Elem:     &schema.Schema{Type: schema.TypeString},
 		Computed: true,
 	},
 	"owner_role_type": {

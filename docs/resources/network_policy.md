@@ -37,7 +37,7 @@ resource "snowflake_network_policy" "complete" {
 
 ### Required
 
-- `name` (String) Specifies the identifier for the network policy; must be unique for the account in which the network policy is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `name` (String) Specifies the identifier for the network policy; must be unique for the account in which the network policy is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 
 ### Optional
 
