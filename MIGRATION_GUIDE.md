@@ -11,12 +11,29 @@ across different versions.
 
 ### snowflake_tag_association resource changes
 #### *(behavior change)* new id format
-In order to provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type like the following:
+In order to provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type in one resource.
 ```
+resource "snowflake_tag_association" "gold_warehouses" {
+  object_identifiers = [snowflake_warehouse.w1.fully_qualified_name, snowflake_warehouse.w2.fully_qualified_name]
+  object_type = "WAREHOUSE"
+  tag_id      = snowflake_tag.tier.fully_qualified_name
+  tag_value   = "gold"
+}
+resource "snowflake_tag_association" "silver_warehouses" {
+  object_identifiers = [snowflake_warehouse.w3.fully_qualified_name]
+  object_type = "WAREHOUSE"
+  tag_id      = snowflake_tag.tier.fully_qualified_name
+  tag_value   = "silver"
+}
+resource "snowflake_tag_association" "silver_databases" {
+  object_identifiers = [snowflake_database.d1.fully_qualified_name]
+  object_type = "DATABASE"
+  tag_id      = snowflake_tag.tier.fully_qualified_name
+  tag_value   = "silver"
+}
 ```
 
 The state is migrated automatically. There is no need to adjust configuration files, unless you use resource id like `snowflake_tag_association.example.id`.
-
 
 #### *(behavior change)* changed fields
 Behavior of some fields was changed:

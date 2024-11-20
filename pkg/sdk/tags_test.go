@@ -394,6 +394,21 @@ func TestTagSet(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s SET TAG "tag1" = 'value1'`, opts.objectType, id.FullyQualifiedName())
 	})
 
+	t.Run("set on account", func(t *testing.T) {
+		accountId := randomAccountIdentifier()
+		opts := &setTagOptions{
+			objectType: ObjectTypeStage,
+			objectName: accountId,
+			SetTags: []TagAssociation{
+				{
+					Name:  NewAccountObjectIdentifier("tag1"),
+					Value: "value1",
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s SET TAG "tag1", "tag2"`, opts.objectType, accountId.FullyQualifiedName())
+	})
+
 	t.Run("set with column", func(t *testing.T) {
 		objectId := randomTableColumnIdentifierInSchemaObject(id)
 		tagId := randomSchemaObjectIdentifier()
@@ -434,19 +449,27 @@ func TestTagUnset(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type SEQUENCE is not supported"))
 	})
 
-	t.Run("validation: unsupported account", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.objectType = ObjectTypeAccount
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type ACCOUNT is not supported - use Tags.UnsetOnCurrentAccount instead"))
-	})
-
 	t.Run("unset with all optional", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.UnsetTags = []ObjectIdentifier{
 			NewAccountObjectIdentifier("tag1"),
 			NewAccountObjectIdentifier("tag2"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s UNSET TAG "tag1", "tag2"`, opts.objectType, id.FullyQualifiedName())
+		opts.IfExists = Pointer(true)
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s IF EXISTS %s UNSET TAG "tag1", "tag2"`, opts.objectType, id.FullyQualifiedName())
+	})
+
+	t.Run("unset on account", func(t *testing.T) {
+		accountId := randomAccountIdentifier()
+		opts := &unsetTagOptions{
+			objectType: ObjectTypeStage,
+			objectName: accountId,
+			UnsetTags: []ObjectIdentifier{
+				NewAccountObjectIdentifier("tag1"),
+				NewAccountObjectIdentifier("tag2"),
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s UNSET TAG "tag1", "tag2"`, opts.objectType, accountId.FullyQualifiedName())
 	})
 
 	t.Run("unset with column", func(t *testing.T) {
@@ -460,8 +483,9 @@ func TestTagUnset(t *testing.T) {
 				tagId1,
 				tagId2,
 			},
+			IfExists: Pointer(true),
 		}
 		opts := request.toOpts()
-		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s MODIFY COLUMN "%s" UNSET TAG %s, %s`, opts.objectType, id.FullyQualifiedName(), objectId.Name(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s IF EXISTS %s MODIFY COLUMN "%s" UNSET TAG %s, %s`, opts.objectType, id.FullyQualifiedName(), objectId.Name(), tagId1.FullyQualifiedName(), tagId2.FullyQualifiedName())
 	})
 }

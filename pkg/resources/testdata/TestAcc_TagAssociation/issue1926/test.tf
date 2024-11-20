@@ -7,6 +7,8 @@ resource "snowflake_table" "test" {
   name     = var.table_name
   database = var.database
   schema   = var.schema
+  // TODO(SNOW-1348114): use only one column, if possible.
+  // We need a dummy column here because a table must have at least one column, and when we rename the second one in the config, it gets dropped for a moment.
   column {
     name = "DUMMY"
     type = "VARIANT"

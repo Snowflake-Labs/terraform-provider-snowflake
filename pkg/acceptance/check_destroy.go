@@ -523,7 +523,7 @@ func CheckTagValueEmpty(t *testing.T) func(*terraform.State) error {
 						return fmt.Errorf("invalid object id: %w", err)
 					}
 				}
-				tag, err := TestClient().Tag.GetTag(t, tagId, id, objectType)
+				tag, err := TestClient().SystemFunctions.GetTag(t, tagId, id, objectType)
 				if err != nil {
 					if strings.Contains(err.Error(), "does not exist or not authorized") {
 						// Note: this can happen if the object has been deleted as well; in this case, ignore the error

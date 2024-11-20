@@ -25,18 +25,21 @@ func v0_98_0_TagAssociationStateUpgrader(ctx context.Context, rawState map[strin
 	for _, objectIdentifierOld := range objectIdentifiersOld {
 		obj := objectIdentifierOld.(map[string]any)
 		var id sdk.ObjectIdentifier
-		database := obj["database"].(string)
-		schema := obj["schema"].(string)
-		name := obj["name"].(string)
-		switch {
-		case schema != "":
-			id = sdk.NewSchemaObjectIdentifier(database, schema, name)
-		case database != "":
-			id = sdk.NewDatabaseObjectIdentifier(database, name)
-		default:
-			id = sdk.NewAccountObjectIdentifier(name)
+		if objectType == string(sdk.ObjectTypeAccount) {
+			id = sdk.NewAccountIdentifierFromFullyQualifiedName(obj["name"].(string))
+		} else {
+			database := obj["database"].(string)
+			schema := obj["schema"].(string)
+			name := obj["name"].(string)
+			switch {
+			case schema != "":
+				id = sdk.NewSchemaObjectIdentifier(database, schema, name)
+			case database != "":
+				id = sdk.NewDatabaseObjectIdentifier(database, name)
+			default:
+				id = sdk.NewAccountObjectIdentifier(name)
+			}
 		}
-
 		objectIdentifiers = append(objectIdentifiers, id.FullyQualifiedName())
 	}
 	rawState["object_identifiers"] = objectIdentifiers

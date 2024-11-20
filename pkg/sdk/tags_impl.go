@@ -149,6 +149,7 @@ func (s *SetTagRequest) toOpts() *setTagOptions {
 			o.column = String(id.Name())
 		}
 	}
+	// TODO(SNOW-1818976): remove this hack
 	if o.objectType == ObjectTypeAccount {
 		id, ok := o.objectName.(AccountIdentifier)
 		if ok {
@@ -174,6 +175,7 @@ func (s *UnsetTagRequest) toOpts() *unsetTagOptions {
 			o.column = String(id.Name())
 		}
 	}
+	// TODO(SNOW-1818976): remove this hack
 	if o.objectType == ObjectTypeAccount {
 		id, ok := o.objectName.(AccountIdentifier)
 		if ok {

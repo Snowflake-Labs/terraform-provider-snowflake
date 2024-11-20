@@ -373,10 +373,7 @@ func TestInt_TagsAssociations(t *testing.T) {
 	})
 
 	t.Run("TestInt_TagAssociationForAccount", func(t *testing.T) {
-		accountName := testClientHelper().Context.CurrentAccountName(t)
-		organizationName := testClientHelper().Context.CurrentOrganizationName(t)
-		id := sdk.NewAccountIdentifier(organizationName, accountName)
-
+		id := testClientHelper().Context.CurrentAccountIdentifier(t)
 		// test tag sdk method
 		err := client.Tags.Set(ctx, sdk.NewSetTagRequest(sdk.ObjectTypeAccount, id).WithSetTags(tags))
 		require.NoError(t, err)

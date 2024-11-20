@@ -313,9 +313,7 @@ func TestAcc_TagAssociationAccountIssues1910(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 
 	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	accountName := acc.TestClient().Context.CurrentAccountName(t)
-	orgName := acc.TestClient().Context.CurrentOrganizationName(t)
-	accountId := sdk.NewAccountIdentifier(orgName, accountName)
+	accountId := acc.TestClient().Context.CurrentAccountIdentifier(t)
 	resourceName := "snowflake_tag_association.test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{

@@ -11,6 +11,22 @@ import (
 )
 
 func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
+	t.Run("account identifier", func(t *testing.T) {
+		in := map[string]any{
+			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
+			"object_type": "ACCOUNT",
+			"object_identifier": []any{
+				"orgname.accountname",
+			},
+		}
+		d := schema.TestResourceDataRaw(t, resources.TagAssociation().Schema, in)
+		tid, identifiers, objectType, err := resources.TagIdentifierAndObjectIdentifier(d)
+		require.NoError(t, err)
+		assert.Equal(t, sdk.NewSchemaObjectIdentifier("test_db", "test_schema", "test_tag"), tid)
+		assert.Len(t, identifiers, 1)
+		assert.Equal(t, `"orgname"."accountname"`, identifiers[0].FullyQualifiedName())
+		assert.Equal(t, sdk.ObjectTypeAccount, objectType)
+	})
 	t.Run("account object identifier", func(t *testing.T) {
 		in := map[string]any{
 			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",

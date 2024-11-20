@@ -1,9 +1,9 @@
 package resources
 
 import (
+	"fmt"
 	"slices"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -20,11 +20,36 @@ func expandIntList(configured []interface{}) []int {
 }
 
 func expandStringList(configured []interface{}) []string {
-	return helpers.ExpandStringList(configured)
+	vs := make([]string, 0, len(configured))
+	for _, v := range configured {
+		val, ok := v.(string)
+		if ok && val != "" {
+			vs = append(vs, val)
+		}
+	}
+	return vs
 }
 
 func ExpandObjectIdentifierSet(configured []any, objectType sdk.ObjectType) ([]sdk.ObjectIdentifier, error) {
-	return helpers.ExpandObjectIdentifierSet(configured, objectType)
+	vs := expandStringList(configured)
+	ids := make([]sdk.ObjectIdentifier, len(vs))
+	for i, idRaw := range vs {
+		var id sdk.ObjectIdentifier
+		var err error
+		if objectType == sdk.ObjectTypeAccount {
+			id, err = sdk.ParseAccountIdentifier(idRaw)
+			if err != nil {
+				return nil, fmt.Errorf("invalid account id: %w", err)
+			}
+		} else {
+			id, err = sdk.ParseObjectIdentifierString(idRaw)
+			if err != nil {
+				return nil, fmt.Errorf("invalid object id: %w", err)
+			}
+		}
+		ids[i] = id
+	}
+	return ids, nil
 }
 
 func expandStringListAllowEmpty(configured []interface{}) []string {

@@ -53,6 +53,15 @@ func (c *ContextClient) CurrentOrganizationName(t *testing.T) string {
 	return orgName
 }
 
+func (c *ContextClient) CurrentAccountIdentifier(t *testing.T) sdk.AccountIdentifier {
+	t.Helper()
+
+	orgName := c.CurrentOrganizationName(t)
+	accountName := c.CurrentAccountName(t)
+
+	return sdk.NewAccountIdentifier(orgName, accountName)
+}
+
 func (c *ContextClient) CurrentRole(t *testing.T) sdk.AccountObjectIdentifier {
 	t.Helper()
 	ctx := context.Background()
