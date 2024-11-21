@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -89,23 +91,24 @@ var schemaSchema = map[string]*schema.Schema{
 // Schema returns a pointer to the resource representing a schema.
 func Schema() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSchema,
-		ReadContext:   ReadContextSchema(true),
-		UpdateContext: UpdateContextSchema,
-		DeleteContext: DeleteContextSchema,
+		CreateContext: TrackingCreateWrapper(resources.Schema, CreateContextSchema),
+		ReadContext:   TrackingReadWrapper(resources.Schema, ReadContextSchema(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.Schema, UpdateContextSchema),
+		DeleteContext: TrackingDeleteWrapper(resources.Schema, DeleteContextSchema),
 		Description:   "Resource used to manage schema objects. For more information, check [schema documentation](https://docs.snowflake.com/en/sql-reference/sql/create-schema).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Schema, customdiff.All(
 			ComputedIfAnyAttributeChanged(schemaSchema, ShowOutputAttributeName, "name", "comment", "with_managed_access", "is_transient"),
 			ComputedIfAnyAttributeChanged(schemaSchema, DescribeOutputAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(schemaSchema, FullyQualifiedNameAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(schemaParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllSchemaParameters), strings.ToLower)...),
+			// TODO(SNOW-1804424 - next pr): handle custom context in parameters customdiff
 			schemaParametersCustomDiff,
-		),
+		)),
 
 		Schema: collections.MergeMaps(schemaSchema, schemaParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportSchema,
+			StateContext: TrackingImportWrapper(resources.Schema, ImportSchema),
 		},
 
 		SchemaVersion: 2,
