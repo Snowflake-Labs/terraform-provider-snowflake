@@ -41,7 +41,7 @@ func setUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t *testing.T, pa
 	tmpRoleId := tmpRole.ID()
 
 	acc.TestClient().Grant.GrantPrivilegesOnDatabaseToAccountRole(t, tmpRoleId, acc.TestClient().Ids.DatabaseId(), []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeUsage}, false)
-	acc.TestClient().Grant.GrantPrivilegesOnWarehouseToAccountRole(t, tmpRoleId, sdk.NewAccountObjectIdentifier("SNOWFLAKE"), []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeUsage}, false)
+	acc.TestClient().Grant.GrantPrivilegesOnWarehouseToAccountRole(t, tmpRoleId, acc.TestClient().Ids.SnowflakeWarehouseId(), []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeUsage}, false)
 	acc.TestClient().Role.GrantRoleToUser(t, tmpRoleId, tmpUserId)
 
 	return tmpUserId, tmpRoleId
@@ -218,7 +218,7 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 					//assert.Equal(t, account, config.Account)
 					//assert.Equal(t, user, config.User)
-					assert.Equal(t, "SNOWFLAKE", config.Warehouse)
+					assert.Equal(t, acc.TestClient().Ids.SnowflakeWarehouseId().Name(), config.Warehouse)
 					assert.Equal(t, "ACCOUNTADMIN", config.Role)
 					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
 					assert.Equal(t, net.ParseIP("1.2.3.4"), config.ClientIP)
@@ -292,7 +292,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.OrganizationName, orgName)
 					t.Setenv(snowflakeenvs.User, tmpUserId.Name())
 					t.Setenv(snowflakeenvs.Password, pass)
-					t.Setenv(snowflakeenvs.Warehouse, "SNOWFLAKE")
+					t.Setenv(snowflakeenvs.Warehouse, acc.TestClient().Ids.SnowflakeWarehouseId().Name())
 					t.Setenv(snowflakeenvs.Protocol, "https")
 					t.Setenv(snowflakeenvs.Port, "443")
 					// do not set token - it should be propagated from TOML
@@ -331,7 +331,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					//assert.Equal(t, account, config.Account)
 					assert.Equal(t, tmpUserId.Name(), config.User)
 					//assert.Equal(t, pass, config.Password)
-					assert.Equal(t, "SNOWFLAKE", config.Warehouse)
+					assert.Equal(t, acc.TestClient().Ids.SnowflakeWarehouseId().Name(), config.Warehouse)
 					assert.Equal(t, tmpRoleId.Name(), config.Role)
 					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
 					assert.Equal(t, net.ParseIP("2.2.2.2"), config.ClientIP)
@@ -443,7 +443,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					assert.Equal(t, account, config.Account)
 					assert.Equal(t, tmpUserId.Name(), config.User)
 					assert.Equal(t, pass, config.Password)
-					assert.Equal(t, "SNOWFLAKE", config.Warehouse)
+					assert.Equal(t, acc.TestClient().Ids.SnowflakeWarehouseId().Name(), config.Warehouse)
 					assert.Equal(t, tmpRoleId.Name(), config.Role)
 					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
 					assert.Equal(t, net.ParseIP("3.3.3.3"), config.ClientIP)
@@ -486,9 +486,15 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 }
 
 func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
+	pass := random.Password()
+	tmpUserId, tmpRoleId := setUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t, pass)
+
 	nonExisting := "NON-EXISTENT"
+	warehouse := acc.TestClient().Ids.SnowflakeWarehouseId().Name()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -502,16 +508,16 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      providerConfigWithRole(testprofiles.Default, nonExisting),
+				Config:      providerConfigWithExplicitValidation(tmpUserId.Name(), pass, testprofiles.OnlyAccountDetails, nonExisting, warehouse, true),
 				ExpectError: regexp.MustCompile("Role 'NON-EXISTENT' specified in the connect string does not exist or not authorized."),
 			},
 			{
-				Config:      providerConfigWithWarehouse(testprofiles.Default, nonExisting),
+				Config:      providerConfigWithExplicitValidation(tmpUserId.Name(), pass, testprofiles.OnlyAccountDetails, tmpRoleId.Name(), nonExisting, true),
 				ExpectError: regexp.MustCompile("The requested warehouse does not exist or not authorized."),
 			},
 			// check that using a non-existing warehouse with disabled verification succeeds
 			{
-				Config: providerConfigWithWarehouseAndDisabledValidation(testprofiles.Default, nonExisting),
+				Config: providerConfigWithExplicitValidation(tmpUserId.Name(), pass, testprofiles.OnlyAccountDetails, tmpRoleId.Name(), warehouse, false),
 			},
 		},
 	})
@@ -698,22 +704,18 @@ provider "snowflake" {
 `, profile) + datasourceConfig()
 }
 
-func providerConfigWithRole(profile, role string) string {
+func providerConfigWithExplicitValidation(user, pass, profile, role, warehouse string, validate bool) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
-	profile = "%[1]s"
-	role    = "%[2]s"
-}
-`, profile, role) + datasourceConfig()
-}
+	user      = "%[1]s"
+	password  = "%[2]s"
+	profile   = "%[3]s"
+	role      = "%[4]s"
+	warehouse = "%[5]s"
 
-func providerConfigWithWarehouse(profile, warehouse string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	warehouse    = "%[2]s"
+	validate_default_parameters = "%[6]t"
 }
-`, profile, warehouse) + datasourceConfig()
+`, user, pass, profile, role, warehouse, validate) + datasourceConfig()
 }
 
 func providerConfigWithClientStoreTemporaryCredential(profile, clientStoreTemporaryCredential string) string {
@@ -723,16 +725,6 @@ provider "snowflake" {
 	client_store_temporary_credential    = %[2]s
 }
 `, profile, clientStoreTemporaryCredential) + datasourceConfig()
-}
-
-func providerConfigWithWarehouseAndDisabledValidation(profile, warehouse string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	warehouse    = "%[2]s"
-	validate_default_parameters = "false"
-}
-`, profile, warehouse) + datasourceConfig()
 }
 
 func providerConfigWithProtocol(profile, protocol string) string {
@@ -860,10 +852,10 @@ provider "snowflake" {
 	account_name = "%[3]s"
 	user = "%[4]s"
 	password = "%[5]s"
-	warehouse = "SNOWFLAKE"
+	warehouse = "%[6]s"
 	protocol = "https"
 	port = "443"
-	role = "%[6]s"
+	role = "%[7]s"
 	validate_default_parameters = true
 	client_ip = "3.3.3.3"
 	authenticator = "snowflake"
@@ -890,7 +882,7 @@ provider "snowflake" {
 		foo = "piyo"
 	}
 }
-`, profile, orgName, accountName, user, password, role) + datasourceConfig()
+`, profile, orgName, accountName, user, password, acc.TestClient().Ids.SnowflakeWarehouseId().Name(), role) + datasourceConfig()
 }
 
 // TODO(SNOW-1348325): Use parameter data source with `IN SESSION` filtering.
