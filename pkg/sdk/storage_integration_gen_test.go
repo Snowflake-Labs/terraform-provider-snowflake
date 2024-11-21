@@ -2,8 +2,9 @@ package sdk
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStorageIntegrations_Create(t *testing.T) {

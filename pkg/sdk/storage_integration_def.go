@@ -2,8 +2,9 @@ package sdk
 
 import (
 	"fmt"
-	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 	"strings"
+
+	g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator"
 )
 
 //go:generate go run ./poc/main.go
@@ -16,7 +17,10 @@ const (
 	ChinaS3Protocol   S3Protocol = "S3CHINA"
 )
 
-var AllS3Protocols = []S3Protocol{RegularS3Protocol, GovS3Protocol, ChinaS3Protocol}
+var (
+	AllS3Protocols      = []S3Protocol{RegularS3Protocol, GovS3Protocol, ChinaS3Protocol}
+	AllStorageProviders = append(AsStringList(AllS3Protocols), "GCS", "AZURE")
+)
 
 func ToS3Protocol(s string) (S3Protocol, error) {
 	switch protocol := S3Protocol(strings.ToUpper(s)); protocol {
@@ -47,7 +51,6 @@ var StorageIntegrationDef = g.NewInterface(
 				"S3StorageProviderParams",
 				g.NewQueryStruct("S3StorageParams").
 					PredefinedQueryStructField("Protocol", g.KindOfT[S3Protocol](), g.ParameterOptions().SQL("STORAGE_PROVIDER").SingleQuotes().Required()).
-					//PredefinedQueryStructField("storageProvider", "string", g.StaticOptions().SQL("STORAGE_PROVIDER = 'S3'")).
 					TextAssignment("STORAGE_AWS_ROLE_ARN", g.ParameterOptions().SingleQuotes().Required()).
 					OptionalTextAssignment("STORAGE_AWS_OBJECT_ACL", g.ParameterOptions().SingleQuotes()),
 				g.KeywordOptions(),

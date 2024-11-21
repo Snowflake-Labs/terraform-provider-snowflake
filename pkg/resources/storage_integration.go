@@ -57,7 +57,8 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		ValidateDiagFunc: StringInSlice(append(sdk.AsStringList(sdk.AllS3Protocols), "GCS", "AZURE"), true),
+		ValidateDiagFunc: StringInSlice(sdk.AllStorageProviders, true),
+		Description:      fmt.Sprintf("Specifies the storage provider for the integration. Valid options are: %s", possibleValuesListed(sdk.AllStorageProviders)),
 	},
 	"storage_aws_external_id": {
 		Type:        schema.TypeString,
