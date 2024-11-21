@@ -7,6 +7,14 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v0.99.0 ➞ v1.0.0
+
+### Removed deprecated objects
+All of the deprecated objects are removed from v1 release. This includes:
+- Resources
+- Data sources
+- Fields
+
 ## v0.98.0 ➞ v0.99.0
 
 ### snowflake_tag_masking_policy_association deprecation

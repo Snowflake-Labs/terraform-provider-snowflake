@@ -17,6 +17,7 @@ func v092DatabaseStateUpgrader(ctx context.Context, rawState map[string]any, met
 	}
 
 	if v, ok := rawState["from_share"]; ok && v != nil && len(v.(map[string]any)) > 0 {
+		// TODO: modify here?
 		return nil, fmt.Errorf("failed to upgrade the state with database created from share, please use snowflake_shared_database or deprecated snowflake_database_old instead")
 	}
 

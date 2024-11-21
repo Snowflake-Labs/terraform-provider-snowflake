@@ -2,6 +2,7 @@ package resources
 
 type resource string
 
+// TODO: revisit
 const (
 	Account                                                resource = "snowflake_account"
 	AccountRole                                            resource = "snowflake_account_role"
@@ -12,7 +13,6 @@ const (
 	ApiIntegration                                         resource = "snowflake_api_integration"
 	AuthenticationPolicy                                   resource = "snowflake_authentication_policy"
 	CortexSearchService                                    resource = "snowflake_cortex_search_service"
-	DatabaseOld                                            resource = "snowflake_database_old"
 	Database                                               resource = "snowflake_database"
 	DatabaseRole                                           resource = "snowflake_database_role"
 	DynamicTable                                           resource = "snowflake_dynamic_table"
@@ -38,7 +38,6 @@ const (
 	PrimaryConnection                                      resource = "snowflake_primary_connection"
 	Procedure                                              resource = "snowflake_procedure"
 	ResourceMonitor                                        resource = "snowflake_resource_monitor"
-	Role                                                   resource = "snowflake_role"
 	RowAccessPolicy                                        resource = "snowflake_row_access_policy"
 	Saml2SecurityIntegration                               resource = "snowflake_saml2_integration"
 	Schema                                                 resource = "snowflake_schema"
@@ -55,7 +54,6 @@ const (
 	SharedDatabase                                         resource = "snowflake_shared_database"
 	Stage                                                  resource = "snowflake_stage"
 	StorageIntegration                                     resource = "snowflake_storage_integration"
-	Stream                                                 resource = "snowflake_stream"
 	StreamOnDirectoryTable                                 resource = "snowflake_stream_on_directory_table"
 	StreamOnExternalTable                                  resource = "snowflake_stream_on_external_table"
 	StreamOnTable                                          resource = "snowflake_stream_on_table"

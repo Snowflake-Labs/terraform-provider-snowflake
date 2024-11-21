@@ -410,7 +410,6 @@ const (
 	AuthenticationTypeOauth               AuthenticationType = "OAUTH"
 	AuthenticationTypeExternalBrowser     AuthenticationType = "EXTERNALBROWSER"
 	AuthenticationTypeOkta                AuthenticationType = "OKTA"
-	AuthenticationTypeJwtLegacy           AuthenticationType = "JWT"
 	AuthenticationTypeJwt                 AuthenticationType = "SNOWFLAKE_JWT"
 	AuthenticationTypeTokenAccessor       AuthenticationType = "TOKENACCESSOR"
 	AuthenticationTypeUsernamePasswordMfa AuthenticationType = "USERNAMEPASSWORDMFA"
@@ -421,13 +420,13 @@ var AllAuthenticationTypes = []AuthenticationType{
 	AuthenticationTypeOauth,
 	AuthenticationTypeExternalBrowser,
 	AuthenticationTypeOkta,
-	AuthenticationTypeJwtLegacy,
 	AuthenticationTypeJwt,
 	AuthenticationTypeTokenAccessor,
 	AuthenticationTypeUsernamePasswordMfa,
 }
 
 func ToAuthenticatorType(s string) (gosnowflake.AuthType, error) {
+	// TODO: simplify
 	switch strings.ToUpper(s) {
 	case string(AuthenticationTypeSnowflake):
 		return gosnowflake.AuthTypeSnowflake, nil
@@ -437,7 +436,7 @@ func ToAuthenticatorType(s string) (gosnowflake.AuthType, error) {
 		return gosnowflake.AuthTypeExternalBrowser, nil
 	case string(AuthenticationTypeOkta):
 		return gosnowflake.AuthTypeOkta, nil
-	case string(AuthenticationTypeJwt), string(AuthenticationTypeJwtLegacy):
+	case string(AuthenticationTypeJwt):
 		return gosnowflake.AuthTypeJwt, nil
 	case string(AuthenticationTypeTokenAccessor):
 		return gosnowflake.AuthTypeTokenAccessor, nil

@@ -1,7 +1,6 @@
-Deprecated resources that will be removed with the V1:
+Deprecated resources that are removed with the V1:
 
 * [snowflake_database_old](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/database_old)
-* [snowflake_tag_masking_policy_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/tag_masking_policy_association)
 * [snowflake_procedure](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/procedure)
 * [snowflake_function](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/function)
 * [snowflake_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/role)

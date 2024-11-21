@@ -90,7 +90,6 @@ resource "snowflake_tag_association" "column_association" {
 
 ### Optional
 
-- `object_name` (String, Deprecated) Specifies the object identifier for the tag association.
 - `skip_validation` (Boolean) If true, skips validation of the tag association.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 

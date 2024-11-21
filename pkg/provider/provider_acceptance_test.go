@@ -567,11 +567,6 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 			{
 				Config: providerConfigWithAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwt),
 			},
-			// authenticate with unencrypted private key with a legacy authenticator value
-			// solves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983
-			{
-				Config: providerConfigWithAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwtLegacy),
-			},
 			// authenticate with encrypted private key
 			{
 				Config: providerConfigWithAuthenticator(testprofiles.EncryptedJwtAuth, sdk.AuthenticationTypeJwt),

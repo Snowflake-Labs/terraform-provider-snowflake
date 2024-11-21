@@ -1,7 +1,7 @@
 
 # Resource migration
 
-Here's a guide on how to migrate deprecated resources to their new counter-parts.
+Here's a guide on how to migrate deprecated resources to their new counter-parts before v1 release.
 The migration can be done in two ways. Either you can remove old grant resources and replace them with new ones or perform
 more complicated migration, but without revoking any grant (no downtime migration). We'll focus on the second one as the first approach
 is pretty straight forward. As an example we'll take `snowflake_database_grant` to `snowflake_grant_privileges_to_account_role` migration with one privilege granted to two roles:
