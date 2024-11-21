@@ -97,7 +97,7 @@ var StorageIntegrationDef = g.NewInterface(
 							TextAssignment("AZURE_TENANT_ID", g.ParameterOptions().SingleQuotes().Required()),
 						g.KeywordOptions(),
 					).
-					BooleanAssignment("ENABLED", g.ParameterOptions()).
+					OptionalBooleanAssignment("ENABLED", g.ParameterOptions()).
 					ListAssignment("STORAGE_ALLOWED_LOCATIONS", "StorageLocation", g.ParameterOptions().Parentheses()).
 					ListAssignment("STORAGE_BLOCKED_LOCATIONS", "StorageLocation", g.ParameterOptions().Parentheses()).
 					OptionalComment(),

@@ -14,6 +14,7 @@ func TestStorageIntegrations_Create(t *testing.T) {
 		return &CreateStorageIntegrationOptions{
 			name: id,
 			S3StorageProviderParams: &S3StorageParams{
+				Protocol:          RegularS3Protocol,
 				StorageAwsRoleArn: "arn:aws:iam::001234567890:role/role",
 			},
 			Enabled:                 true,
@@ -56,10 +57,23 @@ func TestStorageIntegrations_Create(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `CREATE STORAGE INTEGRATION %s TYPE = EXTERNAL_STAGE STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::001234567890:role/role' ENABLED = true STORAGE_ALLOWED_LOCATIONS = ('allowed-loc-1', 'allowed-loc-2')`, id.FullyQualifiedName())
 	})
 
+	t.Run("basic - s3 gov protocol", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.S3StorageProviderParams.Protocol = GovS3Protocol
+		assertOptsValidAndSQLEquals(t, opts, `CREATE STORAGE INTEGRATION %s TYPE = EXTERNAL_STAGE STORAGE_PROVIDER = 'S3GOV' STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::001234567890:role/role' ENABLED = true STORAGE_ALLOWED_LOCATIONS = ('allowed-loc-1', 'allowed-loc-2')`, id.FullyQualifiedName())
+	})
+
+	t.Run("basic - s3 china protocol", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.S3StorageProviderParams.Protocol = ChinaS3Protocol
+		assertOptsValidAndSQLEquals(t, opts, `CREATE STORAGE INTEGRATION %s TYPE = EXTERNAL_STAGE STORAGE_PROVIDER = 'S3CHINA' STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::001234567890:role/role' ENABLED = true STORAGE_ALLOWED_LOCATIONS = ('allowed-loc-1', 'allowed-loc-2')`, id.FullyQualifiedName())
+	})
+
 	t.Run("all options - s3", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.S3StorageProviderParams = &S3StorageParams{
+			Protocol:            RegularS3Protocol,
 			StorageAwsRoleArn:   "arn:aws:iam::001234567890:role/role",
 			StorageAwsObjectAcl: String("bucket-owner-full-control"),
 		}
