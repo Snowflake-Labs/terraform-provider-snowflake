@@ -1,6 +1,6 @@
 # Commands to run
 # - terraform init - upgrade
-# - terraform plan (should observe upgrader errors similar to: failed to upgrade the state with database created from replica, please use snowflake_secondary_database or deprecated snowflake_database_old instead)
+# - terraform plan (should observe upgrader errors similar to: failed to upgrade the state with database created from replica, please use snowflake_secondary_database instead)
 # - terraform state rm snowflake_database.secondary (remove secondary database from the state)
 
 terraform {
@@ -16,12 +16,12 @@ provider "snowflake" {}
 
 provider "snowflake" {
   profile = "secondary_test_account"
-  alias = second_account
+  alias   = second_account
 }
 
 resource "snowflake_database" "primary" {
-  provider = snowflake.second_account
-  name = "test"
+  provider                    = snowflake.second_account
+  name                        = "test"
   data_retention_time_in_days = 0 # to avoid in-place update to -1
   replication_configuration {
     accounts             = ["<second_account_account_locator>"] # TODO: Replace
@@ -30,7 +30,7 @@ resource "snowflake_database" "primary" {
 }
 
 resource "snowflake_database" "secondary" {
-  name = "test"
-  data_retention_time_in_days = 0 # to avoid in-place update to -1
-  from_replica = "<second_account_account_locator>.\"${snowflake_database.primary.name}\"" # TODO: Replace
+  name                        = "test"
+  data_retention_time_in_days = 0                                                                         # to avoid in-place update to -1
+  from_replica                = "<second_account_account_locator>.\"${snowflake_database.primary.name}\"" # TODO: Replace
 }

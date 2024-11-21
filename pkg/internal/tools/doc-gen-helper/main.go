@@ -71,18 +71,14 @@ func main() {
 		}
 	}
 
-	if len(deprecatedResources) > 0 {
-		err := printTo(DeprecatedResourcesTemplate, DeprecatedResourcesContext{deprecatedResources}, filepath.Join(additionalExamplesPath, deprecatedResourcesFilename))
-		if err != nil {
-			log.Println(err)
-		}
+	err := printTo(DeprecatedResourcesTemplate, DeprecatedResourcesContext{deprecatedResources}, filepath.Join(additionalExamplesPath, deprecatedResourcesFilename))
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	if len(deprecatedDatasources) > 0 {
-		err := printTo(DeprecatedDatasourcesTemplate, DeprecatedDatasourcesContext{deprecatedDatasources}, filepath.Join(additionalExamplesPath, deprecatedDatasourcesFilename))
-		if err != nil {
-			log.Println(err)
-		}
+	err = printTo(DeprecatedDatasourcesTemplate, DeprecatedDatasourcesContext{deprecatedDatasources}, filepath.Join(additionalExamplesPath, deprecatedDatasourcesFilename))
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 

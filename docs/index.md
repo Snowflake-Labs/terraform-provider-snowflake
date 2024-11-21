@@ -347,6 +347,6 @@ provider "snowflake" {
 }
 ```
 
-## Currently deprecated resources
+<!-- Section of deprecated resources -->
 
-## Currently deprecated datasources
+<!-- Section of deprecated data sources -->

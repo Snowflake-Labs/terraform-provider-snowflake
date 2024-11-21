@@ -1,2 +1,3 @@
-## Currently deprecated resources
+<!-- Section of deprecated resources -->
+
 

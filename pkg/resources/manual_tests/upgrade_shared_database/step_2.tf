@@ -1,7 +1,6 @@
-// TODO: check if we can omit deprecated objects in migration upgraders
 # Commands to run
 # - terraform init - upgrade
-# - terraform plan (should observe upgrader errors similar to: failed to upgrade the state with database created from share, please use snowflake_shared_database or deprecated snowflake_database_old instead)
+# - terraform plan (should observe upgrader errors similar to: failed to upgrade the state with database created from share, please use snowflake_shared_database instead)
 # - terraform state rm snowflake_database.from_share (remove shared database from the state)
 
 terraform {
