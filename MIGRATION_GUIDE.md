@@ -11,9 +11,30 @@ across different versions.
 
 ### Removed deprecated objects
 All of the deprecated objects are removed from v1 release. This includes:
+<!-- TODO(next pr): link to entries in the migration guide regarding details for each of the resource/data source-->
 - Resources
+  - `snowflake_database_old`
+  - `snowflake_role`
+  - `snowflake_oauth_integration`
+  - `snowflake_saml_integration`
+  - `snowflake_stream`
+  - `snowflake_tag_masking_policy_association`
 - Data sources
-- Fields
+  - `snowflake_role`
+- Fields in the provider configuration:
+  - `account`
+  - `oauth_access_token`
+  - `oauth_client_id`
+  - `oauth_client_secret`
+  - `oauth_endpoint`
+  - `oauth_redirect_url`
+  - `oauth_refresh_token`
+  - `private_key_path`
+  - `region`
+  - `session_params`
+  - `username`
+
+Additionally, `JWT` value is no longer available for `authenticator` field in the provider configuration.
 
 ## v0.98.0 ➞ v0.99.0
 

@@ -2,7 +2,6 @@ package resources
 
 type resource string
 
-// TODO: revisit
 const (
 	Account                                                resource = "snowflake_account"
 	AccountRole                                            resource = "snowflake_account_role"

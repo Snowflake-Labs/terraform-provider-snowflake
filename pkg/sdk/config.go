@@ -426,7 +426,6 @@ var AllAuthenticationTypes = []AuthenticationType{
 }
 
 func ToAuthenticatorType(s string) (gosnowflake.AuthType, error) {
-	// TODO: simplify
 	switch strings.ToUpper(s) {
 	case string(AuthenticationTypeSnowflake):
 		return gosnowflake.AuthTypeSnowflake, nil

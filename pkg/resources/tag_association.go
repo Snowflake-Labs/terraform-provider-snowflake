@@ -19,6 +19,13 @@ import (
 )
 
 var tagAssociationSchema = map[string]*schema.Schema{
+	"object_name": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Specifies the object identifier for the tag association.",
+		ForceNew:    true,
+		Deprecated:  "Use `object_identifier` instead",
+	},
 	"object_identifier": {
 		Type:        schema.TypeList,
 		MinItems:    1,
