@@ -377,12 +377,6 @@ func TestTagSet(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type SEQUENCE is not supported"))
 	})
 
-	t.Run("validation: unsupported account", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.objectType = ObjectTypeAccount
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("tagging for object type ACCOUNT is not supported - use Tags.SetOnCurrentAccount instead"))
-	})
-
 	t.Run("set with all optional", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SetTags = []TagAssociation{
@@ -406,7 +400,7 @@ func TestTagSet(t *testing.T) {
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s SET TAG "tag1", "tag2"`, opts.objectType, accountId.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER %s %s SET TAG "tag1" = 'value1'`, opts.objectType, accountId.FullyQualifiedName())
 	})
 
 	t.Run("set with column", func(t *testing.T) {

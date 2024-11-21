@@ -15,7 +15,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		in := map[string]any{
 			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
 			"object_type": "ACCOUNT",
-			"object_identifier": []any{
+			"object_identifiers": []any{
 				"orgname.accountname",
 			},
 		}
@@ -31,7 +31,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		in := map[string]any{
 			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
 			"object_type": "DATABASE",
-			"object_identifier": []any{
+			"object_identifiers": []any{
 				"test_db",
 			},
 		}
@@ -48,7 +48,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		in := map[string]any{
 			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
 			"object_type": "SCHEMA",
-			"object_identifier": []any{
+			"object_identifiers": []any{
 				"test_db.test_schema",
 			},
 		}
@@ -65,7 +65,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		in := map[string]any{
 			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
 			"object_type": "TABLE",
-			"object_identifier": []any{
+			"object_identifiers": []any{
 				"test_db.test_schema.test_table",
 			},
 		}
@@ -82,7 +82,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		in := map[string]any{
 			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
 			"object_type": "COLUMN",
-			"object_identifier": []any{
+			"object_identifiers": []any{
 				"test_db.test_schema.test_table.test_column",
 			},
 		}
@@ -99,7 +99,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		in := map[string]any{
 			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
 			"object_type": "COLUMN",
-			"object_identifier": []any{
+			"object_identifiers": []any{
 				"\"",
 			},
 		}
@@ -112,7 +112,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		in := map[string]any{
 			"tag_id":      "\"test_schema\".\"test_tag\"",
 			"object_type": "DATABASE",
-			"object_identifier": []any{
+			"object_identifiers": []any{
 				"test_db",
 			},
 		}
