@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -113,13 +115,13 @@ func OauthIntegrationForPartnerApplications() *schema.Resource {
 	return &schema.Resource{
 		Schema: oauthIntegrationForPartnerApplicationsSchema,
 
-		CreateContext: CreateContextOauthIntegrationForPartnerApplications,
-		ReadContext:   ReadContextOauthIntegrationForPartnerApplications(true),
-		UpdateContext: UpdateContextOauthIntegrationForPartnerApplications,
-		DeleteContext: DeleteContextSecurityIntegration,
+		CreateContext: TrackingCreateWrapper(resources.OauthIntegrationForPartnerApplications, CreateContextOauthIntegrationForPartnerApplications),
+		ReadContext:   TrackingReadWrapper(resources.OauthIntegrationForPartnerApplications, ReadContextOauthIntegrationForPartnerApplications(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.OauthIntegrationForPartnerApplications, UpdateContextOauthIntegrationForPartnerApplications),
+		DeleteContext: TrackingDeleteWrapper(resources.OauthIntegrationForPartnerApplications, DeleteContextSecurityIntegration),
 		Description:   "Resource used to manage oauth security integration for partner applications objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.OauthIntegrationForPartnerApplications, customdiff.All(
 			ComputedIfAnyAttributeChanged(
 				oauthIntegrationForPartnerApplicationsSchema,
 				ShowOutputAttributeName,
@@ -137,10 +139,10 @@ func OauthIntegrationForPartnerApplications() *schema.Resource {
 				"blocked_roles_list",
 				"comment",
 			),
-		),
+		)),
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportOauthForPartnerApplicationIntegration,
+			StateContext: TrackingImportWrapper(resources.OauthIntegrationForPartnerApplications, ImportOauthForPartnerApplicationIntegration),
 		},
 	}
 }

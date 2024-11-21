@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -116,21 +118,21 @@ var externalVolumeSchema = map[string]*schema.Schema{
 // ExternalVolume returns a pointer to the resource representing an external volume.
 func ExternalVolume() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextExternalVolume,
-		UpdateContext: UpdateContextExternalVolume,
-		ReadContext:   ReadContextExternalVolume(true),
-		DeleteContext: DeleteContextExternalVolume,
+		CreateContext: TrackingCreateWrapper(resources.ExternalVolume, CreateContextExternalVolume),
+		UpdateContext: TrackingUpdateWrapper(resources.ExternalVolume, UpdateContextExternalVolume),
+		ReadContext:   TrackingReadWrapper(resources.ExternalVolume, ReadContextExternalVolume(true)),
+		DeleteContext: TrackingDeleteWrapper(resources.ExternalVolume, DeleteContextExternalVolume),
 		Description:   "Resource used to manage external volume objects. For more information, check [external volume documentation](https://docs.snowflake.com/en/sql-reference/commands-data-loading#external-volume).",
 
 		Schema: externalVolumeSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportExternalVolume,
+			StateContext: TrackingImportWrapper(resources.ExternalVolume, ImportExternalVolume),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.ExternalVolume, customdiff.All(
 			ComputedIfAnyAttributeChanged(externalVolumeSchema, ShowOutputAttributeName, "name", "allow_writes", "comment"),
 			ComputedIfAnyAttributeChanged(externalVolumeSchema, DescribeOutputAttributeName, "name", "allow_writes", "comment", "storage_location"),
-		),
+		)),
 	}
 }
 

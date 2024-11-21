@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -43,22 +45,22 @@ var secretAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 
 func SecretWithAuthorizationCodeGrant() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSecretWithAuthorizationCodeGrant,
-		ReadContext:   ReadContextSecretWithAuthorizationCodeGrant(true),
-		UpdateContext: UpdateContextSecretWithAuthorizationCodeGrant,
-		DeleteContext: DeleteContextSecret,
+		CreateContext: TrackingCreateWrapper(resources.SecretWithAuthorizationCodeGrant, CreateContextSecretWithAuthorizationCodeGrant),
+		ReadContext:   TrackingReadWrapper(resources.SecretWithAuthorizationCodeGrant, ReadContextSecretWithAuthorizationCodeGrant(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.SecretWithAuthorizationCodeGrant, UpdateContextSecretWithAuthorizationCodeGrant),
+		DeleteContext: TrackingDeleteWrapper(resources.SecretWithAuthorizationCodeGrant, DeleteContextSecret),
 		Description:   "Resource used to manage secret objects with OAuth Authorization Code Grant. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
 		Schema: secretAuthorizationCodeGrantSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportSecretWithAuthorizationCodeGrant,
+			StateContext: TrackingImportWrapper(resources.SecretWithAuthorizationCodeGrant, ImportSecretWithAuthorizationCodeGrant),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.SecretWithAuthorizationCodeGrant, customdiff.All(
 			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, ShowOutputAttributeName, "comment"),
 			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "oauth_refresh_token_expiry_time", "api_authentication"),
 			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypeOAuth2AuthorizationCodeGrant),
-		),
+		)),
 	}
 }
 

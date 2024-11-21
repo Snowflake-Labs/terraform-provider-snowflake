@@ -7,6 +7,8 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -96,7 +98,7 @@ func DatabaseOld() *schema.Resource {
 
 		Schema: databaseOldSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.DatabaseOld, ImportName[sdk.AccountObjectIdentifier]),
 		},
 	}
 }

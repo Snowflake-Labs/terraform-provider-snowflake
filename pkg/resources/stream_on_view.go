@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -50,23 +52,23 @@ var StreamOnViewSchema = func() map[string]*schema.Schema {
 
 func StreamOnView() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateStreamOnView(false),
-		ReadContext:   ReadStreamOnView(true),
-		UpdateContext: UpdateStreamOnView,
-		DeleteContext: DeleteStreamContext,
+		CreateContext: TrackingCreateWrapper(resources.StreamOnView, CreateStreamOnView(false)),
+		ReadContext:   TrackingReadWrapper(resources.StreamOnView, ReadStreamOnView(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.StreamOnView, UpdateStreamOnView),
+		DeleteContext: TrackingDeleteWrapper(resources.StreamOnView, DeleteStreamContext),
 		Description:   "Resource used to manage streams on views. For more information, check [stream documentation](https://docs.snowflake.com/en/sql-reference/sql/create-stream).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.StreamOnView, customdiff.All(
 			ComputedIfAnyAttributeChanged(StreamOnViewSchema, ShowOutputAttributeName, "view", "append_only", "comment"),
 			ComputedIfAnyAttributeChanged(StreamOnViewSchema, DescribeOutputAttributeName, "view", "append_only", "comment"),
 			RecreateWhenStreamIsStale(),
 			RecreateWhenStreamTypeChangedExternally(sdk.StreamSourceTypeView),
-		),
+		)),
 
 		Schema: StreamOnViewSchema,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportStreamOnView,
+			StateContext: TrackingImportWrapper(resources.StreamOnView, ImportStreamOnView),
 		},
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -75,9 +77,9 @@ func MaterializedView() *schema.Resource {
 		Update: UpdateMaterializedView,
 		Delete: DeleteMaterializedView,
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.MaterializedView, customdiff.All(
 			ComputedIfAnyAttributeChanged(materializedViewSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: materializedViewSchema,
 		Importer: &schema.ResourceImporter{

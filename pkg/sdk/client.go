@@ -266,9 +266,9 @@ func (c *Client) Close() error {
 	return nil
 }
 
-type ContextKey string
+type ContextKey struct{}
 
-const SnowflakeAccountLocatorContextKey ContextKey = "snowflake_account_locator"
+var SnowflakeAccountLocatorContextKey ContextKey
 
 // Exec executes a query that does not return rows.
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {

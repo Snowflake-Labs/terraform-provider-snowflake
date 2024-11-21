@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -106,22 +108,22 @@ var streamlitSchema = map[string]*schema.Schema{
 
 func Streamlit() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextStreamlit,
-		ReadContext:   ReadContextStreamlit,
-		UpdateContext: UpdateContextStreamlit,
-		DeleteContext: DeleteContextStreamlit,
+		CreateContext: TrackingCreateWrapper(resources.Streamlit, CreateContextStreamlit),
+		ReadContext:   TrackingReadWrapper(resources.Streamlit, ReadContextStreamlit),
+		UpdateContext: TrackingUpdateWrapper(resources.Streamlit, UpdateContextStreamlit),
+		DeleteContext: TrackingDeleteWrapper(resources.Streamlit, DeleteContextStreamlit),
 		Description:   "Resource used to manage streamlits objects. For more information, check [streamlit documentation](https://docs.snowflake.com/en/sql-reference/commands-streamlit).",
 
 		Schema: streamlitSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportStreamlit,
+			StateContext: TrackingImportWrapper(resources.Streamlit, ImportStreamlit),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Streamlit, customdiff.All(
 			ComputedIfAnyAttributeChanged(streamlitSchema, ShowOutputAttributeName, "name", "title", "comment", "query_warehouse"),
 			ComputedIfAnyAttributeChanged(streamlitSchema, FullyQualifiedNameAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(streamlitSchema, DescribeOutputAttributeName, "title", "comment", "root_location", "main_file", "query_warehouse", "external_access_integrations"),
-		),
+		)),
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{

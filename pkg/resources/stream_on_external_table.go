@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -43,23 +45,23 @@ var streamOnExternalTableSchema = func() map[string]*schema.Schema {
 
 func StreamOnExternalTable() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateStreamOnExternalTable(false),
-		ReadContext:   ReadStreamOnExternalTable(true),
-		UpdateContext: UpdateStreamOnExternalTable,
-		DeleteContext: DeleteStreamContext,
+		CreateContext: TrackingCreateWrapper(resources.StreamOnExternalTable, CreateStreamOnExternalTable(false)),
+		ReadContext:   TrackingReadWrapper(resources.StreamOnExternalTable, ReadStreamOnExternalTable(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.StreamOnExternalTable, UpdateStreamOnExternalTable),
+		DeleteContext: TrackingDeleteWrapper(resources.StreamOnExternalTable, DeleteStreamContext),
 		Description:   "Resource used to manage streams on external tables. For more information, check [stream documentation](https://docs.snowflake.com/en/sql-reference/sql/create-stream).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.StreamOnExternalTable, customdiff.All(
 			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, ShowOutputAttributeName, "external_table", "insert_only", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnExternalTableSchema, DescribeOutputAttributeName, "external_table", "insert_only", "comment"),
 			RecreateWhenStreamIsStale(),
 			RecreateWhenStreamTypeChangedExternally(sdk.StreamSourceTypeExternalTable),
-		),
+		)),
 
 		Schema: streamOnExternalTableSchema,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportStreamOnExternalTable,
+			StateContext: TrackingImportWrapper(resources.StreamOnExternalTable, ImportStreamOnExternalTable),
 		},
 	}
 }

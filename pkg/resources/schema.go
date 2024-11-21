@@ -102,7 +102,6 @@ func Schema() *schema.Resource {
 			ComputedIfAnyAttributeChanged(schemaSchema, DescribeOutputAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(schemaSchema, FullyQualifiedNameAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(schemaParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllSchemaParameters), strings.ToLower)...),
-			// TODO(SNOW-1804424 - next pr): handle custom context in parameters customdiff
 			schemaParametersCustomDiff,
 		)),
 
