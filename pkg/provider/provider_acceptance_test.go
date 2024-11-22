@@ -13,11 +13,13 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -32,6 +34,27 @@ func setUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t *testing.T, pa
 	_, userCleanup := acc.TestClient().User.CreateUserWithOptions(t, tmpUserId, &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
 		Password: sdk.String(pass),
 		Type:     sdk.Pointer(sdk.UserTypeLegacyService),
+	}})
+	t.Cleanup(userCleanup)
+
+	tmpRole, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+
+	tmpRoleId := tmpRole.ID()
+
+	acc.TestClient().Grant.GrantPrivilegesOnDatabaseToAccountRole(t, tmpRoleId, acc.TestClient().Ids.DatabaseId(), []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeUsage}, false)
+	acc.TestClient().Grant.GrantPrivilegesOnWarehouseToAccountRole(t, tmpRoleId, acc.TestClient().Ids.SnowflakeWarehouseId(), []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeUsage}, false)
+	acc.TestClient().Role.GrantRoleToUser(t, tmpRoleId, tmpUserId)
+
+	return tmpUserId, tmpRoleId
+}
+
+// TODO [this PR]: merge with the above func
+func setUpServiceUserWithAccessToTestDatabaseAndWarehouse(t *testing.T, publicKey string) (sdk.AccountObjectIdentifier, sdk.AccountObjectIdentifier) {
+	tmpUserId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_, userCleanup := acc.TestClient().User.CreateUserWithOptions(t, tmpUserId, &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
+		Type:         sdk.Pointer(sdk.UserTypeService),
+		RSAPublicKey: sdk.String(publicKey),
 	}})
 	t.Cleanup(userCleanup)
 
@@ -192,11 +215,22 @@ func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 }
 
 func TestAcc_Provider_tomlConfig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	// TODO [this PR]:
-	//user := acc.DefaultConfig(t).User
-	//account := acc.DefaultConfig(t).Account
+	accountDetailsConfig, err := sdk.ProfileConfig(testprofiles.OnlyAccountDetails)
+	require.NoError(t, err)
+
+	accountParts := strings.SplitN(accountDetailsConfig.Account, "-", 2)
+	accountId := sdk.NewAccountIdentifier(accountParts[0], accountParts[1])
+	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
+
+	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
+	tmpUserId, tmpRoleId := setUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
+
+	toml := helpers.FullTomlConfigForServiceUser(t, testprofiles.CompleteFields, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey)
+	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
 
 	oktaUrl, err := url.Parse("https://example.com")
 	require.NoError(t, err)
@@ -207,6 +241,9 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
+
+			t.Setenv(snowflakeenvs.ConfigPath, configPath)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -217,15 +254,15 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 					//assert.Equal(t, account, config.Account)
-					//assert.Equal(t, user, config.User)
-					assert.Equal(t, acc.TestClient().Ids.SnowflakeWarehouseId().Name(), config.Warehouse)
-					assert.Equal(t, "ACCOUNTADMIN", config.Role)
+					assert.Equal(t, tmpUserId.Name(), config.User)
+					assert.Equal(t, warehouseId.Name(), config.Warehouse)
+					assert.Equal(t, tmpRoleId.Name(), config.Role)
 					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
 					assert.Equal(t, net.ParseIP("1.2.3.4"), config.ClientIP)
 					assert.Equal(t, "https", config.Protocol)
 					//assert.Equal(t, fmt.Sprintf("%s.snowflakecomputing.com", account), config.Host)
 					assert.Equal(t, 443, config.Port)
-					assert.Equal(t, gosnowflake.AuthTypeSnowflake, config.Authenticator)
+					assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
 					assert.Equal(t, false, config.PasscodeInPassword)
 					assert.Equal(t, oktaUrl, config.OktaURL)
 					assert.Equal(t, 30*time.Second, config.LoginTimeout)

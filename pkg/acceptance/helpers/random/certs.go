@@ -47,6 +47,13 @@ func GenerateRSAPublicKey(t *testing.T) (string, string) {
 	t.Helper()
 	key := GenerateRSAPrivateKey(t)
 
+	return generateRSAPublicKeyFromPrivateKey(t, key)
+}
+
+// GenerateRSAPublicKey returns an RSA public key without BEGIN and END markers, and key's hash.
+func generateRSAPublicKeyFromPrivateKey(t *testing.T, key *rsa.PrivateKey) (string, string) {
+	t.Helper()
+
 	pub := key.Public()
 	b, err := x509.MarshalPKIXPublicKey(pub.(*rsa.PublicKey))
 	require.NoError(t, err)
@@ -59,6 +66,23 @@ func GenerateRSAPrivateKey(t *testing.T) *rsa.PrivateKey {
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
 	return key
+}
+
+// GenerateRSAKeyPair returns an RSA private key, RSA public key without BEGIN and END markers, and key's hash.
+func GenerateRSAKeyPair(t *testing.T) (string, string, string) {
+	t.Helper()
+
+	privateKey := GenerateRSAPrivateKey(t)
+	unencryptedDer, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	require.NoError(t, err)
+	privBlock := pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: unencryptedDer,
+	}
+	unencrypted := string(pem.EncodeToMemory(&privBlock))
+
+	publicKey, keyHash := generateRSAPublicKeyFromPrivateKey(t, privateKey)
+	return unencrypted, publicKey, keyHash
 }
 
 // GenerateRSAPrivateKeyEncrypted returns a PEM-encoded pair of unencrypted and encrypted key with a given password
