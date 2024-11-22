@@ -20,13 +20,15 @@ import (
 func TestLoadConfigFile(t *testing.T) {
 	c := `
 	[default]
-	account='TEST_ACCOUNT'
+	accountname='TEST_ACCOUNT'
+	organizationname='TEST_ORG'
 	user='TEST_USER'
 	password='abcd1234'
 	role='ACCOUNTADMIN'
 
 	[securityadmin]
-	account='TEST_ACCOUNT'
+	accountname='TEST_ACCOUNT'
+	organizationname='TEST_ORG'
 	user='TEST_USER'
 	password='abcd1234'
 	role='SECURITYADMIN'
@@ -35,11 +37,13 @@ func TestLoadConfigFile(t *testing.T) {
 
 	m, err := loadConfigFile(configPath)
 	require.NoError(t, err)
-	assert.Equal(t, "TEST_ACCOUNT", *m["default"].Account)
+	assert.Equal(t, "TEST_ACCOUNT", *m["default"].AccountName)
+	assert.Equal(t, "TEST_ORG", *m["default"].OrganizationName)
 	assert.Equal(t, "TEST_USER", *m["default"].User)
 	assert.Equal(t, "abcd1234", *m["default"].Password)
 	assert.Equal(t, "ACCOUNTADMIN", *m["default"].Role)
-	assert.Equal(t, "TEST_ACCOUNT", *m["securityadmin"].Account)
+	assert.Equal(t, "TEST_ACCOUNT", *m["securityadmin"].AccountName)
+	assert.Equal(t, "TEST_ORG", *m["securityadmin"].OrganizationName)
 	assert.Equal(t, "TEST_USER", *m["securityadmin"].User)
 	assert.Equal(t, "abcd1234", *m["securityadmin"].Password)
 	assert.Equal(t, "SECURITYADMIN", *m["securityadmin"].Role)
@@ -71,7 +75,7 @@ func TestProfileConfig(t *testing.T) {
 	jwtexpiretimeout=50
 	externalbrowsertimeout=60
 	maxretrycount=1
-	authenticator='jwt'
+	authenticator='SNOWFLAKE_JWT'
 	insecuremode=true
 	ocspfailopen=true
 	token='token'

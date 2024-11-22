@@ -214,7 +214,6 @@ func GetConfigFileName() (string, error) {
 
 // TODO(SNOW-1787920): improve TOML parsing
 type ConfigDTO struct {
-	Account                        *string             `toml:"account"`
 	AccountName                    *string             `toml:"accountname"`
 	OrganizationName               *string             `toml:"organizationname"`
 	User                           *string             `toml:"user"`
@@ -257,7 +256,6 @@ type ConfigDTO struct {
 
 func (c *ConfigDTO) DriverConfig() (gosnowflake.Config, error) {
 	driverCfg := gosnowflake.Config{}
-	pointerAttributeSet(c.Account, &driverCfg.Account)
 	if c.AccountName != nil && c.OrganizationName != nil {
 		driverCfg.Account = fmt.Sprintf("%s-%s", *c.OrganizationName, *c.AccountName)
 	}
