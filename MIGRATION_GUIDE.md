@@ -9,6 +9,13 @@ across different versions.
 
 ## v0.98.0 ➞ v0.99.0
 
+### *(new feature)* snowflake_tags datasource
+Added a new datasource enabling querying and filtering tags. Notes:
+- all results are stored in `tags` field.
+- `like` field enables tags filtering by name.
+- `in` field enables tags filtering by `account`, `database`, `schema`, `application` and `application_package`.
+- `SHOW TAGS` output is enclosed in `show_output` field inside `tags`.
+
 ### snowflake_tag_masking_policy_association deprecation
 `snowflake_tag_masking_policy_association` is now deprecated in favor of `snowflake_tag` with a new `masking_policy` field. It will be removed with the v1 release. Please adjust your configuration files.
 
