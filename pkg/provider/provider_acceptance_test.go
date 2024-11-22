@@ -302,12 +302,18 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	pass := random.Password()
-	tmpUserId, tmpRoleId := setUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t, pass)
+	accountDetailsConfig, err := sdk.ProfileConfig(testprofiles.OnlyAccountDetails)
+	require.NoError(t, err)
 
-	account := acc.DefaultConfig(t).Account
-	accountParts := strings.SplitN(account, "-", 2)
-	orgName, accountName := accountParts[0], accountParts[1]
+	accountParts := strings.SplitN(accountDetailsConfig.Account, "-", 2)
+	accountId := sdk.NewAccountIdentifier(accountParts[0], accountParts[1])
+	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
+
+	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
+	tmpUserId, tmpRoleId := setUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
+
+	toml := helpers.FullInvalidTomlConfigForServiceUser(t, testprofiles.CompleteFieldsInvalid)
+	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
 
 	oktaUrlFromEnv, err := url.Parse("https://example-env.com")
 	require.NoError(t, err)
@@ -318,6 +324,9 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Account)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
+
+			t.Setenv(snowflakeenvs.ConfigPath, configPath)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -325,20 +334,19 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.AccountName, accountName)
-					t.Setenv(snowflakeenvs.OrganizationName, orgName)
+					t.Setenv(snowflakeenvs.AccountName, accountId.AccountName())
+					t.Setenv(snowflakeenvs.OrganizationName, accountId.OrganizationName())
 					t.Setenv(snowflakeenvs.User, tmpUserId.Name())
-					t.Setenv(snowflakeenvs.Password, pass)
-					t.Setenv(snowflakeenvs.Warehouse, acc.TestClient().Ids.SnowflakeWarehouseId().Name())
+					t.Setenv(snowflakeenvs.PrivateKey, privateKey)
+					t.Setenv(snowflakeenvs.Warehouse, warehouseId.Name())
 					t.Setenv(snowflakeenvs.Protocol, "https")
 					t.Setenv(snowflakeenvs.Port, "443")
 					// do not set token - it should be propagated from TOML
 					t.Setenv(snowflakeenvs.Role, tmpRoleId.Name())
-					t.Setenv(snowflakeenvs.Authenticator, "snowflake")
+					t.Setenv(snowflakeenvs.Authenticator, "SNOWFLAKE_JWT")
 					t.Setenv(snowflakeenvs.ValidateDefaultParameters, "true")
 					t.Setenv(snowflakeenvs.ClientIp, "2.2.2.2")
 					t.Setenv(snowflakeenvs.Host, "")
-					t.Setenv(snowflakeenvs.Authenticator, "")
 					t.Setenv(snowflakeenvs.Passcode, "")
 					t.Setenv(snowflakeenvs.PasscodeInPassword, "false")
 					t.Setenv(snowflakeenvs.OktaUrl, "https://example-env.com")
@@ -367,15 +375,14 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 
 					//assert.Equal(t, account, config.Account)
 					assert.Equal(t, tmpUserId.Name(), config.User)
-					//assert.Equal(t, pass, config.Password)
-					assert.Equal(t, acc.TestClient().Ids.SnowflakeWarehouseId().Name(), config.Warehouse)
+					assert.Equal(t, warehouseId.Name(), config.Warehouse)
 					assert.Equal(t, tmpRoleId.Name(), config.Role)
 					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
 					assert.Equal(t, net.ParseIP("2.2.2.2"), config.ClientIP)
 					assert.Equal(t, "https", config.Protocol)
 					//assert.Equal(t, fmt.Sprintf("%s.snowflakecomputing.com", account), config.Host)
 					assert.Equal(t, 443, config.Port)
-					assert.Equal(t, gosnowflake.AuthTypeSnowflake, config.Authenticator)
+					assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
 					assert.Equal(t, false, config.PasscodeInPassword)
 					assert.Equal(t, oktaUrlFromEnv, config.OktaURL)
 					assert.Equal(t, 100*time.Second, config.LoginTimeout)

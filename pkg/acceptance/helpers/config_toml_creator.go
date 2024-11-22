@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -50,4 +51,47 @@ disableconsolelogin = true
 [%[1]s.params]
 foo = 'bar'
 `, profile, userId.Name(), roleId.Name(), warehouseId.Name(), accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey)
+}
+
+// FullInvalidTomlConfigForServiceUser is a temporary function used to test provider configuration
+func FullInvalidTomlConfigForServiceUser(t *testing.T, profile string) string {
+	t.Helper()
+
+	privateKey, _, _ := random.GenerateRSAKeyPair(t)
+	return fmt.Sprintf(`
+[%[1]s]
+user = 'invalid'
+privatekey = '''%[2]s'''
+role = 'invalid'
+accountname = 'invalid'
+organizationname = 'invalid'
+warehouse = 'invalid'
+clientip = 'invalid'
+protocol = 'invalid'
+port = -1
+oktaurl = 'invalid'
+clienttimeout = -1
+jwtclienttimeout = -1
+logintimeout = -1
+requesttimeout = -1
+jwtexpiretimeout = -1
+externalbrowsertimeout = -1
+maxretrycount = -1
+authenticator = 'snowflake'
+insecuremode = true
+ocspfailopen = true
+token = 'token'
+keepsessionalive = true
+disabletelemetry = true
+validatedefaultparameters = false
+clientrequestmfatoken = true
+clientstoretemporarycredential = true
+tracing = 'invalid'
+tmpdirpath = '.'
+disablequerycontextcache = true
+includeretryreason = true
+disableconsolelogin = true
+
+[complete_fields_invalid.params]
+foo = 'bar'`, profile, privateKey)
 }
