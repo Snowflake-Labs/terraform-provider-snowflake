@@ -284,6 +284,8 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 }
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2481 has been fixed
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2353 has been fixed
+// done on user, to not interfere with other parallel tests on the same account
 func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 

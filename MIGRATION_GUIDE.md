@@ -17,6 +17,7 @@ All of the deprecated objects are removed from v1 release. This includes:
   - `snowflake_role`
   - `snowflake_oauth_integration`
   - `snowflake_saml_integration`
+  - `snowflake_session_parameter`
   - `snowflake_stream`
   - `snowflake_tag_masking_policy_association`
 - Data sources

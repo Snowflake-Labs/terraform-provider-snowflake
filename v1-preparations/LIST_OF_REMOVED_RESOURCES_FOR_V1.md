@@ -7,3 +7,4 @@ Deprecated resources that are removed with the V1:
 * [snowflake_saml_integration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/saml_integration)
 * [snowflake_stream](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/stream)
 * [snowflake_tag_masking_policy_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/tag_masking_policy_association)
+* [snowflake_session_parameter](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/session_parameter)

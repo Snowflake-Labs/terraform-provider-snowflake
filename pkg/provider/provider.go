@@ -424,7 +424,6 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_secret_with_generic_string":                                   resources.SecretWithGenericString(),
 		"snowflake_sequence":                                                     resources.Sequence(),
 		"snowflake_service_user":                                                 resources.ServiceUser(),
-		"snowflake_session_parameter":                                            resources.SessionParameter(),
 		"snowflake_share":                                                        resources.Share(),
 		"snowflake_shared_database":                                              resources.SharedDatabase(),
 		"snowflake_stage":                                                        resources.Stage(),
