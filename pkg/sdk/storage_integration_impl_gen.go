@@ -71,6 +71,7 @@ func (r *CreateStorageIntegrationRequest) toOpts() *CreateStorageIntegrationOpti
 	}
 	if r.S3StorageProviderParams != nil {
 		opts.S3StorageProviderParams = &S3StorageParams{
+			Protocol:            r.S3StorageProviderParams.Protocol,
 			StorageAwsRoleArn:   r.S3StorageProviderParams.StorageAwsRoleArn,
 			StorageAwsObjectAcl: r.S3StorageProviderParams.StorageAwsObjectAcl,
 		}
