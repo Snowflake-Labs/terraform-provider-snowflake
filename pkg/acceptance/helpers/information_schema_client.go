@@ -37,27 +37,27 @@ func (c *InformationSchemaClient) GetQueryHistory(t *testing.T, limit int) []Que
 	t.Helper()
 	result, err := c.client().QueryUnsafe(context.Background(), fmt.Sprintf("SELECT * FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY(RESULT_LIMIT => %d))", limit))
 	require.NoError(t, err)
-	return collections.Map(result, func(m map[string]*any) QueryHistory {
-		require.NotNil(t, m["QUERY_ID"])
-		require.NotNil(t, m["QUERY_TEXT"])
-		require.NotNil(t, m["QUERY_TAG"])
-		return QueryHistory{
-			QueryId:   (*m["QUERY_ID"]).(string),
-			QueryText: (*m["QUERY_TEXT"]).(string),
-			QueryTag:  (*m["QUERY_TAG"]).(string),
-		}
+	return collections.Map(result, func(queryResult map[string]*any) QueryHistory {
+		return c.mapQueryHistory(t, queryResult)
 	})
 }
 
 func (c *InformationSchemaClient) GetQueryHistoryByQueryId(t *testing.T, limit int, queryId string) QueryHistory {
 	t.Helper()
-	result, err := c.client().QueryUnsafe(context.Background(), fmt.Sprintf("SELECT QUERY_TEXT FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY(RESULT_LIMIT => %d)) WHERE QUERY_ID = '%s'", limit, queryId))
+	result, err := c.client().QueryUnsafe(context.Background(), fmt.Sprintf("SELECT * FROM TABLE(INFORMATION_SCHEMA.QUERY_HISTORY(RESULT_LIMIT => %d)) WHERE QUERY_ID = '%s'", limit, queryId))
 	require.NoError(t, err)
 	require.Len(t, result, 1)
-	require.NotNil(t, result[0]["QUERY_TEXT"])
+	return c.mapQueryHistory(t, result[0])
+}
+
+func (c *InformationSchemaClient) mapQueryHistory(t *testing.T, queryResult map[string]*any) QueryHistory {
+	t.Helper()
+	require.NotNil(t, queryResult["QUERY_ID"])
+	require.NotNil(t, queryResult["QUERY_TEXT"])
+	require.NotNil(t, queryResult["QUERY_TAG"])
 	return QueryHistory{
-		QueryId:   (*result[0]["QUERY_ID"]).(string),
-		QueryText: (*result[0]["QUERY_TEXT"]).(string),
-		QueryTag:  (*result[0]["QUERY_TAG"]).(string),
+		QueryId:   (*queryResult["QUERY_ID"]).(string),
+		QueryText: (*queryResult["QUERY_TEXT"]).(string),
+		QueryTag:  (*queryResult["QUERY_TAG"]).(string),
 	}
 }

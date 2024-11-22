@@ -134,7 +134,7 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 			logger := instrumentedsql.LoggerFunc(func(ctx context.Context, s string, kv ...interface{}) {
 				switch s {
 				case "sql-conn-query", "sql-conn-exec":
-					log.Printf("[DEBUG] %s: %v (%s)\n", s, kv, ctx.Value(SnowflakeAccountLocatorContextKey))
+					log.Printf("[DEBUG] %s: %v (%s)\n", s, kv, ctx.Value(snowflakeAccountLocatorContextKey))
 				default:
 					return
 				}
@@ -266,9 +266,9 @@ func (c *Client) Close() error {
 	return nil
 }
 
-type ContextKey struct{}
+type accountLocatorContextKey struct{}
 
-var SnowflakeAccountLocatorContextKey ContextKey
+var snowflakeAccountLocatorContextKey accountLocatorContextKey
 
 // Exec executes a query that does not return rows.
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
@@ -277,7 +277,7 @@ func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 		log.Printf("[DEBUG] sql-conn-exec-dry: %v\n", sql)
 		return nil, nil
 	}
-	ctx = context.WithValue(ctx, SnowflakeAccountLocatorContextKey, c.accountLocator)
+	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
 	sql = appendQueryMetadata(ctx, sql)
 	result, err := c.db.ExecContext(ctx, sql)
 	return result, decodeDriverError(err)
@@ -290,7 +290,7 @@ func (c *Client) query(ctx context.Context, dest interface{}, sql string) error 
 		log.Printf("[DEBUG] sql-conn-query-dry: %v\n", sql)
 		return nil
 	}
-	ctx = context.WithValue(ctx, SnowflakeAccountLocatorContextKey, c.accountLocator)
+	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
 	sql = appendQueryMetadata(ctx, sql)
 	return decodeDriverError(c.db.SelectContext(ctx, dest, sql))
 }
@@ -302,7 +302,7 @@ func (c *Client) queryOne(ctx context.Context, dest interface{}, sql string) err
 		log.Printf("[DEBUG] sql-conn-query-one-dry: %v\n", sql)
 		return nil
 	}
-	ctx = context.WithValue(ctx, SnowflakeAccountLocatorContextKey, c.accountLocator)
+	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
 	sql = appendQueryMetadata(ctx, sql)
 	return decodeDriverError(c.db.GetContext(ctx, dest, sql))
 }

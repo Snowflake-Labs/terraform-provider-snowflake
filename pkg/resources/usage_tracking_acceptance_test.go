@@ -5,6 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 
@@ -21,12 +25,33 @@ import (
 )
 
 func TestAcc_CompleteUsageTracking(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	comment := random.Comment()
 
-	userModel := model.User("test", id.Name())
-	userModelWithComment := model.User("test", id.Name()).
-		WithComment(comment)
+	schemaModel := model.Schema("test", id.DatabaseName(), id.Name())
+	schemaModelWithComment := model.Schema("test", id.DatabaseName(), id.Name()).WithComment(comment)
+
+	assertQueryMetadataExists := func(t *testing.T, operation tracking.Operation, query string) resource.TestCheckFunc {
+		t.Helper()
+		return func(state *terraform.State) error {
+			queryHistory := acc.TestClient().InformationSchema.GetQueryHistory(t, 30)
+			expectedMetadata := tracking.NewVersionedMetadata(resources.Schema, operation)
+			if _, err := collections.FindFirst(queryHistory, func(history helpers.QueryHistory) bool {
+				if metadata, err := tracking.ParseMetadata(history.QueryText); err == nil {
+					if expectedMetadata == metadata && strings.Contains(history.QueryText, query) {
+						return true
+					}
+				}
+				return false
+			}); err != nil {
+				return fmt.Errorf("query history does not contain query metadata: %v with query containing: %s", expectedMetadata, query)
+			}
+			return nil
+		}
+	}
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -34,59 +59,50 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
-			// Create + CustomDiff (parameters)
+			// Create
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModel(t, schemaModel),
 				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModel.ResourceReference()).
+					resourceassert.SchemaResource(t, schemaModel.ResourceReference()).
 						HasNameString(id.Name()).
-						HasNoComment(),
+						HasCommentString(""),
+					assert.Check(assertQueryMetadataExists(t, tracking.CreateOperation, fmt.Sprintf(`CREATE SCHEMA %s`, id.FullyQualifiedName()))),
 				),
 			},
 			// Import
 			{
-				ResourceName: userModel.ResourceReference(),
+				ResourceName: schemaModel.ResourceReference(),
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					resourceassert.ImportedUserResource(t, id.Name()).
-						HasNoComment(),
+					resourceassert.ImportedSchemaResource(t, id.FullyQualifiedName()).
+						HasCommentString(""),
+					assert.CheckImport(func(states []*terraform.InstanceState) error {
+						return assertQueryMetadataExists(t, tracking.ImportOperation, fmt.Sprintf(`SHOW SCHEMAS LIKE '%s'`, id.Name()))(nil)
+					}),
 				),
 			},
-			// Update
+			// Update + CustomDiff (parameters) + Read
 			{
-				Config: config.FromModel(t, userModelWithComment),
+				Config: config.FromModel(t, schemaModelWithComment),
 				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModelWithComment.ResourceReference()).
+					resourceassert.SchemaResource(t, schemaModelWithComment.ResourceReference()).
 						HasNameString(id.Name()).
 						HasCommentString(comment),
+					assert.Check(assertQueryMetadataExists(t, tracking.UpdateOperation, fmt.Sprintf(`ALTER SCHEMA %s SET COMMENT = '%s'`, id.FullyQualifiedName(), comment))),
+					assert.Check(assertQueryMetadataExists(t, tracking.ReadOperation, fmt.Sprintf(`SHOW SCHEMAS LIKE '%s'`, id.Name()))),
+					assert.Check(assertQueryMetadataExists(t, tracking.CustomDiffOperation, fmt.Sprintf(`SHOW PARAMETERS IN SCHEMA %s`, id.FullyQualifiedName()))),
+				),
+			},
+			// Delete
+			{
+				Config:  config.FromModel(t, schemaModelWithComment),
+				Destroy: true,
+				Check: assert.AssertThat(t,
+					assert.Check(assertQueryMetadataExists(t, tracking.DeleteOperation, fmt.Sprintf(`DROP SCHEMA IF EXISTS %s`, id.FullyQualifiedName()))),
 				),
 			},
 		},
-	}) // Delete
-
-	assertQueryMetadataExists := func(t *testing.T, queryHistory []helpers.QueryHistory, operation tracking.Operation, query string) {
-		t.Helper()
-		found := false
-		expectedMetadata := tracking.NewVersionedMetadata(resources.User, operation)
-		for _, history := range queryHistory {
-			if metadata, err := tracking.ParseMetadata(history.QueryText); err == nil {
-				if expectedMetadata == metadata && strings.Contains(history.QueryText, query) {
-					found = true
-				}
-			}
-		}
-		if !found {
-			t.Fatalf("query history does not contain query metadata: %v with query containing: %s", expectedMetadata, query)
-		}
-	}
-
-	queryHistory := acc.TestClient().InformationSchema.GetQueryHistory(t, 100)
-	assertQueryMetadataExists(t, queryHistory, tracking.CreateOperation, fmt.Sprintf(`CREATE USER "%s"`, id.Name()))
-	assertQueryMetadataExists(t, queryHistory, tracking.ReadOperation, fmt.Sprintf(`SHOW USERS LIKE '%s'`, id.Name()))
-	assertQueryMetadataExists(t, queryHistory, tracking.UpdateOperation, fmt.Sprintf(`ALTER USER "%s" SET COMMENT = '%s'`, id.Name(), comment))
-	assertQueryMetadataExists(t, queryHistory, tracking.DeleteOperation, fmt.Sprintf(`DROP USER IF EXISTS "%s"`, id.Name()))
-	assertQueryMetadataExists(t, queryHistory, tracking.CustomDiffOperation, fmt.Sprintf(`SHOW PARAMETERS IN USER "%s"`, id.Name()))
-	assertQueryMetadataExists(t, queryHistory, tracking.ImportOperation, fmt.Sprintf(`DESCRIBE USER "%s"`, id.Name()))
+	})
 }
