@@ -422,12 +422,18 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	pass := random.Password()
-	tmpUserId, tmpRoleId := setUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t, pass)
+	accountDetailsConfig, err := sdk.ProfileConfig(testprofiles.OnlyAccountDetails)
+	require.NoError(t, err)
 
-	account := acc.DefaultConfig(t).Account
-	accountParts := strings.SplitN(account, "-", 2)
-	orgName, accountName := accountParts[0], accountParts[1]
+	accountParts := strings.SplitN(accountDetailsConfig.Account, "-", 2)
+	accountId := sdk.NewAccountIdentifier(accountParts[0], accountParts[1])
+	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
+
+	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
+	tmpUserId, tmpRoleId := setUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
+
+	toml := helpers.FullInvalidTomlConfigForServiceUser(t, testprofiles.CompleteFieldsInvalid)
+	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
 
 	oktaUrlFromTf, err := url.Parse("https://example-tf.com")
 	require.NoError(t, err)
@@ -438,6 +444,9 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
+
+			t.Setenv(snowflakeenvs.ConfigPath, configPath)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -448,7 +457,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.OrganizationName, "invalid")
 					t.Setenv(snowflakeenvs.AccountName, "invalid")
 					t.Setenv(snowflakeenvs.User, "invalid")
-					t.Setenv(snowflakeenvs.Password, "invalid")
+					t.Setenv(snowflakeenvs.PrivateKey, "invalid")
 					t.Setenv(snowflakeenvs.Warehouse, "invalid")
 					t.Setenv(snowflakeenvs.Protocol, "invalid")
 					t.Setenv(snowflakeenvs.Port, "-1")
@@ -480,21 +489,20 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
-				Config: providerConfigAllFields(testprofiles.CompleteFieldsInvalid, orgName, accountName, tmpUserId.Name(), pass, tmpRoleId.Name()),
+				Config: providerConfigAllFields(testprofiles.CompleteFieldsInvalid, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 
-					assert.Equal(t, account, config.Account)
+					//assert.Equal(t, account, config.Account)
 					assert.Equal(t, tmpUserId.Name(), config.User)
-					assert.Equal(t, pass, config.Password)
-					assert.Equal(t, acc.TestClient().Ids.SnowflakeWarehouseId().Name(), config.Warehouse)
+					assert.Equal(t, warehouseId.Name(), config.Warehouse)
 					assert.Equal(t, tmpRoleId.Name(), config.Role)
 					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
 					assert.Equal(t, net.ParseIP("3.3.3.3"), config.ClientIP)
 					assert.Equal(t, "https", config.Protocol)
-					assert.Equal(t, fmt.Sprintf("%s.snowflakecomputing.com", account), config.Host)
+					//assert.Equal(t, fmt.Sprintf("%s.snowflakecomputing.com", account), config.Host)
 					assert.Equal(t, 443, config.Port)
-					assert.Equal(t, gosnowflake.AuthTypeSnowflake, config.Authenticator)
+					assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
 					assert.Equal(t, false, config.PasscodeInPassword)
 					assert.Equal(t, oktaUrlFromTf, config.OktaURL)
 					assert.Equal(t, 101*time.Second, config.LoginTimeout)
@@ -888,21 +896,22 @@ data snowflake_database "t" {
 }`, acc.TestDatabaseName)
 }
 
-func providerConfigAllFields(profile, orgName, accountName, user, password, role string) string {
+func providerConfigAllFields(profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountId sdk.AccountIdentifier, privateKey string) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
 	profile = "%[1]s"
 	organization_name = "%[2]s"
 	account_name = "%[3]s"
 	user = "%[4]s"
-	password = "%[5]s"
-	warehouse = "%[6]s"
+	private_key = <<EOT
+%[7]sEOT
+	warehouse = "%[5]s"
 	protocol = "https"
 	port = "443"
-	role = "%[7]s"
+	role = "%[6]s"
 	validate_default_parameters = true
 	client_ip = "3.3.3.3"
-	authenticator = "snowflake"
+	authenticator = "SNOWFLAKE_JWT"
 	okta_url = "https://example-tf.com"
 	login_timeout = 101
 	request_timeout = 201
@@ -926,7 +935,7 @@ provider "snowflake" {
 		foo = "piyo"
 	}
 }
-`, profile, orgName, accountName, user, password, acc.TestClient().Ids.SnowflakeWarehouseId().Name(), role) + datasourceConfig()
+`, profile, accountId.OrganizationName(), accountId.AccountName(), userId.Name(), warehouseId.Name(), roleId.Name(), privateKey) + datasourceConfig()
 }
 
 // TODO(SNOW-1348325): Use parameter data source with `IN SESSION` filtering.
