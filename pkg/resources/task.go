@@ -67,14 +67,6 @@ var taskSchema = map[string]*schema.Schema{
 		Description:      "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. Due to Snowflake limitations warehouse identifier can consist of only upper-cased letters. (Conflicts with user_task_managed_initial_warehouse_size)",
 		ConflictsWith:    []string{"user_task_managed_initial_warehouse_size"},
 	},
-	"user_task_managed_initial_warehouse_size": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ValidateDiagFunc: sdkValidation(sdk.ToWarehouseSize),
-		DiffSuppressFunc: NormalizeAndCompare(sdk.ToWarehouseSize),
-		Description:      "Specifies the size of the compute resources to provision for the first run of the task, before a task history is available for Snowflake to determine an ideal size. Once a task has successfully completed a few runs, Snowflake ignores this parameter setting. (Conflicts with warehouse)",
-		ConflictsWith:    []string{"warehouse"},
-	},
 	"schedule": {
 		Type:          schema.TypeList,
 		Optional:      true,
@@ -187,7 +179,7 @@ func Task() *schema.Resource {
 		DeleteContext: DeleteTask,
 		Description:   "Resource used to manage task objects. For more information, check [task documentation](https://docs.snowflake.com/en/user-guide/tasks-intro).",
 
-		Schema: helpers.MergeMaps(taskSchema, taskParametersSchema),
+		Schema: collections.MergeMaps(taskSchema, taskParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportTask,
 		},
@@ -594,18 +586,6 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 			attributeMappedValueReadOrDefault(d, "warehouse", task.Warehouse, func(warehouse *sdk.AccountObjectIdentifier) (string, error) {
 				return warehouse.Name(), nil
 			}, nil),
-			func() error {
-				managedInitialWarehouseSizeIdx := slices.IndexFunc(taskParameters, func(p *sdk.Parameter) bool {
-					return p != nil && p.Key == string(sdk.TaskParameterUserTaskManagedInitialWarehouseSize)
-				})
-				if managedInitialWarehouseSizeIdx == -1 {
-					return fmt.Errorf("unable to find user_task_managed_initial_warehouse_size parameter")
-				}
-				if taskParameters[managedInitialWarehouseSizeIdx].Level == sdk.ParameterTypeTask {
-					return d.Set("user_task_managed_initial_warehouse_size", taskParameters[managedInitialWarehouseSizeIdx].Value)
-				}
-				return nil
-			}(),
 			func() error {
 				if len(task.Schedule) > 0 {
 					taskSchedule, err := sdk.ParseTaskSchedule(task.Schedule)

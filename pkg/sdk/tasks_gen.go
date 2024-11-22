@@ -239,8 +239,9 @@ func ParseTaskSchedule(schedule string) (*TaskSchedule, error) {
 		}
 
 		return &TaskSchedule{Minutes: minutes}, nil
+	default:
+		return nil, fmt.Errorf("invalid schedule format: %s", schedule)
 	}
-	return nil, fmt.Errorf("invalid schedule format: %s", schedule)
 }
 
 // DescribeTaskOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-task.

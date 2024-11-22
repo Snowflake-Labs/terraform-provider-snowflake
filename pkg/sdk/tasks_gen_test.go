@@ -564,27 +564,26 @@ func TestParseTaskSchedule(t *testing.T) {
 		"valid schedule: m minutes": {
 			Schedule:             "5 m",
 			ExpectedTaskSchedule: &TaskSchedule{Minutes: 5},
-			Error:                "",
 		},
 		"valid schedule: M minutes": {
-			Schedule:             "5 m",
+			Schedule:             "5 M",
 			ExpectedTaskSchedule: &TaskSchedule{Minutes: 5},
-			Error:                "",
 		},
 		"valid schedule: MINUTE minutes": {
 			Schedule:             "5 MINUTE",
 			ExpectedTaskSchedule: &TaskSchedule{Minutes: 5},
-			Error:                "",
 		},
 		"valid schedule: MINUTES minutes": {
 			Schedule:             "5 MINUTES",
 			ExpectedTaskSchedule: &TaskSchedule{Minutes: 5},
-			Error:                "",
 		},
 		"valid schedule: cron": {
 			Schedule:             "USING CRON * * * * * UTC",
 			ExpectedTaskSchedule: &TaskSchedule{Cron: "* * * * * UTC"},
-			Error:                "",
+		},
+		"valid schedule: cron with case sensitive location": {
+			Schedule:             "USING CRON * * * * * America/Loc_Angeles",
+			ExpectedTaskSchedule: &TaskSchedule{Cron: "* * * * * America/Loc_Angeles"},
 		},
 		"invalid schedule: wrong schedule format": {
 			Schedule:             "SOME SCHEDULE",
@@ -596,11 +595,10 @@ func TestParseTaskSchedule(t *testing.T) {
 			ExpectedTaskSchedule: nil,
 			Error:                `strconv.Atoi: parsing "A5": invalid syntax`,
 		},
-		// currently cron expressions are not validated (they are on Snowflake level)
+		// currently, cron expressions are not validated (they are on Snowflake level)
 		"invalid schedule: wrong cron format": {
 			Schedule:             "USING CRON some_cron",
 			ExpectedTaskSchedule: &TaskSchedule{Cron: "some_cron"},
-			Error:                "",
 		},
 	}
 

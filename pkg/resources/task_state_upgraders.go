@@ -12,18 +12,22 @@ func v098TaskStateUpgrader(ctx context.Context, rawState map[string]any, meta an
 	}
 
 	rawState["condition"] = rawState["when"]
-	rawState["started"] = booleanStringFromBool(rawState["enabled"].(bool))
+	rawState["started"] = rawState["enabled"].(bool)
 	rawState["allow_overlapping_execution"] = booleanStringFromBool(rawState["allow_overlapping_execution"].(bool))
 	if rawState["after"] != nil {
-		newAfter := make([]string, len(rawState["after"].([]any)))
-		for i, name := range rawState["after"].([]any) {
-			newAfter[i] = sdk.NewSchemaObjectIdentifier(rawState["database"].(string), rawState["schema"].(string), name.(string)).FullyQualifiedName()
+		if afterSlice, okType := rawState["after"].([]any); okType {
+			newAfter := make([]string, len(afterSlice))
+			for i, name := range afterSlice {
+				newAfter[i] = sdk.NewSchemaObjectIdentifier(rawState["database"].(string), rawState["schema"].(string), name.(string)).FullyQualifiedName()
+			}
+			rawState["after"] = newAfter
 		}
-		rawState["after"] = newAfter
 	}
 	if rawState["session_parameters"] != nil {
-		for k, v := range rawState["session_parameters"].(map[string]any) {
-			rawState[k] = v
+		if sessionParamsMap, okType := rawState["session_parameters"].(map[string]any); okType {
+			for k, v := range sessionParamsMap {
+				rawState[k] = v
+			}
 		}
 	}
 	delete(rawState, "session_parameters")

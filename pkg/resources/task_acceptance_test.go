@@ -28,6 +28,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+// TODO(SNOW-1822118): Create more complicated tests for task
+
 func TestAcc_Task_Basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -62,7 +64,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, configModel.ResourceReference()).
@@ -123,7 +125,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 
 	currentRole := acc.TestClient().Context.CurrentRole(t)
 
-	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.CreateWithGcpPubSub(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -237,7 +239,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 
-	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.CreateWithGcpPubSub(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
 
 	taskConfig := `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`
@@ -276,7 +278,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -326,7 +328,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
 						HasCommentString(comment).
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString(condition).
 						HasSqlStatementString(newStatement),
 					resourceshowoutputassert.TaskShowOutput(t, completeConfigModel.ResourceReference()).
@@ -375,7 +377,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -441,12 +443,11 @@ func TestAcc_Task_UpdatesInComplexDAG(t *testing.T) {
 		))
 
 	comment := random.Comment()
-	basicConfigModelAfterUpdate := model.TaskWithId("test", child3Id, true, "SELECT 1").
+	basicConfigModelAfterUpdate := model.TaskWithId("test", child3Id, true, "SELECT 123").
 		WithAfterValue(configvariable.SetVariable(
 			configvariable.StringVariable(child1.ID().FullyQualifiedName()),
 			configvariable.StringVariable(child2.ID().FullyQualifiedName()),
 		)).
-		WithSqlStatement("SELECT 123"). // Overrides sql_statement
 		WithComment(comment)
 
 	resource.Test(t, resource.TestCase{
@@ -466,6 +467,7 @@ func TestAcc_Task_UpdatesInComplexDAG(t *testing.T) {
 						HasSchemaString(child3Id.SchemaName()).
 						HasNameString(child3Id.Name()).
 						HasStartedString(r.BooleanTrue).
+						HasAfter(child1.ID(), child2.ID()).
 						HasSqlStatementString("SELECT 1"),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
 						HasCreatedOnNotEmpty().
@@ -487,6 +489,7 @@ func TestAcc_Task_UpdatesInComplexDAG(t *testing.T) {
 						HasNameString(child3Id.Name()).
 						HasStartedString(r.BooleanTrue).
 						HasCommentString(comment).
+						HasAfter(child1.ID(), child2.ID()).
 						HasSqlStatementString("SELECT 123"),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModelAfterUpdate.ResourceReference()).
 						HasCreatedOnNotEmpty().
@@ -577,7 +580,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 
-	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.CreateWithGcpPubSub(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
 
 	taskConfig := `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`
@@ -618,7 +621,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
 						HasCommentString(comment).
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString(condition).
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, completeConfigModel.ResourceReference()).
@@ -680,7 +683,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
 						HasCommentString(comment).
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString(condition).
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, completeConfigModel.ResourceReference()).
@@ -724,7 +727,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -786,7 +789,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -1622,7 +1625,7 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
-						HasAfterIdsInOrder(id).
+						HasAfter(id).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
 						HasPredecessors(id).
@@ -1800,7 +1803,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
@@ -1815,7 +1818,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasNoScheduleSet().
-						HasAfterIdsInOrder(rootId).
+						HasAfter(rootId).
 						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
@@ -1830,7 +1833,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
@@ -1845,7 +1848,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, childTaskConfigModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse).
 						HasScheduleMinutes(schedule).
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
@@ -1894,7 +1897,7 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(rootId),
+						HasAfter(rootId),
 				),
 			},
 			{
@@ -1906,7 +1909,7 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(),
+						HasAfter(),
 				),
 			},
 		},
@@ -2142,7 +2145,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(),
+						HasAfter(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
@@ -2155,7 +2158,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(rootId),
+						HasAfter(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
@@ -2178,7 +2181,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(rootId),
+						HasAfter(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
@@ -2191,7 +2194,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(),
+						HasAfter(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
@@ -2244,7 +2247,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(rootId).
+						HasAfter(rootId).
 						HasCommentString("abc"),
 				),
 			},
@@ -2263,7 +2266,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithDifferentComment.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(rootId).
+						HasAfter(rootId).
 						HasCommentString("def"),
 				),
 			},
@@ -2335,7 +2338,7 @@ func TestAcc_Task_issue3113(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.CreateWithGcpPubSub(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -2379,18 +2382,50 @@ func TestAcc_Task_issue3113(t *testing.T) {
 	})
 }
 
-func taskConfigWithErrorIntegration(id sdk.SchemaObjectIdentifier, errorIntegrationId sdk.AccountObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_task" "test" {
-	database = "%[1]s"
-	schema = "%[2]s"
-	name = "%[3]s"
-	schedule = "5 MINUTES"
-	sql_statement = "SELECT 1"
-	enabled = true
-	error_integration = "%[4]s"
-}
-`, id.DatabaseName(), id.SchemaName(), id.Name(), errorIntegrationId.Name())
+func TestAcc_Task_StateUpgrade_NoOptionalFields(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	configModel := model.TaskWithId("test", id, false, statement)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.98.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: taskNoOptionalFieldsConfigV0980(id),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_task.test", "enabled", "false"),
+					resource.TestCheckResourceAttr("snowflake_task.test", "allow_overlapping_execution", "false"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables:          config.ConfigVariablesFromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanFalse).
+						HasAllowOverlappingExecutionString(r.BooleanDefault),
+				),
+			},
+		},
+	})
 }
 
 func TestAcc_Task_StateUpgrade(t *testing.T) {
@@ -2453,23 +2488,6 @@ func TestAcc_Task_StateUpgrade(t *testing.T) {
 	})
 }
 
-func taskBasicConfigV0980(id sdk.SchemaObjectIdentifier, condition string) string {
-	return fmt.Sprintf(`
-resource "snowflake_task" "test" {
-	database = "%[1]s"
-	schema = "%[2]s"
-	name = "%[3]s"
-	enabled = false
-	sql_statement = "SELECT 1"
-	schedule = "5 MINUTES"
-	allow_overlapping_execution = true
-	suspend_task_after_num_failures = 10
-	when = "%[4]s"
-	user_task_managed_initial_warehouse_size = "XSMALL"
-}
-`, id.DatabaseName(), id.SchemaName(), id.Name(), condition)
-}
-
 func TestAcc_Task_StateUpgradeWithAfter(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -2526,7 +2544,7 @@ func TestAcc_Task_StateUpgradeWithAfter(t *testing.T) {
 						HasNameString(id.Name()).
 						HasStartedString(r.BooleanFalse).
 						HasSqlStatementString(statement).
-						HasAfterIdsInOrder(rootTask.ID()).
+						HasAfter(rootTask.ID()).
 						HasWarehouseString(acc.TestClient().Ids.WarehouseId().Name()).
 						HasUserTaskTimeoutMsString("50").
 						HasLogLevelString(string(sdk.LogLevelInfo)).
@@ -2537,6 +2555,48 @@ func TestAcc_Task_StateUpgradeWithAfter(t *testing.T) {
 			},
 		},
 	})
+}
+
+func taskNoOptionalFieldsConfigV0980(id sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_task" "test" {
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	sql_statement = "SELECT 1"
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name())
+}
+
+func taskConfigWithErrorIntegration(id sdk.SchemaObjectIdentifier, errorIntegrationId sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_task" "test" {
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	schedule = "5 MINUTES"
+	sql_statement = "SELECT 1"
+	enabled = true
+	error_integration = "%[4]s"
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name(), errorIntegrationId.Name())
+}
+
+func taskBasicConfigV0980(id sdk.SchemaObjectIdentifier, condition string) string {
+	return fmt.Sprintf(`
+resource "snowflake_task" "test" {
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	enabled = false
+	sql_statement = "SELECT 1"
+	schedule = "5 MINUTES"
+	allow_overlapping_execution = true
+	suspend_task_after_num_failures = 10
+	when = "%[4]s"
+	user_task_managed_initial_warehouse_size = "XSMALL"
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name(), condition)
 }
 
 func taskCompleteConfigV0980(

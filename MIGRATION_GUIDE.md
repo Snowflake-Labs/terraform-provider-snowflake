@@ -67,7 +67,8 @@ New fields:
 - Added support for finalizer tasks with `finalize` field. It conflicts with `after` and `schedule` (see [finalizer tasks](https://docs.snowflake.com/en/user-guide/tasks-graphs#release-and-cleanup-of-task-graphs)).
  
 Changes:
-- `enabled` field changed to `started` and type changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values)).
+- `enabled` field changed to `started` and type changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). It is also now required field, so make sure it's explicitly set (previously it was optional with the default value set to `false`).
+- `allow_overlapping_execution` type was changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). Previously, it had the default set to `false` which will be migrated. If nothing will be set the provider will plan the change to `default` value. If you want to make sure it's turned off, set it explicitly to `false`.
 
 Before:
 ```terraform
@@ -130,7 +131,24 @@ resource "snowflake_task" "example" {
 }
 ```
 
-- `after` field type was changed from `list` to `set`. No changes in configuration are necessary.
+- `after` field type was changed from `list` to `set` and the values were changed from names to fully qualified names.
+ 
+Before:
+```terraform
+resource "snowflake_task" "example" {
+  # ...
+  after = ["<task_name>", snowflake_task.some_task.name]
+  # ...
+}
+```
+After:
+```terraform
+resource "snowflake_task" "example" {
+  # ...
+  after = ["<database_name>.<schema_name>.<task_name>", snowflake_task.some_task.fully_qualified_name]
+  # ...
+}
+```
 
 ## v0.98.0 ➞ v0.99.0
 
