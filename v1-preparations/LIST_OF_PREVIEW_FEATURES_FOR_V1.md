@@ -27,6 +27,7 @@
 * [snowflake_network_rule](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/network_rule)
 * [snowflake_email_notification_integration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/email_notification_integration)
 * [snowflake_notification_integration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/notification_integration)
+* [snowflake_object_parameter](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/object_parameter)
 * [snowflake_password_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/password_policy)
 * [snowflake_pipe](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/pipe)
 * [snowflake_pipes](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/pipes) (datasource)
@@ -49,3 +50,4 @@
 * [snowflake_table_constraint](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/table_constraint) (undecided - may be deleted instead)
 * [snowflake_user_public_keys](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/user_public_keys)
 * [snowflake_user_password_policy_attachment](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/user_password_policy_attachment)
+* [snowflake_user_authentication_policy_attachment](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/snowflake_user_authentication_policy_attachment)

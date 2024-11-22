@@ -653,6 +653,34 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 	})
 }
 
+func TestAcc_Provider_PreviewFeaturesEnabled(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	t.Setenv(string(testenvs.EnableAllPreviewFeatures), "")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      providerConfigWithDatasourcePreviewFeature(testprofiles.Default, "snowflake_current_account"),
+				ExpectError: regexp.MustCompile("snowflake_current_account is currently a preview data source, and must be enabled by adding snowflake_current_account to `preview_features_enabled` in Terraform configuration"),
+			},
+		},
+	})
+}
+
+func providerConfigWithDatasourcePreviewFeature(profile, feature string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+}
+data %[2]s p {}
+`, profile, feature)
+}
+
 func providerConfigWithAuthenticator(profile string, authenticator sdk.AuthenticationType) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
