@@ -75,7 +75,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.Password, nil),
-				ConflictsWith: []string{"browser_auth", "private_key_path", "private_key", "private_key_passphrase", "oauth_access_token", "oauth_refresh_token"},
+				ConflictsWith: []string{"private_key", "private_key_passphrase"},
 			},
 			"warehouse": {
 				Type:             schema.TypeString,
@@ -274,11 +274,11 @@ func Provider() *schema.Provider {
 			},
 			"private_key": {
 				Type:          schema.TypeString,
-				Description:   envNameFieldDescription("Private Key for username+private-key auth. Cannot be used with `browser_auth` or `password`.", snowflakeenvs.PrivateKey),
+				Description:   envNameFieldDescription("Private Key for username+private-key auth. Cannot be used with `password`.", snowflakeenvs.PrivateKey),
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.PrivateKey, nil),
-				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "private_key_path", "oauth_refresh_token"},
+				ConflictsWith: []string{"password"},
 			},
 			"private_key_passphrase": {
 				Type:          schema.TypeString,
@@ -286,7 +286,7 @@ func Provider() *schema.Provider {
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.PrivateKeyPassphrase, nil),
-				ConflictsWith: []string{"browser_auth", "password", "oauth_access_token", "oauth_refresh_token"},
+				ConflictsWith: []string{"password"},
 			},
 			"disable_telemetry": {
 				Type:        schema.TypeBool,
