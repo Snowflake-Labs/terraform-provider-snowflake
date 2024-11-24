@@ -17,7 +17,7 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.15.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.33.0
 	github.com/hashicorp/terraform-plugin-testing v1.6.0
-	github.com/jmoiron/sqlx v1.3.5
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pelletier/go-toml/v2 v2.1.1
@@ -30,8 +30,6 @@ require (
 )
 
 require (
-	github.com/go-sql-driver/mysql v1.7.1 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	golang.org/x/tools v0.21.0 // indirect
 )
