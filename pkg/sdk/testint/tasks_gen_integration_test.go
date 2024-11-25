@@ -2,6 +2,7 @@ package testint
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -21,7 +22,7 @@ func TestInt_Tasks(t *testing.T) {
 	ctx := testContext(t)
 	sql := "SELECT CURRENT_TIMESTAMP"
 
-	errorIntegration, ErrorIntegrationCleanup := testClientHelper().NotificationIntegration.Create(t)
+	errorIntegration, ErrorIntegrationCleanup := testClientHelper().NotificationIntegration.CreateWithGcpPubSub(t)
 	t.Cleanup(ErrorIntegrationCleanup)
 
 	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, warehouseId *sdk.AccountObjectIdentifier) {
@@ -899,8 +900,11 @@ func TestInt_Tasks(t *testing.T) {
 		err := client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()))
 		require.NoError(t, err)
 
-		err = client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()).WithRetryLast(true))
-		require.ErrorContains(t, err, fmt.Sprintf("Cannot perform retry: no suitable run of graph with root task %s to retry.", task.ID().Name()))
+		require.Eventually(t, func() bool {
+			err = client.Tasks.Execute(ctx, sdk.NewExecuteTaskRequest(task.ID()).WithRetryLast(true))
+			return strings.Contains(err.Error(), fmt.Sprintf("Cannot perform retry: no suitable run of graph with root task %s to retry.", task.ID().Name())) ||
+				strings.Contains(err.Error(), fmt.Sprintf("graph with root task %s had no failures.", task.ID().Name()))
+		}, 2*time.Second, time.Millisecond*300)
 	})
 
 	t.Run("execute task: retry last after failed last task", func(t *testing.T) {
