@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/go-cty/cty"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -93,16 +93,10 @@ var taskSchema = map[string]*schema.Schema{
 		},
 	},
 	"config": {
-		Type:     schema.TypeString,
-		Optional: true,
-		DiffSuppressFunc: SuppressIfAny(
-			IgnoreChangeToCurrentSnowflakeValueInShow("config"),
-			// TODO(SNOW-1348116 - next pr): Currently config has to be passed with $$ prefix and suffix. The best solution would be to put there only json, so it could be retrieved from file, etc. Move $$ adding to the SDK.
-			func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-				return strings.Trim(oldValue, "$") == strings.Trim(newValue, "$")
-			},
-		),
-		Description: "Specifies a string representation of key value pairs that can be accessed by all tasks in the task graph. Must be in JSON format.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("config"),
+		Description:      "Specifies a string representation of key value pairs that can be accessed by all tasks in the task graph. Must be in JSON format.",
 	},
 	"allow_overlapping_execution": {
 		Type:             schema.TypeString,
@@ -136,15 +130,15 @@ var taskSchema = map[string]*schema.Schema{
 		ConflictsWith: []string{"schedule", "after"},
 	},
 	"after": {
-		Type: schema.TypeSet,
+		Type:     schema.TypeSet,
+		Optional: true,
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
-			DiffSuppressFunc: suppressIdentifierQuoting,
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},
-		Optional:      true,
-		Description:   blocklistedCharactersFieldDescription("Specifies one or more predecessor tasks for the current task. Use this option to [create a DAG](https://docs.snowflake.com/en/user-guide/tasks-graphs.html#label-task-dag) of tasks or add this task to an existing DAG. A DAG is a series of tasks that starts with a scheduled root task and is linked together by dependencies."),
-		ConflictsWith: []string{"schedule", "finalize"},
+		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("after"),
+		Description:      blocklistedCharactersFieldDescription("Specifies one or more predecessor tasks for the current task. Use this option to [create a DAG](https://docs.snowflake.com/en/user-guide/tasks-graphs.html#label-task-dag) of tasks or add this task to an existing DAG. A DAG is a series of tasks that starts with a scheduled root task and is linked together by dependencies."),
+		ConflictsWith:    []string{"schedule", "finalize"},
 	},
 	"when": {
 		Type:             schema.TypeString,
@@ -155,7 +149,6 @@ var taskSchema = map[string]*schema.Schema{
 	"sql_statement": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ForceNew:         false,
 		DiffSuppressFunc: SuppressIfAny(DiffSuppressStatement, IgnoreChangeToCurrentSnowflakeValueInShow("definition")),
 		Description:      "Any single SQL statement, or a call to a stored procedure, executed when the task runs.",
 	},
@@ -186,7 +179,7 @@ func Task() *schema.Resource {
 		DeleteContext: DeleteTask,
 		Description:   "Resource used to manage task objects. For more information, check [task documentation](https://docs.snowflake.com/en/user-guide/tasks-intro).",
 
-		Schema: helpers.MergeMaps(taskSchema, taskParametersSchema),
+		Schema: collections.MergeMaps(taskSchema, taskParametersSchema),
 		Importer: &schema.ResourceImporter{
 			StateContext: ImportTask,
 		},
@@ -197,6 +190,15 @@ func Task() *schema.Resource {
 			ComputedIfAnyAttributeChanged(taskSchema, FullyQualifiedNameAttributeName, "name"),
 			taskParametersCustomDiff,
 		),
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    cty.EmptyObject,
+				Upgrade: v098TaskStateUpgrader,
+			},
+		},
 	}
 }
 
@@ -312,7 +314,6 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) (diags di
 		return diag.FromErr(err)
 	}
 
-	// TODO(SNOW-1348116 - next pr): State upgrader for "id" (and potentially other fields)
 	d.SetId(helpers.EncodeResourceIdentifier(id))
 
 	if d.Get("started").(bool) {
@@ -334,10 +335,10 @@ func CreateTask(ctx context.Context, d *schema.ResourceData, meta any) (diags di
 		}
 	}()
 
-	return ReadTask(false)(ctx, d, meta)
+	return append(diags, ReadTask(false)(ctx, d, meta)...)
 }
 
-func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
 	client := meta.(*provider.Context).Client
 	id, err := sdk.ParseSchemaObjectIdentifier(d.Id())
 	if err != nil {
@@ -354,6 +355,12 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		return diag.FromErr(sdk.JoinErrors(err))
 	}
 
+	defer func() {
+		if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
+			diags = append(diags, resumeTaskErrorDiag(id, "create", err))
+		}
+	}()
+
 	if task.IsStarted() {
 		if err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true)); err != nil {
 			return diag.FromErr(sdk.JoinErrors(err))
@@ -364,6 +371,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 	set := sdk.NewTaskSetRequest()
 
 	err = errors.Join(
+		attributeMappedValueUpdate(d, "user_task_managed_initial_warehouse_size", &set.UserTaskManagedInitialWarehouseSize, &unset.UserTaskManagedInitialWarehouseSize, sdk.ToWarehouseSize),
 		accountObjectIdentifierAttributeUpdate(d, "warehouse", &set.Warehouse, &unset.Warehouse),
 		stringAttributeUpdate(d, "config", &set.Config, &unset.Config),
 		booleanStringAttributeUpdate(d, "allow_overlapping_execution", &set.AllowOverlappingExecution, &unset.AllowOverlappingExecution),
@@ -445,10 +453,6 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 				tasksToResume = append(tasksToResume, rootTaskId)
 			}
 		} else {
-			if task.TaskRelations.FinalizedRootTask == nil {
-				return diag.Errorf("trying to remove the finalizer when it's already unset")
-			}
-
 			rootTask, err := client.Tasks.ShowByID(ctx, *task.TaskRelations.FinalizedRootTask)
 			if err != nil {
 				return diag.FromErr(err)
@@ -527,11 +531,7 @@ func UpdateTask(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 		return identifier.FullyQualifiedName() == id.FullyQualifiedName()
 	})
 
-	if err := client.Tasks.ResumeTasks(ctx, tasksToResume); err != nil {
-		log.Printf("[WARN] failed to resume tasks: %s", err)
-	}
-
-	return ReadTask(false)(ctx, d, meta)
+	return append(diags, ReadTask(false)(ctx, d, meta)...)
 }
 
 func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
@@ -587,35 +587,28 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 				return warehouse.Name(), nil
 			}, nil),
 			func() error {
-				upperSchedule := strings.ToUpper(task.Schedule)
-				switch {
-				case strings.Contains(upperSchedule, "USING CRON"):
-					// We have to do it this was because we want to get rid of the prefix and leave the casing as is (mostly because timezones like America/Los_Angeles are case-sensitive).
-					// That why the prefix trimming has to be done by slicing rather than using strings.TrimPrefix.
-					cron := task.Schedule[len("USING CRON "):]
-					if err := d.Set("schedule", []any{map[string]any{
-						"using_cron": cron,
-					}}); err != nil {
-						return err
-					}
-				case strings.Contains(upperSchedule, "MINUTE"):
-					minuteParts := strings.Split(upperSchedule, " ")
-					minutes, err := strconv.Atoi(minuteParts[0])
+				if len(task.Schedule) > 0 {
+					taskSchedule, err := sdk.ParseTaskSchedule(task.Schedule)
 					if err != nil {
 						return err
 					}
-
-					if err := d.Set("schedule", []any{map[string]any{
-						"minutes": minutes,
-					}}); err != nil {
-						return err
+					switch {
+					case len(taskSchedule.Cron) > 0:
+						if err := d.Set("schedule", []any{map[string]any{
+							"using_cron": taskSchedule.Cron,
+						}}); err != nil {
+							return err
+						}
+					case taskSchedule.Minutes > 0:
+						if err := d.Set("schedule", []any{map[string]any{
+							"minutes": taskSchedule.Minutes,
+						}}); err != nil {
+							return err
+						}
 					}
-				default:
-					if err := d.Set("schedule", nil); err != nil {
-						return err
-					}
+					return nil
 				}
-				return nil
+				return d.Set("schedule", nil)
 			}(),
 			d.Set("started", task.IsStarted()),
 			d.Set("when", task.Condition),
@@ -658,7 +651,7 @@ func DeleteTask(ctx context.Context, d *schema.ResourceData, meta any) (diags di
 	}
 
 	d.SetId("")
-	return nil
+	return diags
 }
 
 func resumeTaskErrorDiag(id sdk.SchemaObjectIdentifier, operation string, originalErr error) diag.Diagnostic {
@@ -680,23 +673,6 @@ func waitForTaskStart(ctx context.Context, client *sdk.Client, id sdk.SchemaObje
 			return fmt.Errorf("error starting task %s err = %w", id.FullyQualifiedName(), err), false
 		}
 		if task.State != sdk.TaskStateStarted {
-			return nil, false
-		}
-		return nil, true
-	})
-}
-
-func waitForTaskSuspend(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) error {
-	err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(id).WithSuspend(true))
-	if err != nil {
-		return fmt.Errorf("error suspending task %s err = %w", id.FullyQualifiedName(), err)
-	}
-	return util.Retry(5, 5*time.Second, func() (error, bool) {
-		task, err := client.Tasks.ShowByID(ctx, id)
-		if err != nil {
-			return fmt.Errorf("error suspending task %s err = %w", id.FullyQualifiedName(), err), false
-		}
-		if task.State != sdk.TaskStateSuspended {
 			return nil, false
 		}
 		return nil, true

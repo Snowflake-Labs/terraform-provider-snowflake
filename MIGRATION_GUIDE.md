@@ -9,11 +9,6 @@ across different versions.
  
 ## v0.98.0 ➞ v0.99.0
 
-### snowflake_task resource changes
-
-new fields:
-- `config` 
-
 ### snowflake_tasks data source changes
 
 New filtering options:
@@ -65,14 +60,33 @@ output "simple_output" {
 }
 ```
 
-Please adjust your Terraform configuration files.
-
-## v0.98.0 ➞ v0.99.0
-
 ### snowflake_task resource changes
+New fields:
+- `config` - enables to specify JSON-formatted metadata that can be retrieved in the `sql_statement` by using [SYSTEM$GET_TASK_GRAPH_CONFIG](https://docs.snowflake.com/en/sql-reference/functions/system_get_task_graph_config).
+- `show_output` and `parameters` fields added for holding SHOW and SHOW PARAMETERS output (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
+- Added support for finalizer tasks with `finalize` field. It conflicts with `after` and `schedule` (see [finalizer tasks](https://docs.snowflake.com/en/user-guide/tasks-graphs#release-and-cleanup-of-task-graphs)).
+ 
 Changes:
-- `enabled` field changed to `started` and type changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values))
-- `shedule` field changed from single value to nested object that allows for specifying either minutes or cron
+- `enabled` field changed to `started` and type changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). It is also now required field, so make sure it's explicitly set (previously it was optional with the default value set to `false`).
+- `allow_overlapping_execution` type was changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). Previously, it had the default set to `false` which will be migrated. If nothing will be set the provider will plan the change to `default` value. If you want to make sure it's turned off, set it explicitly to `false`.
+
+Before:
+```terraform
+resource "snowflake_task" "example" {
+  # ...
+  enabled = true
+  # ...
+}
+```
+After:
+```terraform
+resource "snowflake_task" "example" {
+  # ...
+  started = true
+  # ...
+}
+```
+- `schedule` field changed from single value to a nested object that allows for specifying either minutes or cron
 
 Before:
 ```terraform
@@ -80,7 +94,7 @@ resource "snowflake_task" "example" {
   # ...
   schedule = "5 MINUTES"
   # or
-  schedule = "USING SCHEDULE * * * * * UTC"
+  schedule = "USING CRON * * * * * UTC"
   # ...
 }
 ```
@@ -96,9 +110,45 @@ resource "snowflake_task" "example" {
   # ...
 }
 ```
-- All task parameters defined in [the Snowflake documentation](https://docs.snowflake.com/en/sql-reference/parameters) added into the top-level schema and removed `session_paramters` map.
-- `show_output` and `paramters` fields added for holding SHOW and SHOW PARAMETERS output (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
-- Added support for finalizer tasks with `finalize` field. It conflicts with `after` and `schedule` (see [finalizer tasks](https://docs.snowflake.com/en/user-guide/tasks-graphs#release-and-cleanup-of-task-graphs)).
+- All task parameters defined in [the Snowflake documentation](https://docs.snowflake.com/en/sql-reference/parameters) added into the top-level schema and removed `session_parameters` map.
+
+Before:
+```terraform
+resource "snowflake_task" "example" {
+  # ...
+  session_parameters = {
+    QUERY_TAG = "<query_tag>"
+  }
+  # ...
+}
+```
+After:
+```terraform
+resource "snowflake_task" "example" {
+  # ...
+  query_tag = "<query_tag>"
+  # ...
+}
+```
+
+- `after` field type was changed from `list` to `set` and the values were changed from names to fully qualified names.
+ 
+Before:
+```terraform
+resource "snowflake_task" "example" {
+  # ...
+  after = ["<task_name>", snowflake_task.some_task.name]
+  # ...
+}
+```
+After:
+```terraform
+resource "snowflake_task" "example" {
+  # ...
+  after = ["<database_name>.<schema_name>.<task_name>", snowflake_task.some_task.fully_qualified_name]
+  # ...
+}
+```
 
 ## v0.98.0 ➞ v0.99.0
 

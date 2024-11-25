@@ -1,54 +1,128 @@
+# Basic standalone task
 resource "snowflake_task" "task" {
-  comment = "my task"
-
   database  = "database"
   schema    = "schema"
+  name      = "task"
   warehouse = "warehouse"
-
-  name          = "task"
-  schedule      = "10 MINUTE"
-  sql_statement = "select * from foo;"
-
-  session_parameters = {
-    "foo" : "bar",
+  started   = true
+  schedule {
+    minutes = 5
   }
-
-  user_task_timeout_ms = 10000
-  after                = "preceding_task"
-  when                 = "foo AND bar"
-  enabled              = true
+  sql_statement = "select 1"
 }
 
+# Basic serverless task
 resource "snowflake_task" "serverless_task" {
-  comment = "my serverless task"
-
-  database = "db"
-  schema   = "schema"
-
-  name          = "serverless_task"
-  schedule      = "10 MINUTE"
-  sql_statement = "select * from foo;"
-
-  session_parameters = {
-    "foo" : "bar",
-  }
-
-  user_task_timeout_ms                     = 10000
+  database                                 = "database"
+  schema                                   = "schema"
+  name                                     = "task"
   user_task_managed_initial_warehouse_size = "XSMALL"
-  after                                    = [snowflake_task.task.name]
-  when                                     = "foo AND bar"
-  enabled                                  = true
+  started                                  = true
+  schedule {
+    minutes = 5
+  }
+  sql_statement = "select 1"
 }
 
-resource "snowflake_task" "test_task" {
-  comment = "task with allow_overlapping_execution"
+# Basic child task
+resource "snowflake_task" "child_task" {
+  database  = "database"
+  schema    = "schema"
+  name      = "task"
+  warehouse = "warehouse"
+  started   = true
+  # You can do it by referring to task by computed fully_qualified_name field or write the task name in manually if it's not managed by Terraform
+  after         = [snowflake_task.root_task.fully_qualified_name, "<database_name>.<schema_name>.<root_task_name>"]
+  sql_statement = "select 1"
+}
 
-  database = "database"
-  schema   = "schema"
+# Basic finalizer task
+resource "snowflake_task" "child_task" {
+  database  = "database"
+  schema    = "schema"
+  name      = "task"
+  warehouse = "warehouse"
+  started   = true
+  # You can do it by referring to task by computed fully_qualified_name field or write the task name in manually if it's not managed by Terraform
+  finalize      = snowflake_task.root_task.fully_qualified_name
+  sql_statement = "select 1"
+}
 
-  name          = "test_task"
-  sql_statement = "select 1 as c;"
+# Complete standalone task
+resource "snowflake_task" "test" {
+  database      = "database"
+  schema        = "schema"
+  name          = "task"
+  warehouse     = "warehouse"
+  started       = true
+  sql_statement = "select 1"
 
+  config                      = "{\"key\":\"value\"}"
   allow_overlapping_execution = true
-  enabled                     = true
+  error_integration           = "<error_integration_name>"
+  when                        = "SYSTEM$STREAM_HAS_DATA('<stream_name>')"
+  comment                     = "complete task"
+
+  schedule {
+    minutes = 10
+  }
+
+  # Session Parameters
+  suspend_task_after_num_failures               = 10
+  task_auto_retry_attempts                      = 0
+  user_task_managed_initial_warehouse_size      = "Medium"
+  user_task_minimum_trigger_interval_in_seconds = 30
+  user_task_timeout_ms                          = 3600000
+  abort_detached_query                          = false
+  autocommit                                    = true
+  binary_input_format                           = "HEX"
+  binary_output_format                          = "HEX"
+  client_memory_limit                           = 1536
+  client_metadata_request_use_connection_ctx    = false
+  client_prefetch_threads                       = 4
+  client_result_chunk_size                      = 160
+  client_result_column_case_insensitive         = false
+  client_session_keep_alive                     = false
+  client_session_keep_alive_heartbeat_frequency = 3600
+  client_timestamp_type_mapping                 = "TIMESTAMP_LTZ"
+  date_input_format                             = "AUTO"
+  date_output_format                            = "YYYY-MM-DD"
+  enable_unload_physical_type_optimization      = true
+  error_on_nondeterministic_merge               = true
+  error_on_nondeterministic_update              = false
+  geography_output_format                       = "GeoJSON"
+  geometry_output_format                        = "GeoJSON"
+  jdbc_use_session_timezone                     = true
+  json_indent                                   = 2
+  lock_timeout                                  = 43200
+  log_level                                     = "OFF"
+  multi_statement_count                         = 1
+  noorder_sequence_as_default                   = true
+  odbc_treat_decimal_as_int                     = false
+  query_tag                                     = ""
+  quoted_identifiers_ignore_case                = false
+  rows_per_resultset                            = 0
+  s3_stage_vpce_dns_name                        = ""
+  search_path                                   = "$current, $public"
+  statement_queued_timeout_in_seconds           = 0
+  statement_timeout_in_seconds                  = 172800
+  strict_json_output                            = false
+  timestamp_day_is_always_24h                   = false
+  timestamp_input_format                        = "AUTO"
+  timestamp_ltz_output_format                   = ""
+  timestamp_ntz_output_format                   = "YYYY-MM-DD HH24:MI:SS.FF3"
+  timestamp_output_format                       = "YYYY-MM-DD HH24:MI:SS.FF3 TZHTZM"
+  timestamp_type_mapping                        = "TIMESTAMP_NTZ"
+  timestamp_tz_output_format                    = ""
+  timezone                                      = "America/Los_Angeles"
+  time_input_format                             = "AUTO"
+  time_output_format                            = "HH24:MI:SS"
+  trace_level                                   = "OFF"
+  transaction_abort_on_error                    = false
+  transaction_default_isolation_level           = "READ COMMITTED"
+  two_digit_century_start                       = 1970
+  unsupported_ddl_action                        = "ignore"
+  use_cached_result                             = true
+  week_of_year_policy                           = 0
+  week_start                                    = 0
 }

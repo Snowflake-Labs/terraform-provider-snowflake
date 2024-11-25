@@ -1,7 +1,6 @@
 package resourceassert
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -9,10 +8,10 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 )
 
-func (t *TaskResourceAssert) HasAfterIdsInOrder(ids ...sdk.SchemaObjectIdentifier) *TaskResourceAssert {
+func (t *TaskResourceAssert) HasAfter(ids ...sdk.SchemaObjectIdentifier) *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("after.#", strconv.FormatInt(int64(len(ids)), 10)))
-	for i, id := range ids {
-		t.AddAssertion(assert.ValueSet(fmt.Sprintf("after.%d", i), id.FullyQualifiedName()))
+	for _, id := range ids {
+		t.AddAssertion(assert.SetElem("after.*", id.FullyQualifiedName()))
 	}
 	return t
 }
@@ -31,5 +30,10 @@ func (t *TaskResourceAssert) HasScheduleCron(cron string) *TaskResourceAssert {
 
 func (t *TaskResourceAssert) HasNoScheduleSet() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("schedule.#", "0"))
+	return t
+}
+
+func (t *TaskResourceAssert) HasUserTaskManagedInitialWarehouseSizeEnum(size sdk.WarehouseSize) *TaskResourceAssert {
+	t.AddAssertion(assert.ValueSet("user_task_managed_initial_warehouse_size", string(size)))
 	return t
 }
