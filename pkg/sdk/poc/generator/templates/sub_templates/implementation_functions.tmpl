@@ -1,6 +1,7 @@
 {{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator.Interface*/ -}}
 
 {{ $impl := .NameLowerCased }}
+
 {{ range .Operations }}
     {{ if and (eq .Name "Show") .ShowMapping }}
         func (v *{{ $impl }}) Show(ctx context.Context, request *{{ .OptsField.DtoDecl }}) ([]{{ .ShowMapping.To.Name }}, error) {
@@ -13,9 +14,17 @@
         return resultList, nil
         }
     {{ else if eq .Name "ShowByID" }}
+        {{ $idkind := .ObjectInterface.ObjectIdentifierKind }}
         func (v *{{ $impl }}) ShowByID(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error) {
-        // TODO: adjust request if e.g. LIKE is supported for the resource
-        {{ $impl }}, err := v.Show(ctx, NewShow{{ .ObjectInterface.NameSingular }}Request())
+            request := NewShow{{ .ObjectInterface.NameSingular }}Request()
+            {{- range .ShowByIDFiltering -}} 
+                .{{- if eq .Kind "In" }}
+                    With{{ .Kind }}( {{ printf .Args $idkind }} )
+                {{- else }}
+                    With{{ .Kind }}( {{ .Args }} )
+                {{- end }}
+            {{- end }}
+        {{ $impl }}, err := v.Show(ctx, request)
         if err != nil {
         return nil, err
         }
@@ -53,4 +62,9 @@
         return validateAndExec(v.client, ctx, opts)
         }
     {{ end }}
+{{ end }}
+
+{{ define "ShowByIDFiltering" }}
+    {{- range $k, $v := .ShowByIDFiltering -}}
+    {{- end }}
 {{ end }}

@@ -1,5 +1,7 @@
 package generator
 
+import "strings"
+
 // Interface groups operations for particular object or objects family (e.g. DATABASE ROLE)
 type Interface struct {
 	// Name is the interface's name, e.g. "DatabaseRoles"
@@ -24,4 +26,9 @@ func NewInterface(name string, nameSingular string, identifierKind string, opera
 // NameLowerCased returns interface name starting with a lower case letter
 func (i *Interface) NameLowerCased() string {
 	return startingWithLowerCase(i.Name)
+}
+
+// ObjectIdentifierKind returns the level of the object identifier (e.g. for DatabaseObjectIdentifier, it returns "Database")
+func (i *Interface) ObjectIdentifierKind() string {
+	return strings.Replace(i.IdentifierKind, "ObjectIdentifier", "", 1)
 }

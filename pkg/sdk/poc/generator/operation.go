@@ -20,6 +20,22 @@ const (
 	DescriptionMappingKindSlice       DescriptionMappingKind = "slice"
 )
 
+type ShowByIDFiltering struct {
+	Kind string
+	Args string
+}
+
+type ShowByIDFilteringKind uint
+
+const (
+	// Enables filtering with: Like
+	ShowByIDLikeFiltering ShowByIDFilteringKind = iota
+	// Enables filtering with: In
+	ShowByIDInFiltering
+	// Enables filtering with: ExtendedIn
+	ShowByIDExtendedInFiltering
+)
+
 // Operation defines a single operation for given object or objects family (e.g. CREATE DATABASE ROLE)
 type Operation struct {
 	// Name is the operation's name, e.g. "Create"
@@ -38,6 +54,8 @@ type Operation struct {
 	DescribeKind *DescriptionMappingKind
 	// DescribeMapping is a definition of mapping needed by Operation kind of OperationKindDescribe
 	DescribeMapping *Mapping
+	// ShowByIDFiltering defines a kind of filterings performed in ShowByID operation
+	ShowByIDFiltering []ShowByIDFiltering
 }
 
 type Mapping struct {
@@ -77,6 +95,29 @@ func (s *Operation) withHelperStructs(helperStructs ...*Field) *Operation {
 	return s
 }
 
+func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation {
+	for _, f := range filtering {
+		switch f {
+		case ShowByIDLikeFiltering:
+			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
+				Kind: "Like",
+				Args: "Like{Pattern: String(id.Name())}",
+			})
+		case ShowByIDInFiltering:
+			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
+				Kind: "In",
+				Args: "&In{%[1]v: id.%[1]vId()}",
+			})
+		case ShowByIDExtendedInFiltering:
+			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
+				Kind: "In",
+				Args: "ExtendedIn{In: In{%[1]v: id.%[1]vId()}}",
+			})
+		}
+	}
+	return s
+}
+
 func addShowMapping(op *Operation, from, to *Field) {
 	op.ShowMapping = newMapping("convert", from, to)
 }
@@ -85,11 +126,11 @@ func addDescriptionMapping(op *Operation, from, to *Field) {
 	op.DescribeMapping = newMapping("convert", from, to)
 }
 
-func (i *Interface) newNoSqlOperation(kind string) *Interface {
+func (i *Interface) newNoSqlOperation(kind string) *Operation {
 	operation := newOperation(kind, "placeholder").
 		withOptionsStruct(nil)
 	i.Operations = append(i.Operations, operation)
-	return i
+	return operation
 }
 
 func (i *Interface) newSimpleOperation(kind string, doc string, queryStruct *QueryStruct, helperStructs ...IntoField) *Interface {
@@ -160,8 +201,10 @@ func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resour
 	return i
 }
 
-func (i *Interface) ShowByIdOperation() *Interface {
-	return i.newNoSqlOperation(string(OperationKindShowByID))
+func (i *Interface) ShowByIdOperation(filtering ...ShowByIDFilteringKind) *Interface {
+	op := i.newNoSqlOperation(string(OperationKindShowByID))
+	op.withFiltering(filtering...)
+	return i
 }
 
 func (i *Interface) DescribeOperation(describeKind DescriptionMappingKind, doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct) *Interface {
