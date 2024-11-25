@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/validators"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -357,13 +358,13 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Profile, "default"),
 			},
 			"preview_features_enabled": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: validators.StringInSlice(previewFeatures, true),
+					ValidateDiagFunc: validators.StringInSlice(previewfeatures.AllPreviewFeatures, true),
 				},
-				Description: "A list of preview features that are handled by the provider. See [preview features list](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/LIST_OF_PREVIEW_FEATURES_FOR_V1.md). Preview features may have breaking changes in future releases, even without raising the major version. This field can not be set with environmental variables.",
+				Description: fmt.Sprintf("A list of preview features that are handled by the provider. See [preview features list](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/LIST_OF_PREVIEW_FEATURES_FOR_V1.md). Preview features may have breaking changes in future releases, even without raising the major version. This field can not be set with environmental variables. Valid options are: %v.", docs.PossibleValuesListed(previewfeatures.AllPreviewFeatures)),
 			},
 		},
 		ResourcesMap:         getResources(),
@@ -371,59 +372,6 @@ func Provider() *schema.Provider {
 		ConfigureContextFunc: ConfigureProvider,
 		ProviderMetaSchema:   map[string]*schema.Schema{},
 	}
-}
-
-var previewFeatures = []string{
-	"snowflake_current_account",
-	"snowflake_account_password_policy_attachment",
-	"snowflake_alert",
-	"snowflake_alerts",
-	"snowflake_api_integration",
-	"snowflake_cortex_search_service",
-	"snowflake_cortex_search_services",
-	"snowflake_database",
-	"snowflake_database_role",
-	"snowflake_dynamic_table",
-	"snowflake_dynamic_tables",
-	"snowflake_external_function",
-	"snowflake_external_functions",
-	"snowflake_external_table",
-	"snowflake_external_tables",
-	"snowflake_external_volume",
-	"snowflake_failover_group",
-	"snowflake_failover_groups",
-	"snowflake_file_format",
-	"snowflake_file_formats",
-	"snowflake_managed_account",
-	"snowflake_materialized_view",
-	"snowflake_materialized_views",
-	"snowflake_network_policy_attachment",
-	"snowflake_network_rule",
-	"snowflake_email_notification_integration",
-	"snowflake_notification_integration",
-	"snowflake_object_parameter",
-	"snowflake_password_policy",
-	"snowflake_pipe",
-	"snowflake_pipes",
-	"snowflake_current_role",
-	"snowflake_sequence",
-	"snowflake_sequences",
-	"snowflake_share",
-	"snowflake_shares",
-	"snowflake_object_parameter",
-	"snowflake_parameters",
-	"snowflake_stage",
-	"snowflake_stages",
-	"snowflake_storage_integration",
-	"snowflake_storage_integrations",
-	"snowflake_system_generate_scim_access_token",
-	"snowflake_system_get_aws_sns_iam_policy",
-	"snowflake_system_get_privatelink_config",
-	"snowflake_system_get_snowflake_platform_info",
-	"snowflake_table_column_masking_policy_application",
-	"snowflake_table_constraint",
-	"snowflake_user_public_keys",
-	"snowflake_user_password_policy_attachment",
 }
 
 func getResources() map[string]*schema.Resource {
@@ -604,8 +552,8 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		providerCtx.EnabledFeatures = expandStringList(v.(*schema.Set).List())
 	}
 
-	if os.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
-		providerCtx.EnabledFeatures = previewFeatures
+	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
+		providerCtx.EnabledFeatures = previewfeatures.AllPreviewFeatures
 	}
 
 	// needed for tests verifying different provider setups

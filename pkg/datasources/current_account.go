@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -34,7 +34,7 @@ var currentAccountSchema = map[string]*schema.Schema{
 // CurrentAccount the Snowflake current account resource.
 func CurrentAccount() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadCurrentAccount,
+		Read:   PreviewFeatureReadWrapper(string(previewfeatures.CurrentAccountDatasource), ReadCurrentAccount),
 		Schema: currentAccountSchema,
 	}
 }
@@ -42,10 +42,6 @@ func CurrentAccount() *schema.Resource {
 // ReadCurrentAccount read the current snowflake account information.
 func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	enabled := meta.(*provider.Context).EnabledFeatures
-	if !slices.Contains(enabled, "snowflake_current_account") {
-		return fmt.Errorf("%[1]s is currently a preview data source, and must be enabled by adding %[1]s to `preview_features_enabled` in Terraform configuration.", "snowflake_current_account")
-	}
 	ctx := context.Background()
 
 	current, err := client.ContextFunctions.CurrentSessionDetails(ctx)

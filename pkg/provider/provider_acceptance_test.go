@@ -649,6 +649,10 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 				// .* is used to match the error message regarding of the home user location
 				ExpectError: regexp.MustCompile(`profile "non-existing" not found in file .*.snowflake/config`),
 			},
+			{
+				Config:      providerConfigWithDatasourcePreviewFeatureEnabled(testprofiles.Default, "snowflake_invalid_feature"),
+				ExpectError: regexp.MustCompile(`expected .* preview_features_enabled.* to be one of((.|\n)*), got snowflake_invalid_feature`),
+			},
 		},
 	})
 }
@@ -665,11 +669,42 @@ func TestAcc_Provider_PreviewFeaturesEnabled(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      providerConfigWithDatasourcePreviewFeature(testprofiles.Default, "snowflake_current_account"),
-				ExpectError: regexp.MustCompile("snowflake_current_account is currently a preview data source, and must be enabled by adding snowflake_current_account to `preview_features_enabled` in Terraform configuration"),
+				Config: providerConfigWithDatasourcePreviewFeatureEnabled(testprofiles.Default, "snowflake_current_account"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.snowflake_current_account.t", "account"),
+				),
 			},
 		},
 	})
+}
+
+func TestAcc_Provider_PreviewFeaturesDisabled(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	t.Setenv(string(testenvs.EnableAllPreviewFeatures), "")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      providerConfigWithDatasourcePreviewFeature(testprofiles.Default, "snowflake_current_account"),
+				ExpectError: regexp.MustCompile("snowflake_current_account_datasource is currently a preview feature, and must be enabled by adding snowflake_current_account_datasource to `preview_features_enabled` in Terraform configuration"),
+			},
+		},
+	})
+}
+
+func providerConfigWithDatasourcePreviewFeatureEnabled(profile, feature string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	preview_features_enabled = ["%[2]s_datasource"]
+}
+data %[2]s t {}
+`, profile, feature)
 }
 
 func providerConfigWithDatasourcePreviewFeature(profile, feature string) string {
@@ -677,7 +712,7 @@ func providerConfigWithDatasourcePreviewFeature(profile, feature string) string 
 provider "snowflake" {
 	profile = "%[1]s"
 }
-data %[2]s p {}
+data %[2]s t {}
 `, profile, feature)
 }
 

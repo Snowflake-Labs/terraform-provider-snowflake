@@ -1,6 +1,8 @@
 package datasources
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -146,4 +148,18 @@ func handleExtendedIn(d *schema.ResourceData, setField **sdk.ExtendedIn) error {
 		}
 	}
 	return nil
+}
+
+func PreviewFeatureReadWrapper(featureRaw string, readFunc schema.ReadFunc) schema.ReadFunc { //nolint
+	return func(d *schema.ResourceData, meta interface{}) error {
+		enabled := meta.(*provider.Context).EnabledFeatures
+		feature, err := previewfeatures.StringToFeature(featureRaw)
+		if err != nil {
+			return err
+		}
+		if err := previewfeatures.EnsurePreviewFeatureEnabled(feature, enabled); err != nil {
+			return err
+		}
+		return readFunc(d, meta)
+	}
 }
