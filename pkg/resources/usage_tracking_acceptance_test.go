@@ -37,7 +37,7 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 	assertQueryMetadataExists := func(t *testing.T, operation tracking.Operation, query string) resource.TestCheckFunc {
 		t.Helper()
 		return func(state *terraform.State) error {
-			queryHistory := acc.TestClient().InformationSchema.GetQueryHistory(t, 30)
+			queryHistory := acc.TestClient().InformationSchema.GetQueryHistory(t, 60)
 			expectedMetadata := tracking.NewVersionedMetadata(resources.Schema, operation)
 			if _, err := collections.FindFirst(queryHistory, func(history helpers.QueryHistory) bool {
 				if metadata, err := tracking.ParseMetadata(history.QueryText); err == nil {

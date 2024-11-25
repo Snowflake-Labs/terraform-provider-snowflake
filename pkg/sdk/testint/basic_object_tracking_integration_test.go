@@ -38,7 +38,7 @@ func TestInt_ContextQueryTags(t *testing.T) {
 	})
 	queryId := executeQueryAndReturnQueryId(t, context.Background(), client)
 	queryTagResult := testClientHelper().InformationSchema.GetQueryHistoryByQueryId(t, 20, queryId)
-	require.Equal(t, userQueryTag, queryTagResult)
+	require.Equal(t, userQueryTag, queryTagResult.QueryTag)
 
 	// set query_tag on session level
 	sessionQueryTag := "session query tag"
@@ -67,7 +67,7 @@ func TestInt_ContextQueryTags(t *testing.T) {
 	ctxWithQueryTag := gosnowflake.WithQueryTag(context.Background(), perQueryQueryTag)
 	queryId = executeQueryAndReturnQueryId(t, ctxWithQueryTag, client)
 	queryTagResult = testClientHelper().InformationSchema.GetQueryHistoryByQueryId(t, 20, queryId)
-	require.Equal(t, perQueryQueryTag, queryTagResult)
+	require.Equal(t, perQueryQueryTag, queryTagResult.QueryTag)
 }
 
 func executeQueryAndReturnQueryId(t *testing.T, ctx context.Context, client *sdk.Client) string {
