@@ -42,6 +42,9 @@ func toProtocol(s string) (protocol, error) {
 }
 
 func getPrivateKey(privateKeyString, privateKeyPassphrase string) (*rsa.PrivateKey, error) {
+	if privateKeyString == "" {
+		return nil, nil
+	}
 	privateKeyBytes := []byte(privateKeyString)
 	return sdk.ParsePrivateKey(privateKeyBytes, []byte(privateKeyPassphrase))
 }
