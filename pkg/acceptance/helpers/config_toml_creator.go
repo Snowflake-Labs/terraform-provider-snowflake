@@ -95,3 +95,35 @@ disableconsolelogin = true
 [complete_fields_invalid.params]
 foo = 'bar'`, profile, privateKey)
 }
+
+// TomlConfigForServiceUser is a temporary function used to test provider configuration
+func TomlConfigForServiceUser(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, privateKey string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+[%[1]s]
+user = '%[2]s'
+privatekey = '''%[7]s'''
+role = '%[3]s'
+organizationname = '%[5]s'
+accountname = '%[6]s'
+warehouse = '%[4]s'
+authenticator = 'SNOWFLAKE_JWT'
+`, profile, userId.Name(), roleId.Name(), warehouseId.Name(), accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey)
+}
+
+// TomlIncorrectConfigForServiceUser is a temporary function used to test provider configuration
+func TomlIncorrectConfigForServiceUser(t *testing.T, profile string, accountIdentifier sdk.AccountIdentifier) string {
+	t.Helper()
+
+	privateKey, _, _ := random.GenerateRSAKeyPair(t)
+	return fmt.Sprintf(`
+[%[1]s]
+user = 'non-existing-user'
+privatekey = '''%[4]s'''
+role = 'non-existing-role'
+organizationname = '%[2]s'
+accountname = '%[3]s'
+authenticator = 'SNOWFLAKE_JWT'
+`, profile, accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey)
+}

@@ -75,11 +75,22 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	pass := random.Password()
-	tmpUserId, tmpRoleId := setUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t, pass)
+	accountDetailsConfig, err := sdk.ProfileConfig(testprofiles.OnlyAccountDetails)
+	require.NoError(t, err)
 
-	account := acc.DefaultConfig(t).Account
-	host := acc.DefaultConfig(t).Host
+	accountParts := strings.SplitN(accountDetailsConfig.Account, "-", 2)
+	accountId := sdk.NewAccountIdentifier(accountParts[0], accountParts[1])
+	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
+
+	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
+	tmpUserId, tmpRoleId := setUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
+
+	profile := random.AlphaN(6)
+	toml := helpers.TomlConfigForServiceUser(t, profile, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey)
+	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
+
+	tomlWithIncorrectCredentials := helpers.TomlIncorrectConfigForServiceUser(t, testprofiles.IncorrectUserAndPassword, accountId)
+	configPathWithIncorrect := testhelpers.TestFile(t, random.AlphaN(10), []byte(tomlWithIncorrectCredentials))
 
 	nonExistingUser := "non-existing-user"
 
@@ -89,6 +100,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -96,17 +108,33 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 		Steps: []resource.TestStep{
 			// make sure that we fail for incorrect profile
 			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, configPathWithIncorrect)
+				},
 				Config:      providerConfig(testprofiles.IncorrectUserAndPassword),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
+			},
+			// make sure that we succeed for the correct profile
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, configPath)
+				},
+				Config: providerConfig(profile),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
+				),
 			},
 			// incorrect user in provider config should not be rewritten by profile and cause error
 			{
-				Config:      providerConfigWithUserPasswordRoleAndProfile(nonExistingUser, pass, tmpRoleId.Name(), testprofiles.Default),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+				Config:      providerConfigWithUserAndProfile(nonExistingUser, profile),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
-			// correct user and password in provider's config should not be rewritten by a faulty config
+			// correct user and key in provider's config should not be rewritten by a faulty config
 			{
-				Config: providerConfigWithUserPasswordRoleAndProfile(tmpUserId.Name(), pass, tmpRoleId.Name(), testprofiles.IncorrectUserAndPassword),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, configPathWithIncorrect)
+				},
+				Config: providerConfigWithUserPrivateKeyAndProfile(tmpUserId.Name(), privateKey, tmpRoleId.Name(), testprofiles.IncorrectUserAndPassword),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
@@ -115,18 +143,20 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			{
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.User, nonExistingUser)
+					t.Setenv(snowflakeenvs.ConfigPath, configPath)
 				},
-				Config:      providerConfig(testprofiles.Default),
-				ExpectError: regexp.MustCompile("JWT token is invalid."),
+				Config:      providerConfig(profile),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
-			// correct user and password in env should not be rewritten by a faulty config
+			// correct user and private key in env should not be rewritten by a faulty config
 			{
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.User, tmpUserId.Name())
-					t.Setenv(snowflakeenvs.Password, pass)
+					t.Setenv(snowflakeenvs.PrivateKey, privateKey)
 					t.Setenv(snowflakeenvs.Role, tmpRoleId.Name())
+					t.Setenv(snowflakeenvs.ConfigPath, configPathWithIncorrect)
 				},
-				Config: providerConfigWithAuthenticator(testprofiles.IncorrectUserAndPassword, sdk.AuthenticationTypeSnowflake),
+				Config: providerConfigWithProfileAndAuthenticator(testprofiles.IncorrectUserAndPassword, sdk.AuthenticationTypeJwt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
@@ -135,9 +165,10 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			{
 				PreConfig: func() {
 					testenvs.AssertEnvSet(t, snowflakeenvs.User)
+					t.Setenv(snowflakeenvs.ConfigPath, configPath)
 				},
-				Config:      providerConfigWithUserPasswordRoleAndProfile(nonExistingUser, pass, tmpRoleId.Name(), testprofiles.Default),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+				Config:      providerConfigWithUserPrivateKeyAndProfile(nonExistingUser, privateKey, tmpRoleId.Name(), profile),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// there is no config (by setting the dir to something different from .snowflake/config)
 			{
@@ -146,7 +177,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					require.NoError(t, err)
 					t.Setenv(snowflakeenvs.ConfigPath, dir)
 				},
-				Config:      providerConfigWithUserAndPassword(tmpUserId.Name(), pass, testprofiles.Default),
+				Config:      providerConfigWithUserPrivateKeyAndProfile(tmpUserId.Name(), privateKey, tmpRoleId.Name(), testprofiles.Default),
 				ExpectError: regexp.MustCompile("account is empty"),
 			},
 			// provider's config should not be rewritten by env when there is no profile (incorrect user in config versus correct one in env) - proves #2242
@@ -154,25 +185,25 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 				PreConfig: func() {
 					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
 					t.Setenv(snowflakeenvs.User, tmpUserId.Name())
-					t.Setenv(snowflakeenvs.Password, pass)
-					t.Setenv(snowflakeenvs.Account, account)
+					t.Setenv(snowflakeenvs.PrivateKey, privateKey)
+					t.Setenv(snowflakeenvs.AccountName, accountId.AccountName())
+					t.Setenv(snowflakeenvs.OrganizationName, accountId.OrganizationName())
 					t.Setenv(snowflakeenvs.Role, tmpRoleId.Name())
-					t.Setenv(snowflakeenvs.Host, host)
 				},
 				Config:      providerConfigWithUser(nonExistingUser, testprofiles.Default),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// make sure the teardown is fine by using a correct env config at the end
 			{
 				PreConfig: func() {
 					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
 					testenvs.AssertEnvSet(t, snowflakeenvs.User)
-					testenvs.AssertEnvSet(t, snowflakeenvs.Password)
-					testenvs.AssertEnvSet(t, snowflakeenvs.Account)
+					testenvs.AssertEnvSet(t, snowflakeenvs.PrivateKey)
+					testenvs.AssertEnvSet(t, snowflakeenvs.AccountName)
+					testenvs.AssertEnvSet(t, snowflakeenvs.OrganizationName)
 					testenvs.AssertEnvSet(t, snowflakeenvs.Role)
-					testenvs.AssertEnvSet(t, snowflakeenvs.Host)
 				},
-				Config: emptyProviderConfig(),
+				Config: providerConfigWithAuthenticator(sdk.AuthenticationTypeJwt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
@@ -651,16 +682,16 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 		Steps: []resource.TestStep{
 			// authenticate with unencrypted private key
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwt),
+				Config: providerConfigWithProfileAndAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwt),
 			},
 			// authenticate with unencrypted private key with a legacy authenticator value
 			// solves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwtLegacy),
+				Config: providerConfigWithProfileAndAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwtLegacy),
 			},
 			// authenticate with encrypted private key
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.EncryptedJwtAuth, sdk.AuthenticationTypeJwt),
+				Config: providerConfigWithProfileAndAuthenticator(testprofiles.EncryptedJwtAuth, sdk.AuthenticationTypeJwt),
 			},
 		},
 	})
@@ -679,7 +710,7 @@ func TestAcc_Provider_SnowflakeAuth(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.Default, sdk.AuthenticationTypeSnowflake),
+				Config: providerConfigWithProfileAndAuthenticator(testprofiles.Default, sdk.AuthenticationTypeSnowflake),
 			},
 		},
 	})
@@ -733,7 +764,7 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 	})
 }
 
-func providerConfigWithAuthenticator(profile string, authenticator sdk.AuthenticationType) string {
+func providerConfigWithProfileAndAuthenticator(profile string, authenticator sdk.AuthenticationType) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
 	profile = "%[1]s"
@@ -746,6 +777,13 @@ func emptyProviderConfig() string {
 	return `
 provider "snowflake" {
 }` + datasourceConfig()
+}
+
+func providerConfigWithAuthenticator(authenticator sdk.AuthenticationType) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	authenticator    = "%[1]s"
+}`, authenticator) + datasourceConfig()
 }
 
 func providerConfig(profile string) string {
@@ -861,32 +899,33 @@ func providerConfigWithUser(user string, profile string) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
 	user = "%[1]s"
-	authenticator = "SNOWFLAKE"
+	authenticator = "SNOWFLAKE_JWT"
 	profile = "%[2]s"
 }
 `, user, profile) + datasourceConfig()
 }
 
-func providerConfigWithUserPasswordRoleAndProfile(user string, pass string, role string, profile string) string {
+func providerConfigWithUserAndProfile(user string, profile string) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
-	authenticator = "SNOWFLAKE"
+	authenticator = "SNOWFLAKE_JWT"
 	user = "%[1]s"
-	password = "%[2]s"
+	profile = "%[2]s"
+}
+`, user, profile) + datasourceConfig()
+}
+
+func providerConfigWithUserPrivateKeyAndProfile(user string, key string, role string, profile string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	authenticator = "SNOWFLAKE_JWT"
+	user = "%[1]s"
+	private_key = <<EOT
+%[2]sEOT
 	role = "%[3]s"
 	profile = "%[4]s"
 }
-`, user, pass, role, profile) + datasourceConfig()
-}
-
-func providerConfigWithUserAndPassword(user string, pass string, profile string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	user = "%[1]s"
-	password = "%[2]s"
-	profile = "%[3]s"
-}
-`, user, pass, profile) + datasourceConfig()
+`, user, key, role, profile) + datasourceConfig()
 }
 
 func datasourceConfig() string {

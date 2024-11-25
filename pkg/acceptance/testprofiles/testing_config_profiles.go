@@ -1,5 +1,6 @@
 package testprofiles
 
+// TODO [this PR]: do we get rid of these profiles?
 const (
 	Default                  = "default"
 	Secondary                = "secondary_test_account"
