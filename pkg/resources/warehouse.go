@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -192,18 +194,18 @@ func Warehouse() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 
-		CreateContext: CreateWarehouse,
-		UpdateContext: UpdateWarehouse,
-		ReadContext:   GetReadWarehouseFunc(true),
-		DeleteContext: DeleteWarehouse,
+		CreateContext: TrackingCreateWrapper(resources.Warehouse, CreateWarehouse),
+		UpdateContext: TrackingUpdateWrapper(resources.Warehouse, UpdateWarehouse),
+		ReadContext:   TrackingReadWrapper(resources.Warehouse, GetReadWarehouseFunc(true)),
+		DeleteContext: TrackingDeleteWrapper(resources.Warehouse, DeleteWarehouse),
 		Description:   "Resource used to manage warehouse objects. For more information, check [warehouse documentation](https://docs.snowflake.com/en/sql-reference/commands-warehouse).",
 
 		Schema: warehouseSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportWarehouse,
+			StateContext: TrackingImportWrapper(resources.Warehouse, ImportWarehouse),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Warehouse, customdiff.All(
 			ComputedIfAnyAttributeChanged(warehouseSchema, ShowOutputAttributeName, "name", "warehouse_type", "warehouse_size", "max_cluster_count", "min_cluster_count", "scaling_policy", "auto_suspend", "auto_resume", "resource_monitor", "comment", "enable_query_acceleration", "query_acceleration_max_scale_factor"),
 			ComputedIfAnyAttributeChanged(warehouseSchema, ParametersAttributeName, strings.ToLower(string(sdk.ObjectParameterMaxConcurrencyLevel)), strings.ToLower(string(sdk.ObjectParameterStatementQueuedTimeoutInSeconds)), strings.ToLower(string(sdk.ObjectParameterStatementTimeoutInSeconds))),
 			ComputedIfAnyAttributeChanged(warehouseSchema, FullyQualifiedNameAttributeName, "name"),
@@ -216,7 +218,7 @@ func Warehouse() *schema.Resource {
 				parameter[sdk.AccountParameter]{sdk.AccountParameterMaxConcurrencyLevel, valueTypeInt, sdk.ParameterTypeWarehouse},
 				parameter[sdk.AccountParameter]{sdk.AccountParameterStatementQueuedTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
 				parameter[sdk.AccountParameter]{sdk.AccountParameterStatementTimeoutInSeconds, valueTypeInt, sdk.ParameterTypeWarehouse},
-			),
+			)),
 		),
 
 		StateUpgraders: []schema.StateUpgrader{

@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -153,13 +155,13 @@ func OauthIntegrationForCustomClients() *schema.Resource {
 	return &schema.Resource{
 		Schema: oauthIntegrationForCustomClientsSchema,
 
-		CreateContext: CreateContextOauthIntegrationForCustomClients,
-		ReadContext:   ReadContextOauthIntegrationForCustomClients(true),
-		UpdateContext: UpdateContextOauthIntegrationForCustomClients,
-		DeleteContext: DeleteContextOauthIntegrationForCustomClients,
+		CreateContext: TrackingCreateWrapper(resources.OauthIntegrationForCustomClients, CreateContextOauthIntegrationForCustomClients),
+		ReadContext:   TrackingReadWrapper(resources.OauthIntegrationForCustomClients, ReadContextOauthIntegrationForCustomClients(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.OauthIntegrationForCustomClients, UpdateContextOauthIntegrationForCustomClients),
+		DeleteContext: TrackingDeleteWrapper(resources.OauthIntegrationForCustomClients, DeleteContextOauthIntegrationForCustomClients),
 		Description:   "Resource used to manage oauth security integration for custom clients objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.OauthIntegrationForCustomClients, customdiff.All(
 			ComputedIfAnyAttributeChanged(
 				oauthIntegrationForCustomClientsSchema,
 				ShowOutputAttributeName,
@@ -184,10 +186,10 @@ func OauthIntegrationForCustomClients() *schema.Resource {
 				"oauth_client_rsa_public_key_2",
 				"comment",
 			),
-		),
+		)),
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportOauthForCustomClientsIntegration,
+			StateContext: TrackingImportWrapper(resources.OauthIntegrationForCustomClients, ImportOauthForCustomClientsIntegration),
 		},
 	}
 }

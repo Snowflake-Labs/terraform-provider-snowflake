@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -181,16 +183,16 @@ func Procedure() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 2,
 
-		CreateContext: CreateContextProcedure,
-		ReadContext:   ReadContextProcedure,
-		UpdateContext: UpdateContextProcedure,
-		DeleteContext: DeleteContextProcedure,
+		CreateContext: TrackingCreateWrapper(resources.Procedure, CreateContextProcedure),
+		ReadContext:   TrackingReadWrapper(resources.Procedure, ReadContextProcedure),
+		UpdateContext: TrackingUpdateWrapper(resources.Procedure, UpdateContextProcedure),
+		DeleteContext: TrackingDeleteWrapper(resources.Procedure, DeleteContextProcedure),
 
 		// TODO(SNOW-1348106): add `arguments` to ComputedIfAnyAttributeChanged for FullyQualifiedNameAttributeName.
 		// This can't be done now because this function compares values without diff suppress.
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Procedure, customdiff.All(
 			ComputedIfAnyAttributeChanged(procedureSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: procedureSchema,
 		Importer: &schema.ResourceImporter{

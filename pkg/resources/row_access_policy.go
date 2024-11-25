@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -98,22 +100,22 @@ func RowAccessPolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 
-		CreateContext: CreateRowAccessPolicy,
-		ReadContext:   ReadRowAccessPolicy,
-		UpdateContext: UpdateRowAccessPolicy,
-		DeleteContext: DeleteRowAccessPolicy,
+		CreateContext: TrackingCreateWrapper(resources.RowAccessPolicy, CreateRowAccessPolicy),
+		ReadContext:   TrackingReadWrapper(resources.RowAccessPolicy, ReadRowAccessPolicy),
+		UpdateContext: TrackingUpdateWrapper(resources.RowAccessPolicy, UpdateRowAccessPolicy),
+		DeleteContext: TrackingDeleteWrapper(resources.RowAccessPolicy, DeleteRowAccessPolicy),
 		Description:   "Resource used to manage row access policy objects. For more information, check [row access policy documentation](https://docs.snowflake.com/en/sql-reference/sql/create-row-access-policy).",
 
 		Schema: rowAccessPolicySchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportRowAccessPolicy,
+			StateContext: TrackingImportWrapper(resources.RowAccessPolicy, ImportRowAccessPolicy),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.RowAccessPolicy, customdiff.All(
 			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, ShowOutputAttributeName, "comment", "name"),
 			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, DescribeOutputAttributeName, "body", "name", "signature"),
 			ComputedIfAnyAttributeChanged(rowAccessPolicySchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		StateUpgraders: []schema.StateUpgrader{
 			{

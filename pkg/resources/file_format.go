@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -318,9 +320,9 @@ func FileFormat() *schema.Resource {
 		Update: UpdateFileFormat,
 		Delete: DeleteFileFormat,
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.FileFormat, customdiff.All(
 			ComputedIfAnyAttributeChanged(fileFormatSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: fileFormatSchema,
 		Importer: &schema.ResourceImporter{

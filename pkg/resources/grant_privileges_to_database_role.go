@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -250,14 +252,14 @@ func getGrantPrivilegesOnDatabaseRoleBulkOperationSchema(validGrantToObjectTypes
 
 func GrantPrivilegesToDatabaseRole() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateGrantPrivilegesToDatabaseRole,
-		UpdateContext: UpdateGrantPrivilegesToDatabaseRole,
-		DeleteContext: DeleteGrantPrivilegesToDatabaseRole,
-		ReadContext:   ReadGrantPrivilegesToDatabaseRole,
+		CreateContext: TrackingCreateWrapper(resources.GrantPrivilegesToDatabaseRole, CreateGrantPrivilegesToDatabaseRole),
+		UpdateContext: TrackingUpdateWrapper(resources.GrantPrivilegesToDatabaseRole, UpdateGrantPrivilegesToDatabaseRole),
+		DeleteContext: TrackingDeleteWrapper(resources.GrantPrivilegesToDatabaseRole, DeleteGrantPrivilegesToDatabaseRole),
+		ReadContext:   TrackingReadWrapper(resources.GrantPrivilegesToDatabaseRole, ReadGrantPrivilegesToDatabaseRole),
 
 		Schema: grantPrivilegesToDatabaseRoleSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportGrantPrivilegesToDatabaseRole,
+			StateContext: TrackingImportWrapper(resources.GrantPrivilegesToDatabaseRole, ImportGrantPrivilegesToDatabaseRole),
 		},
 	}
 }

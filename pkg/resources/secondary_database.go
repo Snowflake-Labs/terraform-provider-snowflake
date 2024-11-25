@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -46,19 +48,19 @@ var secondaryDatabaseSchema = map[string]*schema.Schema{
 
 func SecondaryDatabase() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateSecondaryDatabase,
-		UpdateContext: UpdateSecondaryDatabase,
-		ReadContext:   ReadSecondaryDatabase,
-		DeleteContext: DeleteSecondaryDatabase,
+		CreateContext: TrackingCreateWrapper(resources.SecondaryDatabase, CreateSecondaryDatabase),
+		UpdateContext: TrackingUpdateWrapper(resources.SecondaryDatabase, UpdateSecondaryDatabase),
+		ReadContext:   TrackingReadWrapper(resources.SecondaryDatabase, ReadSecondaryDatabase),
+		DeleteContext: TrackingDeleteWrapper(resources.SecondaryDatabase, DeleteSecondaryDatabase),
 		Description:   "A secondary database creates a replica of an existing primary database (i.e. a secondary database). For more information about database replication, see [Introduction to database replication across multiple accounts](https://docs.snowflake.com/en/user-guide/db-replication-intro).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.SecondaryDatabase, customdiff.All(
 			databaseParametersCustomDiff,
 			ComputedIfAnyAttributeChanged(secondaryDatabaseSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 		Schema: collections.MergeMaps(secondaryDatabaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.SecondaryDatabase, ImportName[sdk.AccountObjectIdentifier]),
 		},
 	}
 }
