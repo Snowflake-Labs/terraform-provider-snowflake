@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -54,20 +56,20 @@ var primaryConnectionSchema = map[string]*schema.Schema{
 
 func PrimaryConnection() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextPrimaryConnection,
-		ReadContext:   ReadContextPrimaryConnection,
-		UpdateContext: UpdateContextPrimaryConnection,
-		DeleteContext: DeleteContextPrimaryConnection,
+		CreateContext: TrackingCreateWrapper(resources.PrimaryConnection, CreateContextPrimaryConnection),
+		ReadContext:   TrackingReadWrapper(resources.PrimaryConnection, ReadContextPrimaryConnection),
+		UpdateContext: TrackingUpdateWrapper(resources.PrimaryConnection, UpdateContextPrimaryConnection),
+		DeleteContext: TrackingDeleteWrapper(resources.PrimaryConnection, DeleteContextPrimaryConnection),
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.PrimaryConnection, customdiff.All(
 			ComputedIfAnyAttributeChanged(primaryConnectionSchema, ShowOutputAttributeName, "comment", "is_primary", "enable_failover_to_accounts"),
 			RecreateWhenResourceBoolFieldChangedExternally("is_primary", true),
-		),
+		)),
 
 		Description: "Resource used to manage primary connections. For managing replicated connection check resource [snowflake_secondary_connection](./secondary_connection). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
 		Schema:      primaryConnectionSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.PrimaryConnection, ImportName[sdk.AccountObjectIdentifier]),
 		},
 	}
 }

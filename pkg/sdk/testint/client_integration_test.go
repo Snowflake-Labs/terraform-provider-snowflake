@@ -16,7 +16,7 @@ func TestInt_Client_AdditionalMetadata(t *testing.T) {
 
 	assertQueryMetadata := func(t *testing.T, queryId string) {
 		t.Helper()
-		queryText := testClientHelper().InformationSchema.GetQueryTextByQueryId(t, queryId)
+		queryText := testClientHelper().InformationSchema.GetQueryHistoryByQueryId(t, 20, queryId).QueryText
 		parsedMetadata, err := tracking.ParseMetadata(queryText)
 		require.NoError(t, err)
 		require.Equal(t, metadata, parsedMetadata)

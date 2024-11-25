@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
@@ -153,9 +155,9 @@ func Task() *schema.Resource {
 		Read:   ReadTask,
 		Update: UpdateTask,
 		Delete: DeleteTask,
-		CustomizeDiff: customdiff.ForceNewIfChange("when", func(ctx context.Context, old, new, meta any) bool {
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Task, customdiff.ForceNewIfChange("when", func(ctx context.Context, old, new, meta any) bool {
 			return old.(string) != "" && new.(string) == ""
-		}),
+		})),
 
 		Schema: taskSchema,
 		Importer: &schema.ResourceImporter{

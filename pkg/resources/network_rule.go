@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -65,10 +67,10 @@ var networkRuleSchema = map[string]*schema.Schema{
 // NetworkRule returns a pointer to the resource representing a network rule.
 func NetworkRule() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextNetworkRule,
-		ReadContext:   ReadContextNetworkRule,
-		UpdateContext: UpdateContextNetworkRule,
-		DeleteContext: DeleteContextNetworkRule,
+		CreateContext: TrackingCreateWrapper(resources.NetworkRule, CreateContextNetworkRule),
+		ReadContext:   TrackingReadWrapper(resources.NetworkRule, ReadContextNetworkRule),
+		UpdateContext: TrackingUpdateWrapper(resources.NetworkRule, UpdateContextNetworkRule),
+		DeleteContext: TrackingDeleteWrapper(resources.NetworkRule, DeleteContextNetworkRule),
 
 		Schema: networkRuleSchema,
 		Importer: &schema.ResourceImporter{

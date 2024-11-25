@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -36,21 +38,21 @@ var secretBasicAuthenticationSchema = func() map[string]*schema.Schema {
 
 func SecretWithBasicAuthentication() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSecretWithBasicAuthentication,
-		ReadContext:   ReadContextSecretWithBasicAuthentication,
-		UpdateContext: UpdateContextSecretWithBasicAuthentication,
-		DeleteContext: DeleteContextSecret,
+		CreateContext: TrackingCreateWrapper(resources.SecretWithBasicAuthentication, CreateContextSecretWithBasicAuthentication),
+		ReadContext:   TrackingReadWrapper(resources.SecretWithBasicAuthentication, ReadContextSecretWithBasicAuthentication),
+		UpdateContext: TrackingUpdateWrapper(resources.SecretWithBasicAuthentication, UpdateContextSecretWithBasicAuthentication),
+		DeleteContext: TrackingDeleteWrapper(resources.SecretWithBasicAuthentication, DeleteContextSecret),
 		Description:   "Resource used to manage secret objects with Basic Authentication. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.SecretWithBasicAuthentication, customdiff.All(
 			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, ShowOutputAttributeName, "comment"),
 			ComputedIfAnyAttributeChanged(secretBasicAuthenticationSchema, DescribeOutputAttributeName, "username"),
 			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypePassword),
-		),
+		)),
 
 		Schema: secretBasicAuthenticationSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportSecretWithBasicAuthentication,
+			StateContext: TrackingImportWrapper(resources.SecretWithBasicAuthentication, ImportSecretWithBasicAuthentication),
 		},
 	}
 }

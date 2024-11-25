@@ -6,6 +6,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -155,14 +157,14 @@ func grantOwnershipBulkOperationSchema(branchName string) map[string]*schema.Sch
 
 func GrantOwnership() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateGrantOwnership,
+		CreateContext: TrackingCreateWrapper(resources.GrantOwnership, CreateGrantOwnership),
 		// There's no Update, because every field is marked as ForceNew
-		DeleteContext: DeleteGrantOwnership,
-		ReadContext:   ReadGrantOwnership,
+		DeleteContext: TrackingDeleteWrapper(resources.GrantOwnership, DeleteGrantOwnership),
+		ReadContext:   TrackingReadWrapper(resources.GrantOwnership, ReadGrantOwnership),
 
 		Schema: grantOwnershipSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportGrantOwnership(),
+			StateContext: TrackingImportWrapper(resources.GrantOwnership, ImportGrantOwnership()),
 		},
 	}
 }

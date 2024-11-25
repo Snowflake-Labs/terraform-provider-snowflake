@@ -6,6 +6,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -52,7 +54,7 @@ func GrantAccountRole() *schema.Resource {
 		Delete: DeleteGrantAccountRole,
 		Schema: grantAccountRoleSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+			StateContext: TrackingImportWrapper(resources.GrantAccountRole, func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				parts := strings.Split(d.Id(), helpers.IDDelimiter)
 				if len(parts) != 3 {
 					return nil, fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id())
@@ -74,7 +76,7 @@ func GrantAccountRole() *schema.Resource {
 				}
 
 				return []*schema.ResourceData{d}, nil
-			},
+			}),
 		},
 	}
 }

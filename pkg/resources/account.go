@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
@@ -216,9 +218,9 @@ func Account() *schema.Resource {
 		Update:      UpdateAccount,
 		Delete:      DeleteAccount,
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Account, customdiff.All(
 			ComputedIfAnyAttributeChanged(accountSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: accountSchema,
 		Importer: &schema.ResourceImporter{

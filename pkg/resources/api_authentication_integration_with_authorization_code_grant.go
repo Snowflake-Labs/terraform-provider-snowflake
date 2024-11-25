@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -36,13 +38,13 @@ var apiAuthAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 
 func ApiAuthenticationIntegrationWithAuthorizationCodeGrant() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant,
-		ReadContext:   ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(true),
-		UpdateContext: UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant,
-		DeleteContext: DeleteContextApiAuthenticationIntegrationWithAuthorizationCodeGrant,
+		CreateContext: TrackingCreateWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, CreateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant),
+		ReadContext:   TrackingReadWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant),
+		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, DeleteContextApiAuthenticationIntegrationWithAuthorizationCodeGrant),
 		Description:   "Resource used to manage api authentication security integration objects with authorization code grant. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, customdiff.All(
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
@@ -50,10 +52,10 @@ func ApiAuthenticationIntegrationWithAuthorizationCodeGrant() *schema.Resource {
 			ComputedIfAnyAttributeChanged(apiAuthAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
 				"oauth_client_id", "oauth_client_auth_method", "oauth_authorization_endpoint",
 				"oauth_token_endpoint", "oauth_allowed_scopes"),
-		),
+		)),
 		Schema: apiAuthAuthorizationCodeGrantSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportApiAuthenticationWithAuthorizationCodeGrant,
+			StateContext: TrackingImportWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, ImportApiAuthenticationWithAuthorizationCodeGrant),
 		},
 	}
 }
