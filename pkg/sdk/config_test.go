@@ -49,6 +49,34 @@ func TestLoadConfigFile(t *testing.T) {
 	assert.Equal(t, "SECURITYADMIN", *m["securityadmin"].Role)
 }
 
+func TestLoadConfigFileWithUnknownFields(t *testing.T) {
+	c := `
+	[default]
+	unknown='TEST_ACCOUNT'
+	accountname='TEST_ACCOUNT'
+	`
+	configPath := testhelpers.TestFile(t, "config", []byte(c))
+
+	m, err := loadConfigFile(configPath)
+	require.NoError(t, err)
+	assert.Equal(t, map[string]ConfigDTO{
+		"default": {
+			AccountName: Pointer("TEST_ACCOUNT"),
+		},
+	}, m)
+}
+
+func TestLoadConfigFileWithInvalidFieldValue(t *testing.T) {
+	c := `
+	[default]
+	accountname=42
+	`
+	configPath := testhelpers.TestFile(t, "config", []byte(c))
+
+	_, err := loadConfigFile(configPath)
+	require.ErrorContains(t, err, "toml: cannot decode TOML integer into struct field sdk.ConfigDTO.AccountName of type *string")
+}
+
 func TestProfileConfig(t *testing.T) {
 	unencryptedKey, encryptedKey := random.GenerateRSAPrivateKeyEncrypted(t, "password")
 
