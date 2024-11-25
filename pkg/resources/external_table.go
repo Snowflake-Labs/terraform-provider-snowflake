@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -140,10 +143,10 @@ var externalTableSchema = map[string]*schema.Schema{
 
 func ExternalTable() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateExternalTable,
-		Read:   ReadExternalTable,
-		Update: UpdateExternalTable,
-		Delete: DeleteExternalTable,
+		CreateContext: TrackingCreateWrapper(resources.ExternalTable, CreateExternalTable),
+		ReadContext:   TrackingReadWrapper(resources.ExternalTable, ReadExternalTable),
+		UpdateContext: TrackingUpdateWrapper(resources.ExternalTable, UpdateExternalTable),
+		DeleteContext: TrackingDeleteWrapper(resources.ExternalTable, DeleteExternalTable),
 
 		Schema: externalTableSchema,
 		Importer: &schema.ResourceImporter{
@@ -153,9 +156,8 @@ func ExternalTable() *schema.Resource {
 }
 
 // CreateExternalTable implements schema.CreateFunc.
-func CreateExternalTable(d *schema.ResourceData, meta any) error {
+func CreateExternalTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
@@ -214,7 +216,7 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 		}
 		err := client.ExternalTables.CreateDeltaLake(ctx, req)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	default:
 		req := sdk.NewCreateExternalTableRequest(id, location).
@@ -236,47 +238,45 @@ func CreateExternalTable(d *schema.ResourceData, meta any) error {
 		}
 		err := client.ExternalTables.Create(ctx, req)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	return ReadExternalTable(d, meta)
+	return ReadExternalTable(ctx, d, meta)
 }
 
 // ReadExternalTable implements schema.ReadFunc.
-func ReadExternalTable(d *schema.ResourceData, meta any) error {
+func ReadExternalTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	externalTable, err := client.ExternalTables.ShowByID(ctx, id)
 	if err != nil {
 		log.Printf("[DEBUG] external table (%s) not found", d.Id())
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", externalTable.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("owner", externalTable.Owner); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
 // UpdateExternalTable implements schema.UpdateFunc.
-func UpdateExternalTable(d *schema.ResourceData, meta any) error {
+func UpdateExternalTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("tag") {
@@ -285,7 +285,7 @@ func UpdateExternalTable(d *schema.ResourceData, meta any) error {
 		if len(unsetTags) > 0 {
 			err := client.ExternalTables.Alter(ctx, sdk.NewAlterExternalTableRequest(id).WithUnsetTag(unsetTags))
 			if err != nil {
-				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err))
 			}
 		}
 
@@ -296,23 +296,22 @@ func UpdateExternalTable(d *schema.ResourceData, meta any) error {
 			}
 			err := client.ExternalTables.Alter(ctx, sdk.NewAlterExternalTableRequest(id).WithSetTag(tagAssociationRequests))
 			if err != nil {
-				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err))
 			}
 		}
 	}
 
-	return ReadExternalTable(d, meta)
+	return ReadExternalTable(ctx, d, meta)
 }
 
 // DeleteExternalTable implements schema.DeleteFunc.
-func DeleteExternalTable(d *schema.ResourceData, meta any) error {
+func DeleteExternalTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	err := client.ExternalTables.Drop(ctx, sdk.NewDropExternalTableRequest(id))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

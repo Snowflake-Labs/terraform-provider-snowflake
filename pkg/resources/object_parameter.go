@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -69,10 +72,10 @@ var objectParameterSchema = map[string]*schema.Schema{
 
 func ObjectParameter() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateObjectParameter,
-		Read:   ReadObjectParameter,
-		Update: UpdateObjectParameter,
-		Delete: DeleteObjectParameter,
+		CreateContext: TrackingCreateWrapper(resources.ObjectParameter, CreateObjectParameter),
+		ReadContext:   TrackingReadWrapper(resources.ObjectParameter, ReadObjectParameter),
+		UpdateContext: TrackingUpdateWrapper(resources.ObjectParameter, UpdateObjectParameter),
+		DeleteContext: TrackingDeleteWrapper(resources.ObjectParameter, DeleteObjectParameter),
 
 		Schema: objectParameterSchema,
 		Importer: &schema.ResourceImporter{
@@ -82,11 +85,11 @@ func ObjectParameter() *schema.Resource {
 }
 
 // CreateObjectParameter implements schema.CreateFunc.
-func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
+func CreateObjectParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
-	ctx := context.Background()
+
 	parameter := sdk.ObjectParameter(key)
 
 	o := sdk.Object{}
@@ -102,12 +105,12 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 	if onAccount {
 		err := client.Parameters.SetObjectParameterOnAccount(ctx, parameter, value)
 		if err != nil {
-			return fmt.Errorf("error creating object parameter err = %w", err)
+			return diag.FromErr(fmt.Errorf("error creating object parameter err = %w", err))
 		}
 	} else {
 		err := client.Parameters.SetObjectParameterOnObject(ctx, o, parameter, value)
 		if err != nil {
-			return fmt.Errorf("error setting object parameter err = %w", err)
+			return diag.FromErr(fmt.Errorf("error setting object parameter err = %w", err))
 		}
 	}
 
@@ -127,26 +130,26 @@ func CreateObjectParameter(d *schema.ResourceData, meta interface{}) error {
 		p, err = client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameter(key), o)
 	}
 	if err != nil {
-		return fmt.Errorf("error reading object parameter err = %w", err)
+		return diag.FromErr(fmt.Errorf("error reading object parameter err = %w", err))
 	}
 	err = d.Set("value", p.Value)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	return ReadObjectParameter(d, meta)
+	return ReadObjectParameter(ctx, d, meta)
 }
 
 // ReadObjectParameter implements schema.ReadFunc.
-func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
+func ReadObjectParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := d.Id()
 	parts := strings.Split(id, "|")
 	if len(parts) != 3 {
 		parts = strings.Split(id, "❄️") // for backwards compatibility
 	}
 	if len(parts) != 3 {
-		return fmt.Errorf("unexpected format of ID (%v), expected key|object_type|object_identifier", id)
+		return diag.FromErr(fmt.Errorf("unexpected format of ID (%v), expected key|object_type|object_identifier", id))
 	}
 	key := parts[0]
 	var p *sdk.Parameter
@@ -163,35 +166,35 @@ func ReadObjectParameter(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 	if err != nil {
-		return fmt.Errorf("error reading object parameter err = %w", err)
+		return diag.FromErr(fmt.Errorf("error reading object parameter err = %w", err))
 	}
 	if err := d.Set("value", p.Value); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }
 
 // UpdateObjectParameter implements schema.UpdateFunc.
-func UpdateObjectParameter(d *schema.ResourceData, meta interface{}) error {
-	return CreateObjectParameter(d, meta)
+func UpdateObjectParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return CreateObjectParameter(ctx, d, meta)
 }
 
 // DeleteObjectParameter implements schema.DeleteFunc.
-func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
+func DeleteObjectParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	key := d.Get("key").(string)
 
 	onAccount := d.Get("on_account").(bool)
 	if onAccount {
 		defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		defaultValue := defaultParameter.Default
 		err = client.Parameters.SetAccountParameter(ctx, sdk.AccountParameter(key), defaultValue)
 		if err != nil {
-			return fmt.Errorf("error resetting account parameter err = %w", err)
+			return diag.FromErr(fmt.Errorf("error resetting account parameter err = %w", err))
 		}
 	} else {
 		v := d.Get("object_identifier")
@@ -205,12 +208,12 @@ func DeleteObjectParameter(d *schema.ResourceData, meta interface{}) error {
 		objectParameter := sdk.ObjectParameter(key)
 		defaultParameter, err := client.Parameters.ShowObjectParameter(ctx, objectParameter, o)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		defaultValue := defaultParameter.Default
 		err = client.Parameters.SetObjectParameterOnObject(ctx, o, objectParameter, defaultValue)
 		if err != nil {
-			return fmt.Errorf("error resetting object parameter err = %w", err)
+			return diag.FromErr(fmt.Errorf("error resetting object parameter err = %w", err))
 		}
 	}
 	d.SetId("")

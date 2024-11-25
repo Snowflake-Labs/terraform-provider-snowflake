@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	providerresources "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -100,10 +101,10 @@ var streamSchema = map[string]*schema.Schema{
 
 func Stream() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateStream,
-		Read:   ReadStream,
-		Update: UpdateStream,
-		Delete: DeleteStream,
+		CreateContext: TrackingCreateWrapper(providerresources.Stream, CreateStream),
+		ReadContext:   TrackingReadWrapper(providerresources.Stream, ReadStream),
+		UpdateContext: TrackingUpdateWrapper(providerresources.Stream, UpdateStream),
+		DeleteContext: TrackingDeleteWrapper(providerresources.Stream, DeleteStream),
 		DeprecationMessage: deprecatedResourceDescription(
 			string(providerresources.StreamOnDirectoryTable),
 			string(providerresources.StreamOnExternalTable),
@@ -119,7 +120,7 @@ func Stream() *schema.Resource {
 }
 
 // CreateStream implements schema.CreateFunc.
-func CreateStream(d *schema.ResourceData, meta interface{}) error {
+func CreateStream(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -129,8 +130,6 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	showInitialRows := d.Get("show_initial_rows").(bool)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	ctx := context.Background()
-
 	onTable, onTableSet := d.GetOk("on_table")
 	onView, onViewSet := d.GetOk("on_view")
 	onStage, onStageSet := d.GetOk("on_stage")
@@ -139,13 +138,13 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 	case onTableSet:
 		tableObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(onTable.(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		tableId := tableObjectIdentifier.(sdk.SchemaObjectIdentifier)
 
 		table, err := client.Tables.ShowByID(ctx, tableId)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if table.IsExternal {
@@ -158,7 +157,7 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			}
 			err := client.Streams.CreateOnExternalTable(ctx, req)
 			if err != nil {
-				return fmt.Errorf("error creating stream %v err = %w", name, err)
+				return diag.FromErr(fmt.Errorf("error creating stream %v err = %w", name, err))
 			}
 		} else {
 			req := sdk.NewCreateOnTableStreamRequest(id, tableId)
@@ -173,19 +172,19 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 			}
 			err := client.Streams.CreateOnTable(ctx, req)
 			if err != nil {
-				return fmt.Errorf("error creating stream %v err = %w", name, err)
+				return diag.FromErr(fmt.Errorf("error creating stream %v err = %w", name, err))
 			}
 		}
 	case onViewSet:
 		viewObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(onView.(string))
 		viewId := viewObjectIdentifier.(sdk.SchemaObjectIdentifier)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		_, err = client.Views.ShowByID(ctx, viewId)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		req := sdk.NewCreateOnViewStreamRequest(id, viewId)
@@ -200,20 +199,20 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = client.Streams.CreateOnView(ctx, req)
 		if err != nil {
-			return fmt.Errorf("error creating stream %v err = %w", name, err)
+			return diag.FromErr(fmt.Errorf("error creating stream %v err = %w", name, err))
 		}
 	case onStageSet:
 		stageObjectIdentifier, err := helpers.DecodeSnowflakeParameterID(onStage.(string))
 		stageId := stageObjectIdentifier.(sdk.SchemaObjectIdentifier)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		stageProperties, err := client.Stages.Describe(ctx, stageId)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if findStagePropertyValueByName(stageProperties, "ENABLE") != "true" {
-			return fmt.Errorf("directory must be enabled on stage")
+			return diag.FromErr(fmt.Errorf("directory must be enabled on stage"))
 		}
 		req := sdk.NewCreateOnDirectoryTableStreamRequest(id, stageId)
 		if v, ok := d.GetOk("comment"); ok {
@@ -221,19 +220,19 @@ func CreateStream(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = client.Streams.CreateOnDirectoryTable(ctx, req)
 		if err != nil {
-			return fmt.Errorf("error creating stream %v err = %w", name, err)
+			return diag.FromErr(fmt.Errorf("error creating stream %v err = %w", name, err))
 		}
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	return ReadStream(d, meta)
+	return ReadStream(ctx, d, meta)
 }
 
 // ReadStream implements schema.ReadFunc.
-func ReadStream(d *schema.ResourceData, meta interface{}) error {
+func ReadStream(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	stream, err := client.Streams.ShowByID(ctx, id)
 	if err != nil {
@@ -242,56 +241,56 @@ func ReadStream(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("name", stream.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("database", stream.DatabaseName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("schema", stream.SchemaName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	switch *stream.SourceType {
 	case sdk.StreamSourceTypeStage:
 		if err := d.Set("on_stage", *stream.TableName); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	case sdk.StreamSourceTypeView:
 		if err := d.Set("on_view", *stream.TableName); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	default:
 		if err := d.Set("on_table", *stream.TableName); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if err := d.Set("append_only", *stream.Mode == "APPEND_ONLY"); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("insert_only", *stream.Mode == "INSERT_ONLY"); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	// TODO: SHOW STREAMS doesn't return that value right now (I'm not sure if it ever did), but probably we can assume
 	// 	the customers got 'false' every time and hardcode it (it's only on create thing, so it's not necessary
 	//	to track its value after creation).
 	if err := d.Set("show_initial_rows", false); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("comment", *stream.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("owner", *stream.Owner); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }
 
 // UpdateStream implements schema.UpdateFunc.
-func UpdateStream(d *schema.ResourceData, meta interface{}) error {
+func UpdateStream(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("comment") {
@@ -299,28 +298,28 @@ func UpdateStream(d *schema.ResourceData, meta interface{}) error {
 		if comment == "" {
 			err := client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithUnsetComment(true))
 			if err != nil {
-				return fmt.Errorf("error unsetting stream comment on %v", d.Id())
+				return diag.FromErr(fmt.Errorf("error unsetting stream comment on %v", d.Id()))
 			}
 		} else {
 			err := client.Streams.Alter(ctx, sdk.NewAlterStreamRequest(id).WithSetComment(comment))
 			if err != nil {
-				return fmt.Errorf("error setting stream comment on %v", d.Id())
+				return diag.FromErr(fmt.Errorf("error setting stream comment on %v", d.Id()))
 			}
 		}
 	}
 
-	return ReadStream(d, meta)
+	return ReadStream(ctx, d, meta)
 }
 
 // DeleteStream implements schema.DeleteFunc.
-func DeleteStream(d *schema.ResourceData, meta interface{}) error {
+func DeleteStream(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	streamId := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	err := client.Streams.Drop(ctx, sdk.NewDropStreamRequest(streamId))
 	if err != nil {
-		return fmt.Errorf("error deleting stream %v err = %w", d.Id(), err)
+		return diag.FromErr(fmt.Errorf("error deleting stream %v err = %w", d.Id(), err))
 	}
 
 	d.SetId("")

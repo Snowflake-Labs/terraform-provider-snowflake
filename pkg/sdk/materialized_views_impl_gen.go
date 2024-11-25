@@ -2,6 +2,10 @@ package sdk
 
 import (
 	"context"
+	"fmt"
+	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
@@ -168,9 +172,10 @@ func (r materializedViewDBRow) convert() *MaterializedView {
 		Owner:              r.Owner,
 		Invalid:            r.Invalid,
 		BehindBy:           r.BehindBy,
-		Text:               r.Text,
 		IsSecure:           r.IsSecure,
 	}
+	queryParts := strings.Split(r.Text, fmt.Sprintf(" --%s ", tracking.MetadataPrefix))
+	materializedView.Text = queryParts[0]
 	if r.Reserved.Valid {
 		materializedView.Reserved = &r.Reserved.String
 	}

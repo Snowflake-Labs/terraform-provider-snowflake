@@ -2,6 +2,10 @@ package sdk
 
 import (
 	"context"
+	"fmt"
+	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
@@ -277,7 +281,8 @@ func (r viewDBRow) convert() *View {
 		view.Comment = r.Comment.String
 	}
 	if r.Text.Valid {
-		view.Text = r.Text.String
+		queryParts := strings.Split(r.Text.String, fmt.Sprintf(" --%s ", tracking.MetadataPrefix))
+		view.Text = queryParts[0]
 	}
 	if r.Kind.Valid {
 		view.Kind = r.Kind.String
