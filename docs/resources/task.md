@@ -14,59 +14,133 @@ Resource used to manage task objects. For more information, check [task document
 ## Example Usage
 
 ```terraform
+# Basic standalone task
 resource "snowflake_task" "task" {
-  comment = "my task"
-
   database  = "database"
   schema    = "schema"
+  name      = "task"
   warehouse = "warehouse"
-
-  name          = "task"
-  schedule      = "10 MINUTE"
-  sql_statement = "select * from foo;"
-
-  session_parameters = {
-    "foo" : "bar",
+  started   = true
+  schedule {
+    minutes = 5
   }
-
-  user_task_timeout_ms = 10000
-  after                = "preceding_task"
-  when                 = "foo AND bar"
-  enabled              = true
+  sql_statement = "select 1"
 }
 
+# Basic serverless task
 resource "snowflake_task" "serverless_task" {
-  comment = "my serverless task"
-
-  database = "db"
-  schema   = "schema"
-
-  name          = "serverless_task"
-  schedule      = "10 MINUTE"
-  sql_statement = "select * from foo;"
-
-  session_parameters = {
-    "foo" : "bar",
-  }
-
-  user_task_timeout_ms                     = 10000
+  database                                 = "database"
+  schema                                   = "schema"
+  name                                     = "task"
   user_task_managed_initial_warehouse_size = "XSMALL"
-  after                                    = [snowflake_task.task.name]
-  when                                     = "foo AND bar"
-  enabled                                  = true
+  started                                  = true
+  schedule {
+    minutes = 5
+  }
+  sql_statement = "select 1"
 }
 
-resource "snowflake_task" "test_task" {
-  comment = "task with allow_overlapping_execution"
+# Basic child task
+resource "snowflake_task" "child_task" {
+  database  = "database"
+  schema    = "schema"
+  name      = "task"
+  warehouse = "warehouse"
+  started   = true
+  # You can do it by referring to task by computed fully_qualified_name field or write the task name in manually if it's not managed by Terraform
+  after         = [snowflake_task.root_task.fully_qualified_name, "<database_name>.<schema_name>.<root_task_name>"]
+  sql_statement = "select 1"
+}
 
-  database = "database"
-  schema   = "schema"
+# Basic finalizer task
+resource "snowflake_task" "child_task" {
+  database  = "database"
+  schema    = "schema"
+  name      = "task"
+  warehouse = "warehouse"
+  started   = true
+  # You can do it by referring to task by computed fully_qualified_name field or write the task name in manually if it's not managed by Terraform
+  finalize      = snowflake_task.root_task.fully_qualified_name
+  sql_statement = "select 1"
+}
 
-  name          = "test_task"
-  sql_statement = "select 1 as c;"
+# Complete standalone task
+resource "snowflake_task" "test" {
+  database      = "database"
+  schema        = "schema"
+  name          = "task"
+  warehouse     = "warehouse"
+  started       = true
+  sql_statement = "select 1"
 
+  config                      = "{\"key\":\"value\"}"
   allow_overlapping_execution = true
-  enabled                     = true
+  error_integration           = "<error_integration_name>"
+  when                        = "SYSTEM$STREAM_HAS_DATA('<stream_name>')"
+  comment                     = "complete task"
+
+  schedule {
+    minutes = 10
+  }
+
+  # Session Parameters
+  suspend_task_after_num_failures               = 10
+  task_auto_retry_attempts                      = 0
+  user_task_managed_initial_warehouse_size      = "Medium"
+  user_task_minimum_trigger_interval_in_seconds = 30
+  user_task_timeout_ms                          = 3600000
+  abort_detached_query                          = false
+  autocommit                                    = true
+  binary_input_format                           = "HEX"
+  binary_output_format                          = "HEX"
+  client_memory_limit                           = 1536
+  client_metadata_request_use_connection_ctx    = false
+  client_prefetch_threads                       = 4
+  client_result_chunk_size                      = 160
+  client_result_column_case_insensitive         = false
+  client_session_keep_alive                     = false
+  client_session_keep_alive_heartbeat_frequency = 3600
+  client_timestamp_type_mapping                 = "TIMESTAMP_LTZ"
+  date_input_format                             = "AUTO"
+  date_output_format                            = "YYYY-MM-DD"
+  enable_unload_physical_type_optimization      = true
+  error_on_nondeterministic_merge               = true
+  error_on_nondeterministic_update              = false
+  geography_output_format                       = "GeoJSON"
+  geometry_output_format                        = "GeoJSON"
+  jdbc_use_session_timezone                     = true
+  json_indent                                   = 2
+  lock_timeout                                  = 43200
+  log_level                                     = "OFF"
+  multi_statement_count                         = 1
+  noorder_sequence_as_default                   = true
+  odbc_treat_decimal_as_int                     = false
+  query_tag                                     = ""
+  quoted_identifiers_ignore_case                = false
+  rows_per_resultset                            = 0
+  s3_stage_vpce_dns_name                        = ""
+  search_path                                   = "$current, $public"
+  statement_queued_timeout_in_seconds           = 0
+  statement_timeout_in_seconds                  = 172800
+  strict_json_output                            = false
+  timestamp_day_is_always_24h                   = false
+  timestamp_input_format                        = "AUTO"
+  timestamp_ltz_output_format                   = ""
+  timestamp_ntz_output_format                   = "YYYY-MM-DD HH24:MI:SS.FF3"
+  timestamp_output_format                       = "YYYY-MM-DD HH24:MI:SS.FF3 TZHTZM"
+  timestamp_type_mapping                        = "TIMESTAMP_NTZ"
+  timestamp_tz_output_format                    = ""
+  timezone                                      = "America/Los_Angeles"
+  time_input_format                             = "AUTO"
+  time_output_format                            = "HH24:MI:SS"
+  trace_level                                   = "OFF"
+  transaction_abort_on_error                    = false
+  transaction_default_isolation_level           = "READ COMMITTED"
+  two_digit_century_start                       = 1970
+  unsupported_ddl_action                        = "ignore"
+  use_cached_result                             = true
+  week_of_year_policy                           = 0
+  week_start                                    = 0
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -77,16 +151,16 @@ resource "snowflake_task" "test_task" {
 
 ### Required
 
-- `database` (String) The database in which to create the task. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
-- `name` (String) Specifies the identifier for the task; must be unique for the database and schema in which the task is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
-- `schema` (String) The schema in which to create the task. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `database` (String) The database in which to create the task. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `name` (String) Specifies the identifier for the task; must be unique for the database and schema in which the task is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `schema` (String) The schema in which to create the task. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `sql_statement` (String) Any single SQL statement, or a call to a stored procedure, executed when the task runs.
 - `started` (Boolean) Specifies if the task should be started or suspended.
 
 ### Optional
 
 - `abort_detached_query` (Boolean) Specifies the action that Snowflake performs for in-progress queries if connectivity is lost due to abrupt termination of a session (e.g. network outage, browser termination, service interruption). For more information, check [ABORT_DETACHED_QUERY docs](https://docs.snowflake.com/en/sql-reference/parameters#abort-detached-query).
-- `after` (Set of String) Specifies one or more predecessor tasks for the current task. Use this option to [create a DAG](https://docs.snowflake.com/en/user-guide/tasks-graphs.html#label-task-dag) of tasks or add this task to an existing DAG. A DAG is a series of tasks that starts with a scheduled root task and is linked together by dependencies. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `after` (Set of String) Specifies one or more predecessor tasks for the current task. Use this option to [create a DAG](https://docs.snowflake.com/en/user-guide/tasks-graphs.html#label-task-dag) of tasks or add this task to an existing DAG. A DAG is a series of tasks that starts with a scheduled root task and is linked together by dependencies. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `allow_overlapping_execution` (String) By default, Snowflake ensures that only one instance of a particular DAG is allowed to run at a time, setting the parameter value to TRUE permits DAG runs to overlap. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `autocommit` (Boolean) Specifies whether autocommit is enabled for the session. Autocommit determines whether a DML statement, when executed without an active transaction, is automatically committed after the statement successfully completes. For more information, see [Transactions](https://docs.snowflake.com/en/sql-reference/transactions). For more information, check [AUTOCOMMIT docs](https://docs.snowflake.com/en/sql-reference/parameters#autocommit).
 - `binary_input_format` (String) The format of VARCHAR values passed as input to VARCHAR-to-BINARY conversion functions. For more information, see [Binary input and output](https://docs.snowflake.com/en/sql-reference/binary-input-output). For more information, check [BINARY_INPUT_FORMAT docs](https://docs.snowflake.com/en/sql-reference/parameters#binary-input-format).
@@ -104,10 +178,10 @@ resource "snowflake_task" "test_task" {
 - `date_input_format` (String) Specifies the input format for the DATE data type. For more information, see [Date and time input and output formats](https://docs.snowflake.com/en/sql-reference/date-time-input-output). For more information, check [DATE_INPUT_FORMAT docs](https://docs.snowflake.com/en/sql-reference/parameters#date-input-format).
 - `date_output_format` (String) Specifies the display format for the DATE data type. For more information, see [Date and time input and output formats](https://docs.snowflake.com/en/sql-reference/date-time-input-output). For more information, check [DATE_OUTPUT_FORMAT docs](https://docs.snowflake.com/en/sql-reference/parameters#date-output-format).
 - `enable_unload_physical_type_optimization` (Boolean) Specifies whether to set the schema for unloaded Parquet files based on the logical column data types (i.e. the types in the unload SQL query or source table) or on the unloaded column values (i.e. the smallest data types and precision that support the values in the output columns of the unload SQL statement or source table). For more information, check [ENABLE_UNLOAD_PHYSICAL_TYPE_OPTIMIZATION docs](https://docs.snowflake.com/en/sql-reference/parameters#enable-unload-physical-type-optimization).
-- `error_integration` (String) Specifies the name of the notification integration used for error notifications. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `error_integration` (String) Specifies the name of the notification integration used for error notifications. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `error_on_nondeterministic_merge` (Boolean) Specifies whether to return an error when the [MERGE](https://docs.snowflake.com/en/sql-reference/sql/merge) command is used to update or delete a target row that joins multiple source rows and the system cannot determine the action to perform on the target row. For more information, check [ERROR_ON_NONDETERMINISTIC_MERGE docs](https://docs.snowflake.com/en/sql-reference/parameters#error-on-nondeterministic-merge).
 - `error_on_nondeterministic_update` (Boolean) Specifies whether to return an error when the [UPDATE](https://docs.snowflake.com/en/sql-reference/sql/update) command is used to update a target row that joins multiple source rows and the system cannot determine the action to perform on the target row. For more information, check [ERROR_ON_NONDETERMINISTIC_UPDATE docs](https://docs.snowflake.com/en/sql-reference/parameters#error-on-nondeterministic-update).
-- `finalize` (String) Specifies the name of a root task that the finalizer task is associated with. Finalizer tasks run after all other tasks in the task graph run to completion. You can define the SQL of a finalizer task to handle notifications and the release and cleanup of resources that a task graph uses. For more information, see [Release and cleanup of task graphs](https://docs.snowflake.com/en/user-guide/tasks-graphs.html#label-finalizer-task). Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `(`, `)`, `"`
+- `finalize` (String) Specifies the name of a root task that the finalizer task is associated with. Finalizer tasks run after all other tasks in the task graph run to completion. You can define the SQL of a finalizer task to handle notifications and the release and cleanup of resources that a task graph uses. For more information, see [Release and cleanup of task graphs](https://docs.snowflake.com/en/user-guide/tasks-graphs.html#label-finalizer-task). Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `geography_output_format` (String) Display format for [GEOGRAPHY values](https://docs.snowflake.com/en/sql-reference/data-types-geospatial.html#label-data-types-geography). For more information, check [GEOGRAPHY_OUTPUT_FORMAT docs](https://docs.snowflake.com/en/sql-reference/parameters#geography-output-format).
 - `geometry_output_format` (String) Display format for [GEOMETRY values](https://docs.snowflake.com/en/sql-reference/data-types-geospatial.html#label-data-types-geometry). For more information, check [GEOMETRY_OUTPUT_FORMAT docs](https://docs.snowflake.com/en/sql-reference/parameters#geometry-output-format).
 - `jdbc_treat_timestamp_ntz_as_utc` (Boolean) Specifies how JDBC processes TIMESTAMP_NTZ values. For more information, check [JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC docs](https://docs.snowflake.com/en/sql-reference/parameters#jdbc-treat-timestamp-ntz-as-utc).

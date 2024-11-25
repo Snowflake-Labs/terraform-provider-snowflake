@@ -1,6 +1,8 @@
 package datasources
 
 import (
+	"fmt"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -163,6 +165,8 @@ func handleIn(d *schema.ResourceData, setField **sdk.In) error {
 				return err
 			}
 			*setField = &sdk.In{Schema: schemaId}
+		default:
+			return fmt.Errorf("the `in` filtering field was set, but none of the subfields (account, database, schema) was specified")
 		}
 	}
 	return nil

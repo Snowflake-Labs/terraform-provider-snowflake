@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
@@ -27,9 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-// TODO(SNOW-1348116 - next pr): More tests for complicated DAGs
-// TODO(SNOW-1348116 - next pr): Test for stored procedures passed to sql_statement (decide on name)
-// TODO(SNOW-1348116 - next pr): More test with external changes
+// TODO(SNOW-1822118): Create more complicated tests for task
 
 func TestAcc_Task_Basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
@@ -65,7 +64,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, configModel.ResourceReference()).
@@ -126,7 +125,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 
 	currentRole := acc.TestClient().Context.CurrentRole(t)
 
-	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.CreateWithGcpPubSub(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -198,7 +197,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:    "snowflake_task.test",
+				ResourceName:    configModel.ResourceReference(),
 				ImportState:     true,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
@@ -233,19 +232,20 @@ func TestAcc_Task_Updates(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
+	newStatement := "SELECT 123"
 	basicConfigModel := model.TaskWithId("test", id, false, statement)
 
 	// TODO(SNOW-1736173): New warehouse created, because the common one has lower-case letters that won't work
 	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
 	t.Cleanup(warehouseCleanup)
 
-	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.CreateWithGcpPubSub(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
 
 	taskConfig := `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`
 	comment := random.Comment()
 	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
-	completeConfigModel := model.TaskWithId("test", id, true, statement).
+	completeConfigModel := model.TaskWithId("test", id, true, newStatement).
 		WithWarehouse(warehouse.ID().Name()).
 		WithScheduleMinutes(5).
 		WithConfigValue(configvariable.StringVariable(taskConfig)).
@@ -278,7 +278,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -309,6 +309,11 @@ func TestAcc_Task_Updates(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, completeConfigModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(completeConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, completeConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -323,7 +328,300 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
 						HasCommentString(comment).
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
+						HasWhenString(condition).
+						HasSqlStatementString(newStatement),
+					resourceshowoutputassert.TaskShowOutput(t, completeConfigModel.ResourceReference()).
+						HasCreatedOnNotEmpty().
+						HasName(id.Name()).
+						HasIdNotEmpty().
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner(currentRole.Name()).
+						HasWarehouse(warehouse.ID()).
+						HasComment(comment).
+						HasScheduleMinutes(5).
+						HasPredecessors().
+						HasState(sdk.TaskStateStarted).
+						HasDefinition(newStatement).
+						HasCondition(condition).
+						HasAllowOverlappingExecution(true).
+						HasErrorIntegration(errorNotificationIntegration.ID()).
+						HasLastCommittedOnNotEmpty().
+						HasLastSuspendedOn("").
+						HasOwnerRoleType("ROLE").
+						HasConfig(taskConfig).
+						HasBudget("").
+						HasTaskRelations(sdk.TaskRelations{}),
+				),
+			},
+			// Unset
+			{
+				Config: config.FromModel(t, basicConfigModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(basicConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanFalse).
+						HasWarehouseString("").
+						HasNoScheduleSet().
+						HasConfigString("").
+						HasAllowOverlappingExecutionString(r.BooleanDefault).
+						HasErrorIntegrationString("").
+						HasCommentString("").
+						HasFinalizeString("").
+						HasAfter().
+						HasWhenString("").
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
+						HasCreatedOnNotEmpty().
+						HasName(id.Name()).
+						HasIdNotEmpty().
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner(currentRole.Name()).
+						HasComment("").
+						HasWarehouse(sdk.NewAccountObjectIdentifier("")).
+						HasNoSchedule().
+						HasPredecessors().
+						HasState(sdk.TaskStateSuspended).
+						HasDefinition(statement).
+						HasCondition("").
+						HasAllowOverlappingExecution(false).
+						HasErrorIntegration(sdk.NewAccountObjectIdentifier("")).
+						HasLastCommittedOnNotEmpty().
+						HasLastSuspendedOnNotEmpty().
+						HasOwnerRoleType("ROLE").
+						HasConfig("").
+						HasBudget("").
+						HasTaskRelations(sdk.TaskRelations{}),
+				),
+			},
+		},
+	})
+}
+
+/*
+DAG structure (the test proves child3 won't have any issues with updates in the following scenario):
+
+		 child1
+		/		\
+	 root 		 child3
+		\		/
+		 child2
+*/
+func TestAcc_Task_UpdatesInComplexDAG(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	rootTask, rootTaskCleanup := acc.TestClient().Task.CreateWithSchedule(t)
+	t.Cleanup(rootTaskCleanup)
+
+	child1, child1Cleanup := acc.TestClient().Task.CreateWithAfter(t, rootTask.ID())
+	t.Cleanup(child1Cleanup)
+
+	child2, child2Cleanup := acc.TestClient().Task.CreateWithAfter(t, rootTask.ID())
+	t.Cleanup(child2Cleanup)
+
+	acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(child1.ID()).WithResume(true))
+	acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(child2.ID()).WithResume(true))
+	acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(rootTask.ID()).WithResume(true))
+	t.Cleanup(func() { acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(rootTask.ID()).WithSuspend(true)) })
+
+	child3Id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	basicConfigModel := model.TaskWithId("test", child3Id, true, "SELECT 1").
+		WithAfterValue(configvariable.SetVariable(
+			configvariable.StringVariable(child1.ID().FullyQualifiedName()),
+			configvariable.StringVariable(child2.ID().FullyQualifiedName()),
+		))
+
+	comment := random.Comment()
+	basicConfigModelAfterUpdate := model.TaskWithId("test", child3Id, true, "SELECT 123").
+		WithAfterValue(configvariable.SetVariable(
+			configvariable.StringVariable(child1.ID().FullyQualifiedName()),
+			configvariable.StringVariable(child2.ID().FullyQualifiedName()),
+		)).
+		WithComment(comment)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, basicConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
+						HasFullyQualifiedNameString(child3Id.FullyQualifiedName()).
+						HasDatabaseString(child3Id.DatabaseName()).
+						HasSchemaString(child3Id.SchemaName()).
+						HasNameString(child3Id.Name()).
+						HasStartedString(r.BooleanTrue).
+						HasAfter(child1.ID(), child2.ID()).
+						HasSqlStatementString("SELECT 1"),
+					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
+						HasCreatedOnNotEmpty().
+						HasName(child3Id.Name()).
+						HasDatabaseName(child3Id.DatabaseName()).
+						HasSchemaName(child3Id.SchemaName()).
+						HasState(sdk.TaskStateStarted).
+						HasDefinition("SELECT 1"),
+				),
+			},
+			// Update some fields in child3
+			{
+				Config: config.FromModel(t, basicConfigModelAfterUpdate),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, basicConfigModelAfterUpdate.ResourceReference()).
+						HasFullyQualifiedNameString(child3Id.FullyQualifiedName()).
+						HasDatabaseString(child3Id.DatabaseName()).
+						HasSchemaString(child3Id.SchemaName()).
+						HasNameString(child3Id.Name()).
+						HasStartedString(r.BooleanTrue).
+						HasCommentString(comment).
+						HasAfter(child1.ID(), child2.ID()).
+						HasSqlStatementString("SELECT 123"),
+					resourceshowoutputassert.TaskShowOutput(t, basicConfigModelAfterUpdate.ResourceReference()).
+						HasCreatedOnNotEmpty().
+						HasName(child3Id.Name()).
+						HasDatabaseName(child3Id.DatabaseName()).
+						HasSchemaName(child3Id.SchemaName()).
+						HasState(sdk.TaskStateStarted).
+						HasComment(comment).
+						HasDefinition("SELECT 123"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_StatementSpaces(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	when := "1 > 2"
+	configModel := model.TaskWithId("test", id, false, statement).WithWhen(when)
+
+	statementWithSpaces := "    SELECT    1    "
+	whenWithSpaces := "     1      >       2      "
+	configModelWithSpacesInStatements := model.TaskWithId("test", id, false, statementWithSpaces).WithWhen(whenWithSpaces)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasWhenString(when).
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, configModel.ResourceReference()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasName(id.Name()).
+						HasCondition(when).
+						HasDefinition(statement),
+				),
+			},
+			{
+				Config: config.FromModel(t, configModelWithSpacesInStatements),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasWhenString(when).
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, configModel.ResourceReference()).
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasName(id.Name()).
+						HasCondition(when).
+						HasDefinition(statement),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_ExternalChanges(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	currentRole := acc.TestClient().Context.CurrentRole(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	basicConfigModel := model.TaskWithId("test", id, false, statement)
+
+	// TODO(SNOW-1736173): New warehouse created, because the common one has lower-case letters that won't work
+	warehouse, warehouseCleanup := acc.TestClient().Warehouse.CreateWarehouse(t)
+	t.Cleanup(warehouseCleanup)
+
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.CreateWithGcpPubSub(t)
+	t.Cleanup(errorNotificationIntegrationCleanup)
+
+	taskConfig := `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`
+	comment := random.Comment()
+	condition := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
+	completeConfigModel := model.TaskWithId("test", id, true, statement).
+		WithWarehouse(warehouse.ID().Name()).
+		WithScheduleMinutes(5).
+		WithConfigValue(configvariable.StringVariable(taskConfig)).
+		WithAllowOverlappingExecution(r.BooleanTrue).
+		WithErrorIntegration(errorNotificationIntegration.ID().Name()).
+		WithComment(comment).
+		WithWhen(condition)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			// Optionals set
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, completeConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, completeConfigModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanTrue).
+						HasWarehouseString(warehouse.ID().Name()).
+						HasScheduleMinutes(5).
+						HasConfigString(taskConfig).
+						HasAllowOverlappingExecutionString(r.BooleanTrue).
+						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
+						HasCommentString(comment).
+						HasFinalizeString("").
+						HasAfter().
 						HasWhenString(condition).
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, completeConfigModel.ResourceReference()).
@@ -350,7 +648,69 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
-			// Unset
+			// External change - unset all optional fields and expect no change
+			{
+				PreConfig: func() {
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithSuspend(true))
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithUnset(*sdk.NewTaskUnsetRequest().
+						WithWarehouse(true).
+						WithConfig(true).
+						WithAllowOverlappingExecution(true).
+						WithErrorIntegration(true).
+						WithComment(true).
+						WithSchedule(true),
+					))
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithRemoveWhen(true))
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(basicConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables: config.ConfigVariablesFromModel(t, completeConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, completeConfigModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanTrue).
+						HasWarehouseString(warehouse.ID().Name()).
+						HasScheduleMinutes(5).
+						HasConfigString(taskConfig).
+						HasAllowOverlappingExecutionString(r.BooleanTrue).
+						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()).
+						HasCommentString(comment).
+						HasFinalizeString("").
+						HasAfter().
+						HasWhenString(condition).
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, completeConfigModel.ResourceReference()).
+						HasCreatedOnNotEmpty().
+						HasName(id.Name()).
+						HasIdNotEmpty().
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner(currentRole.Name()).
+						HasWarehouse(warehouse.ID()).
+						HasComment(comment).
+						HasScheduleMinutes(5).
+						HasPredecessors().
+						HasState(sdk.TaskStateStarted).
+						HasDefinition(statement).
+						HasCondition(condition).
+						HasAllowOverlappingExecution(true).
+						HasErrorIntegration(errorNotificationIntegration.ID()).
+						HasLastCommittedOnNotEmpty().
+						HasLastSuspendedOnNotEmpty().
+						HasOwnerRoleType("ROLE").
+						HasConfig(taskConfig).
+						HasBudget("").
+						HasTaskRelations(sdk.TaskRelations{}),
+				),
+			},
+			// Unset optional values
 			{
 				Config: config.FromModel(t, basicConfigModel),
 				Check: assert.AssertThat(t,
@@ -367,7 +727,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasErrorIntegrationString("").
 						HasCommentString("").
 						HasFinalizeString("").
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasWhenString("").
 						HasSqlStatementString(statement),
 					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
@@ -392,6 +752,112 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasConfig("").
 						HasBudget("").
 						HasTaskRelations(sdk.TaskRelations{}),
+				),
+			},
+			// External change - set all optional fields and expect no change
+			{
+				PreConfig: func() {
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithSuspend(true))
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithSet(*sdk.NewTaskSetRequest().
+						WithWarehouse(warehouse.ID()).
+						WithConfig(taskConfig).
+						WithAllowOverlappingExecution(true).
+						WithErrorIntegration(errorNotificationIntegration.ID()).
+						WithComment(comment).
+						WithSchedule("5 MINUTE"),
+					))
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithModifyWhen(condition))
+					acc.TestClient().Task.Alter(t, sdk.NewAlterTaskRequest(id).WithModifyAs("SELECT 123"))
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(basicConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModel(t, basicConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanFalse).
+						HasWarehouseString("").
+						HasNoScheduleSet().
+						HasConfigString("").
+						HasAllowOverlappingExecutionString(r.BooleanDefault).
+						HasErrorIntegrationString("").
+						HasCommentString("").
+						HasFinalizeString("").
+						HasAfter().
+						HasWhenString("").
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, basicConfigModel.ResourceReference()).
+						HasCreatedOnNotEmpty().
+						HasName(id.Name()).
+						HasIdNotEmpty().
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasOwner(currentRole.Name()).
+						HasComment("").
+						HasWarehouse(sdk.NewAccountObjectIdentifier("")).
+						HasNoSchedule().
+						HasPredecessors().
+						HasState(sdk.TaskStateSuspended).
+						HasDefinition(statement).
+						HasCondition("").
+						HasAllowOverlappingExecution(false).
+						HasErrorIntegration(sdk.NewAccountObjectIdentifier("")).
+						HasLastCommittedOnNotEmpty().
+						HasLastSuspendedOnNotEmpty().
+						HasOwnerRoleType("ROLE").
+						HasConfig("").
+						HasBudget("").
+						HasTaskRelations(sdk.TaskRelations{}),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_CallingProcedure(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	procedure := acc.TestClient().Procedure.Create(t, sdk.DataTypeNumber)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := fmt.Sprintf("call %s(123)", procedure.Name)
+	configModel := model.TaskWithId("test", id, false, statement).WithUserTaskManagedInitialWarehouseSizeEnum(sdk.WarehouseSizeXSmall)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanFalse).
+						HasUserTaskManagedInitialWarehouseSizeEnum(sdk.WarehouseSizeXSmall).
+						HasSqlStatementString(statement),
+					resourceshowoutputassert.TaskShowOutput(t, configModel.ResourceReference()).
+						HasCreatedOnNotEmpty().
+						HasDatabaseName(id.DatabaseName()).
+						HasSchemaName(id.SchemaName()).
+						HasName(id.Name()).
+						HasState(sdk.TaskStateSuspended).
+						HasDefinition(statement),
+					resourceparametersassert.TaskResourceParameters(t, configModel.ResourceReference()).
+						HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeXSmall),
 				),
 			},
 		},
@@ -1159,7 +1625,7 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 						HasScheduleMinutes(5).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
-						HasAfterIdsInOrder(id).
+						HasAfter(id).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
 						HasPredecessors(id).
@@ -1337,7 +1803,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
@@ -1352,7 +1818,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasNoScheduleSet().
-						HasAfterIdsInOrder(rootId).
+						HasAfter(rootId).
 						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
@@ -1367,7 +1833,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
@@ -1382,7 +1848,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 					resourceassert.TaskResource(t, childTaskConfigModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse).
 						HasScheduleMinutes(schedule).
-						HasAfterIdsInOrder().
+						HasAfter().
 						HasSuspendTaskAfterNumFailuresString("10"),
 				),
 			},
@@ -1431,7 +1897,7 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(rootId),
+						HasAfter(rootId),
 				),
 			},
 			{
@@ -1443,7 +1909,7 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(),
+						HasAfter(),
 				),
 			},
 		},
@@ -1679,7 +2145,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(),
+						HasAfter(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
@@ -1692,7 +2158,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(rootId),
+						HasAfter(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
@@ -1715,7 +2181,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(rootId),
+						HasAfter(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
@@ -1728,7 +2194,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(),
+						HasAfter(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
 						HasTaskRelations(sdk.TaskRelations{}),
@@ -1781,7 +2247,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(rootId).
+						HasAfter(rootId).
 						HasCommentString("abc"),
 				),
 			},
@@ -1800,7 +2266,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 						HasScheduleMinutes(schedule),
 					resourceassert.TaskResource(t, childTaskConfigModelWithDifferentComment.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
-						HasAfterIdsInOrder(rootId).
+						HasAfter(rootId).
 						HasCommentString("def"),
 				),
 			},
@@ -1872,7 +2338,7 @@ func TestAcc_Task_issue3113(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.Create(t)
+	errorNotificationIntegration, errorNotificationIntegrationCleanup := acc.TestClient().NotificationIntegration.CreateWithGcpPubSub(t)
 	t.Cleanup(errorNotificationIntegrationCleanup)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -1916,6 +2382,192 @@ func TestAcc_Task_issue3113(t *testing.T) {
 	})
 }
 
+func TestAcc_Task_StateUpgrade_NoOptionalFields(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	configModel := model.TaskWithId("test", id, false, statement)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.98.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: taskNoOptionalFieldsConfigV0980(id),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_task.test", "enabled", "false"),
+					resource.TestCheckResourceAttr("snowflake_task.test", "allow_overlapping_execution", "false"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables:          config.ConfigVariablesFromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanFalse).
+						HasAllowOverlappingExecutionString(r.BooleanDefault),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_StateUpgrade(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	condition := "2 < 1"
+	configModel := model.TaskWithId("test", id, false, statement).
+		WithScheduleMinutes(5).
+		WithAllowOverlappingExecution(r.BooleanTrue).
+		WithSuspendTaskAfterNumFailures(10).
+		WithWhen(condition).
+		WithUserTaskManagedInitialWarehouseSizeEnum(sdk.WarehouseSizeXSmall)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.98.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: taskBasicConfigV0980(id, condition),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_task.test", "enabled", "false"),
+					resource.TestCheckResourceAttr("snowflake_task.test", "allow_overlapping_execution", "true"),
+					resource.TestCheckResourceAttr("snowflake_task.test", "schedule", "5 MINUTES"),
+					resource.TestCheckResourceAttr("snowflake_task.test", "suspend_task_after_num_failures", "10"),
+					resource.TestCheckResourceAttr("snowflake_task.test", "when", condition),
+					resource.TestCheckResourceAttr("snowflake_task.test", "user_task_managed_initial_warehouse_size", "XSMALL"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Task/basic"),
+				ConfigVariables:          config.ConfigVariablesFromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanFalse).
+						HasScheduleMinutes(5).
+						HasAllowOverlappingExecutionString(r.BooleanTrue).
+						HasSuspendTaskAfterNumFailuresString("10").
+						HasWhenString(condition).
+						HasUserTaskManagedInitialWarehouseSizeEnum(sdk.WarehouseSizeXSmall),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Task_StateUpgradeWithAfter(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	rootTask, rootTaskCleanup := acc.TestClient().Task.Create(t)
+	t.Cleanup(rootTaskCleanup)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT 1"
+	comment := random.Comment()
+	configModel := model.TaskWithId("test", id, false, statement).
+		WithUserTaskTimeoutMs(50).
+		WithWarehouse(acc.TestClient().Ids.WarehouseId().Name()).
+		WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootTask.ID().FullyQualifiedName()))).
+		WithComment(comment).
+		WithLogLevelEnum(sdk.LogLevelInfo).
+		WithAutocommit(false).
+		WithJsonIndent(4)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Task),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.98.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: taskCompleteConfigV0980(id, rootTask.ID(), acc.TestClient().Ids.WarehouseId(), 50, comment),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_task.test", "after.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_task.test", "after.0", rootTask.ID().Name()),
+					resource.TestCheckResourceAttr("snowflake_task.test", "warehouse", acc.TestClient().Ids.WarehouseId().Name()),
+					resource.TestCheckResourceAttr("snowflake_task.test", "user_task_timeout_ms", "50"),
+					resource.TestCheckResourceAttr("snowflake_task.test", "comment", comment),
+					resource.TestCheckResourceAttr("snowflake_task.test", "session_parameters.LOG_LEVEL", "INFO"),
+					resource.TestCheckResourceAttr("snowflake_task.test", "session_parameters.AUTOCOMMIT", "false"),
+					resource.TestCheckResourceAttr("snowflake_task.test", "session_parameters.JSON_INDENT", "4"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.TaskResource(t, configModel.ResourceReference()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasNameString(id.Name()).
+						HasStartedString(r.BooleanFalse).
+						HasSqlStatementString(statement).
+						HasAfter(rootTask.ID()).
+						HasWarehouseString(acc.TestClient().Ids.WarehouseId().Name()).
+						HasUserTaskTimeoutMsString("50").
+						HasLogLevelString(string(sdk.LogLevelInfo)).
+						HasAutocommitString("false").
+						HasJsonIndentString("4").
+						HasCommentString(comment),
+				),
+			},
+		},
+	})
+}
+
+func taskNoOptionalFieldsConfigV0980(id sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_task" "test" {
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	sql_statement = "SELECT 1"
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name())
+}
+
 func taskConfigWithErrorIntegration(id sdk.SchemaObjectIdentifier, errorIntegrationId sdk.AccountObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_task" "test" {
@@ -1928,4 +2580,54 @@ resource "snowflake_task" "test" {
 	error_integration = "%[4]s"
 }
 `, id.DatabaseName(), id.SchemaName(), id.Name(), errorIntegrationId.Name())
+}
+
+func taskBasicConfigV0980(id sdk.SchemaObjectIdentifier, condition string) string {
+	return fmt.Sprintf(`
+resource "snowflake_task" "test" {
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	enabled = false
+	sql_statement = "SELECT 1"
+	schedule = "5 MINUTES"
+	allow_overlapping_execution = true
+	suspend_task_after_num_failures = 10
+	when = "%[4]s"
+	user_task_managed_initial_warehouse_size = "XSMALL"
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name(), condition)
+}
+
+func taskCompleteConfigV0980(
+	id sdk.SchemaObjectIdentifier,
+	rootTaskId sdk.SchemaObjectIdentifier,
+	warehouseId sdk.AccountObjectIdentifier,
+	userTaskTimeoutMs int,
+	comment string,
+) string {
+	return fmt.Sprintf(`
+resource "snowflake_task" "test" {
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	enabled = false
+	sql_statement = "SELECT 1"
+
+	after = [%[4]s]
+	warehouse = "%[5]s"
+	user_task_timeout_ms = %[6]d
+	comment = "%[7]s"
+	session_parameters = {
+		LOG_LEVEL = "INFO",
+		AUTOCOMMIT = false,
+		JSON_INDENT = 4,
+	}
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name(),
+		strconv.Quote(rootTaskId.Name()),
+		warehouseId.Name(),
+		userTaskTimeoutMs,
+		comment,
+	)
 }
