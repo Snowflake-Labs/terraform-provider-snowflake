@@ -19,9 +19,6 @@ import (
 )
 
 func getPrivateKey(privateKeyString, privateKeyPassphrase string) (*rsa.PrivateKey, error) {
-	if privateKeyString == "" {
-		return nil, nil
-	}
 	privateKeyBytes := []byte(privateKeyString)
 	return parsePrivateKey(privateKeyBytes, []byte(privateKeyPassphrase))
 }
