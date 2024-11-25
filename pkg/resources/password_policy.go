@@ -3,6 +3,8 @@ package resources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -144,9 +146,9 @@ func PasswordPolicy() *schema.Resource {
 		Update:      UpdatePasswordPolicy,
 		Delete:      DeletePasswordPolicy,
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.PasswordPolicy, customdiff.All(
 			ComputedIfAnyAttributeChanged(passwordPolicySchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: passwordPolicySchema,
 		Importer: &schema.ResourceImporter{

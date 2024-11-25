@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -166,15 +168,15 @@ func Function() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 2,
 
-		CreateContext: CreateContextFunction,
-		ReadContext:   ReadContextFunction,
-		UpdateContext: UpdateContextFunction,
-		DeleteContext: DeleteContextFunction,
+		CreateContext: TrackingCreateWrapper(resources.Function, CreateContextFunction),
+		ReadContext:   TrackingReadWrapper(resources.Function, ReadContextFunction),
+		UpdateContext: TrackingUpdateWrapper(resources.Function, UpdateContextFunction),
+		DeleteContext: TrackingDeleteWrapper(resources.Function, DeleteContextFunction),
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Function, customdiff.All(
 			// TODO(SNOW-1348103): add `arguments` to ComputedIfAnyAttributeChanged. This can't be done now because this function compares values without diff suppress.
 			ComputedIfAnyAttributeChanged(functionSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: functionSchema,
 		Importer: &schema.ResourceImporter{

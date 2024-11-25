@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -30,21 +32,21 @@ var secretGenericStringSchema = func() map[string]*schema.Schema {
 
 func SecretWithGenericString() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSecretWithGenericString,
-		ReadContext:   ReadContextSecretWithGenericString,
-		UpdateContext: UpdateContextSecretWithGenericString,
-		DeleteContext: DeleteContextSecret,
+		CreateContext: TrackingCreateWrapper(resources.SecretWithGenericString, CreateContextSecretWithGenericString),
+		ReadContext:   TrackingReadWrapper(resources.SecretWithGenericString, ReadContextSecretWithGenericString),
+		UpdateContext: TrackingUpdateWrapper(resources.SecretWithGenericString, UpdateContextSecretWithGenericString),
+		DeleteContext: TrackingDeleteWrapper(resources.SecretWithGenericString, DeleteContextSecret),
 		Description:   "Resource used to manage secret objects with Generic String. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.SecretWithGenericString, customdiff.All(
 			ComputedIfAnyAttributeChanged(secretGenericStringSchema, ShowOutputAttributeName, "comment"),
 			ComputedIfAnyAttributeChanged(secretGenericStringSchema, DescribeOutputAttributeName),
 			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypeGenericString),
-		),
+		)),
 
 		Schema: secretGenericStringSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportSecretWithGenericString,
+			StateContext: TrackingImportWrapper(resources.SecretWithGenericString, ImportSecretWithGenericString),
 		},
 	}
 }

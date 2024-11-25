@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -97,21 +99,21 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 
 func SCIMIntegration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSCIMIntegration,
-		ReadContext:   ReadContextSCIMIntegration(true),
-		UpdateContext: UpdateContextSCIMIntegration,
-		DeleteContext: DeleteContextSCIMIntegration,
+		CreateContext: TrackingCreateWrapper(resources.ScimSecurityIntegration, CreateContextSCIMIntegration),
+		ReadContext:   TrackingReadWrapper(resources.ScimSecurityIntegration, ReadContextSCIMIntegration(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.ScimSecurityIntegration, UpdateContextSCIMIntegration),
+		DeleteContext: TrackingDeleteWrapper(resources.ScimSecurityIntegration, DeleteContextSCIMIntegration),
 		Description:   "Resource used to manage scim security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim).",
 
 		Schema: scimIntegrationSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportScimIntegration,
+			StateContext: TrackingImportWrapper(resources.ScimSecurityIntegration, ImportScimIntegration),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.ScimSecurityIntegration, customdiff.All(
 			ComputedIfAnyAttributeChanged(scimIntegrationSchema, ShowOutputAttributeName, "enabled", "scim_client", "comment"),
 			ComputedIfAnyAttributeChanged(scimIntegrationSchema, DescribeOutputAttributeName, "enabled", "comment", "network_policy", "run_as_role", "sync_password"),
-		),
+		)),
 
 		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{

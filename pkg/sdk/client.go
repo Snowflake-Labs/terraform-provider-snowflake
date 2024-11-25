@@ -8,6 +8,8 @@ import (
 	"os"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
@@ -264,11 +266,9 @@ func (c *Client) Close() error {
 	return nil
 }
 
-type snowflakeAccountLocatorContext string
+type accountLocatorContextKey struct{}
 
-const (
-	snowflakeAccountLocatorContextKey snowflakeAccountLocatorContext = "snowflake_account_locator"
-)
+var snowflakeAccountLocatorContextKey accountLocatorContextKey
 
 // Exec executes a query that does not return rows.
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
@@ -278,6 +278,7 @@ func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 		return nil, nil
 	}
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	sql = appendQueryMetadata(ctx, sql)
 	result, err := c.db.ExecContext(ctx, sql)
 	return result, decodeDriverError(err)
 }
@@ -290,6 +291,7 @@ func (c *Client) query(ctx context.Context, dest interface{}, sql string) error 
 		return nil
 	}
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	sql = appendQueryMetadata(ctx, sql)
 	return decodeDriverError(c.db.SelectContext(ctx, dest, sql))
 }
 
@@ -301,5 +303,18 @@ func (c *Client) queryOne(ctx context.Context, dest interface{}, sql string) err
 		return nil
 	}
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
+	sql = appendQueryMetadata(ctx, sql)
 	return decodeDriverError(c.db.GetContext(ctx, dest, sql))
+}
+
+func appendQueryMetadata(ctx context.Context, sql string) string {
+	if metadata, ok := tracking.FromContext(ctx); ok {
+		newSql, err := tracking.AppendMetadata(sql, metadata)
+		if err != nil {
+			log.Printf("[ERROR] failed to append metadata tracking: %v\n", err)
+			return sql
+		}
+		return newSql
+	}
+	return sql
 }

@@ -68,6 +68,14 @@ func (c *UserClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, opts *s
 	require.NoError(t, err)
 }
 
+func (c *UserClient) AlterCurrentUser(t *testing.T, opts *sdk.AlterUserOptions) {
+	t.Helper()
+	id, err := c.context.client.ContextFunctions.CurrentUser(context.Background())
+	require.NoError(t, err)
+	err = c.client().Alter(context.Background(), id, opts)
+	require.NoError(t, err)
+}
+
 func (c *UserClient) DropUserFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	ctx := context.Background()

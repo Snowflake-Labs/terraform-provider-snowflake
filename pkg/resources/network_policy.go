@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -87,13 +89,13 @@ func NetworkPolicy() *schema.Resource {
 	return &schema.Resource{
 		Schema: networkPolicySchema,
 
-		CreateContext: CreateContextNetworkPolicy,
-		ReadContext:   ReadContextNetworkPolicy,
-		UpdateContext: UpdateContextNetworkPolicy,
-		DeleteContext: DeleteContextNetworkPolicy,
+		CreateContext: TrackingCreateWrapper(resources.NetworkPolicy, CreateContextNetworkPolicy),
+		ReadContext:   TrackingReadWrapper(resources.NetworkPolicy, ReadContextNetworkPolicy),
+		UpdateContext: TrackingUpdateWrapper(resources.NetworkPolicy, UpdateContextNetworkPolicy),
+		DeleteContext: TrackingDeleteWrapper(resources.NetworkPolicy, DeleteContextNetworkPolicy),
 		Description:   "Resource used to control network traffic. For more information, check an [official guide](https://docs.snowflake.com/en/user-guide/network-policies) on controlling network traffic with network policies.",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.NetworkPolicy, customdiff.All(
 			// For now, allowed_network_rule_list and blocked_network_rule_list have to stay commented.
 			// The main issue lays in the old Terraform SDK and how its handling DiffSuppression and CustomizeDiff
 			// for complex types like Sets, Lists, and Maps. When every element of the Set is suppressed in custom diff,
@@ -117,10 +119,10 @@ func NetworkPolicy() *schema.Resource {
 				"blocked_ip_list",
 			),
 			ComputedIfAnyAttributeChanged(networkPolicySchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.NetworkPolicy, ImportName[sdk.AccountObjectIdentifier]),
 		},
 	}
 }

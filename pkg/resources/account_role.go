@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -43,19 +45,19 @@ func AccountRole() *schema.Resource {
 	return &schema.Resource{
 		Schema: accountRoleSchema,
 
-		CreateContext: CreateAccountRole,
-		ReadContext:   ReadAccountRole,
-		DeleteContext: DeleteAccountRole,
-		UpdateContext: UpdateAccountRole,
+		CreateContext: TrackingCreateWrapper(resources.AccountRole, CreateAccountRole),
+		ReadContext:   TrackingReadWrapper(resources.AccountRole, ReadAccountRole),
+		DeleteContext: TrackingDeleteWrapper(resources.AccountRole, DeleteAccountRole),
+		UpdateContext: TrackingUpdateWrapper(resources.AccountRole, UpdateAccountRole),
 		Description:   "The resource is used for role management, where roles can be assigned privileges and, in turn, granted to users and other roles. When granted to roles they can create hierarchies of privilege structures. For more details, refer to the [official documentation](https://docs.snowflake.com/en/user-guide/security-access-control-overview).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.AccountRole, customdiff.All(
 			ComputedIfAnyAttributeChanged(accountRoleSchema, ShowOutputAttributeName, "comment", "name"),
 			ComputedIfAnyAttributeChanged(accountRoleSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.AccountRole, ImportName[sdk.AccountObjectIdentifier]),
 		},
 	}
 }

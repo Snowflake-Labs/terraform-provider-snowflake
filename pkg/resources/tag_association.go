@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -84,10 +86,10 @@ var tagAssociationSchema = map[string]*schema.Schema{
 // TagAssociation returns a pointer to the resource representing a schema.
 func TagAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextTagAssociation,
-		ReadContext:   ReadContextTagAssociation,
-		UpdateContext: UpdateContextTagAssociation,
-		DeleteContext: DeleteContextTagAssociation,
+		CreateContext: TrackingCreateWrapper(resources.TagAssociation, CreateContextTagAssociation),
+		ReadContext:   TrackingReadWrapper(resources.TagAssociation, ReadContextTagAssociation),
+		UpdateContext: TrackingUpdateWrapper(resources.TagAssociation, UpdateContextTagAssociation),
+		DeleteContext: TrackingDeleteWrapper(resources.TagAssociation, DeleteContextTagAssociation),
 
 		Schema: tagAssociationSchema,
 		Importer: &schema.ResourceImporter{
