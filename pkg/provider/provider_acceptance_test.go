@@ -28,48 +28,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [this PR]: create this user and role and use in these tests?
-func setUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t *testing.T, pass string) (sdk.AccountObjectIdentifier, sdk.AccountObjectIdentifier) {
-	tmpUserId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	_, userCleanup := acc.TestClient().User.CreateUserWithOptions(t, tmpUserId, &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
-		Password: sdk.String(pass),
-		Type:     sdk.Pointer(sdk.UserTypeLegacyService),
-	}})
-	t.Cleanup(userCleanup)
-
-	tmpRole, roleCleanup := acc.TestClient().Role.CreateRole(t)
-	t.Cleanup(roleCleanup)
-
-	tmpRoleId := tmpRole.ID()
-
-	acc.TestClient().Grant.GrantPrivilegesOnDatabaseToAccountRole(t, tmpRoleId, acc.TestClient().Ids.DatabaseId(), []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeUsage}, false)
-	acc.TestClient().Grant.GrantPrivilegesOnWarehouseToAccountRole(t, tmpRoleId, acc.TestClient().Ids.SnowflakeWarehouseId(), []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeUsage}, false)
-	acc.TestClient().Role.GrantRoleToUser(t, tmpRoleId, tmpUserId)
-
-	return tmpUserId, tmpRoleId
-}
-
-// TODO [this PR]: merge with the above func
-func setUpServiceUserWithAccessToTestDatabaseAndWarehouse(t *testing.T, publicKey string) (sdk.AccountObjectIdentifier, sdk.AccountObjectIdentifier) {
-	tmpUserId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	_, userCleanup := acc.TestClient().User.CreateUserWithOptions(t, tmpUserId, &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
-		Type:         sdk.Pointer(sdk.UserTypeService),
-		RSAPublicKey: sdk.String(publicKey),
-	}})
-	t.Cleanup(userCleanup)
-
-	tmpRole, roleCleanup := acc.TestClient().Role.CreateRole(t)
-	t.Cleanup(roleCleanup)
-
-	tmpRoleId := tmpRole.ID()
-
-	acc.TestClient().Grant.GrantPrivilegesOnDatabaseToAccountRole(t, tmpRoleId, acc.TestClient().Ids.DatabaseId(), []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeUsage}, false)
-	acc.TestClient().Grant.GrantPrivilegesOnWarehouseToAccountRole(t, tmpRoleId, acc.TestClient().Ids.SnowflakeWarehouseId(), []sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeUsage}, false)
-	acc.TestClient().Role.GrantRoleToUser(t, tmpRoleId, tmpUserId)
-
-	return tmpUserId, tmpRoleId
-}
-
 func TestAcc_Provider_configHierarchy(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -83,7 +41,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
 
 	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
-	tmpUserId, tmpRoleId := setUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
+	tmpUserId, tmpRoleId := acc.TestClient().SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
 
 	profile := random.AlphaN(6)
 	toml := helpers.TomlConfigForServiceUser(t, profile, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey)
@@ -258,7 +216,7 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
 
 	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
-	tmpUserId, tmpRoleId := setUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
+	tmpUserId, tmpRoleId := acc.TestClient().SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
 
 	toml := helpers.FullTomlConfigForServiceUser(t, testprofiles.CompleteFields, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey)
 	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
@@ -341,7 +299,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
 
 	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
-	tmpUserId, tmpRoleId := setUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
+	tmpUserId, tmpRoleId := acc.TestClient().SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
 
 	toml := helpers.FullInvalidTomlConfigForServiceUser(t, testprofiles.CompleteFieldsInvalid)
 	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
@@ -461,7 +419,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
 
 	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
-	tmpUserId, tmpRoleId := setUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
+	tmpUserId, tmpRoleId := acc.TestClient().SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
 
 	toml := helpers.FullInvalidTomlConfigForServiceUser(t, testprofiles.CompleteFieldsInvalid)
 	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
@@ -574,7 +532,7 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	pass := random.Password()
-	tmpUserId, tmpRoleId := setUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t, pass)
+	tmpUserId, tmpRoleId := acc.TestClient().SetUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t, pass)
 
 	nonExisting := "NON-EXISTENT"
 	warehouse := acc.TestClient().Ids.SnowflakeWarehouseId().Name()
