@@ -44,8 +44,9 @@ func TestClient_NewClient(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, config)
 
-		account := config.Account
-		t.Setenv(snowflakeenvs.Account, account)
+		account := configAccountId(t, config)
+		t.Setenv(snowflakeenvs.OrganizationName, account.OrganizationName())
+		t.Setenv(snowflakeenvs.OrganizationName, account.AccountName())
 
 		dir, err := os.UserHomeDir()
 		require.NoError(t, err)

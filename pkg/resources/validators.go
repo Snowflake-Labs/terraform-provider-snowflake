@@ -36,7 +36,7 @@ func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentif
 // IsValidAccountIdentifier is a validator that can be used for validating account identifiers passed in resources and data sources.
 //
 // Provider supported both account locators and organization name + account name pairs.
-// The account locators are deprecated, so this function accepts only the new format.
+// The account locators are not supported, so this function accepts only the new format.
 func IsValidAccountIdentifier() schema.SchemaValidateDiagFunc {
 	return func(value any, path cty.Path) diag.Diagnostics {
 		if _, ok := value.(string); !ok {

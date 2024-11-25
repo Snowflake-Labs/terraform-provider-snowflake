@@ -30,7 +30,6 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 
 	user := acc.DefaultConfig(t).User
 	pass := acc.DefaultConfig(t).Password
-	account := acc.DefaultConfig(t).Account
 	role := acc.DefaultConfig(t).Role
 	host := acc.DefaultConfig(t).Host
 
@@ -104,7 +103,11 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
 					t.Setenv(snowflakeenvs.User, user)
 					t.Setenv(snowflakeenvs.Password, pass)
-					t.Setenv(snowflakeenvs.Account, account)
+
+					accountId := configAccountId(t, acc.DefaultConfig(t))
+					t.Setenv(snowflakeenvs.OrganizationName, accountId.OrganizationName())
+					t.Setenv(snowflakeenvs.AccountName, accountId.AccountName())
+
 					t.Setenv(snowflakeenvs.Role, role)
 					t.Setenv(snowflakeenvs.Host, host)
 				},
@@ -117,7 +120,8 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
 					testenvs.AssertEnvSet(t, snowflakeenvs.User)
 					testenvs.AssertEnvSet(t, snowflakeenvs.Password)
-					testenvs.AssertEnvSet(t, snowflakeenvs.Account)
+					testenvs.AssertEnvSet(t, snowflakeenvs.OrganizationName)
+					testenvs.AssertEnvSet(t, snowflakeenvs.AccountName)
 					testenvs.AssertEnvSet(t, snowflakeenvs.Role)
 					testenvs.AssertEnvSet(t, snowflakeenvs.Host)
 				},
@@ -128,6 +132,13 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			},
 		},
 	})
+}
+
+func configAccountId(t *testing.T, cfg *gosnowflake.Config) sdk.AccountIdentifier {
+	t.Helper()
+	accountIdRaw := cfg.Account
+	parts := strings.SplitN(accountIdRaw, "-", 2)
+	return sdk.NewAccountIdentifier(parts[0], parts[1])
 }
 
 func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
@@ -566,11 +577,6 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 			// authenticate with unencrypted private key
 			{
 				Config: providerConfigWithAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwt),
-			},
-			// authenticate with unencrypted private key with a legacy authenticator value
-			// solves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983
-			{
-				Config: providerConfigWithAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwtLegacy),
 			},
 			// authenticate with encrypted private key
 			{

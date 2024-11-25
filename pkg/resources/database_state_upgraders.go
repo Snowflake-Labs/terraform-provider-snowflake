@@ -17,15 +17,15 @@ func v092DatabaseStateUpgrader(ctx context.Context, rawState map[string]any, met
 	}
 
 	if v, ok := rawState["from_share"]; ok && v != nil && len(v.(map[string]any)) > 0 {
-		return nil, fmt.Errorf("failed to upgrade the state with database created from share, please use snowflake_shared_database or deprecated snowflake_database_old instead")
+		return nil, fmt.Errorf("failed to upgrade the state with database created from share, please use snowflake_shared_database instead")
 	}
 
 	if v, ok := rawState["from_replica"]; ok && v != nil && len(v.(string)) > 0 {
-		return nil, fmt.Errorf("failed to upgrade the state with database created from replica, please use snowflake_secondary_database or deprecated snowflake_database_old instead")
+		return nil, fmt.Errorf("failed to upgrade the state with database created from replica, please use snowflake_secondary_database instead")
 	}
 
 	if v, ok := rawState["from_database"]; ok && v != nil && len(v.(string)) > 0 {
-		return nil, fmt.Errorf("failed to upgrade the state with database created from database, please use snowflake_database or deprecated snowflake_database_old instead. Dislaimer: Right now, database cloning is not supported. They can be imported into mentioned resources, but any differetnce in behavior from standard database won't be handled (and can result in errors)")
+		return nil, fmt.Errorf("failed to upgrade the state with database created from database, please use snowflake_database instead. Dislaimer: Right now, database cloning is not supported. They can be imported into the mentioned resource, but any differetnce in behavior from standard database won't be handled (and can result in errors)")
 	}
 
 	if replicationConfigurations, ok := rawState["replication_configuration"]; ok && len(replicationConfigurations.([]any)) == 1 {

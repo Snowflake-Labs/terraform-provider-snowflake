@@ -3,12 +3,10 @@ package provider
 import (
 	"crypto/rsa"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -16,7 +14,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/mitchellh/go-homedir"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -44,37 +41,12 @@ func toProtocol(s string) (protocol, error) {
 	}
 }
 
-func getPrivateKey(privateKeyPath, privateKeyString, privateKeyPassphrase string) (*rsa.PrivateKey, error) {
-	if privateKeyPath == "" && privateKeyString == "" {
+func getPrivateKey(privateKeyString, privateKeyPassphrase string) (*rsa.PrivateKey, error) {
+	if privateKeyString == "" {
 		return nil, nil
 	}
 	privateKeyBytes := []byte(privateKeyString)
-	var err error
-	if len(privateKeyBytes) == 0 && privateKeyPath != "" {
-		privateKeyBytes, err = readFile(privateKeyPath)
-		if err != nil {
-			return nil, fmt.Errorf("private Key file could not be read err = %w", err)
-		}
-	}
 	return sdk.ParsePrivateKey(privateKeyBytes, []byte(privateKeyPassphrase))
-}
-
-func readFile(privateKeyPath string) ([]byte, error) {
-	expandedPrivateKeyPath, err := homedir.Expand(privateKeyPath)
-	if err != nil {
-		return nil, fmt.Errorf("invalid Path to private key err = %w", err)
-	}
-
-	privateKeyBytes, err := os.ReadFile(expandedPrivateKeyPath)
-	if err != nil {
-		return nil, fmt.Errorf("could not read private key err = %w", err)
-	}
-
-	if len(privateKeyBytes) == 0 {
-		return nil, errors.New("private key is empty")
-	}
-
-	return privateKeyBytes, nil
 }
 
 type GetRefreshTokenResponseBody struct {
