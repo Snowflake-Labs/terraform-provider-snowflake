@@ -2357,6 +2357,7 @@ func TestAcc_Task_issue3113(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
+				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"snowflake": {
 						VersionConstraint: "=0.97.0",
@@ -2369,6 +2370,7 @@ func TestAcc_Task_issue3113(t *testing.T) {
 			{
 				PreConfig: func() {
 					acc.TestClient().Task.DropFunc(t, id)()
+					acc.UnsetConfigPathEnv(t)
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Task/basic"),

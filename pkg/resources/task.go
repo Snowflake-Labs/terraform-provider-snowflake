@@ -175,15 +175,15 @@ var taskSchema = map[string]*schema.Schema{
 
 func Task() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateTask,
-		UpdateContext: UpdateTask,
-		ReadContext:   ReadTask(true),
-		DeleteContext: DeleteTask,
+		CreateContext: TrackingCreateWrapper(resources.Task, CreateTask),
+		UpdateContext: TrackingUpdateWrapper(resources.Task, UpdateTask),
+		ReadContext:   TrackingReadWrapper(resources.Task, ReadTask(true)),
+		DeleteContext: TrackingDeleteWrapper(resources.Task, DeleteTask),
 		Description:   "Resource used to manage task objects. For more information, check [task documentation](https://docs.snowflake.com/en/user-guide/tasks-intro).",
 
 		Schema: collections.MergeMaps(taskSchema, taskParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportTask,
+			StateContext: TrackingImportWrapper(resources.Task, ImportTask),
 		},
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Task, customdiff.All(

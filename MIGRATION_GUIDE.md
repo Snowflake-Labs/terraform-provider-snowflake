@@ -150,8 +150,6 @@ resource "snowflake_task" "example" {
 }
 ```
 
-## v0.98.0 ➞ v0.99.0
-
 ### *(new feature)* snowflake_tags datasource
 Added a new datasource enabling querying and filtering tags. Notes:
 - all results are stored in `tags` field.
