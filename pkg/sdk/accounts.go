@@ -164,6 +164,11 @@ func (opts *AccountLevelParameters) validate() error {
 }
 
 type AccountSet struct {
+	// TODO:
+	// - Packages policy
+	// - validate parameters
+	// - IsOrgAdmin
+	// -
 	Parameters           *AccountLevelParameters `ddl:"list,no_parentheses"`
 	ResourceMonitor      AccountObjectIdentifier `ddl:"identifier,equals" sql:"RESOURCE_MONITOR"`
 	PasswordPolicy       SchemaObjectIdentifier  `ddl:"identifier" sql:"PASSWORD POLICY"`
@@ -238,6 +243,7 @@ func (opts *AccountRename) validate() error {
 type AccountDrop struct {
 	Name   AccountObjectIdentifier `ddl:"identifier"`
 	OldURL *bool                   `ddl:"keyword" sql:"DROP OLD URL"`
+	// TODO: Drop organization url
 }
 
 func (opts *AccountDrop) validate() error {
