@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+func TrimMetadata(sql string) string {
+	queryParts := strings.Split(sql, fmt.Sprintf(" --%s", MetadataPrefix))
+	return queryParts[0]
+}
+
 func AppendMetadata(sql string, metadata Metadata) (string, error) {
 	bytes, err := json.Marshal(metadata)
 	if err != nil {

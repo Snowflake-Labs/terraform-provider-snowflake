@@ -62,6 +62,7 @@ const (
 	resourceAssertionTypeValuePresent = "VALUE_PRESENT"
 	resourceAssertionTypeValueSet     = "VALUE_SET"
 	resourceAssertionTypeValueNotSet  = "VALUE_NOT_SET"
+	resourceAssertionTypeSetElem      = "SET_ELEM"
 )
 
 type ResourceAssertion struct {
@@ -73,6 +74,10 @@ type ResourceAssertion struct {
 func (r *ResourceAssert) AddAssertion(assertion ResourceAssertion) {
 	assertion.fieldName = r.additionalPrefix + assertion.fieldName
 	r.assertions = append(r.assertions, assertion)
+}
+
+func SetElem(fieldName string, expected string) ResourceAssertion {
+	return ResourceAssertion{fieldName: fieldName, expectedValue: expected, resourceAssertionType: resourceAssertionTypeSetElem}
 }
 
 func ValuePresent(fieldName string) ResourceAssertion {
@@ -152,6 +157,11 @@ func (r *ResourceAssert) ToTerraformTestCheckFunc(t *testing.T) resource.TestChe
 
 		for i, a := range r.assertions {
 			switch a.resourceAssertionType {
+			case resourceAssertionTypeSetElem:
+				if err := resource.TestCheckTypeSetElemAttr(r.name, a.fieldName, a.expectedValue)(s); err != nil {
+					errCut, _ := strings.CutPrefix(err.Error(), fmt.Sprintf("%s: ", r.name))
+					result = append(result, fmt.Errorf("%s %s assertion [%d/%d]: failed with error: %s", r.name, r.prefix, i+1, len(r.assertions), errCut))
+				}
 			case resourceAssertionTypeValueSet:
 				if err := resource.TestCheckResourceAttr(r.name, a.fieldName, a.expectedValue)(s); err != nil {
 					errCut, _ := strings.CutPrefix(err.Error(), fmt.Sprintf("%s: ", r.name))

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -154,14 +156,14 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 
 func ExternalOauthIntegration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextExternalOauthIntegration,
-		ReadContext:   ReadContextExternalOauthIntegration(true),
-		UpdateContext: UpdateContextExternalOauthIntegration,
-		DeleteContext: DeleteContextExternalOauthIntegration,
+		CreateContext: TrackingCreateWrapper(resources.ExternalOauthSecurityIntegration, CreateContextExternalOauthIntegration),
+		ReadContext:   TrackingReadWrapper(resources.ExternalOauthSecurityIntegration, ReadContextExternalOauthIntegration(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.ExternalOauthSecurityIntegration, UpdateContextExternalOauthIntegration),
+		DeleteContext: TrackingDeleteWrapper(resources.ExternalOauthSecurityIntegration, DeleteContextExternalOauthIntegration),
 		Description:   "Resource used to manage external oauth security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external).",
 
 		Schema: externalOauthIntegrationSchema,
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.ExternalOauthSecurityIntegration, customdiff.All(
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key"),
 			ForceNewIfChangeToEmptyString("external_oauth_rsa_public_key_2"),
 			ForceNewIfChangeToEmptyString("external_oauth_scope_mapping_attribute"),
@@ -172,9 +174,9 @@ func ExternalOauthIntegration() *schema.Resource {
 				"external_oauth_rsa_public_key", "external_oauth_rsa_public_key_2", "external_oauth_blocked_roles_list", "external_oauth_allowed_roles_list",
 				"external_oauth_audience_list", "external_oauth_token_user_mapping_claim", "external_oauth_snowflake_user_mapping_attribute", "external_oauth_scope_delimiter",
 				"comment"),
-		),
+		)),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportExternalOauthIntegration,
+			StateContext: TrackingImportWrapper(resources.ExternalOauthSecurityIntegration, ImportExternalOauthIntegration),
 		},
 
 		SchemaVersion: 1,

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -52,20 +54,20 @@ var secondaryConnectionSchema = map[string]*schema.Schema{
 
 func SecondaryConnection() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSecondaryConnection,
-		ReadContext:   ReadContextSecondaryConnection,
-		UpdateContext: UpdateContextSecondaryConnection,
-		DeleteContext: DeleteContextSecondaryConnection,
+		CreateContext: TrackingCreateWrapper(resources.SecondaryConnection, CreateContextSecondaryConnection),
+		ReadContext:   TrackingReadWrapper(resources.SecondaryConnection, ReadContextSecondaryConnection),
+		UpdateContext: TrackingUpdateWrapper(resources.SecondaryConnection, UpdateContextSecondaryConnection),
+		DeleteContext: TrackingDeleteWrapper(resources.SecondaryConnection, DeleteContextSecondaryConnection),
 		Description:   "Resource used to manage secondary (replicated) connections. To manage primary connection check resource [snowflake_primary_connection](./primary_connection). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.SecondaryConnection, customdiff.All(
 			ComputedIfAnyAttributeChanged(secondaryConnectionSchema, ShowOutputAttributeName, "comment", "is_primary"),
 			RecreateWhenResourceBoolFieldChangedExternally("is_primary", false),
-		),
+		)),
 
 		Schema: secondaryConnectionSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.SecondaryConnection, ImportName[sdk.AccountObjectIdentifier]),
 		},
 	}
 }

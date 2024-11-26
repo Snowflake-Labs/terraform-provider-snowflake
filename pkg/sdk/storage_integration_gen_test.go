@@ -1,6 +1,11 @@
 package sdk
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestStorageIntegrations_Create(t *testing.T) {
 	id := randomAccountObjectIdentifier()
@@ -10,6 +15,7 @@ func TestStorageIntegrations_Create(t *testing.T) {
 		return &CreateStorageIntegrationOptions{
 			name: id,
 			S3StorageProviderParams: &S3StorageParams{
+				Protocol:          RegularS3Protocol,
 				StorageAwsRoleArn: "arn:aws:iam::001234567890:role/role",
 			},
 			Enabled:                 true,
@@ -52,10 +58,23 @@ func TestStorageIntegrations_Create(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `CREATE STORAGE INTEGRATION %s TYPE = EXTERNAL_STAGE STORAGE_PROVIDER = 'S3' STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::001234567890:role/role' ENABLED = true STORAGE_ALLOWED_LOCATIONS = ('allowed-loc-1', 'allowed-loc-2')`, id.FullyQualifiedName())
 	})
 
+	t.Run("basic - s3 gov protocol", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.S3StorageProviderParams.Protocol = GovS3Protocol
+		assertOptsValidAndSQLEquals(t, opts, `CREATE STORAGE INTEGRATION %s TYPE = EXTERNAL_STAGE STORAGE_PROVIDER = 'S3GOV' STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::001234567890:role/role' ENABLED = true STORAGE_ALLOWED_LOCATIONS = ('allowed-loc-1', 'allowed-loc-2')`, id.FullyQualifiedName())
+	})
+
+	t.Run("basic - s3 china protocol", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.S3StorageProviderParams.Protocol = ChinaS3Protocol
+		assertOptsValidAndSQLEquals(t, opts, `CREATE STORAGE INTEGRATION %s TYPE = EXTERNAL_STAGE STORAGE_PROVIDER = 'S3CHINA' STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::001234567890:role/role' ENABLED = true STORAGE_ALLOWED_LOCATIONS = ('allowed-loc-1', 'allowed-loc-2')`, id.FullyQualifiedName())
+	})
+
 	t.Run("all options - s3", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.IfNotExists = Bool(true)
 		opts.S3StorageProviderParams = &S3StorageParams{
+			Protocol:            RegularS3Protocol,
 			StorageAwsRoleArn:   "arn:aws:iam::001234567890:role/role",
 			StorageAwsObjectAcl: String("bucket-owner-full-control"),
 		}
@@ -282,4 +301,39 @@ func TestStorageIntegrations_Describe(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, "DESCRIBE STORAGE INTEGRATION %s", id.FullyQualifiedName())
 	})
+}
+
+func TestToS3Protocol(t *testing.T) {
+	testCases := []struct {
+		Name     string
+		Input    string
+		Expected S3Protocol
+		Error    string
+	}{
+		{Input: "S3", Expected: RegularS3Protocol},
+		{Input: "s3", Expected: RegularS3Protocol},
+		{Input: "S3gov", Expected: GovS3Protocol},
+		{Input: "S3GOV", Expected: GovS3Protocol},
+		{Input: "S3ChInA", Expected: ChinaS3Protocol},
+		{Input: "S3CHINA", Expected: ChinaS3Protocol},
+		{Name: "validation: incorrect s3 protocol", Input: "incorrect", Error: "invalid S3 protocol: incorrect"},
+		{Name: "validation: empty input", Input: "", Error: "invalid S3 protocol: "},
+	}
+
+	for _, testCase := range testCases {
+		name := testCase.Name
+		if name == "" {
+			name = fmt.Sprintf("%v s3 protocol", testCase.Input)
+		}
+		t.Run(name, func(t *testing.T) {
+			value, err := ToS3Protocol(testCase.Input)
+			if testCase.Error != "" {
+				assert.Empty(t, value)
+				assert.ErrorContains(t, err, testCase.Error)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.Expected, value)
+			}
+		})
+	}
 }

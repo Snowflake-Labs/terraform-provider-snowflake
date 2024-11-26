@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -31,20 +34,19 @@ var userAuthenticationPolicyAttachmentSchema = map[string]*schema.Schema{
 // UserAuthenticationPolicyAttachment returns a pointer to the resource representing a user authentication policy attachment.
 func UserAuthenticationPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "Specifies the authentication policy to use for a certain user.",
-		Create:      CreateUserAuthenticationPolicyAttachment,
-		Read:        ReadUserAuthenticationPolicyAttachment,
-		Delete:      DeleteUserAuthenticationPolicyAttachment,
-		Schema:      userAuthenticationPolicyAttachmentSchema,
+		Description:   "Specifies the authentication policy to use for a certain user.",
+		CreateContext: TrackingCreateWrapper(resources.UserAuthenticationPolicyAttachment, CreateUserAuthenticationPolicyAttachment),
+		ReadContext:   TrackingReadWrapper(resources.UserAuthenticationPolicyAttachment, ReadUserAuthenticationPolicyAttachment),
+		DeleteContext: TrackingDeleteWrapper(resources.UserAuthenticationPolicyAttachment, DeleteUserAuthenticationPolicyAttachment),
+		Schema:        userAuthenticationPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func CreateUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) error {
+func CreateUserAuthenticationPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
 	authenticationPolicy := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Get("authentication_policy_name").(string))
@@ -55,28 +57,27 @@ func CreateUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) 
 		},
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeResourceIdentifier(userName.FullyQualifiedName(), authenticationPolicy.FullyQualifiedName()))
 
-	return ReadUserAuthenticationPolicyAttachment(d, meta)
+	return ReadUserAuthenticationPolicyAttachment(ctx, d, meta)
 }
 
-func ReadUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) error {
+func ReadUserAuthenticationPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	parts := helpers.ParseResourceIdentifier(d.Id())
 	if len(parts) != 2 {
-		return fmt.Errorf("required id format 'user_name|authentication_policy_name', but got: '%s'", d.Id())
+		return diag.FromErr(fmt.Errorf("required id format 'user_name|authentication_policy_name', but got: '%s'", d.Id()))
 	}
 
 	// Note: there is no alphanumeric id for an attachment, so we retrieve the authentication policies attached to a certain user.
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[0])
 	policyReferences, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(userName, sdk.PolicyEntityDomainUser))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	authenticationPolicyReferences := make([]sdk.PolicyReference, 0)
@@ -88,7 +89,7 @@ func ReadUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) er
 
 	// Note: this should never happen, but just in case: so far, Snowflake only allows one Authentication Policy per user.
 	if len(authenticationPolicyReferences) > 1 {
-		return fmt.Errorf("internal error: multiple policy references attached to a user. This should never happen")
+		return diag.FromErr(fmt.Errorf("internal error: multiple policy references attached to a user. This should never happen"))
 	}
 
 	// Note: this means the resource has been deleted outside of Terraform.
@@ -98,7 +99,7 @@ func ReadUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) er
 	}
 
 	if err := d.Set("user_name", userName.Name()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set(
 		"authentication_policy_name",
@@ -107,15 +108,14 @@ func ReadUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) er
 			*authenticationPolicyReferences[0].PolicySchema,
 			authenticationPolicyReferences[0].PolicyName,
 		).FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
-func DeleteUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) error {
+func DeleteUserAuthenticationPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
 
@@ -125,7 +125,7 @@ func DeleteUserAuthenticationPolicyAttachment(d *schema.ResourceData, meta any) 
 		},
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

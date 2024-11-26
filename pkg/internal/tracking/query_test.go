@@ -5,9 +5,46 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/stretchr/testify/require"
 )
+
+func TestTrimMetadata(t *testing.T) {
+	testCases := []struct {
+		Input    string
+		Expected string
+	}{
+		{
+			Input:    "select 1",
+			Expected: "select 1",
+		},
+		{
+			Input:    "select 1; --some comment",
+			Expected: "select 1; --some comment",
+		},
+		{
+			Input:    fmt.Sprintf("select 1; --%s", MetadataPrefix),
+			Expected: "select 1;",
+		},
+		{
+			Input:    fmt.Sprintf("select 1; --%s ", MetadataPrefix),
+			Expected: "select 1;",
+		},
+		{
+			Input:    fmt.Sprintf("select 1; --%s some text after", MetadataPrefix),
+			Expected: "select 1;",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("TrimMetadata: "+tc.Input, func(t *testing.T) {
+			trimmedInput := TrimMetadata(tc.Input)
+			assert.Equal(t, tc.Expected, trimmedInput)
+		})
+	}
+}
 
 func TestAppendMetadata(t *testing.T) {
 	metadata := NewMetadata("123", resources.Account, CreateOperation)

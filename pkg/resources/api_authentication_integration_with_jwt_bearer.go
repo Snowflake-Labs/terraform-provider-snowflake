@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -34,24 +36,24 @@ var apiAuthJwtBearerSchema = func() map[string]*schema.Schema {
 
 func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextApiAuthenticationIntegrationWithJwtBearer,
-		ReadContext:   ReadContextApiAuthenticationIntegrationWithJwtBearer(true),
-		UpdateContext: UpdateContextApiAuthenticationIntegrationWithJwtBearer,
-		DeleteContext: DeleteContextApiAuthenticationIntegrationWithJwtBearer,
+		CreateContext: TrackingCreateWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, CreateContextApiAuthenticationIntegrationWithJwtBearer),
+		ReadContext:   TrackingReadWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, ReadContextApiAuthenticationIntegrationWithJwtBearer(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, UpdateContextApiAuthenticationIntegrationWithJwtBearer),
+		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, DeleteContextApiAuthenticationIntegrationWithJwtBearer),
 		Description:   "Resource used to manage api authentication security integration objects with jwt bearer. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
 
 		Schema: apiAuthJwtBearerSchema,
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, customdiff.All(
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_authorization_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
 			ComputedIfAnyAttributeChanged(apiAuthJwtBearerSchema, ShowOutputAttributeName, "enabled", "comment"),
 			ComputedIfAnyAttributeChanged(apiAuthJwtBearerSchema, DescribeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
 				"oauth_client_id", "oauth_client_auth_method", "oauth_authorization_endpoint",
-				"oauth_token_endpoint", "oauth_assertion_issuer"),
+				"oauth_token_endpoint", "oauth_assertion_issuer")),
 		),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportApiAuthenticationWithJwtBearer,
+			StateContext: TrackingImportWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, ImportApiAuthenticationWithJwtBearer),
 		},
 	}
 }

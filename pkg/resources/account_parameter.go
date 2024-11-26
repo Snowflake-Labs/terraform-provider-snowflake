@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -26,10 +29,10 @@ var accountParameterSchema = map[string]*schema.Schema{
 
 func AccountParameter() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateAccountParameter,
-		Read:   ReadAccountParameter,
-		Update: UpdateAccountParameter,
-		Delete: DeleteAccountParameter,
+		CreateContext: TrackingCreateWrapper(resources.AccountParameter, CreateAccountParameter),
+		ReadContext:   TrackingReadWrapper(resources.AccountParameter, ReadAccountParameter),
+		UpdateContext: TrackingUpdateWrapper(resources.AccountParameter, UpdateAccountParameter),
+		DeleteContext: TrackingDeleteWrapper(resources.AccountParameter, DeleteAccountParameter),
 
 		Schema: accountParameterSchema,
 		Importer: &schema.ResourceImporter{
@@ -39,59 +42,56 @@ func AccountParameter() *schema.Resource {
 }
 
 // CreateAccountParameter implements schema.CreateFunc.
-func CreateAccountParameter(d *schema.ResourceData, meta interface{}) error {
+func CreateAccountParameter(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
-	ctx := context.Background()
 	parameter := sdk.AccountParameter(key)
 	err := client.Parameters.SetAccountParameter(ctx, parameter, value)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(key)
-	return ReadAccountParameter(d, meta)
+	return ReadAccountParameter(ctx, d, meta)
 }
 
 // ReadAccountParameter implements schema.ReadFunc.
-func ReadAccountParameter(d *schema.ResourceData, meta interface{}) error {
+func ReadAccountParameter(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	parameterName := d.Id()
 	parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(parameterName))
 	if err != nil {
-		return fmt.Errorf("error reading account parameter err = %w", err)
+		return diag.FromErr(fmt.Errorf("error reading account parameter err = %w", err))
 	}
 	err = d.Set("value", parameter.Value)
 	if err != nil {
-		return fmt.Errorf("error setting account parameter err = %w", err)
+		return diag.FromErr(fmt.Errorf("error setting account parameter err = %w", err))
 	}
 	err = d.Set("key", parameter.Key)
 	if err != nil {
-		return fmt.Errorf("error setting account parameter err = %w", err)
+		return diag.FromErr(fmt.Errorf("error setting account parameter err = %w", err))
 	}
 	return nil
 }
 
 // UpdateAccountParameter implements schema.UpdateFunc.
-func UpdateAccountParameter(d *schema.ResourceData, meta interface{}) error {
-	return CreateAccountParameter(d, meta)
+func UpdateAccountParameter(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return CreateAccountParameter(ctx, d, meta)
 }
 
 // DeleteAccountParameter implements schema.DeleteFunc.
-func DeleteAccountParameter(d *schema.ResourceData, meta interface{}) error {
+func DeleteAccountParameter(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
-	ctx := context.Background()
 	parameter := sdk.AccountParameter(key)
 	defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	defaultValue := defaultParameter.Default
 	err = client.Parameters.SetAccountParameter(ctx, parameter, defaultValue)
 	if err != nil {
-		return fmt.Errorf("error resetting account parameter err = %w", err)
+		return diag.FromErr(fmt.Errorf("error resetting account parameter err = %w", err))
 	}
 
 	d.SetId("")

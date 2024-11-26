@@ -73,8 +73,8 @@ type TagUnsetRequest struct {
 }
 
 type ShowTagRequest struct {
-	like *Like
-	in   *ExtendedIn
+	Like *Like
+	In   *ExtendedIn
 }
 
 type DropTagRequest struct {

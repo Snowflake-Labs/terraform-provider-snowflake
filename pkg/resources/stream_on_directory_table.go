@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -32,23 +34,23 @@ var streamOnDirectoryTableSchema = func() map[string]*schema.Schema {
 
 func StreamOnDirectoryTable() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateStreamOnDirectoryTable(false),
-		ReadContext:   ReadStreamOnDirectoryTable(true),
-		UpdateContext: UpdateStreamOnDirectoryTable,
-		DeleteContext: DeleteStreamContext,
+		CreateContext: TrackingCreateWrapper(resources.StreamOnDirectoryTable, CreateStreamOnDirectoryTable(false)),
+		ReadContext:   TrackingReadWrapper(resources.StreamOnDirectoryTable, ReadStreamOnDirectoryTable(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.StreamOnDirectoryTable, UpdateStreamOnDirectoryTable),
+		DeleteContext: TrackingDeleteWrapper(resources.StreamOnDirectoryTable, DeleteStreamContext),
 		Description:   "Resource used to manage streams on directory tables. For more information, check [stream documentation](https://docs.snowflake.com/en/sql-reference/sql/create-stream).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.StreamOnDirectoryTable, customdiff.All(
 			ComputedIfAnyAttributeChanged(streamOnDirectoryTableSchema, ShowOutputAttributeName, "stage", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnDirectoryTableSchema, DescribeOutputAttributeName, "stage", "comment"),
 			RecreateWhenStreamIsStale(),
 			RecreateWhenStreamTypeChangedExternally(sdk.StreamSourceTypeStage),
-		),
+		)),
 
 		Schema: streamOnDirectoryTableSchema,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.SchemaObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.StreamOnDirectoryTable, ImportName[sdk.SchemaObjectIdentifier]),
 		},
 	}
 }

@@ -6,6 +6,10 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -47,12 +51,12 @@ var grantAccountRoleSchema = map[string]*schema.Schema{
 
 func GrantAccountRole() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateGrantAccountRole,
-		Read:   ReadGrantAccountRole,
-		Delete: DeleteGrantAccountRole,
-		Schema: grantAccountRoleSchema,
+		CreateContext: TrackingCreateWrapper(resources.GrantAccountRole, CreateGrantAccountRole),
+		ReadContext:   TrackingReadWrapper(resources.GrantAccountRole, ReadGrantAccountRole),
+		DeleteContext: TrackingDeleteWrapper(resources.GrantAccountRole, DeleteGrantAccountRole),
+		Schema:        grantAccountRoleSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+			StateContext: TrackingImportWrapper(resources.GrantAccountRole, func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				parts := strings.Split(d.Id(), helpers.IDDelimiter)
 				if len(parts) != 3 {
 					return nil, fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id())
@@ -74,15 +78,14 @@ func GrantAccountRole() *schema.Resource {
 				}
 
 				return []*schema.ResourceData{d}, nil
-			},
+			}),
 		},
 	}
 }
 
 // CreateGrantAccountRole implements schema.CreateFunc.
-func CreateGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
+func CreateGrantAccountRole(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	roleName := d.Get("role_name").(string)
 	roleIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(roleName)
 	// format of snowflakeResourceID is <role_identifier>|<object type>|<target_identifier>
@@ -94,7 +97,7 @@ func CreateGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
 			Role: &parentRoleIdentifier,
 		})
 		if err := client.Roles.Grant(ctx, req); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else if userName, ok := d.GetOk("user_name"); ok && userName.(string) != "" {
 		userIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(userName.(string))
@@ -103,26 +106,25 @@ func CreateGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
 			User: &userIdentifier,
 		})
 		if err := client.Roles.Grant(ctx, req); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
-		return fmt.Errorf("invalid role grant specified: %v", d)
+		return diag.FromErr(fmt.Errorf("invalid role grant specified: %v", d))
 	}
 	d.SetId(snowflakeResourceID)
-	return ReadGrantAccountRole(d, meta)
+	return ReadGrantAccountRole(ctx, d, meta)
 }
 
-func ReadGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
+func ReadGrantAccountRole(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	parts := strings.Split(d.Id(), helpers.IDDelimiter)
 	if len(parts) != 3 {
-		return fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id())
+		return diag.FromErr(fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id()))
 	}
 	roleName := parts[0]
 	roleIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(roleName)
 	objectType := parts[1]
 	targetIdentifier := parts[2]
-	ctx := context.Background()
 	grants, err := client.Grants.Show(ctx, &sdk.ShowGrantOptions{
 		Of: &sdk.ShowGrantsOf{
 			Role: roleIdentifier,
@@ -151,28 +153,27 @@ func ReadGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func DeleteGrantAccountRole(d *schema.ResourceData, meta interface{}) error {
+func DeleteGrantAccountRole(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	parts := strings.Split(d.Id(), helpers.IDDelimiter)
 	if len(parts) != 3 {
-		return fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id())
+		return diag.FromErr(fmt.Errorf("invalid ID specified: %v, expected <role_name>|<grantee_object_type>|<grantee_identifier>", d.Id()))
 	}
 	id := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[0])
 	objectType := parts[1]
 	granteeName := parts[2]
-	ctx := context.Background()
 	granteeIdentifier := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(granteeName)
 	switch objectType {
 	case "ROLE":
 		if err := client.Roles.Revoke(ctx, sdk.NewRevokeRoleRequest(id, sdk.RevokeRole{Role: &granteeIdentifier})); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	case "USER":
 		if err := client.Roles.Revoke(ctx, sdk.NewRevokeRoleRequest(id, sdk.RevokeRole{User: &granteeIdentifier})); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	default:
-		return fmt.Errorf("invalid object type specified: %v, expected ROLE or USER", objectType)
+		return diag.FromErr(fmt.Errorf("invalid object type specified: %v, expected ROLE or USER", objectType))
 	}
 	d.SetId("")
 	return nil

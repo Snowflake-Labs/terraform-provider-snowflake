@@ -24,7 +24,8 @@ type CreateStorageIntegrationRequest struct {
 }
 
 type S3StorageParamsRequest struct {
-	StorageAwsRoleArn   string // required
+	Protocol            S3Protocol // required
+	StorageAwsRoleArn   string     // required
 	StorageAwsObjectAcl *string
 }
 

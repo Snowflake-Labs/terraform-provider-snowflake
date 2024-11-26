@@ -6,6 +6,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -121,10 +124,10 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 // APIIntegration returns a pointer to the resource representing an api integration.
 func APIIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateAPIIntegration,
-		Read:   ReadAPIIntegration,
-		Update: UpdateAPIIntegration,
-		Delete: DeleteAPIIntegration,
+		CreateContext: TrackingCreateWrapper(resources.ApiIntegration, CreateAPIIntegration),
+		ReadContext:   TrackingReadWrapper(resources.ApiIntegration, ReadAPIIntegration),
+		UpdateContext: TrackingUpdateWrapper(resources.ApiIntegration, UpdateAPIIntegration),
+		DeleteContext: TrackingDeleteWrapper(resources.ApiIntegration, DeleteAPIIntegration),
 
 		Schema: apiIntegrationSchema,
 		Importer: &schema.ResourceImporter{
@@ -142,9 +145,8 @@ func toApiIntegrationEndpointPrefix(paths []string) []sdk.ApiIntegrationEndpoint
 }
 
 // CreateAPIIntegration implements schema.CreateFunc.
-func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
+func CreateAPIIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -169,7 +171,7 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	case "aws_api_gateway", "aws_private_api_gateway", "aws_gov_api_gateway", "aws_gov_private_api_gateway":
 		roleArn, ok := d.GetOk("api_aws_role_arn")
 		if !ok {
-			return fmt.Errorf("if you use AWS api provider you must specify an api_aws_role_arn")
+			return diag.FromErr(fmt.Errorf("if you use AWS api provider you must specify an api_aws_role_arn"))
 		}
 		awsParams := sdk.NewAwsApiParamsRequest(sdk.ApiIntegrationAwsApiProviderType(apiProvider), roleArn.(string))
 		if v, ok := d.GetOk("api_key"); ok {
@@ -179,11 +181,11 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	case "azure_api_management":
 		tenantId, ok := d.GetOk("azure_tenant_id")
 		if !ok {
-			return fmt.Errorf("if you use the Azure api provider you must specify an azure_tenant_id")
+			return diag.FromErr(fmt.Errorf("if you use the Azure api provider you must specify an azure_tenant_id"))
 		}
 		applicationId, ok := d.GetOk("azure_ad_application_id")
 		if !ok {
-			return fmt.Errorf("if you use the Azure api provider you must specify an azure_ad_application_id")
+			return diag.FromErr(fmt.Errorf("if you use the Azure api provider you must specify an azure_ad_application_id"))
 		}
 		azureParams := sdk.NewAzureApiParamsRequest(tenantId.(string), applicationId.(string))
 		if v, ok := d.GetOk("api_key"); ok {
@@ -193,66 +195,65 @@ func CreateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 	case "google_api_gateway":
 		audience, ok := d.GetOk("google_audience")
 		if !ok {
-			return fmt.Errorf("if you use GCP api provider you must specify a google_audience")
+			return diag.FromErr(fmt.Errorf("if you use GCP api provider you must specify a google_audience"))
 		}
 		googleParams := sdk.NewGoogleApiParamsRequest(audience.(string))
 		createRequest.WithGoogleApiProviderParams(googleParams)
 	default:
-		return fmt.Errorf("unexpected provider %v", apiProvider)
+		return diag.FromErr(fmt.Errorf("unexpected provider %v", apiProvider))
 	}
 
 	err := client.ApiIntegrations.Create(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("error creating api integration: %w", err)
+		return diag.FromErr(fmt.Errorf("error creating api integration: %w", err))
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	return ReadAPIIntegration(d, meta)
+	return ReadAPIIntegration(ctx, d, meta)
 }
 
 // ReadAPIIntegration implements schema.ReadFunc.
-func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
+func ReadAPIIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	integration, err := client.ApiIntegrations.ShowByID(ctx, id)
 	if err != nil {
 		log.Printf("[DEBUG] api integration (%s) not found", d.Id())
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Note: category must be API or something is broken
 	if c := integration.Category; c != "API" {
-		return fmt.Errorf("expected %v to be an api integration, got %v", id, c)
+		return diag.FromErr(fmt.Errorf("expected %v to be an api integration, got %v", id, c))
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", integration.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", integration.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("created_on", integration.CreatedOn.String()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("enabled", integration.Enabled); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Some properties come from the DESCRIBE INTEGRATION call
 	integrationProperties, err := client.ApiIntegrations.Describe(ctx, id)
 	if err != nil {
-		return fmt.Errorf("could not describe api integration: %w", err)
+		return diag.FromErr(fmt.Errorf("could not describe api integration: %w", err))
 	}
 
 	for _, property := range integrationProperties {
@@ -263,66 +264,65 @@ func ReadAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "API_ALLOWED_PREFIXES":
 			if err := d.Set("api_allowed_prefixes", strings.Split(value, ",")); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "API_BLOCKED_PREFIXES":
 			if val := value; val != "" {
 				if err := d.Set("api_blocked_prefixes", strings.Split(val, ",")); err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			}
 		case "API_AWS_IAM_USER_ARN":
 			if err := d.Set("api_aws_iam_user_arn", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "API_AWS_ROLE_ARN":
 			if err := d.Set("api_aws_role_arn", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "API_AWS_EXTERNAL_ID":
 			if err := d.Set("api_aws_external_id", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "AZURE_CONSENT_URL":
 			if err := d.Set("azure_consent_url", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "AZURE_MULTI_TENANT_APP_NAME":
 			if err := d.Set("azure_multi_tenant_app_name", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "AZURE_TENANT_ID":
 			if err := d.Set("azure_tenant_id", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "AZURE_AD_APPLICATION_ID":
 			if err := d.Set("azure_ad_application_id", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "GOOGLE_AUDIENCE":
 			if err := d.Set("google_audience", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "API_GCP_SERVICE_ACCOUNT":
 			if err := d.Set("api_gcp_service_account", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "API_PROVIDER":
 			if err := d.Set("api_provider", strings.ToLower(value)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		default:
 			log.Printf("[WARN] unexpected api integration property %v returned from Snowflake", name)
 		}
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
 // UpdateAPIIntegration implements schema.UpdateFunc.
-func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
+func UpdateAPIIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	var runSetStatement bool
@@ -348,7 +348,7 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 		if len(v) == 0 {
 			err := client.ApiIntegrations.Alter(ctx, sdk.NewAlterApiIntegrationRequest(id).WithUnset(sdk.NewApiIntegrationUnsetRequest().WithApiBlockedPrefixes(sdk.Bool(true))))
 			if err != nil {
-				return fmt.Errorf("error unsetting api_blocked_prefixes: %w", err)
+				return diag.FromErr(fmt.Errorf("error unsetting api_blocked_prefixes: %w", err))
 			}
 		} else {
 			runSetStatement = true
@@ -392,28 +392,27 @@ func UpdateAPIIntegration(d *schema.ResourceData, meta interface{}) error {
 			setRequest.WithGoogleParams(googleParams)
 		}
 	default:
-		return fmt.Errorf("unexpected provider %v", apiProvider)
+		return diag.FromErr(fmt.Errorf("unexpected provider %v", apiProvider))
 	}
 
 	if runSetStatement {
 		err := client.ApiIntegrations.Alter(ctx, sdk.NewAlterApiIntegrationRequest(id).WithSet(setRequest))
 		if err != nil {
-			return fmt.Errorf("error updating api integration: %w", err)
+			return diag.FromErr(fmt.Errorf("error updating api integration: %w", err))
 		}
 	}
 
-	return ReadAPIIntegration(d, meta)
+	return ReadAPIIntegration(ctx, d, meta)
 }
 
 // DeleteAPIIntegration implements schema.DeleteFunc.
-func DeleteAPIIntegration(d *schema.ResourceData, meta interface{}) error {
+func DeleteAPIIntegration(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	err := client.ApiIntegrations.Drop(ctx, sdk.NewDropApiIntegrationRequest(id))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

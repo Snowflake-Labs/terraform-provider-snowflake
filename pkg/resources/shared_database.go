@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -47,19 +49,19 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 
 func SharedDatabase() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateSharedDatabase,
-		UpdateContext: UpdateSharedDatabase,
-		ReadContext:   ReadSharedDatabase,
-		DeleteContext: DeleteSharedDatabase,
+		CreateContext: TrackingCreateWrapper(resources.SharedDatabase, CreateSharedDatabase),
+		UpdateContext: TrackingUpdateWrapper(resources.SharedDatabase, UpdateSharedDatabase),
+		ReadContext:   TrackingReadWrapper(resources.SharedDatabase, ReadSharedDatabase),
+		DeleteContext: TrackingDeleteWrapper(resources.SharedDatabase, DeleteSharedDatabase),
 		Description:   "A shared database creates a database from a share provided by another Snowflake account. For more information about shares, see [Introduction to Secure Data Sharing](https://docs.snowflake.com/en/user-guide/data-sharing-intro).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.SharedDatabase, customdiff.All(
 			ComputedIfAnyAttributeChanged(sharedDatabaseSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: collections.MergeMaps(sharedDatabaseSchema, sharedDatabaseParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.SharedDatabase, ImportName[sdk.AccountObjectIdentifier]),
 		},
 	}
 }

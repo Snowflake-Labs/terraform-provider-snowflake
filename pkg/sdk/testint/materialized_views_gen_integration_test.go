@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
@@ -107,6 +110,18 @@ func TestInt_MaterializedViews(t *testing.T) {
 		view := createMaterializedViewWithRequest(t, request)
 
 		assertMaterializedView(t, view, request.GetName())
+	})
+
+	t.Run("create materialized view: with usage tracking comment", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		plainQuery := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
+		query, err := tracking.AppendMetadata(plainQuery, tracking.NewVersionedMetadata(resources.MaterializedView, tracking.CreateOperation))
+		require.NoError(t, err)
+
+		view := createMaterializedViewWithRequest(t, sdk.NewCreateMaterializedViewRequest(id, query))
+
+		assertMaterializedView(t, view, sdk.NewCreateMaterializedViewRequest(id, query).GetName())
+		assert.Equal(t, fmt.Sprintf("CREATE MATERIALIZED VIEW %s AS %s", id.FullyQualifiedName(), plainQuery), view.Text)
 	})
 
 	t.Run("create materialized view: almost complete case", func(t *testing.T) {
