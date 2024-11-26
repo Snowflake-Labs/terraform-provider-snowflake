@@ -26,7 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [this PR]: verify user+pass login
 // TODO [this PR]: verify jwt login
 // TODO [this PR]: verify encrypted jwt login
 
@@ -643,19 +642,32 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 }
 
 func TestAcc_Provider_SnowflakeAuth(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpLegacyServiceUser := acc.TestClient().SetUpTemporaryLegacyServiceUser(t)
+	tmpLegacyServiceUserConfig := acc.TestClient().TempTomlConfigForLegacyServiceUser(t, tmpLegacyServiceUser)
+	incorrectLegacyServiceUserConfig := acc.TestClient().TempIncorrectTomlConfigForLegacyServiceUser(t, tmpLegacyServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck: func() {
-			acc.TestAccPreCheck(t)
-		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfigWithProfileAndAuthenticator(testprofiles.Default, sdk.AuthenticationTypeSnowflake),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, incorrectLegacyServiceUserConfig.Path)
+				},
+				Config:      providerConfig(incorrectLegacyServiceUserConfig.Profile),
+				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+			},
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpLegacyServiceUserConfig.Path)
+				},
+				Config: providerConfig(tmpLegacyServiceUserConfig.Profile),
 			},
 		},
 	})

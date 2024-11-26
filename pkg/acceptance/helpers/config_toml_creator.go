@@ -127,3 +127,19 @@ accountname = '%[3]s'
 authenticator = 'SNOWFLAKE_JWT'
 `, profile, accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey)
 }
+
+// TomlConfigForLegacyServiceUser is a temporary function used to test provider configuration
+func TomlConfigForLegacyServiceUser(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, pass string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+[%[1]s]
+user = '%[2]s'
+password = '%[7]s'
+role = '%[3]s'
+organizationname = '%[5]s'
+accountname = '%[6]s'
+warehouse = '%[4]s'
+authenticator = 'SNOWFLAKE'
+`, profile, userId.Name(), roleId.Name(), warehouseId.Name(), accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), pass)
+}

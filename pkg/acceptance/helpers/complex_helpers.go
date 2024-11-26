@@ -49,6 +49,24 @@ func (c *TestClient) SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t *tes
 	return tmpUserId, tmpRoleId
 }
 
+func (c *TestClient) SetUpTemporaryLegacyServiceUser(t *testing.T) *TmpLegacyServiceUser {
+	warehouseId := c.Ids.SnowflakeWarehouseId()
+	accountId := c.Context.CurrentAccountId(t)
+
+	pass := random.Password()
+	tmpUserId, tmpRoleId := c.SetUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t, pass)
+
+	return &TmpLegacyServiceUser{
+		Pass: pass,
+		TmpUser: TmpUser{
+			UserId:      tmpUserId,
+			RoleId:      tmpRoleId,
+			WarehouseId: warehouseId,
+			AccountId:   accountId,
+		},
+	}
+}
+
 func (c *TestClient) SetUpTemporaryServiceUser(t *testing.T) *TmpServiceUser {
 	warehouseId := c.Ids.SnowflakeWarehouseId()
 	accountId := c.Context.CurrentAccountId(t)
@@ -77,6 +95,18 @@ func (c *TestClient) TempTomlConfigForServiceUser(t *testing.T, serviceUser *Tmp
 func (c *TestClient) TempIncorrectTomlConfigForServiceUser(t *testing.T, serviceUser *TmpServiceUser) *TmpTomlConfig {
 	return c.StoreTempTomlConfig(t, func(profile string) string {
 		return TomlIncorrectConfigForServiceUser(t, profile, serviceUser.AccountId)
+	})
+}
+
+func (c *TestClient) TempTomlConfigForLegacyServiceUser(t *testing.T, legacyServiceUser *TmpLegacyServiceUser) *TmpTomlConfig {
+	return c.StoreTempTomlConfig(t, func(profile string) string {
+		return TomlConfigForLegacyServiceUser(t, profile, legacyServiceUser.UserId, legacyServiceUser.RoleId, legacyServiceUser.WarehouseId, legacyServiceUser.AccountId, legacyServiceUser.Pass)
+	})
+}
+
+func (c *TestClient) TempIncorrectTomlConfigForLegacyServiceUser(t *testing.T, legacyServiceUser *TmpLegacyServiceUser) *TmpTomlConfig {
+	return c.StoreTempTomlConfig(t, func(profile string) string {
+		return TomlConfigForLegacyServiceUser(t, profile, legacyServiceUser.UserId, legacyServiceUser.RoleId, legacyServiceUser.WarehouseId, legacyServiceUser.AccountId, "incorrect pass")
 	})
 }
 
