@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTasks_Create(t *testing.T) {
@@ -81,7 +83,7 @@ func TestTasks_Create(t *testing.T) {
 		}
 		opts.UserTaskTimeoutMs = Int(5)
 		opts.SuspendTaskAfterNumFailures = Int(6)
-		opts.ErrorNotificationIntegration = Pointer(NewAccountObjectIdentifier("some_error_integration"))
+		opts.ErrorIntegration = Pointer(NewAccountObjectIdentifier("some_error_integration"))
 		opts.Comment = String("some comment")
 		opts.Finalize = &finalizerId
 		opts.TaskAutoRetryAttempts = Int(10)
@@ -157,7 +159,7 @@ func TestTasks_CreateOrAlter(t *testing.T) {
 			LockTimeout: Int(5),
 		}
 		opts.SuspendTaskAfterNumFailures = Int(6)
-		opts.ErrorNotificationIntegration = Pointer(NewAccountObjectIdentifier("some_error_integration"))
+		opts.ErrorIntegration = Pointer(NewAccountObjectIdentifier("some_error_integration"))
 		opts.Comment = String("some comment")
 		opts.Finalize = &finalizerId
 		opts.TaskAutoRetryAttempts = Int(10)
@@ -271,7 +273,7 @@ func TestTasks_Alter(t *testing.T) {
 	t.Run("validation: at least one of the fields [opts.Unset.Warehouse opts.Unset.Schedule opts.Unset.Config opts.Unset.AllowOverlappingExecution opts.Unset.UserTaskTimeoutMs opts.Unset.SuspendTaskAfterNumFailures opts.Unset.ErrorIntegration opts.Unset.Comment opts.Unset.SessionParametersUnset] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &TaskUnset{}
-		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterTaskOptions.Unset", "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"))
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterTaskOptions.Unset", "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"))
 	})
 
 	t.Run("validation: opts.Unset.SessionParametersUnset.SessionParametersUnset should be valid", func(t *testing.T) {
@@ -457,14 +459,34 @@ func TestTasks_Show(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, "SHOW TASKS")
 	})
 
+	t.Run("in application", func(t *testing.T) {
+		opts := defaultOpts()
+		id := randomAccountObjectIdentifier()
+		opts.In = &ExtendedIn{
+			Application: id,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW TASKS IN APPLICATION %s", id.FullyQualifiedName())
+	})
+
+	t.Run("in application package", func(t *testing.T) {
+		opts := defaultOpts()
+		id := randomAccountObjectIdentifier()
+		opts.In = &ExtendedIn{
+			ApplicationPackage: id,
+		}
+		assertOptsValidAndSQLEquals(t, opts, "SHOW TASKS IN APPLICATION PACKAGE %s", id.FullyQualifiedName())
+	})
+
 	t.Run("all options", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Terse = Bool(true)
 		opts.Like = &Like{
 			Pattern: String("myaccount"),
 		}
-		opts.In = &In{
-			Account: Bool(true),
+		opts.In = &ExtendedIn{
+			In: In{
+				Account: Bool(true),
+			},
 		}
 		opts.StartsWith = String("abc")
 		opts.RootOnly = Bool(true)
@@ -531,4 +553,65 @@ func TestTasks_Execute(t *testing.T) {
 		opts.RetryLast = Bool(true)
 		assertOptsValidAndSQLEquals(t, opts, "EXECUTE TASK %s RETRY LAST", id.FullyQualifiedName())
 	})
+}
+
+func TestParseTaskSchedule(t *testing.T) {
+	testCases := map[string]struct {
+		Schedule             string
+		ExpectedTaskSchedule *TaskSchedule
+		Error                string
+	}{
+		"valid schedule: m minutes": {
+			Schedule:             "5 m",
+			ExpectedTaskSchedule: &TaskSchedule{Minutes: 5},
+		},
+		"valid schedule: M minutes": {
+			Schedule:             "5 M",
+			ExpectedTaskSchedule: &TaskSchedule{Minutes: 5},
+		},
+		"valid schedule: MINUTE minutes": {
+			Schedule:             "5 MINUTE",
+			ExpectedTaskSchedule: &TaskSchedule{Minutes: 5},
+		},
+		"valid schedule: MINUTES minutes": {
+			Schedule:             "5 MINUTES",
+			ExpectedTaskSchedule: &TaskSchedule{Minutes: 5},
+		},
+		"valid schedule: cron": {
+			Schedule:             "USING CRON * * * * * UTC",
+			ExpectedTaskSchedule: &TaskSchedule{Cron: "* * * * * UTC"},
+		},
+		"valid schedule: cron with case sensitive location": {
+			Schedule:             "USING CRON * * * * * America/Loc_Angeles",
+			ExpectedTaskSchedule: &TaskSchedule{Cron: "* * * * * America/Loc_Angeles"},
+		},
+		"invalid schedule: wrong schedule format": {
+			Schedule:             "SOME SCHEDULE",
+			ExpectedTaskSchedule: nil,
+			Error:                "invalid schedule format",
+		},
+		"invalid schedule: wrong minutes format": {
+			Schedule:             "a5 MINUTE",
+			ExpectedTaskSchedule: nil,
+			Error:                `strconv.Atoi: parsing "A5": invalid syntax`,
+		},
+		// currently, cron expressions are not validated (they are on Snowflake level)
+		"invalid schedule: wrong cron format": {
+			Schedule:             "USING CRON some_cron",
+			ExpectedTaskSchedule: &TaskSchedule{Cron: "some_cron"},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			taskSchedule, err := ParseTaskSchedule(tc.Schedule)
+			if tc.Error != "" {
+				assert.Nil(t, taskSchedule)
+				assert.ErrorContains(t, err, tc.Error)
+			} else {
+				assert.EqualValues(t, tc.ExpectedTaskSchedule, taskSchedule)
+				assert.NoError(t, err)
+			}
+		})
+	}
 }

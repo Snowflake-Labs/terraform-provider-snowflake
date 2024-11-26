@@ -7,5 +7,6 @@ resource "snowflake_task" "test" {
   schema        = var.schema
   name          = var.task
   warehouse     = var.warehouse
+  started       = false
   sql_statement = "SELECT CURRENT_TIMESTAMP"
 }

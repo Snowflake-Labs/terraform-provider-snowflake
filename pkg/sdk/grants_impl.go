@@ -403,11 +403,15 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 		return err
 	}
 
+	if currentTask.Warehouse == nil {
+		return fmt.Errorf("no warehouse found to be attached to the task: %s", taskId.FullyQualifiedName())
+	}
+
 	currentGrantsOnTaskWarehouse, err := v.client.Grants.Show(ctx, &ShowGrantOptions{
 		On: &ShowGrantsOn{
 			Object: &Object{
 				ObjectType: ObjectTypeWarehouse,
-				Name:       NewAccountObjectIdentifier(currentTask.Warehouse),
+				Name:       *currentTask.Warehouse,
 			},
 		},
 	})
@@ -442,7 +446,7 @@ func (v *grants) grantOwnershipOnTask(ctx context.Context, taskId SchemaObjectId
 		return err
 	}
 
-	if currentTask.State == TaskStateStarted && !slices.ContainsFunc(tasksToResume, func(id SchemaObjectIdentifier) bool {
+	if currentTask.IsStarted() && !slices.ContainsFunc(tasksToResume, func(id SchemaObjectIdentifier) bool {
 		return id.FullyQualifiedName() == currentTask.ID().FullyQualifiedName()
 	}) {
 		tasksToResume = append(tasksToResume, currentTask.ID())
@@ -515,7 +519,7 @@ func (v *grants) runOnAllTasks(ctx context.Context, inDatabase *AccountObjectIde
 		}
 	}
 
-	tasks, err := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(in))
+	tasks, err := v.client.Tasks.Show(ctx, NewShowTaskRequest().WithIn(ExtendedIn{In: in}))
 	if err != nil {
 		return err
 	}

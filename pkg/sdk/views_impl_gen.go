@@ -3,6 +3,8 @@ package sdk
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
@@ -277,7 +279,7 @@ func (r viewDBRow) convert() *View {
 		view.Comment = r.Comment.String
 	}
 	if r.Text.Valid {
-		view.Text = r.Text.String
+		view.Text = tracking.TrimMetadata(r.Text.String)
 	}
 	if r.Kind.Valid {
 		view.Kind = r.Kind.String

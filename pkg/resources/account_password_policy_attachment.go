@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -26,9 +29,9 @@ func AccountPasswordPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "Specifies the password policy to use for the current account. To set the password policy of a different account, use a provider alias.",
 
-		Create: CreateAccountPasswordPolicyAttachment,
-		Read:   ReadAccountPasswordPolicyAttachment,
-		Delete: DeleteAccountPasswordPolicyAttachment,
+		CreateContext: TrackingCreateWrapper(resources.AccountPasswordPolicyAttachment, CreateAccountPasswordPolicyAttachment),
+		ReadContext:   TrackingReadWrapper(resources.AccountPasswordPolicyAttachment, ReadAccountPasswordPolicyAttachment),
+		DeleteContext: TrackingDeleteWrapper(resources.AccountPasswordPolicyAttachment, DeleteAccountPasswordPolicyAttachment),
 
 		Schema: accountPasswordPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{
@@ -38,13 +41,12 @@ func AccountPasswordPolicyAttachment() *schema.Resource {
 }
 
 // CreateAccountPasswordPolicyAttachment implements schema.CreateFunc.
-func CreateAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+func CreateAccountPasswordPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	passwordPolicy, ok := sdk.NewObjectIdentifierFromFullyQualifiedName(d.Get("password_policy").(string)).(sdk.SchemaObjectIdentifier)
 	if !ok {
-		return fmt.Errorf("password_policy %s is not a valid password policy qualified name, expected format: `\"db\".\"schema\".\"policy\"`", d.Get("password_policy"))
+		return diag.FromErr(fmt.Errorf("password_policy %s is not a valid password policy qualified name, expected format: `\"db\".\"schema\".\"policy\"`", d.Get("password_policy")))
 	}
 
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
@@ -53,27 +55,26 @@ func CreateAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interfac
 		},
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(passwordPolicy))
 
-	return ReadAccountPasswordPolicyAttachment(d, meta)
+	return ReadAccountPasswordPolicyAttachment(ctx, d, meta)
 }
 
-func ReadAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+func ReadAccountPasswordPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	passwordPolicy := helpers.DecodeSnowflakeID(d.Id())
 	if err := d.Set("password_policy", passwordPolicy.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
 // DeleteAccountPasswordPolicyAttachment implements schema.DeleteFunc.
-func DeleteAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+func DeleteAccountPasswordPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 		Unset: &sdk.AccountUnset{
@@ -81,7 +82,7 @@ func DeleteAccountPasswordPolicyAttachment(d *schema.ResourceData, meta interfac
 		},
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

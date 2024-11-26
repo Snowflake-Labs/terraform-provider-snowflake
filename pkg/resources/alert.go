@@ -119,7 +119,7 @@ func Alert() *schema.Resource {
 
 		Schema: alertSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: TrackingImportWrapper(resources.Alert, schema.ImportStatePassthroughContext),
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }

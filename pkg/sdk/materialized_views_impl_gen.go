@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 )
 
 var _ MaterializedViews = (*materializedViews)(nil)
@@ -168,7 +169,7 @@ func (r materializedViewDBRow) convert() *MaterializedView {
 		Owner:              r.Owner,
 		Invalid:            r.Invalid,
 		BehindBy:           r.BehindBy,
-		Text:               r.Text,
+		Text:               tracking.TrimMetadata(r.Text),
 		IsSecure:           r.IsSecure,
 	}
 	if r.Reserved.Valid {

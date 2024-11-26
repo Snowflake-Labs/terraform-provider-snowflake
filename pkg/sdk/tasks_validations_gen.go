@@ -32,8 +32,8 @@ func (opts *CreateTaskOptions) validate() error {
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateTaskOptions", "OrReplace", "IfNotExists"))
 	}
-	if opts.ErrorNotificationIntegration != nil && !ValidObjectIdentifier(opts.ErrorNotificationIntegration) {
-		errs = append(errs, errInvalidIdentifier("CreateTaskOptions", "ErrorNotificationIntegration"))
+	if opts.ErrorIntegration != nil && !ValidObjectIdentifier(opts.ErrorIntegration) {
+		errs = append(errs, errInvalidIdentifier("CreateTaskOptions", "ErrorIntegration"))
 	}
 	return JoinErrors(errs...)
 }
@@ -56,8 +56,8 @@ func (opts *CreateOrAlterTaskOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if opts.ErrorNotificationIntegration != nil && !ValidObjectIdentifier(opts.ErrorNotificationIntegration) {
-		errs = append(errs, errInvalidIdentifier("CreateOrAlterTaskOptions", "ErrorNotificationIntegration"))
+	if opts.ErrorIntegration != nil && !ValidObjectIdentifier(opts.ErrorIntegration) {
+		errs = append(errs, errInvalidIdentifier("CreateOrAlterTaskOptions", "ErrorIntegration"))
 	}
 	return JoinErrors(errs...)
 }
@@ -93,19 +93,19 @@ func (opts *AlterTaskOptions) validate() error {
 				errs = append(errs, err)
 			}
 		}
-		if !anyValueSet(opts.Set.Warehouse, opts.Set.UserTaskManagedInitialWarehouseSize, opts.Set.Schedule, opts.Set.Config, opts.Set.AllowOverlappingExecution, opts.Set.UserTaskTimeoutMs, opts.Set.SuspendTaskAfterNumFailures, opts.Set.ErrorNotificationIntegration, opts.Set.Comment, opts.Set.SessionParameters, opts.Set.TaskAutoRetryAttempts, opts.Set.UserTaskMinimumTriggerIntervalInSeconds) {
+		if !anyValueSet(opts.Set.Warehouse, opts.Set.UserTaskManagedInitialWarehouseSize, opts.Set.Schedule, opts.Set.Config, opts.Set.AllowOverlappingExecution, opts.Set.UserTaskTimeoutMs, opts.Set.SuspendTaskAfterNumFailures, opts.Set.ErrorIntegration, opts.Set.Comment, opts.Set.SessionParameters, opts.Set.TaskAutoRetryAttempts, opts.Set.UserTaskMinimumTriggerIntervalInSeconds) {
 			errs = append(errs, errAtLeastOneOf("AlterTaskOptions.Set", "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"))
 		}
 		if everyValueSet(opts.Set.Warehouse, opts.Set.UserTaskManagedInitialWarehouseSize) {
 			errs = append(errs, errOneOf("AlterTaskOptions.Set", "Warehouse", "UserTaskManagedInitialWarehouseSize"))
 		}
-		if opts.Set.ErrorNotificationIntegration != nil && !ValidObjectIdentifier(opts.Set.ErrorNotificationIntegration) {
-			errs = append(errs, errInvalidIdentifier("AlterTaskOptions.Set", "ErrorNotificationIntegration"))
+		if opts.Set.ErrorIntegration != nil && !ValidObjectIdentifier(opts.Set.ErrorIntegration) {
+			errs = append(errs, errInvalidIdentifier("AlterTaskOptions.Set", "ErrorIntegration"))
 		}
 	}
 	if valueSet(opts.Unset) {
-		if !anyValueSet(opts.Unset.Warehouse, opts.Unset.Schedule, opts.Unset.Config, opts.Unset.AllowOverlappingExecution, opts.Unset.UserTaskTimeoutMs, opts.Unset.SuspendTaskAfterNumFailures, opts.Unset.ErrorIntegration, opts.Unset.Comment, opts.Unset.SessionParametersUnset, opts.Unset.TaskAutoRetryAttempts, opts.Unset.UserTaskMinimumTriggerIntervalInSeconds) {
-			errs = append(errs, errAtLeastOneOf("AlterTaskOptions.Unset", "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"))
+		if !anyValueSet(opts.Unset.Warehouse, opts.Unset.UserTaskManagedInitialWarehouseSize, opts.Unset.Schedule, opts.Unset.Config, opts.Unset.AllowOverlappingExecution, opts.Unset.UserTaskTimeoutMs, opts.Unset.SuspendTaskAfterNumFailures, opts.Unset.ErrorIntegration, opts.Unset.Comment, opts.Unset.SessionParametersUnset, opts.Unset.TaskAutoRetryAttempts, opts.Unset.UserTaskMinimumTriggerIntervalInSeconds) {
+			errs = append(errs, errAtLeastOneOf("AlterTaskOptions.Unset", "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"))
 		}
 		if valueSet(opts.Unset.SessionParametersUnset) {
 			if err := opts.Unset.SessionParametersUnset.validate(); err != nil {
