@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -112,10 +113,10 @@ var alertSchema = map[string]*schema.Schema{
 // Alert returns a pointer to the resource representing an alert.
 func Alert() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.Alert, CreateAlert),
-		ReadContext:   TrackingReadWrapper(resources.Alert, ReadAlert),
-		UpdateContext: TrackingUpdateWrapper(resources.Alert, UpdateAlert),
-		DeleteContext: TrackingDeleteWrapper(resources.Alert, DeleteAlert),
+		CreateContext: previewfeatures.PreviewFeatureCreateContextWrapper(string(previewfeatures.AlertResource), TrackingCreateWrapper(resources.Alert, CreateAlert)),
+		ReadContext:   previewfeatures.PreviewFeatureReadContextWrapper(string(previewfeatures.AlertResource), TrackingReadWrapper(resources.Alert, ReadAlert)),
+		UpdateContext: previewfeatures.PreviewFeatureUpdateContextWrapper(string(previewfeatures.AlertResource), TrackingUpdateWrapper(resources.Alert, UpdateAlert)),
+		DeleteContext: previewfeatures.PreviewFeatureDeleteContextWrapper(string(previewfeatures.AlertResource), TrackingDeleteWrapper(resources.Alert, DeleteAlert)),
 
 		Schema: alertSchema,
 		Importer: &schema.ResourceImporter{

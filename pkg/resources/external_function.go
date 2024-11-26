@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -187,10 +188,10 @@ func ExternalFunction() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 2,
 
-		CreateContext: TrackingCreateWrapper(resources.ExternalFunction, CreateContextExternalFunction),
-		ReadContext:   TrackingReadWrapper(resources.ExternalFunction, ReadContextExternalFunction),
-		UpdateContext: TrackingUpdateWrapper(resources.ExternalFunction, UpdateContextExternalFunction),
-		DeleteContext: TrackingDeleteWrapper(resources.ExternalFunction, DeleteContextExternalFunction),
+		CreateContext: previewfeatures.PreviewFeatureCreateContextWrapper(string(previewfeatures.ExternalFunctionResource), TrackingCreateWrapper(resources.ExternalFunction, CreateContextExternalFunction)),
+		ReadContext:   previewfeatures.PreviewFeatureReadContextWrapper(string(previewfeatures.ExternalFunctionResource), TrackingReadWrapper(resources.ExternalFunction, ReadContextExternalFunction)),
+		UpdateContext: previewfeatures.PreviewFeatureUpdateContextWrapper(string(previewfeatures.ExternalFunctionResource), TrackingUpdateWrapper(resources.ExternalFunction, UpdateContextExternalFunction)),
+		DeleteContext: previewfeatures.PreviewFeatureDeleteContextWrapper(string(previewfeatures.ExternalFunctionResource), TrackingDeleteWrapper(resources.ExternalFunction, DeleteContextExternalFunction)),
 
 		Schema: externalFunctionSchema,
 		Importer: &schema.ResourceImporter{

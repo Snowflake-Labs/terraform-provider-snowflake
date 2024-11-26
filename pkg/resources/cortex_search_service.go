@@ -7,10 +7,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -83,10 +83,10 @@ var cortexSearchServiceSchema = map[string]*schema.Schema{
 // CortexSearchService returns a pointer to the resource representing a Cortex search service.
 func CortexSearchService() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.CortexSearchService, CreateCortexSearchService),
-		ReadContext:   TrackingReadWrapper(resources.CortexSearchService, ReadCortexSearchService),
-		UpdateContext: TrackingUpdateWrapper(resources.CortexSearchService, UpdateCortexSearchService),
-		DeleteContext: TrackingDeleteWrapper(resources.CortexSearchService, DeleteCortexSearchService),
+		CreateContext: previewfeatures.PreviewFeatureCreateContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingCreateWrapper(resources.CortexSearchService, CreateCortexSearchService)),
+		ReadContext:   previewfeatures.PreviewFeatureReadContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingReadWrapper(resources.CortexSearchService, ReadCortexSearchService)),
+		UpdateContext: previewfeatures.PreviewFeatureUpdateContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingUpdateWrapper(resources.CortexSearchService, UpdateCortexSearchService)),
+		DeleteContext: previewfeatures.PreviewFeatureDeleteContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingDeleteWrapper(resources.CortexSearchService, DeleteCortexSearchService)),
 
 		Schema: cortexSearchServiceSchema,
 		Importer: &schema.ResourceImporter{

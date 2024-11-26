@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -67,10 +68,10 @@ var networkRuleSchema = map[string]*schema.Schema{
 // NetworkRule returns a pointer to the resource representing a network rule.
 func NetworkRule() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.NetworkRule, CreateContextNetworkRule),
-		ReadContext:   TrackingReadWrapper(resources.NetworkRule, ReadContextNetworkRule),
-		UpdateContext: TrackingUpdateWrapper(resources.NetworkRule, UpdateContextNetworkRule),
-		DeleteContext: TrackingDeleteWrapper(resources.NetworkRule, DeleteContextNetworkRule),
+		CreateContext: previewfeatures.PreviewFeatureCreateContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingCreateWrapper(resources.NetworkRule, CreateContextNetworkRule)),
+		ReadContext:   previewfeatures.PreviewFeatureReadContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingReadWrapper(resources.NetworkRule, ReadContextNetworkRule)),
+		UpdateContext: previewfeatures.PreviewFeatureUpdateContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingUpdateWrapper(resources.NetworkRule, UpdateContextNetworkRule)),
+		DeleteContext: previewfeatures.PreviewFeatureDeleteContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingDeleteWrapper(resources.NetworkRule, DeleteContextNetworkRule)),
 
 		Schema: networkRuleSchema,
 		Importer: &schema.ResourceImporter{
