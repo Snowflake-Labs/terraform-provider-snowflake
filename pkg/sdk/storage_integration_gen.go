@@ -37,9 +37,9 @@ type StorageLocation struct {
 }
 
 type S3StorageParams struct {
-	storageProvider     string  `ddl:"static" sql:"STORAGE_PROVIDER = 'S3'"`
-	StorageAwsRoleArn   string  `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_ROLE_ARN"`
-	StorageAwsObjectAcl *string `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_OBJECT_ACL"`
+	Protocol            S3Protocol `ddl:"parameter,single_quotes" sql:"STORAGE_PROVIDER"`
+	StorageAwsRoleArn   string     `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_ROLE_ARN"`
+	StorageAwsObjectAcl *string    `ddl:"parameter,single_quotes" sql:"STORAGE_AWS_OBJECT_ACL"`
 }
 
 type GCSStorageParams struct {

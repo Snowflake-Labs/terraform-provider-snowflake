@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -52,12 +53,12 @@ var storageIntegrationSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Explicitly prohibits external stages that use the integration from referencing one or more storage locations.",
 	},
-	// TODO (SNOW-1015282): Remove S3gov option before going into V1
 	"storage_provider": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: validation.StringInSlice([]string{"S3", "S3gov", "GCS", "AZURE", "S3GOV"}, false),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		ValidateDiagFunc: StringInSlice(sdk.AllStorageProviders, true),
+		Description:      fmt.Sprintf("Specifies the storage provider for the integration. Valid options are: %s", possibleValuesListed(sdk.AllStorageProviders)),
 	},
 	"storage_aws_external_id": {
 		Type:        schema.TypeString,
@@ -140,7 +141,7 @@ func CreateStorageIntegration(d *schema.ResourceData, meta any) error {
 	req := sdk.NewCreateStorageIntegrationRequest(name, enabled, storageAllowedLocations)
 
 	if v, ok := d.GetOk("comment"); ok {
-		req.WithComment(sdk.String(v.(string)))
+		req.WithComment(v.(string))
 	}
 
 	if _, ok := d.GetOk("storage_blocked_locations"); ok {
@@ -154,28 +155,33 @@ func CreateStorageIntegration(d *schema.ResourceData, meta any) error {
 		req.WithStorageBlockedLocations(storageBlockedLocations)
 	}
 
-	storageProvider := d.Get("storage_provider").(string)
+	storageProvider := strings.ToUpper(d.Get("storage_provider").(string))
 
-	switch storageProvider {
-	case "S3", "S3GOV", "S3gov":
+	switch {
+	case slices.Contains(sdk.AllS3Protocols, sdk.S3Protocol(storageProvider)):
+		s3Protocol, err := sdk.ToS3Protocol(storageProvider)
+		if err != nil {
+			return err
+		}
+
 		v, ok := d.GetOk("storage_aws_role_arn")
 		if !ok {
 			return fmt.Errorf("if you use the S3 storage provider you must specify a storage_aws_role_arn")
 		}
 
-		s3Params := sdk.NewS3StorageParamsRequest(v.(string))
+		s3Params := sdk.NewS3StorageParamsRequest(s3Protocol, v.(string))
 		if _, ok := d.GetOk("storage_aws_object_acl"); ok {
-			s3Params.WithStorageAwsObjectAcl(sdk.String(d.Get("storage_aws_object_acl").(string)))
+			s3Params.WithStorageAwsObjectAcl(d.Get("storage_aws_object_acl").(string))
 		}
-		req.WithS3StorageProviderParams(s3Params)
-	case "AZURE":
+		req.WithS3StorageProviderParams(*s3Params)
+	case storageProvider == "AZURE":
 		v, ok := d.GetOk("azure_tenant_id")
 		if !ok {
 			return fmt.Errorf("if you use the Azure storage provider you must specify an azure_tenant_id")
 		}
-		req.WithAzureStorageProviderParams(sdk.NewAzureStorageParamsRequest(sdk.String(v.(string))))
-	case "GCS":
-		req.WithGCSStorageProviderParams(sdk.NewGCSStorageParamsRequest())
+		req.WithAzureStorageProviderParams(*sdk.NewAzureStorageParamsRequest(sdk.String(v.(string))))
+	case storageProvider == "GCS":
+		req.WithGCSStorageProviderParams(*sdk.NewGCSStorageParamsRequest())
 	default:
 		return fmt.Errorf("unexpected provider %v", storageProvider)
 	}
@@ -295,7 +301,7 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta any) error {
 
 	if d.HasChange("comment") {
 		runSetStatement = true
-		setReq.WithComment(sdk.String(d.Get("comment").(string)))
+		setReq.WithComment(d.Get("comment").(string))
 	}
 
 	if d.HasChange("enabled") {
@@ -320,7 +326,7 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta any) error {
 		v := d.Get("storage_blocked_locations").([]interface{})
 		if len(v) == 0 {
 			if err := client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).
-				WithUnset(sdk.NewStorageIntegrationUnsetRequest().WithStorageBlockedLocations(sdk.Bool(true)))); err != nil {
+				WithUnset(*sdk.NewStorageIntegrationUnsetRequest().WithStorageBlockedLocations(true))); err != nil {
 				return fmt.Errorf("error unsetting storage_blocked_locations, err = %w", err)
 			}
 		} else {
@@ -342,25 +348,25 @@ func UpdateStorageIntegration(d *schema.ResourceData, meta any) error {
 
 		if d.HasChange("storage_aws_object_acl") {
 			if v, ok := d.GetOk("storage_aws_object_acl"); ok {
-				s3SetParams.WithStorageAwsObjectAcl(sdk.String(v.(string)))
+				s3SetParams.WithStorageAwsObjectAcl(v.(string))
 			} else {
 				if err := client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).
-					WithUnset(sdk.NewStorageIntegrationUnsetRequest().WithStorageAwsObjectAcl(sdk.Bool(true)))); err != nil {
+					WithUnset(*sdk.NewStorageIntegrationUnsetRequest().WithStorageAwsObjectAcl(true))); err != nil {
 					return fmt.Errorf("error unsetting storage_aws_object_acl, err = %w", err)
 				}
 			}
 		}
 
-		setReq.WithS3Params(s3SetParams)
+		setReq.WithS3Params(*s3SetParams)
 	}
 
 	if d.HasChange("azure_tenant_id") {
 		runSetStatement = true
-		setReq.WithAzureParams(sdk.NewSetAzureStorageParamsRequest(d.Get("azure_tenant_id").(string)))
+		setReq.WithAzureParams(*sdk.NewSetAzureStorageParamsRequest(d.Get("azure_tenant_id").(string)))
 	}
 
 	if runSetStatement {
-		if err := client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).WithSet(setReq)); err != nil {
+		if err := client.StorageIntegrations.Alter(ctx, sdk.NewAlterStorageIntegrationRequest(id).WithSet(*setReq)); err != nil {
 			return fmt.Errorf("error updating storage integration, err = %w", err)
 		}
 	}

@@ -54,10 +54,10 @@ func (c *StorageIntegrationClient) CreateS3(t *testing.T, awsBucketUrl, awsRoleA
 
 	id := c.ids.RandomAccountObjectIdentifier()
 	req := sdk.NewCreateStorageIntegrationRequest(id, true, s3AllowedLocations).
-		WithIfNotExists(sdk.Bool(true)).
-		WithS3StorageProviderParams(sdk.NewS3StorageParamsRequest(awsRoleArn)).
+		WithIfNotExists(true).
+		WithS3StorageProviderParams(*sdk.NewS3StorageParamsRequest(sdk.RegularS3Protocol, awsRoleArn)).
 		WithStorageBlockedLocations(s3BlockedLocations).
-		WithComment(sdk.String("some comment"))
+		WithComment("some comment")
 
 	err := c.client().Create(ctx, req)
 	require.NoError(t, err)
@@ -73,7 +73,7 @@ func (c *StorageIntegrationClient) DropFunc(t *testing.T, id sdk.AccountObjectId
 	ctx := context.Background()
 
 	return func() {
-		err := c.client().Drop(ctx, sdk.NewDropStorageIntegrationRequest(id).WithIfExists(sdk.Bool(true)))
+		err := c.client().Drop(ctx, sdk.NewDropStorageIntegrationRequest(id).WithIfExists(true))
 		require.NoError(t, err)
 	}
 }

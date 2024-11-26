@@ -42,7 +42,7 @@ resource "snowflake_storage_integration" "integration" {
 
 - `name` (String)
 - `storage_allowed_locations` (List of String) Explicitly limits external stages that use the integration to reference one or more storage locations.
-- `storage_provider` (String)
+- `storage_provider` (String) Specifies the storage provider for the integration. Valid options are: `S3` | `S3GOV` | `S3CHINA` | `GCS` | `AZURE`
 
 ### Optional
 

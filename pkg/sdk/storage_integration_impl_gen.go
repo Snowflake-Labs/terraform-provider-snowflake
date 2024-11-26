@@ -38,7 +38,7 @@ func (v *storageIntegrations) Show(ctx context.Context, request *ShowStorageInte
 }
 
 func (v *storageIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*StorageIntegration, error) {
-	storageIntegrations, err := v.Show(ctx, NewShowStorageIntegrationRequest().WithLike(&Like{
+	storageIntegrations, err := v.Show(ctx, NewShowStorageIntegrationRequest().WithLike(Like{
 		Pattern: String(id.Name()),
 	}))
 	if err != nil {
@@ -71,6 +71,7 @@ func (r *CreateStorageIntegrationRequest) toOpts() *CreateStorageIntegrationOpti
 	}
 	if r.S3StorageProviderParams != nil {
 		opts.S3StorageProviderParams = &S3StorageParams{
+			Protocol:            r.S3StorageProviderParams.Protocol,
 			StorageAwsRoleArn:   r.S3StorageProviderParams.StorageAwsRoleArn,
 			StorageAwsObjectAcl: r.S3StorageProviderParams.StorageAwsObjectAcl,
 		}
