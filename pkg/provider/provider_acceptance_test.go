@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -28,16 +27,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO [this PR]: verify user+pass login
+// TODO [this PR]: verify jwt login
+// TODO [this PR]: verify encrypted jwt login
+
+// TODO [this PR]: tmp user config?
+
 func TestAcc_Provider_configHierarchy(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	accountDetailsConfig, err := sdk.ProfileConfig(testprofiles.OnlyAccountDetails)
-	require.NoError(t, err)
-
-	accountParts := strings.SplitN(accountDetailsConfig.Account, "-", 2)
-	accountId := sdk.NewAccountIdentifier(accountParts[0], accountParts[1])
+	accountId := acc.TestClient().Context.CurrentAccountId(t)
 	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
 
 	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
@@ -208,11 +209,7 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	accountDetailsConfig, err := sdk.ProfileConfig(testprofiles.OnlyAccountDetails)
-	require.NoError(t, err)
-
-	accountParts := strings.SplitN(accountDetailsConfig.Account, "-", 2)
-	accountId := sdk.NewAccountIdentifier(accountParts[0], accountParts[1])
+	accountId := acc.TestClient().Context.CurrentAccountId(t)
 	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
 
 	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
@@ -291,11 +288,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	accountDetailsConfig, err := sdk.ProfileConfig(testprofiles.OnlyAccountDetails)
-	require.NoError(t, err)
-
-	accountParts := strings.SplitN(accountDetailsConfig.Account, "-", 2)
-	accountId := sdk.NewAccountIdentifier(accountParts[0], accountParts[1])
+	accountId := acc.TestClient().Context.CurrentAccountId(t)
 	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
 
 	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
@@ -411,11 +404,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	accountDetailsConfig, err := sdk.ProfileConfig(testprofiles.OnlyAccountDetails)
-	require.NoError(t, err)
-
-	accountParts := strings.SplitN(accountDetailsConfig.Account, "-", 2)
-	accountId := sdk.NewAccountIdentifier(accountParts[0], accountParts[1])
+	accountId := acc.TestClient().Context.CurrentAccountId(t)
 	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
 
 	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
@@ -531,11 +520,17 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	pass := random.Password()
-	tmpUserId, tmpRoleId := acc.TestClient().SetUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t, pass)
+	accountId := acc.TestClient().Context.CurrentAccountId(t)
+	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
+
+	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
+	tmpUserId, tmpRoleId := acc.TestClient().SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
+
+	profile := random.AlphaN(6)
+	toml := helpers.TomlConfigForServiceUser(t, profile, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey)
+	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
 
 	nonExisting := "NON-EXISTENT"
-	warehouse := acc.TestClient().Ids.SnowflakeWarehouseId().Name()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -543,22 +538,25 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
+
+			t.Setenv(snowflakeenvs.ConfigPath, configPath)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      providerConfigWithExplicitValidation(tmpUserId.Name(), pass, testprofiles.OnlyAccountDetails, nonExisting, warehouse, true),
+				Config:      providerConfigWithExplicitValidationAndRole(profile, nonExisting, true),
 				ExpectError: regexp.MustCompile("Role 'NON-EXISTENT' specified in the connect string does not exist or not authorized."),
 			},
 			{
-				Config:      providerConfigWithExplicitValidation(tmpUserId.Name(), pass, testprofiles.OnlyAccountDetails, tmpRoleId.Name(), nonExisting, true),
+				Config:      providerConfigWithExplicitValidationAndWarehouse(profile, nonExisting, true),
 				ExpectError: regexp.MustCompile("The requested warehouse does not exist or not authorized."),
 			},
 			// check that using a non-existing warehouse with disabled verification succeeds
 			{
-				Config: providerConfigWithExplicitValidation(tmpUserId.Name(), pass, testprofiles.OnlyAccountDetails, tmpRoleId.Name(), warehouse, false),
+				Config: providerConfigWithExplicitValidationAndWarehouse(profile, nonExisting, false),
 			},
 		},
 	})
@@ -752,18 +750,26 @@ provider "snowflake" {
 `, profile) + datasourceConfig()
 }
 
-func providerConfigWithExplicitValidation(user, pass, profile, role, warehouse string, validate bool) string {
+func providerConfigWithExplicitValidationAndRole(profile string, role string, validate bool) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
-	user      = "%[1]s"
-	password  = "%[2]s"
-	profile   = "%[3]s"
-	role      = "%[4]s"
-	warehouse = "%[5]s"
+	profile = "%[1]s"
+	role    = "%[2]s"
 
-	validate_default_parameters = "%[6]t"
+	validate_default_parameters = "%[3]t"
 }
-`, user, pass, profile, role, warehouse, validate) + datasourceConfig()
+`, profile, role, validate) + datasourceConfig()
+}
+
+func providerConfigWithExplicitValidationAndWarehouse(profile string, warehouse string, validate bool) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile   = "%[1]s"
+	warehouse = "%[2]s"
+
+	validate_default_parameters = "%[3]t"
+}
+`, profile, warehouse, validate) + datasourceConfig()
 }
 
 func providerConfigWithClientStoreTemporaryCredential(profile, clientStoreTemporaryCredential string) string {
