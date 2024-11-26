@@ -324,7 +324,7 @@ func TestInt_TagsAssociations(t *testing.T) {
 		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
 	}
 
-	t.Run("TestInt_TagAssociationForAccount", func(t *testing.T) {
+	t.Run("TestInt_TagAssociationForAccountLocator", func(t *testing.T) {
 		id := testClientHelper().Ids.AccountIdentifierWithLocator()
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			SetTag: tags,
@@ -352,6 +352,22 @@ func TestInt_TagsAssociations(t *testing.T) {
 		assert.Equal(t, tagValue, returnedTagValue)
 
 		err = client.Tags.UnsetOnCurrentAccount(ctx, sdk.NewUnsetTagOnCurrentAccountRequest().WithUnsetTags(unsetTags))
+		require.NoError(t, err)
+
+		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
+		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+	})
+
+	t.Run("TestInt_TagAssociationForAccount", func(t *testing.T) {
+		id := testClientHelper().Context.CurrentAccountIdentifier(t)
+		err := client.Tags.Set(ctx, sdk.NewSetTagRequest(sdk.ObjectTypeAccount, id).WithSetTags(tags))
+		require.NoError(t, err)
+
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
+		require.NoError(t, err)
+		assert.Equal(t, tagValue, returnedTagValue)
+
+		err = client.Tags.Unset(ctx, sdk.NewUnsetTagRequest(sdk.ObjectTypeAccount, id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 
 		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)

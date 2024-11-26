@@ -491,6 +491,7 @@ func DeleteContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	// TODO(SNOW-1818849): unassign policies before dropping
 	if err := client.AuthenticationPolicies.Drop(ctx, sdk.NewDropAuthenticationPolicyRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}

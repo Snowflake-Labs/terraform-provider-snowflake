@@ -437,6 +437,8 @@ func DeletePasswordPolicy(ctx context.Context, d *schema.ResourceData, meta any)
 	client := meta.(*provider.Context).Client
 
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+
+	// TODO(SNOW-1818849): unassign policies before dropping
 	err := client.PasswordPolicies.Drop(ctx, objectIdentifier, nil)
 	if err != nil {
 		return diag.FromErr(err)
