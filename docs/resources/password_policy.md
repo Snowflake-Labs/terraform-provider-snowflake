@@ -5,6 +5,9 @@ description: |-
   A password policy specifies the requirements that must be met to create and reset a password to authenticate to Snowflake.
 ---
 
+> [!WARNING]
+> According to Snowflake [docs](https://docs.snowflake.com/en/sql-reference/sql/drop-password-policy#usage-notes), a password policy cannot be dropped successfully if it is currently assigned to another object. Currently, the provider does not unassign such objects automatically. Before dropping the resource, list the assigned objects with `SELECT * from table(information_schema.policy_references(policy_name=>'<string>'));` and unassign them manually with `ALTER ...` or with updated Terraform configuration, if possible.
+
 # snowflake_password_policy (Resource)
 
 A password policy specifies the requirements that must be met to create and reset a password to authenticate to Snowflake.
