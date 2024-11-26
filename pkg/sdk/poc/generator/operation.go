@@ -20,22 +20,6 @@ const (
 	DescriptionMappingKindSlice       DescriptionMappingKind = "slice"
 )
 
-type ShowByIDFiltering struct {
-	Kind string
-	Args string
-}
-
-type ShowByIDFilteringKind uint
-
-const (
-	// Enables filtering with: Like
-	ShowByIDLikeFiltering ShowByIDFilteringKind = iota
-	// Enables filtering with: In
-	ShowByIDInFiltering
-	// Enables filtering with: ExtendedIn
-	ShowByIDExtendedInFiltering
-)
-
 // Operation defines a single operation for given object or objects family (e.g. CREATE DATABASE ROLE)
 type Operation struct {
 	// Name is the operation's name, e.g. "Create"
@@ -92,29 +76,6 @@ func (s *Operation) withHelperStruct(helperStruct *Field) *Operation {
 
 func (s *Operation) withHelperStructs(helperStructs ...*Field) *Operation {
 	s.HelperStructs = append(s.HelperStructs, helperStructs...)
-	return s
-}
-
-func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation {
-	for _, f := range filtering {
-		switch f {
-		case ShowByIDLikeFiltering:
-			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
-				Kind: "Like",
-				Args: "Like{Pattern: String(id.Name())}",
-			})
-		case ShowByIDInFiltering:
-			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
-				Kind: "In",
-				Args: "&In{%[1]v: id.%[1]vId()}",
-			})
-		case ShowByIDExtendedInFiltering:
-			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
-				Kind: "In",
-				Args: "ExtendedIn{In: In{%[1]v: id.%[1]vId()}}",
-			})
-		}
-	}
 	return s
 }
 
