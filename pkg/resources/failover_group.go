@@ -8,6 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -138,10 +141,10 @@ var failoverGroupSchema = map[string]*schema.Schema{
 // FailoverGroup returns a pointer to the resource representing a failover group.
 func FailoverGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateFailoverGroup,
-		Read:   ReadFailoverGroup,
-		Update: UpdateFailoverGroup,
-		Delete: DeleteFailoverGroup,
+		CreateContext: TrackingCreateWrapper(resources.FailoverGroup, CreateFailoverGroup),
+		ReadContext:   TrackingReadWrapper(resources.FailoverGroup, ReadFailoverGroup),
+		UpdateContext: TrackingUpdateWrapper(resources.FailoverGroup, UpdateFailoverGroup),
+		DeleteContext: TrackingDeleteWrapper(resources.FailoverGroup, DeleteFailoverGroup),
 
 		Schema: failoverGroupSchema,
 		Importer: &schema.ResourceImporter{
@@ -151,9 +154,8 @@ func FailoverGroup() *schema.Resource {
 }
 
 // CreateFailoverGroup implements schema.CreateFunc.
-func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
+func CreateFailoverGroup(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	// getting required attributes
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -168,15 +170,15 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		primaryFailoverGroupID := sdk.NewExternalObjectIdentifier(sdk.NewAccountIdentifier(organizationName, sourceAccountName), sdk.NewAccountObjectIdentifier(sourceFailoverGroupName))
 		err := client.FailoverGroups.CreateSecondaryReplicationGroup(ctx, id, primaryFailoverGroupID, nil)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		d.SetId(name)
-		return ReadFailoverGroup(d, meta)
+		return ReadFailoverGroup(ctx, d, meta)
 	}
 
 	// these two are required attributes if from_replica is not set
 	if _, ok := d.GetOk("object_types"); !ok {
-		return errors.New("object_types is required when not creating from a replica")
+		return diag.FromErr(errors.New("object_types is required when not creating from a replica"))
 	}
 	objectTypesList := expandStringList(d.Get("object_types").(*schema.Set).List())
 	objectTypes := make([]sdk.PluralObjectType, len(objectTypesList))
@@ -185,7 +187,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("allowed_accounts"); !ok {
-		return errors.New("allowed_accounts is required when not creating from a replica")
+		return diag.FromErr(errors.New("allowed_accounts is required when not creating from a replica"))
 	}
 	aaList := expandStringList(d.Get("allowed_accounts").(*schema.Set).List())
 	allowedAccounts := make([]sdk.AccountIdentifier, len(aaList))
@@ -193,7 +195,7 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		// validation since we cannot do that in the ValidateFunc
 		parts := strings.Split(v, ".")
 		if len(parts) != 2 {
-			return fmt.Errorf("allowed_account %s cannot be an account locator and must be of the format <org_name>.<target_account_name>", allowedAccounts[i])
+			return diag.FromErr(fmt.Errorf("allowed_account %s cannot be an account locator and must be of the format <org_name>.<target_account_name>", allowedAccounts[i]))
 		}
 		organizationName := parts[0]
 		accountName := parts[1]
@@ -257,29 +259,28 @@ func CreateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.FailoverGroups.Create(ctx, id, objectTypes, allowedAccounts, &opts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(name)
-	return ReadFailoverGroup(d, meta)
+	return ReadFailoverGroup(ctx, d, meta)
 }
 
 // ReadFailoverGroup implements schema.ReadFunc.
-func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
+func ReadFailoverGroup(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	failoverGroup, err := client.FailoverGroups.ShowByID(ctx, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", failoverGroup.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	// if the failover group is created from a replica, then we do not want to get the other values
 	if _, ok := d.GetOk("from_replica"); ok {
@@ -291,7 +292,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 		if strings.Contains(replicationSchedule, "MINUTE") {
 			interval, err := strconv.Atoi(strings.TrimSuffix(replicationSchedule, " MINUTE"))
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			err = d.Set("replication_schedule", []interface{}{
 				map[string]interface{}{
@@ -299,7 +300,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		} else {
 			repScheduleParts := strings.Split(replicationSchedule, " ")
@@ -316,7 +317,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -327,7 +328,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 	objectTypesSet := schema.NewSet(schema.HashString, objectTypes)
 	if err := d.Set("object_types", objectTypesSet); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// integration types
@@ -338,7 +339,7 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 
 	allowedIntegrationsTypesSet := schema.NewSet(schema.HashString, allowedIntegrationTypes)
 	if err := d.Set("allowed_integration_types", allowedIntegrationsTypesSet); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// allowed accounts
@@ -348,13 +349,13 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 	allowedAccountsSet := schema.NewSet(schema.HashString, allowedAccounts)
 	if err := d.Set("allowed_accounts", allowedAccountsSet); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// allowed databases
 	databases, err := client.FailoverGroups.ShowDatabases(ctx, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	allowedDatabases := make([]interface{}, len(databases))
 	for i, database := range databases {
@@ -363,18 +364,18 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	allowedDatabasesSet := schema.NewSet(schema.HashString, allowedDatabases)
 	if len(allowedDatabases) > 0 {
 		if err := d.Set("allowed_databases", allowedDatabasesSet); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		if err := d.Set("allowed_databases", nil); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	// allowed shares
 	shares, err := client.FailoverGroups.ShowShares(ctx, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	allowedShares := make([]interface{}, len(shares))
 	for i, share := range shares {
@@ -383,11 +384,11 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	allowedSharesSet := schema.NewSet(schema.HashString, allowedShares)
 	if len(allowedShares) > 0 {
 		if err := d.Set("allowed_shares", allowedSharesSet); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		if err := d.Set("allowed_shares", nil); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -395,9 +396,8 @@ func ReadFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 }
 
 // UpdateFailoverGroup implements schema.UpdateFunc.
-func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
+func UpdateFailoverGroup(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	// alter failover group <name> set ...
@@ -437,7 +437,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 	}
 	if runSet {
 		if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -467,7 +467,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		} else {
 			err := client.FailoverGroups.AlterSource(ctx, id, &sdk.AlterSourceFailoverGroupOptions{
@@ -476,7 +476,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -507,7 +507,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed databases for failover group %v err = %w", id.Name(), err)
+				return diag.FromErr(fmt.Errorf("error removing allowed databases for failover group %v err = %w", id.Name(), err))
 			}
 		}
 
@@ -525,7 +525,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed databases for failover group %v err = %w", id.Name(), err)
+				return diag.FromErr(fmt.Errorf("error removing allowed databases for failover group %v err = %w", id.Name(), err))
 			}
 		}
 	}
@@ -556,7 +556,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed shares for failover group %v err = %w", id.Name(), err)
+				return diag.FromErr(fmt.Errorf("error removing allowed shares for failover group %v err = %w", id.Name(), err))
 			}
 		}
 
@@ -574,7 +574,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed shares for failover group %v err = %w", id.Name(), err)
+				return diag.FromErr(fmt.Errorf("error removing allowed shares for failover group %v err = %w", id.Name(), err))
 			}
 		}
 	}
@@ -613,7 +613,7 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed accounts for failover group %v err = %w", id.Name(), err)
+				return diag.FromErr(fmt.Errorf("error removing allowed accounts for failover group %v err = %w", id.Name(), err))
 			}
 		}
 
@@ -631,22 +631,21 @@ func UpdateFailoverGroup(d *schema.ResourceData, meta interface{}) error {
 				},
 			}
 			if err := client.FailoverGroups.AlterSource(ctx, id, opts); err != nil {
-				return fmt.Errorf("error removing allowed accounts for failover group %v err = %w", id.Name(), err)
+				return diag.FromErr(fmt.Errorf("error removing allowed accounts for failover group %v err = %w", id.Name(), err))
 			}
 		}
 	}
 
-	return ReadFailoverGroup(d, meta)
+	return ReadFailoverGroup(ctx, d, meta)
 }
 
 // DeleteFailoverGroup implements schema.DeleteFunc.
-func DeleteFailoverGroup(d *schema.ResourceData, meta interface{}) error {
+func DeleteFailoverGroup(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	ctx := context.Background()
 	err := client.FailoverGroups.Drop(ctx, id, &sdk.DropFailoverGroupOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
-		return fmt.Errorf("error deleting failover group %v err = %w", id.Name(), err)
+		return diag.FromErr(fmt.Errorf("error deleting failover group %v err = %w", id.Name(), err))
 	}
 
 	d.SetId("")

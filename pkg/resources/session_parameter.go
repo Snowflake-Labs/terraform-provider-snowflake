@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -37,10 +40,10 @@ var sessionParameterSchema = map[string]*schema.Schema{
 
 func SessionParameter() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateSessionParameter,
-		Read:   ReadSessionParameter,
-		Update: UpdateSessionParameter,
-		Delete: DeleteSessionParameter,
+		CreateContext: TrackingCreateWrapper(resources.SessionParameter, CreateSessionParameter),
+		ReadContext:   TrackingReadWrapper(resources.SessionParameter, ReadSessionParameter),
+		UpdateContext: TrackingUpdateWrapper(resources.SessionParameter, UpdateSessionParameter),
+		DeleteContext: TrackingDeleteWrapper(resources.SessionParameter, DeleteSessionParameter),
 
 		Schema: sessionParameterSchema,
 		Importer: &schema.ResourceImporter{
@@ -50,11 +53,11 @@ func SessionParameter() *schema.Resource {
 }
 
 // CreateSessionParameter implements schema.CreateFunc.
-func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
+func CreateSessionParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
-	ctx := context.Background()
+
 	onAccount := d.Get("on_account").(bool)
 	user := d.Get("user").(string)
 	parameter := sdk.SessionParameter(key)
@@ -63,28 +66,28 @@ func CreateSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	if onAccount {
 		err := client.Parameters.SetSessionParameterOnAccount(ctx, parameter, value)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		if user == "" {
-			return fmt.Errorf("user is required if on_account is false")
+			return diag.FromErr(fmt.Errorf("user is required if on_account is false"))
 		}
 		userId := sdk.NewAccountObjectIdentifier(user)
 		err = client.Parameters.SetSessionParameterOnUser(ctx, userId, parameter, value)
 		if err != nil {
-			return fmt.Errorf("error creating session parameter err = %w", err)
+			return diag.FromErr(fmt.Errorf("error creating session parameter err = %w", err))
 		}
 	}
 
 	d.SetId(key)
 
-	return ReadSessionParameter(d, meta)
+	return ReadSessionParameter(ctx, d, meta)
 }
 
 // ReadSessionParameter implements schema.ReadFunc.
-func ReadSessionParameter(d *schema.ResourceData, meta interface{}) error {
+func ReadSessionParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	parameter := d.Id()
 
 	onAccount := d.Get("on_account").(bool)
@@ -98,25 +101,24 @@ func ReadSessionParameter(d *schema.ResourceData, meta interface{}) error {
 		p, err = client.Parameters.ShowUserParameter(ctx, sdk.UserParameter(parameter), userId)
 	}
 	if err != nil {
-		return fmt.Errorf("error reading session parameter err = %w", err)
+		return diag.FromErr(fmt.Errorf("error reading session parameter err = %w", err))
 	}
 	err = d.Set("value", p.Value)
 	if err != nil {
-		return fmt.Errorf("error setting session parameter err = %w", err)
+		return diag.FromErr(fmt.Errorf("error setting session parameter err = %w", err))
 	}
 	return nil
 }
 
 // UpdateSessionParameter implements schema.UpdateFunc.
-func UpdateSessionParameter(d *schema.ResourceData, meta interface{}) error {
-	return CreateSessionParameter(d, meta)
+func UpdateSessionParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return CreateSessionParameter(ctx, d, meta)
 }
 
 // DeleteSessionParameter implements schema.DeleteFunc.
-func DeleteSessionParameter(d *schema.ResourceData, meta interface{}) error {
+func DeleteSessionParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
-	ctx := context.Background()
 
 	onAccount := d.Get("on_account").(bool)
 	parameter := sdk.SessionParameter(key)
@@ -124,27 +126,27 @@ func DeleteSessionParameter(d *schema.ResourceData, meta interface{}) error {
 	if onAccount {
 		defaultParameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(key))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		defaultValue := defaultParameter.Default
 		err = client.Parameters.SetSessionParameterOnAccount(ctx, parameter, defaultValue)
 		if err != nil {
-			return fmt.Errorf("error creating session parameter err = %w", err)
+			return diag.FromErr(fmt.Errorf("error creating session parameter err = %w", err))
 		}
 	} else {
 		user := d.Get("user").(string)
 		if user == "" {
-			return fmt.Errorf("user is required if on_account is false")
+			return diag.FromErr(fmt.Errorf("user is required if on_account is false"))
 		}
 		userId := sdk.NewAccountObjectIdentifier(user)
 		defaultParameter, err := client.Parameters.ShowSessionParameter(ctx, sdk.SessionParameter(key))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		defaultValue := defaultParameter.Default
 		err = client.Parameters.SetSessionParameterOnUser(ctx, userId, parameter, defaultValue)
 		if err != nil {
-			return fmt.Errorf("error deleting session parameter err = %w", err)
+			return diag.FromErr(fmt.Errorf("error deleting session parameter err = %w", err))
 		}
 	}
 
