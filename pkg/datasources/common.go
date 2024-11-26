@@ -2,10 +2,10 @@ package datasources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
-	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"

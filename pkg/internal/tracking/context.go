@@ -54,8 +54,8 @@ func (m Metadata) validate() error {
 	return errors.Join(errs...)
 }
 
-// NewTestMetadata is a helper constructor that is used only for testing purposes
-func NewTestMetadata(version string, resource resources.Resource, operation Operation) Metadata {
+// newTestMetadata is a helper constructor that is used only for testing purposes
+func newTestMetadata(version string, resource resources.Resource, operation Operation) Metadata {
 	return Metadata{
 		SchemaVersion: CurrentSchemaVersion,
 		Version:       version,

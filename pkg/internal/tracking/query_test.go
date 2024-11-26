@@ -47,7 +47,7 @@ func TestTrimMetadata(t *testing.T) {
 }
 
 func TestAppendMetadata(t *testing.T) {
-	metadata := NewTestMetadata("123", resources.Account, CreateOperation)
+	metadata := newTestMetadata("123", resources.Account, CreateOperation)
 	sql := "SELECT 1"
 
 	bytes, err := json.Marshal(metadata)
@@ -61,7 +61,7 @@ func TestAppendMetadata(t *testing.T) {
 }
 
 func TestParseMetadata(t *testing.T) {
-	metadata := NewTestMetadata("123", resources.Account, CreateOperation)
+	metadata := newTestMetadata("123", resources.Account, CreateOperation)
 	bytes, err := json.Marshal(metadata)
 	require.NoError(t, err)
 	sql := fmt.Sprintf("SELECT 1 --%s %s", MetadataPrefix, string(bytes))
@@ -91,7 +91,7 @@ func TestParseInvalidMetadataJson(t *testing.T) {
 }
 
 func TestParseMetadataFromInvalidSqlCommentPrefix(t *testing.T) {
-	metadata := NewTestMetadata("123", resources.Account, CreateOperation)
+	metadata := newTestMetadata("123", resources.Account, CreateOperation)
 	sql := "SELECT 1"
 
 	bytes, err := json.Marshal(metadata)

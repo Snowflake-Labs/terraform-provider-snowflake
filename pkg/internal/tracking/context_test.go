@@ -11,7 +11,7 @@ import (
 )
 
 func Test_Context(t *testing.T) {
-	metadata := NewTestMetadata("123", resources.Account, CreateOperation)
+	metadata := newTestMetadata("123", resources.Account, CreateOperation)
 	newMetadata := NewVersionedDatasourceMetadata(datasources.Databases)
 	ctx := context.Background()
 
