@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -52,17 +55,16 @@ var materializedViewsSchema = map[string]*schema.Schema{
 
 func MaterializedViews() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadMaterializedViews,
-		Schema: materializedViewsSchema,
+		ReadContext: TrackingReadWrapper(datasources.MaterializedViews, ReadMaterializedViews),
+		Schema:      materializedViewsSchema,
 	}
 }
 
-func ReadMaterializedViews(d *schema.ResourceData, meta interface{}) error {
+func ReadMaterializedViews(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	ctx := context.Background()
 	schemaId := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)
 	extractedMaterializedViews, err := client.MaterializedViews.Show(ctx, sdk.NewShowMaterializedViewRequest().WithIn(
 		&sdk.In{Schema: schemaId},
@@ -85,5 +87,5 @@ func ReadMaterializedViews(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(databaseName, schemaName))
-	return d.Set("materialized_views", materializedViews)
+	return diag.FromErr(d.Set("materialized_views", materializedViews))
 }

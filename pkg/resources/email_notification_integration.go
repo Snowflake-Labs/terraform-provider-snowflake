@@ -6,6 +6,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -42,10 +45,10 @@ var emailNotificationIntegrationSchema = map[string]*schema.Schema{
 // EmailNotificationIntegration returns a pointer to the resource representing a notification integration.
 func EmailNotificationIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateEmailNotificationIntegration,
-		Read:   ReadEmailNotificationIntegration,
-		Update: UpdateEmailNotificationIntegration,
-		Delete: DeleteEmailNotificationIntegration,
+		CreateContext: TrackingCreateWrapper(resources.EmailNotificationIntegration, CreateEmailNotificationIntegration),
+		ReadContext:   TrackingReadWrapper(resources.EmailNotificationIntegration, ReadEmailNotificationIntegration),
+		UpdateContext: TrackingUpdateWrapper(resources.EmailNotificationIntegration, UpdateEmailNotificationIntegration),
+		DeleteContext: TrackingDeleteWrapper(resources.EmailNotificationIntegration, DeleteEmailNotificationIntegration),
 
 		Schema: emailNotificationIntegrationSchema,
 		Importer: &schema.ResourceImporter{
@@ -63,9 +66,8 @@ func toAllowedRecipients(emails []string) []sdk.NotificationIntegrationAllowedRe
 }
 
 // CreateEmailNotificationIntegration implements schema.CreateFunc.
-func CreateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
+func CreateEmailNotificationIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -85,47 +87,46 @@ func CreateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}
 
 	err := client.NotificationIntegrations.Create(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("error creating notification integration: %w", err)
+		return diag.FromErr(fmt.Errorf("error creating notification integration: %w", err))
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	return ReadEmailNotificationIntegration(d, meta)
+	return ReadEmailNotificationIntegration(ctx, d, meta)
 }
 
 // ReadEmailNotificationIntegration implements schema.ReadFunc.
-func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
+func ReadEmailNotificationIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	integration, err := client.NotificationIntegrations.ShowByID(ctx, id)
 	if err != nil {
 		log.Printf("[DEBUG] notification integration (%s) not found", d.Id())
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", integration.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("enabled", integration.Enabled); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", integration.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Some properties come from the DESCRIBE INTEGRATION call
 	integrationProperties, err := client.NotificationIntegrations.Describe(ctx, id)
 	if err != nil {
-		return fmt.Errorf("could not describe notification integration: %w", err)
+		return diag.FromErr(fmt.Errorf("could not describe notification integration: %w", err))
 	}
 	for _, property := range integrationProperties {
 		name := property.Name
@@ -135,11 +136,11 @@ func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) 
 		case "ALLOWED_RECIPIENTS":
 			if value == "" {
 				if err := d.Set("allowed_recipients", make([]string, 0)); err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			} else {
 				if err := d.Set("allowed_recipients", strings.Split(value, ",")); err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			}
 		default:
@@ -147,13 +148,12 @@ func ReadEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
 // UpdateEmailNotificationIntegration implements schema.UpdateFunc.
-func UpdateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
+func UpdateEmailNotificationIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	var runSetStatement bool
@@ -190,29 +190,28 @@ func UpdateEmailNotificationIntegration(d *schema.ResourceData, meta interface{}
 	if runSetStatement {
 		err := client.NotificationIntegrations.Alter(ctx, sdk.NewAlterNotificationIntegrationRequest(id).WithSet(setRequest))
 		if err != nil {
-			return fmt.Errorf("error updating notification integration: %w", err)
+			return diag.FromErr(fmt.Errorf("error updating notification integration: %w", err))
 		}
 	}
 
 	if runUnsetStatement {
 		err := client.NotificationIntegrations.Alter(ctx, sdk.NewAlterNotificationIntegrationRequest(id).WithUnsetEmailParams(unsetRequest))
 		if err != nil {
-			return fmt.Errorf("error updating notification integration: %w", err)
+			return diag.FromErr(fmt.Errorf("error updating notification integration: %w", err))
 		}
 	}
 
-	return ReadEmailNotificationIntegration(d, meta)
+	return ReadEmailNotificationIntegration(ctx, d, meta)
 }
 
 // DeleteEmailNotificationIntegration implements schema.DeleteFunc.
-func DeleteEmailNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
+func DeleteEmailNotificationIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	err := client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(id))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

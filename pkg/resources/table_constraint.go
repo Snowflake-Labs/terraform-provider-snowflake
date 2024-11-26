@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -179,10 +182,10 @@ var tableConstraintSchema = map[string]*schema.Schema{
 
 func TableConstraint() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateTableConstraint,
-		Read:   ReadTableConstraint,
-		Update: UpdateTableConstraint,
-		Delete: DeleteTableConstraint,
+		CreateContext: TrackingCreateWrapper(resources.TableConstraint, CreateTableConstraint),
+		ReadContext:   TrackingReadWrapper(resources.TableConstraint, ReadTableConstraint),
+		UpdateContext: TrackingUpdateWrapper(resources.TableConstraint, UpdateTableConstraint),
+		DeleteContext: TrackingDeleteWrapper(resources.TableConstraint, DeleteTableConstraint),
 
 		Schema: tableConstraintSchema,
 		Importer: &schema.ResourceImporter{
@@ -229,9 +232,8 @@ func getTableIdentifier(s string) (*sdk.SchemaObjectIdentifier, error) {
 }
 
 // CreateTableConstraint implements schema.CreateFunc.
-func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
+func CreateTableConstraint(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	name := d.Get("name").(string)
 	cType := d.Get("type").(string)
@@ -239,12 +241,12 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 
 	tableIdentifier, err := getTableIdentifier(tableID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	constraintType, err := sdk.ToColumnConstraintType(cType)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	constraintRequest := sdk.NewOutOfLineConstraintRequest(constraintType).WithName(&name)
 
@@ -290,11 +292,11 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		fkTableID := references["table_id"].(string)
 		fkId, err := helpers.DecodeSnowflakeParameterID(fkTableID)
 		if err != nil {
-			return fmt.Errorf("table id is incorrect: %s, err: %w", fkTableID, err)
+			return diag.FromErr(fmt.Errorf("table id is incorrect: %s, err: %w", fkTableID, err))
 		}
 		referencedTableIdentifier, ok := fkId.(sdk.SchemaObjectIdentifier)
 		if !ok {
-			return fmt.Errorf("table id is incorrect: %s", fkId)
+			return diag.FromErr(fmt.Errorf("table id is incorrect: %s", fkId))
 		}
 
 		cols := references["columns"].([]interface{})
@@ -306,17 +308,17 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 
 		matchType, err := sdk.ToMatchType(foreignKeyProperties["match"].(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		foreignKeyRequest.WithMatch(&matchType)
 
 		onUpdate, err := sdk.ToForeignKeyAction(foreignKeyProperties["on_update"].(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		onDelete, err := sdk.ToForeignKeyAction(foreignKeyProperties["on_delete"].(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		foreignKeyRequest.WithOn(sdk.NewForeignKeyOnAction().
 			WithOnDelete(&onDelete).
@@ -328,7 +330,7 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	alterStatement := sdk.NewAlterTableRequest(*tableIdentifier).WithConstraintAction(sdk.NewTableConstraintActionRequest().WithAdd(constraintRequest))
 	err = client.Tables.Alter(ctx, alterStatement)
 	if err != nil {
-		return fmt.Errorf("error creating table constraint %v err = %w", name, err)
+		return diag.FromErr(fmt.Errorf("error creating table constraint %v err = %w", name, err))
 	}
 
 	tc := tableConstraintID{
@@ -338,11 +340,11 @@ func CreateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(tc.String())
 
-	return ReadTableConstraint(d, meta)
+	return ReadTableConstraint(ctx, d, meta)
 }
 
 // ReadTableConstraint implements schema.ReadFunc.
-func ReadTableConstraint(_ *schema.ResourceData, _ interface{}) error {
+func ReadTableConstraint(ctx context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
 	// TODO(issue-2683): Implement read operation
 	// commenting this out since it requires an active warehouse to be set which may not be intuitive.
 	// also it takes a while for the database to reflect changes. Would likely need to add a validation
@@ -356,24 +358,24 @@ func ReadTableConstraint(_ *schema.ResourceData, _ interface{}) error {
 	// just need to check to make sure it exists
 	_, err := snowflake.ShowTableConstraint(tc.name, databaseName, schemaName, tableName, db)
 	if err != nil {
-		return fmt.Errorf(fmt.Sprintf("error reading table constraint %v", tc.String()))
+		return diag.FromErr(fmt.Errorf(fmt.Sprintf("error reading table constraint %v", tc.String()))
 	}*/
 
 	return nil
 }
 
 // UpdateTableConstraint implements schema.UpdateFunc.
-func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
+func UpdateTableConstraint(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	/* TODO(issue-2683): Update isn't be possible with non-existing Read operation. The Update logic is ready to be uncommented once the Read operation is ready.
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 
 	tc := tableConstraintID{}
 	tc.parse(d.Id())
 
 	tableIdentifier, err := getTableIdentifier(tc.tableID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 		if d.HasChange("name") {
@@ -383,7 +385,7 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 
 			err = client.Tables.Alter(ctx, alterStatement)
 			if err != nil {
-				return fmt.Errorf("error renaming table constraint %s err = %w", tc.name, err)
+				return diag.FromErr(fmt.Errorf("error renaming table constraint %s err = %w", tc.name, err)
 			}
 
 			tc.name = newName
@@ -391,20 +393,19 @@ func UpdateTableConstraint(d *schema.ResourceData, meta interface{}) error {
 		}
 	*/
 
-	return ReadTableConstraint(d, meta)
+	return ReadTableConstraint(ctx, d, meta)
 }
 
 // DeleteTableConstraint implements schema.DeleteFunc.
-func DeleteTableConstraint(d *schema.ResourceData, meta interface{}) error {
+func DeleteTableConstraint(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	tc := tableConstraintID{}
 	tc.parse(d.Id())
 
 	tableIdentifier, err := getTableIdentifier(tc.tableID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	dropRequest := sdk.NewTableConstraintDropActionRequest().WithConstraintName(&tc.name)
@@ -416,7 +417,7 @@ func DeleteTableConstraint(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error dropping table constraint %v err = %w", tc.name, err)
+		return diag.FromErr(fmt.Errorf("error dropping table constraint %v err = %w", tc.name, err))
 	}
 
 	d.SetId("")

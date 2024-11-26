@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 )
 
 type DynamicTables interface {
@@ -172,7 +174,7 @@ func (dtr dynamicTableRow) convert() *DynamicTable {
 		RefreshMode:         DynamicTableRefreshMode(dtr.RefreshMode),
 		Warehouse:           dtr.Warehouse,
 		Comment:             dtr.Comment,
-		Text:                dtr.Text,
+		Text:                tracking.TrimMetadata(dtr.Text),
 		AutomaticClustering: dtr.AutomaticClustering == "ON", // "ON" or "OFF
 		SchedulingState:     DynamicTableSchedulingState(dtr.SchedulingState),
 		IsClone:             dtr.IsClone,

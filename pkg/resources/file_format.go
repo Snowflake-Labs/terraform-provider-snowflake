@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -315,10 +317,10 @@ func (ffi *fileFormatID) String() (string, error) {
 // FileFormat returns a pointer to the resource representing a file format.
 func FileFormat() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateFileFormat,
-		Read:   ReadFileFormat,
-		Update: UpdateFileFormat,
-		Delete: DeleteFileFormat,
+		CreateContext: TrackingCreateWrapper(resources.FileFormat, CreateFileFormat),
+		ReadContext:   TrackingReadWrapper(resources.FileFormat, ReadFileFormat),
+		UpdateContext: TrackingUpdateWrapper(resources.FileFormat, UpdateFileFormat),
+		DeleteContext: TrackingDeleteWrapper(resources.FileFormat, DeleteFileFormat),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FileFormat, customdiff.All(
 			ComputedIfAnyAttributeChanged(fileFormatSchema, FullyQualifiedNameAttributeName, "name"),
@@ -332,9 +334,8 @@ func FileFormat() *schema.Resource {
 }
 
 // CreateFileFormat implements schema.CreateFunc.
-func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
+func CreateFileFormat(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	dbName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -520,7 +521,7 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.FileFormats.Create(ctx, id, &opts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	fileFormatID := &fileFormatID{
@@ -530,252 +531,250 @@ func CreateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	}
 	dataIDInput, err := fileFormatID.String()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(dataIDInput)
 
-	return ReadFileFormat(d, meta)
+	return ReadFileFormat(ctx, d, meta)
 }
 
 // ReadFileFormat implements schema.ReadFunc.
-func ReadFileFormat(d *schema.ResourceData, meta interface{}) error {
+func ReadFileFormat(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	fileFormatID, err := fileFormatIDFromString(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	id := sdk.NewSchemaObjectIdentifier(fileFormatID.DatabaseName, fileFormatID.SchemaName, fileFormatID.FileFormatName)
 
 	fileFormat, err := client.FileFormats.ShowByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("cannot read file format: %w", err)
+		return diag.FromErr(fmt.Errorf("cannot read file format: %w", err))
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", fileFormat.Name.Name()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("database", fileFormat.Name.DatabaseName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("schema", fileFormat.Name.SchemaName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("format_type", fileFormat.Type); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	switch fileFormat.Type {
 	case sdk.FileFormatTypeCSV:
 		if err := d.Set("compression", fileFormat.Options.CSVCompression); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("record_delimiter", fileFormat.Options.CSVRecordDelimiter); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("field_delimiter", fileFormat.Options.CSVFieldDelimiter); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("file_extension", fileFormat.Options.CSVFileExtension); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("parse_header", fileFormat.Options.CSVParseHeader); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("skip_header", fileFormat.Options.CSVSkipHeader); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("skip_blank_lines", fileFormat.Options.CSVSkipBlankLines); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("date_format", fileFormat.Options.CSVDateFormat); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("time_format", fileFormat.Options.CSVTimeFormat); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("timestamp_format", fileFormat.Options.CSVTimestampFormat); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("binary_format", fileFormat.Options.CSVBinaryFormat); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("escape", fileFormat.Options.CSVEscape); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("escape_unenclosed_field", fileFormat.Options.CSVEscapeUnenclosedField); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("trim_space", fileFormat.Options.CSVTrimSpace); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("field_optionally_enclosed_by", fileFormat.Options.CSVFieldOptionallyEnclosedBy); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		nullIf := []string{}
 		for _, s := range *fileFormat.Options.CSVNullIf {
 			nullIf = append(nullIf, s.S)
 		}
 		if err := d.Set("null_if", nullIf); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("error_on_column_count_mismatch", fileFormat.Options.CSVErrorOnColumnCountMismatch); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("replace_invalid_characters", fileFormat.Options.CSVReplaceInvalidCharacters); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("empty_field_as_null", fileFormat.Options.CSVEmptyFieldAsNull); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("skip_byte_order_mark", fileFormat.Options.CSVSkipByteOrderMark); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("encoding", fileFormat.Options.CSVEncoding); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	case sdk.FileFormatTypeJSON:
 		if err := d.Set("compression", fileFormat.Options.JSONCompression); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("date_format", fileFormat.Options.JSONDateFormat); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("time_format", fileFormat.Options.JSONTimeFormat); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("timestamp_format", fileFormat.Options.JSONTimestampFormat); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("binary_format", fileFormat.Options.JSONBinaryFormat); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("trim_space", fileFormat.Options.JSONTrimSpace); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		nullIf := []string{}
 		for _, s := range fileFormat.Options.JSONNullIf {
 			nullIf = append(nullIf, s.S)
 		}
 		if err := d.Set("null_if", nullIf); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("file_extension", fileFormat.Options.JSONFileExtension); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("enable_octal", fileFormat.Options.JSONEnableOctal); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("allow_duplicate", fileFormat.Options.JSONAllowDuplicate); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("strip_outer_array", fileFormat.Options.JSONStripOuterArray); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("strip_null_values", fileFormat.Options.JSONStripNullValues); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("replace_invalid_characters", fileFormat.Options.JSONReplaceInvalidCharacters); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("ignore_utf8_errors", fileFormat.Options.JSONIgnoreUTF8Errors); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("skip_byte_order_mark", fileFormat.Options.JSONSkipByteOrderMark); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	case sdk.FileFormatTypeAvro:
 		if err := d.Set("compression", fileFormat.Options.AvroCompression); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("trim_space", fileFormat.Options.AvroTrimSpace); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		nullIf := []string{}
 		for _, s := range *fileFormat.Options.AvroNullIf {
 			nullIf = append(nullIf, s.S)
 		}
 		if err := d.Set("null_if", nullIf); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	case sdk.FileFormatTypeORC:
 		if err := d.Set("trim_space", fileFormat.Options.ORCTrimSpace); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		nullIf := []string{}
 		for _, s := range *fileFormat.Options.ORCNullIf {
 			nullIf = append(nullIf, s.S)
 		}
 		if err := d.Set("null_if", nullIf); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	case sdk.FileFormatTypeParquet:
 		if err := d.Set("compression", fileFormat.Options.ParquetCompression); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("binary_as_text", fileFormat.Options.ParquetBinaryAsText); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("trim_space", fileFormat.Options.ParquetTrimSpace); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		nullIf := []string{}
 		for _, s := range *fileFormat.Options.ParquetNullIf {
 			nullIf = append(nullIf, s.S)
 		}
 		if err := d.Set("null_if", nullIf); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	case sdk.FileFormatTypeXML:
 		if err := d.Set("compression", fileFormat.Options.XMLCompression); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("ignore_utf8_errors", fileFormat.Options.XMLIgnoreUTF8Errors); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("preserve_space", fileFormat.Options.XMLPreserveSpace); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("strip_outer_element", fileFormat.Options.XMLStripOuterElement); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("disable_snowflake_data", fileFormat.Options.XMLDisableSnowflakeData); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("disable_auto_convert", fileFormat.Options.XMLDisableAutoConvert); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("skip_byte_order_mark", fileFormat.Options.XMLSkipByteOrderMark); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		// Terraform doesn't like it when computed fields aren't set.
 		if err := d.Set("null_if", []string{}); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if err := d.Set("comment", fileFormat.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }
 
 // UpdateFileFormat implements schema.UpdateFunc.
-func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
+func UpdateFileFormat(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	fileFormatID, err := fileFormatIDFromString(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	id := sdk.NewSchemaObjectIdentifier(fileFormatID.DatabaseName, fileFormatID.SchemaName, fileFormatID.FileFormatName)
 
@@ -788,7 +787,7 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("error renaming file format: %w", err)
+			return diag.FromErr(fmt.Errorf("error renaming file format: %w", err))
 		}
 
 		d.SetId(helpers.EncodeSnowflakeID(newId))
@@ -1116,27 +1115,26 @@ func UpdateFileFormat(d *schema.ResourceData, meta interface{}) error {
 	if runSet {
 		err = client.FileFormats.Alter(ctx, id, &opts)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return ReadFileFormat(d, meta)
+	return ReadFileFormat(ctx, d, meta)
 }
 
 // DeleteFileFormat implements schema.DeleteFunc.
-func DeleteFileFormat(d *schema.ResourceData, meta interface{}) error {
+func DeleteFileFormat(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	fileFormatID, err := fileFormatIDFromString(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	id := sdk.NewSchemaObjectIdentifier(fileFormatID.DatabaseName, fileFormatID.SchemaName, fileFormatID.FileFormatName)
 
 	err = client.FileFormats.Drop(ctx, id, nil)
 	if err != nil {
-		return fmt.Errorf("error while deleting file format: %w", err)
+		return diag.FromErr(fmt.Errorf("error while deleting file format: %w", err))
 	}
 
 	d.SetId("")

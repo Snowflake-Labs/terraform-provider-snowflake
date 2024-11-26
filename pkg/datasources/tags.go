@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -36,7 +38,7 @@ var tagsSchema = map[string]*schema.Schema{
 
 func Tags() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadTags,
+		ReadContext: TrackingReadWrapper(datasources.Tags, ReadTags),
 		Schema:      tagsSchema,
 		Description: "Datasource used to get details of filtered tags. Filtering is aligned with the current possibilities for [SHOW TAGS](https://docs.snowflake.com/en/sql-reference/sql/show-tags) query. The results of SHOW are encapsulated in one output collection `tags`.",
 	}

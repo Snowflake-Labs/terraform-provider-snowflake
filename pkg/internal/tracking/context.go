@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 )
 
 const (
-	ProviderVersion string = "v1.0.0-rc.1" // TODO(SNOW-1814934): Currently hardcoded, make it computed
-	MetadataPrefix  string = "terraform_provider_usage_tracking"
+	CurrentSchemaVersion string = "1"
+	ProviderVersion      string = "v1.0.0.rc.1" // TODO(SNOW-1814934): Currently hardcoded, make it computed
+	MetadataPrefix       string = "terraform_provider_usage_tracking"
 )
 
 type key struct{}
@@ -28,18 +30,23 @@ const (
 )
 
 type Metadata struct {
-	Version   string    `json:"version,omitempty"`
-	Resource  string    `json:"resource,omitempty"`
-	Operation Operation `json:"operation,omitempty"`
+	SchemaVersion string    `json:"json_schema_version,omitempty"`
+	Version       string    `json:"version,omitempty"`
+	Resource      string    `json:"resource,omitempty"`
+	Datasource    string    `json:"datasource,omitempty"`
+	Operation     Operation `json:"operation,omitempty"`
 }
 
 func (m Metadata) validate() error {
 	errs := make([]error, 0)
-	if m.Version == "" {
-		errs = append(errs, errors.New("version for metadata should not be empty"))
+	if m.SchemaVersion == "" {
+		errs = append(errs, errors.New("schema version for metadata should not be empty"))
 	}
-	if m.Resource == "" {
-		errs = append(errs, errors.New("resource name for metadata should not be empty"))
+	if m.Version == "" {
+		errs = append(errs, errors.New("provider version for metadata should not be empty"))
+	}
+	if m.Resource == "" && m.Datasource == "" {
+		errs = append(errs, errors.New("either resource or data source name for metadata should be specified"))
 	}
 	if m.Operation == "" {
 		errs = append(errs, errors.New("operation for metadata should not be empty"))
@@ -47,19 +54,31 @@ func (m Metadata) validate() error {
 	return errors.Join(errs...)
 }
 
-func NewMetadata(version string, resource resources.Resource, operation Operation) Metadata {
+// newTestMetadata is a helper constructor that is used only for testing purposes
+func newTestMetadata(version string, resource resources.Resource, operation Operation) Metadata {
 	return Metadata{
-		Version:   version,
-		Resource:  resource.String(),
-		Operation: operation,
+		SchemaVersion: CurrentSchemaVersion,
+		Version:       version,
+		Resource:      resource.String(),
+		Operation:     operation,
 	}
 }
 
-func NewVersionedMetadata(resource resources.Resource, operation Operation) Metadata {
+func NewVersionedResourceMetadata(resource resources.Resource, operation Operation) Metadata {
 	return Metadata{
-		Version:   ProviderVersion,
-		Resource:  resource.String(),
-		Operation: operation,
+		SchemaVersion: CurrentSchemaVersion,
+		Version:       ProviderVersion,
+		Resource:      resource.String(),
+		Operation:     operation,
+	}
+}
+
+func NewVersionedDatasourceMetadata(datasource datasources.Datasource) Metadata {
+	return Metadata{
+		SchemaVersion: CurrentSchemaVersion,
+		Version:       ProviderVersion,
+		Datasource:    datasource.String(),
+		Operation:     ReadOperation,
 	}
 }
 

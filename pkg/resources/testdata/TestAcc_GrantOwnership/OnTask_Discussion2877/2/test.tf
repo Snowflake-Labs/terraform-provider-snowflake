@@ -7,6 +7,7 @@ resource "snowflake_task" "test" {
   schema        = var.schema
   name          = var.task
   warehouse     = var.warehouse
+  started       = false
   sql_statement = "SELECT CURRENT_TIMESTAMP"
 }
 
@@ -15,7 +16,8 @@ resource "snowflake_task" "child" {
   schema        = var.schema
   name          = var.child
   warehouse     = var.warehouse
-  after         = [snowflake_task.test.name]
+  after         = [snowflake_task.test.fully_qualified_name]
+  started       = false
   sql_statement = "SELECT CURRENT_TIMESTAMP"
 }
 

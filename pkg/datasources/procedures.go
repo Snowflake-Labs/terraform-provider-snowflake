@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -65,7 +67,7 @@ var proceduresSchema = map[string]*schema.Schema{
 
 func Procedures() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadContextProcedures,
+		ReadContext: TrackingReadWrapper(datasources.Procedures, ReadContextProcedures),
 		Schema:      proceduresSchema,
 	}
 }

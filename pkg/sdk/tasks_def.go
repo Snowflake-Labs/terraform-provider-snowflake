@@ -27,8 +27,9 @@ func ToTaskState(s string) (TaskState, error) {
 }
 
 type TaskRelationsRepresentation struct {
-	Predecessors  []string `json:"Predecessors"`
-	FinalizerTask string   `json:"FinalizerTask"`
+	Predecessors      []string `json:"Predecessors"`
+	FinalizerTask     string   `json:"FinalizerTask"`
+	FinalizedRootTask string   `json:"FinalizedRootTask"`
 }
 
 func (r *TaskRelationsRepresentation) ToTaskRelations() (TaskRelations, error) {
@@ -53,12 +54,21 @@ func (r *TaskRelationsRepresentation) ToTaskRelations() (TaskRelations, error) {
 		taskRelations.FinalizerTask = &finalizerTask
 	}
 
+	if len(r.FinalizedRootTask) > 0 {
+		finalizedRootTask, err := ParseSchemaObjectIdentifier(r.FinalizedRootTask)
+		if err != nil {
+			return TaskRelations{}, err
+		}
+		taskRelations.FinalizedRootTask = &finalizedRootTask
+	}
+
 	return taskRelations, nil
 }
 
 type TaskRelations struct {
-	Predecessors  []SchemaObjectIdentifier
-	FinalizerTask *SchemaObjectIdentifier
+	Predecessors      []SchemaObjectIdentifier
+	FinalizerTask     *SchemaObjectIdentifier
+	FinalizedRootTask *SchemaObjectIdentifier
 }
 
 func ToTaskRelations(s string) (TaskRelations, error) {
@@ -146,7 +156,7 @@ var TasksDef = g.NewInterface(
 			OptionalSessionParameters().
 			OptionalNumberAssignment("USER_TASK_TIMEOUT_MS", nil).
 			OptionalNumberAssignment("SUSPEND_TASK_AFTER_NUM_FAILURES", nil).
-			OptionalIdentifier("ErrorNotificationIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("ERROR_INTEGRATION")).
+			OptionalIdentifier("ErrorIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("ERROR_INTEGRATION")).
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 			OptionalIdentifier("Finalize", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Equals().SQL("FINALIZE")).
 			OptionalNumberAssignment("TASK_AUTO_RETRY_ATTEMPTS", g.ParameterOptions()).
@@ -157,7 +167,7 @@ var TasksDef = g.NewInterface(
 			SQL("AS").
 			Text("sql", g.KeywordOptions().NoQuotes().Required()).
 			WithValidation(g.ValidIdentifier, "name").
-			WithValidation(g.ValidIdentifierIfSet, "ErrorNotificationIntegration").
+			WithValidation(g.ValidIdentifierIfSet, "ErrorIntegration").
 			WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 		taskCreateWarehouse,
 	).
@@ -175,7 +185,7 @@ var TasksDef = g.NewInterface(
 			OptionalNumberAssignment("USER_TASK_TIMEOUT_MS", nil).
 			OptionalSessionParameters().
 			OptionalNumberAssignment("SUSPEND_TASK_AFTER_NUM_FAILURES", nil).
-			OptionalIdentifier("ErrorNotificationIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("ERROR_INTEGRATION")).
+			OptionalIdentifier("ErrorIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("ERROR_INTEGRATION")).
 			OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 			OptionalIdentifier("Finalize", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Equals().SQL("FINALIZE")).
 			OptionalNumberAssignment("TASK_AUTO_RETRY_ATTEMPTS", g.ParameterOptions()).
@@ -184,7 +194,7 @@ var TasksDef = g.NewInterface(
 			SQL("AS").
 			Text("sql", g.KeywordOptions().NoQuotes().Required()).
 			WithValidation(g.ValidIdentifier, "name").
-			WithValidation(g.ValidIdentifierIfSet, "ErrorNotificationIntegration"),
+			WithValidation(g.ValidIdentifierIfSet, "ErrorIntegration"),
 	).
 	CustomOperation(
 		"Clone",
@@ -221,20 +231,21 @@ var TasksDef = g.NewInterface(
 					OptionalBooleanAssignment("ALLOW_OVERLAPPING_EXECUTION", nil).
 					OptionalNumberAssignment("USER_TASK_TIMEOUT_MS", nil).
 					OptionalNumberAssignment("SUSPEND_TASK_AFTER_NUM_FAILURES", nil).
-					OptionalIdentifier("ErrorNotificationIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("ERROR_INTEGRATION")).
+					OptionalIdentifier("ErrorIntegration", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions().Equals().SQL("ERROR_INTEGRATION")).
 					OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 					OptionalSessionParameters().
 					OptionalNumberAssignment("TASK_AUTO_RETRY_ATTEMPTS", nil).
 					OptionalNumberAssignment("USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS", nil).
 					WithValidation(g.AtLeastOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParameters", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds").
 					WithValidation(g.ConflictingFields, "Warehouse", "UserTaskManagedInitialWarehouseSize").
-					WithValidation(g.ValidIdentifierIfSet, "ErrorNotificationIntegration"),
+					WithValidation(g.ValidIdentifierIfSet, "ErrorIntegration"),
 				g.ListOptions().SQL("SET"),
 			).
 			OptionalQueryStructField(
 				"Unset",
 				g.NewQueryStruct("TaskUnset").
 					OptionalSQL("WAREHOUSE").
+					OptionalSQL("USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE").
 					OptionalSQL("SCHEDULE").
 					OptionalSQL("CONFIG").
 					OptionalSQL("ALLOW_OVERLAPPING_EXECUTION").
@@ -245,7 +256,7 @@ var TasksDef = g.NewInterface(
 					OptionalSQL("TASK_AUTO_RETRY_ATTEMPTS").
 					OptionalSQL("USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS").
 					OptionalSessionParametersUnset().
-					WithValidation(g.AtLeastOneValueSet, "Warehouse", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"),
+					WithValidation(g.AtLeastOneValueSet, "Warehouse", "UserTaskManagedInitialWarehouseSize", "Schedule", "Config", "AllowOverlappingExecution", "UserTaskTimeoutMs", "SuspendTaskAfterNumFailures", "ErrorIntegration", "Comment", "SessionParametersUnset", "TaskAutoRetryAttempts", "UserTaskMinimumTriggerIntervalInSeconds"),
 				g.ListOptions().SQL("UNSET"),
 			).
 			OptionalSetTags().
@@ -276,7 +287,7 @@ var TasksDef = g.NewInterface(
 			Terse().
 			SQL("TASKS").
 			OptionalLike().
-			OptionalIn().
+			OptionalExtendedIn().
 			OptionalStartsWith().
 			OptionalSQL("ROOT ONLY").
 			OptionalLimit(),

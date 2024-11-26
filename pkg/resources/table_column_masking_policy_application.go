@@ -1,7 +1,11 @@
 package resources
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -32,10 +36,10 @@ var tableColumnMaskingPolicyApplicationSchema = map[string]*schema.Schema{
 
 func TableColumnMaskingPolicyApplication() *schema.Resource {
 	return &schema.Resource{
-		Description: "Applies a masking policy to a table column.",
-		Create:      CreateTableColumnMaskingPolicyApplication,
-		Read:        ReadTableColumnMaskingPolicyApplication,
-		Delete:      DeleteTableColumnMaskingPolicyApplication,
+		Description:   "Applies a masking policy to a table column.",
+		CreateContext: TrackingCreateWrapper(resources.TableColumnMaskingPolicyApplication, CreateTableColumnMaskingPolicyApplication),
+		ReadContext:   TrackingReadWrapper(resources.TableColumnMaskingPolicyApplication, ReadTableColumnMaskingPolicyApplication),
+		DeleteContext: TrackingDeleteWrapper(resources.TableColumnMaskingPolicyApplication, DeleteTableColumnMaskingPolicyApplication),
 
 		Schema: tableColumnMaskingPolicyApplicationSchema,
 		Importer: &schema.ResourceImporter{
@@ -45,7 +49,7 @@ func TableColumnMaskingPolicyApplication() *schema.Resource {
 }
 
 // CreateTableColumnMaskingPolicyApplication implements schema.CreateFunc.
-func CreateTableColumnMaskingPolicyApplication(d *schema.ResourceData, meta interface{}) error {
+func CreateTableColumnMaskingPolicyApplication(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	manager := snowflake.NewTableColumnMaskingPolicyApplicationManager()
 
 	input := &snowflake.TableColumnMaskingPolicyApplicationCreateInput{
@@ -62,25 +66,25 @@ func CreateTableColumnMaskingPolicyApplication(d *schema.ResourceData, meta inte
 	db := client.GetConn().DB
 	_, err := db.Exec(stmt)
 	if err != nil {
-		return fmt.Errorf("error applying masking policy: %w", err)
+		return diag.FromErr(fmt.Errorf("error applying masking policy: %w", err))
 	}
 
 	d.SetId(TableColumnMaskingPolicyApplicationID(&input.TableColumnMaskingPolicyApplication))
 
-	return ReadTableColumnMaskingPolicyApplication(d, meta)
+	return ReadTableColumnMaskingPolicyApplication(ctx, d, meta)
 }
 
 // ReadTableColumnMaskingPolicyApplication implements schema.ReadFunc.
-func ReadTableColumnMaskingPolicyApplication(d *schema.ResourceData, meta interface{}) error {
+func ReadTableColumnMaskingPolicyApplication(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	manager := snowflake.NewTableColumnMaskingPolicyApplicationManager()
 
 	table, column := TableColumnMaskingPolicyApplicationIdentifier(d.Id())
 
 	if err := d.Set("table", table.QualifiedName()); err != nil {
-		return fmt.Errorf("error setting table: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting table: %w", err))
 	}
 	if err := d.Set("column", column); err != nil {
-		return fmt.Errorf("error setting column: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting column: %w", err))
 	}
 
 	input := &snowflake.TableColumnMaskingPolicyApplicationReadInput{
@@ -94,24 +98,24 @@ func ReadTableColumnMaskingPolicyApplication(d *schema.ResourceData, meta interf
 	db := client.GetConn().DB
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return fmt.Errorf("error querying password policy: %w", err)
+		return diag.FromErr(fmt.Errorf("error querying password policy: %w", err))
 	}
 
 	defer rows.Close()
 	maskingPolicy, err := manager.Parse(rows, column)
 	if err != nil {
-		return fmt.Errorf("failed to parse result of describe: %w", err)
+		return diag.FromErr(fmt.Errorf("failed to parse result of describe: %w", err))
 	}
 
 	if err = d.Set("masking_policy", maskingPolicy); err != nil {
-		return fmt.Errorf("error setting masking_policy: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting masking_policy: %w", err))
 	}
 
 	return nil
 }
 
 // DeleteTableColumnMaskingPolicyApplication implements schema.DeleteFunc.
-func DeleteTableColumnMaskingPolicyApplication(d *schema.ResourceData, meta interface{}) error {
+func DeleteTableColumnMaskingPolicyApplication(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	manager := snowflake.NewTableColumnMaskingPolicyApplicationManager()
 
 	input := &snowflake.TableColumnMaskingPolicyApplicationDeleteInput{
@@ -127,7 +131,7 @@ func DeleteTableColumnMaskingPolicyApplication(d *schema.ResourceData, meta inte
 	db := client.GetConn().DB
 	_, err := db.Exec(stmt)
 	if err != nil {
-		return fmt.Errorf("error executing drop statement: %w", err)
+		return diag.FromErr(fmt.Errorf("error executing drop statement: %w", err))
 	}
 
 	return nil

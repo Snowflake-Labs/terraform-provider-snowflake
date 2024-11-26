@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,14 +22,13 @@ var currentRoleSchema = map[string]*schema.Schema{
 
 func CurrentRole() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadCurrentRole,
-		Schema: currentRoleSchema,
+		ReadContext: TrackingReadWrapper(datasources.CurrentRole, ReadCurrentRole),
+		Schema:      currentRoleSchema,
 	}
 }
 
-func ReadCurrentRole(d *schema.ResourceData, meta interface{}) error {
+func ReadCurrentRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	role, err := client.ContextFunctions.CurrentRole(ctx)
 	if err != nil {
@@ -38,7 +40,7 @@ func ReadCurrentRole(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(helpers.EncodeSnowflakeID(role))
 	err = d.Set("name", role.Name())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }

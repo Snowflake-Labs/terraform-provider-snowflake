@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -52,7 +54,7 @@ var securityIntegrationsSchema = map[string]*schema.Schema{
 
 func SecurityIntegrations() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadSecurityIntegrations,
+		ReadContext: TrackingReadWrapper(datasources.SecurityIntegrations, ReadSecurityIntegrations),
 		Schema:      securityIntegrationsSchema,
 		Description: "Datasource used to get details of filtered security integrations. Filtering is aligned with the current possibilities for [SHOW SECURITY INTEGRATIONS](https://docs.snowflake.com/en/sql-reference/sql/show-integrations) query (only `like` is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection `security_integrations`.",
 	}

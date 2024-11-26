@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -15,7 +17,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -208,10 +209,10 @@ var tableSchema = map[string]*schema.Schema{
 
 func Table() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateTable,
-		Read:   ReadTable,
-		Update: UpdateTable,
-		Delete: DeleteTable,
+		CreateContext: TrackingCreateWrapper(resources.Table, CreateTable),
+		ReadContext:   TrackingReadWrapper(resources.Table, ReadTable),
+		UpdateContext: TrackingUpdateWrapper(resources.Table, UpdateTable),
+		DeleteContext: TrackingDeleteWrapper(resources.Table, DeleteTable),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Table, customdiff.All(
 			ComputedIfAnyAttributeChanged(tableSchema, FullyQualifiedNameAttributeName, "name"),
@@ -568,9 +569,8 @@ func toColumnIdentityConfig(td sdk.TableColumnDetails) map[string]any {
 }
 
 // CreateTable implements schema.CreateFunc.
-func CreateTable(d *schema.ResourceData, meta interface{}) error {
+func CreateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -622,18 +622,18 @@ func CreateTable(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.Tables.Create(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("error creating table %v err = %w", name, err)
+		return diag.FromErr(fmt.Errorf("error creating table %v err = %w", name, err))
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	return ReadTable(d, meta)
+	return ReadTable(ctx, d, meta)
 }
 
 // ReadTable implements schema.ReadFunc.
-func ReadTable(d *schema.ResourceData, meta interface{}) error {
+func ReadTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	table, err := client.Tables.ShowByID(ctx, id)
@@ -650,7 +650,7 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	var schemaRetentionTime int64
 	// "retention_time" may sometimes be empty string instead of an integer
@@ -662,13 +662,13 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 		schemaRetentionTime, err = strconv.ParseInt(rt, 10, 64)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	tableDescription, err := client.Tables.DescribeColumns(ctx, sdk.NewDescribeTableColumnsRequest(id))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set the relevant data in the state
@@ -688,16 +688,16 @@ func ReadTable(d *schema.ResourceData, meta interface{}) error {
 
 	for key, val := range toSet {
 		if err := d.Set(key, val); err != nil { // lintignore:R001
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	return nil
 }
 
 // UpdateTable implements schema.UpdateFunc.
-func UpdateTable(d *schema.ResourceData, meta interface{}) error {
+func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("name") {
@@ -705,7 +705,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 
 		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithNewName(&newId))
 		if err != nil {
-			return fmt.Errorf("error renaming table %v err = %w", d.Id(), err)
+			return diag.FromErr(fmt.Errorf("error renaming table %v err = %w", d.Id(), err))
 		}
 
 		d.SetId(helpers.EncodeSnowflakeID(newId))
@@ -747,14 +747,14 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 	if runSetStatement {
 		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSet(setRequest))
 		if err != nil {
-			return fmt.Errorf("error updating table: %w", err)
+			return diag.FromErr(fmt.Errorf("error updating table: %w", err))
 		}
 	}
 
 	if runUnsetStatement {
 		err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithUnset(unsetRequest))
 		if err != nil {
-			return fmt.Errorf("error updating table: %w", err)
+			return diag.FromErr(fmt.Errorf("error updating table: %w", err))
 		}
 	}
 
@@ -764,12 +764,12 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		if len(cb) != 0 {
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithClusteringAction(sdk.NewTableClusteringActionRequest().WithClusterBy(cb)))
 			if err != nil {
-				return fmt.Errorf("error updating table: %w", err)
+				return diag.FromErr(fmt.Errorf("error updating table: %w", err))
 			}
 		} else {
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithClusteringAction(sdk.NewTableClusteringActionRequest().WithDropClusteringKey(sdk.Bool(true))))
 			if err != nil {
-				return fmt.Errorf("error updating table: %w", err)
+				return diag.FromErr(fmt.Errorf("error updating table: %w", err))
 			}
 		}
 	}
@@ -785,7 +785,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithDropColumns(snowflake.QuoteStringList(removedColumnNames))))
 			if err != nil {
-				return fmt.Errorf("error updating table: %w", err)
+				return diag.FromErr(fmt.Errorf("error updating table: %w", err))
 			}
 		}
 
@@ -795,7 +795,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 
 			if cA._default != nil {
 				if cA._default._type() != "constant" {
-					return fmt.Errorf("failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name)
+					return diag.FromErr(fmt.Errorf("failed to add column %v => Only adding a column as a constant is supported by Snowflake", cA.name))
 				}
 				var expression string
 				if sdk.IsStringType(cA.dataType) {
@@ -824,7 +824,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAdd(addRequest)))
 			if err != nil {
-				return fmt.Errorf("error adding column: %w", err)
+				return diag.FromErr(fmt.Errorf("error adding column: %w", err))
 			}
 		}
 		for _, cA := range changed {
@@ -835,7 +835,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				}
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithType(sdk.Pointer(sdk.DataType(cA.newColumn.dataType))).WithCollate(newCollation)})))
 				if err != nil {
-					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
+					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))
 				}
 			}
 			if cA.changedNullConstraint {
@@ -847,13 +847,13 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				}
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithNotNullConstraint(nullabilityRequest)})))
 				if err != nil {
-					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
+					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))
 				}
 			}
 			if cA.dropedDefault {
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithDropDefault(sdk.Bool(true))})))
 				if err != nil {
-					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
+					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))
 				}
 			}
 			if cA.changedComment {
@@ -866,7 +866,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*columnAlterActionRequest})))
 				if err != nil {
-					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
+					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))
 				}
 			}
 			if cA.changedMaskingPolicy {
@@ -878,7 +878,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				}
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(columnAction))
 				if err != nil {
-					return fmt.Errorf("error changing property on %v: err %w", d.Id(), err)
+					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))
 				}
 			}
 		}
@@ -897,7 +897,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 					WithDrop(sdk.NewTableConstraintDropActionRequest().WithPrimaryKey(sdk.Bool(true))),
 			))
 			if err != nil {
-				return fmt.Errorf("error updating table: %w", err)
+				return diag.FromErr(fmt.Errorf("error updating table: %w", err))
 			}
 		}
 
@@ -910,7 +910,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 				sdk.NewTableConstraintActionRequest().WithAdd(constraint),
 			))
 			if err != nil {
-				return fmt.Errorf("error updating table: %w", err)
+				return diag.FromErr(fmt.Errorf("error updating table: %w", err))
 			}
 		}
 	}
@@ -921,7 +921,7 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 		if len(unsetTags) > 0 {
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithUnsetTags(unsetTags))
 			if err != nil {
-				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err))
 			}
 		}
 
@@ -932,23 +932,23 @@ func UpdateTable(d *schema.ResourceData, meta interface{}) error {
 			}
 			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithSetTags(tagAssociationRequests))
 			if err != nil {
-				return fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error setting tags on %v, err = %w", d.Id(), err))
 			}
 		}
 	}
 
-	return ReadTable(d, meta)
+	return ReadTable(ctx, d, meta)
 }
 
 // DeleteTable implements schema.DeleteFunc.
-func DeleteTable(d *schema.ResourceData, meta interface{}) error {
+func DeleteTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

@@ -12,7 +12,7 @@ import (
 
 func TestInt_Client_AdditionalMetadata(t *testing.T) {
 	client := testClient(t)
-	metadata := tracking.NewMetadata("v1.13.1002-rc-test", resources.Database, tracking.CreateOperation)
+	metadata := tracking.Metadata{SchemaVersion: "1", Version: "v1.13.1002-rc-test", Resource: resources.Database.String(), Operation: tracking.CreateOperation}
 
 	assertQueryMetadata := func(t *testing.T, queryId string) {
 		t.Helper()

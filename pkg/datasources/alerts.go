@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -76,15 +79,14 @@ var alertsSchema = map[string]*schema.Schema{
 // Alerts Snowflake Roles resource.
 func Alerts() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadAlerts,
-		Schema: alertsSchema,
+		ReadContext: TrackingReadWrapper(datasources.Alerts, ReadAlerts),
+		Schema:      alertsSchema,
 	}
 }
 
 // ReadAlerts Reads the database metadata information.
-func ReadAlerts(d *schema.ResourceData, meta interface{}) error {
+func ReadAlerts(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	d.SetId("alerts_read")
 
@@ -114,7 +116,7 @@ func ReadAlerts(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		log.Printf("[DEBUG] failed to list alerts in schema (%s)", d.Id())
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 
 	alerts := make([]map[string]any, 0, len(listAlerts))
@@ -127,7 +129,7 @@ func ReadAlerts(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("alerts", alerts); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }
