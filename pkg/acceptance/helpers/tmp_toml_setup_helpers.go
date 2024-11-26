@@ -7,7 +7,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 )
 
-// TODO [next PR]: add TestClient ref to each specific client, so that we enhance specific client and not the base one
+// TODO [SNOW-1827324]: add TestClient ref to each specific client, so that we enhance specific client and not the base one
 
 func (c *TestClient) TempTomlConfigForServiceUser(t *testing.T, serviceUser *TmpServiceUser) *TmpTomlConfig {
 	return c.StoreTempTomlConfig(t, func(profile string) string {

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [next PR]: Move the rest of the tests to testint package
+// TODO [SNOW-1827331]: Move the rest of the tests to testint package
 
 func TestClient_ping(t *testing.T) {
 	client := defaultTestClient(t)

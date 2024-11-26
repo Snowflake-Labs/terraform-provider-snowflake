@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [next PR]: use generated config for these tests
+// TODO [SNOW-1827310]: use generated config for these tests
 func TestClient_NewClient(t *testing.T) {
 	t.Run("with default config", func(t *testing.T) {
 		config := sdk.DefaultConfig()

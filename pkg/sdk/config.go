@@ -245,7 +245,7 @@ type ConfigDTO struct {
 	PrivateKey             *string             `toml:"privatekey,multiline"`
 	PrivateKeyPassphrase   *string             `toml:"privatekeypassphrase"`
 	DisableTelemetry       *bool               `toml:"disabletelemetry"`
-	// TODO [next PR]: handle and test 3-value booleans properly from TOML
+	// TODO [SNOW-1827312]: handle and test 3-value booleans properly from TOML
 	ValidateDefaultParameters      *bool   `toml:"validatedefaultparameters"`
 	ClientRequestMfaToken          *bool   `toml:"clientrequestmfatoken"`
 	ClientStoreTemporaryCredential *bool   `toml:"clientstoretemporarycredential"`
@@ -338,7 +338,7 @@ func pointerTimeInSecondsAttributeSet(src *int, dst *time.Duration) {
 	}
 }
 
-// TODO [next PR]: fix this method
+// TODO [SNOW-1827312]: fix this method
 func pointerConfigBoolAttributeSet(src *bool, dst *gosnowflake.ConfigBool) {
 	if src != nil {
 		*dst = boolToConfigBool(*src)

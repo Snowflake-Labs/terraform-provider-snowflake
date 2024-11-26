@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO [SNOW-1827309]: use toml config builder instead of hardcoding
 func TestLoadConfigFile(t *testing.T) {
 	c := `
 	[default]

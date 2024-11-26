@@ -7,8 +7,8 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-// TODO [next PR]: add TestClient ref to each specific client, so that we enhance specific client and not the base one
-// TODO [next PR]: consider using these in other places where user is set up
+// TODO [SNOW-1827324]: add TestClient ref to each specific client, so that we enhance specific client and not the base one
+// TODO [SNOW-1827324]: consider using these in other places where user is set up
 
 func (c *TestClient) SetUpTemporaryLegacyServiceUser(t *testing.T) *TmpLegacyServiceUser {
 	pass := random.Password()
