@@ -21,7 +21,7 @@
                 // TODO: adjust request if e.g. LIKE is supported for the resource
             {{ else }}
                 {{- range .ShowByIDFiltering -}} 
-                    .{{- if or (eq .Kind "In") (eq .Kind "ExtendedIn") }}
+                    .{{- if .IdentifierBased }}
                         With{{ .Kind }}( {{ .Kind }} { {{ printf .Args $idkind }} })
                     {{- else }}
                         With{{ .Kind }}( {{ .Kind }} { {{ .Args }} })

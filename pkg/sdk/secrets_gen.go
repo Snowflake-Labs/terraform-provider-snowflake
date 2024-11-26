@@ -14,8 +14,8 @@ type Secrets interface {
 	Alter(ctx context.Context, request *AlterSecretRequest) error
 	Drop(ctx context.Context, request *DropSecretRequest) error
 	Show(ctx context.Context, request *ShowSecretRequest) ([]Secret, error)
-	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error)
+	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error)
 }
 
 // CreateWithOAuthClientCredentialsFlowSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-secret.
@@ -123,10 +123,10 @@ type DropSecretOptions struct {
 
 // ShowSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-secrets.
 type ShowSecretOptions struct {
-	show    bool        `ddl:"static" sql:"SHOW"`
-	secrets bool        `ddl:"static" sql:"SECRETS"`
-	Like    *Like       `ddl:"keyword" sql:"LIKE"`
-	In      *ExtendedIn `ddl:"keyword" sql:"IN"`
+	show       bool        `ddl:"static" sql:"SHOW"`
+	secrets    bool        `ddl:"static" sql:"SECRETS"`
+	Like       *Like       `ddl:"keyword" sql:"LIKE"`
+	ExtendedIn *ExtendedIn `ddl:"keyword" sql:"IN"`
 }
 type secretDBRow struct {
 	CreatedOn     time.Time      `db:"created_on"`

@@ -52,15 +52,6 @@ func (v *secrets) Show(ctx context.Context, request *ShowSecretRequest) ([]Secre
 	return resultList, nil
 }
 
-func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error) {
-	request := NewShowSecretRequest().WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).WithLike(Like{String(id.Name())})
-	secrets, err := v.Show(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-	return collections.FindFirst(secrets, func(r Secret) bool { return r.Name == id.Name() })
-}
-
 func (v *secrets) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error) {
 	opts := &DescribeSecretOptions{
 		name: id,
@@ -72,14 +63,24 @@ func (v *secrets) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Sec
 	return result.convert(), nil
 }
 
+func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error) {
+	request := NewShowSecretRequest().
+		WithLike(Like{Pattern: String(id.Name())}).
+		WithExtendedIn(ExtendedIn{In: In{Schema: id.SchemaId()}})
+	secrets, err := v.Show(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	return collections.FindFirst(secrets, func(r Secret) bool { return r.Name == id.Name() })
+}
+
 func (r *CreateWithOAuthClientCredentialsFlowSecretRequest) toOpts() *CreateWithOAuthClientCredentialsFlowSecretOptions {
 	opts := &CreateWithOAuthClientCredentialsFlowSecretOptions{
 		OrReplace:      r.OrReplace,
 		IfNotExists:    r.IfNotExists,
 		name:           r.name,
 		ApiIntegration: r.ApiIntegration,
-
-		Comment: r.Comment,
+		Comment:        r.Comment,
 	}
 
 	if r.OauthScopes != nil {
@@ -134,6 +135,7 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 	}
 
 	if r.Set != nil {
+
 		opts.Set = &SecretSet{
 			Comment: r.Set.Comment,
 		}
@@ -192,8 +194,8 @@ func (r *DropSecretRequest) toOpts() *DropSecretOptions {
 
 func (r *ShowSecretRequest) toOpts() *ShowSecretOptions {
 	opts := &ShowSecretOptions{
-		Like: r.Like,
-		In:   r.In,
+		Like:       r.Like,
+		ExtendedIn: r.ExtendedIn,
 	}
 	return opts
 }
