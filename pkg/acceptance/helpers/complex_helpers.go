@@ -49,43 +49,66 @@ func (c *TestClient) SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t *tes
 	return tmpUserId, tmpRoleId
 }
 
-func (c *TestClient) SetUpTemporaryServiceUser(t *testing.T) *TmpServiceUserConfig {
-	accountId := c.Context.CurrentAccountId(t)
+func (c *TestClient) SetUpTemporaryServiceUser(t *testing.T) *TmpServiceUser {
 	warehouseId := c.Ids.SnowflakeWarehouseId()
+	accountId := c.Context.CurrentAccountId(t)
 
 	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
 	tmpUserId, tmpRoleId := c.SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
 
-	profile := random.AlphaN(6)
-	toml := TomlConfigForServiceUser(t, profile, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey)
-	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
-
-	return &TmpServiceUserConfig{
+	return &TmpServiceUser{
 		PublicKey:  publicKey,
 		PrivateKey: privateKey,
-		TmpUserConfig: TmpUserConfig{
-			Profile: profile,
-			Path:    configPath,
-			UserId:  tmpUserId,
-			RoleId:  tmpRoleId,
+		TmpUser: TmpUser{
+			UserId:      tmpUserId,
+			RoleId:      tmpRoleId,
+			WarehouseId: warehouseId,
+			AccountId:   accountId,
 		},
 	}
 }
 
-type TmpUserConfig struct {
-	Profile string
-	Path    string
-	UserId  sdk.AccountObjectIdentifier
-	RoleId  sdk.AccountObjectIdentifier
+func (c *TestClient) TempTomlConfigForServiceUser(t *testing.T, serviceUser *TmpServiceUser) *TmpTomlConfig {
+	return c.storeTempTomlConfig(t, func(profile string) string {
+		return TomlConfigForServiceUser(t, profile, serviceUser.UserId, serviceUser.RoleId, serviceUser.WarehouseId, serviceUser.AccountId, serviceUser.PrivateKey)
+	})
 }
 
-type TmpServiceUserConfig struct {
+func (c *TestClient) TempIncorrectTomlConfigForServiceUser(t *testing.T, serviceUser *TmpServiceUser) *TmpTomlConfig {
+	return c.storeTempTomlConfig(t, func(profile string) string {
+		return TomlIncorrectConfigForServiceUser(t, profile, serviceUser.AccountId)
+	})
+}
+
+func (c *TestClient) storeTempTomlConfig(t *testing.T, tomlProvider func(string) string) *TmpTomlConfig {
+	profile := random.AlphaN(6)
+	toml := tomlProvider(profile)
+	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
+	return &TmpTomlConfig{
+		Profile: profile,
+		Path:    configPath,
+	}
+}
+
+type TmpUser struct {
+	UserId      sdk.AccountObjectIdentifier
+	RoleId      sdk.AccountObjectIdentifier
+	WarehouseId sdk.AccountObjectIdentifier
+	AccountId   sdk.AccountIdentifier
+}
+
+type TmpServiceUser struct {
 	PublicKey  string
 	PrivateKey string
-	TmpUserConfig
+	TmpUser
 }
 
-type TmpLegacyServiceUserConfig struct {
+type TmpLegacyServiceUser struct {
 	Pass string
-	TmpUserConfig
+	TmpUser
+}
+
+type TmpTomlConfig struct {
+	Profile string
+	Path    string
 }

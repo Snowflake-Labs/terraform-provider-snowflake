@@ -32,19 +32,14 @@ import (
 // TODO [this PR]: verify jwt login
 // TODO [this PR]: verify encrypted jwt login
 
-// TODO [this PR]: toml creator should persist file
-// TODO [this PR]: SetUpTemporaryServiceUser vs SetUpTemporaryServiceUserWithConfig
-
 func TestAcc_Provider_configHierarchy(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	tmpServiceUserConfig := acc.TestClient().SetUpTemporaryServiceUser(t)
-
-	accountId := acc.TestClient().Context.CurrentAccountId(t)
-	tomlWithIncorrectCredentials := helpers.TomlIncorrectConfigForServiceUser(t, testprofiles.IncorrectUserAndPassword, accountId)
-	configPathWithIncorrect := testhelpers.TestFile(t, random.AlphaN(10), []byte(tomlWithIncorrectCredentials))
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+	incorrectConfig := acc.TestClient().TempIncorrectTomlConfigForServiceUser(t, tmpServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -61,9 +56,9 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			// make sure that we fail for incorrect profile
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.ConfigPath, configPathWithIncorrect)
+					t.Setenv(snowflakeenvs.ConfigPath, incorrectConfig.Path)
 				},
-				Config:      providerConfig(testprofiles.IncorrectUserAndPassword),
+				Config:      providerConfig(incorrectConfig.Profile),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// make sure that we succeed for the correct profile
@@ -84,9 +79,9 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			// correct user and key in provider's config should not be rewritten by a faulty config
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.ConfigPath, configPathWithIncorrect)
+					t.Setenv(snowflakeenvs.ConfigPath, incorrectConfig.Path)
 				},
-				Config: providerConfigWithUserPrivateKeyAndProfile(tmpServiceUserConfig.UserId, tmpServiceUserConfig.PrivateKey, tmpServiceUserConfig.RoleId.Name(), testprofiles.IncorrectUserAndPassword),
+				Config: providerConfigWithUserPrivateKeyAndProfile(tmpServiceUser.UserId, tmpServiceUser.PrivateKey, tmpServiceUser.RoleId.Name(), incorrectConfig.Profile),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
@@ -103,12 +98,12 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			// correct user and private key in env should not be rewritten by a faulty config
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.User, tmpServiceUserConfig.UserId.Name())
-					t.Setenv(snowflakeenvs.PrivateKey, tmpServiceUserConfig.PrivateKey)
-					t.Setenv(snowflakeenvs.Role, tmpServiceUserConfig.RoleId.Name())
-					t.Setenv(snowflakeenvs.ConfigPath, configPathWithIncorrect)
+					t.Setenv(snowflakeenvs.User, tmpServiceUser.UserId.Name())
+					t.Setenv(snowflakeenvs.PrivateKey, tmpServiceUser.PrivateKey)
+					t.Setenv(snowflakeenvs.Role, tmpServiceUser.RoleId.Name())
+					t.Setenv(snowflakeenvs.ConfigPath, incorrectConfig.Path)
 				},
-				Config: providerConfigWithProfileAndAuthenticator(testprofiles.IncorrectUserAndPassword, sdk.AuthenticationTypeJwt),
+				Config: providerConfigWithProfileAndAuthenticator(incorrectConfig.Profile, sdk.AuthenticationTypeJwt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
@@ -119,7 +114,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					testenvs.AssertEnvSet(t, snowflakeenvs.User)
 					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
-				Config:      providerConfigWithUserPrivateKeyAndProfile(ids.NonExistingAccountObjectIdentifier, tmpServiceUserConfig.PrivateKey, tmpServiceUserConfig.RoleId.Name(), tmpServiceUserConfig.Profile),
+				Config:      providerConfigWithUserPrivateKeyAndProfile(ids.NonExistingAccountObjectIdentifier, tmpServiceUser.PrivateKey, tmpServiceUser.RoleId.Name(), tmpServiceUserConfig.Profile),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// there is no config (by setting the dir to something different from .snowflake/config)
@@ -129,18 +124,18 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					require.NoError(t, err)
 					t.Setenv(snowflakeenvs.ConfigPath, dir)
 				},
-				Config:      providerConfigWithUserPrivateKeyAndProfile(tmpServiceUserConfig.UserId, tmpServiceUserConfig.PrivateKey, tmpServiceUserConfig.RoleId.Name(), testprofiles.Default),
+				Config:      providerConfigWithUserPrivateKeyAndProfile(tmpServiceUser.UserId, tmpServiceUser.PrivateKey, tmpServiceUser.RoleId.Name(), testprofiles.Default),
 				ExpectError: regexp.MustCompile("account is empty"),
 			},
 			// provider's config should not be rewritten by env when there is no profile (incorrect user in config versus correct one in env) - proves #2242
 			{
 				PreConfig: func() {
 					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
-					t.Setenv(snowflakeenvs.User, tmpServiceUserConfig.UserId.Name())
-					t.Setenv(snowflakeenvs.PrivateKey, tmpServiceUserConfig.PrivateKey)
-					t.Setenv(snowflakeenvs.AccountName, accountId.AccountName())
-					t.Setenv(snowflakeenvs.OrganizationName, accountId.OrganizationName())
-					t.Setenv(snowflakeenvs.Role, tmpServiceUserConfig.RoleId.Name())
+					t.Setenv(snowflakeenvs.User, tmpServiceUser.UserId.Name())
+					t.Setenv(snowflakeenvs.PrivateKey, tmpServiceUser.PrivateKey)
+					t.Setenv(snowflakeenvs.AccountName, tmpServiceUser.AccountId.AccountName())
+					t.Setenv(snowflakeenvs.OrganizationName, tmpServiceUser.AccountId.OrganizationName())
+					t.Setenv(snowflakeenvs.Role, tmpServiceUser.RoleId.Name())
 				},
 				Config:      providerConfigWithUserAndProfile(ids.NonExistingAccountObjectIdentifier, testprofiles.Default),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
