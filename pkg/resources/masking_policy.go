@@ -366,6 +366,7 @@ func DeleteMaskingPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		return diag.FromErr(err)
 	}
 
+	// TODO(SNOW-1818849): unassign policies before dropping
 	err = client.MaskingPolicies.Drop(ctx, id, &sdk.DropMaskingPolicyOptions{IfExists: sdk.Pointer(true)})
 	if err != nil {
 		return diag.Diagnostics{
