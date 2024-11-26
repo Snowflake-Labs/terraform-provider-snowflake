@@ -579,7 +579,12 @@ func TestAcc_Provider_triValueBoolean(t *testing.T) {
 }
 
 func TestAcc_Provider_sessionParameters(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -593,7 +598,10 @@ func TestAcc_Provider_sessionParameters(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerWithParamsConfig(testprofiles.Default, 31337),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config: providerWithParamsConfig(tmpServiceUserConfig.Profile, 31337),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_unsafe_execute.t", "query_results.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_unsafe_execute.t", "query_results.0.value", "31337"),
@@ -654,48 +662,58 @@ func TestAcc_Provider_SnowflakeAuth(t *testing.T) {
 }
 
 func TestAcc_Provider_invalidConfigurations(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
+		PreCheck: func() {
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+		},
 		Steps: []resource.TestStep{
 			{
-				Config:      providerConfigWithClientIp(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithClientIp(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile("expected client_ip to contain a valid IP"),
 			},
 			{
-				Config:      providerConfigWithProtocol(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithProtocol(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile("invalid protocol: invalid"),
 			},
 			{
-				Config:      providerConfigWithPort(testprofiles.Default, 123456789),
+				Config:      providerConfigWithPort(tmpServiceUserConfig.Profile, 123456789),
 				ExpectError: regexp.MustCompile(`expected "port" to be a valid port number or 0, got: 123456789`),
 			},
 			{
-				Config:      providerConfigWithAuthType(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithAuthType(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile("invalid authenticator type: invalid"),
 			},
 			{
-				Config:      providerConfigWithOktaUrl(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithOktaUrl(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile(`expected "okta_url" to have a host, got invalid`),
 			},
 			{
-				Config:      providerConfigWithTimeout(testprofiles.Default, "login_timeout", -1),
+				Config:      providerConfigWithTimeout(tmpServiceUserConfig.Profile, "login_timeout", -1),
 				ExpectError: regexp.MustCompile(`expected login_timeout to be at least \(0\), got -1`),
 			},
 			{
-				Config:      providerConfigWithTokenEndpoint(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithTokenEndpoint(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile(`expected "token_endpoint" to have a host, got invalid`),
 			},
 			{
-				Config:      providerConfigWithLogLevel(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithLogLevel(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile(`invalid driver log level: invalid`),
 			},
 			{
 				Config: providerConfig("non-existing"),
 				// .* is used to match the error message regarding of the home user location
-				ExpectError: regexp.MustCompile(`profile "non-existing" not found in file .*.snowflake/config`),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`profile "non-existing" not found in file %s`, tmpServiceUserConfig.Path)),
 			},
 		},
 	})
@@ -708,12 +726,6 @@ provider "snowflake" {
 	authenticator    = "%[2]s"
 }
 `, profile, authenticator) + datasourceConfig()
-}
-
-func emptyProviderConfig() string {
-	return `
-provider "snowflake" {
-}` + datasourceConfig()
 }
 
 func providerConfigWithAuthenticator(authenticator sdk.AuthenticationType) string {
