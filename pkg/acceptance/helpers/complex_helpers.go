@@ -71,12 +71,15 @@ func (c *TestClient) SetUpTemporaryServiceUser(t *testing.T) *TmpServiceUser {
 	warehouseId := c.Ids.SnowflakeWarehouseId()
 	accountId := c.Context.CurrentAccountId(t)
 
-	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
+	pass := random.Password()
+	privateKey, encryptedKey, publicKey, _ := random.GenerateRSAKeyPair(t, pass)
 	tmpUserId, tmpRoleId := c.SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
 
 	return &TmpServiceUser{
-		PublicKey:  publicKey,
-		PrivateKey: privateKey,
+		PublicKey:           publicKey,
+		PrivateKey:          privateKey,
+		EncryptedPrivateKey: encryptedKey,
+		Pass:                pass,
 		TmpUser: TmpUser{
 			UserId:      tmpUserId,
 			RoleId:      tmpRoleId,
@@ -92,9 +95,21 @@ func (c *TestClient) TempTomlConfigForServiceUser(t *testing.T, serviceUser *Tmp
 	})
 }
 
+func (c *TestClient) TempTomlConfigForServiceUserWithEncryptedKey(t *testing.T, serviceUser *TmpServiceUser) *TmpTomlConfig {
+	return c.StoreTempTomlConfig(t, func(profile string) string {
+		return TomlConfigForServiceUserWithEncryptedKey(t, profile, serviceUser.UserId, serviceUser.RoleId, serviceUser.WarehouseId, serviceUser.AccountId, serviceUser.EncryptedPrivateKey, serviceUser.Pass)
+	})
+}
+
 func (c *TestClient) TempIncorrectTomlConfigForServiceUser(t *testing.T, serviceUser *TmpServiceUser) *TmpTomlConfig {
 	return c.StoreTempTomlConfig(t, func(profile string) string {
 		return TomlIncorrectConfigForServiceUser(t, profile, serviceUser.AccountId)
+	})
+}
+
+func (c *TestClient) TempIncorrectTomlConfigForServiceUserWithEncryptedKey(t *testing.T, serviceUser *TmpServiceUser) *TmpTomlConfig {
+	return c.StoreTempTomlConfig(t, func(profile string) string {
+		return TomlConfigForServiceUserWithEncryptedKey(t, profile, serviceUser.UserId, serviceUser.RoleId, serviceUser.WarehouseId, serviceUser.AccountId, serviceUser.EncryptedPrivateKey, "incorrect pass")
 	})
 }
 
@@ -128,8 +143,10 @@ type TmpUser struct {
 }
 
 type TmpServiceUser struct {
-	PublicKey  string
-	PrivateKey string
+	PublicKey           string
+	PrivateKey          string
+	EncryptedPrivateKey string
+	Pass                string
 	TmpUser
 }
 

@@ -26,9 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [this PR]: verify jwt login
-// TODO [this PR]: verify encrypted jwt login
-
 func TestAcc_Provider_configHierarchy(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -611,7 +608,15 @@ func TestAcc_Provider_sessionParameters(t *testing.T) {
 }
 
 func TestAcc_Provider_JwtAuth(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+	tmpIncorrectServiceUserConfig := acc.TestClient().TempIncorrectTomlConfigForServiceUser(t, tmpServiceUser)
+	tmpServiceUserWithEncryptedKeyConfig := acc.TestClient().TempTomlConfigForServiceUserWithEncryptedKey(t, tmpServiceUser)
+	tmpIncorrectServiceUserWithEncryptedKeyConfig := acc.TestClient().TempIncorrectTomlConfigForServiceUserWithEncryptedKey(t, tmpServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -624,18 +629,40 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
+			// authenticate with incorrect private key
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpIncorrectServiceUserConfig.Path)
+				},
+				Config:      providerConfigWithProfileAndAuthenticator(tmpIncorrectServiceUserConfig.Profile, sdk.AuthenticationTypeJwt),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
+			},
 			// authenticate with unencrypted private key
 			{
-				Config: providerConfigWithProfileAndAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwt),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config: providerConfigWithProfileAndAuthenticator(tmpServiceUserConfig.Profile, sdk.AuthenticationTypeJwt),
 			},
 			// authenticate with unencrypted private key with a legacy authenticator value
 			// solves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983
 			{
-				Config: providerConfigWithProfileAndAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwtLegacy),
+				Config: providerConfigWithProfileAndAuthenticator(tmpServiceUserConfig.Profile, sdk.AuthenticationTypeJwtLegacy),
+			},
+			// check encrypted private key with incorrect password
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpIncorrectServiceUserWithEncryptedKeyConfig.Path)
+				},
+				Config:      providerConfigWithProfileAndAuthenticator(tmpIncorrectServiceUserWithEncryptedKeyConfig.Profile, sdk.AuthenticationTypeJwt),
+				ExpectError: regexp.MustCompile("pkcs8: incorrect password"),
 			},
 			// authenticate with encrypted private key
 			{
-				Config: providerConfigWithProfileAndAuthenticator(testprofiles.EncryptedJwtAuth, sdk.AuthenticationTypeJwt),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserWithEncryptedKeyConfig.Path)
+				},
+				Config: providerConfigWithProfileAndAuthenticator(tmpServiceUserWithEncryptedKeyConfig.Profile, sdk.AuthenticationTypeJwt),
 			},
 		},
 	})

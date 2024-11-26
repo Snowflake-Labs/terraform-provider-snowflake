@@ -68,8 +68,8 @@ func GenerateRSAPrivateKey(t *testing.T) *rsa.PrivateKey {
 	return key
 }
 
-// GenerateRSAKeyPair returns an RSA private key, RSA public key without BEGIN and END markers, and key's hash.
-func GenerateRSAKeyPair(t *testing.T) (string, string, string) {
+// GenerateRSAKeyPair returns an RSA private key (unencrypted and encrypted), RSA public key without BEGIN and END markers, and key's hash.
+func GenerateRSAKeyPair(t *testing.T, pass string) (string, string, string, string) {
 	t.Helper()
 
 	privateKey := GenerateRSAPrivateKey(t)
@@ -80,9 +80,10 @@ func GenerateRSAKeyPair(t *testing.T) (string, string, string) {
 		Bytes: unencryptedDer,
 	}
 	unencrypted := string(pem.EncodeToMemory(&privBlock))
+	encrypted := encrypt(t, privateKey, pass)
 
 	publicKey, keyHash := generateRSAPublicKeyFromPrivateKey(t, privateKey)
-	return unencrypted, publicKey, keyHash
+	return unencrypted, encrypted, publicKey, keyHash
 }
 
 // GenerateRSAPrivateKeyEncrypted returns a PEM-encoded pair of unencrypted and encrypted key with a given password
@@ -96,8 +97,15 @@ func GenerateRSAPrivateKeyEncrypted(t *testing.T, password string) (unencrypted,
 		Bytes: unencryptedDer,
 	}
 	unencrypted = string(pem.EncodeToMemory(&privBlock))
+	encrypted = encrypt(t, rsaPrivateKey, password)
 
-	encryptedDer, err := pkcs8.MarshalPrivateKey(rsaPrivateKey, []byte(password), &pkcs8.Opts{
+	return
+}
+
+func encrypt(t *testing.T, rsaPrivateKey *rsa.PrivateKey, pass string) string {
+	t.Helper()
+
+	encryptedDer, err := pkcs8.MarshalPrivateKey(rsaPrivateKey, []byte(pass), &pkcs8.Opts{
 		Cipher: pkcs8.AES256CBC,
 		KDFOpts: pkcs8.PBKDF2Opts{
 			SaltSize: 16, IterationCount: 2000, HMACHash: crypto.SHA256,
@@ -108,9 +116,7 @@ func GenerateRSAPrivateKeyEncrypted(t *testing.T, password string) (unencrypted,
 		Type:  "ENCRYPTED PRIVATE KEY",
 		Bytes: encryptedDer,
 	}
-	encrypted = string(pem.EncodeToMemory(&privEncryptedBlock))
-
-	return
+	return string(pem.EncodeToMemory(&privEncryptedBlock))
 }
 
 func hash(t *testing.T, b []byte) string {

@@ -57,7 +57,7 @@ foo = 'bar'
 func FullInvalidTomlConfigForServiceUser(t *testing.T, profile string) string {
 	t.Helper()
 
-	privateKey, _, _ := random.GenerateRSAKeyPair(t)
+	privateKey, _, _, _ := random.GenerateRSAKeyPair(t, "")
 	return fmt.Sprintf(`
 [%[1]s]
 user = 'invalid'
@@ -112,11 +112,28 @@ authenticator = 'SNOWFLAKE_JWT'
 `, profile, userId.Name(), roleId.Name(), warehouseId.Name(), accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey)
 }
 
+// TomlConfigForServiceUserWithEncryptedKey is a temporary function used to test provider configuration
+func TomlConfigForServiceUserWithEncryptedKey(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, privateKey string, pass string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+[%[1]s]
+user = '%[2]s'
+privatekey = '''%[7]s'''
+privatekeypassphrase = '%[8]s'
+role = '%[3]s'
+organizationname = '%[5]s'
+accountname = '%[6]s'
+warehouse = '%[4]s'
+authenticator = 'SNOWFLAKE_JWT'
+`, profile, userId.Name(), roleId.Name(), warehouseId.Name(), accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey, pass)
+}
+
 // TomlIncorrectConfigForServiceUser is a temporary function used to test provider configuration
 func TomlIncorrectConfigForServiceUser(t *testing.T, profile string, accountIdentifier sdk.AccountIdentifier) string {
 	t.Helper()
 
-	privateKey, _, _ := random.GenerateRSAKeyPair(t)
+	privateKey, _, _, _ := random.GenerateRSAKeyPair(t, "")
 	return fmt.Sprintf(`
 [%[1]s]
 user = 'non-existing-user'
