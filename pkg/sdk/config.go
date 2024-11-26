@@ -110,8 +110,7 @@ func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config
 	if baseConfig.Port == 0 {
 		baseConfig.Port = mergeConfig.Port
 	}
-	// TODO [this PR]: extract gosnowflake.AuthType(-1)
-	if baseConfig.Authenticator == gosnowflake.AuthType(-1) {
+	if baseConfig.Authenticator == gosnowflakeAuthTypeEmpty {
 		baseConfig.Authenticator = mergeConfig.Authenticator
 	}
 	if baseConfig.Passcode == "" {
@@ -246,7 +245,7 @@ type ConfigDTO struct {
 	PrivateKey             *string             `toml:"privatekey,multiline"`
 	PrivateKeyPassphrase   *string             `toml:"privatekeypassphrase"`
 	DisableTelemetry       *bool               `toml:"disabletelemetry"`
-	// TODO [this PR]: handle and test 3-value booleans properly from TOML
+	// TODO [next PR]: handle and test 3-value booleans properly from TOML
 	ValidateDefaultParameters      *bool   `toml:"validatedefaultparameters"`
 	ClientRequestMfaToken          *bool   `toml:"clientrequestmfatoken"`
 	ClientStoreTemporaryCredential *bool   `toml:"clientstoretemporarycredential"`
@@ -339,7 +338,7 @@ func pointerTimeInSecondsAttributeSet(src *int, dst *time.Duration) {
 	}
 }
 
-// TODO [this PR]: fix this method
+// TODO [next PR]: fix this method
 func pointerConfigBoolAttributeSet(src *bool, dst *gosnowflake.ConfigBool) {
 	if src != nil {
 		*dst = boolToConfigBool(*src)
@@ -418,7 +417,7 @@ const (
 	AuthenticationTypeTokenAccessor       AuthenticationType = "TOKENACCESSOR"
 	AuthenticationTypeUsernamePasswordMfa AuthenticationType = "USERNAMEPASSWORDMFA"
 
-	AuthenticationTypeInvalid AuthenticationType = ""
+	AuthenticationTypeEmpty AuthenticationType = ""
 )
 
 var AllAuthenticationTypes = []AuthenticationType{
@@ -453,12 +452,12 @@ func ToAuthenticatorType(s string) (gosnowflake.AuthType, error) {
 	}
 }
 
-// TODO [this PR]: test
+const gosnowflakeAuthTypeEmpty = gosnowflake.AuthType(-1)
+
 func ToExtendedAuthenticatorType(s string) (gosnowflake.AuthType, error) {
 	switch strings.ToUpper(s) {
-	case string(AuthenticationTypeInvalid):
-		// TODO [this PR]: extract gosnowflake.AuthType(-1)
-		return gosnowflake.AuthType(-1), nil
+	case string(AuthenticationTypeEmpty):
+		return gosnowflakeAuthTypeEmpty, nil
 	default:
 		return ToAuthenticatorType(s)
 	}

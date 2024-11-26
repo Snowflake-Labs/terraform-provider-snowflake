@@ -135,7 +135,7 @@ func Provider() *schema.Provider {
 				Type:             schema.TypeString,
 				Description:      envNameFieldDescription(fmt.Sprintf("Specifies the [authentication type](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#AuthType) to use when connecting to Snowflake. Valid options are: %v. Value `JWT` is deprecated and will be removed in future releases.", docs.PossibleValuesListed(sdk.AllAuthenticationTypes)), snowflakeenvs.Authenticator),
 				Optional:         true,
-				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Authenticator, string(sdk.AuthenticationTypeInvalid)),
+				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.Authenticator, string(sdk.AuthenticationTypeEmpty)),
 				ValidateDiagFunc: validators.NormalizeValidation(sdk.ToExtendedAuthenticatorType),
 			},
 			"passcode": {
