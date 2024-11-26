@@ -11,6 +11,8 @@ import (
 // TODO [SNOW-1827324]: consider using these in other places where user is set up
 
 func (c *TestClient) SetUpTemporaryLegacyServiceUser(t *testing.T) *TmpLegacyServiceUser {
+	t.Helper()
+
 	pass := random.Password()
 	tmpUser := c.setUpTmpUserWithBasicAccess(t, func(userId sdk.AccountObjectIdentifier) (*sdk.User, func()) {
 		return c.User.CreateUserWithOptions(t, userId, &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{
@@ -26,6 +28,8 @@ func (c *TestClient) SetUpTemporaryLegacyServiceUser(t *testing.T) *TmpLegacySer
 }
 
 func (c *TestClient) SetUpTemporaryServiceUser(t *testing.T) *TmpServiceUser {
+	t.Helper()
+
 	pass := random.Password()
 	privateKey, encryptedKey, publicKey, _ := random.GenerateRSAKeyPair(t, pass)
 	tmpUser := c.setUpTmpUserWithBasicAccess(t, func(userId sdk.AccountObjectIdentifier) (*sdk.User, func()) {
@@ -45,6 +49,8 @@ func (c *TestClient) SetUpTemporaryServiceUser(t *testing.T) *TmpServiceUser {
 }
 
 func (c *TestClient) setUpTmpUserWithBasicAccess(t *testing.T, userCreator func(userId sdk.AccountObjectIdentifier) (*sdk.User, func())) TmpUser {
+	t.Helper()
+
 	warehouseId := c.Ids.SnowflakeWarehouseId()
 	accountId := c.Context.CurrentAccountId(t)
 

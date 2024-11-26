@@ -17,7 +17,7 @@ import (
 )
 
 // TODO [SNOW-1827310]: use generated config for these tests
-func TestClient_NewClient(t *testing.T) {
+func TestInt_Client_NewClient(t *testing.T) {
 	t.Run("with default config", func(t *testing.T) {
 		config := sdk.DefaultConfig()
 		_, err := sdk.NewClient(config)

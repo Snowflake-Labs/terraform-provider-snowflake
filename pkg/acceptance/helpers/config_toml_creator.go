@@ -9,7 +9,7 @@ import (
 )
 
 // FullTomlConfigForServiceUser is a temporary function used to test provider configuration
-// TODO [SNOW-1827309]: use toml marshalling from "github.com/pelletier/go-toml/v2"
+// TODO [SNOW-1827309]: use toml marshaling from "github.com/pelletier/go-toml/v2"
 // TODO [SNOW-1827309]: add builders for our toml config struct
 func FullTomlConfigForServiceUser(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, privateKey string) string {
 	t.Helper()
