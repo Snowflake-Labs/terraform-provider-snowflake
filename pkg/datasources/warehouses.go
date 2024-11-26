@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -66,7 +68,7 @@ var warehousesSchema = map[string]*schema.Schema{
 
 func Warehouses() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadWarehouses,
+		ReadContext: TrackingReadWrapper(datasources.Warehouses, ReadWarehouses),
 		Schema:      warehousesSchema,
 		Description: "Datasource used to get details of filtered warehouses. Filtering is aligned with the current possibilities for [SHOW WAREHOUSES](https://docs.snowflake.com/en/sql-reference/sql/show-warehouses) query (only `like` is supported). The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.",
 	}

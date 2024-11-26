@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -34,7 +36,7 @@ var connectionsSchema = map[string]*schema.Schema{
 
 func Connections() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadConnections,
+		ReadContext: TrackingReadWrapper(datasources.Connections, ReadConnections),
 		Schema:      connectionsSchema,
 		Description: "Datasource used to get details of filtered connections. Filtering is aligned with the current possibilities for [SHOW CONNECTIONS](https://docs.snowflake.com/en/sql-reference/sql/show-connections) query. The results of SHOW is encapsulated in one output collection `connections`.",
 	}

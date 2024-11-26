@@ -4,13 +4,15 @@ import (
 	"context"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_Context(t *testing.T) {
-	metadata := NewMetadata("123", resources.Account, CreateOperation)
-	newMetadata := NewMetadata("321", resources.Database, UpdateOperation)
+	metadata := NewTestMetadata("123", resources.Account, CreateOperation)
+	newMetadata := NewVersionedDatasourceMetadata(datasources.Databases)
 	ctx := context.Background()
 
 	// no metadata in context

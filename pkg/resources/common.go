@@ -108,42 +108,42 @@ func ImportName[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | s
 
 func TrackingImportWrapper(resourceName resources.Resource, importImplementation schema.StateContextFunc) schema.StateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.ImportOperation))
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedResourceMetadata(resourceName, tracking.ImportOperation))
 		return importImplementation(ctx, d, meta)
 	}
 }
 
 func TrackingCreateWrapper(resourceName resources.Resource, createImplementation schema.CreateContextFunc) schema.CreateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.CreateOperation))
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedResourceMetadata(resourceName, tracking.CreateOperation))
 		return createImplementation(ctx, d, meta)
 	}
 }
 
 func TrackingReadWrapper(resourceName resources.Resource, readImplementation schema.ReadContextFunc) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.ReadOperation))
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedResourceMetadata(resourceName, tracking.ReadOperation))
 		return readImplementation(ctx, d, meta)
 	}
 }
 
 func TrackingUpdateWrapper(resourceName resources.Resource, updateImplementation schema.UpdateContextFunc) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.UpdateOperation))
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedResourceMetadata(resourceName, tracking.UpdateOperation))
 		return updateImplementation(ctx, d, meta)
 	}
 }
 
 func TrackingDeleteWrapper(resourceName resources.Resource, deleteImplementation schema.DeleteContextFunc) schema.DeleteContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.DeleteOperation))
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedResourceMetadata(resourceName, tracking.DeleteOperation))
 		return deleteImplementation(ctx, d, meta)
 	}
 }
 
 func TrackingCustomDiffWrapper(resourceName resources.Resource, customdiffImplementation schema.CustomizeDiffFunc) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
-		ctx = tracking.NewContext(ctx, tracking.NewVersionedMetadata(resourceName, tracking.CustomDiffOperation))
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedResourceMetadata(resourceName, tracking.CustomDiffOperation))
 		return customdiffImplementation(ctx, diff, meta)
 	}
 }

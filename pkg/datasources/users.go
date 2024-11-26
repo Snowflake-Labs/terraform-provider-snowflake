@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -91,7 +93,7 @@ var usersSchema = map[string]*schema.Schema{
 
 func Users() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadUsers,
+		ReadContext: TrackingReadWrapper(datasources.Users, ReadUsers),
 		Schema:      usersSchema,
 		Description: "Datasource used to get details of filtered users. Filtering is aligned with the current possibilities for [SHOW USERS](https://docs.snowflake.com/en/sql-reference/sql/show-users) query. The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection. Important note is that when querying users you don't have permissions to, the querying options are limited. You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command cannot be called, so you have to set `with_describe = false`. Only `parameters` output is not affected by the lack of privileges.",
 	}

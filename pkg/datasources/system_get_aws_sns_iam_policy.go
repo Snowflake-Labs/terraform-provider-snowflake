@@ -1,9 +1,13 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -26,13 +30,13 @@ var systemGetAWSSNSIAMPolicySchema = map[string]*schema.Schema{
 
 func SystemGetAWSSNSIAMPolicy() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadSystemGetAWSSNSIAMPolicy,
-		Schema: systemGetAWSSNSIAMPolicySchema,
+		ReadContext: TrackingReadWrapper(datasources.SystemGetAwsSnsIamPolicy, ReadSystemGetAWSSNSIAMPolicy),
+		Schema:      systemGetAWSSNSIAMPolicySchema,
 	}
 }
 
 // ReadSystemGetAWSSNSIAMPolicy implements schema.ReadFunc.
-func ReadSystemGetAWSSNSIAMPolicy(d *schema.ResourceData, meta interface{}) error {
+func ReadSystemGetAWSSNSIAMPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 	awsSNSTopicArn := d.Get("aws_sns_topic_arn").(string)
@@ -47,9 +51,9 @@ func ReadSystemGetAWSSNSIAMPolicy(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(awsSNSTopicArn)
-	return d.Set("aws_sns_topic_policy_json", policy.Policy)
+	return diag.FromErr(d.Set("aws_sns_topic_policy_json", policy.Policy))
 }

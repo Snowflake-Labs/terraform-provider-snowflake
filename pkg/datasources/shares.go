@@ -3,6 +3,9 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -55,18 +58,17 @@ var sharesSchema = map[string]*schema.Schema{
 // Shares Snowflake Shares resource.
 func Shares() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadShares,
-		Schema: sharesSchema,
+		ReadContext: TrackingReadWrapper(datasources.Shares, ReadShares),
+		Schema:      sharesSchema,
 	}
 }
 
 // ReadShares Reads the database metadata information.
-func ReadShares(d *schema.ResourceData, meta interface{}) error {
+func ReadShares(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	d.SetId("shares_read")
 	pattern := d.Get("pattern").(string)
-	ctx := context.Background()
 	var opts sdk.ShowShareOptions
 	if pattern != "" {
 		opts.Like = &sdk.Like{
@@ -75,7 +77,7 @@ func ReadShares(d *schema.ResourceData, meta interface{}) error {
 	}
 	shares, err := client.Shares.Show(ctx, &opts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	sharesFlatten := []map[string]interface{}{}
 	for _, share := range shares {
@@ -93,7 +95,7 @@ func ReadShares(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("shares", sharesFlatten); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }

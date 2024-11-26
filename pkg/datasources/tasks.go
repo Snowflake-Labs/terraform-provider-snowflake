@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -57,14 +60,13 @@ var tasksSchema = map[string]*schema.Schema{
 
 func Tasks() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadTasks,
-		Schema: tasksSchema,
+		ReadContext: TrackingReadWrapper(datasources.Tasks, ReadTasks),
+		Schema:      tasksSchema,
 	}
 }
 
-func ReadTasks(d *schema.ResourceData, meta interface{}) error {
+func ReadTasks(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -91,5 +93,5 @@ func ReadTasks(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
-	return d.Set("tasks", tasks)
+	return diag.FromErr(d.Set("tasks", tasks))
 }
