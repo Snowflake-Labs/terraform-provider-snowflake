@@ -3,7 +3,9 @@ package helpers
 import (
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 )
 
 func (c *TestClient) SetUpLegacyServiceUserWithAccessToTestDatabaseAndWarehouse(t *testing.T, pass string) (sdk.AccountObjectIdentifier, sdk.AccountObjectIdentifier) {
@@ -45,4 +47,45 @@ func (c *TestClient) SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t *tes
 	c.Role.GrantRoleToUser(t, tmpRoleId, tmpUserId)
 
 	return tmpUserId, tmpRoleId
+}
+
+func (c *TestClient) SetUpTemporaryServiceUser(t *testing.T) *TmpServiceUserConfig {
+	accountId := c.Context.CurrentAccountId(t)
+	warehouseId := c.Ids.SnowflakeWarehouseId()
+
+	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
+	tmpUserId, tmpRoleId := c.SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
+
+	profile := random.AlphaN(6)
+	toml := TomlConfigForServiceUser(t, profile, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey)
+	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
+
+	return &TmpServiceUserConfig{
+		PublicKey:  publicKey,
+		PrivateKey: privateKey,
+		TmpUserConfig: TmpUserConfig{
+			Profile: profile,
+			Path:    configPath,
+			UserId:  tmpUserId,
+			RoleId:  tmpRoleId,
+		},
+	}
+}
+
+type TmpUserConfig struct {
+	Profile string
+	Path    string
+	UserId  sdk.AccountObjectIdentifier
+	RoleId  sdk.AccountObjectIdentifier
+}
+
+type TmpServiceUserConfig struct {
+	PublicKey  string
+	PrivateKey string
+	TmpUserConfig
+}
+
+type TmpLegacyServiceUserConfig struct {
+	Pass string
+	TmpUserConfig
 }

@@ -14,6 +14,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
@@ -31,27 +32,19 @@ import (
 // TODO [this PR]: verify jwt login
 // TODO [this PR]: verify encrypted jwt login
 
-// TODO [this PR]: tmp user config?
+// TODO [this PR]: toml creator should persist file
+// TODO [this PR]: SetUpTemporaryServiceUser vs SetUpTemporaryServiceUserWithConfig
 
 func TestAcc_Provider_configHierarchy(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
+	tmpServiceUserConfig := acc.TestClient().SetUpTemporaryServiceUser(t)
+
 	accountId := acc.TestClient().Context.CurrentAccountId(t)
-	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
-
-	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
-	tmpUserId, tmpRoleId := acc.TestClient().SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
-
-	profile := random.AlphaN(6)
-	toml := helpers.TomlConfigForServiceUser(t, profile, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey)
-	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
-
 	tomlWithIncorrectCredentials := helpers.TomlIncorrectConfigForServiceUser(t, testprofiles.IncorrectUserAndPassword, accountId)
 	configPathWithIncorrect := testhelpers.TestFile(t, random.AlphaN(10), []byte(tomlWithIncorrectCredentials))
-
-	nonExistingUser := "non-existing-user"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -76,16 +69,16 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			// make sure that we succeed for the correct profile
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.ConfigPath, configPath)
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
-				Config: providerConfig(profile),
+				Config: providerConfig(tmpServiceUserConfig.Profile),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
 			},
 			// incorrect user in provider config should not be rewritten by profile and cause error
 			{
-				Config:      providerConfigWithUserAndProfile(nonExistingUser, profile),
+				Config:      providerConfigWithUserAndProfile(ids.NonExistingAccountObjectIdentifier, tmpServiceUserConfig.Profile),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// correct user and key in provider's config should not be rewritten by a faulty config
@@ -93,7 +86,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, configPathWithIncorrect)
 				},
-				Config: providerConfigWithUserPrivateKeyAndProfile(tmpUserId.Name(), privateKey, tmpRoleId.Name(), testprofiles.IncorrectUserAndPassword),
+				Config: providerConfigWithUserPrivateKeyAndProfile(tmpServiceUserConfig.UserId, tmpServiceUserConfig.PrivateKey, tmpServiceUserConfig.RoleId.Name(), testprofiles.IncorrectUserAndPassword),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
@@ -101,18 +94,18 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			// incorrect user in env variable should not be rewritten by profile and cause error (profile authenticator is set to JWT and that's why the error is about incorrect token)
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.User, nonExistingUser)
-					t.Setenv(snowflakeenvs.ConfigPath, configPath)
+					t.Setenv(snowflakeenvs.User, ids.NonExistingAccountObjectIdentifier.Name())
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
-				Config:      providerConfig(profile),
+				Config:      providerConfig(tmpServiceUserConfig.Profile),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// correct user and private key in env should not be rewritten by a faulty config
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.User, tmpUserId.Name())
-					t.Setenv(snowflakeenvs.PrivateKey, privateKey)
-					t.Setenv(snowflakeenvs.Role, tmpRoleId.Name())
+					t.Setenv(snowflakeenvs.User, tmpServiceUserConfig.UserId.Name())
+					t.Setenv(snowflakeenvs.PrivateKey, tmpServiceUserConfig.PrivateKey)
+					t.Setenv(snowflakeenvs.Role, tmpServiceUserConfig.RoleId.Name())
 					t.Setenv(snowflakeenvs.ConfigPath, configPathWithIncorrect)
 				},
 				Config: providerConfigWithProfileAndAuthenticator(testprofiles.IncorrectUserAndPassword, sdk.AuthenticationTypeJwt),
@@ -124,9 +117,9 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			{
 				PreConfig: func() {
 					testenvs.AssertEnvSet(t, snowflakeenvs.User)
-					t.Setenv(snowflakeenvs.ConfigPath, configPath)
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
-				Config:      providerConfigWithUserPrivateKeyAndProfile(nonExistingUser, privateKey, tmpRoleId.Name(), profile),
+				Config:      providerConfigWithUserPrivateKeyAndProfile(ids.NonExistingAccountObjectIdentifier, tmpServiceUserConfig.PrivateKey, tmpServiceUserConfig.RoleId.Name(), tmpServiceUserConfig.Profile),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// there is no config (by setting the dir to something different from .snowflake/config)
@@ -136,20 +129,20 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					require.NoError(t, err)
 					t.Setenv(snowflakeenvs.ConfigPath, dir)
 				},
-				Config:      providerConfigWithUserPrivateKeyAndProfile(tmpUserId.Name(), privateKey, tmpRoleId.Name(), testprofiles.Default),
+				Config:      providerConfigWithUserPrivateKeyAndProfile(tmpServiceUserConfig.UserId, tmpServiceUserConfig.PrivateKey, tmpServiceUserConfig.RoleId.Name(), testprofiles.Default),
 				ExpectError: regexp.MustCompile("account is empty"),
 			},
 			// provider's config should not be rewritten by env when there is no profile (incorrect user in config versus correct one in env) - proves #2242
 			{
 				PreConfig: func() {
 					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
-					t.Setenv(snowflakeenvs.User, tmpUserId.Name())
-					t.Setenv(snowflakeenvs.PrivateKey, privateKey)
+					t.Setenv(snowflakeenvs.User, tmpServiceUserConfig.UserId.Name())
+					t.Setenv(snowflakeenvs.PrivateKey, tmpServiceUserConfig.PrivateKey)
 					t.Setenv(snowflakeenvs.AccountName, accountId.AccountName())
 					t.Setenv(snowflakeenvs.OrganizationName, accountId.OrganizationName())
-					t.Setenv(snowflakeenvs.Role, tmpRoleId.Name())
+					t.Setenv(snowflakeenvs.Role, tmpServiceUserConfig.RoleId.Name())
 				},
-				Config:      providerConfigWithUser(nonExistingUser, testprofiles.Default),
+				Config:      providerConfigWithUserAndProfile(ids.NonExistingAccountObjectIdentifier, testprofiles.Default),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// make sure the teardown is fine by using a correct env config at the end
@@ -859,27 +852,17 @@ provider "snowflake" {
 `, profile, clientIp) + datasourceConfig()
 }
 
-func providerConfigWithUser(user string, profile string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	user = "%[1]s"
-	authenticator = "SNOWFLAKE_JWT"
-	profile = "%[2]s"
-}
-`, user, profile) + datasourceConfig()
-}
-
-func providerConfigWithUserAndProfile(user string, profile string) string {
+func providerConfigWithUserAndProfile(userId sdk.AccountObjectIdentifier, profile string) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
 	authenticator = "SNOWFLAKE_JWT"
 	user = "%[1]s"
 	profile = "%[2]s"
 }
-`, user, profile) + datasourceConfig()
+`, userId.Name(), profile) + datasourceConfig()
 }
 
-func providerConfigWithUserPrivateKeyAndProfile(user string, key string, role string, profile string) string {
+func providerConfigWithUserPrivateKeyAndProfile(userId sdk.AccountObjectIdentifier, key string, role string, profile string) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
 	authenticator = "SNOWFLAKE_JWT"
@@ -889,7 +872,7 @@ provider "snowflake" {
 	role = "%[3]s"
 	profile = "%[4]s"
 }
-`, user, key, role, profile) + datasourceConfig()
+`, userId.Name(), key, role, profile) + datasourceConfig()
 }
 
 func datasourceConfig() string {
