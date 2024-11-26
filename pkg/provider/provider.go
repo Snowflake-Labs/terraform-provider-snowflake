@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/validators"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -356,6 +357,15 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.Profile, "default"),
 			},
+			"preview_features_enabled": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validators.StringInSlice(previewfeatures.AllPreviewFeatures, true),
+				},
+				Description: fmt.Sprintf("A list of preview features that are handled by the provider. See [preview features list](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/LIST_OF_PREVIEW_FEATURES_FOR_V1.md). Preview features may have breaking changes in future releases, even without raising the major version. This field can not be set with environmental variables. Valid options are: %v.", docs.PossibleValuesListed(previewfeatures.AllPreviewFeatures)),
+			},
 		},
 		ResourcesMap:         getResources(),
 		DataSourcesMap:       getDataSources(),
@@ -506,15 +516,15 @@ func getDataSources() map[string]*schema.Resource {
 }
 
 var (
-	configuredClient     *sdk.Client
 	configureClientError error //nolint:errname
+	configureProviderCtx *provider.Context
 )
 
 func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
 	// hacky way to speed up our acceptance tests
 	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
-		if configuredClient != nil {
-			return &provider.Context{Client: configuredClient}, nil
+		if configureProviderCtx != nil {
+			return configureProviderCtx, nil
 		}
 		if configureClientError != nil {
 			return nil, diag.FromErr(configureClientError)
@@ -536,12 +546,22 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 
 	client, clientErr := sdk.NewClient(config)
 
+	providerCtx := &provider.Context{Client: client}
+
+	if v, ok := s.GetOk("preview_features_enabled"); ok {
+		providerCtx.EnabledFeatures = expandStringList(v.(*schema.Set).List())
+	}
+
+	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
+		providerCtx.EnabledFeatures = previewfeatures.AllPreviewFeatures
+	}
+
 	// needed for tests verifying different provider setups
 	if os.Getenv(resource.EnvTfAcc) != "" && os.Getenv(string(testenvs.ConfigureClientOnce)) == "true" {
-		configuredClient = client
+		configureProviderCtx = providerCtx
 		configureClientError = clientErr
 	} else {
-		configuredClient = nil
+		configureProviderCtx = nil
 		configureClientError = nil
 	}
 
@@ -549,7 +569,19 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		return nil, diag.FromErr(clientErr)
 	}
 
-	return &provider.Context{Client: client}, nil
+	return providerCtx, nil
+}
+
+// TODO: reuse with the function from resources package
+func expandStringList(configured []interface{}) []string {
+	vs := make([]string, 0, len(configured))
+	for _, v := range configured {
+		val, ok := v.(string)
+		if ok && val != "" {
+			vs = append(vs, val)
+		}
+	}
+	return vs
 }
 
 func getDriverConfigFromTOML(profile string) (*gosnowflake.Config, error) {

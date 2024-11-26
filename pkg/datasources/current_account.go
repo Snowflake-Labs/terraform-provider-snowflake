@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -33,7 +34,7 @@ var currentAccountSchema = map[string]*schema.Schema{
 // CurrentAccount the Snowflake current account resource.
 func CurrentAccount() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadCurrentAccount,
+		Read:   PreviewFeatureReadWrapper(string(previewfeatures.CurrentAccountDatasource), ReadCurrentAccount),
 		Schema: currentAccountSchema,
 	}
 }

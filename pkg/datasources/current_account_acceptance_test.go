@@ -16,7 +16,6 @@ func TestAcc_CurrentAccount(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: currentAccount(),

@@ -9,6 +9,67 @@ across different versions.
 
 ## v0.99.0 ➞ v1.0.0
 
+### Preview features flag
+All of the preview features objects are now disabled by default. This includes:
+- Resources
+	- `snowflake_account_password_policy_attachment`
+	- `snowflake_alert`
+	- `snowflake_api_integration`
+	- `snowflake_cortex_search_service`
+	- `snowflake_dynamic_table`
+	- `snowflake_external_function`
+	- `snowflake_external_table`
+	- `snowflake_external_volume`
+	- `snowflake_failover_group`
+	- `snowflake_file_format`
+	- `snowflake_managed_account`
+	- `snowflake_materialized_view`
+	- `snowflake_network_policy_attachment`
+	- `snowflake_network_rule`
+	- `snowflake_email_notification_integration`
+	- `snowflake_notification_integration`
+	- `snowflake_object_parameter`
+	- `snowflake_password_policy`
+	- `snowflake_pipe`
+	- `snowflake_sequence`
+	- `snowflake_share`
+	- `snowflake_stage`
+	- `snowflake_storage_integration`
+	- `snowflake_table_column_masking_policy_application`
+	- `snowflake_table_constraint`
+	- `snowflake_user_public_keys`
+	- `snowflake_user_password_policy_attachment`
+- Data sources
+	- `snowflake_current_account`
+	- `snowflake_alerts`
+	- `snowflake_cortex_search_services`
+	- `snowflake_database`
+	- `snowflake_database_role`
+	- `snowflake_dynamic_tables`
+	- `snowflake_external_functions`
+	- `snowflake_external_tables`
+	- `snowflake_failover_groups`
+	- `snowflake_file_formats`
+	- `snowflake_materialized_views`
+	- `snowflake_pipes`
+	- `snowflake_current_role`
+	- `snowflake_sequences`
+	- `snowflake_shares`
+	- `snowflake_parameters`
+	- `snowflake_stages`
+	- `snowflake_storage_integrations`
+	- `snowflake_system_generate_scim_access_token`
+	- `snowflake_system_get_aws_sns_iam_policy`
+	- `snowflake_system_get_privatelink_config`
+	- `snowflake_system_get_snowflake_platform_info`
+
+If you want to have them enabled, add the feature name to the provider configuration (with `_datasource` or `_resource` suffix), like this:
+```terraform
+provider "snowflake" {
+	preview_features_enabled = ["snowflake_current_account_datasource", "snowflake_alert_resource"]
+}
+```
+
 ### Removed deprecated objects
 All of the deprecated objects are removed from v1 release. This includes:
 <!-- TODO(next pr): link to entries in the migration guide regarding details for each of the resource/data source-->
