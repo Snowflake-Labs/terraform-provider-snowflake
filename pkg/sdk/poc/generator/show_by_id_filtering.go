@@ -24,21 +24,21 @@ func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation
 		switch f {
 		case ShowByIDLikeFiltering:
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
-				Kind: "Like",
-				Args: "Pattern: String(id.Name())",
-                IdentifierBased: false,
+				Kind:            "Like",
+				Args:            "Pattern: String(id.Name())",
+				IdentifierBased: false,
 			})
 		case ShowByIDInFiltering:
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
-				Kind: "In",
-				Args: "%[1]v: id.%[1]vId()",
-                IdentifierBased: true,
+				Kind:            "In",
+				Args:            "%[1]v: id.%[1]vId()",
+				IdentifierBased: true,
 			})
 		case ShowByIDExtendedInFiltering:
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
-				Kind: "ExtendedIn",
-				Args: "In: In{%[1]v: id.%[1]vId()}",
-                IdentifierBased: true,
+				Kind:            "ExtendedIn",
+				Args:            "In: In{%[1]v: id.%[1]vId()}",
+				IdentifierBased: true,
 			})
 		}
 	}

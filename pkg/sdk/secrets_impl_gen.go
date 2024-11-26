@@ -135,7 +135,6 @@ func (r *AlterSecretRequest) toOpts() *AlterSecretOptions {
 	}
 
 	if r.Set != nil {
-
 		opts.Set = &SecretSet{
 			Comment: r.Set.Comment,
 		}
