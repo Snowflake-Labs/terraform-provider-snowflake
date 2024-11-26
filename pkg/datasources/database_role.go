@@ -40,7 +40,7 @@ var databaseRoleSchema = map[string]*schema.Schema{
 // DatabaseRole Snowflake Database Role resource.
 func DatabaseRole() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.DatabaseDatasource), TrackingReadWrapper(datasources.DatabaseRole, ReadDatabaseRole)),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.DatabaseRoleDatasource), TrackingReadWrapper(datasources.DatabaseRole, ReadDatabaseRole)),
 		Schema:      databaseRoleSchema,
 	}
 }

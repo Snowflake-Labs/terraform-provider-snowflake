@@ -70,8 +70,8 @@ func Sequence() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.SequenceResource), TrackingCreateWrapper(resources.Sequence, CreateSequence)),
 		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.SequenceResource), TrackingReadWrapper(resources.Sequence, ReadSequence)),
-		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.SequenceResource), TrackingUpdateWrapper(resources.Sequence, DeleteSequence)),
-		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.SequenceResource), TrackingDeleteWrapper(resources.Sequence, UpdateSequence)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.SequenceResource), TrackingUpdateWrapper(resources.Sequence, UpdateSequence)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.SequenceResource), TrackingDeleteWrapper(resources.Sequence, DeleteSequence)),
 
 		Schema: sequenceSchema,
 		Importer: &schema.ResourceImporter{

@@ -162,6 +162,15 @@ func ensureResourceIsEnabled(featureRaw string, meta any) error {
 	return nil
 }
 
+func PreviewFeatureCreateContextWrapper(featureRaw string, createFunc schema.CreateContextFunc) schema.CreateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		if err := ensureResourceIsEnabled(featureRaw, meta); err != nil {
+			return diag.FromErr(err)
+		}
+		return createFunc(ctx, d, meta)
+	}
+}
+
 func PreviewFeatureReadContextWrapper(featureRaw string, readFunc schema.ReadContextFunc) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		if err := ensureResourceIsEnabled(featureRaw, meta); err != nil {
@@ -171,16 +180,7 @@ func PreviewFeatureReadContextWrapper(featureRaw string, readFunc schema.ReadCon
 	}
 }
 
-func PreviewFeatureCreateContextWrapper(featureRaw string, createFunc schema.CreateContextFunc) schema.CreateContextFunc { //nolint
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		if err := ensureResourceIsEnabled(featureRaw, meta); err != nil {
-			return diag.FromErr(err)
-		}
-		return createFunc(ctx, d, meta)
-	}
-}
-
-func PreviewFeatureUpdateContextWrapper(featureRaw string, updateFunc schema.UpdateContextFunc) schema.UpdateContextFunc { //nolint
+func PreviewFeatureUpdateContextWrapper(featureRaw string, updateFunc schema.UpdateContextFunc) schema.UpdateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		if err := ensureResourceIsEnabled(featureRaw, meta); err != nil {
 			return diag.FromErr(err)
@@ -189,7 +189,7 @@ func PreviewFeatureUpdateContextWrapper(featureRaw string, updateFunc schema.Upd
 	}
 }
 
-func PreviewFeatureDeleteContextWrapper(featureRaw string, deleteFunc schema.DeleteContextFunc) schema.DeleteContextFunc { //nolint
+func PreviewFeatureDeleteContextWrapper(featureRaw string, deleteFunc schema.DeleteContextFunc) schema.DeleteContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		if err := ensureResourceIsEnabled(featureRaw, meta); err != nil {
 			return diag.FromErr(err)

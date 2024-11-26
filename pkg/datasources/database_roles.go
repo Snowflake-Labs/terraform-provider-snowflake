@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -67,7 +66,7 @@ var databaseRolesSchema = map[string]*schema.Schema{
 
 func DatabaseRoles() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.DatabaseRoleDatasource), TrackingReadWrapper(datasources.DatabaseRoles, ReadDatabaseRoles)),
+		ReadContext: TrackingReadWrapper(datasources.DatabaseRoles, ReadDatabaseRoles),
 		Schema:      databaseRolesSchema,
 		Description: "Datasource used to get details of filtered database roles. Filtering is aligned with the current possibilities for [SHOW DATABASE ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-database-roles) query (`like` and `limit` are supported). The results of SHOW is encapsulated in show_output collection.",
 	}
