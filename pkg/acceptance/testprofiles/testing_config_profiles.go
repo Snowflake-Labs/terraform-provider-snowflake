@@ -7,8 +7,6 @@ const (
 	Third                    = "third_test_account"
 	Fourth                   = "fourth_test_account"
 	IncorrectUserAndPassword = "incorrect_test_profile"
-	CompleteFields           = "complete_fields"
-	CompleteFieldsInvalid    = "complete_fields_invalid"
 	DefaultWithPasscode      = "default_with_passcode"
 
 	JwtAuth          = "jwt_auth"

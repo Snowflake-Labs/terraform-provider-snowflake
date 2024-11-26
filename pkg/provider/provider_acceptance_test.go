@@ -13,13 +13,11 @@ import (
 	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -160,7 +158,13 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 }
 
 func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+	incorrectConfig := acc.TestClient().TempIncorrectTomlConfigForServiceUser(t, tmpServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -175,15 +179,19 @@ func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 		Steps: []resource.TestStep{
 			// client setup is incorrect
 			{
-				Config:      providerConfig(testprofiles.IncorrectUserAndPassword),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, incorrectConfig.Path)
+				},
+				Config:      providerConfig(incorrectConfig.Profile),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// in this step we simulate the situation when we want to use client configured once, but it was faulty last time
 			{
 				PreConfig: func() {
 					t.Setenv(string(testenvs.ConfigureClientOnce), "true")
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
-				Config: emptyProviderConfig(),
+				Config: providerConfig(tmpServiceUserConfig.Profile),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
@@ -197,14 +205,10 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	accountId := acc.TestClient().Context.CurrentAccountId(t)
-	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
-
-	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
-	tmpUserId, tmpRoleId := acc.TestClient().SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
-
-	toml := helpers.FullTomlConfigForServiceUser(t, testprofiles.CompleteFields, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey)
-	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return helpers.FullTomlConfigForServiceUser(t, profile, tmpServiceUser.UserId, tmpServiceUser.RoleId, tmpServiceUser.WarehouseId, tmpServiceUser.AccountId, tmpServiceUser.PrivateKey)
+	})
 
 	oktaUrl, err := url.Parse("https://example.com")
 	require.NoError(t, err)
@@ -217,20 +221,20 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
 
-			t.Setenv(snowflakeenvs.ConfigPath, configPath)
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig(testprofiles.CompleteFields),
+				Config: providerConfig(tmpServiceUserConfig.Profile),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 					//assert.Equal(t, account, config.Account)
-					assert.Equal(t, tmpUserId.Name(), config.User)
-					assert.Equal(t, warehouseId.Name(), config.Warehouse)
-					assert.Equal(t, tmpRoleId.Name(), config.Role)
+					assert.Equal(t, tmpServiceUser.UserId.Name(), config.User)
+					assert.Equal(t, tmpServiceUser.WarehouseId.Name(), config.Warehouse)
+					assert.Equal(t, tmpServiceUser.RoleId.Name(), config.Role)
 					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
 					assert.Equal(t, net.ParseIP("1.2.3.4"), config.ClientIP)
 					assert.Equal(t, "https", config.Protocol)
@@ -276,14 +280,10 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	accountId := acc.TestClient().Context.CurrentAccountId(t)
-	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
-
-	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
-	tmpUserId, tmpRoleId := acc.TestClient().SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
-
-	toml := helpers.FullInvalidTomlConfigForServiceUser(t, testprofiles.CompleteFieldsInvalid)
-	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return helpers.FullInvalidTomlConfigForServiceUser(t, profile)
+	})
 
 	oktaUrlFromEnv, err := url.Parse("https://example-env.com")
 	require.NoError(t, err)
@@ -296,7 +296,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Account)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
 
-			t.Setenv(snowflakeenvs.ConfigPath, configPath)
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -304,15 +304,15 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.AccountName, accountId.AccountName())
-					t.Setenv(snowflakeenvs.OrganizationName, accountId.OrganizationName())
-					t.Setenv(snowflakeenvs.User, tmpUserId.Name())
-					t.Setenv(snowflakeenvs.PrivateKey, privateKey)
-					t.Setenv(snowflakeenvs.Warehouse, warehouseId.Name())
+					t.Setenv(snowflakeenvs.AccountName, tmpServiceUser.AccountId.AccountName())
+					t.Setenv(snowflakeenvs.OrganizationName, tmpServiceUser.AccountId.OrganizationName())
+					t.Setenv(snowflakeenvs.User, tmpServiceUser.UserId.Name())
+					t.Setenv(snowflakeenvs.PrivateKey, tmpServiceUser.PrivateKey)
+					t.Setenv(snowflakeenvs.Warehouse, tmpServiceUser.WarehouseId.Name())
 					t.Setenv(snowflakeenvs.Protocol, "https")
 					t.Setenv(snowflakeenvs.Port, "443")
 					// do not set token - it should be propagated from TOML
-					t.Setenv(snowflakeenvs.Role, tmpRoleId.Name())
+					t.Setenv(snowflakeenvs.Role, tmpServiceUser.RoleId.Name())
 					t.Setenv(snowflakeenvs.Authenticator, "SNOWFLAKE_JWT")
 					t.Setenv(snowflakeenvs.ValidateDefaultParameters, "true")
 					t.Setenv(snowflakeenvs.ClientIp, "2.2.2.2")
@@ -339,14 +339,14 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
-				Config: providerConfig(testprofiles.CompleteFieldsInvalid),
+				Config: providerConfig(tmpServiceUserConfig.Profile),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 
 					//assert.Equal(t, account, config.Account)
-					assert.Equal(t, tmpUserId.Name(), config.User)
-					assert.Equal(t, warehouseId.Name(), config.Warehouse)
-					assert.Equal(t, tmpRoleId.Name(), config.Role)
+					assert.Equal(t, tmpServiceUser.UserId.Name(), config.User)
+					assert.Equal(t, tmpServiceUser.WarehouseId.Name(), config.Warehouse)
+					assert.Equal(t, tmpServiceUser.RoleId.Name(), config.Role)
 					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
 					assert.Equal(t, net.ParseIP("2.2.2.2"), config.ClientIP)
 					assert.Equal(t, "https", config.Protocol)
@@ -392,14 +392,10 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	accountId := acc.TestClient().Context.CurrentAccountId(t)
-	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
-
-	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
-	tmpUserId, tmpRoleId := acc.TestClient().SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
-
-	toml := helpers.FullInvalidTomlConfigForServiceUser(t, testprofiles.CompleteFieldsInvalid)
-	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return helpers.FullInvalidTomlConfigForServiceUser(t, profile)
+	})
 
 	oktaUrlFromTf, err := url.Parse("https://example-tf.com")
 	require.NoError(t, err)
@@ -412,7 +408,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
 
-			t.Setenv(snowflakeenvs.ConfigPath, configPath)
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -455,14 +451,14 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
-				Config: providerConfigAllFields(testprofiles.CompleteFieldsInvalid, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey),
+				Config: providerConfigAllFields(tmpServiceUserConfig, tmpServiceUser),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 
 					//assert.Equal(t, account, config.Account)
-					assert.Equal(t, tmpUserId.Name(), config.User)
-					assert.Equal(t, warehouseId.Name(), config.Warehouse)
-					assert.Equal(t, tmpRoleId.Name(), config.Role)
+					assert.Equal(t, tmpServiceUser.UserId.Name(), config.User)
+					assert.Equal(t, tmpServiceUser.WarehouseId.Name(), config.Warehouse)
+					assert.Equal(t, tmpServiceUser.RoleId.Name(), config.Role)
 					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
 					assert.Equal(t, net.ParseIP("3.3.3.3"), config.ClientIP)
 					assert.Equal(t, "https", config.Protocol)
@@ -508,15 +504,8 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	accountId := acc.TestClient().Context.CurrentAccountId(t)
-	warehouseId := acc.TestClient().Ids.SnowflakeWarehouseId()
-
-	privateKey, publicKey, _ := random.GenerateRSAKeyPair(t)
-	tmpUserId, tmpRoleId := acc.TestClient().SetUpServiceUserWithAccessToTestDatabaseAndWarehouse(t, publicKey)
-
-	profile := random.AlphaN(6)
-	toml := helpers.TomlConfigForServiceUser(t, profile, tmpUserId, tmpRoleId, warehouseId, accountId, privateKey)
-	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
 
 	nonExisting := "NON-EXISTENT"
 
@@ -528,23 +517,23 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
 
-			t.Setenv(snowflakeenvs.ConfigPath, configPath)
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      providerConfigWithExplicitValidationAndRole(profile, nonExisting, true),
+				Config:      providerConfigWithExplicitValidationAndRole(tmpServiceUserConfig.Profile, nonExisting, true),
 				ExpectError: regexp.MustCompile("Role 'NON-EXISTENT' specified in the connect string does not exist or not authorized."),
 			},
 			{
-				Config:      providerConfigWithExplicitValidationAndWarehouse(profile, nonExisting, true),
+				Config:      providerConfigWithExplicitValidationAndWarehouse(tmpServiceUserConfig.Profile, nonExisting, true),
 				ExpectError: regexp.MustCompile("The requested warehouse does not exist or not authorized."),
 			},
 			// check that using a non-existing warehouse with disabled verification succeeds
 			{
-				Config: providerConfigWithExplicitValidationAndWarehouse(profile, nonExisting, false),
+				Config: providerConfigWithExplicitValidationAndWarehouse(tmpServiceUserConfig.Profile, nonExisting, false),
 			},
 		},
 	})
@@ -552,7 +541,12 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 
 // prove we can use tri-value booleans, similarly to the ones in resources
 func TestAcc_Provider_triValueBoolean(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -570,16 +564,15 @@ func TestAcc_Provider_triValueBoolean(t *testing.T) {
 				Config:            providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
 			},
 			{
-				// Use the default TOML config again.
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.ConfigPath, "")
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
+				Config:                   providerConfigWithClientStoreTemporaryCredential(tmpServiceUserConfig.Profile, `true`),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `"true"`),
+				Config:                   providerConfigWithClientStoreTemporaryCredential(tmpServiceUserConfig.Profile, `"true"`),
 			},
 		},
 	})
@@ -877,7 +870,7 @@ data snowflake_database "t" {
 }`, acc.TestDatabaseName)
 }
 
-func providerConfigAllFields(profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountId sdk.AccountIdentifier, privateKey string) string {
+func providerConfigAllFields(tmpConfig *helpers.TmpTomlConfig, tmpUser *helpers.TmpServiceUser) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
 	profile = "%[1]s"
@@ -916,7 +909,7 @@ provider "snowflake" {
 		foo = "piyo"
 	}
 }
-`, profile, accountId.OrganizationName(), accountId.AccountName(), userId.Name(), warehouseId.Name(), roleId.Name(), privateKey) + datasourceConfig()
+`, tmpConfig.Profile, tmpUser.AccountId.OrganizationName(), tmpUser.AccountId.AccountName(), tmpUser.UserId.Name(), tmpUser.WarehouseId.Name(), tmpUser.RoleId.Name(), tmpUser.PrivateKey) + datasourceConfig()
 }
 
 // TODO(SNOW-1348325): Use parameter data source with `IN SESSION` filtering.

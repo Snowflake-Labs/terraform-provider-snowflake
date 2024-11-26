@@ -92,7 +92,7 @@ disablequerycontextcache = true
 includeretryreason = true
 disableconsolelogin = true
 
-[complete_fields_invalid.params]
+[%[1]s.params]
 foo = 'bar'`, profile, privateKey)
 }
 

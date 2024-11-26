@@ -69,18 +69,18 @@ func (c *TestClient) SetUpTemporaryServiceUser(t *testing.T) *TmpServiceUser {
 }
 
 func (c *TestClient) TempTomlConfigForServiceUser(t *testing.T, serviceUser *TmpServiceUser) *TmpTomlConfig {
-	return c.storeTempTomlConfig(t, func(profile string) string {
+	return c.StoreTempTomlConfig(t, func(profile string) string {
 		return TomlConfigForServiceUser(t, profile, serviceUser.UserId, serviceUser.RoleId, serviceUser.WarehouseId, serviceUser.AccountId, serviceUser.PrivateKey)
 	})
 }
 
 func (c *TestClient) TempIncorrectTomlConfigForServiceUser(t *testing.T, serviceUser *TmpServiceUser) *TmpTomlConfig {
-	return c.storeTempTomlConfig(t, func(profile string) string {
+	return c.StoreTempTomlConfig(t, func(profile string) string {
 		return TomlIncorrectConfigForServiceUser(t, profile, serviceUser.AccountId)
 	})
 }
 
-func (c *TestClient) storeTempTomlConfig(t *testing.T, tomlProvider func(string) string) *TmpTomlConfig {
+func (c *TestClient) StoreTempTomlConfig(t *testing.T, tomlProvider func(string) string) *TmpTomlConfig {
 	profile := random.AlphaN(6)
 	toml := tomlProvider(profile)
 	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
