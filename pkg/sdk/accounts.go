@@ -47,6 +47,7 @@ type CreateAccountOptions struct {
 	AdminName          string         `ddl:"parameter,single_quotes" sql:"ADMIN_NAME"`
 	AdminPassword      *string        `ddl:"parameter,single_quotes" sql:"ADMIN_PASSWORD"`
 	AdminRSAPublicKey  *string        `ddl:"parameter,single_quotes" sql:"ADMIN_RSA_PUBLIC_KEY"`
+	AdminUserType      *UserType      `ddl:"parameter,single_quotes" sql:"ADMIN_USER_TYPE"`
 	FirstName          *string        `ddl:"parameter,single_quotes" sql:"FIRST_NAME"`
 	LastName           *string        `ddl:"parameter,single_quotes" sql:"LAST_NAME"`
 	Email              string         `ddl:"parameter,single_quotes" sql:"EMAIL"`
@@ -55,6 +56,7 @@ type CreateAccountOptions struct {
 	RegionGroup        *string        `ddl:"parameter,single_quotes" sql:"REGION_GROUP"`
 	Region             *string        `ddl:"parameter,single_quotes" sql:"REGION"`
 	Comment            *string        `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Polaris            *bool          `ddl:"parameter" sql:"POLARIS"`
 }
 
 func (opts *CreateAccountOptions) validate() error {
