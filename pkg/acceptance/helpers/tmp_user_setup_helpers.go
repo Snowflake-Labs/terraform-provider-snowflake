@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -80,6 +81,10 @@ type TmpUser struct {
 	RoleId      sdk.AccountObjectIdentifier
 	WarehouseId sdk.AccountObjectIdentifier
 	AccountId   sdk.AccountIdentifier
+}
+
+func (u *TmpUser) OrgAndAccount() string {
+	return fmt.Sprintf("%s-%s", u.AccountId.OrganizationName(), u.AccountId.AccountName())
 }
 
 type TmpServiceUser struct {
