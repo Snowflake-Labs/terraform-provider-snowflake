@@ -3,8 +3,9 @@ package tracking
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/stretchr/testify/require"
@@ -25,7 +26,7 @@ func TestTrimMetadata(t *testing.T) {
 		},
 		{
 			Input:    fmt.Sprintf("select 1; --%s", MetadataPrefix),
-			Expected: fmt.Sprintf("select 1; --%s", MetadataPrefix),
+			Expected: "select 1;",
 		},
 		{
 			Input:    fmt.Sprintf("select 1; --%s ", MetadataPrefix),

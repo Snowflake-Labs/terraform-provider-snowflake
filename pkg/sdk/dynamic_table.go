@@ -3,8 +3,9 @@ package sdk
 import (
 	"context"
 	"database/sql"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 )
 
 type DynamicTables interface {

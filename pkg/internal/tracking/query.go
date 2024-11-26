@@ -7,7 +7,7 @@ import (
 )
 
 func TrimMetadata(sql string) string {
-	queryParts := strings.Split(sql, fmt.Sprintf(" --%s ", MetadataPrefix))
+	queryParts := strings.Split(sql, fmt.Sprintf(" --%s", MetadataPrefix))
 	return queryParts[0]
 }
 
