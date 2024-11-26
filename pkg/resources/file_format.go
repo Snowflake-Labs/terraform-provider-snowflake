@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -317,10 +318,10 @@ func (ffi *fileFormatID) String() (string, error) {
 // FileFormat returns a pointer to the resource representing a file format.
 func FileFormat() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.FileFormat, CreateFileFormat),
-		ReadContext:   TrackingReadWrapper(resources.FileFormat, ReadFileFormat),
-		UpdateContext: TrackingUpdateWrapper(resources.FileFormat, UpdateFileFormat),
-		DeleteContext: TrackingDeleteWrapper(resources.FileFormat, DeleteFileFormat),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.FileFormatResource), TrackingCreateWrapper(resources.FileFormat, CreateFileFormat)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.FileFormatResource), TrackingReadWrapper(resources.FileFormat, ReadFileFormat)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.FileFormatResource), TrackingUpdateWrapper(resources.FileFormat, UpdateFileFormat)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.FileFormatResource), TrackingDeleteWrapper(resources.FileFormat, DeleteFileFormat)),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FileFormat, customdiff.All(
 			ComputedIfAnyAttributeChanged(fileFormatSchema, FullyQualifiedNameAttributeName, "name"),

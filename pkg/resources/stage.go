@@ -103,10 +103,10 @@ var stageSchema = map[string]*schema.Schema{
 // TODO (SNOW-1019005): Remove snowflake package that is used in Create and Update operations
 func Stage() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: previewfeatures.PreviewFeatureCreateContextWrapper(string(previewfeatures.StageResource), TrackingCreateWrapper(resources.Stage, CreateStage)),
-		ReadContext:   previewfeatures.PreviewFeatureReadContextWrapper(string(previewfeatures.StageResource), TrackingReadWrapper(resources.Stage, ReadStage)),
-		UpdateContext: previewfeatures.PreviewFeatureUpdateContextWrapper(string(previewfeatures.StageResource), TrackingUpdateWrapper(resources.Stage, UpdateStage)),
-		DeleteContext: previewfeatures.PreviewFeatureDeleteContextWrapper(string(previewfeatures.StageResource), TrackingDeleteWrapper(resources.Stage, DeleteStage)),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.StageResource), TrackingCreateWrapper(resources.Stage, CreateStage)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.StageResource), TrackingReadWrapper(resources.Stage, ReadStage)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.StageResource), TrackingUpdateWrapper(resources.Stage, UpdateStage)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.StageResource), TrackingDeleteWrapper(resources.Stage, DeleteStage)),
 
 		Schema: stageSchema,
 		Importer: &schema.ResourceImporter{

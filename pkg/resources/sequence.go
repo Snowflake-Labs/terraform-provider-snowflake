@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -67,10 +68,10 @@ var sequenceSchema = map[string]*schema.Schema{
 
 func Sequence() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.Sequence, CreateSequence),
-		ReadContext:   TrackingReadWrapper(resources.Sequence, ReadSequence),
-		DeleteContext: TrackingDeleteWrapper(resources.Sequence, DeleteSequence),
-		UpdateContext: TrackingUpdateWrapper(resources.Sequence, UpdateSequence),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.SequenceResource), TrackingCreateWrapper(resources.Sequence, CreateSequence)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.SequenceResource), TrackingReadWrapper(resources.Sequence, ReadSequence)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.SequenceResource), TrackingUpdateWrapper(resources.Sequence, DeleteSequence)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.SequenceResource), TrackingDeleteWrapper(resources.Sequence, UpdateSequence)),
 
 		Schema: sequenceSchema,
 		Importer: &schema.ResourceImporter{

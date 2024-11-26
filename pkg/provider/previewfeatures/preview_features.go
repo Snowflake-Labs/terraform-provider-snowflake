@@ -47,7 +47,7 @@ const (
 	SharesDatasource                            feature = "snowflake_shares_datasource"
 	ParametersDatasource                        feature = "snowflake_parameters_datasource"
 	StageResource                               feature = "snowflake_stage_resource"
-	StageDatasource                             feature = "snowflake_stages_datasource"
+	StagesDatasource                            feature = "snowflake_stages_datasource"
 	StorageIntegrationResource                  feature = "snowflake_storage_integration_resource"
 	StorageIntegrationsDatasource               feature = "snowflake_storage_integrations_datasource"
 	SystemGenerateSCIMAccessTokenDatasource     feature = "snowflake_system_generate_scim_access_token_datasource"
@@ -56,6 +56,7 @@ const (
 	SystemGetSnowflakePlatformInfoDatasource    feature = "snowflake_system_get_snowflake_platform_info_datasource"
 	TableColumnMaskingPolicyApplicationResource feature = "snowflake_table_column_masking_policy_application_resource"
 	TableConstraintResource                     feature = "snowflake_table_constraint_resource"
+	UserAuthenticationPolicyAttachmentResource  feature = "snowflake_user_authentication_policy_attachment_resource"
 	UserPublicKeysResource                      feature = "snowflake_user_public_keys_resource"
 	UserPasswordPolicyAttachmentResource        feature = "snowflake_user_password_policy_attachment_resource"
 )
@@ -99,7 +100,7 @@ var allPreviewFeatures = []feature{
 	SharesDatasource,
 	ParametersDatasource,
 	StageResource,
-	StageDatasource,
+	StagesDatasource,
 	StorageIntegrationResource,
 	StorageIntegrationsDatasource,
 	SystemGenerateSCIMAccessTokenDatasource,
@@ -108,6 +109,7 @@ var allPreviewFeatures = []feature{
 	SystemGetSnowflakePlatformInfoDatasource,
 	TableColumnMaskingPolicyApplicationResource,
 	TableConstraintResource,
+	UserAuthenticationPolicyAttachmentResource,
 	UserPublicKeysResource,
 	UserPasswordPolicyAttachmentResource,
 }
@@ -131,7 +133,7 @@ func EnsurePreviewFeatureEnabled(feat feature, enabledFeatures []string) error {
 func StringToFeature(featRaw string) (feature, error) {
 	feat := feature(strings.ToLower(featRaw))
 	if !slices.Contains(allPreviewFeatures, feat) {
-		return "", fmt.Errorf("%[1]s is currently a preview feature, and must be enabled by adding %[1]s to `preview_features_enabled` in Terraform configuration.", feat)
+		return "", fmt.Errorf("invalid feature: %s", featRaw)
 	}
 	return feat, nil
 }

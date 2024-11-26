@@ -119,10 +119,10 @@ var externalVolumeSchema = map[string]*schema.Schema{
 // ExternalVolume returns a pointer to the resource representing an external volume.
 func ExternalVolume() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: previewfeatures.PreviewFeatureCreateContextWrapper(string(previewfeatures.ExternalVolumeResource), TrackingCreateWrapper(resources.ExternalVolume, CreateContextExternalVolume)),
-		ReadContext:   previewfeatures.PreviewFeatureReadContextWrapper(string(previewfeatures.ExternalVolumeResource), TrackingReadWrapper(resources.ExternalVolume, ReadContextExternalVolume(true))),
-		UpdateContext: previewfeatures.PreviewFeatureUpdateContextWrapper(string(previewfeatures.ExternalVolumeResource), TrackingUpdateWrapper(resources.ExternalVolume, UpdateContextExternalVolume)),
-		DeleteContext: previewfeatures.PreviewFeatureDeleteContextWrapper(string(previewfeatures.ExternalVolumeResource), TrackingDeleteWrapper(resources.ExternalVolume, DeleteContextExternalVolume)),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ExternalVolumeResource), TrackingCreateWrapper(resources.ExternalVolume, CreateContextExternalVolume)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ExternalVolumeResource), TrackingReadWrapper(resources.ExternalVolume, ReadContextExternalVolume(true))),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ExternalVolumeResource), TrackingUpdateWrapper(resources.ExternalVolume, UpdateContextExternalVolume)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ExternalVolumeResource), TrackingDeleteWrapper(resources.ExternalVolume, DeleteContextExternalVolume)),
 
 		Description: "Resource used to manage external volume objects. For more information, check [external volume documentation](https://docs.snowflake.com/en/sql-reference/commands-data-loading#external-volume).",
 

@@ -68,10 +68,10 @@ var networkRuleSchema = map[string]*schema.Schema{
 // NetworkRule returns a pointer to the resource representing a network rule.
 func NetworkRule() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: previewfeatures.PreviewFeatureCreateContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingCreateWrapper(resources.NetworkRule, CreateContextNetworkRule)),
-		ReadContext:   previewfeatures.PreviewFeatureReadContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingReadWrapper(resources.NetworkRule, ReadContextNetworkRule)),
-		UpdateContext: previewfeatures.PreviewFeatureUpdateContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingUpdateWrapper(resources.NetworkRule, UpdateContextNetworkRule)),
-		DeleteContext: previewfeatures.PreviewFeatureDeleteContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingDeleteWrapper(resources.NetworkRule, DeleteContextNetworkRule)),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingCreateWrapper(resources.NetworkRule, CreateContextNetworkRule)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingReadWrapper(resources.NetworkRule, ReadContextNetworkRule)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingUpdateWrapper(resources.NetworkRule, UpdateContextNetworkRule)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.NetworkRuleResource), TrackingDeleteWrapper(resources.NetworkRule, DeleteContextNetworkRule)),
 
 		Schema: networkRuleSchema,
 		Importer: &schema.ResourceImporter{

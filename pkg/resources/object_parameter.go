@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -72,10 +73,10 @@ var objectParameterSchema = map[string]*schema.Schema{
 
 func ObjectParameter() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ObjectParameter, CreateObjectParameter),
-		ReadContext:   TrackingReadWrapper(resources.ObjectParameter, ReadObjectParameter),
-		UpdateContext: TrackingUpdateWrapper(resources.ObjectParameter, UpdateObjectParameter),
-		DeleteContext: TrackingDeleteWrapper(resources.ObjectParameter, DeleteObjectParameter),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ObjectParameterResource), TrackingCreateWrapper(resources.ObjectParameter, CreateObjectParameter)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ObjectParameterResource), TrackingReadWrapper(resources.ObjectParameter, ReadObjectParameter)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ObjectParameterResource), TrackingUpdateWrapper(resources.ObjectParameter, UpdateObjectParameter)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ObjectParameterResource), TrackingDeleteWrapper(resources.ObjectParameter, DeleteObjectParameter)),
 
 		Schema: objectParameterSchema,
 		Importer: &schema.ResourceImporter{

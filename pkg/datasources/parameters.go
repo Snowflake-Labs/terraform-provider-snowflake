@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -82,7 +83,7 @@ var parametersSchema = map[string]*schema.Schema{
 
 func Parameters() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.Parameters, ReadParameters),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.ParametersDatasource), TrackingReadWrapper(datasources.Parameters, ReadParameters)),
 		Schema:      parametersSchema,
 	}
 }

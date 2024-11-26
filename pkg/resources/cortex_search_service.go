@@ -83,10 +83,10 @@ var cortexSearchServiceSchema = map[string]*schema.Schema{
 // CortexSearchService returns a pointer to the resource representing a Cortex search service.
 func CortexSearchService() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: previewfeatures.PreviewFeatureCreateContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingCreateWrapper(resources.CortexSearchService, CreateCortexSearchService)),
-		ReadContext:   previewfeatures.PreviewFeatureReadContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingReadWrapper(resources.CortexSearchService, ReadCortexSearchService)),
-		UpdateContext: previewfeatures.PreviewFeatureUpdateContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingUpdateWrapper(resources.CortexSearchService, UpdateCortexSearchService)),
-		DeleteContext: previewfeatures.PreviewFeatureDeleteContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingDeleteWrapper(resources.CortexSearchService, DeleteCortexSearchService)),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingCreateWrapper(resources.CortexSearchService, CreateCortexSearchService)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingReadWrapper(resources.CortexSearchService, ReadCortexSearchService)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingUpdateWrapper(resources.CortexSearchService, UpdateCortexSearchService)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.CortexSearchServiceResource), TrackingDeleteWrapper(resources.CortexSearchService, DeleteCortexSearchService)),
 
 		Schema: cortexSearchServiceSchema,
 		Importer: &schema.ResourceImporter{

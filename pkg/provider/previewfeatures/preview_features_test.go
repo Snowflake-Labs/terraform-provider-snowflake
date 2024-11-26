@@ -55,7 +55,7 @@ func Test_StringToFeature(t *testing.T) {
 		{input: "snowflake_shares_datasource", want: SharesDatasource},
 		{input: "snowflake_parameters_datasource", want: ParametersDatasource},
 		{input: "snowflake_stage_resource", want: StageResource},
-		{input: "snowflake_stages_datasource", want: StageDatasource},
+		{input: "snowflake_stages_datasource", want: StagesDatasource},
 		{input: "snowflake_storage_integration_resource", want: StorageIntegrationResource},
 		{input: "snowflake_storage_integrations_datasource", want: StorageIntegrationsDatasource},
 		{input: "snowflake_system_generate_scim_access_token_datasource", want: SystemGenerateSCIMAccessTokenDatasource},
@@ -84,7 +84,7 @@ func Test_StringToFeature(t *testing.T) {
 	for _, tc := range invalid {
 		t.Run(tc.input, func(t *testing.T) {
 			_, err := StringToFeature(tc.input)
-			require.Error(t, err)
+			require.ErrorContains(t, err, "invalid feature")
 		})
 	}
 }

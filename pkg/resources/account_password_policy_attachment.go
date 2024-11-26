@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -29,9 +30,9 @@ func AccountPasswordPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "Specifies the password policy to use for the current account. To set the password policy of a different account, use a provider alias.",
 
-		CreateContext: TrackingCreateWrapper(resources.AccountPasswordPolicyAttachment, CreateAccountPasswordPolicyAttachment),
-		ReadContext:   TrackingReadWrapper(resources.AccountPasswordPolicyAttachment, ReadAccountPasswordPolicyAttachment),
-		DeleteContext: TrackingDeleteWrapper(resources.AccountPasswordPolicyAttachment, DeleteAccountPasswordPolicyAttachment),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.AccountPasswordPolicyAttachmentResource), TrackingCreateWrapper(resources.AccountPasswordPolicyAttachment, CreateAccountPasswordPolicyAttachment)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.AccountPasswordPolicyAttachmentResource), TrackingReadWrapper(resources.AccountPasswordPolicyAttachment, ReadAccountPasswordPolicyAttachment)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.AccountPasswordPolicyAttachmentResource), TrackingDeleteWrapper(resources.AccountPasswordPolicyAttachment, DeleteAccountPasswordPolicyAttachment)),
 
 		Schema: accountPasswordPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{

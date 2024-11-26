@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -87,9 +88,9 @@ var managedAccountSchema = map[string]*schema.Schema{
 // ManagedAccount returns a pointer to the resource representing a managed account.
 func ManagedAccount() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ManagedAccount, CreateManagedAccount),
-		ReadContext:   TrackingReadWrapper(resources.ManagedAccount, ReadManagedAccount),
-		DeleteContext: TrackingDeleteWrapper(resources.ManagedAccount, DeleteManagedAccount),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ManagedAccountResource), TrackingCreateWrapper(resources.ManagedAccount, CreateManagedAccount)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ManagedAccountResource), TrackingReadWrapper(resources.ManagedAccount, ReadManagedAccount)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ManagedAccountResource), TrackingDeleteWrapper(resources.ManagedAccount, DeleteManagedAccount)),
 
 		Schema: managedAccountSchema,
 		Importer: &schema.ResourceImporter{

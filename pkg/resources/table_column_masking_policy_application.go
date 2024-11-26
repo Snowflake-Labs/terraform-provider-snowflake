@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -37,9 +38,9 @@ var tableColumnMaskingPolicyApplicationSchema = map[string]*schema.Schema{
 func TableColumnMaskingPolicyApplication() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Applies a masking policy to a table column.",
-		CreateContext: TrackingCreateWrapper(resources.TableColumnMaskingPolicyApplication, CreateTableColumnMaskingPolicyApplication),
-		ReadContext:   TrackingReadWrapper(resources.TableColumnMaskingPolicyApplication, ReadTableColumnMaskingPolicyApplication),
-		DeleteContext: TrackingDeleteWrapper(resources.TableColumnMaskingPolicyApplication, DeleteTableColumnMaskingPolicyApplication),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.TableColumnMaskingPolicyApplicationResource), TrackingCreateWrapper(resources.TableColumnMaskingPolicyApplication, CreateTableColumnMaskingPolicyApplication)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.TableColumnMaskingPolicyApplicationResource), TrackingReadWrapper(resources.TableColumnMaskingPolicyApplication, ReadTableColumnMaskingPolicyApplication)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.TableColumnMaskingPolicyApplicationResource), TrackingDeleteWrapper(resources.TableColumnMaskingPolicyApplication, DeleteTableColumnMaskingPolicyApplication)),
 
 		Schema: tableColumnMaskingPolicyApplicationSchema,
 		Importer: &schema.ResourceImporter{
