@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -54,14 +57,13 @@ var externalTablesSchema = map[string]*schema.Schema{
 
 func ExternalTables() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadExternalTables,
-		Schema: externalTablesSchema,
+		ReadContext: TrackingReadWrapper(datasources.ExternalTables, ReadExternalTables),
+		Schema:      externalTablesSchema,
 	}
 }
 
-func ReadExternalTables(d *schema.ResourceData, meta interface{}) error {
+func ReadExternalTables(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
@@ -86,5 +88,5 @@ func ReadExternalTables(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(helpers.EncodeSnowflakeID(schemaId))
 
-	return d.Set("external_tables", externalTablesObjects)
+	return diag.FromErr(d.Set("external_tables", externalTablesObjects))
 }

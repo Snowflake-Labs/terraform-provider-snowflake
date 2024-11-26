@@ -3,11 +3,12 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -57,7 +58,7 @@ var tasksSchema = map[string]*schema.Schema{
 
 func Tasks() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadTasks,
+		ReadContext: TrackingReadWrapper(datasources.Tasks, ReadTasks),
 		Schema:      tasksSchema,
 		Description: "Data source used to get details of filtered tasks. Filtering is aligned with the current possibilities for [SHOW TASKS](https://docs.snowflake.com/en/sql-reference/sql/show-tasks) query. The results of SHOW and SHOW PARAMETERS IN are encapsulated in one output collection `tasks`.",
 	}

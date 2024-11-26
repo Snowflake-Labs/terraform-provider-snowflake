@@ -56,7 +56,7 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 	t.Run("create with usage tracking comment", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		plainQuery := fmt.Sprintf("SELECT id FROM %s", tableTest.ID().FullyQualifiedName())
-		query, err := tracking.AppendMetadata(plainQuery, tracking.NewVersionedMetadata(resources.DynamicTable, tracking.CreateOperation))
+		query, err := tracking.AppendMetadata(plainQuery, tracking.NewVersionedResourceMetadata(resources.DynamicTable, tracking.CreateOperation))
 		require.NoError(t, err)
 
 		err = client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(id, testClientHelper().Ids.WarehouseId(), sdk.TargetLag{

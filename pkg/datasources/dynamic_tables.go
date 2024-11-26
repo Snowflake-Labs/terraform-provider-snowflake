@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -194,13 +197,13 @@ var dynamicTablesSchema = map[string]*schema.Schema{
 // DynamicTables Snowflake Dynamic Tables resource.
 func DynamicTables() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadDynamicTables,
-		Schema: dynamicTablesSchema,
+		ReadContext: TrackingReadWrapper(datasources.DynamicTables, ReadDynamicTables),
+		Schema:      dynamicTablesSchema,
 	}
 }
 
 // ReadDynamicTables Reads the dynamic tables metadata information.
-func ReadDynamicTables(d *schema.ResourceData, meta interface{}) error {
+func ReadDynamicTables(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	request := sdk.NewShowDynamicTableRequest()
 	if v, ok := d.GetOk("like"); ok {
@@ -252,7 +255,7 @@ func ReadDynamicTables(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		log.Printf("[DEBUG] snowflake_dynamic_tables.go: %v", err)
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("dynamic_tables")
 	records := make([]map[string]any, 0, len(dts))
@@ -287,7 +290,7 @@ func ReadDynamicTables(d *schema.ResourceData, meta interface{}) error {
 		records = append(records, record)
 	}
 	if err := d.Set("records", records); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }

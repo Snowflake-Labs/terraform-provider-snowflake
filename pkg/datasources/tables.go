@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -52,14 +55,13 @@ var tablesSchema = map[string]*schema.Schema{
 
 func Tables() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadTables,
-		Schema: tablesSchema,
+		ReadContext: TrackingReadWrapper(datasources.Tables, ReadTables),
+		Schema:      tablesSchema,
 	}
 }
 
-func ReadTables(d *schema.ResourceData, meta interface{}) error {
+func ReadTables(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
@@ -91,5 +93,5 @@ func ReadTables(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(databaseName, schemaName))
-	return d.Set("tables", tables)
+	return diag.FromErr(d.Set("tables", tables))
 }

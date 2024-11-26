@@ -1,10 +1,15 @@
 package datasources
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -204,4 +209,11 @@ func handleExtendedIn(d *schema.ResourceData, setField **sdk.ExtendedIn) error {
 		}
 	}
 	return nil
+}
+
+func TrackingReadWrapper(datasourceName datasources.Datasource, readImplementation schema.ReadContextFunc) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedDatasourceMetadata(datasourceName))
+		return readImplementation(ctx, d, meta)
+	}
 }

@@ -3,6 +3,9 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -117,15 +120,14 @@ var failoverGroupsSchema = map[string]*schema.Schema{
 // FailoverGroups Snowflake FailoverGroups resource.
 func FailoverGroups() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadFailoverGroups,
-		Schema: failoverGroupsSchema,
+		ReadContext: TrackingReadWrapper(datasources.FailoverGroups, ReadFailoverGroups),
+		Schema:      failoverGroupsSchema,
 	}
 }
 
 // ReadFailoverGroups lists failover groups.
-func ReadFailoverGroups(d *schema.ResourceData, meta interface{}) error {
+func ReadFailoverGroups(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	inAccount := d.Get("in_account").(string)
 	opts := sdk.ShowFailoverGroupOptions{}
@@ -134,7 +136,7 @@ func ReadFailoverGroups(d *schema.ResourceData, meta interface{}) error {
 	}
 	failoverGroups, err := client.FailoverGroups.Show(ctx, &opts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("failover_groups")
 	failoverGroupsFlatten := []map[string]interface{}{}
@@ -173,7 +175,7 @@ func ReadFailoverGroups(d *schema.ResourceData, meta interface{}) error {
 		failoverGroupsFlatten = append(failoverGroupsFlatten, m)
 	}
 	if err := d.Set("failover_groups", failoverGroupsFlatten); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }
