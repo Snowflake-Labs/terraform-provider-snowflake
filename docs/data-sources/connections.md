@@ -2,14 +2,14 @@
 page_title: "snowflake_connections Data Source - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Datasource used to get details of filtered connections. Filtering is aligned with the current possibilities for SHOW CONNECTIONS https://docs.snowflake.com/en/sql-reference/sql/show-connections query. The results of SHOW is encapsulated in one output collection connections.
+  Data source used to get details of filtered connections. Filtering is aligned with the current possibilities for SHOW CONNECTIONS https://docs.snowflake.com/en/sql-reference/sql/show-connections query. The results of SHOW is encapsulated in one output collection connections.
 ---
 
 !> **V1 release candidate** This data source is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the data source if needed. Any errors reported will be resolved with a higher priority. We encourage checking this data source out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0970--v0980) to use it.
 
 # snowflake_connections (Data Source)
 
-Datasource used to get details of filtered connections. Filtering is aligned with the current possibilities for [SHOW CONNECTIONS](https://docs.snowflake.com/en/sql-reference/sql/show-connections) query. The results of SHOW is encapsulated in one output collection `connections`.
+Data source used to get details of filtered connections. Filtering is aligned with the current possibilities for [SHOW CONNECTIONS](https://docs.snowflake.com/en/sql-reference/sql/show-connections) query. The results of SHOW is encapsulated in one output collection `connections`.
 
 ## Example Usage
 

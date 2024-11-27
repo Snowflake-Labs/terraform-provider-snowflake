@@ -2,14 +2,14 @@
 page_title: "snowflake_row_access_policies Data Source - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Datasource used to get details of filtered row access policies. Filtering is aligned with the current possibilities for SHOW ROW ACCESS POLICIES https://docs.snowflake.com/en/sql-reference/sql/show-row-access-policies query. The results of SHOW and DESCRIBE are encapsulated in one output collection row_access_policies.
+  Data source used to get details of filtered row access policies. Filtering is aligned with the current possibilities for SHOW ROW ACCESS POLICIES https://docs.snowflake.com/en/sql-reference/sql/show-row-access-policies query. The results of SHOW and DESCRIBE are encapsulated in one output collection row_access_policies.
 ---
 
 !> **V1 release candidate** This data source was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the data source if needed. Any errors reported will be resolved with a higher priority. We encourage checking this data source out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0950--v0960) to use it.
 
 # snowflake_row_access_policies (Data Source)
 
-Datasource used to get details of filtered row access policies. Filtering is aligned with the current possibilities for [SHOW ROW ACCESS POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-row-access-policies) query. The results of SHOW and DESCRIBE are encapsulated in one output collection `row_access_policies`.
+Data source used to get details of filtered row access policies. Filtering is aligned with the current possibilities for [SHOW ROW ACCESS POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-row-access-policies) query. The results of SHOW and DESCRIBE are encapsulated in one output collection `row_access_policies`.
 
 ## Example Usage
 
