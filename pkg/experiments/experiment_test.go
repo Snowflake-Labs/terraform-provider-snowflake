@@ -114,8 +114,8 @@ func Test_experiments(t *testing.T) {
 		assert.NotEqual(t, "*** *** *** ***", output)
 		assert.Equal(t, "different space-separated really, really, really secret infos", output)
 
-		output = echoWithOutput(t, "different space-separatedreally, really,reallysecret infos")
+		output = echoWithOutput(t, "different space-separatedreally, really, reallysecret infos")
 		assert.NotEqual(t, "***", output)
-		assert.Equal(t, "different space-separatedreally, really,reallysecret infos", output)
+		assert.Equal(t, "different space-separatedreally, really, reallysecret infos", output)
 	})
 }

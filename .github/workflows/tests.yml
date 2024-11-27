@@ -69,6 +69,7 @@ jobs:
         run: |
           echo "masking does not\nwork this way.\n!@#$%^&*()_+=-1234567890"
           echo "$TEST_SF_TF_MULTI_LINER"
+          echo "masking does not"
         env:
           TEST_SF_TF_MULTI_LINER: ${{ secrets.TEST_SF_TF_MULTI_LINER }}
 
