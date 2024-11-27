@@ -66,9 +66,11 @@ func Test_experiments(t *testing.T) {
 
 		output := echoWithOutput(t, value)
 		assert.Equal(t, "***", output)
+		assert.Equal(t, value, output)
 
 		output = echoWithOutput(t, "very secret info")
 		assert.Equal(t, "***", output)
+		assert.Equal(t, "very secret info", output)
 
 		output = echoWithOutput(t, "secret info")
 		assert.Equal(t, "secret info", output)
@@ -90,11 +92,14 @@ func Test_experiments(t *testing.T) {
 
 		output := echoWithOutput(t, value)
 		assert.Equal(t, "***\n***\n***\n***", output)
+		assert.Equal(t, value, output)
 
 		output = echoWithOutput(t, "different space-separated really, really, really secret infos")
-		assert.Equal(t, "*** *** *** ***\n", output)
+		assert.Equal(t, "*** *** *** ***", output)
+		assert.Equal(t, "different space-separated really, really, really secret infos", output)
 
 		output = echoWithOutput(t, "different space-separatedreally, really,reallysecret infos")
-		assert.Equal(t, "************\n", output)
+		assert.Equal(t, "***", output)
+		assert.Equal(t, "different space-separatedreally, really,reallysecret infos", output)
 	})
 }
