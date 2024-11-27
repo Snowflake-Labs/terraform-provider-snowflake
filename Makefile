@@ -61,6 +61,9 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 			else echo "Aborting..."; \
 		fi;
 
+test-experiment: ## run experiment
+	go test -v ./pkg/experiments/...
+
 test: test-client ## run unit and integration tests
 	go test -v -cover -timeout=45m ./...
 
