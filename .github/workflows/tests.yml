@@ -48,7 +48,6 @@ jobs:
         run: make dev-setup
 
       - run: make test-experiment
-        if: ${{ !cancelled() && steps.create_config.conclusion == 'success' }}
 
       - name: find comment
         if: ${{ always() }}

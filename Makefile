@@ -62,7 +62,7 @@ sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
 		fi;
 
 test-experiment: ## run experiment
-	go test -v ./pkg/experiments/...
+	go test ./pkg/experiments/... -v
 
 test: test-client ## run unit and integration tests
 	go test -v -cover -timeout=45m ./...
