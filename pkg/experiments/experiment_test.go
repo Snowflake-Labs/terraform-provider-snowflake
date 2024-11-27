@@ -21,7 +21,7 @@ func Test_experiments(t *testing.T) {
 		if os.Getenv("GITHUB_ACTIONS") == "true" {
 			t.Logf("masking `%s`", line)
 			t.Setenv("TEST_SF_TF_MASKING_TEST", line)
-			return echo(`::add-mask::$TEST_SF_TF_MASKING_TEST`)
+			return echo(`"::add-mask::$TEST_SF_TF_MASKING_TEST"`)
 		}
 		return nil
 	}
