@@ -36,6 +36,9 @@ jobs:
           go-version-file: ./go.mod
           cache: false
 
+      - name: GH Actions env
+        run: echo "$GITHUB_ACTIONS"
+
       - name: Experiment
         run: echo "::add-mask::$TEST_SF_TF_ONE_LINER"
         env:
