@@ -19,7 +19,7 @@ func Test_experiments(t *testing.T) {
 	maskOnCi := func(line string) error {
 		if os.Getenv("GITHUB_ACTIONS") == "true" {
 			t.Log("masking")
-			return echo(fmt.Sprintf(`"::add-mask::%s"`, line))
+			return echo(fmt.Sprintf("::add-mask::%s", line))
 		}
 		return nil
 	}
