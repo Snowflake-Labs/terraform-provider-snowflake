@@ -1,7 +1,6 @@
 package experiments
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"testing"
@@ -21,7 +20,8 @@ func Test_experiments(t *testing.T) {
 	maskOnCi := func(line string) error {
 		if os.Getenv("GITHUB_ACTIONS") == "true" {
 			t.Logf("masking `%s`", line)
-			return echo(fmt.Sprintf(`::add-mask::"%s"`, line))
+			t.Setenv("TEST_SF_TF_MASKING_TEST", line)
+			return echo(`::add-mask::$TEST_SF_TF_MASKING_TEST`)
 		}
 		return nil
 	}
