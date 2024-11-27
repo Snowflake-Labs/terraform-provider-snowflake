@@ -13,13 +13,15 @@ import (
 func Test_experiments(t *testing.T) {
 
 	echo := func(content string) error {
-		return exec.Command("echo", content).Run()
+		cmd := exec.Command("echo", content)
+		t.Logf(cmd.String())
+		return cmd.Run()
 	}
 
 	maskOnCi := func(line string) error {
 		if os.Getenv("GITHUB_ACTIONS") == "true" {
-			t.Log("masking")
-			return echo(fmt.Sprintf("::add-mask::%s", line))
+			t.Logf("masking `%s`", line)
+			return echo(fmt.Sprintf(`::add-mask::%s`, line))
 		}
 		return nil
 	}
@@ -35,7 +37,7 @@ func Test_experiments(t *testing.T) {
 		require.NoError(t, err)
 
 		require.NoError(t, echo(a))
-		require.NoError(t, echo(a))
+		require.NoError(t, echo(b))
 		require.NoError(t, echo(c))
 		t.Log(a)
 		t.Log(b)
