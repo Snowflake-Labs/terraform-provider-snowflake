@@ -18,24 +18,28 @@ func Test_experiments(t *testing.T) {
 
 	maskOnCi := func(line string) error {
 		if os.Getenv("GITHUB_ACTIONS") == "true" {
-			t.Logf("masking %s", line)
+			t.Log("masking")
 			return echo(fmt.Sprintf(`"::add-mask::%s"`, line))
 		}
-		t.Logf("not masking %s", line)
 		return nil
 	}
 
 	t.Run("dynamic masking", func(t *testing.T) {
 		a := "something to mask"
 		b := "something not to mask"
+		c := "katarakta"
 
 		err := maskOnCi(a)
 		require.NoError(t, err)
+		err = maskOnCi(c)
+		require.NoError(t, err)
 
 		require.NoError(t, echo(a))
-		require.NoError(t, echo(b))
+		require.NoError(t, echo(a))
+		require.NoError(t, echo(c))
 		t.Log(a)
 		t.Log(b)
+		t.Log(c)
 	})
 
 	t.Run("masking from env", func(t *testing.T) {
