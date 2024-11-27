@@ -39,6 +39,15 @@ jobs:
       - name: GH Actions env
         run: echo "$GITHUB_ACTIONS"
 
+      - name: Experiment with case
+        run: echo "::add-mask::cAsE dOeS nOt MaTtEr"
+
+      - name: Echo different case
+        run: |
+          echo "cAsE dOeS nOt MaTtEr"
+          echo "CASE DOES NOT MATTER"
+          echo "case does not matter"
+
       - name: Experiment single line env
         run: echo "::add-mask::$TEST_SF_TF_ONE_LINER"
         env:
