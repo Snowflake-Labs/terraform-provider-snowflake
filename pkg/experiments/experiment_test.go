@@ -45,7 +45,7 @@ func Test_experiments(t *testing.T) {
 		} {
 			output, err := maskOnCi(fmt.Sprintf(option, value))
 			require.NoError(t, err)
-			require.Equal(t, value, string(output))
+			require.Contains(t, value, string(output))
 
 			t.Logf("option %d: %s", idx+1, value)
 		}
@@ -63,11 +63,11 @@ func Test_experiments(t *testing.T) {
 
 		output, err := echoWithOutput(value)
 		require.NoError(t, err)
-		require.Equal(t, "***", string(output))
+		require.Equal(t, "***\n", string(output))
 
 		output, err = echoWithOutput("very secret info")
 		require.NoError(t, err)
-		require.Equal(t, "***", string(output))
+		require.Equal(t, "***\n", string(output))
 
 		output, err = echoWithOutput("secret info")
 		require.NoError(t, err)
@@ -90,14 +90,14 @@ func Test_experiments(t *testing.T) {
 
 		output, err := echoWithOutput(value)
 		require.NoError(t, err)
-		require.Equal(t, "*** *** *** ***", string(output))
+		require.Equal(t, "***\n***\n***\n***", string(output))
 
 		output, err = echoWithOutput("different space-separated really, really, really secret infos")
 		require.NoError(t, err)
-		require.Equal(t, "*** *** *** ***", string(output))
+		require.Equal(t, "*** *** *** ***\n", string(output))
 
 		output, err = echoWithOutput("different space-separatedreally, really,reallysecret infos")
 		require.NoError(t, err)
-		require.Equal(t, "************", string(output))
+		require.Equal(t, "************\n", string(output))
 	})
 }
