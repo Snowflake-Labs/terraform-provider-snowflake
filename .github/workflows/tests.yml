@@ -39,24 +39,40 @@ jobs:
       - name: GH Actions env
         run: echo "$GITHUB_ACTIONS"
 
-      - name: Experiment
+      - name: Experiment single line env
         run: echo "::add-mask::$TEST_SF_TF_ONE_LINER"
         env:
           TEST_SF_TF_ONE_LINER: ${{ secrets.TEST_SF_TF_ONE_LINER }}
 
-      - name: Experiment multiple
+      - name: Experiment multiple lines env
+        run: echo "::add-mask::$TEST_SF_TF_MULTI_LINER"
+        env:
+          TEST_SF_TF_MULTI_LINER: ${{ secrets.TEST_SF_TF_MULTI_LINER }}
+
+      - name: Experiment all lines from env
         run: |
           while IFS= read -r line || [[ -n $line ]]; do
             echo "masking $line"
             echo "::add-mask::$line"
-          done < <(printf '%s' "$TEST_SF_TF_MULTI_LINE")
+          done < <(printf '%s' "$TEST_SF_TF_ALL_LINES")
         env:
-          TEST_SF_TF_MULTI_LINE: ${{ secrets.TEST_SF_TF_MULTI_LINE }}
+          TEST_SF_TF_ALL_LINES: ${{ secrets.TEST_SF_TF_ALL_LINES }}
 
-      - name: Echo
-        run: echo "very secret info"
+      - name: Echo single line env content
+        run: |
+          echo "very secret info"
+          echo "$TEST_SF_TF_ONE_LINER"
+        env:
+          TEST_SF_TF_ONE_LINER: ${{ secrets.TEST_SF_TF_ONE_LINER }}
 
-      - name: Echo multiple
+      - name: Echo multiple lines env content
+        run: |
+          echo "it\nworks\nthis way\n.\n!@#$%^&*()_+=-1234567890"
+          echo "$TEST_SF_TF_MULTI_LINER"
+        env:
+          TEST_SF_TF_MULTI_LINER: ${{ secrets.TEST_SF_TF_MULTI_LINER }}
+
+      - name: Echo different lines from all lines env
         run: |
           echo "different space-separated"
           echo "really, really,"
@@ -66,6 +82,9 @@ jobs:
           echo "different space-separated really, really, really secret infos"
           echo "different"
           echo "infos"
+          echo "$TEST_SF_TF_ALL_LINES"
+        env:
+          TEST_SF_TF_ALL_LINES: ${{ secrets.TEST_SF_TF_ALL_LINES }}
 
       - name: Install dependencies
         run: make dev-setup
@@ -73,7 +92,8 @@ jobs:
       - run: make test-experiment
         env:
           TEST_SF_TF_ONE_LINER: ${{ secrets.TEST_SF_TF_ONE_LINER }}
-          TEST_SF_TF_MULTI_LINE: ${{ secrets.TEST_SF_TF_MULTI_LINE }}
+          TEST_SF_TF_MULTI_LINER: ${{ secrets.TEST_SF_TF_MULTI_LINER }}
+          TEST_SF_TF_ALL_LINES: ${{ secrets.TEST_SF_TF_ALL_LINES }}
 
       - name: find comment
         if: ${{ always() }}
