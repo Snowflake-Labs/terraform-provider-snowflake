@@ -46,9 +46,10 @@ jobs:
 
       - name: Experiment multiple
         run: |
-          while read p; do
-            echo "::add-mask::$TEST_SF_TF_MULTI_LINE"
-          done
+          while IFS= read -r line || [[ -n $line ]]; do
+            echo "masking $line"
+            echo "::add-mask::$line"
+          done < <(printf '%s' "$TEST_SF_TF_MULTI_LINE")
         env:
           TEST_SF_TF_MULTI_LINE: ${{ secrets.TEST_SF_TF_MULTI_LINE }}
 
@@ -61,6 +62,7 @@ jobs:
           echo "really, really,"
           echo "really"
           echo "secret infos"
+          echo "really, really,"
 
       - name: Install dependencies
         run: make dev-setup
