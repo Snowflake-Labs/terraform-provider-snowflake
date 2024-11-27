@@ -4,27 +4,31 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_experiments(t *testing.T) {
 	ghActionsValue := testenvs.GetOrSkipTest(t, testenvs.GithubActions)
 
-	echoWithOutput := func(content string) ([]byte, error) {
+	echoWithOutput := func(t *testing.T, content string) string {
 		cmd := exec.Command("echo", content)
 		t.Logf(cmd.String())
-		return cmd.Output()
+		output, err := cmd.Output()
+		require.NoError(t, err)
+		return strings.TrimSpace(string(output))
 	}
 
-	maskOnCi := func(line string) ([]byte, error) {
+	maskOnCi := func(t *testing.T, line string) string {
 		if ghActionsValue == "true" {
 			t.Logf("trying to mask using `%s`", line)
-			return echoWithOutput(line)
+			return echoWithOutput(t, line)
 		}
-		return []byte{}, nil
+		return ""
 	}
 
 	// This test show that programmatically we are not able to mask using the GH workflow command.
@@ -43,9 +47,8 @@ func Test_experiments(t *testing.T) {
 			`"::add-mask:: %s"`,
 			`'::add-mask:: %s'`,
 		} {
-			output, err := maskOnCi(fmt.Sprintf(option, value))
-			require.NoError(t, err)
-			require.Contains(t, value, string(output))
+			output := maskOnCi(t, fmt.Sprintf(option, value))
+			assert.Contains(t, string(output), value)
 
 			t.Logf("option %d: %s", idx+1, value)
 		}
@@ -61,17 +64,14 @@ func Test_experiments(t *testing.T) {
 		t.Log("very secret info")
 		t.Log("secret info")
 
-		output, err := echoWithOutput(value)
-		require.NoError(t, err)
-		require.Equal(t, "***\n", string(output))
+		output := echoWithOutput(t, value)
+		assert.Equal(t, "***", output)
 
-		output, err = echoWithOutput("very secret info")
-		require.NoError(t, err)
-		require.Equal(t, "***\n", string(output))
+		output = echoWithOutput(t, "very secret info")
+		assert.Equal(t, "***", output)
 
-		output, err = echoWithOutput("secret info")
-		require.NoError(t, err)
-		require.Equal(t, "secret info", string(output))
+		output = echoWithOutput(t, "secret info")
+		assert.Equal(t, "secret info", output)
 	})
 
 	// This test assumes that TEST_SF_TF_MULTI_LINE is set to:
@@ -88,16 +88,13 @@ func Test_experiments(t *testing.T) {
 		t.Log("different space-separated really, really, really secret infos")
 		t.Log("different space-separatedreally, really,reallysecret infos")
 
-		output, err := echoWithOutput(value)
-		require.NoError(t, err)
-		require.Equal(t, "***\n***\n***\n***", string(output))
+		output := echoWithOutput(t, value)
+		assert.Equal(t, "***\n***\n***\n***", output)
 
-		output, err = echoWithOutput("different space-separated really, really, really secret infos")
-		require.NoError(t, err)
-		require.Equal(t, "*** *** *** ***\n", string(output))
+		output = echoWithOutput(t, "different space-separated really, really, really secret infos")
+		assert.Equal(t, "*** *** *** ***\n", output)
 
-		output, err = echoWithOutput("different space-separatedreally, really,reallysecret infos")
-		require.NoError(t, err)
-		require.Equal(t, "************\n", string(output))
+		output = echoWithOutput(t, "different space-separatedreally, really,reallysecret infos")
+		assert.Equal(t, "************\n", output)
 	})
 }
