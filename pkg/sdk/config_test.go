@@ -186,7 +186,7 @@ func Test_MergeConfig(t *testing.T) {
 		Protocol:                       "protocol1",
 		Host:                           "host1",
 		Port:                           1,
-		Authenticator:                  1,
+		Authenticator:                  gosnowflake.AuthTypeSnowflake,
 		Passcode:                       "passcode1",
 		PasscodeInPassword:             false,
 		OktaURL:                        oktaUrl1,
@@ -226,7 +226,7 @@ func Test_MergeConfig(t *testing.T) {
 		Protocol:                       "protocol2",
 		Host:                           "host2",
 		Port:                           2,
-		Authenticator:                  2,
+		Authenticator:                  gosnowflake.AuthTypeOAuth,
 		Passcode:                       "passcode2",
 		PasscodeInPassword:             true,
 		OktaURL:                        oktaUrl2,
@@ -266,6 +266,14 @@ func Test_MergeConfig(t *testing.T) {
 
 	t.Run("both configs filled - base config takes precedence", func(t *testing.T) {
 		config := MergeConfig(config1, config2)
+		require.Equal(t, config1, config)
+	})
+
+	t.Run("special authenticator value", func(t *testing.T) {
+		config := MergeConfig(&gosnowflake.Config{
+			Authenticator: gosnowflakeAuthTypeEmpty,
+		}, config1)
+
 		require.Equal(t, config1, config)
 	})
 }
