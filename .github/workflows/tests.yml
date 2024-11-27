@@ -73,6 +73,7 @@ jobs:
       - run: make test-experiment
         env:
           TEST_SF_TF_ONE_LINER: ${{ secrets.TEST_SF_TF_ONE_LINER }}
+          TEST_SF_TF_MULTI_LINE: ${{ secrets.TEST_SF_TF_MULTI_LINE }}
 
       - name: find comment
         if: ${{ always() }}
