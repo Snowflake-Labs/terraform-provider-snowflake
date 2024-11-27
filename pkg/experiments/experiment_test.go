@@ -32,6 +32,8 @@ func Test_experiments(t *testing.T) {
 
 		require.NoError(t, echo(a))
 		require.NoError(t, echo(b))
+		t.Log(a)
+		t.Log(b)
 	})
 
 	t.Run("masking from env", func(t *testing.T) {
@@ -40,5 +42,6 @@ func Test_experiments(t *testing.T) {
 		value := os.Getenv("TEST_SF_TF_ONE_LINER")
 
 		require.NoError(t, echo(value))
+		t.Log(value)
 	})
 }

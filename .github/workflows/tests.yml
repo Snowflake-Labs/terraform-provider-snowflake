@@ -48,6 +48,8 @@ jobs:
         run: make dev-setup
 
       - run: make test-experiment
+        env:
+          TEST_SF_TF_ONE_LINER: ${{ secrets.TEST_SF_TF_ONE_LINER }}
 
       - name: find comment
         if: ${{ always() }}
