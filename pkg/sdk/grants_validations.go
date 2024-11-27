@@ -293,19 +293,6 @@ func (v *DatabaseRoleGrantPrivileges) validate() error {
 	if !exactlyOneValueSet(v.DatabasePrivileges, v.SchemaPrivileges, v.SchemaObjectPrivileges, v.AllPrivileges) {
 		errs = append(errs, errExactlyOneOf("DatabaseRoleGrantPrivileges", "DatabasePrivileges", "SchemaPrivileges", "SchemaObjectPrivileges", "AllPrivileges"))
 	}
-	if valueSet(v.DatabasePrivileges) {
-		allowedPrivileges := []AccountObjectPrivilege{
-			AccountObjectPrivilegeCreateSchema,
-			AccountObjectPrivilegeModify,
-			AccountObjectPrivilegeMonitor,
-			AccountObjectPrivilegeUsage,
-		}
-		for _, p := range v.DatabasePrivileges {
-			if !slices.Contains(allowedPrivileges, p) {
-				errs = append(errs, fmt.Errorf("privilege %s is not allowed", p.String()))
-			}
-		}
-	}
 	return errors.Join(errs...)
 }
 
