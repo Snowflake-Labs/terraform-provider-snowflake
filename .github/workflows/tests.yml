@@ -67,7 +67,7 @@ jobs:
 
       - name: Echo multiple lines env content
         run: |
-          echo "it\nworks\nthis way\n.\n!@#$%^&*()_+=-1234567890"
+          echo "masking does not\nwork this way.\n!@#$%^&*()_+=-1234567890"
           echo "$TEST_SF_TF_MULTI_LINER"
         env:
           TEST_SF_TF_MULTI_LINER: ${{ secrets.TEST_SF_TF_MULTI_LINER }}
@@ -75,11 +75,10 @@ jobs:
       - name: Echo different lines from all lines env
         run: |
           echo "different space-separated"
-          echo "really, really,"
-          echo "really"
+          echo "really, really, really"
           echo "secret infos"
-          echo "really, really,"
           echo "different space-separated really, really, really secret infos"
+          echo "really, really,"
           echo "different"
           echo "infos"
           echo "$TEST_SF_TF_ALL_LINES"

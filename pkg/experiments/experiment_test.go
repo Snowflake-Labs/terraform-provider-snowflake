@@ -79,10 +79,8 @@ func Test_experiments(t *testing.T) {
 	})
 
 	// This test assumes that TEST_SF_TF_MULTI_LINER is set to:
-	//  it
-	//  works
-	//  this way
-	//  .
+	//  masking does not
+	//  work this way.
 	//  !@#$%^&*()_+=-1234567890
 	t.Run("masking from multi line env", func(t *testing.T) {
 		testenvs.AssertEnvSet(t, "TEST_SF_TF_MULTI_LINER")
@@ -90,15 +88,14 @@ func Test_experiments(t *testing.T) {
 		value := os.Getenv("TEST_SF_TF_MULTI_LINER")
 
 		t.Log(value)
-		t.Log("it\nworks\nthis way\n.\n!@#$%^&*()_+=-1234567890")
-		t.Log("it works this way . !@#$%^&*()_+=-1234567890")
-		t.Log("it works")
+		t.Log("masking does not\nwork this way.\n!@#$%^&*()_+=-1234567890")
+		t.Log("masking does not work this way. !@#$%^&*()_+=-1234567890")
+		t.Log("masking does not")
 	})
 
 	// This test assumes that TEST_SF_TF_ALL_LINES is set to:
 	//  different space-separated
-	//  really, really,
-	//  really
+	//  really, really, really
 	//  secret infos
 	t.Run("masking all lines from env", func(t *testing.T) {
 		testenvs.AssertEnvSet(t, "TEST_SF_TF_ALL_LINES")
@@ -107,7 +104,7 @@ func Test_experiments(t *testing.T) {
 
 		t.Log(value)
 		t.Log("different space-separated really, really, really secret infos")
-		t.Log("different space-separatedreally, really,reallysecret infos")
+		t.Log("different space-separatedreally, really, reallysecret infos")
 
 		output := echoWithOutput(t, value)
 		assert.NotEqual(t, "***\n***\n***\n***", output)
