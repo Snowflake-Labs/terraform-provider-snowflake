@@ -48,7 +48,7 @@ func Test_experiments(t *testing.T) {
 			`'::add-mask:: %s'`,
 		} {
 			output := maskOnCi(t, fmt.Sprintf(option, value))
-			assert.Contains(t, string(output), value)
+			assert.Contains(t, output, value)
 
 			t.Logf("option %d: %s", idx+1, value)
 		}
@@ -65,11 +65,11 @@ func Test_experiments(t *testing.T) {
 		t.Log("secret info")
 
 		output := echoWithOutput(t, value)
-		assert.Equal(t, "***", output)
+		assert.NotEqual(t, "***", output)
 		assert.Equal(t, value, output)
 
 		output = echoWithOutput(t, "very secret info")
-		assert.Equal(t, "***", output)
+		assert.NotEqual(t, "***", output)
 		assert.Equal(t, "very secret info", output)
 
 		output = echoWithOutput(t, "secret info")
@@ -91,15 +91,15 @@ func Test_experiments(t *testing.T) {
 		t.Log("different space-separatedreally, really,reallysecret infos")
 
 		output := echoWithOutput(t, value)
-		assert.Equal(t, "***\n***\n***\n***", output)
+		assert.NotEqual(t, "***\n***\n***\n***", output)
 		assert.Equal(t, value, output)
 
 		output = echoWithOutput(t, "different space-separated really, really, really secret infos")
-		assert.Equal(t, "*** *** *** ***", output)
+		assert.NotEqual(t, "*** *** *** ***", output)
 		assert.Equal(t, "different space-separated really, really, really secret infos", output)
 
 		output = echoWithOutput(t, "different space-separatedreally, really,reallysecret infos")
-		assert.Equal(t, "***", output)
+		assert.NotEqual(t, "***", output)
 		assert.Equal(t, "different space-separatedreally, really,reallysecret infos", output)
 	})
 }
