@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -142,10 +143,10 @@ var passwordPolicySchema = map[string]*schema.Schema{
 func PasswordPolicy() *schema.Resource {
 	return &schema.Resource{
 		Description:   "A password policy specifies the requirements that must be met to create and reset a password to authenticate to Snowflake.",
-		CreateContext: TrackingCreateWrapper(resources.PasswordPolicy, CreatePasswordPolicy),
-		ReadContext:   TrackingReadWrapper(resources.PasswordPolicy, ReadPasswordPolicy),
-		UpdateContext: TrackingUpdateWrapper(resources.PasswordPolicy, UpdatePasswordPolicy),
-		DeleteContext: TrackingDeleteWrapper(resources.PasswordPolicy, DeletePasswordPolicy),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.PasswordPolicyResource), TrackingCreateWrapper(resources.PasswordPolicy, CreatePasswordPolicy)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.PasswordPolicyResource), TrackingReadWrapper(resources.PasswordPolicy, ReadPasswordPolicy)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.PasswordPolicyResource), TrackingUpdateWrapper(resources.PasswordPolicy, UpdatePasswordPolicy)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.PasswordPolicyResource), TrackingDeleteWrapper(resources.PasswordPolicy, DeletePasswordPolicy)),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.PasswordPolicy, customdiff.All(
 			ComputedIfAnyAttributeChanged(passwordPolicySchema, FullyQualifiedNameAttributeName, "name"),

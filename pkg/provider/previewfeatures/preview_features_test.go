@@ -55,7 +55,7 @@ func Test_StringToFeature(t *testing.T) {
 		{input: "snowflake_shares_datasource", want: SharesDatasource},
 		{input: "snowflake_parameters_datasource", want: ParametersDatasource},
 		{input: "snowflake_stage_resource", want: StageResource},
-		{input: "snowflake_stages_datasource", want: StageDatasource},
+		{input: "snowflake_stages_datasource", want: StagesDatasource},
 		{input: "snowflake_storage_integration_resource", want: StorageIntegrationResource},
 		{input: "snowflake_storage_integrations_datasource", want: StorageIntegrationsDatasource},
 		{input: "snowflake_system_generate_scim_access_token_datasource", want: SystemGenerateSCIMAccessTokenDatasource},
@@ -64,6 +64,7 @@ func Test_StringToFeature(t *testing.T) {
 		{input: "snowflake_system_get_snowflake_platform_info_datasource", want: SystemGetSnowflakePlatformInfoDatasource},
 		{input: "snowflake_table_column_masking_policy_application_resource", want: TableColumnMaskingPolicyApplicationResource},
 		{input: "snowflake_table_constraint_resource", want: TableConstraintResource},
+		{input: "snowflake_user_authentication_policy_attachment_resource", want: UserAuthenticationPolicyAttachmentResource},
 		{input: "snowflake_user_public_keys_resource", want: UserPublicKeysResource},
 		{input: "snowflake_user_password_policy_attachment_resource", want: UserPasswordPolicyAttachmentResource},
 	}
@@ -84,7 +85,7 @@ func Test_StringToFeature(t *testing.T) {
 	for _, tc := range invalid {
 		t.Run(tc.input, func(t *testing.T) {
 			_, err := StringToFeature(tc.input)
-			require.Error(t, err)
+			require.ErrorContains(t, err, "invalid feature")
 		})
 	}
 }

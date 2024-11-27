@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -54,7 +55,7 @@ var sequencesSchema = map[string]*schema.Schema{
 
 func Sequences() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.Sequences, ReadSequences),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.SequencesDatasource), TrackingReadWrapper(datasources.Sequences, ReadSequences)),
 		Schema:      sequencesSchema,
 	}
 }

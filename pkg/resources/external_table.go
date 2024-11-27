@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -143,10 +144,10 @@ var externalTableSchema = map[string]*schema.Schema{
 
 func ExternalTable() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ExternalTable, CreateExternalTable),
-		ReadContext:   TrackingReadWrapper(resources.ExternalTable, ReadExternalTable),
-		UpdateContext: TrackingUpdateWrapper(resources.ExternalTable, UpdateExternalTable),
-		DeleteContext: TrackingDeleteWrapper(resources.ExternalTable, DeleteExternalTable),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ExternalTableResource), TrackingCreateWrapper(resources.ExternalTable, CreateExternalTable)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ExternalTableResource), TrackingReadWrapper(resources.ExternalTable, ReadExternalTable)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ExternalTableResource), TrackingUpdateWrapper(resources.ExternalTable, UpdateExternalTable)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ExternalTableResource), TrackingDeleteWrapper(resources.ExternalTable, DeleteExternalTable)),
 
 		Schema: externalTableSchema,
 		Importer: &schema.ResourceImporter{

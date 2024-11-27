@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -73,10 +74,10 @@ var materializedViewSchema = map[string]*schema.Schema{
 // MaterializedView returns a pointer to the resource representing a view.
 func MaterializedView() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.MaterializedView, CreateMaterializedView),
-		ReadContext:   TrackingReadWrapper(resources.MaterializedView, ReadMaterializedView),
-		UpdateContext: TrackingUpdateWrapper(resources.MaterializedView, UpdateMaterializedView),
-		DeleteContext: TrackingDeleteWrapper(resources.MaterializedView, DeleteMaterializedView),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.MaterializedViewResource), TrackingCreateWrapper(resources.MaterializedView, CreateMaterializedView)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.MaterializedViewResource), TrackingReadWrapper(resources.MaterializedView, ReadMaterializedView)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.MaterializedViewResource), TrackingUpdateWrapper(resources.MaterializedView, UpdateMaterializedView)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.MaterializedViewResource), TrackingDeleteWrapper(resources.MaterializedView, DeleteMaterializedView)),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.MaterializedView, customdiff.All(
 			ComputedIfAnyAttributeChanged(materializedViewSchema, FullyQualifiedNameAttributeName, "name"),

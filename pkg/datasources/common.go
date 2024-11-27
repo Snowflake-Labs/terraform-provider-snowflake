@@ -213,7 +213,14 @@ func handleExtendedIn(d *schema.ResourceData, setField **sdk.ExtendedIn) error {
 	return nil
 }
 
-func PreviewFeatureReadWrapper(featureRaw string, readFunc schema.ReadContextFunc) schema.ReadContextFunc { //nolint
+func TrackingReadWrapper(datasourceName datasources.Datasource, readImplementation schema.ReadContextFunc) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedDatasourceMetadata(datasourceName))
+		return readImplementation(ctx, d, meta)
+	}
+}
+
+func PreviewFeatureReadWrapper(featureRaw string, readFunc schema.ReadContextFunc) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		enabled := meta.(*provider.Context).EnabledFeatures
 		feature, err := previewfeatures.StringToFeature(featureRaw)
@@ -224,12 +231,5 @@ func PreviewFeatureReadWrapper(featureRaw string, readFunc schema.ReadContextFun
 			return diag.FromErr(err)
 		}
 		return readFunc(ctx, d, meta)
-	}
-}
-
-func TrackingReadWrapper(datasourceName datasources.Datasource, readImplementation schema.ReadContextFunc) schema.ReadContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		ctx = tracking.NewContext(ctx, tracking.NewVersionedDatasourceMetadata(datasourceName))
-		return readImplementation(ctx, d, meta)
 	}
 }

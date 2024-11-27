@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -86,10 +87,10 @@ var pipeSchema = map[string]*schema.Schema{
 
 func Pipe() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.Pipe, CreatePipe),
-		ReadContext:   TrackingReadWrapper(resources.Pipe, ReadPipe),
-		UpdateContext: TrackingUpdateWrapper(resources.Pipe, UpdatePipe),
-		DeleteContext: TrackingDeleteWrapper(resources.Pipe, DeletePipe),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.PipeResource), TrackingCreateWrapper(resources.Pipe, CreatePipe)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.PipeResource), TrackingReadWrapper(resources.Pipe, ReadPipe)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.PipeResource), TrackingUpdateWrapper(resources.Pipe, UpdatePipe)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.PipeResource), TrackingDeleteWrapper(resources.Pipe, DeletePipe)),
 
 		Schema: pipeSchema,
 		Importer: &schema.ResourceImporter{

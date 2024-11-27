@@ -5,7 +5,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -145,5 +147,53 @@ func TrackingCustomDiffWrapper(resourceName resources.Resource, customdiffImplem
 	return func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 		ctx = tracking.NewContext(ctx, tracking.NewVersionedResourceMetadata(resourceName, tracking.CustomDiffOperation))
 		return customdiffImplementation(ctx, diff, meta)
+	}
+}
+
+func ensureResourceIsEnabled(featureRaw string, meta any) error {
+	enabled := meta.(*provider.Context).EnabledFeatures
+	feature, err := previewfeatures.StringToFeature(featureRaw)
+	if err != nil {
+		return err
+	}
+	if err := previewfeatures.EnsurePreviewFeatureEnabled(feature, enabled); err != nil {
+		return err
+	}
+	return nil
+}
+
+func PreviewFeatureCreateContextWrapper(featureRaw string, createFunc schema.CreateContextFunc) schema.CreateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		if err := ensureResourceIsEnabled(featureRaw, meta); err != nil {
+			return diag.FromErr(err)
+		}
+		return createFunc(ctx, d, meta)
+	}
+}
+
+func PreviewFeatureReadContextWrapper(featureRaw string, readFunc schema.ReadContextFunc) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		if err := ensureResourceIsEnabled(featureRaw, meta); err != nil {
+			return diag.FromErr(err)
+		}
+		return readFunc(ctx, d, meta)
+	}
+}
+
+func PreviewFeatureUpdateContextWrapper(featureRaw string, updateFunc schema.UpdateContextFunc) schema.UpdateContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		if err := ensureResourceIsEnabled(featureRaw, meta); err != nil {
+			return diag.FromErr(err)
+		}
+		return updateFunc(ctx, d, meta)
+	}
+}
+
+func PreviewFeatureDeleteContextWrapper(featureRaw string, deleteFunc schema.DeleteContextFunc) schema.DeleteContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		if err := ensureResourceIsEnabled(featureRaw, meta); err != nil {
+			return diag.FromErr(err)
+		}
+		return deleteFunc(ctx, d, meta)
 	}
 }

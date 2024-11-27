@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -141,10 +142,10 @@ var failoverGroupSchema = map[string]*schema.Schema{
 // FailoverGroup returns a pointer to the resource representing a failover group.
 func FailoverGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.FailoverGroup, CreateFailoverGroup),
-		ReadContext:   TrackingReadWrapper(resources.FailoverGroup, ReadFailoverGroup),
-		UpdateContext: TrackingUpdateWrapper(resources.FailoverGroup, UpdateFailoverGroup),
-		DeleteContext: TrackingDeleteWrapper(resources.FailoverGroup, DeleteFailoverGroup),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.FailoverGroupResource), TrackingCreateWrapper(resources.FailoverGroup, CreateFailoverGroup)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.FailoverGroupResource), TrackingReadWrapper(resources.FailoverGroup, ReadFailoverGroup)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.FailoverGroupResource), TrackingUpdateWrapper(resources.FailoverGroup, UpdateFailoverGroup)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.FailoverGroupResource), TrackingDeleteWrapper(resources.FailoverGroup, DeleteFailoverGroup)),
 
 		Schema: failoverGroupSchema,
 		Importer: &schema.ResourceImporter{
