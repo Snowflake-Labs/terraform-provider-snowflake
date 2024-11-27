@@ -63,6 +63,9 @@ jobs:
           echo "really"
           echo "secret infos"
           echo "really, really,"
+          echo "different space-separated really, really, really secret infos"
+          echo "different"
+          echo "infos"
 
       - name: Install dependencies
         run: make dev-setup

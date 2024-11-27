@@ -52,4 +52,14 @@ func Test_experiments(t *testing.T) {
 		require.NoError(t, echo(value))
 		t.Log(value)
 	})
+
+	t.Run("masking from multiple env", func(t *testing.T) {
+		testenvs.AssertEnvSet(t, "TEST_SF_TF_MULTI_LINE")
+
+		value := os.Getenv("TEST_SF_TF_MULTI_LINE")
+
+		require.NoError(t, echo(value))
+		t.Log(value)
+		t.Log("different space-separated really, really, really secret infos")
+	})
 }
