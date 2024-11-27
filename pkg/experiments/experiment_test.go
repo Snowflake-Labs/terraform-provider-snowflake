@@ -16,14 +16,16 @@ func Test_experiments(t *testing.T) {
 	ghActionsValue := testenvs.GetOrSkipTest(t, testenvs.GithubActions)
 
 	echoWithOutput := func(t *testing.T, content string) string {
+		t.Helper()
 		cmd := exec.Command("echo", content)
-		t.Logf(cmd.String())
+		t.Log(cmd.String())
 		output, err := cmd.Output()
 		require.NoError(t, err)
 		return strings.TrimSpace(string(output))
 	}
 
 	maskOnCi := func(t *testing.T, line string) string {
+		t.Helper()
 		if ghActionsValue == "true" {
 			t.Logf("trying to mask using `%s`", line)
 			return echoWithOutput(t, line)
