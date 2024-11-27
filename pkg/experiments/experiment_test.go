@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions?tool=bash#masking-a-value-in-a-log
+// https://github.com/actions/runner/issues/161
+// https://dev.to/yuyatakeyama/mask-multiple-lines-text-in-github-actions-workflow-1a0
+// https://www.aaron-powell.com/posts/2022-07-14-working-with-add-mask-and-github-actions/
+// https://stackoverflow.com/a/73041579
 func Test_experiments(t *testing.T) {
 	ghActionsValue := testenvs.GetOrSkipTest(t, testenvs.GithubActions)
 
