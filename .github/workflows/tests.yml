@@ -44,8 +44,23 @@ jobs:
         env:
           TEST_SF_TF_ONE_LINER: ${{ secrets.TEST_SF_TF_ONE_LINER }}
 
+      - name: Experiment multiple
+        run: |
+          while read p; do
+            echo "::add-mask::$TEST_SF_TF_MULTI_LINE"
+          done
+        env:
+          TEST_SF_TF_MULTI_LINE: ${{ secrets.TEST_SF_TF_MULTI_LINE }}
+
       - name: Echo
         run: echo "very secret info"
+
+      - name: Echo multiple
+        run: |
+          echo "different space-separated"
+          echo "really, really,"
+          echo "really"
+          echo "secret infos"
 
       - name: Install dependencies
         run: make dev-setup
