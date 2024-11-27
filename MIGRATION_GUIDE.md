@@ -6,7 +6,7 @@ across different versions.
 
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
- 
+
 ## v0.98.0 ➞ v0.99.0
 
 ### snowflake_tasks data source changes
@@ -39,7 +39,7 @@ data "snowflake_tasks" "new_tasks" {
   in {
     # for IN SCHEMA specify:
     schema = "<database_name>.<schema_name>"
-    
+
     # for IN DATABASE specify:
     database = "<database_name>"
   }
@@ -65,7 +65,7 @@ New fields:
 - `config` - enables to specify JSON-formatted metadata that can be retrieved in the `sql_statement` by using [SYSTEM$GET_TASK_GRAPH_CONFIG](https://docs.snowflake.com/en/sql-reference/functions/system_get_task_graph_config).
 - `show_output` and `parameters` fields added for holding SHOW and SHOW PARAMETERS output (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
 - Added support for finalizer tasks with `finalize` field. It conflicts with `after` and `schedule` (see [finalizer tasks](https://docs.snowflake.com/en/user-guide/tasks-graphs#release-and-cleanup-of-task-graphs)).
- 
+
 Changes:
 - `enabled` field changed to `started` and type changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). It is also now required field, so make sure it's explicitly set (previously it was optional with the default value set to `false`).
 - `allow_overlapping_execution` type was changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). Previously, it had the default set to `false` which will be migrated. If nothing will be set the provider will plan the change to `default` value. If you want to make sure it's turned off, set it explicitly to `false`.
@@ -132,7 +132,7 @@ resource "snowflake_task" "example" {
 ```
 
 - `after` field type was changed from `list` to `set` and the values were changed from names to fully qualified names.
- 
+
 Before:
 ```terraform
 resource "snowflake_task" "example" {
@@ -257,6 +257,12 @@ provider "snowflake" {
 	account_name    = "ACCOUNT"
 }
 ```
+
+This change may cause the connection host URL to change. If you get errors like
+```
+Error: open snowflake connection: Post "https://ORGANIZATION-ACCOUNT.snowflakecomputing.com:443/session/v1/login-request?requestId=[guid]&request_guid=[guid]&roleName=myrole": EOF
+```
+make sure that the host `ORGANIZATION-ACCOUNT.snowflakecomputing.com` is allowed to be reached from your network (i.e. not blocked by a firewall).
 
 #### *(behavior change)* changed behavior of some fields
 For the fields that are not deprecated, we focused on improving validations and documentation. Also, we adjusted some fields to match our [driver's](https://github.com/snowflakedb/gosnowflake) defaults. Specifically:
