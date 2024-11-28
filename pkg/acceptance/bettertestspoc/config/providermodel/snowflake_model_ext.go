@@ -7,6 +7,7 @@ import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -30,6 +31,10 @@ func (m *SnowflakeModel) WithRoleId(roleId sdk.AccountObjectIdentifier) *Snowfla
 	return m.WithRole(roleId.Name())
 }
 
+func (m *SnowflakeModel) WithWarehouseId(warehouseId sdk.AccountObjectIdentifier) *SnowflakeModel {
+	return m.WithWarehouse(warehouseId.Name())
+}
+
 func (m *SnowflakeModel) WithAuthenticatorType(authenticationType sdk.AuthenticationType) *SnowflakeModel {
 	return m.WithAuthenticator(string(authenticationType))
 }
@@ -38,20 +43,25 @@ func (m *SnowflakeModel) WithPrivateKeyMultiline(privateKey string) *SnowflakeMo
 	return m.WithPrivateKey(fmt.Sprintf(`%[1]s%[2]s%[1]s`, config.SnowflakeProviderConfigPrivateKey, privateKey))
 }
 
-func (m *SnowflakeModel) AllFields(profile, orgName, accountName, user, password string) *SnowflakeModel {
+func (m *SnowflakeModel) WithClientStoreTemporaryCredentialBool(clientStoreTemporaryCredential bool) *SnowflakeModel {
+	m.ClientStoreTemporaryCredential = tfconfig.BoolVariable(clientStoreTemporaryCredential)
+	return m
+}
+
+func (m *SnowflakeModel) AllFields(tmpConfig *helpers.TmpTomlConfig, tmpUser *helpers.TmpServiceUser) *SnowflakeModel {
 	return SnowflakeProvider().
-		WithProfile(profile).
-		WithOrganizationName(orgName).
-		WithAccountName(accountName).
-		WithUser(user).
-		WithPassword(password).
-		WithWarehouse("SNOWFLAKE").
+		WithProfile(tmpConfig.Profile).
+		WithOrganizationName(tmpUser.AccountId.OrganizationName()).
+		WithAccountName(tmpUser.AccountId.AccountName()).
+		WithUserId(tmpUser.UserId).
+		WithPrivateKeyMultiline(tmpUser.PrivateKey).
+		WithWarehouseId(tmpUser.WarehouseId).
 		WithProtocol("https").
 		WithPort(443).
-		WithRole("ACCOUNTADMIN").
+		WithRoleId(tmpUser.RoleId).
 		WithValidateDefaultParameters("true").
 		WithClientIp("3.3.3.3").
-		WithAuthenticator("snowflake").
+		WithAuthenticatorType(sdk.AuthenticationTypeJwt).
 		WithOktaUrl("https://example-tf.com").
 		WithLoginTimeout(101).
 		WithRequestTimeout(201).
@@ -68,7 +78,7 @@ func (m *SnowflakeModel) AllFields(profile, orgName, accountName, user, password
 		WithDisableQueryContextCache(true).
 		WithIncludeRetryReason("true").
 		WithMaxRetryCount(3).
-		WithDriverTracing("info").
+		WithDriverTracing("warning").
 		WithTmpDirectoryPath("../../").
 		WithDisableConsoleLogin("true").
 		WithParamsValue(

@@ -11,6 +11,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
@@ -196,8 +197,7 @@ func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, incorrectConfig.Path)
 				},
-				// 				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.IncorrectUserAndPassword), datasourceModel()),
-				Config:      providerConfig(incorrectConfig.Profile),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(incorrectConfig.Profile), datasourceModel()),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// in this step we simulate the situation when we want to use client configured once, but it was faulty last time
@@ -206,8 +206,7 @@ func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 					t.Setenv(string(testenvs.ConfigureClientOnce), "true")
 					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
-				// 				Config: config.FromModels(t, providermodel.SnowflakeProvider(), datasourceModel()),
-				Config: providerConfig(tmpServiceUserConfig.Profile),
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile), datasourceModel()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
@@ -244,8 +243,7 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				// 				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.CompleteFields), datasourceModel()),
-				Config: providerConfig(tmpServiceUserConfig.Profile),
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile), datasourceModel()),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 					assert.Equal(t, tmpServiceUser.OrgAndAccount(), config.Account)
@@ -356,8 +354,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
-				// 				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.CompleteFieldsInvalid), datasourceModel()),
-				Config: providerConfig(tmpServiceUserConfig.Profile),
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile), datasourceModel()),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 
@@ -469,8 +466,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
-				// 				Config: config.FromModels(t, providermodel.SnowflakeProvider().AllFields(testprofiles.CompleteFieldsInvalid, orgName, accountName, user, pass), datasourceModel()),
-				Config: providerConfigAllFields(tmpServiceUserConfig, tmpServiceUser),
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().AllFields(tmpServiceUserConfig, tmpServiceUser), datasourceModel()),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
 
@@ -543,19 +539,16 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				// 				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithRole(nonExisting), datasourceModel()),
-				Config:      providerConfigWithExplicitValidationAndRole(tmpServiceUserConfig.Profile, nonExisting, true),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithRole(nonExisting).WithValidateDefaultParameters("true"), datasourceModel()),
 				ExpectError: regexp.MustCompile("Role 'NON-EXISTENT' specified in the connect string does not exist or not authorized."),
 			},
 			{
-				// 				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithWarehouse(nonExisting), datasourceModel()),
-				Config:      providerConfigWithExplicitValidationAndWarehouse(tmpServiceUserConfig.Profile, nonExisting, true),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithWarehouse(nonExisting).WithValidateDefaultParameters("true"), datasourceModel()),
 				ExpectError: regexp.MustCompile("The requested warehouse does not exist or not authorized."),
 			},
 			// check that using a non-existing warehouse with disabled verification succeeds
 			{
-				// 				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithWarehouse(nonExisting).WithValidateDefaultParameters("false"), datasourceModel()),
-				Config: providerConfigWithExplicitValidationAndWarehouse(tmpServiceUserConfig.Profile, nonExisting, false),
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithWarehouse(nonExisting).WithValidateDefaultParameters("false"), datasourceModel()),
 			},
 		},
 	})
@@ -583,21 +576,18 @@ func TestAcc_Provider_triValueBoolean(t *testing.T) {
 			{
 				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
 				ExternalProviders: acc.ExternalProviderWithExactVersion("0.97.0"),
-				// 				Config:            config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithClientStoreTemporaryCredential(`true`), datasourceModel()),
-				Config: providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
+				Config:            config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithClientStoreTemporaryCredentialBool(true), datasourceModel()),
 			},
 			{
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				// 				Config:                   config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithClientStoreTemporaryCredential(`true`), datasourceModel()),
-				Config: providerConfigWithClientStoreTemporaryCredential(tmpServiceUserConfig.Profile, `true`),
+				Config:                   config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithClientStoreTemporaryCredentialBool(true), datasourceModel()),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				// 				Config:                   config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithClientStoreTemporaryCredential(`"true"`), datasourceModel()),
-				Config: providerConfigWithClientStoreTemporaryCredential(tmpServiceUserConfig.Profile, `"true"`),
+				Config:                   config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithClientStoreTemporaryCredential("true"), datasourceModel()),
 			},
 		},
 	})
@@ -626,16 +616,14 @@ func TestAcc_Provider_sessionParameters(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
-				Config: providerWithParamsConfig(tmpServiceUserConfig.Profile, 31337),
-				// TODO(SNOW-1348325): Use parameter data source with `IN SESSION` filtering.
-				//Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithParamsValue(
-				//	tfconfig.ObjectVariable(
-				//		map[string]tfconfig.Variable{
-				//			"statement_timeout_in_seconds": tfconfig.IntegerVariable(31337),
-				//		},
-				//	),
-				//)) + unsafeExecuteShowSessionParameter(),
-
+				// TODO [SNOW-1348325]: Use parameter data source with `IN SESSION` filtering.
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithParamsValue(
+					tfconfig.ObjectVariable(
+						map[string]tfconfig.Variable{
+							"statement_timeout_in_seconds": tfconfig.IntegerVariable(31337),
+						},
+					),
+				)) + unsafeExecuteShowSessionParameter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_unsafe_execute.t", "query_results.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_unsafe_execute.t", "query_results.0.value", "31337"),
@@ -672,7 +660,7 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, tmpIncorrectServiceUserConfig.Path)
 				},
-				Config:      providerConfigWithProfileAndAuthenticator(tmpIncorrectServiceUserConfig.Profile, sdk.AuthenticationTypeJwt),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpIncorrectServiceUserConfig.Profile).WithAuthenticatorType(sdk.AuthenticationTypeJwt), datasourceModel()),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// authenticate with unencrypted private key
@@ -680,21 +668,19 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
-				//				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.JwtAuth).WithAuthenticator(string(sdk.AuthenticationTypeJwt)), datasourceModel()),
-				Config: providerConfigWithProfileAndAuthenticator(tmpServiceUserConfig.Profile, sdk.AuthenticationTypeJwt),
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithAuthenticatorType(sdk.AuthenticationTypeJwt), datasourceModel()),
 			},
 			// authenticate with unencrypted private key with a legacy authenticator value
 			// solves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983
 			{
-				Config: providerConfigWithProfileAndAuthenticator(tmpServiceUserConfig.Profile, sdk.AuthenticationTypeJwtLegacy),
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithAuthenticatorType(sdk.AuthenticationTypeJwtLegacy), datasourceModel()),
 			},
 			// check encrypted private key with incorrect password
 			{
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, tmpIncorrectServiceUserWithEncryptedKeyConfig.Path)
 				},
-				// 				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.JwtAuth).WithAuthenticator(string(sdk.AuthenticationTypeJwtLegacy)), datasourceModel()),
-				Config:      providerConfigWithProfileAndAuthenticator(tmpIncorrectServiceUserWithEncryptedKeyConfig.Profile, sdk.AuthenticationTypeJwt),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpIncorrectServiceUserWithEncryptedKeyConfig.Profile).WithAuthenticatorType(sdk.AuthenticationTypeJwt), datasourceModel()),
 				ExpectError: regexp.MustCompile("pkcs8: incorrect password"),
 			},
 			// authenticate with encrypted private key
@@ -702,8 +688,7 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserWithEncryptedKeyConfig.Path)
 				},
-				// 				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.EncryptedJwtAuth).WithAuthenticator(string(sdk.AuthenticationTypeJwt)), datasourceModel()),
-				Config: providerConfigWithProfileAndAuthenticator(tmpServiceUserWithEncryptedKeyConfig.Profile, sdk.AuthenticationTypeJwt),
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserWithEncryptedKeyConfig.Profile).WithAuthenticatorType(sdk.AuthenticationTypeJwt), datasourceModel()),
 			},
 		},
 	})
@@ -728,15 +713,14 @@ func TestAcc_Provider_SnowflakeAuth(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, incorrectLegacyServiceUserConfig.Path)
 				},
-				Config:      providerConfig(incorrectLegacyServiceUserConfig.Profile),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(incorrectLegacyServiceUserConfig.Profile), datasourceModel()),
 				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
 			},
 			{
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, tmpLegacyServiceUserConfig.Path)
 				},
-				// 				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithAuthenticator(string(sdk.AuthenticationTypeSnowflake)), datasourceModel()),
-				Config: providerConfig(tmpLegacyServiceUserConfig.Profile),
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpLegacyServiceUserConfig.Profile), datasourceModel()),
 			},
 		},
 	})
@@ -760,257 +744,59 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				//				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithClientIp("invalid"), datasourceModel()),
-				Config:      providerConfigWithClientIp(tmpServiceUserConfig.Profile, "invalid"),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithClientIp("invalid"), datasourceModel()),
 				ExpectError: regexp.MustCompile("expected client_ip to contain a valid IP"),
 			},
 			{
-				//				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithProtocol("invalid"), datasourceModel()),
-				Config:      providerConfigWithProtocol(tmpServiceUserConfig.Profile, "invalid"),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithProtocol("invalid"), datasourceModel()),
 				ExpectError: regexp.MustCompile("invalid protocol: invalid"),
 			},
 			{
-				//				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithPort(123456789), datasourceModel()),
-				Config:      providerConfigWithPort(tmpServiceUserConfig.Profile, 123456789),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithPort(123456789), datasourceModel()),
 				ExpectError: regexp.MustCompile(`expected "port" to be a valid port number or 0, got: 123456789`),
 			},
 			{
-				//				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithAuthenticator("invalid"), datasourceModel()),
-				Config:      providerConfigWithAuthType(tmpServiceUserConfig.Profile, "invalid"),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithAuthenticator("invalid"), datasourceModel()),
 				ExpectError: regexp.MustCompile("invalid authenticator type: invalid"),
 			},
 			{
-				// 				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithOktaUrl("invalid"), datasourceModel()),
-				Config:      providerConfigWithOktaUrl(tmpServiceUserConfig.Profile, "invalid"),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithOktaUrl("invalid"), datasourceModel()),
 				ExpectError: regexp.MustCompile(`expected "okta_url" to have a host, got invalid`),
 			},
 			{
-				// 				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithLoginTimeout(-1), datasourceModel()),
-				Config:      providerConfigWithTimeout(tmpServiceUserConfig.Profile, "login_timeout", -1),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithLoginTimeout(-1), datasourceModel()),
 				ExpectError: regexp.MustCompile(`expected login_timeout to be at least \(0\), got -1`),
 			},
 			{
-				//Config: config.FromModels(
-				//	t,
-				//	providermodel.SnowflakeProvider().
-				//		WithProfile(testprofiles.Default).
-				//		WithTokenAccessorValue(
-				//			tfconfig.ObjectVariable(
-				//				map[string]tfconfig.Variable{
-				//					"token_endpoint": tfconfig.StringVariable("invalid"),
-				//					"refresh_token":  tfconfig.StringVariable("refresh_token"),
-				//					"client_id":      tfconfig.StringVariable("client_id"),
-				//					"client_secret":  tfconfig.StringVariable("client_secret"),
-				//					"redirect_uri":   tfconfig.StringVariable("redirect_uri"),
-				//				},
-				//			),
-				//		),
-				//	datasourceModel(),
-				//),
-				Config:      providerConfigWithTokenEndpoint(tmpServiceUserConfig.Profile, "invalid"),
+				Config: config.FromModels(
+					t,
+					providermodel.SnowflakeProvider().
+						WithProfile(tmpServiceUserConfig.Profile).
+						WithTokenAccessorValue(
+							tfconfig.ObjectVariable(
+								map[string]tfconfig.Variable{
+									"token_endpoint": tfconfig.StringVariable("invalid"),
+									"refresh_token":  tfconfig.StringVariable("refresh_token"),
+									"client_id":      tfconfig.StringVariable("client_id"),
+									"client_secret":  tfconfig.StringVariable("client_secret"),
+									"redirect_uri":   tfconfig.StringVariable("redirect_uri"),
+								},
+							),
+						),
+					datasourceModel(),
+				),
 				ExpectError: regexp.MustCompile(`expected "token_endpoint" to have a host, got invalid`),
 			},
 			{
-				//				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(testprofiles.Default).WithDriverTracing("invalid"), datasourceModel()),
-				Config:      providerConfigWithLogLevel(tmpServiceUserConfig.Profile, "invalid"),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithDriverTracing("invalid"), datasourceModel()),
 				ExpectError: regexp.MustCompile(`invalid driver log level: invalid`),
 			},
 			{
-				// 				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile("non-existing"), datasourceModel()),
-				Config: providerConfig("non-existing"),
-				// // .* is used to match the error message regarding of the home user location
-				//				ExpectError: regexp.MustCompile(`profile "non-existing" not found in file .*.snowflake/config`),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile("non-existing"), datasourceModel()),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`profile "non-existing" not found in file %s`, tmpServiceUserConfig.Path)),
 			},
 		},
 	})
-}
-
-func providerConfigWithProfileAndAuthenticator(profile string, authenticator sdk.AuthenticationType) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	authenticator    = "%[2]s"
-}
-`, profile, authenticator) + datasourceConfig()
-}
-
-func providerConfig(profile string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-}
-`, profile) + datasourceConfig()
-}
-
-func providerConfigWithExplicitValidationAndRole(profile string, role string, validate bool) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	role    = "%[2]s"
-
-	validate_default_parameters = "%[3]t"
-}
-`, profile, role, validate) + datasourceConfig()
-}
-
-func providerConfigWithExplicitValidationAndWarehouse(profile string, warehouse string, validate bool) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile   = "%[1]s"
-	warehouse = "%[2]s"
-
-	validate_default_parameters = "%[3]t"
-}
-`, profile, warehouse, validate) + datasourceConfig()
-}
-
-func providerConfigWithClientStoreTemporaryCredential(profile, clientStoreTemporaryCredential string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	client_store_temporary_credential    = %[2]s
-}
-`, profile, clientStoreTemporaryCredential) + datasourceConfig()
-}
-
-func providerConfigWithProtocol(profile, protocol string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	protocol    = "%[2]s"
-}
-`, profile, protocol) + datasourceConfig()
-}
-
-func providerConfigWithPort(profile string, port int) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	port    = %[2]d
-}
-`, profile, port) + datasourceConfig()
-}
-
-func providerConfigWithAuthType(profile, authType string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	authenticator    = "%[2]s"
-}
-`, profile, authType) + datasourceConfig()
-}
-
-func providerConfigWithOktaUrl(profile, oktaUrl string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	okta_url    = "%[2]s"
-}
-`, profile, oktaUrl) + datasourceConfig()
-}
-
-func providerConfigWithTimeout(profile, timeoutName string, timeoutSeconds int) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	%[2]s    = %[3]d
-}
-`, profile, timeoutName, timeoutSeconds) + datasourceConfig()
-}
-
-func providerConfigWithTokenEndpoint(profile, tokenEndpoint string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	token_accessor {
-		token_endpoint = "%[2]s"
-		refresh_token = "refresh_token"
-		client_id = "client_id"
-		client_secret = "client_secret"
-		redirect_uri = "redirect_uri"
-	}
-}
-`, profile, tokenEndpoint) + datasourceConfig()
-}
-
-func providerConfigWithLogLevel(profile, logLevel string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	driver_tracing    = "%[2]s"
-}
-`, profile, logLevel) + datasourceConfig()
-}
-
-func providerConfigWithClientIp(profile, clientIp string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	client_ip    = "%[2]s"
-}
-`, profile, clientIp) + datasourceConfig()
-}
-
-func datasourceConfig() string {
-	return fmt.Sprintf(`
-data snowflake_database "t" {
-	name = "%s"
-}`, acc.TestDatabaseName)
-}
-
-func providerConfigAllFields(tmpConfig *helpers.TmpTomlConfig, tmpUser *helpers.TmpServiceUser) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	organization_name = "%[2]s"
-	account_name = "%[3]s"
-	user = "%[4]s"
-	private_key = <<EOT
-%[7]sEOT
-	warehouse = "%[5]s"
-	protocol = "https"
-	port = "443"
-	role = "%[6]s"
-	validate_default_parameters = true
-	client_ip = "3.3.3.3"
-	authenticator = "SNOWFLAKE_JWT"
-	okta_url = "https://example-tf.com"
-	login_timeout = 101
-	request_timeout = 201
-	jwt_expire_timeout = 301
-	client_timeout = 401
-	jwt_client_timeout = 501
-	external_browser_timeout = 601
-	insecure_mode = true
-	ocsp_fail_open = true
-	keep_session_alive = true
-	disable_telemetry = true
-	client_request_mfa_token = true
-	client_store_temporary_credential = true
-	disable_query_context_cache = true
-	include_retry_reason = true
-	max_retry_count = 3
-	driver_tracing = "warning"
-	tmp_directory_path = "../../"
-	disable_console_login = true
-	params = {
-		foo = "piyo"
-	}
-}
-`, tmpConfig.Profile, tmpUser.AccountId.OrganizationName(), tmpUser.AccountId.AccountName(), tmpUser.UserId.Name(), tmpUser.WarehouseId.Name(), tmpUser.RoleId.Name(), tmpUser.PrivateKey) + datasourceConfig()
-}
-
-// TODO(SNOW-1348325): Use parameter data source with `IN SESSION` filtering.
-func providerWithParamsConfig(profile string, statementTimeoutInSeconds int) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-    profile = "%[1]s"
-    params = {
-        statement_timeout_in_seconds = %[2]d
-    }
-}
-`, profile, statementTimeoutInSeconds) + unsafeExecuteShowSessionParameter()
 }
 
 func datasourceModel() config.DatasourceModel {
