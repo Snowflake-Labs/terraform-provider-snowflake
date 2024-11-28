@@ -1,9 +1,17 @@
 package generator
 
+type ShowByIDFilteringType string
+
+const (
+	SimpleFiltering          ShowByIDFilteringType = "Simple"
+	IdentifierBasedFiltering ShowByIDFilteringType = "IdentifierBased"
+)
+
 type ShowByIDFiltering struct {
-	Kind            string
-	Args            string
-	IdentifierBased bool
+	Name string
+	Kind string
+	Args string
+	Type ShowByIDFilteringType
 }
 
 type ShowByIDFilteringKind uint
@@ -24,21 +32,24 @@ func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation
 		switch f {
 		case ShowByIDLikeFiltering:
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
-				Kind:            "Like",
-				Args:            "Pattern: String(id.Name())",
-				IdentifierBased: false,
+				Name: "Like",
+				Kind: "Like",
+				Args: "Pattern: String(id.Name())",
+				Type: SimpleFiltering,
 			})
 		case ShowByIDInFiltering:
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
-				Kind:            "In",
-				Args:            "%[1]v: id.%[1]vId()",
-				IdentifierBased: true,
+				Name: "In",
+				Kind: "In",
+				Args: "%[1]v: id.%[1]vId()",
+				Type: IdentifierBasedFiltering,
 			})
 		case ShowByIDExtendedInFiltering:
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
-				Kind:            "ExtendedIn",
-				Args:            "In: In{%[1]v: id.%[1]vId()}",
-				IdentifierBased: true,
+				Name: "In",
+				Kind: "ExtendedIn",
+				Args: "In: In{%[1]v: id.%[1]vId()}",
+				Type: IdentifierBasedFiltering,
 			})
 		}
 	}

@@ -21,10 +21,10 @@
                 // TODO: adjust request if e.g. LIKE is supported for the resource
             {{ else }}
                 {{- range .ShowByIDFiltering -}} 
-                    .{{- if .IdentifierBased }}
-                        With{{ .Kind }}( {{ .Kind }} { {{ printf .Args $idkind }} })
+                    .{{- if eq .Type "IdentifierBased" }}
+                        With{{ .Name }}( {{ .Kind }} { {{ printf .Args $idkind }} })
                     {{- else }}
-                        With{{ .Kind }}( {{ .Kind }} { {{ .Args }} })
+                        With{{ .Name }}( {{ .Kind }} { {{ .Args }} })
                     {{- end }}
                 {{- end }}
             {{- end }}
