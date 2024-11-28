@@ -6,35 +6,34 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/snowflakedb/gosnowflake"
-	"github.com/stretchr/testify/assert"
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
-	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/snowflakedb/gosnowflake"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_Provider_configHierarchy(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	user := acc.DefaultConfig(t).User
-	pass := acc.DefaultConfig(t).Password
-	account := acc.DefaultConfig(t).Account
-	role := acc.DefaultConfig(t).Role
-	host := acc.DefaultConfig(t).Host
-
-	nonExistingUser := "non-existing-user"
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+	incorrectConfig := acc.TestClient().TempIncorrectTomlConfigForServiceUser(t, tmpServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -42,6 +41,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -49,79 +49,102 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 		Steps: []resource.TestStep{
 			// make sure that we fail for incorrect profile
 			{
-				Config:      providerConfig(testprofiles.IncorrectUserAndPassword),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, incorrectConfig.Path)
+				},
+				Config:      providerConfig(incorrectConfig.Profile),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
-			// incorrect user in provider config should not be rewritten by profile and cause error
+			// make sure that we succeed for the correct profile
 			{
-				Config:      providerConfigWithUser(nonExistingUser, testprofiles.Default),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
-			},
-			// correct user and password in provider's config should not be rewritten by a faulty config
-			{
-				Config: providerConfigWithUserAndPassword(user, pass, testprofiles.IncorrectUserAndPassword),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config: providerConfig(tmpServiceUserConfig.Profile),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
 			},
-			// incorrect user in env variable should not be rewritten by profile and cause error
+			// incorrect user in provider config should not be rewritten by profile and cause error
 			{
-				PreConfig: func() {
-					t.Setenv(snowflakeenvs.User, nonExistingUser)
-				},
-				Config:      providerConfig(testprofiles.Default),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+				Config:      providerConfigWithUserAndProfile(ids.NonExistingAccountObjectIdentifier, tmpServiceUserConfig.Profile),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
-			// correct user and password in env should not be rewritten by a faulty config
+			// correct user and key in provider's config should not be rewritten by a faulty config
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.User, user)
-					t.Setenv(snowflakeenvs.Password, pass)
+					t.Setenv(snowflakeenvs.ConfigPath, incorrectConfig.Path)
 				},
-				Config: providerConfig(testprofiles.IncorrectUserAndPassword),
+				Config: providerConfigWithUserPrivateKeyAndProfile(tmpServiceUser.UserId, tmpServiceUser.PrivateKey, tmpServiceUser.RoleId.Name(), incorrectConfig.Profile),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
+				),
+			},
+			// incorrect user in env variable should not be rewritten by profile and cause error (profile authenticator is set to JWT and that's why the error is about incorrect token)
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.User, ids.NonExistingAccountObjectIdentifier.Name())
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config:      providerConfig(tmpServiceUserConfig.Profile),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
+			},
+			// correct user and private key in env should not be rewritten by a faulty config
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.User, tmpServiceUser.UserId.Name())
+					t.Setenv(snowflakeenvs.PrivateKey, tmpServiceUser.PrivateKey)
+					t.Setenv(snowflakeenvs.Role, tmpServiceUser.RoleId.Name())
+					t.Setenv(snowflakeenvs.ConfigPath, incorrectConfig.Path)
+				},
+				Config: providerConfigWithProfileAndAuthenticator(incorrectConfig.Profile, sdk.AuthenticationTypeJwt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
 			},
 			// user on provider level wins (it's incorrect - env and profile ones are)
 			{
-				Config:      providerConfigWithUser(nonExistingUser, testprofiles.Default),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+				PreConfig: func() {
+					testenvs.AssertEnvSet(t, snowflakeenvs.User)
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config:      providerConfigWithUserPrivateKeyAndProfile(ids.NonExistingAccountObjectIdentifier, tmpServiceUser.PrivateKey, tmpServiceUser.RoleId.Name(), tmpServiceUserConfig.Profile),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
-			// there is no config (by setting the dir to something different than .snowflake/config)
+			// there is no config (by setting the dir to something different from .snowflake/config)
 			{
 				PreConfig: func() {
 					dir, err := os.UserHomeDir()
 					require.NoError(t, err)
 					t.Setenv(snowflakeenvs.ConfigPath, dir)
 				},
-				Config:      providerConfigWithUserAndPassword(user, pass, testprofiles.Default),
+				Config:      providerConfigWithUserPrivateKeyAndProfile(tmpServiceUser.UserId, tmpServiceUser.PrivateKey, tmpServiceUser.RoleId.Name(), testprofiles.Default),
 				ExpectError: regexp.MustCompile("account is empty"),
 			},
 			// provider's config should not be rewritten by env when there is no profile (incorrect user in config versus correct one in env) - proves #2242
 			{
 				PreConfig: func() {
 					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
-					t.Setenv(snowflakeenvs.User, user)
-					t.Setenv(snowflakeenvs.Password, pass)
-					t.Setenv(snowflakeenvs.Account, account)
-					t.Setenv(snowflakeenvs.Role, role)
-					t.Setenv(snowflakeenvs.Host, host)
+					t.Setenv(snowflakeenvs.User, tmpServiceUser.UserId.Name())
+					t.Setenv(snowflakeenvs.PrivateKey, tmpServiceUser.PrivateKey)
+					t.Setenv(snowflakeenvs.AccountName, tmpServiceUser.AccountId.AccountName())
+					t.Setenv(snowflakeenvs.OrganizationName, tmpServiceUser.AccountId.OrganizationName())
+					t.Setenv(snowflakeenvs.Role, tmpServiceUser.RoleId.Name())
 				},
-				Config:      providerConfigWithUser(nonExistingUser, testprofiles.Default),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+				Config:      providerConfigWithUserAndProfile(ids.NonExistingAccountObjectIdentifier, testprofiles.Default),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// make sure the teardown is fine by using a correct env config at the end
 			{
 				PreConfig: func() {
 					testenvs.AssertEnvSet(t, snowflakeenvs.ConfigPath)
 					testenvs.AssertEnvSet(t, snowflakeenvs.User)
-					testenvs.AssertEnvSet(t, snowflakeenvs.Password)
-					testenvs.AssertEnvSet(t, snowflakeenvs.Account)
+					testenvs.AssertEnvSet(t, snowflakeenvs.PrivateKey)
+					testenvs.AssertEnvSet(t, snowflakeenvs.AccountName)
+					testenvs.AssertEnvSet(t, snowflakeenvs.OrganizationName)
 					testenvs.AssertEnvSet(t, snowflakeenvs.Role)
-					testenvs.AssertEnvSet(t, snowflakeenvs.Host)
 				},
-				Config: emptyProviderConfig(),
+				Config: providerConfigWithAuthenticator(sdk.AuthenticationTypeJwt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
@@ -131,7 +154,13 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 }
 
 func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+	incorrectConfig := acc.TestClient().TempIncorrectTomlConfigForServiceUser(t, tmpServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -146,15 +175,19 @@ func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 		Steps: []resource.TestStep{
 			// client setup is incorrect
 			{
-				Config:      providerConfig(testprofiles.IncorrectUserAndPassword),
-				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, incorrectConfig.Path)
+				},
+				Config:      providerConfig(incorrectConfig.Profile),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// in this step we simulate the situation when we want to use client configured once, but it was faulty last time
 			{
 				PreConfig: func() {
 					t.Setenv(string(testenvs.ConfigureClientOnce), "true")
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
-				Config: emptyProviderConfig(),
+				Config: providerConfig(tmpServiceUserConfig.Profile),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
@@ -164,11 +197,14 @@ func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 }
 
 func TestAcc_Provider_tomlConfig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	user := acc.DefaultConfig(t).User
-	pass := acc.DefaultConfig(t).Password
-	account := acc.DefaultConfig(t).Account
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return helpers.FullTomlConfigForServiceUser(t, profile, tmpServiceUser.UserId, tmpServiceUser.RoleId, tmpServiceUser.WarehouseId, tmpServiceUser.AccountId, tmpServiceUser.PrivateKey)
+	})
 
 	oktaUrl, err := url.Parse("https://example.com")
 	require.NoError(t, err)
@@ -179,54 +215,54 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
+
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig(testprofiles.CompleteFields),
+				Config: providerConfig(tmpServiceUserConfig.Profile),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
-					assert.Equal(t, &gosnowflake.Config{
-						Account:                   account,
-						User:                      user,
-						Password:                  pass,
-						Warehouse:                 "SNOWFLAKE",
-						Role:                      "ACCOUNTADMIN",
-						ValidateDefaultParameters: gosnowflake.ConfigBoolTrue,
-						ClientIP:                  net.ParseIP("1.2.3.4"),
-						Protocol:                  "https",
-						Host:                      fmt.Sprintf("%s.snowflakecomputing.com", account),
-						Params: map[string]*string{
-							"foo": sdk.Pointer("bar"),
-						},
-						Port:                           443,
-						Authenticator:                  gosnowflake.AuthTypeSnowflake,
-						PasscodeInPassword:             false,
-						OktaURL:                        oktaUrl,
-						LoginTimeout:                   30 * time.Second,
-						RequestTimeout:                 40 * time.Second,
-						JWTExpireTimeout:               50 * time.Second,
-						ClientTimeout:                  10 * time.Second,
-						JWTClientTimeout:               20 * time.Second,
-						ExternalBrowserTimeout:         60 * time.Second,
-						MaxRetryCount:                  1,
-						Application:                    "terraform-provider-snowflake",
-						InsecureMode:                   true,
-						OCSPFailOpen:                   gosnowflake.OCSPFailOpenTrue,
-						Token:                          "token",
-						KeepSessionAlive:               true,
-						DisableTelemetry:               true,
-						Tracing:                        string(sdk.DriverLogLevelInfo),
-						TmpDirPath:                     ".",
-						ClientRequestMfaToken:          gosnowflake.ConfigBoolTrue,
-						ClientStoreTemporaryCredential: gosnowflake.ConfigBoolTrue,
-						DisableQueryContextCache:       true,
-						IncludeRetryReason:             gosnowflake.ConfigBoolTrue,
-						DisableConsoleLogin:            gosnowflake.ConfigBoolTrue,
-					}, config)
-					assert.Equal(t, string(sdk.DriverLogLevelInfo), gosnowflake.GetLogger().GetLogLevel())
+					assert.Equal(t, tmpServiceUser.OrgAndAccount(), config.Account)
+					assert.Equal(t, tmpServiceUser.UserId.Name(), config.User)
+					assert.Equal(t, tmpServiceUser.WarehouseId.Name(), config.Warehouse)
+					assert.Equal(t, tmpServiceUser.RoleId.Name(), config.Role)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
+					assert.Equal(t, net.ParseIP("1.2.3.4"), config.ClientIP)
+					assert.Equal(t, "https", config.Protocol)
+					assert.Equal(t, fmt.Sprintf("%s.snowflakecomputing.com", tmpServiceUser.OrgAndAccount()), config.Host)
+					assert.Equal(t, 443, config.Port)
+					assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
+					assert.Equal(t, false, config.PasscodeInPassword)
+					assert.Equal(t, oktaUrl, config.OktaURL)
+					assert.Equal(t, 30*time.Second, config.LoginTimeout)
+					assert.Equal(t, 40*time.Second, config.RequestTimeout)
+					assert.Equal(t, 50*time.Second, config.JWTExpireTimeout)
+					assert.Equal(t, 10*time.Second, config.ClientTimeout)
+					assert.Equal(t, 20*time.Second, config.JWTClientTimeout)
+					assert.Equal(t, 60*time.Second, config.ExternalBrowserTimeout)
+					assert.Equal(t, 1, config.MaxRetryCount)
+					assert.Equal(t, "terraform-provider-snowflake", config.Application)
+					assert.Equal(t, true, config.InsecureMode)
+					assert.Equal(t, gosnowflake.OCSPFailOpenTrue, config.OCSPFailOpen)
+					assert.Equal(t, "token", config.Token)
+					assert.Equal(t, true, config.KeepSessionAlive)
+					assert.Equal(t, true, config.DisableTelemetry)
+					assert.Equal(t, string(sdk.DriverLogLevelWarning), config.Tracing)
+					assert.Equal(t, ".", config.TmpDirPath)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ClientRequestMfaToken)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ClientStoreTemporaryCredential)
+					assert.Equal(t, true, config.DisableQueryContextCache)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.IncludeRetryReason)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.DisableConsoleLogin)
+					assert.Equal(t, map[string]*string{
+						"foo": sdk.Pointer("bar"),
+					}, config.Params)
+					assert.Equal(t, string(sdk.DriverLogLevelWarning), gosnowflake.GetLogger().GetLogLevel())
 
 					return nil
 				},
@@ -236,13 +272,14 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 }
 
 func TestAcc_Provider_envConfig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	user := acc.DefaultConfig(t).User
-	pass := acc.DefaultConfig(t).Password
-	account := acc.DefaultConfig(t).Account
-
-	accountParts := strings.SplitN(account, "-", 2)
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return helpers.FullInvalidTomlConfigForServiceUser(t, profile)
+	})
 
 	oktaUrlFromEnv, err := url.Parse("https://example-env.com")
 	require.NoError(t, err)
@@ -250,9 +287,12 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck: func() {
-			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Account)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
+
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -260,20 +300,19 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.AccountName, accountParts[1])
-					t.Setenv(snowflakeenvs.OrganizationName, accountParts[0])
-					t.Setenv(snowflakeenvs.User, user)
-					t.Setenv(snowflakeenvs.Password, pass)
-					t.Setenv(snowflakeenvs.Warehouse, "SNOWFLAKE")
+					t.Setenv(snowflakeenvs.AccountName, tmpServiceUser.AccountId.AccountName())
+					t.Setenv(snowflakeenvs.OrganizationName, tmpServiceUser.AccountId.OrganizationName())
+					t.Setenv(snowflakeenvs.User, tmpServiceUser.UserId.Name())
+					t.Setenv(snowflakeenvs.PrivateKey, tmpServiceUser.PrivateKey)
+					t.Setenv(snowflakeenvs.Warehouse, tmpServiceUser.WarehouseId.Name())
 					t.Setenv(snowflakeenvs.Protocol, "https")
 					t.Setenv(snowflakeenvs.Port, "443")
 					// do not set token - it should be propagated from TOML
-					t.Setenv(snowflakeenvs.Role, "ACCOUNTADMIN")
-					t.Setenv(snowflakeenvs.Authenticator, "snowflake")
-					t.Setenv(snowflakeenvs.ValidateDefaultParameters, "false")
+					t.Setenv(snowflakeenvs.Role, tmpServiceUser.RoleId.Name())
+					t.Setenv(snowflakeenvs.Authenticator, "SNOWFLAKE_JWT")
+					t.Setenv(snowflakeenvs.ValidateDefaultParameters, "true")
 					t.Setenv(snowflakeenvs.ClientIp, "2.2.2.2")
 					t.Setenv(snowflakeenvs.Host, "")
-					t.Setenv(snowflakeenvs.Authenticator, "")
 					t.Setenv(snowflakeenvs.Passcode, "")
 					t.Setenv(snowflakeenvs.PasscodeInPassword, "false")
 					t.Setenv(snowflakeenvs.OktaUrl, "https://example-env.com")
@@ -292,52 +331,50 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.DisableQueryContextCache, "false")
 					t.Setenv(snowflakeenvs.IncludeRetryReason, "false")
 					t.Setenv(snowflakeenvs.MaxRetryCount, "2")
-					t.Setenv(snowflakeenvs.DriverTracing, string(sdk.DriverLogLevelDebug))
+					t.Setenv(snowflakeenvs.DriverTracing, string(sdk.DriverLogLevelWarning))
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
-				Config: providerConfig(testprofiles.CompleteFieldsInvalid),
+				Config: providerConfig(tmpServiceUserConfig.Profile),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
-					assert.Equal(t, &gosnowflake.Config{
-						Account:                   account,
-						User:                      user,
-						Password:                  pass,
-						Warehouse:                 "SNOWFLAKE",
-						Role:                      "ACCOUNTADMIN",
-						ValidateDefaultParameters: gosnowflake.ConfigBoolFalse,
-						ClientIP:                  net.ParseIP("2.2.2.2"),
-						Protocol:                  "https",
-						Params: map[string]*string{
-							"foo": sdk.Pointer("bar"),
-						},
-						Host:                           fmt.Sprintf("%s.snowflakecomputing.com", account),
-						Port:                           443,
-						Authenticator:                  gosnowflake.AuthTypeSnowflake,
-						PasscodeInPassword:             false,
-						OktaURL:                        oktaUrlFromEnv,
-						LoginTimeout:                   100 * time.Second,
-						RequestTimeout:                 200 * time.Second,
-						JWTExpireTimeout:               300 * time.Second,
-						ClientTimeout:                  400 * time.Second,
-						JWTClientTimeout:               500 * time.Second,
-						ExternalBrowserTimeout:         600 * time.Second,
-						MaxRetryCount:                  2,
-						Application:                    "terraform-provider-snowflake",
-						InsecureMode:                   true,
-						OCSPFailOpen:                   gosnowflake.OCSPFailOpenFalse,
-						Token:                          "token",
-						KeepSessionAlive:               true,
-						DisableTelemetry:               true,
-						Tracing:                        string(sdk.DriverLogLevelDebug),
-						TmpDirPath:                     "../",
-						ClientRequestMfaToken:          gosnowflake.ConfigBoolFalse,
-						ClientStoreTemporaryCredential: gosnowflake.ConfigBoolFalse,
-						DisableQueryContextCache:       true,
-						IncludeRetryReason:             gosnowflake.ConfigBoolFalse,
-						DisableConsoleLogin:            gosnowflake.ConfigBoolFalse,
-					}, config)
-					assert.Equal(t, string(sdk.DriverLogLevelDebug), gosnowflake.GetLogger().GetLogLevel())
+
+					assert.Equal(t, tmpServiceUser.OrgAndAccount(), config.Account)
+					assert.Equal(t, tmpServiceUser.UserId.Name(), config.User)
+					assert.Equal(t, tmpServiceUser.WarehouseId.Name(), config.Warehouse)
+					assert.Equal(t, tmpServiceUser.RoleId.Name(), config.Role)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
+					assert.Equal(t, net.ParseIP("2.2.2.2"), config.ClientIP)
+					assert.Equal(t, "https", config.Protocol)
+					assert.Equal(t, fmt.Sprintf("%s.snowflakecomputing.com", tmpServiceUser.OrgAndAccount()), config.Host)
+					assert.Equal(t, 443, config.Port)
+					assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
+					assert.Equal(t, false, config.PasscodeInPassword)
+					assert.Equal(t, oktaUrlFromEnv, config.OktaURL)
+					assert.Equal(t, 100*time.Second, config.LoginTimeout)
+					assert.Equal(t, 200*time.Second, config.RequestTimeout)
+					assert.Equal(t, 300*time.Second, config.JWTExpireTimeout)
+					assert.Equal(t, 400*time.Second, config.ClientTimeout)
+					assert.Equal(t, 500*time.Second, config.JWTClientTimeout)
+					assert.Equal(t, 600*time.Second, config.ExternalBrowserTimeout)
+					assert.Equal(t, 2, config.MaxRetryCount)
+					assert.Equal(t, "terraform-provider-snowflake", config.Application)
+					assert.Equal(t, true, config.InsecureMode)
+					assert.Equal(t, gosnowflake.OCSPFailOpenFalse, config.OCSPFailOpen)
+					assert.Equal(t, "token", config.Token)
+					assert.Equal(t, true, config.KeepSessionAlive)
+					assert.Equal(t, true, config.DisableTelemetry)
+					assert.Equal(t, string(sdk.DriverLogLevelWarning), config.Tracing)
+					assert.Equal(t, "../", config.TmpDirPath)
+					assert.Equal(t, gosnowflake.ConfigBoolFalse, config.ClientRequestMfaToken)
+					assert.Equal(t, gosnowflake.ConfigBoolFalse, config.ClientStoreTemporaryCredential)
+					assert.Equal(t, true, config.DisableQueryContextCache)
+					assert.Equal(t, gosnowflake.ConfigBoolFalse, config.IncludeRetryReason)
+					assert.Equal(t, gosnowflake.ConfigBoolFalse, config.DisableConsoleLogin)
+					assert.Equal(t, map[string]*string{
+						"foo": sdk.Pointer("bar"),
+					}, config.Params)
+					assert.Equal(t, string(sdk.DriverLogLevelWarning), gosnowflake.GetLogger().GetLogLevel())
 
 					return nil
 				},
@@ -347,14 +384,14 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 }
 
 func TestAcc_Provider_tfConfig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	user := acc.DefaultConfig(t).User
-	pass := acc.DefaultConfig(t).Password
-	account := acc.DefaultConfig(t).Account
-
-	accountParts := strings.SplitN(account, "-", 2)
-	orgName, accountName := accountParts[0], accountParts[1]
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return helpers.FullInvalidTomlConfigForServiceUser(t, profile)
+	})
 
 	oktaUrlFromTf, err := url.Parse("https://example-tf.com")
 	require.NoError(t, err)
@@ -365,6 +402,9 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
+
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -375,7 +415,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.OrganizationName, "invalid")
 					t.Setenv(snowflakeenvs.AccountName, "invalid")
 					t.Setenv(snowflakeenvs.User, "invalid")
-					t.Setenv(snowflakeenvs.Password, "invalid")
+					t.Setenv(snowflakeenvs.PrivateKey, "invalid")
 					t.Setenv(snowflakeenvs.Warehouse, "invalid")
 					t.Setenv(snowflakeenvs.Protocol, "invalid")
 					t.Setenv(snowflakeenvs.Port, "-1")
@@ -403,52 +443,50 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.DisableQueryContextCache, "false")
 					t.Setenv(snowflakeenvs.IncludeRetryReason, "false")
 					t.Setenv(snowflakeenvs.MaxRetryCount, "2")
-					t.Setenv(snowflakeenvs.DriverTracing, string(sdk.DriverLogLevelDebug))
+					t.Setenv(snowflakeenvs.DriverTracing, "invalid")
 					t.Setenv(snowflakeenvs.TmpDirectoryPath, "../")
 					t.Setenv(snowflakeenvs.DisableConsoleLogin, "false")
 				},
-				Config: providerConfigAllFields(testprofiles.CompleteFieldsInvalid, orgName, accountName, user, pass),
+				Config: providerConfigAllFields(tmpServiceUserConfig, tmpServiceUser),
 				Check: func(s *terraform.State) error {
 					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
-					assert.Equal(t, &gosnowflake.Config{
-						Account:                   account,
-						User:                      user,
-						Password:                  pass,
-						Warehouse:                 "SNOWFLAKE",
-						Role:                      "ACCOUNTADMIN",
-						ValidateDefaultParameters: gosnowflake.ConfigBoolTrue,
-						ClientIP:                  net.ParseIP("3.3.3.3"),
-						Protocol:                  "https",
-						Params: map[string]*string{
-							"foo": sdk.Pointer("piyo"),
-						},
-						Host:                           fmt.Sprintf("%s.snowflakecomputing.com", account),
-						Port:                           443,
-						Authenticator:                  gosnowflake.AuthTypeSnowflake,
-						PasscodeInPassword:             false,
-						OktaURL:                        oktaUrlFromTf,
-						LoginTimeout:                   101 * time.Second,
-						RequestTimeout:                 201 * time.Second,
-						JWTExpireTimeout:               301 * time.Second,
-						ClientTimeout:                  401 * time.Second,
-						JWTClientTimeout:               501 * time.Second,
-						ExternalBrowserTimeout:         601 * time.Second,
-						MaxRetryCount:                  3,
-						Application:                    "terraform-provider-snowflake",
-						InsecureMode:                   true,
-						OCSPFailOpen:                   gosnowflake.OCSPFailOpenTrue,
-						Token:                          "token",
-						KeepSessionAlive:               true,
-						DisableTelemetry:               true,
-						Tracing:                        string(sdk.DriverLogLevelInfo),
-						TmpDirPath:                     "../../",
-						ClientRequestMfaToken:          gosnowflake.ConfigBoolTrue,
-						ClientStoreTemporaryCredential: gosnowflake.ConfigBoolTrue,
-						DisableQueryContextCache:       true,
-						IncludeRetryReason:             gosnowflake.ConfigBoolTrue,
-						DisableConsoleLogin:            gosnowflake.ConfigBoolTrue,
-					}, config)
-					assert.Equal(t, string(sdk.DriverLogLevelInfo), gosnowflake.GetLogger().GetLogLevel())
+
+					assert.Equal(t, tmpServiceUser.OrgAndAccount(), config.Account)
+					assert.Equal(t, tmpServiceUser.UserId.Name(), config.User)
+					assert.Equal(t, tmpServiceUser.WarehouseId.Name(), config.Warehouse)
+					assert.Equal(t, tmpServiceUser.RoleId.Name(), config.Role)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
+					assert.Equal(t, net.ParseIP("3.3.3.3"), config.ClientIP)
+					assert.Equal(t, "https", config.Protocol)
+					assert.Equal(t, fmt.Sprintf("%s.snowflakecomputing.com", tmpServiceUser.OrgAndAccount()), config.Host)
+					assert.Equal(t, 443, config.Port)
+					assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
+					assert.Equal(t, false, config.PasscodeInPassword)
+					assert.Equal(t, oktaUrlFromTf, config.OktaURL)
+					assert.Equal(t, 101*time.Second, config.LoginTimeout)
+					assert.Equal(t, 201*time.Second, config.RequestTimeout)
+					assert.Equal(t, 301*time.Second, config.JWTExpireTimeout)
+					assert.Equal(t, 401*time.Second, config.ClientTimeout)
+					assert.Equal(t, 501*time.Second, config.JWTClientTimeout)
+					assert.Equal(t, 601*time.Second, config.ExternalBrowserTimeout)
+					assert.Equal(t, 3, config.MaxRetryCount)
+					assert.Equal(t, "terraform-provider-snowflake", config.Application)
+					assert.Equal(t, true, config.InsecureMode)
+					assert.Equal(t, gosnowflake.OCSPFailOpenTrue, config.OCSPFailOpen)
+					assert.Equal(t, "token", config.Token)
+					assert.Equal(t, true, config.KeepSessionAlive)
+					assert.Equal(t, true, config.DisableTelemetry)
+					assert.Equal(t, string(sdk.DriverLogLevelWarning), config.Tracing)
+					assert.Equal(t, "../../", config.TmpDirPath)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ClientRequestMfaToken)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ClientStoreTemporaryCredential)
+					assert.Equal(t, true, config.DisableQueryContextCache)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.IncludeRetryReason)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.DisableConsoleLogin)
+					assert.Equal(t, map[string]*string{
+						"foo": sdk.Pointer("piyo"),
+					}, config.Params)
+					assert.Equal(t, string(sdk.DriverLogLevelWarning), gosnowflake.GetLogger().GetLogLevel())
 
 					return nil
 				},
@@ -458,7 +496,12 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 }
 
 func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
 
 	nonExisting := "NON-EXISTENT"
 
@@ -468,22 +511,25 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 			acc.TestAccPreCheck(t)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
+
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      providerConfigWithRole(testprofiles.Default, nonExisting),
+				Config:      providerConfigWithExplicitValidationAndRole(tmpServiceUserConfig.Profile, nonExisting, true),
 				ExpectError: regexp.MustCompile("Role 'NON-EXISTENT' specified in the connect string does not exist or not authorized."),
 			},
 			{
-				Config:      providerConfigWithWarehouse(testprofiles.Default, nonExisting),
+				Config:      providerConfigWithExplicitValidationAndWarehouse(tmpServiceUserConfig.Profile, nonExisting, true),
 				ExpectError: regexp.MustCompile("The requested warehouse does not exist or not authorized."),
 			},
 			// check that using a non-existing warehouse with disabled verification succeeds
 			{
-				Config: providerConfigWithWarehouseAndDisabledValidation(testprofiles.Default, nonExisting),
+				Config: providerConfigWithExplicitValidationAndWarehouse(tmpServiceUserConfig.Profile, nonExisting, false),
 			},
 		},
 	})
@@ -491,7 +537,12 @@ func TestAcc_Provider_useNonExistentDefaultParams(t *testing.T) {
 
 // prove we can use tri-value booleans, similarly to the ones in resources
 func TestAcc_Provider_triValueBoolean(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -509,23 +560,27 @@ func TestAcc_Provider_triValueBoolean(t *testing.T) {
 				Config:            providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
 			},
 			{
-				// Use the default TOML config again.
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.ConfigPath, "")
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `true`),
+				Config:                   providerConfigWithClientStoreTemporaryCredential(tmpServiceUserConfig.Profile, `true`),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   providerConfigWithClientStoreTemporaryCredential(testprofiles.Default, `"true"`),
+				Config:                   providerConfigWithClientStoreTemporaryCredential(tmpServiceUserConfig.Profile, `"true"`),
 			},
 		},
 	})
 }
 
 func TestAcc_Provider_sessionParameters(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -539,7 +594,10 @@ func TestAcc_Provider_sessionParameters(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerWithParamsConfig(testprofiles.Default, 31337),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config: providerWithParamsConfig(tmpServiceUserConfig.Profile, 31337),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_unsafe_execute.t", "query_results.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_unsafe_execute.t", "query_results.0.value", "31337"),
@@ -550,7 +608,15 @@ func TestAcc_Provider_sessionParameters(t *testing.T) {
 }
 
 func TestAcc_Provider_JwtAuth(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+	tmpIncorrectServiceUserConfig := acc.TestClient().TempIncorrectTomlConfigForServiceUser(t, tmpServiceUser)
+	tmpServiceUserWithEncryptedKeyConfig := acc.TestClient().TempTomlConfigForServiceUserWithEncryptedKey(t, tmpServiceUser)
+	tmpIncorrectServiceUserWithEncryptedKeyConfig := acc.TestClient().TempIncorrectTomlConfigForServiceUserWithEncryptedKey(t, tmpServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -563,91 +629,135 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
+			// authenticate with incorrect private key
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpIncorrectServiceUserConfig.Path)
+				},
+				Config:      providerConfigWithProfileAndAuthenticator(tmpIncorrectServiceUserConfig.Profile, sdk.AuthenticationTypeJwt),
+				ExpectError: regexp.MustCompile("JWT token is invalid"),
+			},
 			// authenticate with unencrypted private key
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwt),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config: providerConfigWithProfileAndAuthenticator(tmpServiceUserConfig.Profile, sdk.AuthenticationTypeJwt),
 			},
 			// authenticate with unencrypted private key with a legacy authenticator value
 			// solves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.JwtAuth, sdk.AuthenticationTypeJwtLegacy),
+				Config: providerConfigWithProfileAndAuthenticator(tmpServiceUserConfig.Profile, sdk.AuthenticationTypeJwtLegacy),
+			},
+			// check encrypted private key with incorrect password
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpIncorrectServiceUserWithEncryptedKeyConfig.Path)
+				},
+				Config:      providerConfigWithProfileAndAuthenticator(tmpIncorrectServiceUserWithEncryptedKeyConfig.Profile, sdk.AuthenticationTypeJwt),
+				ExpectError: regexp.MustCompile("pkcs8: incorrect password"),
 			},
 			// authenticate with encrypted private key
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.EncryptedJwtAuth, sdk.AuthenticationTypeJwt),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserWithEncryptedKeyConfig.Path)
+				},
+				Config: providerConfigWithProfileAndAuthenticator(tmpServiceUserWithEncryptedKeyConfig.Profile, sdk.AuthenticationTypeJwt),
 			},
 		},
 	})
 }
 
 func TestAcc_Provider_SnowflakeAuth(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpLegacyServiceUser := acc.TestClient().SetUpTemporaryLegacyServiceUser(t)
+	tmpLegacyServiceUserConfig := acc.TestClient().TempTomlConfigForLegacyServiceUser(t, tmpLegacyServiceUser)
+	incorrectLegacyServiceUserConfig := acc.TestClient().TempIncorrectTomlConfigForLegacyServiceUser(t, tmpLegacyServiceUser)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck: func() {
-			acc.TestAccPreCheck(t)
-		},
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.Default, sdk.AuthenticationTypeSnowflake),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, incorrectLegacyServiceUserConfig.Path)
+				},
+				Config:      providerConfig(incorrectLegacyServiceUserConfig.Profile),
+				ExpectError: regexp.MustCompile("Incorrect username or password was specified"),
+			},
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpLegacyServiceUserConfig.Path)
+				},
+				Config: providerConfig(tmpLegacyServiceUserConfig.Profile),
 			},
 		},
 	})
 }
 
 func TestAcc_Provider_invalidConfigurations(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
+		PreCheck: func() {
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+		},
 		Steps: []resource.TestStep{
 			{
-				Config:      providerConfigWithClientIp(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithClientIp(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile("expected client_ip to contain a valid IP"),
 			},
 			{
-				Config:      providerConfigWithProtocol(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithProtocol(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile("invalid protocol: invalid"),
 			},
 			{
-				Config:      providerConfigWithPort(testprofiles.Default, 123456789),
+				Config:      providerConfigWithPort(tmpServiceUserConfig.Profile, 123456789),
 				ExpectError: regexp.MustCompile(`expected "port" to be a valid port number or 0, got: 123456789`),
 			},
 			{
-				Config:      providerConfigWithAuthType(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithAuthType(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile("invalid authenticator type: invalid"),
 			},
 			{
-				Config:      providerConfigWithOktaUrl(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithOktaUrl(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile(`expected "okta_url" to have a host, got invalid`),
 			},
 			{
-				Config:      providerConfigWithTimeout(testprofiles.Default, "login_timeout", -1),
+				Config:      providerConfigWithTimeout(tmpServiceUserConfig.Profile, "login_timeout", -1),
 				ExpectError: regexp.MustCompile(`expected login_timeout to be at least \(0\), got -1`),
 			},
 			{
-				Config:      providerConfigWithTokenEndpoint(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithTokenEndpoint(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile(`expected "token_endpoint" to have a host, got invalid`),
 			},
 			{
-				Config:      providerConfigWithLogLevel(testprofiles.Default, "invalid"),
+				Config:      providerConfigWithLogLevel(tmpServiceUserConfig.Profile, "invalid"),
 				ExpectError: regexp.MustCompile(`invalid driver log level: invalid`),
 			},
 			{
-				Config: providerConfig("non-existing"),
-				// .* is used to match the error message regarding of the home user location
-				ExpectError: regexp.MustCompile(`profile "non-existing" not found in file .*.snowflake/config`),
+				Config:      providerConfig("non-existing"),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`profile "non-existing" not found in file %s`, tmpServiceUserConfig.Path)),
 			},
 		},
 	})
 }
 
-func providerConfigWithAuthenticator(profile string, authenticator sdk.AuthenticationType) string {
+func providerConfigWithProfileAndAuthenticator(profile string, authenticator sdk.AuthenticationType) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
 	profile = "%[1]s"
@@ -656,10 +766,11 @@ provider "snowflake" {
 `, profile, authenticator) + datasourceConfig()
 }
 
-func emptyProviderConfig() string {
-	return `
+func providerConfigWithAuthenticator(authenticator sdk.AuthenticationType) string {
+	return fmt.Sprintf(`
 provider "snowflake" {
-}` + datasourceConfig()
+	authenticator    = "%[1]s"
+}`, authenticator) + datasourceConfig()
 }
 
 func providerConfig(profile string) string {
@@ -670,22 +781,26 @@ provider "snowflake" {
 `, profile) + datasourceConfig()
 }
 
-func providerConfigWithRole(profile, role string) string {
+func providerConfigWithExplicitValidationAndRole(profile string, role string, validate bool) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
 	profile = "%[1]s"
 	role    = "%[2]s"
+
+	validate_default_parameters = "%[3]t"
 }
-`, profile, role) + datasourceConfig()
+`, profile, role, validate) + datasourceConfig()
 }
 
-func providerConfigWithWarehouse(profile, warehouse string) string {
+func providerConfigWithExplicitValidationAndWarehouse(profile string, warehouse string, validate bool) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
-	profile = "%[1]s"
-	warehouse    = "%[2]s"
+	profile   = "%[1]s"
+	warehouse = "%[2]s"
+
+	validate_default_parameters = "%[3]t"
 }
-`, profile, warehouse) + datasourceConfig()
+`, profile, warehouse, validate) + datasourceConfig()
 }
 
 func providerConfigWithClientStoreTemporaryCredential(profile, clientStoreTemporaryCredential string) string {
@@ -695,16 +810,6 @@ provider "snowflake" {
 	client_store_temporary_credential    = %[2]s
 }
 `, profile, clientStoreTemporaryCredential) + datasourceConfig()
-}
-
-func providerConfigWithWarehouseAndDisabledValidation(profile, warehouse string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	warehouse    = "%[2]s"
-	validate_default_parameters = "false"
-}
-`, profile, warehouse) + datasourceConfig()
 }
 
 func providerConfigWithProtocol(profile, protocol string) string {
@@ -785,46 +890,27 @@ provider "snowflake" {
 `, profile, clientIp) + datasourceConfig()
 }
 
-func providerConfigWithUser(user string, profile string) string {
+func providerConfigWithUserAndProfile(userId sdk.AccountObjectIdentifier, profile string) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
+	authenticator = "SNOWFLAKE_JWT"
 	user = "%[1]s"
 	profile = "%[2]s"
 }
-`, user, profile) + datasourceConfig()
+`, userId.Name(), profile) + datasourceConfig()
 }
 
-func providerConfigWithUserAndPassword(user string, pass string, profile string) string {
+func providerConfigWithUserPrivateKeyAndProfile(userId sdk.AccountObjectIdentifier, key string, role string, profile string) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
+	authenticator = "SNOWFLAKE_JWT"
 	user = "%[1]s"
-	password = "%[2]s"
-	profile = "%[3]s"
+	private_key = <<EOT
+%[2]sEOT
+	role = "%[3]s"
+	profile = "%[4]s"
 }
-`, user, pass, profile) + datasourceConfig()
-}
-
-func providerConfigWithNewAccountId(profile, orgName, accountName string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	account_name    = "%[2]s"
-	organization_name    = "%[3]s"
-}
-`, profile, accountName, orgName) + datasourceConfig()
-}
-
-func providerConfigComplete(profile, user, password, orgName, accountName string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-	user = "%[2]s"
-	password = "%[3]s"
-	organization_name = "%[4]s"
-	account_name = "%[5]s"
-	warehouse    = "SNOWFLAKE"
-}
-`, profile, user, password, orgName, accountName) + datasourceConfig()
+`, userId.Name(), key, role, profile) + datasourceConfig()
 }
 
 func datasourceConfig() string {
@@ -834,21 +920,22 @@ data snowflake_database "t" {
 }`, acc.TestDatabaseName)
 }
 
-func providerConfigAllFields(profile, orgName, accountName, user, password string) string {
+func providerConfigAllFields(tmpConfig *helpers.TmpTomlConfig, tmpUser *helpers.TmpServiceUser) string {
 	return fmt.Sprintf(`
 provider "snowflake" {
 	profile = "%[1]s"
 	organization_name = "%[2]s"
 	account_name = "%[3]s"
 	user = "%[4]s"
-	password = "%[5]s"
-	warehouse = "SNOWFLAKE"
+	private_key = <<EOT
+%[7]sEOT
+	warehouse = "%[5]s"
 	protocol = "https"
 	port = "443"
-	role = "ACCOUNTADMIN"
+	role = "%[6]s"
 	validate_default_parameters = true
 	client_ip = "3.3.3.3"
-	authenticator = "snowflake"
+	authenticator = "SNOWFLAKE_JWT"
 	okta_url = "https://example-tf.com"
 	login_timeout = 101
 	request_timeout = 201
@@ -865,14 +952,14 @@ provider "snowflake" {
 	disable_query_context_cache = true
 	include_retry_reason = true
 	max_retry_count = 3
-	driver_tracing = "info"
+	driver_tracing = "warning"
 	tmp_directory_path = "../../"
 	disable_console_login = true
 	params = {
 		foo = "piyo"
 	}
 }
-`, profile, orgName, accountName, user, password) + datasourceConfig()
+`, tmpConfig.Profile, tmpUser.AccountId.OrganizationName(), tmpUser.AccountId.AccountName(), tmpUser.UserId.Name(), tmpUser.WarehouseId.Name(), tmpUser.RoleId.Name(), tmpUser.PrivateKey) + datasourceConfig()
 }
 
 // TODO(SNOW-1348325): Use parameter data source with `IN SESSION` filtering.

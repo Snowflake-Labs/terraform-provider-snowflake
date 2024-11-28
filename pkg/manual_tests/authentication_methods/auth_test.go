@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -31,7 +31,7 @@ func TestAcc_Provider_OktaAuth(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.Okta, sdk.AuthenticationTypeOkta),
+				Config: providerConfigWithAuthenticator(Okta, sdk.AuthenticationTypeOkta),
 			},
 		},
 	})
@@ -75,11 +75,11 @@ func TestAcc_Provider_UsernamePasswordMfaAuthWithPasscode(t *testing.T) {
 		Steps: []resource.TestStep{
 			// ensure MFA is checked here - accept access to keychain on your device
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
+				Config: providerConfigWithAuthenticator(DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
 			},
 			// check that MFA login is cached - this step should not require manual action
 			{
-				Config: providerConfigWithAuthenticator(testprofiles.DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
+				Config: providerConfigWithAuthenticator(DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
 			},
 		},
 	})
