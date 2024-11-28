@@ -2,8 +2,11 @@ package providermodel
 
 import (
 	"encoding/json"
+	"fmt"
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 // Based on https://medium.com/picus-security-engineering/custom-json-marshaller-in-go-and-common-pitfalls-c43fa774db05.
@@ -16,6 +19,22 @@ func (m *SnowflakeModel) MarshalJSON() ([]byte, error) {
 		AliasModelType: (*AliasModelType)(m),
 		Alias:          m.Alias(),
 	})
+}
+
+func (m *SnowflakeModel) WithUserId(userId sdk.AccountObjectIdentifier) *SnowflakeModel {
+	return m.WithUser(userId.Name())
+}
+
+func (m *SnowflakeModel) WithRoleId(roleId sdk.AccountObjectIdentifier) *SnowflakeModel {
+	return m.WithRole(roleId.Name())
+}
+
+func (m *SnowflakeModel) WithAuthenticatorType(authenticationType sdk.AuthenticationType) *SnowflakeModel {
+	return m.WithAuthenticator(string(authenticationType))
+}
+
+func (m *SnowflakeModel) WithPrivateKeyMultiline(privateKey string) *SnowflakeModel {
+	return m.WithPrivateKey(fmt.Sprintf(`SF_TF_TEST_MULTILINE_PLACEHOLDER%sSF_TF_TEST_MULTILINE_PLACEHOLDER`, privateKey))
 }
 
 func (m *SnowflakeModel) AllFields(profile, orgName, accountName, user, password string) *SnowflakeModel {

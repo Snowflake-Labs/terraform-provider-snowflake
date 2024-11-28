@@ -35,6 +35,7 @@ func Test_HclProvider(t *testing.T) {
                             "prop1": 1,
                             "prop2": "two"
                         },
+						"multiline_string": "SF_TF_TEST_MULTILINE_PLACEHOLDER-----BEGIN PRIVATE KEY-----\nabc\ndef\nghj\n-----END PRIVATE KEY-----\nSF_TF_TEST_MULTILINE_PLACEHOLDER",
                         "depends_on": [
                             "some_other_resource.some_name",
                             "other_resource.some_other_name",
@@ -62,6 +63,7 @@ func Test_HclProvider(t *testing.T) {
     prop1 = 1
     prop2 = "two"
   }
+  multiline_string = <<EOT\n-----BEGIN PRIVATE KEY-----\nabc\ndef\nghj\n-----END PRIVATE KEY-----\nEOT
   depends_on = [some_other_resource.some_name, other_resource.some_other_name, data.some_datasource.some_fancy_datasource]
 }
 `

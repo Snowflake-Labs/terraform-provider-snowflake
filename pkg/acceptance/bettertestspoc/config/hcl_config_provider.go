@@ -10,7 +10,7 @@ import (
 	hclv1parser "github.com/hashicorp/hcl/json/parser"
 )
 
-var DefaultHclConfigProvider = NewHclV1ConfigProvider(unquoteBlockType, fixBlockArguments, unquoteArguments, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
+var DefaultHclConfigProvider = NewHclV1ConfigProvider(unquoteBlockType, fixBlockArguments, fixMultilinePrivateKey, unquoteArguments, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
 
 // HclConfigProvider defines methods to generate .tf config from .tf.json configs.
 type HclConfigProvider interface {
@@ -77,6 +77,11 @@ func unquoteBlockType(s string) (string, error) {
 func fixBlockArguments(s string) (string, error) {
 	argumentRegex := regexp.MustCompile(`( +)"(\w+)"( +)= ({\n)`)
 	return argumentRegex.ReplaceAllString(s, `$1$2$3$4`), nil
+}
+
+func fixMultilinePrivateKey(s string) (string, error) {
+	argumentRegex := regexp.MustCompile(`"SF_TF_TEST_MULTILINE_PLACEHOLDER(.*)SF_TF_TEST_MULTILINE_PLACEHOLDER"`)
+	return argumentRegex.ReplaceAllString(s, `<<EOT\n${1}EOT`), nil
 }
 
 // Conversion to HCL using hcl v1  does not unquote arguments.
