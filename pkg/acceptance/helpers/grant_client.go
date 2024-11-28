@@ -137,30 +137,44 @@ func (c *GrantClient) GrantPrivilegesOnDatabaseToAccountRole(
 	withGrantOption bool,
 ) {
 	t.Helper()
-	ctx := context.Background()
-
-	err := c.client().GrantPrivilegesToAccountRole(
-		ctx,
-		&sdk.AccountRoleGrantPrivileges{
-			AccountObjectPrivileges: privileges,
-		},
+	c.grantPrivilegesOnAccountLevelObjectToAccountRole(
+		t,
+		accountRoleId,
 		&sdk.AccountRoleGrantOn{
 			AccountObject: &sdk.GrantOnAccountObject{
 				Database: sdk.Pointer(databaseId),
 			},
 		},
-		accountRoleId,
-		&sdk.GrantPrivilegesToAccountRoleOptions{
-			WithGrantOption: sdk.Bool(withGrantOption),
-		},
+		privileges,
+		withGrantOption,
 	)
-	require.NoError(t, err)
 }
 
 func (c *GrantClient) GrantPrivilegesOnWarehouseToAccountRole(
 	t *testing.T,
 	accountRoleId sdk.AccountObjectIdentifier,
 	warehouseId sdk.AccountObjectIdentifier,
+	privileges []sdk.AccountObjectPrivilege,
+	withGrantOption bool,
+) {
+	t.Helper()
+	c.grantPrivilegesOnAccountLevelObjectToAccountRole(
+		t,
+		accountRoleId,
+		&sdk.AccountRoleGrantOn{
+			AccountObject: &sdk.GrantOnAccountObject{
+				Warehouse: sdk.Pointer(warehouseId),
+			},
+		},
+		privileges,
+		withGrantOption,
+	)
+}
+
+func (c *GrantClient) grantPrivilegesOnAccountLevelObjectToAccountRole(
+	t *testing.T,
+	accountRoleId sdk.AccountObjectIdentifier,
+	accountObjectGrantOn *sdk.AccountRoleGrantOn,
 	privileges []sdk.AccountObjectPrivilege,
 	withGrantOption bool,
 ) {
@@ -172,11 +186,7 @@ func (c *GrantClient) GrantPrivilegesOnWarehouseToAccountRole(
 		&sdk.AccountRoleGrantPrivileges{
 			AccountObjectPrivileges: privileges,
 		},
-		&sdk.AccountRoleGrantOn{
-			AccountObject: &sdk.GrantOnAccountObject{
-				Warehouse: sdk.Pointer(warehouseId),
-			},
-		},
+		accountObjectGrantOn,
 		accountRoleId,
 		&sdk.GrantPrivilegesToAccountRoleOptions{
 			WithGrantOption: sdk.Bool(withGrantOption),

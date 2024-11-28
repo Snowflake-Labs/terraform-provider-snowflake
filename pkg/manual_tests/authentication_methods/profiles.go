@@ -1,4 +1,4 @@
-package manualtestprofiles
+package manual
 
 const (
 	DefaultWithPasscode = "default_with_passcode"

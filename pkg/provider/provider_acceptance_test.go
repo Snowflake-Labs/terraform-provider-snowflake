@@ -750,8 +750,7 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 				ExpectError: regexp.MustCompile(`invalid driver log level: invalid`),
 			},
 			{
-				Config: providerConfig("non-existing"),
-				// .* is used to match the error message regarding of the home user location
+				Config:      providerConfig("non-existing"),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`profile "non-existing" not found in file %s`, tmpServiceUserConfig.Path)),
 			},
 		},
