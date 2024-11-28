@@ -2,28 +2,31 @@ package sdk
 
 import (
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"testing"
 )
 
 func TestAccountCreate(t *testing.T) {
 	t.Run("simplest case", func(t *testing.T) {
 		id := randomAccountObjectIdentifier()
+		password := random.Password()
 		opts := &CreateAccountOptions{
 			name:          id,
 			AdminName:     "someadmin",
-			AdminPassword: String("v3rys3cr3t"),
+			AdminPassword: String(password),
 			Email:         "admin@example.com",
 			Edition:       EditionBusinessCritical,
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT %s ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = 'v3rys3cr3t' EMAIL = 'admin@example.com' EDITION = BUSINESS_CRITICAL`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT %s ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = '%s' EMAIL = 'admin@example.com' EDITION = BUSINESS_CRITICAL`, id.FullyQualifiedName(), password)
 	})
 
 	t.Run("every option", func(t *testing.T) {
 		id := randomAccountObjectIdentifier()
+		key := random.Password()
 		opts := &CreateAccountOptions{
 			name:               id,
 			AdminName:          "someadmin",
-			AdminRSAPublicKey:  String("s3cr3tk3y"),
+			AdminRSAPublicKey:  String(key),
 			AdminUserType:      Pointer(UserTypeService),
 			FirstName:          String("Ad"),
 			LastName:           String("Min"),
@@ -35,15 +38,16 @@ func TestAccountCreate(t *testing.T) {
 			Comment:            String("Test account"),
 			Polaris:            Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT %s ADMIN_NAME = 'someadmin' ADMIN_RSA_PUBLIC_KEY = 's3cr3tk3y' ADMIN_USER_TYPE = SERVICE FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = true EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account' POLARIS = true`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT %s ADMIN_NAME = 'someadmin' ADMIN_RSA_PUBLIC_KEY = '%s' ADMIN_USER_TYPE = SERVICE FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = true EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account' POLARIS = true`, id.FullyQualifiedName(), key)
 	})
 
 	t.Run("static password", func(t *testing.T) {
 		id := randomAccountObjectIdentifier()
+		password := random.Password()
 		opts := &CreateAccountOptions{
 			name:               id,
 			AdminName:          "someadmin",
-			AdminPassword:      String("v3rys3cr3t"),
+			AdminPassword:      String(password),
 			FirstName:          String("Ad"),
 			LastName:           String("Min"),
 			Email:              "admin@example.com",
@@ -53,7 +57,7 @@ func TestAccountCreate(t *testing.T) {
 			Region:             String("regionid"),
 			Comment:            String("Test account"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT %s ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = 'v3rys3cr3t' FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = false EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT %s ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = '%s' FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = false EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account'`, id.FullyQualifiedName(), password)
 	})
 }
 

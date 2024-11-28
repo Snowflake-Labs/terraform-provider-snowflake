@@ -316,7 +316,7 @@ type Account struct {
 	DroppedOn                   *time.Time
 	ScheduledDeletionTime       *time.Time
 	RestoredOn                  *time.Time
-	MovedToOrganization         string
+	MovedToOrganization         *string
 	MovedOn                     *string
 	OrganizationUrlExpirationOn *time.Time
 }
@@ -357,7 +357,7 @@ type accountDBRow struct {
 	DroppedOn                   sql.NullTime   `db:"dropped_on"`
 	ScheduledDeletionTime       sql.NullTime   `db:"scheduled_deletion_time"`
 	RestoredOn                  sql.NullTime   `db:"restored_on"`
-	MovedToOrganization         string         `db:"moved_to_organization"`
+	MovedToOrganization         sql.NullString `db:"moved_to_organization"`
 	MovedOn                     sql.NullString `db:"moved_on"`
 	OrganizationUrlExpirationOn sql.NullTime   `db:"organization_URL_expiration_on"`
 }
@@ -380,7 +380,6 @@ func (row accountDBRow) convert() *Account {
 		OrganizationOldUrl:           row.OrganizationOldUrl,
 		IsEventsAccount:              row.IsEventsAccount,
 		IsOrganizationAccount:        row.IsOrganizationAccount,
-		MovedToOrganization:          row.MovedToOrganization,
 	}
 	if row.MarketplaceConsumerBillingEntityName.Valid {
 		acc.MarketplaceConsumerBillingEntityName = &row.MarketplaceConsumerBillingEntityName.String
@@ -411,6 +410,9 @@ func (row accountDBRow) convert() *Account {
 	}
 	if row.RestoredOn.Valid {
 		acc.RestoredOn = &row.RestoredOn.Time
+	}
+	if row.MovedToOrganization.Valid {
+		acc.MovedToOrganization = &row.MovedToOrganization.String
 	}
 	if row.MovedOn.Valid {
 		acc.MovedOn = &row.MovedOn.String

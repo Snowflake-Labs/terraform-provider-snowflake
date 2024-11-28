@@ -82,7 +82,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 
 		Ids: idsGenerator,
 
-		Account:                      NewAccountClient(context),
+		Account:                      NewAccountClient(context, idsGenerator),
 		AggregationPolicy:            NewAggregationPolicyClient(context, idsGenerator),
 		Alert:                        NewAlertClient(context, idsGenerator),
 		ApiIntegration:               NewApiIntegrationClient(context, idsGenerator),

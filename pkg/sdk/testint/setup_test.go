@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"log"
 	"os"
 	"testing"
@@ -128,26 +129,33 @@ func (itc *integrationTestContext) initialize() error {
 	itc.client = c
 	itc.ctx = context.Background()
 
-	db, dbCleanup, err := createDb(itc.client, itc.ctx, false)
-	itc.databaseCleanup = dbCleanup
+	currentRole, err := c.ContextFunctions.CurrentRole(context.Background())
 	if err != nil {
 		return err
 	}
-	itc.database = db
 
-	sc, scCleanup, err := createSc(itc.client, itc.ctx, itc.database, false)
-	itc.schemaCleanup = scCleanup
-	if err != nil {
-		return err
-	}
-	itc.schema = sc
+	if currentRole == snowflakeroles.Accountadmin {
+		db, dbCleanup, err := createDb(itc.client, itc.ctx, false)
+		itc.databaseCleanup = dbCleanup
+		if err != nil {
+			return err
+		}
+		itc.database = db
 
-	wh, whCleanup, err := createWh(itc.client, itc.ctx, false)
-	itc.warehouseCleanup = whCleanup
-	if err != nil {
-		return err
+		sc, scCleanup, err := createSc(itc.client, itc.ctx, itc.database, false)
+		itc.schemaCleanup = scCleanup
+		if err != nil {
+			return err
+		}
+		itc.schema = sc
+
+		wh, whCleanup, err := createWh(itc.client, itc.ctx, false)
+		itc.warehouseCleanup = whCleanup
+		if err != nil {
+			return err
+		}
+		itc.warehouse = wh
 	}
-	itc.warehouse = wh
 
 	config, err := sdk.ProfileConfig(testprofiles.Secondary)
 	if err != nil {
@@ -165,26 +173,29 @@ func (itc *integrationTestContext) initialize() error {
 	itc.secondaryClient = secondaryClient
 	itc.secondaryCtx = context.Background()
 
-	secondaryDb, secondaryDbCleanup, err := createDb(itc.secondaryClient, itc.secondaryCtx, true)
-	itc.secondaryDatabaseCleanup = secondaryDbCleanup
-	if err != nil {
-		return err
-	}
-	itc.secondaryDatabase = secondaryDb
+	// TODO: Get current role from the secondary client
+	if currentRole == snowflakeroles.Accountadmin {
+		secondaryDb, secondaryDbCleanup, err := createDb(itc.secondaryClient, itc.secondaryCtx, true)
+		itc.secondaryDatabaseCleanup = secondaryDbCleanup
+		if err != nil {
+			return err
+		}
+		itc.secondaryDatabase = secondaryDb
 
-	secondarySchema, secondarySchemaCleanup, err := createSc(itc.secondaryClient, itc.secondaryCtx, itc.database, true)
-	itc.secondarySchemaCleanup = secondarySchemaCleanup
-	if err != nil {
-		return err
-	}
-	itc.secondarySchema = secondarySchema
+		secondarySchema, secondarySchemaCleanup, err := createSc(itc.secondaryClient, itc.secondaryCtx, itc.database, true)
+		itc.secondarySchemaCleanup = secondarySchemaCleanup
+		if err != nil {
+			return err
+		}
+		itc.secondarySchema = secondarySchema
 
-	secondaryWarehouse, secondaryWarehouseCleanup, err := createWh(itc.secondaryClient, itc.secondaryCtx, true)
-	itc.secondaryWarehouseCleanup = secondaryWarehouseCleanup
-	if err != nil {
-		return err
+		secondaryWarehouse, secondaryWarehouseCleanup, err := createWh(itc.secondaryClient, itc.secondaryCtx, true)
+		itc.secondaryWarehouseCleanup = secondaryWarehouseCleanup
+		if err != nil {
+			return err
+		}
+		itc.secondaryWarehouse = secondaryWarehouse
 	}
-	itc.secondaryWarehouse = secondaryWarehouse
 
 	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 	itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
@@ -198,13 +209,16 @@ func (itc *integrationTestContext) initialize() error {
 		return err
 	}
 
-	err = helpers.EnsureScimProvisionerRolesExist(itc.client, itc.ctx)
-	if err != nil {
-		return err
-	}
-	err = helpers.EnsureScimProvisionerRolesExist(itc.secondaryClient, itc.secondaryCtx)
-	if err != nil {
-		return err
+	// TODO: Remove after
+	if currentRole == snowflakeroles.Accountadmin {
+		err = helpers.EnsureScimProvisionerRolesExist(itc.client, itc.ctx)
+		if err != nil {
+			return err
+		}
+		err = helpers.EnsureScimProvisionerRolesExist(itc.secondaryClient, itc.secondaryCtx)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
