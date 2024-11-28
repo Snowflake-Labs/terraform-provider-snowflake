@@ -23,6 +23,10 @@ func GetDatasourceSchemaDetails() []genhelpers.ResourceSchemaDetails {
 
 var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 	{
+		name:   "Database",
+		schema: datasources.Database().Schema,
+	},
+	{
 		name:   "Databases",
 		schema: datasources.Databases().Schema,
 	},
