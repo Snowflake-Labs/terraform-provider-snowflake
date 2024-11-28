@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"time"
 )
 
@@ -47,7 +47,7 @@ type CreateAccountOptions struct {
 	AdminName          string         `ddl:"parameter,single_quotes" sql:"ADMIN_NAME"`
 	AdminPassword      *string        `ddl:"parameter,single_quotes" sql:"ADMIN_PASSWORD"`
 	AdminRSAPublicKey  *string        `ddl:"parameter,single_quotes" sql:"ADMIN_RSA_PUBLIC_KEY"`
-	AdminUserType      *UserType      `ddl:"parameter,single_quotes" sql:"ADMIN_USER_TYPE"`
+	AdminUserType      *UserType      `ddl:"parameter" sql:"ADMIN_USER_TYPE"`
 	FirstName          *string        `ddl:"parameter,single_quotes" sql:"FIRST_NAME"`
 	LastName           *string        `ddl:"parameter,single_quotes" sql:"LAST_NAME"`
 	Email              string         `ddl:"parameter,single_quotes" sql:"EMAIL"`
@@ -92,12 +92,13 @@ type AlterAccountOptions struct {
 	alter   bool `ddl:"static" sql:"ALTER"`
 	account bool `ddl:"static" sql:"ACCOUNT"`
 
-	Set      *AccountSet        `ddl:"keyword" sql:"SET"`
-	Unset    *AccountUnset      `ddl:"list,no_parentheses" sql:"UNSET"`
-	SetTag   []TagAssociation   `ddl:"keyword" sql:"SET TAG"`
-	UnsetTag []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
-	Rename   *AccountRename     `ddl:"-"`
-	Drop     *AccountDrop       `ddl:"-"`
+	Set           *AccountSet           `ddl:"keyword" sql:"SET"`
+	Unset         *AccountUnset         `ddl:"list,no_parentheses" sql:"UNSET"`
+	SetTag        []TagAssociation      `ddl:"keyword" sql:"SET TAG"`
+	UnsetTag      []ObjectIdentifier    `ddl:"keyword" sql:"UNSET TAG"`
+	SetIsOrgAdmin *AccountSetIsOrgAdmin `ddl:"-"`
+	Rename        *AccountRename        `ddl:"-"`
+	Drop          *AccountDrop          `ddl:"-"`
 }
 
 func (opts *AlterAccountOptions) validate() error {
@@ -105,8 +106,8 @@ func (opts *AlterAccountOptions) validate() error {
 		return errors.Join(ErrNilOptions)
 	}
 	var errs []error
-	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.Drop, opts.Rename) {
-		errs = append(errs, errExactlyOneOf("CreateAccountOptions", "Set", "Unset", "SetTag", "UnsetTag", "Drop", "Rename"))
+	if !exactlyOneValueSet(opts.Set, opts.Unset, opts.SetTag, opts.UnsetTag, opts.Drop, opts.Rename, opts.SetIsOrgAdmin) {
+		errs = append(errs, errExactlyOneOf("CreateAccountOptions", "Set", "Unset", "SetTag", "UnsetTag", "Drop", "Rename", "SetIsOrgAdmin"))
 	}
 	if valueSet(opts.Set) {
 		if err := opts.Set.validate(); err != nil {
@@ -164,22 +165,23 @@ func (opts *AccountLevelParameters) validate() error {
 }
 
 type AccountSet struct {
-	// TODO:
-	// - Packages policy
-	// - validate parameters
-	// - IsOrgAdmin
-	// -
+	// TODO: validate all parameters are available
 	Parameters           *AccountLevelParameters `ddl:"list,no_parentheses"`
 	ResourceMonitor      AccountObjectIdentifier `ddl:"identifier,equals" sql:"RESOURCE_MONITOR"`
+	PackagesPolicy       SchemaObjectIdentifier  `ddl:"identifier" sql:"PACKAGES POLICY"`
 	PasswordPolicy       SchemaObjectIdentifier  `ddl:"identifier" sql:"PASSWORD POLICY"`
 	SessionPolicy        SchemaObjectIdentifier  `ddl:"identifier" sql:"SESSION POLICY"`
 	AuthenticationPolicy SchemaObjectIdentifier  `ddl:"identifier" sql:"AUTHENTICATION POLICY"`
+	Force                *bool                   `ddl:"keyword" sql:"FORCE"`
 }
 
 func (opts *AccountSet) validate() error {
 	var errs []error
-	if !exactlyOneValueSet(opts.Parameters, opts.ResourceMonitor, opts.PasswordPolicy, opts.SessionPolicy, opts.AuthenticationPolicy) {
-		errs = append(errs, errExactlyOneOf("AccountSet", "Parameters", "ResourceMonitor", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
+	if !exactlyOneValueSet(opts.Parameters, opts.ResourceMonitor, opts.PackagesPolicy, opts.PasswordPolicy, opts.SessionPolicy, opts.AuthenticationPolicy) {
+		errs = append(errs, errExactlyOneOf("AccountSet", "Parameters", "ResourceMonitor", "PackagesPolicy", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
+	}
+	if valueSet(opts.Force) && !valueSet(opts.PackagesPolicy) {
+		errs = append(errs, NewError("force can only be set with PackagesPolicy field"))
 	}
 	if valueSet(opts.Parameters) {
 		if err := opts.Parameters.validate(); err != nil {
@@ -205,15 +207,17 @@ func (opts *AccountLevelParametersUnset) validate() error {
 
 type AccountUnset struct {
 	Parameters           *AccountLevelParametersUnset `ddl:"list,no_parentheses"`
+	PackagesPolicy       *bool                        `ddl:"keyword" sql:"PACKAGES POLICY"`
 	PasswordPolicy       *bool                        `ddl:"keyword" sql:"PASSWORD POLICY"`
 	SessionPolicy        *bool                        `ddl:"keyword" sql:"SESSION POLICY"`
 	AuthenticationPolicy *bool                        `ddl:"keyword" sql:"AUTHENTICATION POLICY"`
+	ResourceMonitor      *bool                        `ddl:"keyword" sql:"RESOURCE_MONITOR"`
 }
 
 func (opts *AccountUnset) validate() error {
 	var errs []error
-	if !exactlyOneValueSet(opts.Parameters, opts.PasswordPolicy, opts.SessionPolicy, opts.AuthenticationPolicy) {
-		errs = append(errs, errExactlyOneOf("AccountUnset", "Parameters", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy"))
+	if !exactlyOneValueSet(opts.Parameters, opts.PackagesPolicy, opts.PasswordPolicy, opts.SessionPolicy, opts.AuthenticationPolicy, opts.ResourceMonitor) {
+		errs = append(errs, errExactlyOneOf("AccountUnset", "Parameters", "PackagesPolicy", "PasswordPolicy", "SessionPolicy", "AuthenticationPolicy", "ResourceMonitor"))
 	}
 	if valueSet(opts.Parameters) {
 		if err := opts.Parameters.validate(); err != nil {
@@ -221,6 +225,11 @@ func (opts *AccountUnset) validate() error {
 		}
 	}
 	return errors.Join(errs...)
+}
+
+type AccountSetIsOrgAdmin struct {
+	Name     AccountObjectIdentifier `ddl:"identifier"`
+	OrgAdmin *bool                   `ddl:"parameter" sql:"SET IS_ORG_ADMIN"`
 }
 
 type AccountRename struct {
@@ -241,9 +250,9 @@ func (opts *AccountRename) validate() error {
 }
 
 type AccountDrop struct {
-	Name   AccountObjectIdentifier `ddl:"identifier"`
-	OldURL *bool                   `ddl:"keyword" sql:"DROP OLD URL"`
-	// TODO: Drop organization url
+	Name               AccountObjectIdentifier `ddl:"identifier"`
+	OldUrl             *bool                   `ddl:"keyword" sql:"DROP OLD URL"`
+	OldOrganizationUrl *bool                   `ddl:"keyword" sql:"DROP OLD ORGANIZATION URL"`
 }
 
 func (opts *AccountDrop) validate() error {
@@ -251,13 +260,8 @@ func (opts *AccountDrop) validate() error {
 	if !ValidObjectIdentifier(opts.Name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if valueSet(opts.OldURL) {
-		// TODO: Should this really be validated to be true ?
-		if !*opts.OldURL {
-			errs = append(errs, fmt.Errorf("OldURL must be true"))
-		}
-	} else {
-		errs = append(errs, errNotSet("AccountDrop", "OldURL"))
+	if !exactlyOneValueSet(opts.OldUrl, opts.OldOrganizationUrl) {
+		errs = append(errs, errExactlyOneOf("AccountDrop", "OldUrl", "OldOrganizationUrl"))
 	}
 	return errors.Join(errs...)
 }
@@ -273,6 +277,7 @@ func (c *accounts) Alter(ctx context.Context, opts *AlterAccountOptions) error {
 type ShowAccountOptions struct {
 	show     bool  `ddl:"static" sql:"SHOW"`
 	accounts bool  `ddl:"static" sql:"ACCOUNTS"`
+	History  *bool `ddl:"keyword" sql:"HISTORY"`
 	Like     *Like `ddl:"keyword" sql:"LIKE"`
 }
 
@@ -286,7 +291,7 @@ func (opts *ShowAccountOptions) validate() error {
 type Account struct {
 	OrganizationName                     string
 	AccountName                          string
-	RegionGroup                          string
+	RegionGroup                          *string
 	SnowflakeRegion                      string
 	Edition                              AccountEdition
 	AccountURL                           string
@@ -296,10 +301,24 @@ type Account struct {
 	AccountLocatorURL                    string
 	ManagedAccounts                      int
 	ConsumptionBillingEntityName         string
-	MarketplaceConsumerBillingEntityName string
-	MarketplaceProviderBillingEntityName string
+	MarketplaceConsumerBillingEntityName *string
+	MarketplaceProviderBillingEntityName *string
 	OldAccountURL                        string
 	IsOrgAdmin                           bool
+	AccountOldUrlSavedOn                 *time.Time
+	AccountOldUrlLastUsed                *time.Time
+	OrganizationOldUrl                   string
+	OrganizationOldUrlSavedOn            *time.Time
+	OrganizationOldUrlLastUsed           *time.Time
+	IsEventsAccount                      bool
+	IsOrganizationAccount                bool
+	// Available only with the History keyword set
+	DroppedOn                   *time.Time
+	ScheduledDeletionTime       *time.Time
+	RestoredOn                  *time.Time
+	MovedToOrganization         string
+	MovedOn                     *string
+	OrganizationUrlExpirationOn *time.Time
 }
 
 func (v *Account) ID() AccountObjectIdentifier {
@@ -321,42 +340,83 @@ type accountDBRow struct {
 	Comment                              sql.NullString `db:"comment"`
 	AccountLocator                       string         `db:"account_locator"`
 	AccountLocatorURL                    string         `db:"account_locator_url"`
-	AccountOldURLSavedOn                 sql.NullString `db:"account_old_url_saved_on"`
 	ManagedAccounts                      int            `db:"managed_accounts"`
 	ConsumptionBillingEntityName         string         `db:"consumption_billing_entity_name"`
 	MarketplaceConsumerBillingEntityName sql.NullString `db:"marketplace_consumer_billing_entity_name"`
 	MarketplaceProviderBillingEntityName sql.NullString `db:"marketplace_provider_billing_entity_name"`
 	OldAccountURL                        string         `db:"old_account_url"`
 	IsOrgAdmin                           bool           `db:"is_org_admin"`
+	AccountOldUrlSavedOn                 sql.NullTime   `db:"account_old_url_saved_on"`
+	AccountOldUrlLastUsed                sql.NullTime   `db:"account_old_url_last_used"`
+	OrganizationOldUrl                   string         `db:"organization_old_url"`
+	OrganizationOldUrlSavedOn            sql.NullTime   `db:"organization_old_url_saved_on"`
+	OrganizationOldUrlLastUsed           sql.NullTime   `db:"organization_old_url_last_used"`
+	IsEventsAccount                      bool           `db:"is_events_account"`
+	IsOrganizationAccount                bool           `db:"is_organization_account"`
+	// Available only with the History keyword set
+	DroppedOn                   sql.NullTime   `db:"dropped_on"`
+	ScheduledDeletionTime       sql.NullTime   `db:"scheduled_deletion_time"`
+	RestoredOn                  sql.NullTime   `db:"restored_on"`
+	MovedToOrganization         string         `db:"moved_to_organization"`
+	MovedOn                     sql.NullString `db:"moved_on"`
+	OrganizationUrlExpirationOn sql.NullTime   `db:"organization_URL_expiration_on"`
 }
 
 func (row accountDBRow) convert() *Account {
 	acc := &Account{
-		OrganizationName:                     row.OrganizationName,
-		AccountName:                          row.AccountName,
-		RegionGroup:                          "",
-		SnowflakeRegion:                      row.SnowflakeRegion,
-		Edition:                              AccountEdition(row.Edition),
-		AccountURL:                           row.AccountURL,
-		CreatedOn:                            row.CreatedOn,
-		Comment:                              row.Comment.String,
-		AccountLocator:                       row.AccountLocator,
-		AccountLocatorURL:                    row.AccountLocatorURL,
-		ManagedAccounts:                      row.ManagedAccounts,
-		ConsumptionBillingEntityName:         row.ConsumptionBillingEntityName,
-		MarketplaceConsumerBillingEntityName: "",
-		MarketplaceProviderBillingEntityName: "",
-		OldAccountURL:                        row.OldAccountURL,
-		IsOrgAdmin:                           row.IsOrgAdmin,
+		OrganizationName:             row.OrganizationName,
+		AccountName:                  row.AccountName,
+		SnowflakeRegion:              row.SnowflakeRegion,
+		Edition:                      AccountEdition(row.Edition),
+		AccountURL:                   row.AccountURL,
+		CreatedOn:                    row.CreatedOn,
+		Comment:                      row.Comment.String,
+		AccountLocator:               row.AccountLocator,
+		AccountLocatorURL:            row.AccountLocatorURL,
+		ManagedAccounts:              row.ManagedAccounts,
+		ConsumptionBillingEntityName: row.ConsumptionBillingEntityName,
+		OldAccountURL:                row.OldAccountURL,
+		IsOrgAdmin:                   row.IsOrgAdmin,
+		OrganizationOldUrl:           row.OrganizationOldUrl,
+		IsEventsAccount:              row.IsEventsAccount,
+		IsOrganizationAccount:        row.IsOrganizationAccount,
+		MovedToOrganization:          row.MovedToOrganization,
 	}
 	if row.MarketplaceConsumerBillingEntityName.Valid {
-		acc.MarketplaceConsumerBillingEntityName = row.MarketplaceConsumerBillingEntityName.String
+		acc.MarketplaceConsumerBillingEntityName = &row.MarketplaceConsumerBillingEntityName.String
 	}
 	if row.MarketplaceProviderBillingEntityName.Valid {
-		acc.MarketplaceProviderBillingEntityName = row.MarketplaceProviderBillingEntityName.String
+		acc.MarketplaceProviderBillingEntityName = &row.MarketplaceProviderBillingEntityName.String
 	}
 	if row.RegionGroup.Valid {
-		acc.SnowflakeRegion = row.RegionGroup.String
+		acc.RegionGroup = &row.RegionGroup.String
+	}
+	if row.AccountOldUrlSavedOn.Valid {
+		acc.AccountOldUrlSavedOn = &row.AccountOldUrlSavedOn.Time
+	}
+	if row.AccountOldUrlLastUsed.Valid {
+		acc.AccountOldUrlLastUsed = &row.AccountOldUrlLastUsed.Time
+	}
+	if row.OrganizationOldUrlSavedOn.Valid {
+		acc.OrganizationOldUrlSavedOn = &row.OrganizationOldUrlSavedOn.Time
+	}
+	if row.OrganizationOldUrlLastUsed.Valid {
+		acc.OrganizationOldUrlLastUsed = &row.OrganizationOldUrlLastUsed.Time
+	}
+	if row.DroppedOn.Valid {
+		acc.DroppedOn = &row.DroppedOn.Time
+	}
+	if row.ScheduledDeletionTime.Valid {
+		acc.ScheduledDeletionTime = &row.ScheduledDeletionTime.Time
+	}
+	if row.RestoredOn.Valid {
+		acc.RestoredOn = &row.RestoredOn.Time
+	}
+	if row.MovedOn.Valid {
+		acc.MovedOn = &row.MovedOn.String
+	}
+	if row.OrganizationUrlExpirationOn.Valid {
+		acc.OrganizationUrlExpirationOn = &row.OrganizationUrlExpirationOn.Time
 	}
 	return acc
 }
@@ -380,12 +440,9 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 	if err != nil {
 		return nil, err
 	}
-	for _, account := range accounts {
-		if account.AccountName == id.Name() || account.AccountLocator == id.Name() {
-			return &account, nil
-		}
-	}
-	return nil, ErrObjectNotExistOrAuthorized
+	return collections.FindFirst(accounts, func(account Account) bool {
+		return account.AccountName == id.Name()
+	})
 }
 
 // DropAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-account.
@@ -394,7 +451,7 @@ type DropAccountOptions struct {
 	account           bool                    `ddl:"static" sql:"ACCOUNT"`
 	IfExists          *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name              AccountObjectIdentifier `ddl:"identifier"`
-	gracePeriodInDays int                     `ddl:"parameter" sql:"GRACE_PERIOD_IN_DAYS"`
+	gracePeriodInDays *int                    `ddl:"parameter" sql:"GRACE_PERIOD_IN_DAYS"`
 }
 
 func (opts *DropAccountOptions) validate() error {
@@ -405,8 +462,8 @@ func (opts *DropAccountOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !validateIntGreaterThanOrEqual(opts.gracePeriodInDays, 3) {
-		errs = append(errs, errIntValue("DropAccountOptions", "gracePeriodInDays", IntErrGreaterOrEqual, 3))
+	if !valueSet(opts.gracePeriodInDays) {
+		errs = append(errs, errNotSet("DropAccountOptions", "gracePeriodInDays"))
 	}
 	return errors.Join(errs...)
 }
@@ -416,7 +473,7 @@ func (c *accounts) Drop(ctx context.Context, id AccountObjectIdentifier, gracePe
 		opts = &DropAccountOptions{}
 	}
 	opts.name = id
-	opts.gracePeriodInDays = gracePeriodInDays
+	opts.gracePeriodInDays = &gracePeriodInDays
 	return validateAndExec(c.client, ctx, opts)
 }
 

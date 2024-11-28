@@ -117,7 +117,7 @@ func TestInt_AccountCreate(t *testing.T) {
 		alterOpts = &sdk.AlterAccountOptions{
 			Drop: &sdk.AccountDrop{
 				Name:   newAccountID,
-				OldURL: sdk.Bool(true),
+				OldUrl: sdk.Bool(true),
 			},
 		}
 		err = client.Accounts.Alter(ctx, alterOpts)
