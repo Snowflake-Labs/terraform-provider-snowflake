@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.99.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.98.0...v0.99.0) (2024-11-26)
+
+
+### 🎉 **What's new:**
+
+* Add tags data source ([#3211](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3211)) ([8907d9d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8907d9dfea69d6b8ac26fc0a9e249676f332f8b3))
+* Tag resource v1 ([#3197](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3197)) ([77b3bf0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/77b3bf0c9998c05a30951730439f8b03a2e418ac))
+* Tasks v1 readiness ([#3222](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3222)) ([e2284d9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e2284d98d23586031514934d7bc7c67139f5e272))
+
+
+### 🔧 **Misc**
+
+* Add support for usage tracking to data sources ([#3224](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3224)) ([8210bb8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8210bb84b69fe91e0fff22ac836feb79d6e9a402))
+* Add usage tracking for the rest of the resources and fix views ([#3223](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3223)) ([231f653](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/231f65323611f110564117a325062355e7ed7cf6))
+* Basic object tracking ([#3205](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3205)) ([1f0dc94](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1f0dc94e6ac95940ac5fd0e0b5f62152b8f821a5))
+* basic object tracking part 2 ([#3214](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3214)) ([e44f2e1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e44f2e1938807285ed4d521b56d2efeab7b927bb))
+* Improve tags integration tests ([#3193](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3193)) ([7736e0a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7736e0a5fa6a97f9e5551507cea955fb62dd1e90))
+* parser and secret tests  ([#3192](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3192)) ([5ec9c86](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5ec9c86fdc3450f6f07820a4a5fe7f74779c7c41))
+* Storage integration with custom protocol ([#3213](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3213)) ([a3a44ae](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a3a44ae5a6eca2a9623369499d8cac4516a87004))
+* Unskip auth config tests ([#3180](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3180)) ([46ab142](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/46ab142ad74e5fdc5deb6cc6edc409f487434862))
+
+
+### 🐛 **Bug fixes:**
+
+* Small fixes and adjustments ([#3226](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3226)) ([9f67457](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9f6745743daba831422627b5171df404373e9650))
+
 ## [0.98.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.97.0...v0.98.0) (2024-11-08)
 
 

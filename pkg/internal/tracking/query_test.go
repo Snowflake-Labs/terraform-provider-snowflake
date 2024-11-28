@@ -47,7 +47,7 @@ func TestTrimMetadata(t *testing.T) {
 }
 
 func TestAppendMetadata(t *testing.T) {
-	metadata := NewMetadata("123", resources.Account, CreateOperation)
+	metadata := newTestMetadata("123", resources.Account, CreateOperation)
 	sql := "SELECT 1"
 
 	bytes, err := json.Marshal(metadata)
@@ -61,7 +61,7 @@ func TestAppendMetadata(t *testing.T) {
 }
 
 func TestParseMetadata(t *testing.T) {
-	metadata := NewMetadata("123", resources.Account, CreateOperation)
+	metadata := newTestMetadata("123", resources.Account, CreateOperation)
 	bytes, err := json.Marshal(metadata)
 	require.NoError(t, err)
 	sql := fmt.Sprintf("SELECT 1 --%s %s", MetadataPrefix, string(bytes))
@@ -75,8 +75,9 @@ func TestParseInvalidMetadataKeys(t *testing.T) {
 	sql := fmt.Sprintf(`SELECT 1 --%s {"key": "value"}`, MetadataPrefix)
 
 	parsedMetadata, err := ParseMetadata(sql)
-	require.ErrorContains(t, err, "version for metadata should not be empty")
-	require.ErrorContains(t, err, "resource name for metadata should not be empty")
+	require.ErrorContains(t, err, "schema version for metadata should not be empty")
+	require.ErrorContains(t, err, "provider version for metadata should not be empty")
+	require.ErrorContains(t, err, "either resource or data source name for metadata should be specified")
 	require.ErrorContains(t, err, "operation for metadata should not be empty")
 	require.Equal(t, Metadata{}, parsedMetadata)
 }
@@ -90,7 +91,7 @@ func TestParseInvalidMetadataJson(t *testing.T) {
 }
 
 func TestParseMetadataFromInvalidSqlCommentPrefix(t *testing.T) {
-	metadata := NewMetadata("123", resources.Account, CreateOperation)
+	metadata := newTestMetadata("123", resources.Account, CreateOperation)
 	sql := "SELECT 1"
 
 	bytes, err := json.Marshal(metadata)

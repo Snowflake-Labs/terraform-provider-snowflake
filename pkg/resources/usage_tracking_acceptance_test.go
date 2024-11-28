@@ -38,14 +38,12 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 		t.Helper()
 		return func(state *terraform.State) error {
 			queryHistory := acc.TestClient().InformationSchema.GetQueryHistory(t, 60)
-			expectedMetadata := tracking.NewVersionedMetadata(resources.Schema, operation)
+			expectedMetadata := tracking.NewVersionedResourceMetadata(resources.Schema, operation)
 			if _, err := collections.FindFirst(queryHistory, func(history helpers.QueryHistory) bool {
-				if metadata, err := tracking.ParseMetadata(history.QueryText); err == nil {
-					if expectedMetadata == metadata && strings.Contains(history.QueryText, query) {
-						return true
-					}
-				}
-				return false
+				metadata, err := tracking.ParseMetadata(history.QueryText)
+				return err == nil &&
+					expectedMetadata == metadata &&
+					strings.Contains(history.QueryText, query)
 			}); err != nil {
 				return fmt.Errorf("query history does not contain query metadata: %v with query containing: %s", expectedMetadata, query)
 			}

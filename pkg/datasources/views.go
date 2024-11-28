@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -106,7 +108,7 @@ var viewsSchema = map[string]*schema.Schema{
 
 func Views() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadViews,
+		ReadContext: TrackingReadWrapper(datasources.Views, ReadViews),
 		Schema:      viewsSchema,
 		Description: "Datasource used to get details of filtered views. Filtering is aligned with the current possibilities for [SHOW VIEWS](https://docs.snowflake.com/en/sql-reference/sql/show-views) query (only `like` is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection `views`.",
 	}

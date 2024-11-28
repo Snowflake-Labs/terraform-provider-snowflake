@@ -115,7 +115,7 @@ func TestInt_MaterializedViews(t *testing.T) {
 	t.Run("create materialized view: with usage tracking comment", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		plainQuery := fmt.Sprintf("SELECT id FROM %s", table.ID().FullyQualifiedName())
-		query, err := tracking.AppendMetadata(plainQuery, tracking.NewVersionedMetadata(resources.MaterializedView, tracking.CreateOperation))
+		query, err := tracking.AppendMetadata(plainQuery, tracking.NewVersionedResourceMetadata(resources.MaterializedView, tracking.CreateOperation))
 		require.NoError(t, err)
 
 		view := createMaterializedViewWithRequest(t, sdk.NewCreateMaterializedViewRequest(id, query))

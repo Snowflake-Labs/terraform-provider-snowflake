@@ -172,7 +172,7 @@ func TestInt_Views(t *testing.T) {
 	t.Run("create view: with usage tracking comment", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		plainQuery := "SELECT NULL AS TYPE"
-		query, err := tracking.AppendMetadata(plainQuery, tracking.NewVersionedMetadata(resources.View, tracking.CreateOperation))
+		query, err := tracking.AppendMetadata(plainQuery, tracking.NewVersionedResourceMetadata(resources.View, tracking.CreateOperation))
 		require.NoError(t, err)
 		request := sdk.NewCreateViewRequest(id, query)
 

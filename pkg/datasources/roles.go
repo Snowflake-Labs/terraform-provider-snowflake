@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -47,7 +49,7 @@ var rolesSchema = map[string]*schema.Schema{
 
 func Roles() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadRoles,
+		ReadContext: TrackingReadWrapper(datasources.Roles, ReadRoles),
 		Schema:      rolesSchema,
 		Description: "Datasource used to get details of filtered roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.",
 	}

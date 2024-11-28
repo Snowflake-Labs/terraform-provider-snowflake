@@ -377,6 +377,7 @@ func DeleteContextNetworkPolicy(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 
+	// TODO(SNOW-1818849): unassign policies before dropping
 	err = client.NetworkPolicies.Drop(ctx, sdk.NewDropNetworkPolicyRequest(id).WithIfExists(true))
 	if err != nil {
 		return diag.Diagnostics{

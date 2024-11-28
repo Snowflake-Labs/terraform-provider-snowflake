@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -110,19 +113,18 @@ var accountsSchema = map[string]*schema.Schema{
 // Accounts Snowflake Accounts resource.
 func Accounts() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadAccounts,
-		Schema: accountsSchema,
+		ReadContext: TrackingReadWrapper(datasources.Accounts, ReadAccounts),
+		Schema:      accountsSchema,
 	}
 }
 
 // ReadAccounts lists accounts.
-func ReadAccounts(d *schema.ResourceData, meta interface{}) error {
+func ReadAccounts(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	ok, err := client.ContextFunctions.IsRoleInSession(ctx, snowflakeroles.Orgadmin)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if !ok {
 		log.Printf("[DEBUG] ORGADMIN role is not in current session, cannot read accounts")
@@ -136,7 +138,7 @@ func ReadAccounts(d *schema.ResourceData, meta interface{}) error {
 	}
 	accounts, err := client.Accounts.Show(ctx, opts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("accounts")
 	accountsFlatten := []map[string]interface{}{}
@@ -161,7 +163,7 @@ func ReadAccounts(d *schema.ResourceData, meta interface{}) error {
 		accountsFlatten = append(accountsFlatten, m)
 	}
 	if err := d.Set("accounts", accountsFlatten); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }

@@ -3,6 +3,9 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -54,52 +57,51 @@ var databaseSchema = map[string]*schema.Schema{
 // Database the Snowflake Database resource.
 func Database() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadDatabase,
-		Schema: databaseSchema,
+		ReadContext: TrackingReadWrapper(datasources.Database, ReadDatabase),
+		Schema:      databaseSchema,
 	}
 }
 
 // ReadDatabase read the database meta-data information.
-func ReadDatabase(d *schema.ResourceData, meta interface{}) error {
+func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
 	database, err := client.Databases.ShowByID(ctx, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(helpers.EncodeResourceIdentifier(database.ID()))
 	if err := d.Set("name", database.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("comment", database.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("owner", database.Owner); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("is_default", database.IsDefault); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("is_current", database.IsCurrent); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	var origin string
 	if database.Origin != nil {
 		origin = database.Origin.FullyQualifiedName()
 	}
 	if err := d.Set("origin", origin); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("retention_time", database.RetentionTime); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("created_on", database.CreatedOn.String()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("options", database.Options); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }
