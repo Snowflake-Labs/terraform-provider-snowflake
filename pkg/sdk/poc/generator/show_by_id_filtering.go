@@ -1,17 +1,29 @@
 package generator
 
-type ShowByIDFilteringType string
-
-const (
-	SimpleFiltering          ShowByIDFilteringType = "Simple"
-	IdentifierBasedFiltering ShowByIDFilteringType = "IdentifierBased"
+import (
+	"fmt"
 )
 
 type ShowByIDFiltering struct {
 	Name string
 	Kind string
 	Args string
-	Type ShowByIDFilteringType
+}
+
+func (s *ShowByIDFiltering) String() string {
+	return fmt.Sprintf("With%s(%s{%s})", s.Name, s.Kind, s.Args)
+}
+
+type ShowByIDFilter interface {
+	String() string
+}
+
+func ShowByIDLikeFilteringFunc() ShowByIDFilter {
+	return &ShowByIDFiltering{
+		Name: "Like",
+		Kind: "Like",
+		Args: "Pattern: String(id.Name())",
+	}
 }
 
 type ShowByIDFilteringKind uint
@@ -35,21 +47,18 @@ func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation
 				Name: "Like",
 				Kind: "Like",
 				Args: "Pattern: String(id.Name())",
-				Type: SimpleFiltering,
 			})
 		case ShowByIDInFiltering:
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
 				Name: "In",
 				Kind: "In",
-				Args: "%[1]v: id.%[1]vId()",
-				Type: IdentifierBasedFiltering,
+				Args: fmt.Sprintf("%[1]v: id.%[1]vId()", s.ObjectInterface.ObjectIdentifierKind()),
 			})
 		case ShowByIDExtendedInFiltering:
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, ShowByIDFiltering{
 				Name: "In",
 				Kind: "ExtendedIn",
-				Args: "In: In{%[1]v: id.%[1]vId()}",
-				Type: IdentifierBasedFiltering,
+				Args: fmt.Sprintf("In: In{%[1]v: id.%[1]vId()}", s.ObjectInterface.ObjectIdentifierKind()),
 			})
 		}
 	}

@@ -20,12 +20,8 @@
             {{- if not .ShowByIDFiltering }}
                 // TODO: adjust request if e.g. LIKE is supported for the resource
             {{ else }}
-                {{- range .ShowByIDFiltering -}} 
-                    .{{- if eq .Type "IdentifierBased" }}
-                        With{{ .Name }}( {{ .Kind }} { {{ printf .Args $idkind }} })
-                    {{- else }}
+                {{- range .ShowByIDFiltering }}.
                         With{{ .Name }}( {{ .Kind }} { {{ .Args }} })
-                    {{- end }}
                 {{- end }}
             {{- end }}
         {{ $impl }}, err := v.Show(ctx, request)
