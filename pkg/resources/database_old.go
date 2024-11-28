@@ -7,6 +7,10 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -88,23 +92,22 @@ var databaseOldSchema = map[string]*schema.Schema{
 // Database returns a pointer to the resource representing a database.
 func DatabaseOld() *schema.Resource {
 	return &schema.Resource{
-		Create:             CreateDatabaseOld,
-		Read:               ReadDatabaseOld,
-		Delete:             DeleteDatabaseOld,
-		Update:             UpdateDatabaseOld,
+		CreateContext:      TrackingCreateWrapper(resources.DatabaseOld, CreateDatabaseOld),
+		ReadContext:        TrackingReadWrapper(resources.DatabaseOld, ReadDatabaseOld),
+		DeleteContext:      TrackingDeleteWrapper(resources.DatabaseOld, DeleteDatabaseOld),
+		UpdateContext:      TrackingUpdateWrapper(resources.DatabaseOld, UpdateDatabaseOld),
 		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_database or snowflake_shared_database or snowflake_secondary_database instead.",
 
 		Schema: databaseOldSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.DatabaseOld, ImportName[sdk.AccountObjectIdentifier]),
 		},
 	}
 }
 
 // CreateDatabase implements schema.CreateFunc.
-func CreateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
+func CreateDatabaseOld(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
 
@@ -119,10 +122,10 @@ func CreateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.Databases.CreateShared(ctx, id, shareID, opts)
 		if err != nil {
-			return fmt.Errorf("error creating database %v: %w", name, err)
+			return diag.FromErr(fmt.Errorf("error creating database %v: %w", name, err))
 		}
 		d.SetId(name)
-		return ReadDatabaseOld(d, meta)
+		return ReadDatabaseOld(ctx, d, meta)
 	}
 	// Is it a Secondary Database?
 	if primaryName, ok := d.GetOk("from_replica"); ok {
@@ -133,11 +136,11 @@ func CreateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.Databases.CreateSecondary(ctx, id, primaryID, opts)
 		if err != nil {
-			return fmt.Errorf("error creating database %v: %w", name, err)
+			return diag.FromErr(fmt.Errorf("error creating database %v: %w", name, err))
 		}
 		d.SetId(name)
 		// todo: add failover_configuration block
-		return ReadDatabaseOld(d, meta)
+		return ReadDatabaseOld(ctx, d, meta)
 	}
 
 	// Otherwise it is a Standard Database
@@ -162,7 +165,7 @@ func CreateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.Databases.Create(ctx, id, &opts)
 	if err != nil {
-		return fmt.Errorf("error creating database %v: %w", name, err)
+		return diag.FromErr(fmt.Errorf("error creating database %v: %w", name, err))
 	}
 	d.SetId(name)
 
@@ -183,16 +186,15 @@ func CreateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.Databases.AlterReplication(ctx, id, opts)
 		if err != nil {
-			return fmt.Errorf("error enabling replication for database %v: %w", name, err)
+			return diag.FromErr(fmt.Errorf("error enabling replication for database %v: %w", name, err))
 		}
 	}
 
-	return ReadDatabaseOld(d, meta)
+	return ReadDatabaseOld(ctx, d, meta)
 }
 
-func ReadDatabaseOld(d *schema.ResourceData, meta interface{}) error {
+func ReadDatabaseOld(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	database, err := client.Databases.ShowByID(ctx, id)
@@ -203,35 +205,34 @@ func ReadDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("comment", database.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	dataRetention, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterDataRetentionTimeInDays)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	paramDataRetention, err := strconv.Atoi(dataRetention.Value)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if dataRetentionDays := d.Get("data_retention_time_in_days"); dataRetentionDays.(int) != IntDefault || database.RetentionTime != paramDataRetention {
 		if err := d.Set("data_retention_time_in_days", database.RetentionTime); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if err := d.Set("is_transient", database.Transient); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func UpdateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
+func UpdateDatabaseOld(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	if d.HasChange("name") {
 		newName := d.Get("name").(string)
@@ -241,7 +242,7 @@ func UpdateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.Databases.Alter(ctx, id, opts)
 		if err != nil {
-			return fmt.Errorf("error updating database name on %v err = %w", d.Id(), err)
+			return diag.FromErr(fmt.Errorf("error updating database name on %v err = %w", d.Id(), err))
 		}
 		d.SetId(helpers.EncodeSnowflakeID(newId))
 		id = newId
@@ -259,7 +260,7 @@ func UpdateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.Databases.Alter(ctx, id, opts)
 		if err != nil {
-			return fmt.Errorf("error updating database comment on %v err = %w", d.Id(), err)
+			return diag.FromErr(fmt.Errorf("error updating database comment on %v err = %w", d.Id(), err))
 		}
 	}
 
@@ -271,7 +272,7 @@ func UpdateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return fmt.Errorf("error when setting database data retention time on %v err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error when setting database data retention time on %v err = %w", d.Id(), err))
 			}
 		} else {
 			err := client.Databases.Alter(ctx, id, &sdk.AlterDatabaseOptions{
@@ -280,7 +281,7 @@ func UpdateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return fmt.Errorf("error when usetting database data retention time on %v err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error when usetting database data retention time on %v err = %w", d.Id(), err))
 			}
 		}
 	}
@@ -333,7 +334,7 @@ func UpdateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 			}
 			err := client.Databases.AlterReplication(ctx, id, opts)
 			if err != nil {
-				return fmt.Errorf("error enabling replication configuration on %v err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error enabling replication configuration on %v err = %w", d.Id(), err))
 			}
 		}
 
@@ -345,23 +346,22 @@ func UpdateDatabaseOld(d *schema.ResourceData, meta interface{}) error {
 			}
 			err := client.Databases.AlterReplication(ctx, id, opts)
 			if err != nil {
-				return fmt.Errorf("error disabling replication configuration on %v err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error disabling replication configuration on %v err = %w", d.Id(), err))
 			}
 		}
 	}
 
-	return ReadDatabaseOld(d, meta)
+	return ReadDatabaseOld(ctx, d, meta)
 }
 
-func DeleteDatabaseOld(d *schema.ResourceData, meta interface{}) error {
+func DeleteDatabaseOld(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	err := client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
 		IfExists: sdk.Bool(true),
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	return nil

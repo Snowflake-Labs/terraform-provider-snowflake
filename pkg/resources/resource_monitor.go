@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -97,22 +99,23 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 
 func ResourceMonitor() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateResourceMonitor,
-		ReadContext:   ReadResourceMonitor(true),
-		UpdateContext: UpdateResourceMonitor,
-		DeleteContext: DeleteResourceMonitor,
+		CreateContext: TrackingCreateWrapper(resources.ResourceMonitor, CreateResourceMonitor),
+		ReadContext:   TrackingReadWrapper(resources.ResourceMonitor, ReadResourceMonitor(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.ResourceMonitor, UpdateResourceMonitor),
+		DeleteContext: TrackingDeleteWrapper(resources.ResourceMonitor, DeleteResourceMonitor),
+		Description:   "Resource used to manage resource monitor objects. For more information, check [resource monitor documentation](https://docs.snowflake.com/en/user-guide/resource-monitors).",
 
 		Schema: resourceMonitorSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportResourceMonitor,
+			StateContext: TrackingImportWrapper(resources.ResourceMonitor, ImportResourceMonitor),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.ResourceMonitor, customdiff.All(
 			ComputedIfAnyAttributeChanged(resourceMonitorSchema, ShowOutputAttributeName, "notify_users", "credit_quota", "frequency", "start_timestamp", "end_timestamp", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
 			ForceNewIfAllKeysAreNotSet("notify_triggers", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
 			ForceNewIfAllKeysAreNotSet("suspend_trigger", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
 			ForceNewIfAllKeysAreNotSet("suspend_immediate_trigger", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
-		),
+		)),
 	}
 }
 

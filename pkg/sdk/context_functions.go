@@ -20,6 +20,8 @@ type ContextFunctions interface {
 	CurrentSession(ctx context.Context) (string, error)
 	CurrentUser(ctx context.Context) (AccountObjectIdentifier, error)
 	CurrentSessionDetails(ctx context.Context) (*CurrentSessionDetails, error)
+
+	// TODO(SNOW-1805152): Remove this and utilize gosnowflake.WithQueryIDChan instead whenever query id is needed
 	LastQueryId(ctx context.Context) (string, error)
 
 	// Session Object functions.

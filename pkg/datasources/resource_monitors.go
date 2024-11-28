@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -39,7 +41,7 @@ var resourceMonitorsSchema = map[string]*schema.Schema{
 
 func ResourceMonitors() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadResourceMonitors,
+		ReadContext: TrackingReadWrapper(datasources.ResourceMonitors, ReadResourceMonitors),
 		Schema:      resourceMonitorsSchema,
 		Description: "Datasource used to get details of filtered resource monitors. Filtering is aligned with the current possibilities for [SHOW RESOURCE MONITORS](https://docs.snowflake.com/en/sql-reference/sql/show-resource-monitors) query (`like` is supported). The results of SHOW is encapsulated in show_output collection.",
 	}

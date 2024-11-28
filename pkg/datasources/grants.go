@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -320,7 +322,7 @@ var grantsSchema = map[string]*schema.Schema{
 
 func Grants() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadGrants,
+		ReadContext: TrackingReadWrapper(datasources.Grants, ReadGrants),
 		Schema:      grantsSchema,
 	}
 }

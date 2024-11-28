@@ -33,35 +33,6 @@ func (c *ContextClient) CurrentAccount(t *testing.T) string {
 	return currentAccount
 }
 
-func (c *ContextClient) CurrentAccountName(t *testing.T) string {
-	t.Helper()
-	ctx := context.Background()
-
-	accountName, err := c.client().CurrentAccountName(ctx)
-	require.NoError(t, err)
-
-	return accountName
-}
-
-func (c *ContextClient) CurrentOrganizationName(t *testing.T) string {
-	t.Helper()
-	ctx := context.Background()
-
-	orgName, err := c.client().CurrentOrganizationName(ctx)
-	require.NoError(t, err)
-
-	return orgName
-}
-
-func (c *ContextClient) CurrentAccountIdentifier(t *testing.T) sdk.AccountIdentifier {
-	t.Helper()
-
-	orgName := c.CurrentOrganizationName(t)
-	accountName := c.CurrentAccountName(t)
-
-	return sdk.NewAccountIdentifier(orgName, accountName)
-}
-
 func (c *ContextClient) CurrentRole(t *testing.T) sdk.AccountObjectIdentifier {
 	t.Helper()
 	ctx := context.Background()
@@ -90,6 +61,15 @@ func (c *ContextClient) CurrentUser(t *testing.T) sdk.AccountObjectIdentifier {
 	require.NoError(t, err)
 
 	return currentUser
+}
+
+func (c *ContextClient) CurrentAccountIdentifier(t *testing.T) sdk.AccountIdentifier {
+	t.Helper()
+
+	details, err := c.client().CurrentSessionDetails(context.Background())
+	require.NoError(t, err)
+
+	return sdk.NewAccountIdentifier(details.OrganizationName, details.AccountName)
 }
 
 func (c *ContextClient) IsRoleInSession(t *testing.T, id sdk.AccountObjectIdentifier) bool {

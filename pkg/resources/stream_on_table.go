@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -50,23 +52,23 @@ var streamOnTableSchema = func() map[string]*schema.Schema {
 
 func StreamOnTable() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateStreamOnTable(false),
-		ReadContext:   ReadStreamOnTable(true),
-		UpdateContext: UpdateStreamOnTable,
-		DeleteContext: DeleteStreamContext,
+		CreateContext: TrackingCreateWrapper(resources.StreamOnTable, CreateStreamOnTable(false)),
+		ReadContext:   TrackingReadWrapper(resources.StreamOnTable, ReadStreamOnTable(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.StreamOnTable, UpdateStreamOnTable),
+		DeleteContext: TrackingDeleteWrapper(resources.StreamOnTable, DeleteStreamContext),
 		Description:   "Resource used to manage streams on tables. For more information, check [stream documentation](https://docs.snowflake.com/en/sql-reference/sql/create-stream).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.StreamOnTable, customdiff.All(
 			ComputedIfAnyAttributeChanged(streamOnTableSchema, ShowOutputAttributeName, "table", "append_only", "comment"),
 			ComputedIfAnyAttributeChanged(streamOnTableSchema, DescribeOutputAttributeName, "table", "append_only", "comment"),
 			RecreateWhenStreamIsStale(),
 			RecreateWhenStreamTypeChangedExternally(sdk.StreamSourceTypeTable),
-		),
+		)),
 
 		Schema: streamOnTableSchema,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportStreamOnTable,
+			StateContext: TrackingImportWrapper(resources.StreamOnTable, ImportStreamOnTable),
 		},
 	}
 }

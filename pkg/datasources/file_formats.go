@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -56,14 +59,13 @@ var fileFormatsSchema = map[string]*schema.Schema{
 
 func FileFormats() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadFileFormats,
-		Schema: fileFormatsSchema,
+		ReadContext: TrackingReadWrapper(datasources.FileFormats, ReadFileFormats),
+		Schema:      fileFormatsSchema,
 	}
 }
 
-func ReadFileFormats(d *schema.ResourceData, meta interface{}) error {
+func ReadFileFormats(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -75,7 +77,7 @@ func ReadFileFormats(d *schema.ResourceData, meta interface{}) error {
 	})
 	if err != nil {
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 
 	fileFormats := []map[string]interface{}{}
@@ -93,5 +95,5 @@ func ReadFileFormats(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
-	return d.Set("file_formats", fileFormats)
+	return diag.FromErr(d.Set("file_formats", fileFormats))
 }

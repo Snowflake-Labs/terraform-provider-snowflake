@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -31,22 +33,22 @@ var apiAuthClientCredentialsSchema = func() map[string]*schema.Schema {
 
 func ApiAuthenticationIntegrationWithClientCredentials() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextApiAuthenticationIntegrationWithClientCredentials,
-		ReadContext:   ReadContextApiAuthenticationIntegrationWithClientCredentials(true),
-		UpdateContext: UpdateContextApiAuthenticationIntegrationWithClientCredentials,
-		DeleteContext: DeleteContextApiAuthenticationIntegrationWithClientCredentials,
+		CreateContext: TrackingCreateWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, CreateContextApiAuthenticationIntegrationWithClientCredentials),
+		ReadContext:   TrackingReadWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, ReadContextApiAuthenticationIntegrationWithClientCredentials(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, UpdateContextApiAuthenticationIntegrationWithClientCredentials),
+		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, DeleteContextApiAuthenticationIntegrationWithClientCredentials),
 		Description:   "Resource used to manage api authentication security integration objects with client credentials. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
 
 		Schema: apiAuthClientCredentialsSchema,
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, customdiff.All(
 			ForceNewIfChangeToEmptyString("oauth_token_endpoint"),
 			ForceNewIfChangeToEmptyString("oauth_client_auth_method"),
 			ComputedIfAnyAttributeChanged(apiAuthClientCredentialsSchema, ShowOutputAttributeName, "enabled", "comment"),
 			ComputedIfAnyAttributeChanged(apiAuthClientCredentialsSchema, DescribeOutputAttributeName, "enabled", "comment", "oauth_access_token_validity", "oauth_refresh_token_validity",
 				"oauth_client_id", "oauth_client_auth_method", "oauth_token_endpoint", "oauth_allowed_scopes"),
-		),
+		)),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportApiAuthenticationWithClientCredentials,
+			StateContext: TrackingImportWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, ImportApiAuthenticationWithClientCredentials),
 		},
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/hashicorp/go-uuid"
@@ -53,7 +55,7 @@ func UnsafeExecute() *schema.Resource {
 
 		Description: "Experimental resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.",
 
-		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.UnsafeExecute, func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 			if diff.HasChange("query") {
 				err := diff.SetNewComputed("query_results")
 				if err != nil {
@@ -61,7 +63,7 @@ func UnsafeExecute() *schema.Resource {
 				}
 			}
 			return nil
-		},
+		}),
 	}
 }
 

@@ -3,6 +3,9 @@ package resources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -64,10 +67,10 @@ var sequenceSchema = map[string]*schema.Schema{
 
 func Sequence() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateSequence,
-		Read:   ReadSequence,
-		Delete: DeleteSequence,
-		Update: UpdateSequence,
+		CreateContext: TrackingCreateWrapper(resources.Sequence, CreateSequence),
+		ReadContext:   TrackingReadWrapper(resources.Sequence, ReadSequence),
+		DeleteContext: TrackingDeleteWrapper(resources.Sequence, DeleteSequence),
+		UpdateContext: TrackingUpdateWrapper(resources.Sequence, UpdateSequence),
 
 		Schema: sequenceSchema,
 		Importer: &schema.ResourceImporter{
@@ -76,9 +79,9 @@ func Sequence() *schema.Resource {
 	}
 }
 
-func CreateSequence(d *schema.ResourceData, meta interface{}) error {
+func CreateSequence(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
 	name := d.Get("name").(string)
@@ -97,72 +100,72 @@ func CreateSequence(d *schema.ResourceData, meta interface{}) error {
 	}
 	err := client.Sequences.Create(ctx, req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(database, schema, name))
 
-	return ReadSequence(d, meta)
+	return ReadSequence(ctx, d, meta)
 }
 
-func ReadSequence(d *schema.ResourceData, meta interface{}) error {
+func ReadSequence(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	seq, err := client.Sequences.ShowByID(ctx, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", seq.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("schema", seq.SchemaName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("database", seq.DatabaseName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", seq.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("increment", seq.Interval); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("next_value", seq.NextValue); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if seq.Ordered {
 		if err := d.Set("ordering", "ORDER"); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		if err := d.Set("ordering", "NOORDER"); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }
 
-func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
+func UpdateSequence(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	if d.HasChange("comment") {
 		req := sdk.NewAlterSequenceRequest(id)
 		req.WithSet(sdk.NewSequenceSetRequest().WithComment(sdk.String(d.Get("comment").(string))))
 		if err := client.Sequences.Alter(ctx, req); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -170,7 +173,7 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 		req := sdk.NewAlterSequenceRequest(id)
 		req.WithSetIncrement(sdk.Int(d.Get("increment").(int)))
 		if err := client.Sequences.Alter(ctx, req); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -178,20 +181,20 @@ func UpdateSequence(d *schema.ResourceData, meta interface{}) error {
 		req := sdk.NewAlterSequenceRequest(id)
 		req.WithSet(sdk.NewSequenceSetRequest().WithValuesBehavior(sdk.ValuesBehaviorPointer(sdk.ValuesBehavior(d.Get("ordering").(string)))))
 		if err := client.Sequences.Alter(ctx, req); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return ReadSequence(d, meta)
+	return ReadSequence(ctx, d, meta)
 }
 
-func DeleteSequence(d *schema.ResourceData, meta interface{}) error {
+func DeleteSequence(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	err := client.Sequences.Drop(ctx, sdk.NewDropSequenceRequest(id).WithIfExists(sdk.Bool(true)))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	return nil

@@ -3,12 +3,15 @@ package resources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -138,15 +141,15 @@ var passwordPolicySchema = map[string]*schema.Schema{
 
 func PasswordPolicy() *schema.Resource {
 	return &schema.Resource{
-		Description: "A password policy specifies the requirements that must be met to create and reset a password to authenticate to Snowflake.",
-		Create:      CreatePasswordPolicy,
-		Read:        ReadPasswordPolicy,
-		Update:      UpdatePasswordPolicy,
-		Delete:      DeletePasswordPolicy,
+		Description:   "A password policy specifies the requirements that must be met to create and reset a password to authenticate to Snowflake.",
+		CreateContext: TrackingCreateWrapper(resources.PasswordPolicy, CreatePasswordPolicy),
+		ReadContext:   TrackingReadWrapper(resources.PasswordPolicy, ReadPasswordPolicy),
+		UpdateContext: TrackingUpdateWrapper(resources.PasswordPolicy, UpdatePasswordPolicy),
+		DeleteContext: TrackingDeleteWrapper(resources.PasswordPolicy, DeletePasswordPolicy),
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.PasswordPolicy, customdiff.All(
 			ComputedIfAnyAttributeChanged(passwordPolicySchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: passwordPolicySchema,
 		Importer: &schema.ResourceImporter{
@@ -156,9 +159,9 @@ func PasswordPolicy() *schema.Resource {
 }
 
 // CreatePasswordPolicy implements schema.CreateFunc.
-func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
+func CreatePasswordPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	name := d.Get("name").(string)
 	database := d.Get("database").(string)
 	schema := d.Get("schema").(string)
@@ -186,84 +189,83 @@ func CreatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.PasswordPolicies.Create(ctx, objectIdentifier, createOptions)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
-	return ReadPasswordPolicy(d, meta)
+	return ReadPasswordPolicy(ctx, d, meta)
 }
 
 // ReadPasswordPolicy implements schema.ReadFunc.
-func ReadPasswordPolicy(d *schema.ResourceData, meta interface{}) error {
+func ReadPasswordPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	passwordPolicy, err := client.PasswordPolicies.ShowByID(ctx, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("database", passwordPolicy.DatabaseName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("schema", passwordPolicy.SchemaName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("name", passwordPolicy.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("comment", passwordPolicy.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	passwordPolicyDetails, err := client.PasswordPolicies.Describe(ctx, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := setFromIntProperty(d, "min_length", passwordPolicyDetails.PasswordMinLength); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := setFromIntProperty(d, "max_length", passwordPolicyDetails.PasswordMaxLength); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := setFromIntProperty(d, "min_upper_case_chars", passwordPolicyDetails.PasswordMinUpperCaseChars); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := setFromIntProperty(d, "min_lower_case_chars", passwordPolicyDetails.PasswordMinLowerCaseChars); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := setFromIntProperty(d, "min_numeric_chars", passwordPolicyDetails.PasswordMinNumericChars); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := setFromIntProperty(d, "min_special_chars", passwordPolicyDetails.PasswordMinSpecialChars); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := setFromIntProperty(d, "min_age_days", passwordPolicyDetails.PasswordMinAgeDays); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := setFromIntProperty(d, "max_age_days", passwordPolicyDetails.PasswordMaxAgeDays); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := setFromIntProperty(d, "max_retries", passwordPolicyDetails.PasswordMaxRetries); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := setFromIntProperty(d, "lockout_time_mins", passwordPolicyDetails.PasswordLockoutTimeMins); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := setFromIntProperty(d, "history", passwordPolicyDetails.PasswordHistory); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
 // UpdatePasswordPolicy implements schema.UpdateFunc.
-func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
+func UpdatePasswordPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
@@ -274,7 +276,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 			NewName: &newId,
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		d.SetId(helpers.EncodeSnowflakeID(newId))
@@ -289,7 +291,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if d.HasChange("max_length") {
@@ -300,7 +302,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if d.HasChange("min_upper_case_chars") {
@@ -311,7 +313,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if d.HasChange("min_lower_case_chars") {
@@ -322,7 +324,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -334,7 +336,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -346,7 +348,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -358,7 +360,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -370,7 +372,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -382,7 +384,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -394,7 +396,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -406,7 +408,7 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -423,23 +425,23 @@ func UpdatePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.PasswordPolicies.Alter(ctx, objectIdentifier, alterOptions)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return ReadPasswordPolicy(d, meta)
+	return ReadPasswordPolicy(ctx, d, meta)
 }
 
 // DeletePasswordPolicy implements schema.DeleteFunc.
-func DeletePasswordPolicy(d *schema.ResourceData, meta interface{}) error {
+func DeletePasswordPolicy(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	// TODO(SNOW-1818849): unassign policies before dropping
 	err := client.PasswordPolicies.Drop(ctx, objectIdentifier, nil)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

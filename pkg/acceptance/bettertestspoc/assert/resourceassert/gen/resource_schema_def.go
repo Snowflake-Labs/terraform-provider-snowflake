@@ -109,4 +109,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "Tag",
 		schema: resources.Tag().Schema,
 	},
+	{
+		name:   "Task",
+		schema: resources.Task().Schema,
+	},
 }

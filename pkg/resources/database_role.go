@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -49,19 +51,19 @@ var databaseRoleSchema = map[string]*schema.Schema{
 
 func DatabaseRole() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateDatabaseRole,
-		ReadContext:   ReadDatabaseRole,
-		UpdateContext: UpdateDatabaseRole,
-		DeleteContext: DeleteDatabaseRole,
+		CreateContext: TrackingCreateWrapper(resources.DatabaseRole, CreateDatabaseRole),
+		ReadContext:   TrackingReadWrapper(resources.DatabaseRole, ReadDatabaseRole),
+		UpdateContext: TrackingUpdateWrapper(resources.DatabaseRole, UpdateDatabaseRole),
+		DeleteContext: TrackingDeleteWrapper(resources.DatabaseRole, DeleteDatabaseRole),
 
 		Schema: databaseRoleSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.DatabaseObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.DatabaseRole, ImportName[sdk.DatabaseObjectIdentifier]),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.DatabaseRole, customdiff.All(
 			ComputedIfAnyAttributeChanged(databaseRoleSchema, ShowOutputAttributeName, "comment", "name"),
-		),
+		)),
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{

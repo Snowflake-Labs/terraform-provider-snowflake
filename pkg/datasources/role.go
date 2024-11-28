@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -28,7 +31,7 @@ var roleSchema = map[string]*schema.Schema{
 // Role Snowflake Role resource.
 func Role() *schema.Resource {
 	return &schema.Resource{
-		Read:               ReadRole,
+		ReadContext:        TrackingReadWrapper(datasources.Role, ReadRole),
 		Schema:             roleSchema,
 		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_roles instead.",
 		Importer: &schema.ResourceImporter{
@@ -38,13 +41,12 @@ func Role() *schema.Resource {
 }
 
 // ReadRole Reads the database metadata information.
-func ReadRole(d *schema.ResourceData, meta interface{}) error {
+func ReadRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	roleId, err := sdk.ParseAccountObjectIdentifier(d.Get("name").(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	role, err := client.Roles.ShowByID(ctx, roleId)
@@ -56,10 +58,10 @@ func ReadRole(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(helpers.EncodeResourceIdentifier(role.ID()))
 	if err := d.Set("name", role.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("comment", role.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }

@@ -6,6 +6,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -36,10 +39,10 @@ var networkPolicyAttachmentSchema = map[string]*schema.Schema{
 // NetworkPolicyAttachment returns a pointer to the resource representing a network policy attachment.
 func NetworkPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateNetworkPolicyAttachment,
-		Read:   ReadNetworkPolicyAttachment,
-		Update: UpdateNetworkPolicyAttachment,
-		Delete: DeleteNetworkPolicyAttachment,
+		CreateContext: TrackingCreateWrapper(resources.NetworkPolicyAttachment, CreateNetworkPolicyAttachment),
+		ReadContext:   TrackingReadWrapper(resources.NetworkPolicyAttachment, ReadNetworkPolicyAttachment),
+		UpdateContext: TrackingUpdateWrapper(resources.NetworkPolicyAttachment, UpdateNetworkPolicyAttachment),
+		DeleteContext: TrackingDeleteWrapper(resources.NetworkPolicyAttachment, DeleteNetworkPolicyAttachment),
 
 		Schema: networkPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{
@@ -49,40 +52,40 @@ func NetworkPolicyAttachment() *schema.Resource {
 }
 
 // CreateNetworkPolicyAttachment implements schema.CreateFunc.
-func CreateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+func CreateNetworkPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	policyName := d.Get("network_policy_name").(string)
 	d.SetId(policyName + "_attachment")
 
 	if d.Get("set_for_account").(bool) {
-		if err := setOnAccount(d, meta); err != nil {
-			return fmt.Errorf("error creating attachment for network policy %v err = %w", policyName, err)
+		if err := setOnAccount(ctx, d, meta); err != nil {
+			return diag.FromErr(fmt.Errorf("error creating attachment for network policy %v err = %w", policyName, err))
 		}
 	}
 
 	if u, ok := d.GetOk("users"); ok {
 		users := expandStringList(u.(*schema.Set).List())
 
-		if err := ensureUserAlterPrivileges(users, meta); err != nil {
-			return err
+		if err := ensureUserAlterPrivileges(ctx, users, meta); err != nil {
+			return diag.FromErr(err)
 		}
 
-		if err := setOnUsers(users, d, meta); err != nil {
-			return fmt.Errorf("error creating attachment for network policy %v err = %w", policyName, err)
+		if err := setOnUsers(ctx, users, d, meta); err != nil {
+			return diag.FromErr(fmt.Errorf("error creating attachment for network policy %v err = %w", policyName, err))
 		}
 	}
 
-	return ReadNetworkPolicyAttachment(d, meta)
+	return ReadNetworkPolicyAttachment(ctx, d, meta)
 }
 
 // ReadNetworkPolicyAttachment implements schema.ReadFunc.
-func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+func ReadNetworkPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	policyName := strings.Replace(d.Id(), "_attachment", "", 1)
 
 	var currentUsers []string
 	if err := d.Set("network_policy_name", policyName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if u, ok := d.GetOk("users"); ok {
@@ -100,7 +103,7 @@ func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if err := d.Set("users", currentUsers); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -117,22 +120,22 @@ func ReadNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err := d.Set("set_for_account", isSetOnAccount); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }
 
 // UpdateNetworkPolicyAttachment implements schema.UpdateFunc.
-func UpdateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+func UpdateNetworkPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	if d.HasChange("set_for_account") {
 		oldAcctFlag, newAcctFlag := d.GetChange("set_for_account")
 		if newAcctFlag.(bool) {
-			if err := setOnAccount(d, meta); err != nil {
-				return err
+			if err := setOnAccount(ctx, d, meta); err != nil {
+				return diag.FromErr(err)
 			}
 		} else if !newAcctFlag.(bool) && oldAcctFlag == true {
-			if err := unsetOnAccount(d, meta); err != nil {
-				return err
+			if err := unsetOnAccount(ctx, d, meta); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -145,50 +148,50 @@ func UpdateNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 		removedUsers := expandStringList(oldUsersSet.Difference(newUsersSet).List())
 		addedUsers := expandStringList(newUsersSet.Difference(oldUsersSet).List())
 
-		if err := ensureUserAlterPrivileges(removedUsers, meta); err != nil {
-			return err
+		if err := ensureUserAlterPrivileges(ctx, removedUsers, meta); err != nil {
+			return diag.FromErr(err)
 		}
 
-		if err := ensureUserAlterPrivileges(addedUsers, meta); err != nil {
-			return err
+		if err := ensureUserAlterPrivileges(ctx, addedUsers, meta); err != nil {
+			return diag.FromErr(err)
 		}
 
 		for _, user := range removedUsers {
-			if err := unsetOnUser(user, d, meta); err != nil {
-				return err
+			if err := unsetOnUser(ctx, user, d, meta); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 
 		for _, user := range addedUsers {
-			if err := setOnUser(user, d, meta); err != nil {
-				return err
+			if err := setOnUser(ctx, user, d, meta); err != nil {
+				return diag.FromErr(err)
 			}
 		}
 	}
 
-	return ReadNetworkPolicyAttachment(d, meta)
+	return ReadNetworkPolicyAttachment(ctx, d, meta)
 }
 
 // DeleteNetworkPolicyAttachment implements schema.DeleteFunc.
-func DeleteNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+func DeleteNetworkPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	policyName := d.Get("network_policy_name").(string)
 	d.SetId(policyName + "_attachment")
 
 	if d.Get("set_for_account").(bool) {
-		if err := unsetOnAccount(d, meta); err != nil {
-			return fmt.Errorf("error deleting attachment for network policy %v err = %w", policyName, err)
+		if err := unsetOnAccount(ctx, d, meta); err != nil {
+			return diag.FromErr(fmt.Errorf("error deleting attachment for network policy %v err = %w", policyName, err))
 		}
 	}
 
 	if u, ok := d.GetOk("users"); ok {
 		users := expandStringList(u.(*schema.Set).List())
 
-		if err := ensureUserAlterPrivileges(users, meta); err != nil {
-			return err
+		if err := ensureUserAlterPrivileges(ctx, users, meta); err != nil {
+			return diag.FromErr(err)
 		}
 
-		if err := unsetOnUsers(users, d, meta); err != nil {
-			return fmt.Errorf("error deleting attachment for network policy %v err = %w", policyName, err)
+		if err := unsetOnUsers(ctx, users, d, meta); err != nil {
+			return diag.FromErr(fmt.Errorf("error deleting attachment for network policy %v err = %w", policyName, err))
 		}
 	}
 
@@ -197,9 +200,9 @@ func DeleteNetworkPolicyAttachment(d *schema.ResourceData, meta interface{}) err
 
 // setOnAccount sets the network policy globally for the Snowflake account
 // Note: the ip address of the session executing this SQL must be allowed by the network policy being set.
-func setOnAccount(d *schema.ResourceData, meta interface{}) error {
+func setOnAccount(ctx context.Context, d *schema.ResourceData, meta any) error {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	policyName := d.Get("network_policy_name").(string)
 
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{Set: &sdk.AccountSet{Parameters: &sdk.AccountLevelParameters{ObjectParameters: &sdk.ObjectParameters{NetworkPolicy: sdk.String(policyName)}}}})
@@ -211,9 +214,9 @@ func setOnAccount(d *schema.ResourceData, meta interface{}) error {
 }
 
 // setOnAccount unsets the network policy globally for the Snowflake account.
-func unsetOnAccount(d *schema.ResourceData, meta interface{}) error {
+func unsetOnAccount(ctx context.Context, d *schema.ResourceData, meta any) error {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	policyName := d.Get("network_policy_name").(string)
 
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{Unset: &sdk.AccountUnset{Parameters: &sdk.AccountLevelParametersUnset{ObjectParameters: &sdk.ObjectParametersUnset{NetworkPolicy: sdk.Bool(true)}}}})
@@ -225,10 +228,10 @@ func unsetOnAccount(d *schema.ResourceData, meta interface{}) error {
 }
 
 // setOnUsers sets the network policy for list of users.
-func setOnUsers(users []string, data *schema.ResourceData, meta interface{}) error {
+func setOnUsers(ctx context.Context, users []string, data *schema.ResourceData, meta interface{}) error {
 	policyName := data.Get("network_policy_name").(string)
 	for _, user := range users {
-		if err := setOnUser(user, data, meta); err != nil {
+		if err := setOnUser(ctx, user, data, meta); err != nil {
 			return fmt.Errorf("error setting network policy %v on user %v err = %w", policyName, user, err)
 		}
 	}
@@ -237,9 +240,9 @@ func setOnUsers(users []string, data *schema.ResourceData, meta interface{}) err
 }
 
 // setOnUser sets the network policy for a given user.
-func setOnUser(user string, data *schema.ResourceData, meta interface{}) error {
+func setOnUser(ctx context.Context, user string, data *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	policyName := data.Get("network_policy_name").(string)
 
 	err := client.Users.Alter(ctx, sdk.NewAccountObjectIdentifier(user), &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectParameters: &sdk.UserObjectParameters{NetworkPolicy: sdk.Pointer(sdk.NewAccountObjectIdentifier(policyName))}}})
@@ -251,10 +254,10 @@ func setOnUser(user string, data *schema.ResourceData, meta interface{}) error {
 }
 
 // unsetOnUsers unsets the network policy for list of users.
-func unsetOnUsers(users []string, data *schema.ResourceData, meta interface{}) error {
+func unsetOnUsers(ctx context.Context, users []string, data *schema.ResourceData, meta interface{}) error {
 	policyName := data.Get("network_policy_name").(string)
 	for _, user := range users {
-		if err := unsetOnUser(user, data, meta); err != nil {
+		if err := unsetOnUser(ctx, user, data, meta); err != nil {
 			return fmt.Errorf("error unsetting network policy %v on user %v err = %w", policyName, user, err)
 		}
 	}
@@ -263,9 +266,9 @@ func unsetOnUsers(users []string, data *schema.ResourceData, meta interface{}) e
 }
 
 // unsetOnUser sets the network policy for a given user.
-func unsetOnUser(user string, data *schema.ResourceData, meta interface{}) error {
+func unsetOnUser(ctx context.Context, user string, data *schema.ResourceData, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	policyName := data.Get("network_policy_name").(string)
 
 	err := client.Users.Alter(ctx, sdk.NewAccountObjectIdentifier(user), &sdk.AlterUserOptions{Unset: &sdk.UserUnset{ObjectParameters: &sdk.UserObjectParametersUnset{NetworkPolicy: sdk.Bool(true)}}})
@@ -277,9 +280,8 @@ func unsetOnUser(user string, data *schema.ResourceData, meta interface{}) error
 }
 
 // ensureUserAlterPrivileges ensures the executing Snowflake user can alter each user in the set of users.
-func ensureUserAlterPrivileges(users []string, meta interface{}) error {
+func ensureUserAlterPrivileges(ctx context.Context, users []string, meta interface{}) error {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	for _, user := range users {
 		_, err := client.Users.Describe(ctx, sdk.NewAccountObjectIdentifier(user))

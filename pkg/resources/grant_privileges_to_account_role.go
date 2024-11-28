@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -296,14 +298,14 @@ func getGrantPrivilegesOnAccountRoleBulkOperationSchema(validGrantToObjectTypes 
 
 func GrantPrivilegesToAccountRole() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateGrantPrivilegesToAccountRole,
-		UpdateContext: UpdateGrantPrivilegesToAccountRole,
-		DeleteContext: DeleteGrantPrivilegesToAccountRole,
-		ReadContext:   ReadGrantPrivilegesToAccountRole,
+		CreateContext: TrackingCreateWrapper(resources.GrantPrivilegesToAccountRole, CreateGrantPrivilegesToAccountRole),
+		UpdateContext: TrackingUpdateWrapper(resources.GrantPrivilegesToAccountRole, UpdateGrantPrivilegesToAccountRole),
+		DeleteContext: TrackingDeleteWrapper(resources.GrantPrivilegesToAccountRole, DeleteGrantPrivilegesToAccountRole),
+		ReadContext:   TrackingReadWrapper(resources.GrantPrivilegesToAccountRole, ReadGrantPrivilegesToAccountRole),
 
 		Schema: grantPrivilegesToAccountRoleSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportGrantPrivilegesToAccountRole(),
+			StateContext: TrackingImportWrapper(resources.GrantPrivilegesToAccountRole, ImportGrantPrivilegesToAccountRole()),
 		},
 	}
 }

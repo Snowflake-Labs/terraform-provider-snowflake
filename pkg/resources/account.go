@@ -7,6 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
@@ -210,15 +214,15 @@ var accountSchema = map[string]*schema.Schema{
 
 func Account() *schema.Resource {
 	return &schema.Resource{
-		Description: "The account resource allows you to create and manage Snowflake accounts.",
-		Create:      CreateAccount,
-		Read:        ReadAccount,
-		Update:      UpdateAccount,
-		Delete:      DeleteAccount,
+		Description:   "The account resource allows you to create and manage Snowflake accounts.",
+		CreateContext: TrackingCreateWrapper(resources.Account, CreateAccount),
+		ReadContext:   TrackingReadWrapper(resources.Account, ReadAccount),
+		UpdateContext: TrackingUpdateWrapper(resources.Account, UpdateAccount),
+		DeleteContext: TrackingDeleteWrapper(resources.Account, DeleteAccount),
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Account, customdiff.All(
 			ComputedIfAnyAttributeChanged(accountSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: accountSchema,
 		Importer: &schema.ResourceImporter{
@@ -228,9 +232,8 @@ func Account() *schema.Resource {
 }
 
 // CreateAccount implements schema.CreateFunc.
-func CreateAccount(d *schema.ResourceData, meta interface{}) error {
+func CreateAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	name := d.Get("name").(string)
 	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
@@ -265,7 +268,7 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 		// For organizations that have accounts in multiple region groups, returns <region_group>.<region> so we need to split on "."
 		currentRegion, err := client.ContextFunctions.CurrentRegion(ctx)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		regionParts := strings.Split(currentRegion, ".")
 		if len(regionParts) == 2 {
@@ -278,7 +281,7 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 		// For organizations that have accounts in multiple region groups, returns <region_group>.<region> so we need to split on "."
 		currentRegion, err := client.ContextFunctions.CurrentRegion(ctx)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		regionParts := strings.Split(currentRegion, ".")
 		if len(regionParts) == 2 {
@@ -293,7 +296,7 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.Accounts.Create(ctx, objectIdentifier, createOptions)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	var account *sdk.Account
@@ -306,17 +309,16 @@ func CreateAccount(d *schema.ResourceData, meta interface{}) error {
 		return nil, true
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(account.AccountLocator))
-	return ReadAccount(d, meta)
+	return ReadAccount(ctx, d, meta)
 }
 
 // ReadAccount implements schema.ReadFunc.
-func ReadAccount(d *schema.ResourceData, meta interface{}) error {
+func ReadAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
@@ -331,42 +333,42 @@ func ReadAccount(d *schema.ResourceData, meta interface{}) error {
 		return nil, true
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err = d.Set("name", acc.AccountName); err != nil {
-		return fmt.Errorf("error setting name: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting name: %w", err))
 	}
 
 	if err = d.Set("edition", acc.Edition); err != nil {
-		return fmt.Errorf("error setting edition: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting edition: %w", err))
 	}
 
 	if err = d.Set("region_group", acc.RegionGroup); err != nil {
-		return fmt.Errorf("error setting region_group: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting region_group: %w", err))
 	}
 
 	if err = d.Set("region", acc.SnowflakeRegion); err != nil {
-		return fmt.Errorf("error setting region: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting region: %w", err))
 	}
 
 	if err = d.Set("comment", acc.Comment); err != nil {
-		return fmt.Errorf("error setting comment: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting comment: %w", err))
 	}
 
 	if err = d.Set("is_org_admin", acc.IsOrgAdmin); err != nil {
-		return fmt.Errorf("error setting is_org_admin: %w", err)
+		return diag.FromErr(fmt.Errorf("error setting is_org_admin: %w", err))
 	}
 
 	return nil
 }
 
 // UpdateAccount implements schema.UpdateFunc.
-func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
+func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	/*
 		todo: comments may eventually work again for accounts, so this can be uncommented when that happens
 		client := meta.(*provider.Context).Client
@@ -392,12 +394,11 @@ func UpdateAccount(d *schema.ResourceData, meta interface{}) error {
 }
 
 // DeleteAccount implements schema.DeleteFunc.
-func DeleteAccount(d *schema.ResourceData, meta interface{}) error {
+func DeleteAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	gracePeriodInDays := d.Get("grace_period_in_days").(int)
 	err := client.Accounts.Drop(ctx, helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier), gracePeriodInDays, &sdk.DropAccountOptions{
 		IfExists: sdk.Bool(true),
 	})
-	return err
+	return diag.FromErr(err)
 }

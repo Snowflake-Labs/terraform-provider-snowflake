@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -31,20 +34,19 @@ var userPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 // UserPasswordPolicyAttachment returns a pointer to the resource representing a user password policy attachment.
 func UserPasswordPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Description: "Specifies the password policy to use for a certain user.",
-		Create:      CreateUserPasswordPolicyAttachment,
-		Read:        ReadUserPasswordPolicyAttachment,
-		Delete:      DeleteUserPasswordPolicyAttachment,
-		Schema:      userPasswordPolicyAttachmentSchema,
+		Description:   "Specifies the password policy to use for a certain user.",
+		CreateContext: TrackingCreateWrapper(resources.UserPasswordPolicyAttachment, CreateUserPasswordPolicyAttachment),
+		ReadContext:   TrackingReadWrapper(resources.UserPasswordPolicyAttachment, ReadUserPasswordPolicyAttachment),
+		DeleteContext: TrackingDeleteWrapper(resources.UserPasswordPolicyAttachment, DeleteUserPasswordPolicyAttachment),
+		Schema:        userPasswordPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
+func CreateUserPasswordPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
 	passwordPolicy := sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(d.Get("password_policy_name").(string))
@@ -55,28 +57,27 @@ func CreateUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error 
 		},
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeResourceIdentifier(userName.FullyQualifiedName(), passwordPolicy.FullyQualifiedName()))
 
-	return ReadUserPasswordPolicyAttachment(d, meta)
+	return ReadUserPasswordPolicyAttachment(ctx, d, meta)
 }
 
-func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
+func ReadUserPasswordPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	parts := helpers.ParseResourceIdentifier(d.Id())
 	if len(parts) != 2 {
-		return fmt.Errorf("required id format 'user_name|password_policy_name', but got: '%s'", d.Id())
+		return diag.FromErr(fmt.Errorf("required id format 'user_name|password_policy_name', but got: '%s'", d.Id()))
 	}
 
 	// Note: there is no alphanumeric id for an attachment, so we retrieve the password policies attached to a certain user.
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(parts[0])
 	policyReferences, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(userName, sdk.PolicyEntityDomainUser))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	passwordPolicyReferences := make([]sdk.PolicyReference, 0)
@@ -88,7 +89,7 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 
 	// Note: this should never happen, but just in case: so far, Snowflake only allows one Password Policy per user.
 	if len(passwordPolicyReferences) > 1 {
-		return fmt.Errorf("internal error: multiple policy references attached to a user. This should never happen")
+		return diag.FromErr(fmt.Errorf("internal error: multiple policy references attached to a user. This should never happen"))
 	}
 
 	// Note: this means the resource has been deleted outside of Terraform.
@@ -98,7 +99,7 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 	}
 
 	if err := d.Set("user_name", userName.Name()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set(
 		"password_policy_name",
@@ -107,15 +108,14 @@ func ReadUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
 			*passwordPolicyReferences[0].PolicySchema,
 			passwordPolicyReferences[0].PolicyName,
 		).FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
-func DeleteUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error {
+func DeleteUserPasswordPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	userName := sdk.NewAccountObjectIdentifierFromFullyQualifiedName(d.Get("user_name").(string))
 
@@ -125,7 +125,7 @@ func DeleteUserPasswordPolicyAttachment(d *schema.ResourceData, meta any) error 
 		},
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

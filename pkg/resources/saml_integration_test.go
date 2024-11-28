@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 
@@ -41,10 +42,10 @@ func TestSAMLIntegrationCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadSAMLIntegration(mock)
 
-		err := resources.CreateSAMLIntegration(d, &internalprovider.Context{
+		diags := resources.CreateSAMLIntegration(context.Background(), d, &internalprovider.Context{
 			Client: sdk.NewClientFromDB(db),
 		})
-		r.NoError(err)
+		r.Empty(diags)
 	})
 }
 
@@ -56,10 +57,10 @@ func TestSAMLIntegrationRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadSAMLIntegration(mock)
 
-		err := resources.ReadSAMLIntegration(d, &internalprovider.Context{
+		diags := resources.ReadSAMLIntegration(context.Background(), d, &internalprovider.Context{
 			Client: sdk.NewClientFromDB(db),
 		})
-		r.NoError(err)
+		r.Empty(diags)
 	})
 }
 
@@ -70,10 +71,10 @@ func TestSAMLIntegrationDelete(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP SECURITY INTEGRATION "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := resources.DeleteSAMLIntegration(d, &internalprovider.Context{
+		diags := resources.DeleteSAMLIntegration(context.Background(), d, &internalprovider.Context{
 			Client: sdk.NewClientFromDB(db),
 		})
-		r.NoError(err)
+		r.Empty(diags)
 	})
 }
 

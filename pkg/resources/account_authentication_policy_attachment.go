@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -26,9 +29,9 @@ func AccountAuthenticationPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description: "Specifies the authentication policy to use for the current account. To set the authentication policy of a different account, use a provider alias.",
 
-		Create: CreateAccountAuthenticationPolicyAttachment,
-		Read:   ReadAccountAuthenticationPolicyAttachment,
-		Delete: DeleteAccountAuthenticationPolicyAttachment,
+		CreateContext: TrackingCreateWrapper(resources.AccountAuthenticationPolicyAttachment, CreateAccountAuthenticationPolicyAttachment),
+		ReadContext:   TrackingReadWrapper(resources.AccountAuthenticationPolicyAttachment, ReadAccountAuthenticationPolicyAttachment),
+		DeleteContext: TrackingDeleteWrapper(resources.AccountAuthenticationPolicyAttachment, DeleteAccountAuthenticationPolicyAttachment),
 
 		Schema: accountAuthenticationPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{
@@ -38,13 +41,12 @@ func AccountAuthenticationPolicyAttachment() *schema.Resource {
 }
 
 // CreateAccountAuthenticationPolicyAttachment implements schema.CreateFunc.
-func CreateAccountAuthenticationPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+func CreateAccountAuthenticationPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	authenticationPolicy, ok := sdk.NewObjectIdentifierFromFullyQualifiedName(d.Get("authentication_policy").(string)).(sdk.SchemaObjectIdentifier)
 	if !ok {
-		return fmt.Errorf("authentication_policy %s is not a valid authentication policy qualified name, expected format: `\"db\".\"schema\".\"policy\"`", d.Get("authentication_policy"))
+		return diag.FromErr(fmt.Errorf("authentication_policy %s is not a valid authentication policy qualified name, expected format: `\"db\".\"schema\".\"policy\"`", d.Get("authentication_policy")))
 	}
 
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
@@ -53,27 +55,26 @@ func CreateAccountAuthenticationPolicyAttachment(d *schema.ResourceData, meta in
 		},
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(authenticationPolicy))
 
-	return ReadAccountAuthenticationPolicyAttachment(d, meta)
+	return ReadAccountAuthenticationPolicyAttachment(ctx, d, meta)
 }
 
-func ReadAccountAuthenticationPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+func ReadAccountAuthenticationPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	authenticationPolicy := helpers.DecodeSnowflakeID(d.Id())
 	if err := d.Set("authentication_policy", authenticationPolicy.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
 // DeleteAccountAuthenticationPolicyAttachment implements schema.DeleteFunc.
-func DeleteAccountAuthenticationPolicyAttachment(d *schema.ResourceData, meta interface{}) error {
+func DeleteAccountAuthenticationPolicyAttachment(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 		Unset: &sdk.AccountUnset{
@@ -81,7 +82,7 @@ func DeleteAccountAuthenticationPolicyAttachment(d *schema.ResourceData, meta in
 		},
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

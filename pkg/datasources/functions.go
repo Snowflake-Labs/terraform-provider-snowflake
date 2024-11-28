@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -64,7 +66,7 @@ var functionsSchema = map[string]*schema.Schema{
 
 func Functions() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadContextFunctions,
+		ReadContext: TrackingReadWrapper(datasources.Functions, ReadContextFunctions),
 		Schema:      functionsSchema,
 	}
 }

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -108,20 +110,20 @@ func Tag() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 
-		CreateContext: CreateContextTag,
-		ReadContext:   ReadContextTag,
-		UpdateContext: UpdateContextTag,
-		DeleteContext: DeleteContextTag,
+		CreateContext: TrackingCreateWrapper(resources.Tag, CreateContextTag),
+		ReadContext:   TrackingReadWrapper(resources.Tag, ReadContextTag),
+		UpdateContext: TrackingUpdateWrapper(resources.Tag, UpdateContextTag),
+		DeleteContext: TrackingDeleteWrapper(resources.Tag, DeleteContextTag),
 		Description:   "Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Tag, customdiff.All(
 			ComputedIfAnyAttributeChanged(tagSchema, ShowOutputAttributeName, "name", "comment", "allowed_values"),
 			ComputedIfAnyAttributeChanged(tagSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: tagSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.SchemaObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.Tag, ImportName[sdk.SchemaObjectIdentifier]),
 		},
 
 		StateUpgraders: []schema.StateUpgrader{

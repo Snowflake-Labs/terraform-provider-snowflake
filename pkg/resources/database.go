@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -90,21 +92,21 @@ var databaseSchema = map[string]*schema.Schema{
 
 func Database() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateDatabase,
-		UpdateContext: UpdateDatabase,
-		ReadContext:   ReadDatabase,
-		DeleteContext: DeleteDatabase,
+		CreateContext: TrackingCreateWrapper(resources.Database, CreateDatabase),
+		UpdateContext: TrackingUpdateWrapper(resources.Database, UpdateDatabase),
+		ReadContext:   TrackingReadWrapper(resources.Database, ReadDatabase),
+		DeleteContext: TrackingDeleteWrapper(resources.Database, DeleteDatabase),
 		Description:   "Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.",
 
 		Schema: collections.MergeMaps(databaseSchema, databaseParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.Database, ImportName[sdk.AccountObjectIdentifier]),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Database, customdiff.All(
 			ComputedIfAnyAttributeChanged(databaseSchema, FullyQualifiedNameAttributeName, "name"),
 			databaseParametersCustomDiff,
-		),
+		)),
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{

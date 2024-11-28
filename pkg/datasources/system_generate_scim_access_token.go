@@ -1,9 +1,13 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
@@ -28,13 +32,13 @@ var systemGenerateSCIMAccesstokenSchema = map[string]*schema.Schema{
 
 func SystemGenerateSCIMAccessToken() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadSystemGenerateSCIMAccessToken,
-		Schema: systemGenerateSCIMAccesstokenSchema,
+		ReadContext: TrackingReadWrapper(datasources.SystemGenerateScimAccessToken, ReadSystemGenerateSCIMAccessToken),
+		Schema:      systemGenerateSCIMAccesstokenSchema,
 	}
 }
 
 // ReadSystemGetAWSSNSIAMPolicy implements schema.ReadFunc.
-func ReadSystemGenerateSCIMAccessToken(d *schema.ResourceData, meta interface{}) error {
+func ReadSystemGenerateSCIMAccessToken(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 
@@ -57,5 +61,5 @@ func ReadSystemGenerateSCIMAccessToken(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(integrationName)
-	return d.Set("access_token", accessToken.Token)
+	return diag.FromErr(d.Set("access_token", accessToken.Token))
 }

@@ -6,6 +6,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
@@ -84,9 +87,9 @@ var managedAccountSchema = map[string]*schema.Schema{
 // ManagedAccount returns a pointer to the resource representing a managed account.
 func ManagedAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateManagedAccount,
-		Read:   ReadManagedAccount,
-		Delete: DeleteManagedAccount,
+		CreateContext: TrackingCreateWrapper(resources.ManagedAccount, CreateManagedAccount),
+		ReadContext:   TrackingReadWrapper(resources.ManagedAccount, ReadManagedAccount),
+		DeleteContext: TrackingDeleteWrapper(resources.ManagedAccount, DeleteManagedAccount),
 
 		Schema: managedAccountSchema,
 		Importer: &schema.ResourceImporter{
@@ -96,9 +99,8 @@ func ManagedAccount() *schema.Resource {
 }
 
 // CreateManagedAccount implements schema.CreateFunc.
-func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
+func CreateManagedAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -115,19 +117,18 @@ func CreateManagedAccount(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.ManagedAccounts.Create(ctx, createRequest)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	return ReadManagedAccount(d, meta)
+	return ReadManagedAccount(ctx, d, meta)
 }
 
 // ReadManagedAccount implements schema.ReadFunc.
-func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
+func ReadManagedAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	// We have to wait during the first read, since the locator takes some time to appear.
@@ -144,60 +145,59 @@ func ReadManagedAccount(d *schema.ResourceData, meta interface{}) error {
 		return nil, true
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("name", managedAccount.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("cloud", managedAccount.Cloud); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("region", managedAccount.Region); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("locator", managedAccount.Locator); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("created_on", managedAccount.CreatedOn); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("url", managedAccount.URL); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if managedAccount.IsReader {
 		if err := d.Set("type", "READER"); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
-		return fmt.Errorf("unable to determine the account type")
+		return diag.FromErr(fmt.Errorf("unable to determine the account type"))
 	}
 
 	if err := d.Set("comment", managedAccount.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
 // DeleteManagedAccount implements schema.DeleteFunc.
-func DeleteManagedAccount(d *schema.ResourceData, meta interface{}) error {
+func DeleteManagedAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	err := client.ManagedAccounts.Drop(ctx, sdk.NewDropManagedAccountRequest(objectIdentifier))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

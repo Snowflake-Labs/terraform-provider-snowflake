@@ -3,7 +3,11 @@ package testint
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -47,6 +51,23 @@ func TestInt_DynamicTableCreateAndDrop(t *testing.T) {
 		require.Equal(t, testClientHelper().Ids.WarehouseId().Name(), dynamicTableById.Warehouse)
 		require.Equal(t, *targetLag.MaximumDuration, dynamicTableById.TargetLag)
 		assert.Equal(t, "ROLE", dynamicTableById.OwnerRoleType)
+	})
+
+	t.Run("create with usage tracking comment", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		plainQuery := fmt.Sprintf("SELECT id FROM %s", tableTest.ID().FullyQualifiedName())
+		query, err := tracking.AppendMetadata(plainQuery, tracking.NewVersionedResourceMetadata(resources.DynamicTable, tracking.CreateOperation))
+		require.NoError(t, err)
+
+		err = client.DynamicTables.Create(ctx, sdk.NewCreateDynamicTableRequest(id, testClientHelper().Ids.WarehouseId(), sdk.TargetLag{
+			MaximumDuration: sdk.String("2 minutes"),
+		}, query))
+		require.NoError(t, err)
+
+		dynamicTable, err := client.DynamicTables.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assert.Equal(t, fmt.Sprintf("CREATE DYNAMIC TABLE %s lag = '2 minutes' refresh_mode = 'AUTO' initialize = 'ON_CREATE' warehouse = %s AS %s", id.FullyQualifiedName(), testClientHelper().Ids.WarehouseId().FullyQualifiedName(), plainQuery), dynamicTable.Text)
 	})
 
 	t.Run("test complete with target lag", func(t *testing.T) {

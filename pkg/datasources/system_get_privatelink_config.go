@@ -1,9 +1,13 @@
 package datasources
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -69,13 +73,13 @@ var systemGetPrivateLinkConfigSchema = map[string]*schema.Schema{
 
 func SystemGetPrivateLinkConfig() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadSystemGetPrivateLinkConfig,
-		Schema: systemGetPrivateLinkConfigSchema,
+		ReadContext: TrackingReadWrapper(datasources.SystemGetPrivateLinkConfig, ReadSystemGetPrivateLinkConfig),
+		Schema:      systemGetPrivateLinkConfigSchema,
 	}
 }
 
 // ReadSystemGetPrivateLinkConfig implements schema.ReadFunc.
-func ReadSystemGetPrivateLinkConfig(d *schema.ResourceData, meta interface{}) error {
+func ReadSystemGetPrivateLinkConfig(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 
@@ -100,56 +104,56 @@ func ReadSystemGetPrivateLinkConfig(d *schema.ResourceData, meta interface{}) er
 	d.SetId(config.AccountName)
 	accNameErr := d.Set("account_name", config.AccountName)
 	if accNameErr != nil {
-		return accNameErr
+		return diag.FromErr(accNameErr)
 	}
 	accURLErr := d.Set("account_url", config.AccountURL)
 	if accURLErr != nil {
-		return accURLErr
+		return diag.FromErr(accURLErr)
 	}
 	ocspURLErr := d.Set("ocsp_url", config.OCSPURL)
 	if ocspURLErr != nil {
-		return ocspURLErr
+		return diag.FromErr(ocspURLErr)
 	}
 
 	if config.AwsVpceID != "" {
 		awsVpceIDErr := d.Set("aws_vpce_id", config.AwsVpceID)
 		if awsVpceIDErr != nil {
-			return awsVpceIDErr
+			return diag.FromErr(awsVpceIDErr)
 		}
 	}
 
 	if config.AzurePrivateLinkServiceID != "" {
 		azurePlsIDErr := d.Set("azure_pls_id", config.AzurePrivateLinkServiceID)
 		if azurePlsIDErr != nil {
-			return azurePlsIDErr
+			return diag.FromErr(azurePlsIDErr)
 		}
 	}
 
 	if config.InternalStage != "" {
 		intStgErr := d.Set("internal_stage", config.InternalStage)
 		if intStgErr != nil {
-			return intStgErr
+			return diag.FromErr(intStgErr)
 		}
 	}
 
 	if config.SnowsightURL != "" {
 		snowSigURLErr := d.Set("snowsight_url", config.SnowsightURL)
 		if snowSigURLErr != nil {
-			return snowSigURLErr
+			return diag.FromErr(snowSigURLErr)
 		}
 	}
 
 	if config.RegionlessSnowsightURL != "" {
 		reglssSnowURLErr := d.Set("regionless_snowsight_url", config.RegionlessSnowsightURL)
 		if reglssSnowURLErr != nil {
-			return reglssSnowURLErr
+			return diag.FromErr(reglssSnowURLErr)
 		}
 	}
 
 	if config.RegionlessAccountURL != "" {
 		reglssAccURLErr := d.Set("regionless_account_url", config.RegionlessAccountURL)
 		if reglssAccURLErr != nil {
-			return reglssAccURLErr
+			return diag.FromErr(reglssAccURLErr)
 		}
 	}
 

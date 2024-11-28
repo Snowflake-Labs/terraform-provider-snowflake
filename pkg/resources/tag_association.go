@@ -16,6 +16,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -69,11 +70,12 @@ func TagAssociation() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 
-		CreateContext: CreateContextTagAssociation,
-		ReadContext:   ReadContextTagAssociation,
-		UpdateContext: UpdateContextTagAssociation,
-		DeleteContext: DeleteContextTagAssociation,
-		Description:   "Resource used to manage tag associations. For more information, check [object tagging documentation](https://docs.snowflake.com/en/user-guide/object-tagging).",
+		CreateContext: TrackingCreateWrapper(resources.TagAssociation, CreateContextTagAssociation),
+		ReadContext:   TrackingReadWrapper(resources.TagAssociation, ReadContextTagAssociation),
+		UpdateContext: TrackingUpdateWrapper(resources.TagAssociation, UpdateContextTagAssociation),
+		DeleteContext: TrackingDeleteWrapper(resources.TagAssociation, DeleteContextTagAssociation),
+
+		Description: "Resource used to manage tag associations. For more information, check [object tagging documentation](https://docs.snowflake.com/en/user-guide/object-tagging).",
 
 		Schema: tagAssociationSchema,
 		Importer: &schema.ResourceImporter{
