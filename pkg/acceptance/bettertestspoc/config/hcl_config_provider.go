@@ -79,9 +79,18 @@ func fixBlockArguments(s string) (string, error) {
 	return argumentRegex.ReplaceAllString(s, `$1$2$3$4`), nil
 }
 
+// TODO [SNOW-1501905]: fix new lines replacement totally in this method, consider better placeholders (now there can't be multilinekeys for private key)
 func fixMultilinePrivateKey(s string) (string, error) {
-	argumentRegex := regexp.MustCompile(`"SF_TF_TEST_MULTILINE_PLACEHOLDER(.*)SF_TF_TEST_MULTILINE_PLACEHOLDER"`)
-	return argumentRegex.ReplaceAllString(s, `<<EOT\n${1}EOT`), nil
+	argumentRegex := regexp.MustCompile(fmt.Sprintf(`"%[1]s(.*)%[1]s"`, SnowflakeProviderConfigPrivateKey))
+	submatches := argumentRegex.FindStringSubmatch(s)
+	if len(submatches) < 1 {
+		return s, nil
+	} else {
+		return argumentRegex.ReplaceAllString(s, fmt.Sprintf(`<<EOT
+%s
+EOT`, strings.ReplaceAll(submatches[1], `\n`, `
+`))), nil
+	}
 }
 
 // Conversion to HCL using hcl v1  does not unquote arguments.

@@ -6,6 +6,7 @@ import (
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -34,7 +35,7 @@ func (m *SnowflakeModel) WithAuthenticatorType(authenticationType sdk.Authentica
 }
 
 func (m *SnowflakeModel) WithPrivateKeyMultiline(privateKey string) *SnowflakeModel {
-	return m.WithPrivateKey(fmt.Sprintf(`SF_TF_TEST_MULTILINE_PLACEHOLDER%sSF_TF_TEST_MULTILINE_PLACEHOLDER`, privateKey))
+	return m.WithPrivateKey(fmt.Sprintf(`%[1]s%[2]s%[1]s`, config.SnowflakeProviderConfigPrivateKey, privateKey))
 }
 
 func (m *SnowflakeModel) AllFields(profile, orgName, accountName, user, password string) *SnowflakeModel {
