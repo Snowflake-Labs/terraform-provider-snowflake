@@ -33,7 +33,7 @@ func TestAcc_Provider_OktaAuth(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfigWithAuthenticator(t, testprofiles.Okta, sdk.AuthenticationTypeOkta),
+				Config: providerConfigWithAuthenticator(t, Okta, sdk.AuthenticationTypeOkta),
 			},
 		},
 	})
@@ -77,11 +77,11 @@ func TestAcc_Provider_UsernamePasswordMfaAuthWithPasscode(t *testing.T) {
 		Steps: []resource.TestStep{
 			// ensure MFA is checked here - accept access to keychain on your device
 			{
-				Config: providerConfigWithAuthenticator(t, testprofiles.DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
+				Config: providerConfigWithAuthenticator(t, DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
 			},
 			// check that MFA login is cached - this step should not require manual action
 			{
-				Config: providerConfigWithAuthenticator(t, testprofiles.DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
+				Config: providerConfigWithAuthenticator(t, DefaultWithPasscode, sdk.AuthenticationTypeUsernamePasswordMfa),
 			},
 		},
 	})

@@ -29,6 +29,10 @@ func (c *IdsGenerator) WarehouseId() sdk.AccountObjectIdentifier {
 	return sdk.NewAccountObjectIdentifier(c.context.warehouse)
 }
 
+func (c *IdsGenerator) SnowflakeWarehouseId() sdk.AccountObjectIdentifier {
+	return sdk.NewAccountObjectIdentifier("SNOWFLAKE")
+}
+
 func (c *IdsGenerator) AccountIdentifierWithLocator() sdk.AccountIdentifier {
 	return sdk.NewAccountIdentifierFromAccountLocator(c.context.client.GetAccountLocator())
 }

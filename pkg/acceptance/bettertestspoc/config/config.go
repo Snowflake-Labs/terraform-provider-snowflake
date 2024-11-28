@@ -22,7 +22,6 @@ func ResourceFromModel(t *testing.T, model ResourceModel) string {
 
 	resourceJson, err := DefaultJsonConfigProvider.ResourceJsonFromModel(model)
 	require.NoError(t, err)
-	t.Logf("Generated json:\n%s", resourceJson)
 
 	hcl, err := DefaultHclConfigProvider.HclFromJson(resourceJson)
 	require.NoError(t, err)
@@ -41,7 +40,6 @@ func DatasourceFromModel(t *testing.T, model DatasourceModel) string {
 
 	datasourceJson, err := DefaultJsonConfigProvider.DatasourceJsonFromModel(model)
 	require.NoError(t, err)
-	t.Logf("Generated json:\n%s", datasourceJson)
 
 	hcl, err := DefaultHclConfigProvider.HclFromJson(datasourceJson)
 	require.NoError(t, err)
@@ -60,13 +58,11 @@ func ProviderFromModel(t *testing.T, model ProviderModel) string {
 
 	providerJson, err := DefaultJsonConfigProvider.ProviderJsonFromModel(model)
 	require.NoError(t, err)
-	t.Logf("Generated json:\n%s", providerJson)
 
 	hcl, err := DefaultHclConfigProvider.HclFromJson(providerJson)
 	require.NoError(t, err)
 	hcl, err = revertEqualSignForMapTypeAttributes(hcl)
 	require.NoError(t, err)
-	t.Logf("Generated config:\n%s", hcl)
 
 	return hcl
 }
