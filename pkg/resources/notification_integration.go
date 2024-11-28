@@ -6,6 +6,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -151,10 +154,10 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 // NotificationIntegration returns a pointer to the resource representing a notification integration.
 func NotificationIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateNotificationIntegration,
-		Read:   ReadNotificationIntegration,
-		Update: UpdateNotificationIntegration,
-		Delete: DeleteNotificationIntegration,
+		CreateContext: TrackingCreateWrapper(resources.NotificationIntegration, CreateNotificationIntegration),
+		ReadContext:   TrackingReadWrapper(resources.NotificationIntegration, ReadNotificationIntegration),
+		UpdateContext: TrackingUpdateWrapper(resources.NotificationIntegration, UpdateNotificationIntegration),
+		DeleteContext: TrackingDeleteWrapper(resources.NotificationIntegration, DeleteNotificationIntegration),
 
 		Schema: notificationIntegrationSchema,
 		Importer: &schema.ResourceImporter{
@@ -164,9 +167,8 @@ func NotificationIntegration() *schema.Resource {
 }
 
 // CreateNotificationIntegration implements schema.CreateFunc.
-func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
+func CreateNotificationIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	name := d.Get("name").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
@@ -183,11 +185,11 @@ func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	case "AWS_SNS":
 		topic, ok := d.GetOk("aws_sns_topic_arn")
 		if !ok {
-			return fmt.Errorf("if you use AWS_SNS provider you must specify an aws_sns_topic_arn")
+			return diag.FromErr(fmt.Errorf("if you use AWS_SNS provider you must specify an aws_sns_topic_arn"))
 		}
 		role, ok := d.GetOk("aws_sns_role_arn")
 		if !ok {
-			return fmt.Errorf("if you use AWS_SNS provider you must specify an aws_sns_role_arn")
+			return diag.FromErr(fmt.Errorf("if you use AWS_SNS provider you must specify an aws_sns_role_arn"))
 		}
 		createRequest.WithPushNotificationParams(
 			sdk.NewPushNotificationParamsRequest().WithAmazonPushParams(sdk.NewAmazonPushParamsRequest(topic.(string), role.(string))),
@@ -206,63 +208,63 @@ func CreateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	case "AZURE_STORAGE_QUEUE":
 		uri, ok := d.GetOk("azure_storage_queue_primary_uri")
 		if !ok {
-			return fmt.Errorf("if you use AZURE_STORAGE_QUEUE provider you must specify an azure_storage_queue_primary_uri")
+			return diag.FromErr(fmt.Errorf("if you use AZURE_STORAGE_QUEUE provider you must specify an azure_storage_queue_primary_uri"))
 		}
 		tenantId, ok := d.GetOk("azure_tenant_id")
 		if !ok {
-			return fmt.Errorf("if you use AZURE_STORAGE_QUEUE provider you must specify an azure_tenant_id")
+			return diag.FromErr(fmt.Errorf("if you use AZURE_STORAGE_QUEUE provider you must specify an azure_tenant_id"))
 		}
 		createRequest.WithAutomatedDataLoadsParams(
 			sdk.NewAutomatedDataLoadsParamsRequest().WithAzureAutoParams(sdk.NewAzureAutoParamsRequest(uri.(string), tenantId.(string))),
 		)
 	default:
-		return fmt.Errorf("unexpected provider %v", notificationProvider)
+		return diag.FromErr(fmt.Errorf("unexpected provider %v", notificationProvider))
 	}
 
 	err := client.NotificationIntegrations.Create(ctx, createRequest)
 	if err != nil {
-		return fmt.Errorf("error creating notification integration: %w", err)
+		return diag.FromErr(fmt.Errorf("error creating notification integration: %w", err))
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	return ReadNotificationIntegration(d, meta)
+	return ReadNotificationIntegration(ctx, d, meta)
 }
 
 // ReadNotificationIntegration implements schema.ReadFunc.
-func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
+func ReadNotificationIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	integration, err := client.NotificationIntegrations.ShowByID(ctx, id)
 	if err != nil {
 		log.Printf("[DEBUG] notification integration (%s) not found", d.Id())
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Note: category must be NOTIFICATION or something is broken
 	if c := integration.Category; c != "NOTIFICATION" {
-		return fmt.Errorf("expected %v to be a NOTIFICATION integration, got %v", id, c)
+		return diag.FromErr(fmt.Errorf("expected %v to be a NOTIFICATION integration, got %v", id, c))
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("name", integration.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", integration.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("created_on", integration.CreatedOn.String()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("enabled", integration.Enabled); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Snowflake returns "QUEUE - AZURE_STORAGE_QUEUE" instead of simple "QUEUE" as a type
@@ -270,13 +272,13 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 	typeParts := strings.Split(integration.NotificationType, "-")
 	parsedType := strings.TrimSpace(typeParts[0])
 	if err := d.Set("type", parsedType); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Some properties come from the DESCRIBE INTEGRATION call
 	integrationProperties, err := client.NotificationIntegrations.Describe(ctx, id)
 	if err != nil {
-		return fmt.Errorf("could not describe notification integration: %w", err)
+		return diag.FromErr(fmt.Errorf("could not describe notification integration: %w", err))
 	}
 	for _, property := range integrationProperties {
 		name := property.Name
@@ -286,72 +288,72 @@ func ReadNotificationIntegration(d *schema.ResourceData, meta interface{}) error
 			// We set this using the SHOW INTEGRATION call so let's ignore it here
 		case "DIRECTION":
 			if err := d.Set("direction", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "NOTIFICATION_PROVIDER":
 			if err := d.Set("notification_provider", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "AZURE_STORAGE_QUEUE_PRIMARY_URI":
 			if err := d.Set("azure_storage_queue_primary_uri", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			// NOTIFICATION_PROVIDER is not returned for azure automated data load, so we set it manually in such a case
 			if err := d.Set("notification_provider", "AZURE_STORAGE_QUEUE"); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "AZURE_TENANT_ID":
 			if err := d.Set("azure_tenant_id", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "AWS_SNS_TOPIC_ARN":
 			if err := d.Set("aws_sns_topic_arn", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "AWS_SNS_ROLE_ARN":
 			if err := d.Set("aws_sns_role_arn", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "SF_AWS_EXTERNAL_ID":
 			if err := d.Set("aws_sns_external_id", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "SF_AWS_IAM_USER_ARN":
 			if err := d.Set("aws_sns_iam_user_arn", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "GCP_PUBSUB_SUBSCRIPTION_NAME":
 			if err := d.Set("gcp_pubsub_subscription_name", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			// NOTIFICATION_PROVIDER is not returned for gcp, so we set it manually in such a case
 			if err := d.Set("notification_provider", "GCP_PUBSUB"); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "GCP_PUBSUB_TOPIC_NAME":
 			if err := d.Set("gcp_pubsub_topic_name", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			// NOTIFICATION_PROVIDER is not returned for gcp, so we set it manually in such a case
 			if err := d.Set("notification_provider", "GCP_PUBSUB"); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		case "GCP_PUBSUB_SERVICE_ACCOUNT":
 			if err := d.Set("gcp_pubsub_service_account", value); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		default:
 			log.Printf("[WARN] unexpected property %v returned from Snowflake", name)
 		}
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
 // UpdateNotificationIntegration implements schema.UpdateFunc.
-func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
+func UpdateNotificationIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	var runSetStatement bool
@@ -379,28 +381,28 @@ func UpdateNotificationIntegration(d *schema.ResourceData, meta interface{}) err
 	case "AZURE_STORAGE_QUEUE":
 		log.Printf("[WARN] all AZURE_STORAGE_QUEUE properties should recreate the resource")
 	default:
-		return fmt.Errorf("unexpected provider %v", notificationProvider)
+		return diag.FromErr(fmt.Errorf("unexpected provider %v", notificationProvider))
 	}
 
 	if runSetStatement {
 		err := client.NotificationIntegrations.Alter(ctx, sdk.NewAlterNotificationIntegrationRequest(id).WithSet(setRequest))
 		if err != nil {
-			return fmt.Errorf("error updating notification integration: %w", err)
+			return diag.FromErr(fmt.Errorf("error updating notification integration: %w", err))
 		}
 	}
 
-	return ReadNotificationIntegration(d, meta)
+	return ReadNotificationIntegration(ctx, d, meta)
 }
 
 // DeleteNotificationIntegration implements schema.DeleteFunc.
-func DeleteNotificationIntegration(d *schema.ResourceData, meta interface{}) error {
+func DeleteNotificationIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
 	err := client.NotificationIntegrations.Drop(ctx, sdk.NewDropNotificationIntegrationRequest(id))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

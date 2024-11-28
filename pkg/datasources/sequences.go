@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -51,14 +54,13 @@ var sequencesSchema = map[string]*schema.Schema{
 
 func Sequences() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadSequences,
-		Schema: sequencesSchema,
+		ReadContext: TrackingReadWrapper(datasources.Sequences, ReadSequences),
+		Schema:      sequencesSchema,
 	}
 }
 
-func ReadSequences(d *schema.ResourceData, meta interface{}) error {
+func ReadSequences(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
@@ -67,7 +69,7 @@ func ReadSequences(d *schema.ResourceData, meta interface{}) error {
 	})
 	seqs, err := client.Sequences.Show(ctx, req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	sequences := []map[string]interface{}{}
 	for _, seq := range seqs {
@@ -81,5 +83,5 @@ func ReadSequences(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
-	return d.Set("sequences", sequences)
+	return diag.FromErr(d.Set("sequences", sequences))
 }

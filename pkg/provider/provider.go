@@ -609,6 +609,7 @@ func getDataSources() map[string]*schema.Resource {
 		"snowflake_system_get_privatelink_config":      datasources.SystemGetPrivateLinkConfig(),
 		"snowflake_system_get_snowflake_platform_info": datasources.SystemGetSnowflakePlatformInfo(),
 		"snowflake_tables":                             datasources.Tables(),
+		"snowflake_tags":                               datasources.Tags(),
 		"snowflake_tasks":                              datasources.Tasks(),
 		"snowflake_users":                              datasources.Users(),
 		"snowflake_views":                              datasources.Views(),

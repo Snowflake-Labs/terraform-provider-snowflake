@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -108,15 +110,15 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 // AuthenticationPolicy returns a pointer to the resource representing an authentication policy.
 func AuthenticationPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextAuthenticationPolicy,
-		ReadContext:   ReadContextAuthenticationPolicy,
-		UpdateContext: UpdateContextAuthenticationPolicy,
-		DeleteContext: DeleteContextAuthenticationPolicy,
+		CreateContext: TrackingCreateWrapper(resources.AuthenticationPolicy, CreateContextAuthenticationPolicy),
+		ReadContext:   TrackingReadWrapper(resources.AuthenticationPolicy, ReadContextAuthenticationPolicy),
+		UpdateContext: TrackingUpdateWrapper(resources.AuthenticationPolicy, UpdateContextAuthenticationPolicy),
+		DeleteContext: TrackingDeleteWrapper(resources.AuthenticationPolicy, DeleteContextAuthenticationPolicy),
 		Description:   "Resource used to manage authentication policy objects. For more information, check [authentication policy documentation](https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy).",
 
 		Schema: authenticationPolicySchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportAuthenticationPolicy,
+			StateContext: TrackingImportWrapper(resources.AuthenticationPolicy, ImportAuthenticationPolicy),
 		},
 	}
 }
@@ -489,6 +491,7 @@ func DeleteContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	// TODO(SNOW-1818849): unassign policies before dropping
 	if err := client.AuthenticationPolicies.Drop(ctx, sdk.NewDropAuthenticationPolicyRequest(id).WithIfExists(true)); err != nil {
 		return diag.FromErr(err)
 	}

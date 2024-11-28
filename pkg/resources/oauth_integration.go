@@ -1,10 +1,14 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -86,10 +90,10 @@ var oauthIntegrationSchema = map[string]*schema.Schema{
 // OAuthIntegration returns a pointer to the resource representing an OAuth integration.
 func OAuthIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create:             CreateOAuthIntegration,
-		Read:               ReadOAuthIntegration,
-		Update:             UpdateOAuthIntegration,
-		Delete:             DeleteOAuthIntegration,
+		CreateContext:      TrackingCreateWrapper(resources.OauthIntegration, CreateOAuthIntegration),
+		ReadContext:        TrackingReadWrapper(resources.OauthIntegration, ReadOAuthIntegration),
+		UpdateContext:      TrackingUpdateWrapper(resources.OauthIntegration, UpdateOAuthIntegration),
+		DeleteContext:      TrackingDeleteWrapper(resources.OauthIntegration, DeleteOAuthIntegration),
 		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_oauth_integration_for_custom_clients or snowflake_oauth_integration_for_partner_applications instead.",
 
 		Schema: oauthIntegrationSchema,
@@ -100,7 +104,7 @@ func OAuthIntegration() *schema.Resource {
 }
 
 // CreateOAuthIntegration implements schema.CreateFunc.
-func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
+func CreateOAuthIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 	name := d.Get("name").(string)
@@ -137,16 +141,16 @@ func CreateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-		return fmt.Errorf("error creating security integration err = %w", err)
+		return diag.FromErr(fmt.Errorf("error creating security integration err = %w", err))
 	}
 
 	d.SetId(name)
 
-	return ReadOAuthIntegration(d, meta)
+	return ReadOAuthIntegration(ctx, d, meta)
 }
 
 // ReadOAuthIntegration implements schema.ReadFunc.
-func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
+func ReadOAuthIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 	id := d.Id()
@@ -158,32 +162,32 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	s, err := snowflake.ScanOAuthIntegration(row)
 	if err != nil {
-		return fmt.Errorf("could not show security integration err = %w", err)
+		return diag.FromErr(fmt.Errorf("could not show security integration err = %w", err))
 	}
 
 	// Note: category must be Security or something is broken
 	if c := s.Category.String; c != "SECURITY" {
-		return fmt.Errorf("expected %v to be an Security integration, got %v err = %w", id, c, err)
+		return diag.FromErr(fmt.Errorf("expected %v to be an Security integration, got %v err = %w", id, c, err))
 	}
 
 	if err := d.Set("oauth_client", strings.TrimPrefix(s.IntegrationType.String, "OAUTH - ")); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", s.Name.String); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("enabled", s.Enabled.Bool); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", s.Comment.String); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("created_on", s.CreatedOn.String); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Some properties come from the DESCRIBE INTEGRATION call
@@ -193,12 +197,12 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 	stmt = snowflake.NewOAuthIntegrationBuilder(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return fmt.Errorf("could not describe security integration err = %w", err)
+		return diag.FromErr(fmt.Errorf("could not describe security integration err = %w", err))
 	}
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&k, &pType, &v, &unused); err != nil {
-			return fmt.Errorf("unable to parse security integration rows err = %w", err)
+			return diag.FromErr(fmt.Errorf("unable to parse security integration rows err = %w", err))
 		}
 		switch k {
 		case "ENABLED":
@@ -208,22 +212,22 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 		case "OAUTH_ISSUE_REFRESH_TOKENS":
 			b, err := strconv.ParseBool(v.(string))
 			if err != nil {
-				return fmt.Errorf("returned OAuth issue refresh tokens that is not boolean err = %w", err)
+				return diag.FromErr(fmt.Errorf("returned OAuth issue refresh tokens that is not boolean err = %w", err))
 			}
 			if err := d.Set("oauth_issue_refresh_tokens", b); err != nil {
-				return fmt.Errorf("unable to set OAuth issue refresh tokens for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set OAuth issue refresh tokens for security integration err = %w", err))
 			}
 		case "OAUTH_REFRESH_TOKEN_VALIDITY":
 			i, err := strconv.Atoi(v.(string))
 			if err != nil {
-				return fmt.Errorf("returned OAuth refresh token validity that is not integer err = %w", err)
+				return diag.FromErr(fmt.Errorf("returned OAuth refresh token validity that is not integer err = %w", err))
 			}
 			if err := d.Set("oauth_refresh_token_validity", i); err != nil {
-				return fmt.Errorf("unable to set OAuth refresh token validity for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set OAuth refresh token validity for security integration err = %w", err))
 			}
 		case "OAUTH_USE_SECONDARY_ROLES":
 			if err := d.Set("oauth_use_secondary_roles", v.(string)); err != nil {
-				return fmt.Errorf("unable to set OAuth use secondary roles for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set OAuth use secondary roles for security integration err = %w", err))
 			}
 		case "BLOCKED_ROLES_LIST":
 			blockedRolesAll := strings.Split(v.(string), ",")
@@ -238,18 +242,18 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if err := d.Set("blocked_roles_list", blockedRolesCustom); err != nil {
-				return fmt.Errorf("unable to set blocked roles list for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set blocked roles list for security integration err = %w", err))
 			}
 		case "OAUTH_REDIRECT_URI":
 			if err := d.Set("oauth_redirect_uri", v.(string)); err != nil {
-				return fmt.Errorf("unable to set OAuth redirect URI for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set OAuth redirect URI for security integration err = %w", err))
 			}
 		case "OAUTH_CLIENT_TYPE":
 			isTableau := strings.HasSuffix(s.IntegrationType.String, "TABLEAU_DESKTOP") ||
 				strings.HasSuffix(s.IntegrationType.String, "TABLEAU_SERVER")
 			if !isTableau {
 				if err = d.Set("oauth_client_type", v.(string)); err != nil {
-					return fmt.Errorf("unable to set OAuth client type for security integration err = %w", err)
+					return diag.FromErr(fmt.Errorf("unable to set OAuth client type for security integration err = %w", err))
 				}
 			}
 		case "OAUTH_ENFORCE_PKCE":
@@ -270,11 +274,11 @@ func ReadOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
 // UpdateOAuthIntegration implements schema.UpdateFunc.
-func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
+func UpdateOAuthIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 	id := d.Id()
@@ -330,14 +334,14 @@ func UpdateOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	if runSetStatement {
 		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-			return fmt.Errorf("error updating security integration err = %w", err)
+			return diag.FromErr(fmt.Errorf("error updating security integration err = %w", err))
 		}
 	}
 
-	return ReadOAuthIntegration(d, meta)
+	return ReadOAuthIntegration(ctx, d, meta)
 }
 
 // DeleteOAuthIntegration implements schema.DeleteFunc.
-func DeleteOAuthIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.NewOAuthIntegrationBuilder)(d, meta)
+func DeleteOAuthIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return diag.FromErr(DeleteResource("", snowflake.NewOAuthIntegrationBuilder)(d, meta))
 }

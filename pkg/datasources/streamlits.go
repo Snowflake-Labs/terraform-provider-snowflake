@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -100,7 +102,7 @@ var streamlitsSchema = map[string]*schema.Schema{
 
 func Streamlits() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadStreamlits,
+		ReadContext: TrackingReadWrapper(datasources.Streamlits, ReadStreamlits),
 		Schema:      streamlitsSchema,
 		Description: "Datasource used to get details of filtered streamlits. Filtering is aligned with the current possibilities for [SHOW STREAMLITS](https://docs.snowflake.com/en/sql-reference/sql/show-streamlits) query (only `like` is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection `streamlits`.",
 	}

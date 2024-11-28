@@ -7,6 +7,8 @@ import (
 	"log"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -105,14 +107,14 @@ var grantPrivilegesToShareSchema = map[string]*schema.Schema{
 
 func GrantPrivilegesToShare() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateGrantPrivilegesToShare,
-		UpdateContext: UpdateGrantPrivilegesToShare,
-		DeleteContext: DeleteGrantPrivilegesToShare,
-		ReadContext:   ReadGrantPrivilegesToShare,
+		CreateContext: TrackingCreateWrapper(resources.GrantPrivilegesToShare, CreateGrantPrivilegesToShare),
+		UpdateContext: TrackingUpdateWrapper(resources.GrantPrivilegesToShare, UpdateGrantPrivilegesToShare),
+		DeleteContext: TrackingDeleteWrapper(resources.GrantPrivilegesToShare, DeleteGrantPrivilegesToShare),
+		ReadContext:   TrackingReadWrapper(resources.GrantPrivilegesToShare, ReadGrantPrivilegesToShare),
 
 		Schema: grantPrivilegesToShareSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportGrantPrivilegesToShare(),
+			StateContext: TrackingImportWrapper(resources.GrantPrivilegesToShare, ImportGrantPrivilegesToShare()),
 		},
 	}
 }

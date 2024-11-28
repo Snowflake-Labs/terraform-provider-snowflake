@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -57,14 +60,13 @@ var pipesSchema = map[string]*schema.Schema{
 
 func Pipes() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadPipes,
-		Schema: pipesSchema,
+		ReadContext: TrackingReadWrapper(datasources.Pipes, ReadPipes),
+		Schema:      pipesSchema,
 	}
 }
 
-func ReadPipes(d *schema.ResourceData, meta interface{}) error {
+func ReadPipes(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
@@ -77,7 +79,7 @@ func ReadPipes(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		log.Printf("[DEBUG] unable to parse pipes in schema (%s)", d.Id())
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 
 	pipes := make([]map[string]any, 0, len(extractedPipes))
@@ -94,5 +96,5 @@ func ReadPipes(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(fmt.Sprintf(`%v|%v`, databaseName, schemaName))
-	return d.Set("pipes", pipes)
+	return diag.FromErr(d.Set("pipes", pipes))
 }

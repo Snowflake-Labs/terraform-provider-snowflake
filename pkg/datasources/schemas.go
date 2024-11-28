@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -127,7 +129,7 @@ var schemasSchema = map[string]*schema.Schema{
 
 func Schemas() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadSchemas,
+		ReadContext: TrackingReadWrapper(datasources.Schemas, ReadSchemas),
 		Schema:      schemasSchema,
 		Description: "Datasource used to get details of filtered schemas. Filtering is aligned with the current possibilities for [SHOW SCHEMAS](https://docs.snowflake.com/en/sql-reference/sql/show-schemas) query. The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.",
 	}

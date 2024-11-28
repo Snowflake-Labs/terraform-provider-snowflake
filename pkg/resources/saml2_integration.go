@@ -7,6 +7,8 @@ import (
 	"log"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 
@@ -155,18 +157,18 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 
 func SAML2Integration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSAML2Integration,
-		ReadContext:   ReadContextSAML2Integration(true),
-		UpdateContext: UpdateContextSAML2Integration,
-		DeleteContext: DeleteContextSAM2LIntegration,
+		CreateContext: TrackingCreateWrapper(resources.Saml2SecurityIntegration, CreateContextSAML2Integration),
+		ReadContext:   TrackingReadWrapper(resources.Saml2SecurityIntegration, ReadContextSAML2Integration(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.Saml2SecurityIntegration, UpdateContextSAML2Integration),
+		DeleteContext: TrackingDeleteWrapper(resources.Saml2SecurityIntegration, DeleteContextSAM2LIntegration),
 		Description:   "Resource used to manage saml2 security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2).",
 
 		Schema: saml2IntegrationSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportSaml2Integration,
+			StateContext: TrackingImportWrapper(resources.Saml2SecurityIntegration, ImportSaml2Integration),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Saml2SecurityIntegration, customdiff.All(
 			ForceNewIfChangeToEmptySet("allowed_user_domains"),
 			ForceNewIfChangeToEmptySet("allowed_email_patterns"),
 			ForceNewIfChangeToEmptyString("saml2_snowflake_issuer_url"),
@@ -177,7 +179,7 @@ func SAML2Integration() *schema.Resource {
 				"saml2_sp_initiated_login_page_label", "saml2_enable_sp_initiated", "saml2_sign_request", "saml2_requtedted_nameid_format",
 				"saml2_post_logout_redirect_url", "saml2_force_authn", "saml2_snowflake_issuer_url", "saml2_snowflake_acs_url", "allowed_user_domains",
 				"allowed_email_patterns"),
-		),
+		)),
 	}
 }
 

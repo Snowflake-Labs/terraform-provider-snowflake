@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,15 +36,14 @@ var currentAccountSchema = map[string]*schema.Schema{
 // CurrentAccount the Snowflake current account resource.
 func CurrentAccount() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadCurrentAccount,
-		Schema: currentAccountSchema,
+		ReadContext: TrackingReadWrapper(datasources.CurrentAccount, ReadCurrentAccount),
+		Schema:      currentAccountSchema,
 	}
 }
 
 // ReadCurrentAccount read the current snowflake account information.
-func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
+func ReadCurrentAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	current, err := client.ContextFunctions.CurrentSessionDetails(ctx)
 	if err != nil {
@@ -53,11 +55,11 @@ func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(fmt.Sprintf("%s.%s", current.Account, current.Region))
 	accountErr := d.Set("account", current.Account)
 	if accountErr != nil {
-		return accountErr
+		return diag.FromErr(accountErr)
 	}
 	regionErr := d.Set("region", current.Region)
 	if regionErr != nil {
-		return regionErr
+		return diag.FromErr(regionErr)
 	}
 	url, err := current.AccountURL()
 	if err != nil {
@@ -67,7 +69,7 @@ func ReadCurrentAccount(d *schema.ResourceData, meta interface{}) error {
 
 	urlErr := d.Set("url", url)
 	if urlErr != nil {
-		return urlErr
+		return diag.FromErr(urlErr)
 	}
 	return nil
 }

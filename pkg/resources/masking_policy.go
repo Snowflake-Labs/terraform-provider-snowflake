@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -116,21 +118,21 @@ func MaskingPolicy() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 
-		CreateContext: CreateMaskingPolicy,
-		ReadContext:   ReadMaskingPolicy(true),
-		UpdateContext: UpdateMaskingPolicy,
-		DeleteContext: DeleteMaskingPolicy,
+		CreateContext: TrackingCreateWrapper(resources.MaskingPolicy, CreateMaskingPolicy),
+		ReadContext:   TrackingReadWrapper(resources.MaskingPolicy, ReadMaskingPolicy(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.MaskingPolicy, UpdateMaskingPolicy),
+		DeleteContext: TrackingDeleteWrapper(resources.MaskingPolicy, DeleteMaskingPolicy),
 		Description:   "Resource used to manage masking policies. For more information, check [masking policies documentation](https://docs.snowflake.com/en/sql-reference/sql/create-masking-policy).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.MaskingPolicy, customdiff.All(
 			ComputedIfAnyAttributeChanged(maskingPolicySchema, ShowOutputAttributeName, "name", "comment"),
 			ComputedIfAnyAttributeChanged(maskingPolicySchema, DescribeOutputAttributeName, "name", "body"),
 			ComputedIfAnyAttributeChanged(maskingPolicySchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: maskingPolicySchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportMaskingPolicy,
+			StateContext: TrackingImportWrapper(resources.MaskingPolicy, ImportMaskingPolicy),
 		},
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -364,6 +366,7 @@ func DeleteMaskingPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		return diag.FromErr(err)
 	}
 
+	// TODO(SNOW-1818849): unassign policies before dropping
 	err = client.MaskingPolicies.Drop(ctx, id, &sdk.DropMaskingPolicyOptions{IfExists: sdk.Pointer(true)})
 	if err != nil {
 		return diag.Diagnostics{

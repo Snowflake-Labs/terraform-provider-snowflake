@@ -8,6 +8,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -51,10 +54,10 @@ var userPublicKeysSchema = map[string]*schema.Schema{
 
 func UserPublicKeys() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateUserPublicKeys,
-		Read:   ReadUserPublicKeys,
-		Update: UpdateUserPublicKeys,
-		Delete: DeleteUserPublicKeys,
+		CreateContext: TrackingCreateWrapper(resources.UserPublicKeys, CreateUserPublicKeys),
+		ReadContext:   TrackingReadWrapper(resources.UserPublicKeys, ReadUserPublicKeys),
+		UpdateContext: TrackingUpdateWrapper(resources.UserPublicKeys, UpdateUserPublicKeys),
+		DeleteContext: TrackingDeleteWrapper(resources.UserPublicKeys, DeleteUserPublicKeys),
 
 		Schema: userPublicKeysSchema,
 		Importer: &schema.ResourceImporter{
@@ -63,9 +66,7 @@ func UserPublicKeys() *schema.Resource {
 	}
 }
 
-func checkUserExists(client *sdk.Client, userId sdk.AccountObjectIdentifier) (bool, error) {
-	ctx := context.Background()
-
+func checkUserExists(ctx context.Context, client *sdk.Client, userId sdk.AccountObjectIdentifier) (bool, error) {
 	// First check if user exists
 	_, err := client.Users.Describe(ctx, userId)
 	if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
@@ -79,13 +80,13 @@ func checkUserExists(client *sdk.Client, userId sdk.AccountObjectIdentifier) (bo
 	return true, nil
 }
 
-func ReadUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
+func ReadUserPublicKeys(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 
-	exists, err := checkUserExists(client, id)
+	exists, err := checkUserExists(ctx, client, id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	// If not found, mark resource to be removed from state file during apply or refresh
 	if !exists {
@@ -96,7 +97,7 @@ func ReadUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func CreateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
+func CreateUserPublicKeys(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 	name := d.Get("name").(string)
@@ -108,15 +109,15 @@ func CreateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := updateUserPublicKeys(db, name, prop, publicKey.(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	d.SetId(name)
-	return ReadUserPublicKeys(d, meta)
+	return ReadUserPublicKeys(ctx, d, meta)
 }
 
-func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
+func UpdateUserPublicKeys(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 	name := d.Id()
@@ -142,7 +143,7 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	for prop, value := range propsToSet {
 		err := updateUserPublicKeys(db, name, prop, value)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -150,14 +151,14 @@ func UpdateUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	for k := range propsToUnset {
 		err := unsetUserPublicKeys(db, name, k)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	// re-sync
-	return ReadUserPublicKeys(d, meta)
+	return ReadUserPublicKeys(ctx, d, meta)
 }
 
-func DeleteUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
+func DeleteUserPublicKeys(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 	name := d.Id()
@@ -165,7 +166,7 @@ func DeleteUserPublicKeys(d *schema.ResourceData, meta interface{}) error {
 	for _, prop := range userPublicKeyProperties {
 		err := unsetUserPublicKeys(db, name, prop)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 

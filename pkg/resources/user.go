@@ -7,6 +7,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -185,25 +187,25 @@ func User() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 
-		CreateContext: GetCreateUserFunc(sdk.UserTypePerson),
-		UpdateContext: GetUpdateUserFunc(sdk.UserTypePerson),
-		ReadContext:   GetReadUserFunc(sdk.UserTypePerson, true),
-		DeleteContext: DeleteUser,
+		CreateContext: TrackingCreateWrapper(resources.User, GetCreateUserFunc(sdk.UserTypePerson)),
+		UpdateContext: TrackingUpdateWrapper(resources.User, GetUpdateUserFunc(sdk.UserTypePerson)),
+		ReadContext:   TrackingReadWrapper(resources.User, GetReadUserFunc(sdk.UserTypePerson, true)),
+		DeleteContext: TrackingDeleteWrapper(resources.User, DeleteUser),
 		Description:   "Resource used to manage user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
 		Schema: collections.MergeMaps(userSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: GetImportUserFunc(sdk.UserTypePerson),
+			StateContext: TrackingImportWrapper(resources.User, GetImportUserFunc(sdk.UserTypePerson)),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.User, customdiff.All(
 			// TODO [SNOW-1629468 - next pr]: test "default_role", "default_secondary_roles"
 			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, userExternalChangesAttributes...),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
 			RecreateWhenUserTypeChangedExternally(sdk.UserTypePerson),
-		),
+		)),
 
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -218,47 +220,47 @@ func User() *schema.Resource {
 
 func ServiceUser() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: GetCreateUserFunc(sdk.UserTypeService),
-		UpdateContext: GetUpdateUserFunc(sdk.UserTypeService),
-		ReadContext:   GetReadUserFunc(sdk.UserTypeService, true),
-		DeleteContext: DeleteUser,
+		CreateContext: TrackingCreateWrapper(resources.ServiceUser, GetCreateUserFunc(sdk.UserTypeService)),
+		UpdateContext: TrackingUpdateWrapper(resources.ServiceUser, GetUpdateUserFunc(sdk.UserTypeService)),
+		ReadContext:   TrackingReadWrapper(resources.ServiceUser, GetReadUserFunc(sdk.UserTypeService, true)),
+		DeleteContext: TrackingDeleteWrapper(resources.ServiceUser, DeleteUser),
 		Description:   "Resource used to manage service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
 		Schema: collections.MergeMaps(serviceUserSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: GetImportUserFunc(sdk.UserTypeService),
+			StateContext: TrackingImportWrapper(resources.ServiceUser, GetImportUserFunc(sdk.UserTypeService)),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.ServiceUser, customdiff.All(
 			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, serviceUserExternalChangesAttributes...),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
 			RecreateWhenUserTypeChangedExternally(sdk.UserTypeService),
-		),
+		)),
 	}
 }
 
 func LegacyServiceUser() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: GetCreateUserFunc(sdk.UserTypeLegacyService),
-		UpdateContext: GetUpdateUserFunc(sdk.UserTypeLegacyService),
-		ReadContext:   GetReadUserFunc(sdk.UserTypeLegacyService, true),
-		DeleteContext: DeleteUser,
+		CreateContext: TrackingCreateWrapper(resources.LegacyServiceUser, GetCreateUserFunc(sdk.UserTypeLegacyService)),
+		UpdateContext: TrackingUpdateWrapper(resources.LegacyServiceUser, GetUpdateUserFunc(sdk.UserTypeLegacyService)),
+		ReadContext:   TrackingReadWrapper(resources.LegacyServiceUser, GetReadUserFunc(sdk.UserTypeLegacyService, true)),
+		DeleteContext: TrackingDeleteWrapper(resources.LegacyServiceUser, DeleteUser),
 		Description:   "Resource used to manage legacy service user objects. For more information, check [user documentation](https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management).",
 
 		Schema: collections.MergeMaps(legacyServiceUserSchema, userParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: GetImportUserFunc(sdk.UserTypeLegacyService),
+			StateContext: TrackingImportWrapper(resources.LegacyServiceUser, GetImportUserFunc(sdk.UserTypeLegacyService)),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.LegacyServiceUser, customdiff.All(
 			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, legacyServiceUserExternalChangesAttributes...),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),
 			userParametersCustomDiff,
 			RecreateWhenUserTypeChangedExternally(sdk.UserTypeLegacyService),
-		),
+		)),
 	}
 }
 

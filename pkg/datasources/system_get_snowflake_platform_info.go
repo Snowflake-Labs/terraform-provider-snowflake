@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -30,13 +33,13 @@ var systemGetSnowflakePlatformInfoSchema = map[string]*schema.Schema{
 
 func SystemGetSnowflakePlatformInfo() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadSystemGetSnowflakePlatformInfo,
-		Schema: systemGetSnowflakePlatformInfoSchema,
+		ReadContext: TrackingReadWrapper(datasources.SystemGetSnowflakePlatformInfo, ReadSystemGetSnowflakePlatformInfo),
+		Schema:      systemGetSnowflakePlatformInfoSchema,
 	}
 }
 
 // ReadSystemGetSnowflakePlatformInfo implements schema.ReadFunc.
-func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}) error {
+func ReadSystemGetSnowflakePlatformInfo(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 
@@ -48,7 +51,7 @@ func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}
 		// If not found, mark resource to be removed from state file during apply or refresh
 		d.SetId("")
 		log.Println("[DEBUG] current_account failed to decode")
-		return fmt.Errorf("error current_account err = %w", err)
+		return diag.FromErr(fmt.Errorf("error current_account err = %w", err))
 	}
 
 	d.SetId(fmt.Sprintf("%s.%s", acc.Account, acc.Region))
@@ -57,22 +60,22 @@ func ReadSystemGetSnowflakePlatformInfo(d *schema.ResourceData, meta interface{}
 	if errors.Is(err, sql.ErrNoRows) {
 		// If not found, mark resource to be removed from state file during apply or refresh
 		log.Println("[DEBUG] system_get_snowflake_platform_info not found")
-		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
+		return diag.FromErr(fmt.Errorf("error system_get_snowflake_platform_info err = %w", err))
 	}
 
 	info, err := rawInfo.GetStructuredConfig()
 	if err != nil {
 		log.Println("[DEBUG] system_get_snowflake_platform_info failed to decode")
 		d.SetId("")
-		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
+		return diag.FromErr(fmt.Errorf("error system_get_snowflake_platform_info err = %w", err))
 	}
 
 	if err := d.Set("azure_vnet_subnet_ids", info.AzureVnetSubnetIds); err != nil {
-		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
+		return diag.FromErr(fmt.Errorf("error system_get_snowflake_platform_info err = %w", err))
 	}
 
 	if err := d.Set("aws_vpc_ids", info.AwsVpcIds); err != nil {
-		return fmt.Errorf("error system_get_snowflake_platform_info err = %w", err)
+		return diag.FromErr(fmt.Errorf("error system_get_snowflake_platform_info err = %w", err))
 	}
 
 	return nil

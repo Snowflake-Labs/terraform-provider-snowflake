@@ -116,8 +116,8 @@ func (s *AlterTagRequest) toOpts() *alterTagOptions {
 
 func (s *ShowTagRequest) toOpts() *showTagOptions {
 	return &showTagOptions{
-		Like: s.like,
-		In:   s.in,
+		Like: s.Like,
+		In:   s.In,
 	}
 }
 
@@ -149,6 +149,14 @@ func (s *SetTagRequest) toOpts() *setTagOptions {
 			o.column = String(id.Name())
 		}
 	}
+	// TODO(SNOW-1818976): Remove this workaround. Currently ALTER "ORGNAME"."ACCOUNTNAME" SET TAG does not work, but ALTER "ACCOUNTNAME" does.
+	if o.objectType == ObjectTypeAccount {
+		id, ok := o.objectName.(AccountIdentifier)
+		if ok {
+			o.objectName = NewAccountIdentifierFromFullyQualifiedName(id.AccountName())
+		}
+	}
+
 	return o
 }
 
@@ -167,5 +175,14 @@ func (s *UnsetTagRequest) toOpts() *unsetTagOptions {
 			o.column = String(id.Name())
 		}
 	}
+
+	// TODO(SNOW-1818976): Remove this workaround. Currently ALTER "ORGNAME"."ACCOUNTNAME" SET TAG does not work, but ALTER "ACCOUNTNAME" does.
+	if o.objectType == ObjectTypeAccount {
+		id, ok := o.objectName.(AccountIdentifier)
+		if ok {
+			o.objectName = NewAccountIdentifierFromFullyQualifiedName(id.AccountName())
+		}
+	}
+
 	return o
 }

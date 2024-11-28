@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -79,14 +82,13 @@ var parametersSchema = map[string]*schema.Schema{
 
 func Parameters() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadParameters,
-		Schema: parametersSchema,
+		ReadContext: TrackingReadWrapper(datasources.Parameters, ReadParameters),
+		Schema:      parametersSchema,
 	}
 }
 
-func ReadParameters(d *schema.ResourceData, meta interface{}) error {
+func ReadParameters(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	p, ok := d.GetOk("pattern")
 	pattern := ""
 	if ok {
@@ -107,7 +109,7 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 	case "SESSION":
 		user := d.Get("user").(string)
 		if user == "" {
-			return fmt.Errorf("user is required when parameter_type is set to SESSION")
+			return diag.FromErr(fmt.Errorf("user is required when parameter_type is set to SESSION"))
 		}
 		opts.In.User = sdk.NewAccountObjectIdentifier(user)
 	case "OBJECT":
@@ -125,12 +127,12 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 		case sdk.ObjectTypeTable:
 			opts.In.Table = sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(objectName)
 		default:
-			return fmt.Errorf("object_type %s is not supported", objectType)
+			return diag.FromErr(fmt.Errorf("object_type %s is not supported", objectType))
 		}
 	}
 	parameters, err = client.Parameters.ShowParameters(ctx, &opts)
 	if err != nil {
-		return fmt.Errorf("error listing parameters: %w", err)
+		return diag.FromErr(fmt.Errorf("error listing parameters: %w", err))
 	}
 	d.SetId("parameters")
 
@@ -146,5 +148,5 @@ func ReadParameters(d *schema.ResourceData, meta interface{}) error {
 
 		params = append(params, paramMap)
 	}
-	return d.Set("parameters", params)
+	return diag.FromErr(d.Set("parameters", params))
 }

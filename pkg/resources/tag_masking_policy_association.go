@@ -13,7 +13,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	providerresources "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 )
@@ -77,16 +77,16 @@ func parseAttachmentID(id string) (*attachmentID, error) {
 // Schema returns a pointer to the resource representing a schema.
 func TagMaskingPolicyAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextTagMaskingPolicyAssociation,
-		ReadContext:   ReadContextTagMaskingPolicyAssociation,
-		DeleteContext: DeleteContextTagMaskingPolicyAssociation,
+		CreateContext: TrackingCreateWrapper(resources.TagMaskingPolicyAssociation, CreateContextTagMaskingPolicyAssociation),
+		ReadContext:   TrackingReadWrapper(resources.TagMaskingPolicyAssociation, ReadContextTagMaskingPolicyAssociation),
+		DeleteContext: TrackingDeleteWrapper(resources.TagMaskingPolicyAssociation, DeleteContextTagMaskingPolicyAssociation),
 
 		Schema: mpAttachmentPolicySchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Description:        "Attach a masking policy to a tag. Requires a current warehouse to be set. Either with SNOWFLAKE_WAREHOUSE env variable or in current session. If no warehouse is provided, a temporary warehouse will be created.",
-		DeprecationMessage: deprecatedResourceDescription(string(providerresources.Tag)),
+		DeprecationMessage: deprecatedResourceDescription(string(resources.Tag)),
 	}
 }
 

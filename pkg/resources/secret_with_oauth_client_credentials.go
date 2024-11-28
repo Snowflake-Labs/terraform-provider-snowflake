@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
@@ -37,21 +39,21 @@ var secretClientCredentialsSchema = func() map[string]*schema.Schema {
 
 func SecretWithClientCredentials() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateContextSecretWithClientCredentials,
-		ReadContext:   ReadContextSecretWithClientCredentials,
-		UpdateContext: UpdateContextSecretWithClientCredentials,
-		DeleteContext: DeleteContextSecret,
+		CreateContext: TrackingCreateWrapper(resources.SecretWithClientCredentials, CreateContextSecretWithClientCredentials),
+		ReadContext:   TrackingReadWrapper(resources.SecretWithClientCredentials, ReadContextSecretWithClientCredentials),
+		UpdateContext: TrackingUpdateWrapper(resources.SecretWithClientCredentials, UpdateContextSecretWithClientCredentials),
+		DeleteContext: TrackingDeleteWrapper(resources.SecretWithClientCredentials, DeleteContextSecret),
 		Description:   "Resource used to manage secret objects with OAuth Client Credentials. For more information, check [secret documentation](https://docs.snowflake.com/en/sql-reference/sql/create-secret).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.SecretWithClientCredentials, customdiff.All(
 			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, DescribeOutputAttributeName, "oauth_scopes", "api_authentication"),
 			ComputedIfAnyAttributeChanged(secretClientCredentialsSchema, ShowOutputAttributeName, "comment"),
 			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypeOAuth2ClientCredentials),
-		),
+		)),
 
 		Schema: secretClientCredentialsSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportSecretWithClientCredentials,
+			StateContext: TrackingImportWrapper(resources.SecretWithClientCredentials, ImportSecretWithClientCredentials),
 		},
 	}
 }

@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"context"
 	"database/sql"
 	"testing"
 
@@ -37,10 +38,10 @@ func TestOAuthIntegrationCreate(t *testing.T) {
 		).WillReturnResult(sqlmock.NewResult(1, 1))
 		expectReadOAuthIntegration(mock)
 
-		err := resources.CreateOAuthIntegration(d, &internalprovider.Context{
+		diags := resources.CreateOAuthIntegration(context.Background(), d, &internalprovider.Context{
 			Client: sdk.NewClientFromDB(db),
 		})
-		r.NoError(err)
+		r.Empty(diags)
 	})
 }
 
@@ -52,10 +53,10 @@ func TestOAuthIntegrationRead(t *testing.T) {
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		expectReadOAuthIntegration(mock)
 
-		err := resources.ReadOAuthIntegration(d, &internalprovider.Context{
+		diags := resources.ReadOAuthIntegration(context.Background(), d, &internalprovider.Context{
 			Client: sdk.NewClientFromDB(db),
 		})
-		r.NoError(err)
+		r.Empty(diags)
 	})
 }
 
@@ -66,10 +67,10 @@ func TestOAuthIntegrationDelete(t *testing.T) {
 
 	WithMockDb(t, func(db *sql.DB, mock sqlmock.Sqlmock) {
 		mock.ExpectExec(`DROP SECURITY INTEGRATION "drop_it"`).WillReturnResult(sqlmock.NewResult(1, 1))
-		err := resources.DeleteOAuthIntegration(d, &internalprovider.Context{
+		diags := resources.DeleteOAuthIntegration(context.Background(), d, &internalprovider.Context{
 			Client: sdk.NewClientFromDB(db),
 		})
-		r.NoError(err)
+		r.Empty(diags)
 	})
 }
 

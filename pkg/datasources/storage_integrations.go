@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -42,25 +45,24 @@ var storageIntegrationsSchema = map[string]*schema.Schema{
 
 func StorageIntegrations() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadStorageIntegrations,
-		Schema: storageIntegrationsSchema,
+		ReadContext: TrackingReadWrapper(datasources.StorageIntegrations, ReadStorageIntegrations),
+		Schema:      storageIntegrationsSchema,
 	}
 }
 
-func ReadStorageIntegrations(d *schema.ResourceData, meta interface{}) error {
+func ReadStorageIntegrations(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	account, err := client.ContextFunctions.CurrentAccount(ctx)
 	if err != nil {
 		d.SetId("")
-		return fmt.Errorf("[DEBUG] unable to retrieve current account")
+		return diag.FromErr(fmt.Errorf("[DEBUG] unable to retrieve current account"))
 	}
 
 	region, err := client.ContextFunctions.CurrentRegion(ctx)
 	if err != nil {
 		d.SetId("")
-		return fmt.Errorf("[DEBUG] unable to retrieve current region")
+		return diag.FromErr(fmt.Errorf("[DEBUG] unable to retrieve current region"))
 	}
 
 	d.SetId(fmt.Sprintf("%s.%s", account, region))
@@ -68,7 +70,7 @@ func ReadStorageIntegrations(d *schema.ResourceData, meta interface{}) error {
 	storageIntegrations, err := client.StorageIntegrations.Show(ctx, sdk.NewShowStorageIntegrationRequest())
 	if err != nil {
 		d.SetId("")
-		return fmt.Errorf("unable to retrieve storage integrations in account (%s), err = %w", d.Id(), err)
+		return diag.FromErr(fmt.Errorf("unable to retrieve storage integrations in account (%s), err = %w", d.Id(), err))
 	}
 
 	storageIntegrationMaps := make([]map[string]any, len(storageIntegrations))
@@ -82,5 +84,5 @@ func ReadStorageIntegrations(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return d.Set("storage_integrations", storageIntegrationMaps)
+	return diag.FromErr(d.Set("storage_integrations", storageIntegrationMaps))
 }

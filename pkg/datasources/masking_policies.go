@@ -3,6 +3,8 @@ package datasources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -117,7 +119,7 @@ var maskingPoliciesSchema = map[string]*schema.Schema{
 
 func MaskingPolicies() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: ReadMaskingPolicies,
+		ReadContext: TrackingReadWrapper(datasources.MaskingPolicies, ReadMaskingPolicies),
 		Schema:      maskingPoliciesSchema,
 		Description: "Datasource used to get details of filtered masking policies. Filtering is aligned with the current possibilities for [SHOW MASKING POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-masking-policies) query. The results of SHOW and DESCRIBE are encapsulated in one output collection `masking_policies`.",
 	}

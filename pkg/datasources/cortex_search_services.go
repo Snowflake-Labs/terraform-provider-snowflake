@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -108,13 +111,13 @@ var cortexSearchServicesSchema = map[string]*schema.Schema{
 // CortexSearchServices Snowflake Cortex search services resource.
 func CortexSearchServices() *schema.Resource {
 	return &schema.Resource{
-		Read:   ReadCortexSearchServices,
-		Schema: cortexSearchServicesSchema,
+		ReadContext: TrackingReadWrapper(datasources.CortexSearchServices, ReadCortexSearchServices),
+		Schema:      cortexSearchServicesSchema,
 	}
 }
 
 // ReadCortexSearchServices Reads the cortex search services metadata information.
-func ReadCortexSearchServices(d *schema.ResourceData, meta interface{}) error {
+func ReadCortexSearchServices(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	request := sdk.NewShowCortexSearchServiceRequest()
 
@@ -167,7 +170,7 @@ func ReadCortexSearchServices(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		log.Printf("[DEBUG] snowflake_cortex_search_services.go: %v", err)
 		d.SetId("")
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("cortex_search_services")
 	records := make([]map[string]any, 0, len(dts))
@@ -181,7 +184,7 @@ func ReadCortexSearchServices(d *schema.ResourceData, meta interface{}) error {
 		records = append(records, record)
 	}
 	if err := d.Set("cortex_search_services", records); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	return nil
 }

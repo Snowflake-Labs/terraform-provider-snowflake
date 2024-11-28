@@ -7,6 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -163,10 +166,10 @@ var dynamicTableSchema = map[string]*schema.Schema{
 // DynamicTable returns a pointer to the resource representing a dynamic table.
 func DynamicTable() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateDynamicTable,
-		Read:   ReadDynamicTable,
-		Update: UpdateDynamicTable,
-		Delete: DeleteDynamicTable,
+		CreateContext: TrackingCreateWrapper(resources.DynamicTable, CreateDynamicTable),
+		ReadContext:   TrackingReadWrapper(resources.DynamicTable, ReadDynamicTable),
+		UpdateContext: TrackingUpdateWrapper(resources.DynamicTable, UpdateDynamicTable),
+		DeleteContext: TrackingDeleteWrapper(resources.DynamicTable, DeleteDynamicTable),
 
 		Schema: dynamicTableSchema,
 		Importer: &schema.ResourceImporter{
@@ -176,93 +179,93 @@ func DynamicTable() *schema.Resource {
 }
 
 // ReadDynamicTable implements schema.ReadFunc.
-func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
+func ReadDynamicTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	dynamicTable, err := client.DynamicTables.ShowByID(context.Background(), id)
+	dynamicTable, err := client.DynamicTables.ShowByID(ctx, id)
 	if err != nil {
 		log.Printf("[DEBUG] dynamic table (%s) not found", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("name", dynamicTable.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("database", dynamicTable.DatabaseName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("schema", dynamicTable.SchemaName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("warehouse", dynamicTable.Warehouse); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("comment", dynamicTable.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	tl := map[string]interface{}{}
 	if dynamicTable.TargetLag == "DOWNSTREAM" {
 		tl["downstream"] = true
 		if err := d.Set("target_lag", []interface{}{tl}); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		tl["maximum_duration"] = dynamicTable.TargetLag
 		if err := d.Set("target_lag", []interface{}{tl}); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if strings.Contains(dynamicTable.Text, "OR REPLACE") {
 		if err := d.Set("or_replace", true); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		if err := d.Set("or_replace", false); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if strings.Contains(dynamicTable.Text, "initialize = 'ON_CREATE'") {
 		if err := d.Set("initialize", "ON_CREATE"); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else if strings.Contains(dynamicTable.Text, "initialize = 'ON_SCHEDULE'") {
 		if err := d.Set("initialize", "ON_SCHEDULE"); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	m := refreshModePattern.FindStringSubmatch(dynamicTable.Text)
 	if len(m) > 1 {
 		if err := d.Set("refresh_mode", m[1]); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	if err := d.Set("created_on", dynamicTable.CreatedOn.Format(time.RFC3339)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("cluster_by", dynamicTable.ClusterBy); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("rows", dynamicTable.Rows); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("bytes", dynamicTable.Bytes); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("owner", dynamicTable.Owner); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("refresh_mode_reason", dynamicTable.RefreshModeReason); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("automatic_clustering", dynamicTable.AutomaticClustering); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("scheduling_state", string(dynamicTable.SchedulingState)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	/*
 		guides on time formatting
@@ -271,25 +274,25 @@ func ReadDynamicTable(d *schema.ResourceData, meta interface{}) error {
 		note: format may depend on what the account parameter for TIMESTAMP_OUTPUT_FORMAT is set to. Perhaps we should return this as a string rather than a time.Time?
 	*/
 	if err := d.Set("last_suspended_on", dynamicTable.LastSuspendedOn.Format("2006-01-02T16:04:05.000 -0700")); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("is_clone", dynamicTable.IsClone); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("is_replica", dynamicTable.IsReplica); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("data_timestamp", dynamicTable.DataTimestamp.Format("2006-01-02T16:04:05.000 -0700")); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	extractor := snowflake.NewViewSelectStatementExtractor(dynamicTable.Text)
 	query, err := extractor.ExtractDynamicTable()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("query", query); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
@@ -309,7 +312,7 @@ func parseTargetLag(v interface{}) sdk.TargetLag {
 }
 
 // CreateDynamicTable implements schema.CreateFunc.
-func CreateDynamicTable(d *schema.ResourceData, meta interface{}) error {
+func CreateDynamicTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	databaseName := d.Get("database").(string)
@@ -334,18 +337,17 @@ func CreateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("initialize"); ok {
 		request.WithInitialize(sdk.DynamicTableInitialize(v.(string)))
 	}
-	if err := client.DynamicTables.Create(context.Background(), request); err != nil {
-		return err
+	if err := client.DynamicTables.Create(ctx, request); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId(helpers.EncodeSnowflakeID(id))
 
-	return ReadDynamicTable(d, meta)
+	return ReadDynamicTable(ctx, d, meta)
 }
 
 // UpdateDynamicTable implements schema.UpdateFunc.
-func UpdateDynamicTable(d *schema.ResourceData, meta interface{}) error {
+func UpdateDynamicTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 	request := sdk.NewAlterDynamicTableRequest(id)
 
@@ -366,7 +368,7 @@ func UpdateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 	if runSet {
 		request.WithSet(set)
 		if err := client.DynamicTables.Alter(ctx, request); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -377,19 +379,19 @@ func UpdateDynamicTable(d *schema.ResourceData, meta interface{}) error {
 			Value:      sdk.String(d.Get("comment").(string)),
 		})
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return ReadDynamicTable(d, meta)
+	return ReadDynamicTable(ctx, d, meta)
 }
 
 // DeleteDynamicTable implements schema.DeleteFunc.
-func DeleteDynamicTable(d *schema.ResourceData, meta interface{}) error {
+func DeleteDynamicTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	if err := client.DynamicTables.Drop(context.Background(), sdk.NewDropDynamicTableRequest(id)); err != nil {
-		return err
+	if err := client.DynamicTables.Drop(ctx, sdk.NewDropDynamicTableRequest(id)); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 

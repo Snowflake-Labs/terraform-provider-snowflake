@@ -16,28 +16,28 @@ func NewCreateStorageIntegrationRequest(
 	return &s
 }
 
-func (s *CreateStorageIntegrationRequest) WithOrReplace(OrReplace *bool) *CreateStorageIntegrationRequest {
-	s.OrReplace = OrReplace
+func (s *CreateStorageIntegrationRequest) WithOrReplace(OrReplace bool) *CreateStorageIntegrationRequest {
+	s.OrReplace = &OrReplace
 	return s
 }
 
-func (s *CreateStorageIntegrationRequest) WithIfNotExists(IfNotExists *bool) *CreateStorageIntegrationRequest {
-	s.IfNotExists = IfNotExists
+func (s *CreateStorageIntegrationRequest) WithIfNotExists(IfNotExists bool) *CreateStorageIntegrationRequest {
+	s.IfNotExists = &IfNotExists
 	return s
 }
 
-func (s *CreateStorageIntegrationRequest) WithS3StorageProviderParams(S3StorageProviderParams *S3StorageParamsRequest) *CreateStorageIntegrationRequest {
-	s.S3StorageProviderParams = S3StorageProviderParams
+func (s *CreateStorageIntegrationRequest) WithS3StorageProviderParams(S3StorageProviderParams S3StorageParamsRequest) *CreateStorageIntegrationRequest {
+	s.S3StorageProviderParams = &S3StorageProviderParams
 	return s
 }
 
-func (s *CreateStorageIntegrationRequest) WithGCSStorageProviderParams(GCSStorageProviderParams *GCSStorageParamsRequest) *CreateStorageIntegrationRequest {
-	s.GCSStorageProviderParams = GCSStorageProviderParams
+func (s *CreateStorageIntegrationRequest) WithGCSStorageProviderParams(GCSStorageProviderParams GCSStorageParamsRequest) *CreateStorageIntegrationRequest {
+	s.GCSStorageProviderParams = &GCSStorageProviderParams
 	return s
 }
 
-func (s *CreateStorageIntegrationRequest) WithAzureStorageProviderParams(AzureStorageProviderParams *AzureStorageParamsRequest) *CreateStorageIntegrationRequest {
-	s.AzureStorageProviderParams = AzureStorageProviderParams
+func (s *CreateStorageIntegrationRequest) WithAzureStorageProviderParams(AzureStorageProviderParams AzureStorageParamsRequest) *CreateStorageIntegrationRequest {
+	s.AzureStorageProviderParams = &AzureStorageProviderParams
 	return s
 }
 
@@ -46,21 +46,23 @@ func (s *CreateStorageIntegrationRequest) WithStorageBlockedLocations(StorageBlo
 	return s
 }
 
-func (s *CreateStorageIntegrationRequest) WithComment(Comment *string) *CreateStorageIntegrationRequest {
-	s.Comment = Comment
+func (s *CreateStorageIntegrationRequest) WithComment(Comment string) *CreateStorageIntegrationRequest {
+	s.Comment = &Comment
 	return s
 }
 
 func NewS3StorageParamsRequest(
+	Protocol S3Protocol,
 	StorageAwsRoleArn string,
 ) *S3StorageParamsRequest {
 	s := S3StorageParamsRequest{}
+	s.Protocol = Protocol
 	s.StorageAwsRoleArn = StorageAwsRoleArn
 	return &s
 }
 
-func (s *S3StorageParamsRequest) WithStorageAwsObjectAcl(StorageAwsObjectAcl *string) *S3StorageParamsRequest {
-	s.StorageAwsObjectAcl = StorageAwsObjectAcl
+func (s *S3StorageParamsRequest) WithStorageAwsObjectAcl(StorageAwsObjectAcl string) *S3StorageParamsRequest {
+	s.StorageAwsObjectAcl = &StorageAwsObjectAcl
 	return s
 }
 
@@ -84,18 +86,18 @@ func NewAlterStorageIntegrationRequest(
 	return &s
 }
 
-func (s *AlterStorageIntegrationRequest) WithIfExists(IfExists *bool) *AlterStorageIntegrationRequest {
-	s.IfExists = IfExists
+func (s *AlterStorageIntegrationRequest) WithIfExists(IfExists bool) *AlterStorageIntegrationRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
-func (s *AlterStorageIntegrationRequest) WithSet(Set *StorageIntegrationSetRequest) *AlterStorageIntegrationRequest {
-	s.Set = Set
+func (s *AlterStorageIntegrationRequest) WithSet(Set StorageIntegrationSetRequest) *AlterStorageIntegrationRequest {
+	s.Set = &Set
 	return s
 }
 
-func (s *AlterStorageIntegrationRequest) WithUnset(Unset *StorageIntegrationUnsetRequest) *AlterStorageIntegrationRequest {
-	s.Unset = Unset
+func (s *AlterStorageIntegrationRequest) WithUnset(Unset StorageIntegrationUnsetRequest) *AlterStorageIntegrationRequest {
+	s.Unset = &Unset
 	return s
 }
 
@@ -113,13 +115,13 @@ func NewStorageIntegrationSetRequest() *StorageIntegrationSetRequest {
 	return &StorageIntegrationSetRequest{}
 }
 
-func (s *StorageIntegrationSetRequest) WithS3Params(S3Params *SetS3StorageParamsRequest) *StorageIntegrationSetRequest {
-	s.S3Params = S3Params
+func (s *StorageIntegrationSetRequest) WithS3Params(S3Params SetS3StorageParamsRequest) *StorageIntegrationSetRequest {
+	s.S3Params = &S3Params
 	return s
 }
 
-func (s *StorageIntegrationSetRequest) WithAzureParams(AzureParams *SetAzureStorageParamsRequest) *StorageIntegrationSetRequest {
-	s.AzureParams = AzureParams
+func (s *StorageIntegrationSetRequest) WithAzureParams(AzureParams SetAzureStorageParamsRequest) *StorageIntegrationSetRequest {
+	s.AzureParams = &AzureParams
 	return s
 }
 
@@ -138,8 +140,8 @@ func (s *StorageIntegrationSetRequest) WithStorageBlockedLocations(StorageBlocke
 	return s
 }
 
-func (s *StorageIntegrationSetRequest) WithComment(Comment *string) *StorageIntegrationSetRequest {
-	s.Comment = Comment
+func (s *StorageIntegrationSetRequest) WithComment(Comment string) *StorageIntegrationSetRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -151,8 +153,8 @@ func NewSetS3StorageParamsRequest(
 	return &s
 }
 
-func (s *SetS3StorageParamsRequest) WithStorageAwsObjectAcl(StorageAwsObjectAcl *string) *SetS3StorageParamsRequest {
-	s.StorageAwsObjectAcl = StorageAwsObjectAcl
+func (s *SetS3StorageParamsRequest) WithStorageAwsObjectAcl(StorageAwsObjectAcl string) *SetS3StorageParamsRequest {
+	s.StorageAwsObjectAcl = &StorageAwsObjectAcl
 	return s
 }
 
@@ -168,23 +170,23 @@ func NewStorageIntegrationUnsetRequest() *StorageIntegrationUnsetRequest {
 	return &StorageIntegrationUnsetRequest{}
 }
 
-func (s *StorageIntegrationUnsetRequest) WithStorageAwsObjectAcl(StorageAwsObjectAcl *bool) *StorageIntegrationUnsetRequest {
-	s.StorageAwsObjectAcl = StorageAwsObjectAcl
+func (s *StorageIntegrationUnsetRequest) WithStorageAwsObjectAcl(StorageAwsObjectAcl bool) *StorageIntegrationUnsetRequest {
+	s.StorageAwsObjectAcl = &StorageAwsObjectAcl
 	return s
 }
 
-func (s *StorageIntegrationUnsetRequest) WithEnabled(Enabled *bool) *StorageIntegrationUnsetRequest {
-	s.Enabled = Enabled
+func (s *StorageIntegrationUnsetRequest) WithEnabled(Enabled bool) *StorageIntegrationUnsetRequest {
+	s.Enabled = &Enabled
 	return s
 }
 
-func (s *StorageIntegrationUnsetRequest) WithStorageBlockedLocations(StorageBlockedLocations *bool) *StorageIntegrationUnsetRequest {
-	s.StorageBlockedLocations = StorageBlockedLocations
+func (s *StorageIntegrationUnsetRequest) WithStorageBlockedLocations(StorageBlockedLocations bool) *StorageIntegrationUnsetRequest {
+	s.StorageBlockedLocations = &StorageBlockedLocations
 	return s
 }
 
-func (s *StorageIntegrationUnsetRequest) WithComment(Comment *bool) *StorageIntegrationUnsetRequest {
-	s.Comment = Comment
+func (s *StorageIntegrationUnsetRequest) WithComment(Comment bool) *StorageIntegrationUnsetRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -196,8 +198,8 @@ func NewDropStorageIntegrationRequest(
 	return &s
 }
 
-func (s *DropStorageIntegrationRequest) WithIfExists(IfExists *bool) *DropStorageIntegrationRequest {
-	s.IfExists = IfExists
+func (s *DropStorageIntegrationRequest) WithIfExists(IfExists bool) *DropStorageIntegrationRequest {
+	s.IfExists = &IfExists
 	return s
 }
 
@@ -205,8 +207,8 @@ func NewShowStorageIntegrationRequest() *ShowStorageIntegrationRequest {
 	return &ShowStorageIntegrationRequest{}
 }
 
-func (s *ShowStorageIntegrationRequest) WithLike(Like *Like) *ShowStorageIntegrationRequest {
-	s.Like = Like
+func (s *ShowStorageIntegrationRequest) WithLike(Like Like) *ShowStorageIntegrationRequest {
+	s.Like = &Like
 	return s
 }
 

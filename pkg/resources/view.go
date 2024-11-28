@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -278,20 +280,20 @@ func View() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
 
-		CreateContext: CreateView(false),
-		ReadContext:   ReadView(true),
-		UpdateContext: UpdateView,
-		DeleteContext: DeleteView,
+		CreateContext: TrackingCreateWrapper(resources.View, CreateView(false)),
+		ReadContext:   TrackingReadWrapper(resources.View, ReadView(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.View, UpdateView),
+		DeleteContext: TrackingDeleteWrapper(resources.View, DeleteView),
 		Description:   "Resource used to manage view objects. For more information, check [view documentation](https://docs.snowflake.com/en/sql-reference/sql/create-view).",
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.View, customdiff.All(
 			ComputedIfAnyAttributeChanged(viewSchema, ShowOutputAttributeName, "comment", "change_tracking", "is_secure", "is_temporary", "is_recursive", "statement"),
 			ComputedIfAnyAttributeChanged(viewSchema, FullyQualifiedNameAttributeName, "name"),
-		),
+		)),
 
 		Schema: viewSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportView,
+			StateContext: TrackingImportWrapper(resources.View, ImportView),
 		},
 
 		StateUpgraders: []schema.StateUpgrader{

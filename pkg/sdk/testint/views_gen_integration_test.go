@@ -7,6 +7,9 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
@@ -164,6 +167,19 @@ func TestInt_Views(t *testing.T) {
 		view := createViewWithRequest(t, request)
 
 		assertView(t, view, request.GetName())
+	})
+
+	t.Run("create view: with usage tracking comment", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		plainQuery := "SELECT NULL AS TYPE"
+		query, err := tracking.AppendMetadata(plainQuery, tracking.NewVersionedResourceMetadata(resources.View, tracking.CreateOperation))
+		require.NoError(t, err)
+		request := sdk.NewCreateViewRequest(id, query)
+
+		view := createViewWithRequest(t, request)
+
+		assertView(t, view, request.GetName())
+		assert.Equal(t, fmt.Sprintf("CREATE VIEW %s AS %s", id.FullyQualifiedName(), plainQuery), view.Text)
 	})
 
 	t.Run("create view: almost complete case - without masking and projection policies", func(t *testing.T) {

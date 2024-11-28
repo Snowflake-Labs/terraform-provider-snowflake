@@ -27,6 +27,7 @@ const (
 	Pipes                          datasource = "snowflake_pipes"
 	Procedures                     datasource = "snowflake_procedures"
 	ResourceMonitors               datasource = "snowflake_resource_monitors"
+	Role                           datasource = "snowflake_role"
 	Roles                          datasource = "snowflake_roles"
 	RowAccessPolicies              datasource = "snowflake_row_access_policies"
 	Schemas                        datasource = "snowflake_schemas"

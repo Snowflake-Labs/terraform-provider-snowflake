@@ -151,15 +151,15 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	gcsBlockedLocations := blockedLocations(gcsBucketUrl)
 	azureBlockedLocations := blockedLocations(azureBucketUrl)
 
-	createS3StorageIntegration := func(t *testing.T) sdk.AccountObjectIdentifier {
+	createS3StorageIntegration := func(t *testing.T, protocol sdk.S3Protocol) sdk.AccountObjectIdentifier {
 		t.Helper()
 
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		req := sdk.NewCreateStorageIntegrationRequest(id, true, s3AllowedLocations).
-			WithIfNotExists(sdk.Bool(true)).
-			WithS3StorageProviderParams(sdk.NewS3StorageParamsRequest(awsRoleARN)).
+			WithIfNotExists(true).
+			WithS3StorageProviderParams(*sdk.NewS3StorageParamsRequest(protocol, awsRoleARN)).
 			WithStorageBlockedLocations(s3BlockedLocations).
-			WithComment(sdk.String("some comment"))
+			WithComment("some comment")
 
 		err := client.StorageIntegrations.Create(ctx, req)
 		require.NoError(t, err)
@@ -177,10 +177,10 @@ func TestInt_StorageIntegrations(t *testing.T) {
 
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		req := sdk.NewCreateStorageIntegrationRequest(id, true, gcsAllowedLocations).
-			WithIfNotExists(sdk.Bool(true)).
-			WithGCSStorageProviderParams(sdk.NewGCSStorageParamsRequest()).
+			WithIfNotExists(true).
+			WithGCSStorageProviderParams(*sdk.NewGCSStorageParamsRequest()).
 			WithStorageBlockedLocations(gcsBlockedLocations).
-			WithComment(sdk.String("some comment"))
+			WithComment("some comment")
 
 		err := client.StorageIntegrations.Create(ctx, req)
 		require.NoError(t, err)
@@ -198,10 +198,10 @@ func TestInt_StorageIntegrations(t *testing.T) {
 
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		req := sdk.NewCreateStorageIntegrationRequest(id, true, azureAllowedLocations).
-			WithIfNotExists(sdk.Bool(true)).
-			WithAzureStorageProviderParams(sdk.NewAzureStorageParamsRequest(sdk.String(azureTenantId))).
+			WithIfNotExists(true).
+			WithAzureStorageProviderParams(*sdk.NewAzureStorageParamsRequest(sdk.String(azureTenantId))).
 			WithStorageBlockedLocations(azureBlockedLocations).
-			WithComment(sdk.String("some comment"))
+			WithComment("some comment")
 
 		err := client.StorageIntegrations.Create(ctx, req)
 		require.NoError(t, err)
@@ -215,7 +215,17 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	}
 
 	t.Run("Create - S3", func(t *testing.T) {
-		id := createS3StorageIntegration(t)
+		id := createS3StorageIntegration(t, sdk.RegularS3Protocol)
+
+		storageIntegration, err := client.StorageIntegrations.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertStorageIntegrationShowResult(t, storageIntegration, id, "some comment")
+	})
+
+	t.Run("Create - S3GOV", func(t *testing.T) {
+		t.Skip("TODO(SNOW-1820099): Setup GOV accounts to be able to run this test on CI")
+		id := createS3StorageIntegration(t, sdk.GovS3Protocol)
 
 		storageIntegration, err := client.StorageIntegrations.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -242,18 +252,18 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	})
 
 	t.Run("Alter - set - S3", func(t *testing.T) {
-		id := createS3StorageIntegration(t)
+		id := createS3StorageIntegration(t, sdk.RegularS3Protocol)
 
 		changedS3AllowedLocations := append([]sdk.StorageLocation{{Path: awsBucketUrl + "/allowed-location3"}}, s3AllowedLocations...)
 		changedS3BlockedLocations := append([]sdk.StorageLocation{{Path: awsBucketUrl + "/blocked-location3"}}, s3BlockedLocations...)
 		req := sdk.NewAlterStorageIntegrationRequest(id).
 			WithSet(
-				sdk.NewStorageIntegrationSetRequest().
-					WithS3Params(sdk.NewSetS3StorageParamsRequest(awsRoleARN)).
+				*sdk.NewStorageIntegrationSetRequest().
+					WithS3Params(*sdk.NewSetS3StorageParamsRequest(awsRoleARN)).
 					WithEnabled(true).
 					WithStorageAllowedLocations(changedS3AllowedLocations).
 					WithStorageBlockedLocations(changedS3BlockedLocations).
-					WithComment(sdk.String("changed comment")),
+					WithComment("changed comment"),
 			)
 		err := client.StorageIntegrations.Alter(ctx, req)
 		require.NoError(t, err)
@@ -271,12 +281,12 @@ func TestInt_StorageIntegrations(t *testing.T) {
 		changedAzureBlockedLocations := append([]sdk.StorageLocation{{Path: azureBucketUrl + "/blocked-location3"}}, azureBlockedLocations...)
 		req := sdk.NewAlterStorageIntegrationRequest(id).
 			WithSet(
-				sdk.NewStorageIntegrationSetRequest().
-					WithAzureParams(sdk.NewSetAzureStorageParamsRequest(azureTenantId)).
+				*sdk.NewStorageIntegrationSetRequest().
+					WithAzureParams(*sdk.NewSetAzureStorageParamsRequest(azureTenantId)).
 					WithEnabled(true).
 					WithStorageAllowedLocations(changedAzureAllowedLocations).
 					WithStorageBlockedLocations(changedAzureBlockedLocations).
-					WithComment(sdk.String("changed comment")),
+					WithComment("changed comment"),
 			)
 		err := client.StorageIntegrations.Alter(ctx, req)
 		require.NoError(t, err)
@@ -288,15 +298,15 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	})
 
 	t.Run("Alter - unset", func(t *testing.T) {
-		id := createS3StorageIntegration(t)
+		id := createS3StorageIntegration(t, sdk.RegularS3Protocol)
 
 		req := sdk.NewAlterStorageIntegrationRequest(id).
 			WithUnset(
-				sdk.NewStorageIntegrationUnsetRequest().
-					WithStorageAwsObjectAcl(sdk.Bool(true)).
-					WithEnabled(sdk.Bool(true)).
-					WithStorageBlockedLocations(sdk.Bool(true)).
-					WithComment(sdk.Bool(true)),
+				*sdk.NewStorageIntegrationUnsetRequest().
+					WithStorageAwsObjectAcl(true).
+					WithEnabled(true).
+					WithStorageBlockedLocations(true).
+					WithComment(true),
 			)
 		err := client.StorageIntegrations.Alter(ctx, req)
 		require.NoError(t, err)
@@ -308,7 +318,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 	})
 
 	t.Run("Describe - S3", func(t *testing.T) {
-		id := createS3StorageIntegration(t)
+		id := createS3StorageIntegration(t, sdk.RegularS3Protocol)
 
 		desc, err := client.StorageIntegrations.Describe(ctx, id)
 		require.NoError(t, err)

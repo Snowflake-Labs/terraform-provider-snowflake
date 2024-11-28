@@ -1,10 +1,14 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -141,10 +145,10 @@ var samlIntegrationSchema = map[string]*schema.Schema{
 // SAMLIntegration returns a pointer to the resource representing a SAML2 security integration.
 func SAMLIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create:             CreateSAMLIntegration,
-		Read:               ReadSAMLIntegration,
-		Update:             UpdateSAMLIntegration,
-		Delete:             DeleteSAMLIntegration,
+		CreateContext:      TrackingCreateWrapper(resources.SamlSecurityIntegration, CreateSAMLIntegration),
+		ReadContext:        TrackingReadWrapper(resources.SamlSecurityIntegration, ReadSAMLIntegration),
+		UpdateContext:      TrackingUpdateWrapper(resources.SamlSecurityIntegration, UpdateSAMLIntegration),
+		DeleteContext:      TrackingDeleteWrapper(resources.SamlSecurityIntegration, DeleteSAMLIntegration),
 		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_saml2_integration instead.",
 
 		Schema: samlIntegrationSchema,
@@ -155,7 +159,7 @@ func SAMLIntegration() *schema.Resource {
 }
 
 // CreateSAMLIntegration implements schema.CreateFunc.
-func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
+func CreateSAMLIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 	name := d.Get("name").(string)
@@ -212,16 +216,16 @@ func CreateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	err := snowflake.Exec(db, stmt.Statement())
 	if err != nil {
-		return fmt.Errorf("error creating security integration err = %w", err)
+		return diag.FromErr(fmt.Errorf("error creating security integration err = %w", err))
 	}
 
 	d.SetId(name)
 
-	return ReadSAMLIntegration(d, meta)
+	return ReadSAMLIntegration(ctx, d, meta)
 }
 
 // ReadSAMLIntegration implements schema.ReadFunc.
-func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
+func ReadSAMLIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 	id := d.Id()
@@ -233,29 +237,29 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	s, err := snowflake.ScanSamlIntegration(row)
 	if err != nil {
-		return fmt.Errorf("could not show security integration err = %w", err)
+		return diag.FromErr(fmt.Errorf("could not show security integration err = %w", err))
 	}
 
 	// Note: category must be Security or something is broken
 	if c := s.Category.String; c != "SECURITY" {
-		return fmt.Errorf("expected %v to be an Security integration, got %v", id, c)
+		return diag.FromErr(fmt.Errorf("expected %v to be an Security integration, got %v", id, c))
 	}
 
 	// Note: type must be SAML2 or something is broken
 	if c := s.IntegrationType.String; c != "SAML2" {
-		return fmt.Errorf("expected %v to be a SAML2 integration type, got %v", id, c)
+		return diag.FromErr(fmt.Errorf("expected %v to be a SAML2 integration type, got %v", id, c))
 	}
 
 	if err := d.Set("name", s.Name.String); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("created_on", s.CreatedOn.String); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("enabled", s.Enabled.Bool); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Some properties come from the DESCRIBE INTEGRATION call
@@ -265,35 +269,35 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 	stmt = snowflake.NewSamlIntegrationBuilder(id).Describe()
 	rows, err := db.Query(stmt)
 	if err != nil {
-		return fmt.Errorf("could not describe security integration err = %w", err)
+		return diag.FromErr(fmt.Errorf("could not describe security integration err = %w", err))
 	}
 	defer rows.Close()
 	for rows.Next() {
 		if err := rows.Scan(&k, &pType, &v, &unused); err != nil {
-			return fmt.Errorf("unable to parse security integration rows err = %w", err)
+			return diag.FromErr(fmt.Errorf("unable to parse security integration rows err = %w", err))
 		}
 		switch k {
 		case "ENABLED":
 			// set using the SHOW INTEGRATION, ignoring here
 		case "SAML2_ISSUER":
 			if err := d.Set("saml2_issuer", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_issuer for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_issuer for security integration err = %w", err))
 			}
 		case "SAML2_SSO_URL":
 			if err := d.Set("saml2_sso_url", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_sso_url for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_sso_url for security integration err = %w", err))
 			}
 		case "SAML2_PROVIDER":
 			if err := d.Set("saml2_provider", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_provider for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_provider for security integration err = %w", err))
 			}
 		case "SAML2_X509_CERT":
 			if err := d.Set("saml2_x509_cert", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_x509_cert for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_x509_cert for security integration err = %w", err))
 			}
 		case "SAML2_SP_INITIATED_LOGIN_PAGE_LABEL":
 			if err := d.Set("saml2_sp_initiated_login_page_label", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_sp_initiated_login_page_label for security integration")
+				return diag.FromErr(fmt.Errorf("unable to set saml2_sp_initiated_login_page_label for security integration"))
 			}
 		case "SAML2_ENABLE_SP_INITIATED":
 			var b bool
@@ -303,17 +307,17 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 			case string:
 				b, err = strconv.ParseBool(v.(string))
 				if err != nil {
-					return fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err)
+					return diag.FromErr(fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err))
 				}
 			default:
-				return fmt.Errorf("returned saml2_force_authn that is not boolean")
+				return diag.FromErr(fmt.Errorf("returned saml2_force_authn that is not boolean"))
 			}
 			if err := d.Set("saml2_enable_sp_initiated", b); err != nil {
-				return fmt.Errorf("unable to set saml2_enable_sp_initiated for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_enable_sp_initiated for security integration err = %w", err))
 			}
 		case "SAML2_SNOWFLAKE_X509_CERT":
 			if err := d.Set("saml2_snowflake_x509_cert", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_snowflake_x509_cert for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_snowflake_x509_cert for security integration err = %w", err))
 			}
 		case "SAML2_SIGN_REQUEST":
 			var b bool
@@ -323,21 +327,21 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 			case string:
 				b, err = strconv.ParseBool(v.(string))
 				if err != nil {
-					return fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err)
+					return diag.FromErr(fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err))
 				}
 			default:
-				return fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err)
+				return diag.FromErr(fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err))
 			}
 			if err := d.Set("saml2_sign_request", b); err != nil {
-				return fmt.Errorf("unable to set saml2_sign_request for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_sign_request for security integration err = %w", err))
 			}
 		case "SAML2_REQUESTED_NAMEID_FORMAT":
 			if err := d.Set("saml2_requested_nameid_format", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_requested_nameid_format for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_requested_nameid_format for security integration err = %w", err))
 			}
 		case "SAML2_POST_LOGOUT_REDIRECT_URL":
 			if err := d.Set("saml2_post_logout_redirect_url", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_post_logout_redirect_url for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_post_logout_redirect_url for security integration err = %w", err))
 			}
 		case "SAML2_FORCE_AUTHN":
 			var b bool
@@ -347,33 +351,33 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 			case string:
 				b, err = strconv.ParseBool(v.(string))
 				if err != nil {
-					return fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err)
+					return diag.FromErr(fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err))
 				}
 			default:
-				return fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err)
+				return diag.FromErr(fmt.Errorf("returned saml2_force_authn that is not boolean err = %w", err))
 			}
 			if err := d.Set("saml2_force_authn", b); err != nil {
-				return fmt.Errorf("unable to set saml2_force_authn for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_force_authn for security integration err = %w", err))
 			}
 		case "SAML2_SNOWFLAKE_ISSUER_URL":
 			if err := d.Set("saml2_snowflake_issuer_url", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_snowflake_issuer_url for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_snowflake_issuer_url for security integration err = %w", err))
 			}
 		case "SAML2_SNOWFLAKE_ACS_URL":
 			if err := d.Set("saml2_snowflake_acs_url", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_snowflake_acs_url for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_snowflake_acs_url for security integration err = %w", err))
 			}
 		case "SAML2_SNOWFLAKE_METADATA":
 			if err := d.Set("saml2_snowflake_metadata", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_snowflake_metadata for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_snowflake_metadata for security integration err = %w", err))
 			}
 		case "SAML2_DIGEST_METHODS_USED":
 			if err := d.Set("saml2_digest_methods_used", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_digest_methods_used for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_digest_methods_used for security integration err = %w", err))
 			}
 		case "SAML2_SIGNATURE_METHODS_USED":
 			if err := d.Set("saml2_signature_methods_used", v.(string)); err != nil {
-				return fmt.Errorf("unable to set saml2_signature_methods_used for security integration err = %w", err)
+				return diag.FromErr(fmt.Errorf("unable to set saml2_signature_methods_used for security integration err = %w", err))
 			}
 		case "COMMENT":
 			// COMMENT cannot be set according to snowflake docs, so ignoring
@@ -382,11 +386,11 @@ func ReadSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
 // UpdateSAMLIntegration implements schema.UpdateFunc.
-func UpdateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
+func UpdateSAMLIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	db := client.GetConn().DB
 	id := d.Id()
@@ -467,14 +471,14 @@ func UpdateSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
 
 	if runSetStatement {
 		if err := snowflake.Exec(db, stmt.Statement()); err != nil {
-			return fmt.Errorf("error updating security integration err = %w", err)
+			return diag.FromErr(fmt.Errorf("error updating security integration err = %w", err))
 		}
 	}
 
-	return ReadSAMLIntegration(d, meta)
+	return ReadSAMLIntegration(ctx, d, meta)
 }
 
 // DeleteSAMLIntegration implements schema.DeleteFunc.
-func DeleteSAMLIntegration(d *schema.ResourceData, meta interface{}) error {
-	return DeleteResource("", snowflake.NewSamlIntegrationBuilder)(d, meta)
+func DeleteSAMLIntegration(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return diag.FromErr(DeleteResource("", snowflake.NewSamlIntegrationBuilder)(d, meta))
 }

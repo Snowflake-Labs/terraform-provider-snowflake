@@ -1,8 +1,15 @@
 package datasources
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -10,6 +17,37 @@ var likeSchema = &schema.Schema{
 	Type:        schema.TypeString,
 	Optional:    true,
 	Description: "Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).",
+}
+
+var inSchema = &schema.Schema{
+	Type:        schema.TypeList,
+	Optional:    true,
+	Description: "IN clause to filter the list of objects",
+	MaxItems:    1,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"account": {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Description:  "Returns records for the entire account.",
+				ExactlyOneOf: []string{"in.0.account", "in.0.database", "in.0.schema"},
+			},
+			"database": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Returns records for the current database in use or for a specified database.",
+				ExactlyOneOf:     []string{"in.0.account", "in.0.database", "in.0.schema"},
+				ValidateDiagFunc: resources.IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			},
+			"schema": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Returns records for the current schema in use or a specified schema. Use fully qualified name.",
+				ExactlyOneOf:     []string{"in.0.account", "in.0.database", "in.0.schema"},
+				ValidateDiagFunc: resources.IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
+			},
+		},
+	},
 }
 
 var extendedInSchema = &schema.Schema{
@@ -114,6 +152,31 @@ func handleLimitFrom(d *schema.ResourceData, setField **sdk.LimitFrom) {
 	}
 }
 
+func handleIn(d *schema.ResourceData, setField **sdk.In) error {
+	if v, ok := d.GetOk("in"); ok {
+		in := v.([]any)[0].(map[string]any)
+		accountValue, okAccount := in["account"]
+		databaseValue, okDatabase := in["database"]
+		schemaValue, okSchema := in["schema"]
+
+		switch {
+		case okAccount && accountValue.(bool):
+			*setField = &sdk.In{Account: sdk.Bool(true)}
+		case okDatabase && databaseValue.(string) != "":
+			*setField = &sdk.In{Database: sdk.NewAccountObjectIdentifier(databaseValue.(string))}
+		case okSchema && schemaValue.(string) != "":
+			schemaId, err := sdk.ParseDatabaseObjectIdentifier(schemaValue.(string))
+			if err != nil {
+				return err
+			}
+			*setField = &sdk.In{Schema: schemaId}
+		default:
+			return fmt.Errorf("the `in` filtering field was set, but none of the subfields (account, database, schema) was specified")
+		}
+	}
+	return nil
+}
+
 func handleExtendedIn(d *schema.ResourceData, setField **sdk.ExtendedIn) error {
 	if v, ok := d.GetOk("in"); ok {
 		in := v.([]any)[0].(map[string]any)
@@ -146,4 +209,11 @@ func handleExtendedIn(d *schema.ResourceData, setField **sdk.ExtendedIn) error {
 		}
 	}
 	return nil
+}
+
+func TrackingReadWrapper(datasourceName datasources.Datasource, readImplementation schema.ReadContextFunc) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		ctx = tracking.NewContext(ctx, tracking.NewVersionedDatasourceMetadata(datasourceName))
+		return readImplementation(ctx, d, meta)
+	}
 }

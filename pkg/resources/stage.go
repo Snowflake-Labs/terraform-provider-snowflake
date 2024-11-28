@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -100,10 +102,10 @@ var stageSchema = map[string]*schema.Schema{
 // TODO (SNOW-1019005): Remove snowflake package that is used in Create and Update operations
 func Stage() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateStage,
-		ReadContext:   ReadStage,
-		UpdateContext: UpdateStage,
-		DeleteContext: DeleteStage,
+		CreateContext: TrackingCreateWrapper(resources.Stage, CreateStage),
+		ReadContext:   TrackingReadWrapper(resources.Stage, ReadStage),
+		UpdateContext: TrackingUpdateWrapper(resources.Stage, UpdateStage),
+		DeleteContext: TrackingDeleteWrapper(resources.Stage, DeleteStage),
 
 		Schema: stageSchema,
 		Importer: &schema.ResourceImporter{

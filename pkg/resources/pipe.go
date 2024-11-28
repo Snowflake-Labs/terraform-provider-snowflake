@@ -6,6 +6,9 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
@@ -83,10 +86,10 @@ var pipeSchema = map[string]*schema.Schema{
 
 func Pipe() *schema.Resource {
 	return &schema.Resource{
-		Create: CreatePipe,
-		Read:   ReadPipe,
-		Update: UpdatePipe,
-		Delete: DeletePipe,
+		CreateContext: TrackingCreateWrapper(resources.Pipe, CreatePipe),
+		ReadContext:   TrackingReadWrapper(resources.Pipe, ReadPipe),
+		UpdateContext: TrackingUpdateWrapper(resources.Pipe, UpdatePipe),
+		DeleteContext: TrackingDeleteWrapper(resources.Pipe, DeletePipe),
 
 		Schema: pipeSchema,
 		Importer: &schema.ResourceImporter{
@@ -105,14 +108,13 @@ func pipeCopyStatementDiffSuppress(_, o, n string, _ *schema.ResourceData) bool 
 }
 
 // CreatePipe implements schema.CreateFunc.
-func CreatePipe(d *schema.ResourceData, meta interface{}) error {
+func CreatePipe(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	ctx := context.Background()
 	objectIdentifier := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
 	opts := &sdk.CreatePipeOptions{}
@@ -142,20 +144,19 @@ func CreatePipe(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.Pipes.Create(ctx, objectIdentifier, copyStatement, opts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(helpers.EncodeSnowflakeID(objectIdentifier))
 
-	return ReadPipe(d, meta)
+	return ReadPipe(ctx, d, meta)
 }
 
 // ReadPipe implements schema.ReadFunc.
-func ReadPipe(d *schema.ResourceData, meta interface{}) error {
+func ReadPipe(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	ctx := context.Background()
 	pipe, err := client.Pipes.ShowByID(ctx, id)
 	if err != nil {
 		// If not found, mark resource to be removed from state file during apply or refresh
@@ -165,59 +166,58 @@ func ReadPipe(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("name", pipe.Name); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("database", pipe.DatabaseName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("schema", pipe.SchemaName); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("copy_statement", pipe.Definition); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("owner", pipe.Owner); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("comment", pipe.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("notification_channel", pipe.NotificationChannel); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("auto_ingest", pipe.NotificationChannel != ""); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if strings.Contains(pipe.NotificationChannel, "arn:aws:sns:") {
 		if err := d.Set("aws_sns_topic_arn", pipe.NotificationChannel); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if err := d.Set("error_integration", pipe.ErrorIntegration); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
 // UpdatePipe implements schema.UpdateFunc.
-func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
+func UpdatePipe(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-	ctx := context.Background()
 
 	pipeSet := &sdk.PipeSet{}
 	pipeUnset := &sdk.PipeUnset{}
@@ -248,7 +248,7 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 		options := &sdk.AlterPipeOptions{Set: pipeSet}
 		err := client.Pipes.Alter(ctx, objectIdentifier, options)
 		if err != nil {
-			return fmt.Errorf("error updating pipe %v: %w", objectIdentifier.Name(), err)
+			return diag.FromErr(fmt.Errorf("error updating pipe %v: %w", objectIdentifier.Name(), err))
 		}
 	}
 
@@ -256,22 +256,22 @@ func UpdatePipe(d *schema.ResourceData, meta interface{}) error {
 		options := &sdk.AlterPipeOptions{Unset: pipeUnset}
 		err := client.Pipes.Alter(ctx, objectIdentifier, options)
 		if err != nil {
-			return fmt.Errorf("error updating pipe %v: %w", objectIdentifier.Name(), err)
+			return diag.FromErr(fmt.Errorf("error updating pipe %v: %w", objectIdentifier.Name(), err))
 		}
 	}
 
-	return ReadPipe(d, meta)
+	return ReadPipe(ctx, d, meta)
 }
 
 // DeletePipe implements schema.DeleteFunc.
-func DeletePipe(d *schema.ResourceData, meta interface{}) error {
+func DeletePipe(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	objectIdentifier := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
 	err := client.Pipes.Drop(ctx, objectIdentifier, &sdk.DropPipeOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

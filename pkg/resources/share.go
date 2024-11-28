@@ -7,6 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -45,23 +48,23 @@ var shareSchema = map[string]*schema.Schema{
 // Share returns a pointer to the resource representing a share.
 func Share() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateShare,
-		Read:   ReadShare,
-		Update: UpdateShare,
-		Delete: DeleteShare,
+		CreateContext: TrackingCreateWrapper(resources.Share, CreateShare),
+		ReadContext:   TrackingReadWrapper(resources.Share, ReadShare),
+		UpdateContext: TrackingUpdateWrapper(resources.Share, UpdateShare),
+		DeleteContext: TrackingDeleteWrapper(resources.Share, DeleteShare),
 
 		Schema: shareSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportName[sdk.AccountObjectIdentifier],
+			StateContext: TrackingImportWrapper(resources.Share, ImportName[sdk.AccountObjectIdentifier]),
 		},
 	}
 }
 
 // CreateShare implements schema.CreateFunc.
-func CreateShare(d *schema.ResourceData, meta interface{}) error {
+func CreateShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	ctx := context.Background()
+
 	comment := d.Get("comment").(string)
 	id := sdk.NewAccountObjectIdentifier(name)
 	var opts sdk.CreateShareOptions
@@ -71,7 +74,7 @@ func CreateShare(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if err := client.Shares.Create(ctx, id, &opts); err != nil {
-		return fmt.Errorf("error creating share (%v) err = %w", d.Id(), err)
+		return diag.FromErr(fmt.Errorf("error creating share (%v) err = %w", d.Id(), err))
 	}
 	d.SetId(name)
 
@@ -87,10 +90,10 @@ func CreateShare(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := setShareAccounts(ctx, client, shareID, accountIdentifiers)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return ReadShare(d, meta)
+	return ReadShare(ctx, d, meta)
 }
 
 func setShareAccounts(ctx context.Context, client *sdk.Client, shareID sdk.AccountObjectIdentifier, accounts []sdk.AccountIdentifier) error {
@@ -156,20 +159,19 @@ func setShareAccounts(ctx context.Context, client *sdk.Client, shareID sdk.Accou
 }
 
 // ReadShare implements schema.ReadFunc.
-func ReadShare(d *schema.ResourceData, meta interface{}) error {
+func ReadShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-	ctx := context.Background()
 
 	share, err := client.Shares.ShowByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("error reading share (%v) err = %w", d.Id(), err)
+		return diag.FromErr(fmt.Errorf("error reading share (%v) err = %w", d.Id(), err))
 	}
 	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("comment", share.Comment); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	accounts := make([]string, len(share.To))
 	for i, accountIdentifier := range share.To {
@@ -184,10 +186,10 @@ func ReadShare(d *schema.ResourceData, meta interface{}) error {
 		accounts = reorderStringList(currentAccounts, accounts)
 	}
 	if err := d.Set("accounts", accounts); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return err
+	return diag.FromErr(err)
 }
 
 func accountIdentifiersFromSlice(accounts []string) []sdk.AccountIdentifier {
@@ -202,10 +204,10 @@ func accountIdentifiersFromSlice(accounts []string) []sdk.AccountIdentifier {
 }
 
 // UpdateShare implements schema.UpdateFunc.
-func UpdateShare(d *schema.ResourceData, meta interface{}) error {
+func UpdateShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	if d.HasChange("accounts") {
 		o, n := d.GetChange("accounts")
 		oldAccounts := expandStringList(o.([]interface{}))
@@ -218,13 +220,13 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				return fmt.Errorf("error removing accounts from share (%v) err = %w", d.Id(), err)
+				return diag.FromErr(fmt.Errorf("error removing accounts from share (%v) err = %w", d.Id(), err))
 			}
 		} else {
 			accountIdentifiers := accountIdentifiersFromSlice(newAccounts)
 			err := setShareAccounts(ctx, client, id, accountIdentifiers)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
@@ -236,21 +238,21 @@ func UpdateShare(d *schema.ResourceData, meta interface{}) error {
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("error updating share (%v) comment err = %w", d.Id(), err)
+			return diag.FromErr(fmt.Errorf("error updating share (%v) comment err = %w", d.Id(), err))
 		}
 	}
 
-	return ReadShare(d, meta)
+	return ReadShare(ctx, d, meta)
 }
 
 // DeleteShare implements schema.DeleteFunc.
-func DeleteShare(d *schema.ResourceData, meta interface{}) error {
+func DeleteShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
 	err := client.Shares.Drop(ctx, id, &sdk.DropShareOptions{IfExists: sdk.Bool(true)})
 	if err != nil {
-		return fmt.Errorf("error deleting share (%v) err = %w", d.Id(), err)
+		return diag.FromErr(fmt.Errorf("error deleting share (%v) err = %w", d.Id(), err))
 	}
 	return nil
 }

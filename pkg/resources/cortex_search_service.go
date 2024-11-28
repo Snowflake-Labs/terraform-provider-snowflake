@@ -7,6 +7,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
@@ -81,10 +83,10 @@ var cortexSearchServiceSchema = map[string]*schema.Schema{
 // CortexSearchService returns a pointer to the resource representing a Cortex search service.
 func CortexSearchService() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: CreateCortexSearchService,
-		ReadContext:   ReadCortexSearchService,
-		UpdateContext: UpdateCortexSearchService,
-		DeleteContext: DeleteCortexSearchService,
+		CreateContext: TrackingCreateWrapper(resources.CortexSearchService, CreateCortexSearchService),
+		ReadContext:   TrackingReadWrapper(resources.CortexSearchService, ReadCortexSearchService),
+		UpdateContext: TrackingUpdateWrapper(resources.CortexSearchService, UpdateCortexSearchService),
+		DeleteContext: TrackingDeleteWrapper(resources.CortexSearchService, DeleteCortexSearchService),
 
 		Schema: cortexSearchServiceSchema,
 		Importer: &schema.ResourceImporter{

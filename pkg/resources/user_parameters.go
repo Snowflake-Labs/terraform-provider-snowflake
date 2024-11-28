@@ -77,11 +77,12 @@ var (
 )
 
 type parameterDef[T ~string] struct {
-	Name         T
-	Type         schema.ValueType
-	Description  string
-	DiffSuppress schema.SchemaDiffSuppressFunc
-	ValidateDiag schema.SchemaValidateDiagFunc
+	Name          T
+	Type          schema.ValueType
+	Description   string
+	DiffSuppress  schema.SchemaDiffSuppressFunc
+	ValidateDiag  schema.SchemaValidateDiagFunc
+	ConflictsWith []string
 }
 
 func init() {
@@ -159,6 +160,7 @@ func init() {
 			Optional:         true,
 			ValidateDiagFunc: field.ValidateDiag,
 			DiffSuppressFunc: field.DiffSuppress,
+			ConflictsWith:    field.ConflictsWith,
 		}
 	}
 }
