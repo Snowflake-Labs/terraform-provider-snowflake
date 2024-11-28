@@ -806,6 +806,118 @@ end;;
 	})
 }
 
+func TestAcc_View_columnsWithMaskingPolicyWithoutUsing(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	table, tableCleanup := acc.TestClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
+		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("foo", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("bar", sdk.DataTypeNumber),
+	})
+	t.Cleanup(tableCleanup)
+	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
+
+	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyWithOptions(t,
+		[]sdk.TableColumnSignature{
+			{
+				Name: "One",
+				Type: sdk.DataTypeNumber,
+			},
+		},
+		sdk.DataTypeNumber,
+		`
+case
+	when One > 0 then One
+	else 0
+end;;
+`,
+		new(sdk.CreateMaskingPolicyOptions),
+	)
+	t.Cleanup(maskingPolicyCleanup)
+
+	projectionPolicy, projectionPolicyCleanup := acc.TestClient().ProjectionPolicy.CreateProjectionPolicy(t)
+	t.Cleanup(projectionPolicyCleanup)
+
+	// generators currently don't handle lists of objects, so use the old way
+	basicView := func(columns ...string) config.Variables {
+		return config.Variables{
+			"name":      config.StringVariable(id.Name()),
+			"database":  config.StringVariable(id.DatabaseName()),
+			"schema":    config.StringVariable(id.SchemaName()),
+			"statement": config.StringVariable(statement),
+			"column": config.SetVariable(
+				collections.Map(columns, func(columnName string) config.Variable {
+					return config.MapVariable(map[string]config.Variable{
+						"column_name": config.StringVariable(columnName),
+					})
+				})...,
+			),
+		}
+	}
+
+	basicViewWithPolicies := func() config.Variables {
+		conf := basicView("ID", "FOO")
+		delete(conf, "column")
+		conf["projection_name"] = config.StringVariable(projectionPolicy.FullyQualifiedName())
+		conf["masking_name"] = config.StringVariable(maskingPolicy.ID().FullyQualifiedName())
+		return conf
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
+		Steps: []resource.TestStep{
+			// With all policies on columns
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/columns"),
+				ConfigVariables: basicViewWithPolicies(),
+				Check: assert.AssertThat(t,
+					resourceassert.ViewResource(t, "snowflake_view.test").
+						HasNameString(id.Name()).
+						HasStatementString(statement).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasColumnLength(2),
+					objectassert.View(t, id).
+						HasMaskingPolicyReferences(acc.TestClient(), 1).
+						HasProjectionPolicyReferences(acc.TestClient(), 1),
+				),
+			},
+			// Remove policies on columns externally
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/columns"),
+				ConfigVariables: basicViewWithPolicies(),
+				PreConfig: func() {
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetMaskingPolicyOnColumn(*sdk.NewViewUnsetColumnMaskingPolicyRequest("ID")))
+					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetProjectionPolicyOnColumn(*sdk.NewViewUnsetProjectionPolicyRequest("ID")))
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.ViewResource(t, "snowflake_view.test").
+						HasNameString(id.Name()).
+						HasStatementString(statement).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()).
+						HasColumnLength(2),
+					objectassert.View(t, id).
+						HasMaskingPolicyReferences(acc.TestClient(), 1).
+						HasProjectionPolicyReferences(acc.TestClient(), 1),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_View_Rename(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"

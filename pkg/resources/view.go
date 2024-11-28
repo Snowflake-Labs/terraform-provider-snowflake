@@ -167,7 +167,8 @@ var viewSchema = map[string]*schema.Schema{
 								Elem: &schema.Schema{
 									Type: schema.TypeString,
 								},
-								Description: "Specifies the arguments to pass into the conditional masking policy SQL expression. The first column in the list specifies the column for the policy conditions to mask or tokenize the data and must match the column to which the masking policy is set. The additional columns specify the columns to evaluate to determine whether to mask or tokenize the data in each row of the query result when a query is made on the first column. If the USING clause is omitted, Snowflake treats the conditional masking policy as a normal masking policy.",
+								DiffSuppressFunc: IgnoreMatchingColumnNameAndMaskingPolicyUsingFirstElem(),
+								Description:      "Specifies the arguments to pass into the conditional masking policy SQL expression. The first column in the list specifies the column for the policy conditions to mask or tokenize the data and must match the column to which the masking policy is set. The additional columns specify the columns to evaluate to determine whether to mask or tokenize the data in each row of the query result when a query is made on the first column. If the USING clause is omitted, Snowflake treats the conditional masking policy as a normal masking policy.",
 							},
 						},
 					},
@@ -571,6 +572,7 @@ func extractPolicyWithColumnsList(v any, columnsKey string) (sdk.SchemaObjectIde
 		return sdk.SchemaObjectIdentifier{}, nil, err
 	}
 	if policyConfig[columnsKey] == nil {
+		// TODO: fix
 		return id, nil, fmt.Errorf("unable to extract policy with column list, unable to find columnsKey: %s", columnsKey)
 	}
 	columnsRaw := expandStringList(policyConfig[columnsKey].([]any))
@@ -779,7 +781,9 @@ func handleColumns(d ResourceValueSetter, columns []sdk.ViewDetails, policyRefs 
 		projectionPolicy, err := collections.FindFirst(policyRefs, func(r sdk.PolicyReference) bool {
 			return r.PolicyKind == sdk.PolicyKindProjectionPolicy && r.RefColumnName != nil && *r.RefColumnName == column.Name
 		})
-		if err == nil {
+		if err != nil {
+			columnsRaw[i]["projection_policy"] = nil
+		} else {
 			if projectionPolicy.PolicyDb != nil && projectionPolicy.PolicySchema != nil {
 				columnsRaw[i]["projection_policy"] = []map[string]any{
 					{
@@ -793,6 +797,9 @@ func handleColumns(d ResourceValueSetter, columns []sdk.ViewDetails, policyRefs 
 		maskingPolicy, err := collections.FindFirst(policyRefs, func(r sdk.PolicyReference) bool {
 			return r.PolicyKind == sdk.PolicyKindMaskingPolicy && r.RefColumnName != nil && *r.RefColumnName == column.Name
 		})
+		// if err != nil {
+		// 	columnsRaw[i]["masking_policy"] = nil
+		// } else {
 		if err == nil {
 			if maskingPolicy.PolicyDb != nil && maskingPolicy.PolicySchema != nil {
 				var usingArgs []string
