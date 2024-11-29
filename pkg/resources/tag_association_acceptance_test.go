@@ -3,15 +3,20 @@ package resources_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/config"
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,13 +31,13 @@ func TestAcc_TagAssociation(t *testing.T) {
 	tagValue2 := "bar"
 	databaseId := acc.TestClient().Ids.DatabaseId()
 	resourceName := "snowflake_tag_association.test"
-	m := func(tagId sdk.SchemaObjectIdentifier, tagValue string) map[string]config.Variable {
-		return map[string]config.Variable{
-			"tag_name":                      config.StringVariable(tagId.Name()),
-			"tag_value":                     config.StringVariable(tagValue),
-			"database":                      config.StringVariable(databaseId.Name()),
-			"schema":                        config.StringVariable(acc.TestSchemaName),
-			"database_fully_qualified_name": config.StringVariable(databaseId.FullyQualifiedName()),
+	m := func(tagId sdk.SchemaObjectIdentifier, tagValue string) map[string]tfconfig.Variable {
+		return map[string]tfconfig.Variable{
+			"tag_name":                      tfconfig.StringVariable(tagId.Name()),
+			"tag_value":                     tfconfig.StringVariable(tagValue),
+			"database":                      tfconfig.StringVariable(databaseId.Name()),
+			"schema":                        tfconfig.StringVariable(acc.TestSchemaName),
+			"database_fully_qualified_name": tfconfig.StringVariable(databaseId.FullyQualifiedName()),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -41,7 +46,7 @@ func TestAcc_TagAssociation(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: acc.CheckTagValueEmpty(t),
+		CheckDestroy: acc.CheckResourceTagUnset(t),
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/basic"),
@@ -55,10 +60,31 @@ func TestAcc_TagAssociation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tag_value", tagValue),
 				),
 			},
-			// external change
+			// external change - unset tag
 			{
 				PreConfig: func() {
-					acc.TestClient().Tag.Unset(t, sdk.ObjectTypeDatabase, sdk.NewAccountObjectIdentifier(acc.TestDatabaseName), []sdk.ObjectIdentifier{tagId})
+					acc.TestClient().Tag.Unset(t, sdk.ObjectTypeDatabase, databaseId, []sdk.ObjectIdentifier{tagId})
+				},
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/basic"),
+				ConfigVariables: m(tagId, tagValue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", helpers.EncodeSnowflakeID(tagId.FullyQualifiedName(), tagValue, string(sdk.ObjectTypeDatabase))),
+					resource.TestCheckResourceAttr(resourceName, "object_type", string(sdk.ObjectTypeDatabase)),
+					resource.TestCheckResourceAttr(resourceName, "object_identifiers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "object_identifiers.*", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_id", tagId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "tag_value", tagValue),
+				),
+			},
+			// external change - set a different value
+			{
+				PreConfig: func() {
+					acc.TestClient().Tag.Set(t, sdk.ObjectTypeDatabase, databaseId, []sdk.TagAssociation{
+						{
+							Name:  tagId,
+							Value: "external",
+						},
+					})
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_TagAssociation/basic"),
 				ConfigVariables: m(tagId, tagValue),
@@ -105,6 +131,7 @@ func TestAcc_TagAssociation(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "object_identifiers.*", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "tag_id", tag2Id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "tag_value", tagValue2),
+					acc.CheckTagUnset(t, tagId, acc.TestClient().Ids.DatabaseId(), sdk.ObjectTypeDatabase),
 				),
 			},
 			{
@@ -132,17 +159,133 @@ func TestAcc_TagAssociation(t *testing.T) {
 	})
 }
 
+func TestAcc_TagAssociation_objectIdentifiers(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tag, tagCleanup := acc.TestClient().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
+	dbRole1, dbRole1Cleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(dbRole1Cleanup)
+	dbRole2, dbRole2Cleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(dbRole2Cleanup)
+	dbRole3, dbRole3Cleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(dbRole3Cleanup)
+
+	model12 := model.TagAssociation("test", []sdk.ObjectIdentifier{dbRole1.ID(), dbRole2.ID()}, string(sdk.ObjectTypeDatabaseRole), tag.ID().FullyQualifiedName(), "foo")
+	model123 := model.TagAssociation("test", []sdk.ObjectIdentifier{dbRole1.ID(), dbRole2.ID(), dbRole3.ID()}, string(sdk.ObjectTypeDatabaseRole), tag.ID().FullyQualifiedName(), "foo")
+	model13 := model.TagAssociation("test", []sdk.ObjectIdentifier{dbRole1.ID(), dbRole3.ID()}, string(sdk.ObjectTypeDatabaseRole), tag.ID().FullyQualifiedName(), "foo")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			acc.CheckResourceTagUnset(t),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model12),
+				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model12.ResourceReference()).
+					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
+					HasTagIdString(tag.ID().FullyQualifiedName()).
+					HasObjectIdentifiersLength(2).
+					HasTagValueString("foo"),
+					assert.Check(resource.TestCheckTypeSetElemAttr(model12.ResourceReference(), "object_identifiers.*", dbRole1.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckTypeSetElemAttr(model12.ResourceReference(), "object_identifiers.*", dbRole2.ID().FullyQualifiedName())),
+				),
+			},
+			{
+				Config: config.FromModel(t, model123),
+				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model12.ResourceReference()).
+					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
+					HasTagIdString(tag.ID().FullyQualifiedName()).
+					HasObjectIdentifiersLength(3).
+					HasTagValueString("foo"),
+					assert.Check(resource.TestCheckTypeSetElemAttr(model12.ResourceReference(), "object_identifiers.*", dbRole1.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckTypeSetElemAttr(model12.ResourceReference(), "object_identifiers.*", dbRole2.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckTypeSetElemAttr(model12.ResourceReference(), "object_identifiers.*", dbRole3.ID().FullyQualifiedName())),
+				),
+			},
+			{
+				Config: config.FromModel(t, model13),
+				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model13.ResourceReference()).
+					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
+					HasTagIdString(tag.ID().FullyQualifiedName()).
+					HasObjectIdentifiersLength(2).
+					HasTagValueString("foo"),
+					assert.Check(resource.TestCheckTypeSetElemAttr(model13.ResourceReference(), "object_identifiers.*", dbRole1.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckTypeSetElemAttr(model13.ResourceReference(), "object_identifiers.*", dbRole3.ID().FullyQualifiedName())),
+					assert.Check(acc.CheckTagUnset(t, tag.ID(), dbRole2.ID(), sdk.ObjectTypeDatabaseRole)),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_TagAssociation_objectType(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tag, tagCleanup := acc.TestClient().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+	dbRole, dbRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(dbRoleCleanup)
+
+	baseModel := model.TagAssociation("test", []sdk.ObjectIdentifier{role.ID()}, string(sdk.ObjectTypeRole), tag.ID().FullyQualifiedName(), "foo")
+	modelWithDifferentObjectType := model.TagAssociation("test", []sdk.ObjectIdentifier{dbRole.ID()}, string(sdk.ObjectTypeDatabaseRole), tag.ID().FullyQualifiedName(), "foo")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			acc.CheckResourceTagUnset(t),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, baseModel),
+				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, baseModel.ResourceReference()).
+					HasObjectTypeString(string(sdk.ObjectTypeRole)).
+					HasTagIdString(tag.ID().FullyQualifiedName()).
+					HasObjectIdentifiersLength(1).
+					HasTagValueString("foo"),
+				),
+			},
+			{
+				Config: config.FromModel(t, modelWithDifferentObjectType),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(modelWithDifferentObjectType.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, baseModel.ResourceReference()).
+					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
+					HasTagIdString(tag.ID().FullyQualifiedName()).
+					HasObjectIdentifiersLength(1).
+					HasTagValueString("foo"),
+					assert.Check(acc.CheckTagUnset(t, tag.ID(), role.ID(), sdk.ObjectTypeRole)),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_TagAssociationSchema(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	schemaId := acc.TestClient().Ids.SchemaId()
 	resourceName := "snowflake_tag_association.test"
-	m := func() map[string]config.Variable {
-		return map[string]config.Variable{
-			"tag_name":                    config.StringVariable(tagId.Name()),
-			"database":                    config.StringVariable(acc.TestDatabaseName),
-			"schema":                      config.StringVariable(acc.TestSchemaName),
-			"schema_fully_qualified_name": config.StringVariable(schemaId.FullyQualifiedName()),
+	m := func() map[string]tfconfig.Variable {
+		return map[string]tfconfig.Variable{
+			"tag_name":                    tfconfig.StringVariable(tagId.Name()),
+			"database":                    tfconfig.StringVariable(acc.TestDatabaseName),
+			"schema":                      tfconfig.StringVariable(acc.TestSchemaName),
+			"schema_fully_qualified_name": tfconfig.StringVariable(schemaId.FullyQualifiedName()),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -169,6 +312,39 @@ func TestAcc_TagAssociationSchema(t *testing.T) {
 	})
 }
 
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3235 is fixed
+func TestAcc_TagAssociation_lowercaseObjectType(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tag, tagCleanup := acc.TestClient().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
+	objectType := strings.ToLower(string(sdk.ObjectTypeSchema))
+	objectId := acc.TestClient().Ids.SchemaId()
+
+	model := model.TagAssociation("test", []sdk.ObjectIdentifier{objectId}, objectType, tag.ID().FullyQualifiedName(), "foo")
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model.ResourceReference()).
+					HasIdString(helpers.EncodeSnowflakeID(tag.ID().FullyQualifiedName(), "foo", string(sdk.ObjectTypeSchema))).
+					HasObjectTypeString(string(sdk.ObjectTypeSchema)).
+					HasTagIdString(tag.ID().FullyQualifiedName()).
+					HasObjectIdentifiersLength(1).
+					HasTagValueString("foo"),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_TagAssociationColumn(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 
@@ -176,14 +352,14 @@ func TestAcc_TagAssociationColumn(t *testing.T) {
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	columnId := sdk.NewTableColumnIdentifier(tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), "column")
 	resourceName := "snowflake_tag_association.test"
-	m := func() map[string]config.Variable {
-		return map[string]config.Variable{
-			"tag_name":                    config.StringVariable(tagId.Name()),
-			"table_name":                  config.StringVariable(tableId.Name()),
-			"database":                    config.StringVariable(acc.TestDatabaseName),
-			"schema":                      config.StringVariable(acc.TestSchemaName),
-			"column":                      config.StringVariable("column"),
-			"column_fully_qualified_name": config.StringVariable(columnId.FullyQualifiedName()),
+	m := func() map[string]tfconfig.Variable {
+		return map[string]tfconfig.Variable{
+			"tag_name":                    tfconfig.StringVariable(tagId.Name()),
+			"table_name":                  tfconfig.StringVariable(tableId.Name()),
+			"database":                    tfconfig.StringVariable(acc.TestDatabaseName),
+			"schema":                      tfconfig.StringVariable(acc.TestSchemaName),
+			"column":                      tfconfig.StringVariable("column"),
+			"column_fully_qualified_name": tfconfig.StringVariable(columnId.FullyQualifiedName()),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -216,12 +392,12 @@ func TestAcc_TagAssociationIssue1202(t *testing.T) {
 	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	tableName := acc.TestClient().Ids.Alpha()
 	resourceName := "snowflake_tag_association.test"
-	m := func() map[string]config.Variable {
-		return map[string]config.Variable{
-			"tag_name":   config.StringVariable(tagId.Name()),
-			"table_name": config.StringVariable(tableName),
-			"database":   config.StringVariable(acc.TestDatabaseName),
-			"schema":     config.StringVariable(acc.TestSchemaName),
+	m := func() map[string]tfconfig.Variable {
+		return map[string]tfconfig.Variable{
+			"tag_name":   tfconfig.StringVariable(tagId.Name()),
+			"table_name": tfconfig.StringVariable(tableName),
+			"database":   tfconfig.StringVariable(acc.TestDatabaseName),
+			"schema":     tfconfig.StringVariable(acc.TestSchemaName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -254,16 +430,16 @@ func TestAcc_TagAssociationIssue1909(t *testing.T) {
 	columnId1 := sdk.NewTableColumnIdentifier(tableId1.DatabaseName(), tableId1.SchemaName(), tableId1.Name(), "test.column")
 	columnId2 := sdk.NewTableColumnIdentifier(tableId2.DatabaseName(), tableId2.SchemaName(), tableId2.Name(), "test.column")
 	resourceName := "snowflake_tag_association.test"
-	m := func() map[string]config.Variable {
-		return map[string]config.Variable{
-			"tag_name":                     config.StringVariable(tagId.Name()),
-			"table_name":                   config.StringVariable(tableId1.Name()),
-			"table_name2":                  config.StringVariable(tableId2.Name()),
-			"column_name":                  config.StringVariable("test.column"),
-			"column_fully_qualified_name":  config.StringVariable(columnId1.FullyQualifiedName()),
-			"column2_fully_qualified_name": config.StringVariable(columnId2.FullyQualifiedName()),
-			"database":                     config.StringVariable(acc.TestDatabaseName),
-			"schema":                       config.StringVariable(acc.TestSchemaName),
+	m := func() map[string]tfconfig.Variable {
+		return map[string]tfconfig.Variable{
+			"tag_name":                     tfconfig.StringVariable(tagId.Name()),
+			"table_name":                   tfconfig.StringVariable(tableId1.Name()),
+			"table_name2":                  tfconfig.StringVariable(tableId2.Name()),
+			"column_name":                  tfconfig.StringVariable("test.column"),
+			"column_fully_qualified_name":  tfconfig.StringVariable(columnId1.FullyQualifiedName()),
+			"column2_fully_qualified_name": tfconfig.StringVariable(columnId2.FullyQualifiedName()),
+			"database":                     tfconfig.StringVariable(acc.TestDatabaseName),
+			"schema":                       tfconfig.StringVariable(acc.TestSchemaName),
 		}
 	}
 	resource.Test(t, resource.TestCase{
@@ -315,12 +491,12 @@ func TestAcc_TagAssociationAccountIssues1910(t *testing.T) {
 	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	accountId := acc.TestClient().Context.CurrentAccountIdentifier(t)
 	resourceName := "snowflake_tag_association.test"
-	m := func() map[string]config.Variable {
-		return map[string]config.Variable{
-			"tag_name":                     config.StringVariable(tagId.Name()),
-			"account_fully_qualified_name": config.StringVariable(accountId.FullyQualifiedName()),
-			"database":                     config.StringVariable(acc.TestDatabaseName),
-			"schema":                       config.StringVariable(acc.TestSchemaName),
+	m := func() map[string]tfconfig.Variable {
+		return map[string]tfconfig.Variable{
+			"tag_name":                     tfconfig.StringVariable(tagId.Name()),
+			"account_fully_qualified_name": tfconfig.StringVariable(accountId.FullyQualifiedName()),
+			"database":                     tfconfig.StringVariable(acc.TestDatabaseName),
+			"schema":                       tfconfig.StringVariable(acc.TestSchemaName),
 		}
 	}
 
@@ -354,14 +530,14 @@ func TestAcc_TagAssociationIssue1926(t *testing.T) {
 	tableId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	columnId1 := sdk.NewTableColumnIdentifier(tableId1.DatabaseName(), tableId1.SchemaName(), tableId1.Name(), "init")
 	resourceName := "snowflake_tag_association.test"
-	m := func() map[string]config.Variable {
-		return map[string]config.Variable{
-			"tag_name":                    config.StringVariable(tagId.Name()),
-			"table_name":                  config.StringVariable(tableId1.Name()),
-			"column_name":                 config.StringVariable(columnId1.Name()),
-			"column_fully_qualified_name": config.StringVariable(columnId1.FullyQualifiedName()),
-			"database":                    config.StringVariable(acc.TestDatabaseName),
-			"schema":                      config.StringVariable(acc.TestSchemaName),
+	m := func() map[string]tfconfig.Variable {
+		return map[string]tfconfig.Variable{
+			"tag_name":                    tfconfig.StringVariable(tagId.Name()),
+			"table_name":                  tfconfig.StringVariable(tableId1.Name()),
+			"column_name":                 tfconfig.StringVariable(columnId1.Name()),
+			"column_fully_qualified_name": tfconfig.StringVariable(columnId1.FullyQualifiedName()),
+			"database":                    tfconfig.StringVariable(acc.TestDatabaseName),
+			"schema":                      tfconfig.StringVariable(acc.TestSchemaName),
 		}
 	}
 
@@ -369,13 +545,13 @@ func TestAcc_TagAssociationIssue1926(t *testing.T) {
 	tableId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix("table.test")
 	columnId2 := sdk.NewTableColumnIdentifier(tableId2.DatabaseName(), tableId2.SchemaName(), tableId2.Name(), "column")
 	columnId3 := sdk.NewTableColumnIdentifier(tableId2.DatabaseName(), tableId2.SchemaName(), tableId2.Name(), "column.test")
-	m2["table_name"] = config.StringVariable(tableId2.Name())
-	m2["column_name"] = config.StringVariable(columnId2.Name())
-	m2["column_fully_qualified_name"] = config.StringVariable(columnId2.FullyQualifiedName())
+	m2["table_name"] = tfconfig.StringVariable(tableId2.Name())
+	m2["column_name"] = tfconfig.StringVariable(columnId2.Name())
+	m2["column_fully_qualified_name"] = tfconfig.StringVariable(columnId2.FullyQualifiedName())
 	m3 := m()
-	m3["table_name"] = config.StringVariable(tableId2.Name())
-	m3["column_name"] = config.StringVariable(columnId3.Name())
-	m3["column_fully_qualified_name"] = config.StringVariable(columnId3.FullyQualifiedName())
+	m3["table_name"] = tfconfig.StringVariable(tableId2.Name())
+	m3["column_name"] = tfconfig.StringVariable(columnId3.Name())
+	m3["column_fully_qualified_name"] = tfconfig.StringVariable(columnId3.FullyQualifiedName())
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -432,12 +608,12 @@ func TestAcc_TagAssociation_migrateFromVersion_0_98_0(t *testing.T) {
 	resourceName := "snowflake_tag_association.test"
 	schemaId := acc.TestClient().Ids.SchemaId()
 
-	m := func() config.Variables {
-		return config.Variables{
-			"tag_name":                    config.StringVariable(tagId.Name()),
-			"database":                    config.StringVariable(acc.TestDatabaseName),
-			"schema":                      config.StringVariable(acc.TestSchemaName),
-			"schema_fully_qualified_name": config.StringVariable(schemaId.FullyQualifiedName()),
+	m := func() tfconfig.Variables {
+		return tfconfig.Variables{
+			"tag_name":                    tfconfig.StringVariable(tagId.Name()),
+			"database":                    tfconfig.StringVariable(acc.TestDatabaseName),
+			"schema":                      tfconfig.StringVariable(acc.TestSchemaName),
+			"schema_fully_qualified_name": tfconfig.StringVariable(schemaId.FullyQualifiedName()),
 		}
 	}
 

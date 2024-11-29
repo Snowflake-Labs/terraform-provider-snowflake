@@ -125,7 +125,7 @@ func ParseGrantOwnershipId(id string) (*GrantOwnershipId, error) {
 			return grantOwnershipId, sdk.NewError(`grant ownership identifier should consist of 6 parts "<target_role_kind>|<role_name>|<outbound_privileges_behavior>|OnObject|<object_type>|<object_name>"`)
 		}
 		objectType := sdk.ObjectType(parts[4])
-		objectName, err := getOnObjectIdentifier(objectType, parts[5])
+		objectName, err := GetOnObjectIdentifier(objectType, parts[5])
 		if err != nil {
 			return nil, err
 		}

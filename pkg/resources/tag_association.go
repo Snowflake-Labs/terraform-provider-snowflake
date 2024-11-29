@@ -39,11 +39,12 @@ var tagAssociationSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("object_identifiers"),
 	},
 	"object_type": {
-		Type:         schema.TypeString,
-		Required:     true,
-		Description:  fmt.Sprintf("Specifies the type of object to add a tag. Allowed object types: %v.", sdk.TagAssociationAllowedObjectTypesString),
-		ValidateFunc: validation.StringInSlice(sdk.TagAssociationAllowedObjectTypesString, true),
-		ForceNew:     true,
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      fmt.Sprintf("Specifies the type of object to add a tag. Allowed object types: %v.", sdk.TagAssociationAllowedObjectTypesString),
+		ValidateFunc:     validation.StringInSlice(sdk.TagAssociationAllowedObjectTypesString, true),
+		DiffSuppressFunc: ignoreCaseSuppressFunc,
+		ForceNew:         true,
 	},
 	"tag_id": {
 		Type:             schema.TypeString,
@@ -102,6 +103,10 @@ func ImportTagAssociation(ctx context.Context, d *schema.ResourceData, meta any)
 	if len(idParts) != 3 {
 		return nil, fmt.Errorf("invalid resource id: expected 3 arguments, but got %d", len(idParts))
 	}
+	objectType, err := sdk.ToObjectType(idParts[2])
+	if err != nil {
+		return nil, err
+	}
 
 	if err := d.Set("tag_id", idParts[0]); err != nil {
 		return nil, err
@@ -109,7 +114,7 @@ func ImportTagAssociation(ctx context.Context, d *schema.ResourceData, meta any)
 	if err := d.Set("tag_value", idParts[1]); err != nil {
 		return nil, err
 	}
-	if err := d.Set("object_type", idParts[2]); err != nil {
+	if err := d.Set("object_type", objectType); err != nil {
 		return nil, err
 	}
 	return []*schema.ResourceData{d}, nil
@@ -122,7 +127,10 @@ func TagIdentifierAndObjectIdentifier(d *schema.ResourceData) (sdk.SchemaObjectI
 		return sdk.SchemaObjectIdentifier{}, nil, "", fmt.Errorf("invalid tag id: %w", err)
 	}
 
-	objectType := sdk.ObjectType(d.Get("object_type").(string))
+	objectType, err := sdk.ToObjectType(d.Get("object_type").(string))
+	if err != nil {
+		return sdk.SchemaObjectIdentifier{}, nil, "", err
+	}
 
 	ids, err := ExpandObjectIdentifierSet(d.Get("object_identifiers").(*schema.Set).List(), objectType)
 	if err != nil {
@@ -193,6 +201,10 @@ func ReadContextTagAssociation(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("object_identifiers", correctObjectIds); err != nil {
 		return diag.FromErr(err)
 	}
+	// ensure that object_type is upper case in the state
+	if err := d.Set("object_type", objectType); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
@@ -202,38 +214,7 @@ func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if d.HasChange("tag_value") {
-		o, n := d.GetChange("object_identifiers")
-		tagValue := d.Get("tag_value").(string)
-		// Set only on old ids, because:
-		// - for the new ids we will set the new tag value below
-		// - for the removed ids we will unset the tag below
-		// So here we set only for the ids that don't change
-		oldIds, err := ExpandObjectIdentifierSet(o.(*schema.Set).List(), objectType)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		newIds, err := ExpandObjectIdentifierSet(n.(*schema.Set).List(), objectType)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		_, _, commonIds := ListDiffWithCommonItems(oldIds, newIds)
-
-		for _, id := range commonIds {
-			request := sdk.NewSetTagRequest(objectType, id).WithSetTags([]sdk.TagAssociation{
-				{
-					Name:  tagId,
-					Value: tagValue,
-				},
-			})
-			if err := client.Tags.Set(ctx, request); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-		d.SetId(helpers.EncodeResourceIdentifier(tagId.FullyQualifiedName(), tagValue, string(objectType)))
-	}
-	if d.HasChange("object_identifiers") {
+	if d.HasChanges("object_identifiers", "tag_value") {
 		tagValue := d.Get("tag_value").(string)
 
 		o, n := d.GetChange("object_identifiers")
@@ -247,9 +228,9 @@ func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 			return diag.FromErr(err)
 		}
 
-		addedids, removedids := ListDiff(oldIds, newIds)
+		addedIds, removedIds, commonIds := ListDiffWithCommonItems(oldIds, newIds)
 
-		for _, id := range addedids {
+		for _, id := range addedIds {
 			request := sdk.NewSetTagRequest(objectType, id).WithSetTags([]sdk.TagAssociation{
 				{
 					Name:  tagId,
@@ -261,7 +242,7 @@ func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		for _, id := range removedids {
+		for _, id := range removedIds {
 			if objectType == sdk.ObjectTypeColumn {
 				skip, err := skipColumnIfDoesNotExist(ctx, client, id)
 				if err != nil {
@@ -275,6 +256,21 @@ func UpdateContextTagAssociation(ctx context.Context, d *schema.ResourceData, me
 			if err := client.Tags.Unset(ctx, request); err != nil {
 				return diag.FromErr(err)
 			}
+		}
+
+		if d.HasChange("tag_value") {
+			for _, id := range commonIds {
+				request := sdk.NewSetTagRequest(objectType, id).WithSetTags([]sdk.TagAssociation{
+					{
+						Name:  tagId,
+						Value: tagValue,
+					},
+				})
+				if err := client.Tags.Set(ctx, request); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+			d.SetId(helpers.EncodeResourceIdentifier(tagId.FullyQualifiedName(), tagValue, string(objectType)))
 		}
 	}
 

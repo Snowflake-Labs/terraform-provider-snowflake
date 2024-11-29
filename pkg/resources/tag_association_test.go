@@ -11,9 +11,10 @@ import (
 )
 
 func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
+	tagId := sdk.NewSchemaObjectIdentifier("test_db", "test_schema", "test_tag")
 	t.Run("account identifier", func(t *testing.T) {
 		in := map[string]any{
-			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
+			"tag_id":      tagId.FullyQualifiedName(),
 			"object_type": "ACCOUNT",
 			"object_identifiers": []any{
 				"orgname.accountname",
@@ -22,14 +23,14 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		d := schema.TestResourceDataRaw(t, resources.TagAssociation().Schema, in)
 		tid, identifiers, objectType, err := resources.TagIdentifierAndObjectIdentifier(d)
 		require.NoError(t, err)
-		assert.Equal(t, sdk.NewSchemaObjectIdentifier("test_db", "test_schema", "test_tag"), tid)
+		assert.Equal(t, tagId, tid)
 		assert.Len(t, identifiers, 1)
 		assert.Equal(t, `"orgname"."accountname"`, identifiers[0].FullyQualifiedName())
 		assert.Equal(t, sdk.ObjectTypeAccount, objectType)
 	})
 	t.Run("account object identifier", func(t *testing.T) {
 		in := map[string]any{
-			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
+			"tag_id":      tagId.FullyQualifiedName(),
 			"object_type": "DATABASE",
 			"object_identifiers": []any{
 				"test_db",
@@ -38,7 +39,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		d := schema.TestResourceDataRaw(t, resources.TagAssociation().Schema, in)
 		tid, identifiers, objectType, err := resources.TagIdentifierAndObjectIdentifier(d)
 		require.NoError(t, err)
-		assert.Equal(t, sdk.NewSchemaObjectIdentifier("test_db", "test_schema", "test_tag"), tid)
+		assert.Equal(t, tagId, tid)
 		assert.Len(t, identifiers, 1)
 		assert.Equal(t, "\"test_db\"", identifiers[0].FullyQualifiedName())
 		assert.Equal(t, sdk.ObjectTypeDatabase, objectType)
@@ -46,7 +47,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 
 	t.Run("database object identifier", func(t *testing.T) {
 		in := map[string]any{
-			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
+			"tag_id":      tagId.FullyQualifiedName(),
 			"object_type": "SCHEMA",
 			"object_identifiers": []any{
 				"test_db.test_schema",
@@ -55,7 +56,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		d := schema.TestResourceDataRaw(t, resources.TagAssociation().Schema, in)
 		tid, identifiers, objectType, err := resources.TagIdentifierAndObjectIdentifier(d)
 		require.NoError(t, err)
-		assert.Equal(t, sdk.NewSchemaObjectIdentifier("test_db", "test_schema", "test_tag"), tid)
+		assert.Equal(t, tagId, tid)
 		assert.Len(t, identifiers, 1)
 		assert.Equal(t, "\"test_db\".\"test_schema\"", identifiers[0].FullyQualifiedName())
 		assert.Equal(t, sdk.ObjectTypeSchema, objectType)
@@ -63,7 +64,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 
 	t.Run("schema object identifier", func(t *testing.T) {
 		in := map[string]any{
-			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
+			"tag_id":      tagId.FullyQualifiedName(),
 			"object_type": "TABLE",
 			"object_identifiers": []any{
 				"test_db.test_schema.test_table",
@@ -72,7 +73,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 		d := schema.TestResourceDataRaw(t, resources.TagAssociation().Schema, in)
 		tid, identifiers, objectType, err := resources.TagIdentifierAndObjectIdentifier(d)
 		require.NoError(t, err)
-		assert.Equal(t, sdk.NewSchemaObjectIdentifier("test_db", "test_schema", "test_tag"), tid)
+		assert.Equal(t, tagId, tid)
 		assert.Len(t, identifiers, 1)
 		assert.Equal(t, "\"test_db\".\"test_schema\".\"test_table\"", identifiers[0].FullyQualifiedName())
 		assert.Equal(t, sdk.ObjectTypeTable, objectType)
@@ -97,7 +98,7 @@ func TestTagIdentifierAndObjectIdentifier(t *testing.T) {
 
 	t.Run("invalid object identifier", func(t *testing.T) {
 		in := map[string]any{
-			"tag_id":      "\"test_db\".\"test_schema\".\"test_tag\"",
+			"tag_id":      tagId.FullyQualifiedName(),
 			"object_type": "COLUMN",
 			"object_identifiers": []any{
 				"\"",

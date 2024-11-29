@@ -2,7 +2,7 @@ resource "snowflake_tag" "test" {
   name           = var.tag_name
   database       = var.database
   schema         = var.schema
-  allowed_values = ["bar", "foo"]
+  allowed_values = ["bar", "foo", "external"]
   comment        = "Terraform acceptance test"
 }
 

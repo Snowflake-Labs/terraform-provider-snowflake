@@ -60,7 +60,6 @@ type TestClient struct {
 	StorageIntegration           *StorageIntegrationClient
 	Stream                       *StreamClient
 	Streamlit                    *StreamlitClient
-	SystemFunctions              *SystemFunctionsClient
 	Table                        *TableClient
 	Tag                          *TagClient
 	Task                         *TaskClient
@@ -134,7 +133,6 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		StorageIntegration:           NewStorageIntegrationClient(context, idsGenerator),
 		Stream:                       NewStreamClient(context, idsGenerator),
 		Streamlit:                    NewStreamlitClient(context, idsGenerator),
-		SystemFunctions:              NewSystemFunctionsClient(context),
 		Table:                        NewTableClient(context, idsGenerator),
 		Tag:                          NewTagClient(context, idsGenerator),
 		Task:                         NewTaskClient(context, idsGenerator),

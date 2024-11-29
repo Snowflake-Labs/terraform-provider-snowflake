@@ -60,6 +60,14 @@ func (c *TagClient) Unset(t *testing.T, objectType sdk.ObjectType, id sdk.Object
 	require.NoError(t, err)
 }
 
+func (c *TagClient) Set(t *testing.T, objectType sdk.ObjectType, id sdk.ObjectIdentifier, setTags []sdk.TagAssociation) {
+	t.Helper()
+	ctx := context.Background()
+
+	err := c.client().Set(ctx, sdk.NewSetTagRequest(objectType, id).WithSetTags(setTags))
+	require.NoError(t, err)
+}
+
 func (c *TagClient) Alter(t *testing.T, req *sdk.AlterTagRequest) {
 	t.Helper()
 	ctx := context.Background()
@@ -82,4 +90,12 @@ func (c *TagClient) Show(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.Tag,
 	ctx := context.Background()
 
 	return c.client().ShowByID(ctx, id)
+}
+
+func (c *TagClient) GetForObject(t *testing.T, tagId sdk.SchemaObjectIdentifier, objectId sdk.ObjectIdentifier, objectType sdk.ObjectType) (*string, error) {
+	t.Helper()
+	ctx := context.Background()
+	client := c.context.client.SystemFunctions
+
+	return client.GetTag(ctx, tagId, objectId, objectType)
 }

@@ -33,7 +33,17 @@ resource "snowflake_tag_association" "silver_databases" {
 }
 ```
 
-The state is migrated automatically. There is no need to adjust configuration files, unless you use resource id like `snowflake_tag_association.example.id`.
+Note that if you want to promote silver instances to gold, you can not simply change `tag_value` in `silver_warehouses`. Instead, you should merge `object_identifiers` from `silver_warehouses` and `gold_warehouses`, and use them only in `gold_warehouses`, like this (note that `silver_warehouses` resource was deleted):
+```
+resource "snowflake_tag_association" "gold_warehouses" {
+  object_identifiers = [snowflake_warehouse.w1.fully_qualified_name, snowflake_warehouse.w2.fully_qualified_name, snowflake_warehouse.w3.fully_qualified_name]
+  object_type = "WAREHOUSE"
+  tag_id      = snowflake_tag.tier.fully_qualified_name
+  tag_value   = "gold"
+}
+```
+
+The state is migrated automatically. There is no need to adjust configuration files, unless you use resource id `snowflake_tag_association.example.id` as a reference in other resources.
 
 #### *(behavior change)* changed fields
 Behavior of some fields was changed:

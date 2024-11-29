@@ -36,13 +36,14 @@ func ExpandObjectIdentifierSet(configured []any, objectType sdk.ObjectType) ([]s
 	for i, idRaw := range vs {
 		var id sdk.ObjectIdentifier
 		var err error
+		// TODO(SNOW-1229218): Use a common mapper to get object id.
 		if objectType == sdk.ObjectTypeAccount {
 			id, err = sdk.ParseAccountIdentifier(idRaw)
 			if err != nil {
 				return nil, fmt.Errorf("invalid account id: %w", err)
 			}
 		} else {
-			id, err = sdk.ParseObjectIdentifierString(idRaw)
+			id, err = GetOnObjectIdentifier(objectType, idRaw)
 			if err != nil {
 				return nil, fmt.Errorf("invalid object id: %w", err)
 			}

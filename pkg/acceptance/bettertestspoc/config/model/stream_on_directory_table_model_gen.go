@@ -17,6 +17,8 @@ type StreamOnDirectoryTableModel struct {
 	Name               tfconfig.Variable `json:"name,omitempty"`
 	Schema             tfconfig.Variable `json:"schema,omitempty"`
 	Stage              tfconfig.Variable `json:"stage,omitempty"`
+	Stale              tfconfig.Variable `json:"stale,omitempty"`
+	StreamType         tfconfig.Variable `json:"stream_type,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -93,6 +95,16 @@ func (s *StreamOnDirectoryTableModel) WithStage(stage string) *StreamOnDirectory
 	return s
 }
 
+func (s *StreamOnDirectoryTableModel) WithStale(stale bool) *StreamOnDirectoryTableModel {
+	s.Stale = tfconfig.BoolVariable(stale)
+	return s
+}
+
+func (s *StreamOnDirectoryTableModel) WithStreamType(streamType string) *StreamOnDirectoryTableModel {
+	s.StreamType = tfconfig.StringVariable(streamType)
+	return s
+}
+
 //////////////////////////////////////////
 // below it's possible to set any value //
 //////////////////////////////////////////
@@ -129,5 +141,15 @@ func (s *StreamOnDirectoryTableModel) WithSchemaValue(value tfconfig.Variable) *
 
 func (s *StreamOnDirectoryTableModel) WithStageValue(value tfconfig.Variable) *StreamOnDirectoryTableModel {
 	s.Stage = value
+	return s
+}
+
+func (s *StreamOnDirectoryTableModel) WithStaleValue(value tfconfig.Variable) *StreamOnDirectoryTableModel {
+	s.Stale = value
+	return s
+}
+
+func (s *StreamOnDirectoryTableModel) WithStreamTypeValue(value tfconfig.Variable) *StreamOnDirectoryTableModel {
+	s.StreamType = value
 	return s
 }

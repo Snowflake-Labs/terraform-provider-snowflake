@@ -28,17 +28,7 @@ func v0_98_0_TagAssociationStateUpgrader(ctx context.Context, rawState map[strin
 		if objectType == string(sdk.ObjectTypeAccount) {
 			id = sdk.NewAccountIdentifierFromFullyQualifiedName(obj["name"].(string))
 		} else {
-			database := obj["database"].(string)
-			schema := obj["schema"].(string)
-			name := obj["name"].(string)
-			switch {
-			case schema != "":
-				id = sdk.NewSchemaObjectIdentifier(database, schema, name)
-			case database != "":
-				id = sdk.NewDatabaseObjectIdentifier(database, name)
-			default:
-				id = sdk.NewAccountObjectIdentifier(name)
-			}
+			id = getTagObjectIdentifier(obj)
 		}
 		objectIdentifiers = append(objectIdentifiers, id.FullyQualifiedName())
 	}
