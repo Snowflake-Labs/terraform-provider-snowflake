@@ -12,6 +12,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -808,6 +809,34 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 func TestAcc_Provider_PreviewFeaturesEnabled(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	t.Setenv(string(testenvs.EnableAllPreviewFeatures), "")
+	acc.TestAccPreCheck(t)
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithPreviewFeaturesEnabled(string(previewfeatures.DatabaseDatasource)), datasourceModel()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceModel().DatasourceReference(), "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_PreviewFeaturesDisabled(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	t.Setenv(string(testenvs.EnableAllPreviewFeatures), "")
+	acc.TestAccPreCheck(t)
 
 	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
 	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
@@ -820,30 +849,11 @@ func TestAcc_Provider_PreviewFeaturesEnabled(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				// Config: providerConfigWithDatasourcePreviewFeatureEnabled(testprofiles.Default, "snowflake_current_account"),
-				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile), datasourceModel()),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_current_account.t", "account"),
-				),
-			},
-		},
-	})
-}
-
-func TestAcc_Provider_PreviewFeaturesDisabled(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
-	t.Setenv(string(testenvs.EnableAllPreviewFeatures), "")
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		Steps: []resource.TestStep{
-			{
-				Config:      providerConfigWithDatasourcePreviewFeature(testprofiles.Default, "snowflake_current_account"),
-				ExpectError: regexp.MustCompile("snowflake_current_account_datasource is currently a preview feature, and must be enabled by adding snowflake_current_account_datasource to `preview_features_enabled` in Terraform configuration"),
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile), datasourceModel()),
+				ExpectError: regexp.MustCompile("snowflake_database_datasource is currently a preview feature, and must be enabled by adding snowflake_database_datasource to `preview_features_enabled` in Terraform configuration"),
 			},
 		},
 	})

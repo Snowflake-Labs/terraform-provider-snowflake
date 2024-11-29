@@ -48,6 +48,15 @@ func (m *SnowflakeModel) WithClientStoreTemporaryCredentialBool(clientStoreTempo
 	return m
 }
 
+func (m *SnowflakeModel) WithPreviewFeaturesEnabled(previewFeaturesEnabled ...string) *SnowflakeModel {
+	previewFeaturesEnabledStringVariables := make([]tfconfig.Variable, len(previewFeaturesEnabled))
+	for i, v := range previewFeaturesEnabled {
+		previewFeaturesEnabledStringVariables[i] = tfconfig.StringVariable(v)
+	}
+	m.PreviewFeaturesEnabled = tfconfig.SetVariable(previewFeaturesEnabledStringVariables...)
+	return m
+}
+
 func (m *SnowflakeModel) AllFields(tmpConfig *helpers.TmpTomlConfig, tmpUser *helpers.TmpServiceUser) *SnowflakeModel {
 	return SnowflakeProvider().
 		WithProfile(tmpConfig.Profile).
