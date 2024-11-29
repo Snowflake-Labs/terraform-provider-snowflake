@@ -39,11 +39,11 @@ func testClient(t *testing.T, profile string) *Client {
 
 	config, err := ProfileConfig(profile)
 	if err != nil {
-		t.Skipf("Snowflake %s profile not configured. Must be set in ~./snowflake/config.yml", profile)
+		t.Skipf("Snowflake %s profile not configured. Must be set in ~./snowflake/config", profile)
 	}
 	client, err := NewClient(config)
 	if err != nil {
-		t.Skipf("Snowflake %s profile not configured. Must be set in ~./snowflake/config.yml", profile)
+		t.Skipf("Snowflake %s profile not configured. Must be set in ~./snowflake/config", profile)
 	}
 
 	return client

@@ -249,7 +249,7 @@ func nukeUsers(client *Client) func() error {
 		log.Printf("[DEBUG] Found %d users\n", len(users))
 		for idx, user := range users {
 			log.Printf("[DEBUG] Processing user [%d/%d]: %s...\n", idx+1, len(users), user.ID().FullyQualifiedName())
-			if !slices.Contains(protectedUsers, user.Name) && user.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
+			if !slices.Contains(protectedUsers, user.Name) && user.CreatedOn.Before(time.Now().Add(-15*time.Minute)) {
 				log.Printf("[DEBUG] Dropping user %s\n", user.ID().FullyQualifiedName())
 				if err := client.Users.Drop(ctx, user.ID(), &DropUserOptions{IfExists: Bool(true)}); err != nil {
 					log.Printf("[DEBUG] Dropping user %s, resulted in error %v\n", user.ID().FullyQualifiedName(), err)
