@@ -49,7 +49,7 @@ func parseTextDataTypeRaw(raw sanitizedDataTypeRaw) (*TextDataType, error) {
 	length, err := strconv.Atoi(strings.TrimSpace(lengthRaw))
 	if err != nil {
 		logging.DebugLogger.Printf(`[DEBUG] Could not parse varchar length "%s", err: %v`, lengthRaw, err)
-		return nil, fmt.Errorf(`could not parse the varchar's precision: "%s", err: %w`, lengthRaw, err)
+		return nil, fmt.Errorf(`could not parse the varchar's length: "%s", err: %w`, lengthRaw, err)
 	}
 	return &TextDataType{length, raw.matchedByType}, nil
 }

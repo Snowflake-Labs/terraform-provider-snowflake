@@ -271,3 +271,71 @@ func Test_ParseDataType_Text(t *testing.T) {
 		})
 	}
 }
+
+func Test_ParseDataType_Binary(t *testing.T) {
+	type test struct {
+		input                  string
+		expectedSize           int
+		expectedUnderlyingType string
+	}
+	defaults := func(input string) test {
+		return test{
+			input:                  input,
+			expectedSize:           DefaultBinarySize,
+			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
+		}
+	}
+	negative := func(input string) test {
+		return test{input: input}
+	}
+
+	positiveTestCases := []test{
+		{input: "BINARY(30)", expectedSize: 30, expectedUnderlyingType: "BINARY"},
+		{input: "varbinary(30)", expectedSize: 30, expectedUnderlyingType: "VARBINARY"},
+		{input: "BINARY(   30   )", expectedSize: 30, expectedUnderlyingType: "BINARY"},
+		{input: "    BINARY   (   30   )    ", expectedSize: 30, expectedUnderlyingType: "BINARY"},
+		{input: fmt.Sprintf("BINARY(%d)", DefaultBinarySize), expectedSize: DefaultBinarySize, expectedUnderlyingType: "BINARY"},
+
+		defaults("   BINARY   "),
+		defaults("BINARY"),
+		defaults("VARBINARY"),
+		defaults("binary"),
+		defaults("varbinary"),
+	}
+
+	negativeTestCases := []test{
+		negative("other(1, 2)"),
+		negative("other(1)"),
+		negative("other"),
+		negative("BINARY()"),
+		negative("BINARY(x)"),
+		negative("BINARY(   )"),
+		negative("BINARY(1, 2)"),
+		negative("BINARY("),
+		negative("BINARY)"),
+		negative("BIN ARY"),
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &BinaryDataType{}, parsed)
+
+			assert.Equal(t, tc.expectedSize, parsed.(*BinaryDataType).size)
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*BinaryDataType).underlyingType)
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}
