@@ -23,7 +23,7 @@ It contains the following packages:
   - resource parameters assertions (generated in subpackage `resourceparametersassert`)
   - show output assertions (generated in subpackage `resourceshowoutputassert`)
 
-- `config` - the new `ResourceModel` abstraction resides here. It provides models for objects and the builder methods allowing better config preparation in the acceptance tests.
+- `config` - the new model abstractions (`ResourceModel`, `DatasourceModel`, and `ProviderModel`) reside here. They provide models for objects and the builder methods allowing better config preparation in the acceptance tests.
 It aims to be more readable than using `Config:` with hardcoded string or `ConfigFile:` for file that is not directly reachable from the test body. Also, it should be easier to reuse the models and prepare convenience extension methods. The models are already generated.
 
 ## How it works
@@ -97,17 +97,57 @@ Resource config model builders can be generated automatically. For object `abc` 
 - add object you want to generate to `allResourceSchemaDefs` slice in the `assert/resourceassert/gen/resource_schema_def.go`
 - to add custom (not generated) config builder methods create file `warehouse_model_ext` in the `config/model` package. Example would be:
 ```go
-func BasicWarehouseModel(
+func BasicAbcModel(
 	name string,
 	comment string,
-) *WarehouseModel {
-	return WarehouseWithDefaultMeta(name).WithComment(comment)
+) *AbcModel {
+	return AbcWithDefaultMeta(name).WithComment(comment)
 }
 
-func (w *WarehouseModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) *WarehouseModel {
+func (w *AbcModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) *AbcModel {
 	return w.WithWarehouseSize(string(warehouseSize))
 }
 ```
+
+### Adding new datasource config model builders
+Data source config model builders can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allDatasourcesSchemaDefs` slice in the `config/datasourcemodel/gen/datasource_schema_def.go`
+- to add custom (not generated) config builder methods create file `abc_model_ext` in the `config/datasourcemodel` package. Example would be:
+```go
+func BasicAbcModel(
+	name string,
+	comment string,
+) *AbcModel {
+	return AbcWithDefaultMeta(name).WithComment(comment)
+}
+
+func (d *AbcModel) WithLimit(rows int) *AbcModel {
+    return d.WithLimitValue(
+        tfconfig.ObjectVariable(map[string]tfconfig.Variable{
+            "rows": tfconfig.IntegerVariable(rows),
+        }),
+    )
+}
+```
+
+### Adding new provider config model builders
+Provider config model builders can be generated automatically. For object `abc` do the following:
+- add object you want to generate to `allProviderSchemaDefs` slice in the `config/providermodel/gen/provider_schema_def.go`
+- to add custom (not generated) config builder methods create file `abc_model_ext` in the `config/providermodel` package. Example would be:
+```go
+func BasicAbcModel(
+	name string,
+	comment string,
+) *AbcModel {
+	return AbcWithDefaultMeta(name).WithComment(comment)
+}
+
+func (w *AbcModel) WithWarehouseSizeEnum(warehouseSize sdk.WarehouseSize) *AbcModel {
+	return w.WithWarehouseSize(string(warehouseSize))
+}
+```
+
+*Note*: our provider's config is already generated, so there should not be a need to generate any more providers (the regeneration or adding custom methods are still expected).
 
 ### Running the generators
 Each of the above assertion types/config models has its own generator and cleanup entry in our Makefile.
@@ -310,12 +350,12 @@ it will result in:
         	Test:       	TestInt_Warehouses/create:_complete
 ```
 
-## Known limitations/planned improvements
+## Planned improvements
 - Test all the utilities for assertion/model construction (public interfaces, methods, functions).
 - Verify if all the config types are supported.
 - Consider a better implementation for the model conversion to config (TODO left in `config/config.go`).
 - Support additional methods for references in models (TODO left in `config/config.go`).
-- Support depends_on in models so that it can be chained like other resource fields (TODO left in `config/config.go`).
+- Generate depends_on for all compatible models. Consider exporting it in meta (discussion: https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/3207#discussion_r1850053618).
 - Add a convenience function to concatenate multiple models (TODO left in `config/config.go`).
 - Add function to support using `ConfigFile:` in the acceptance tests (TODO left in `config/config.go`).
 - Replace `acceptance/snowflakechecks` with the new proposed Snowflake objects assertions.
@@ -354,4 +394,32 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - utilize `ContainsExactlyInAnyOrder` function in `pkg/acceptance/bettertestspoc/assert/commons.go` to create asserts on collections that are order independent
 - Additional asserts for sets and lists that wouldn't rely on the order of items saved to the state (SNOW-1706544)
 - support generating provider config and use generated configs in `pkg/provider/provider_acceptance_test.go`
+- add config builders for other block types (Variable, Output, Locals, Module, Terraform)
+- add provider to resource/datasource models (use in the grant_ownership_acceptance_test)
+- explore HCL v2 in more detail (especially struct tags generation; probably with migration to plugin framework because of schema models); ref: https://github.com/hashicorp/hcl/blob/bee2dc2e75f7528ad85777b7a013c13796426bd6/gohcl/encode_test.go#L48
+- introduce some common interface for all three existing models (ResourceModel, DatasourceModel, and ProviderModel)
+- rename ResourceSchemaDetails (because it is used for the datasources and provider too)
+- consider duplicating the builders template from resource (currently same template used for datasources and provider which limits the customization possibilities for just one block type)
+- consider merging ResourceModel with DatasourceModel (currently the implementation is really similar)
+- remove schema.TypeMap workaround or make it wiser (e.g. during generation we could programmatically gather all schema.TypeMap and use this workaround only for them)
 - support asserting resource id in `assert/resourceassert/*_gen.go`
+
+## Known limitations
+- generating provider config may misbehave when used only with one object/map paramter (like `params`), e.g.:
+```json
+{
+  "provider": {
+    "snowflake": {
+      "params": {
+        "statement_timeout_in_seconds": 31337
+      }
+    }
+  }
+}
+```
+will be converted to HCL:
+```hcl
+provider "snowflake" "params" {
+  statement_timeout_in_seconds = 31337
+}
+```

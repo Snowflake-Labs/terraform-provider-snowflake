@@ -9,70 +9,95 @@ import (
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-1501905]: add possibility to have reference to another object (e.g. WithResourceMonitorReference); new config.Variable impl?
-// TODO [SNOW-1501905]: generate With/SetDependsOn for the resources to preserve builder pattern
-// TODO [SNOW-1501905]: add a convenience method to use multiple configs from multiple models
+// ResourceFromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
+// Current implementation is an improved implementation using two steps:
+// - .tf.json generation
+// - conversion to HCL using hcl v1 lib
+// It is still not ideal. HCL v2 should be considered.
+func ResourceFromModel(t *testing.T, model ResourceModel) string {
+	t.Helper()
 
-// ResourceModel is the base interface all of our config models will implement.
-// To allow easy implementation, ResourceModelMeta can be embedded inside the struct (and the struct will automatically implement it).
-type ResourceModel interface {
-	Resource() resources.Resource
-	ResourceName() string
-	SetResourceName(name string)
-	ResourceReference() string
-	DependsOn() []string
-	SetDependsOn(values ...string)
+	resourceJson, err := DefaultJsonConfigProvider.ResourceJsonFromModel(model)
+	require.NoError(t, err)
+
+	hcl, err := DefaultHclConfigProvider.HclFromJson(resourceJson)
+	require.NoError(t, err)
+	t.Logf("Generated config:\n%s", hcl)
+
+	return hcl
 }
 
-type ResourceModelMeta struct {
-	name      string
-	resource  resources.Resource
-	dependsOn []string
+// DatasourceFromModel should be used in terraform acceptance tests for Config attribute to get string config from DatasourceModel.
+// Current implementation is an improved implementation using two steps:
+// - .tf.json generation
+// - conversion to HCL using hcl v1 lib
+// It is still not ideal. HCL v2 should be considered.
+func DatasourceFromModel(t *testing.T, model DatasourceModel) string {
+	t.Helper()
+
+	datasourceJson, err := DefaultJsonConfigProvider.DatasourceJsonFromModel(model)
+	require.NoError(t, err)
+
+	hcl, err := DefaultHclConfigProvider.HclFromJson(datasourceJson)
+	require.NoError(t, err)
+	t.Logf("Generated config:\n%s", hcl)
+
+	return hcl
 }
 
-func (m *ResourceModelMeta) Resource() resources.Resource {
-	return m.resource
+// ProviderFromModel should be used in terraform acceptance tests for Config attribute to get string config from ProviderModel.
+// Current implementation is an improved implementation using two steps:
+// - .tf.json generation
+// - conversion to HCL using hcl v1 lib
+// It is still not ideal. HCL v2 should be considered.
+func ProviderFromModel(t *testing.T, model ProviderModel) string {
+	t.Helper()
+
+	providerJson, err := DefaultJsonConfigProvider.ProviderJsonFromModel(model)
+	require.NoError(t, err)
+
+	hcl, err := DefaultHclConfigProvider.HclFromJson(providerJson)
+	require.NoError(t, err)
+	hcl, err = revertEqualSignForMapTypeAttributes(hcl)
+	require.NoError(t, err)
+
+	return hcl
 }
 
-func (m *ResourceModelMeta) ResourceName() string {
-	return m.name
-}
+// FromModels allows to combine multiple models.
+// TODO [SNOW-1501905]: introduce some common interface for all three existing models (ResourceModel, DatasourceModel, and ProviderModel)
+func FromModels(t *testing.T, models ...any) string {
+	t.Helper()
 
-func (m *ResourceModelMeta) SetResourceName(name string) {
-	m.name = name
-}
-
-func (m *ResourceModelMeta) ResourceReference() string {
-	return fmt.Sprintf(`%s.%s`, m.resource, m.name)
-}
-
-func (m *ResourceModelMeta) DependsOn() []string {
-	return m.dependsOn
-}
-
-func (m *ResourceModelMeta) SetDependsOn(values ...string) {
-	m.dependsOn = values
-}
-
-// DefaultResourceName is exported to allow assertions against the resources using the default name.
-const DefaultResourceName = "test"
-
-func DefaultMeta(resource resources.Resource) *ResourceModelMeta {
-	return &ResourceModelMeta{name: DefaultResourceName, resource: resource}
-}
-
-func Meta(resourceName string, resource resources.Resource) *ResourceModelMeta {
-	return &ResourceModelMeta{name: resourceName, resource: resource}
+	var sb strings.Builder
+	for i, model := range models {
+		switch m := model.(type) {
+		case ResourceModel:
+			sb.WriteString(ResourceFromModel(t, m))
+		case DatasourceModel:
+			sb.WriteString(DatasourceFromModel(t, m))
+		case ProviderModel:
+			sb.WriteString(ProviderFromModel(t, m))
+		default:
+			t.Fatalf("unknown model: %T", model)
+		}
+		if i < len(models)-1 {
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
 }
 
 // FromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
 // Current implementation is really straightforward but it could be improved and tested. It may not handle all cases (like objects, lists, sets) correctly.
 // TODO [SNOW-1501905]: use reflection to build config directly from model struct (or some other different way)
 // TODO [SNOW-1501905]: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
+// TODO [SNOW-1501905]: add generating MarshalJSON() function
+// TODO [SNOW-1501905]: migrate resources to new config generation method (above needed first)
+// Use ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels instead.
 func FromModel(t *testing.T, model ResourceModel) string {
 	t.Helper()
 
@@ -99,7 +124,9 @@ func FromModel(t *testing.T, model ResourceModel) string {
 	return s
 }
 
-func FromModels(t *testing.T, models ...ResourceModel) string {
+// FromModelsDeprecated allows to combine multiple resource models.
+// Use FromModels instead.
+func FromModelsDeprecated(t *testing.T, models ...ResourceModel) string {
 	t.Helper()
 	var sb strings.Builder
 	for _, model := range models {
@@ -110,6 +137,7 @@ func FromModels(t *testing.T, models ...ResourceModel) string {
 
 // ConfigVariablesFromModel constructs config.Variables needed in acceptance tests that are using ConfigVariables in
 // combination with ConfigDirectory. It's necessary for cases not supported by FromModel, like lists of objects.
+// Use ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels instead.
 func ConfigVariablesFromModel(t *testing.T, model ResourceModel) tfconfig.Variables {
 	t.Helper()
 	variables := make(tfconfig.Variables)
@@ -138,16 +166,4 @@ func ConfigVariablesFromModels(t *testing.T, variableName string, models ...Reso
 	return tfconfig.Variables{
 		variableName: tfconfig.ListVariable(allVariables...),
 	}
-}
-
-type nullVariable struct{}
-
-// MarshalJSON returns the JSON encoding of nullVariable.
-func (v nullVariable) MarshalJSON() ([]byte, error) {
-	return json.Marshal(nil)
-}
-
-// NullVariable returns nullVariable which implements Variable.
-func NullVariable() nullVariable {
-	return nullVariable{}
 }
