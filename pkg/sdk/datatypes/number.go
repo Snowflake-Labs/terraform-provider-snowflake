@@ -23,7 +23,7 @@ type NumberDataType struct {
 }
 
 var NumberDataTypeSynonyms = []string{"NUMBER", "DECIMAL", "DEC", "NUMERIC"}
-var NumberDataTypeSubTypes = []string{"INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
+var NumberDataTypeSubTypes = []string{"INTEGER", "INT", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
 var AllNumberDataTypes = append(NumberDataTypeSynonyms, NumberDataTypeSubTypes...)
 
 func parseNumberDataTypeRaw(raw sanitizedDataTypeRaw) (*NumberDataType, error) {
@@ -41,37 +41,40 @@ func parseNumberDataTypeRaw(raw sanitizedDataTypeRaw) (*NumberDataType, error) {
 // It returns defaults if no arguments were provided. It returns error if any part is not parseable.
 func parseNumberDataTypeWithPrecisionAndScale(raw sanitizedDataTypeRaw) (*NumberDataType, error) {
 	r := strings.TrimSpace(strings.TrimPrefix(raw.raw, raw.matchedByType))
-	if strings.HasPrefix(r, "(") && strings.HasSuffix(r, ")") {
-		onlyArgs := r[1 : len(r)-1]
-		parts := strings.Split(onlyArgs, ",")
-		switch l := len(parts); l {
-		case 1:
-			precision, err := strconv.Atoi(strings.TrimSpace(parts[0]))
-			if err == nil {
-				return &NumberDataType{precision, DefaultNumberScale}, nil
-			} else {
-				logging.DebugLogger.Printf(`[DEBUG] Could not parse number precision "%s", err: %v`, parts[0], err)
-				return nil, fmt.Errorf(`could not parse the number's precision: "%s"`, parts[0])
-			}
-		case 2:
-			precision, err := strconv.Atoi(strings.TrimSpace(parts[0]))
-			if err != nil {
-				logging.DebugLogger.Printf(`[DEBUG] Could not parse number precision "%s", err: %v`, parts[0], err)
-				return nil, fmt.Errorf(`could not parse the number's precision: "%s"`, parts[0])
-			}
-			scale, err := strconv.Atoi(strings.TrimSpace(parts[1]))
-			if err != nil {
-				logging.DebugLogger.Printf(`[DEBUG] Could not parse number scale "%s", err: %v`, parts[1], err)
-				return nil, fmt.Errorf(`could not parse the number's scale: "%s"`, parts[1])
-			}
-			return &NumberDataType{precision, scale}, nil
-		default:
-			logging.DebugLogger.Printf("[DEBUG] Unexpected length of number arguments")
-			return nil, fmt.Errorf(`number cannot have %d arguments: "%s"; only precision and scale are allowed`, l, onlyArgs)
-		}
-	} else {
+	if r == "" {
 		logging.DebugLogger.Printf("[DEBUG] Returning default number precision and scale")
 		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale}, nil
+	}
+	if !strings.HasPrefix(r, "(") || !strings.HasSuffix(r, ")") {
+		logging.DebugLogger.Printf(`number %s could not be parsed, use "NUMBER(precision, scale) format"`, raw.raw)
+		return nil, fmt.Errorf(`number %s could not be parsed, use "NUMBER(precision, scale) format"`, raw.raw)
+	}
+	onlyArgs := r[1 : len(r)-1]
+	parts := strings.Split(onlyArgs, ",")
+	switch l := len(parts); l {
+	case 1:
+		precision, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+		if err == nil {
+			return &NumberDataType{precision, DefaultNumberScale}, nil
+		} else {
+			logging.DebugLogger.Printf(`[DEBUG] Could not parse number precision "%s", err: %v`, parts[0], err)
+			return nil, fmt.Errorf(`could not parse the number's precision: "%s"`, parts[0])
+		}
+	case 2:
+		precision, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+		if err != nil {
+			logging.DebugLogger.Printf(`[DEBUG] Could not parse number precision "%s", err: %v`, parts[0], err)
+			return nil, fmt.Errorf(`could not parse the number's precision: "%s"`, parts[0])
+		}
+		scale, err := strconv.Atoi(strings.TrimSpace(parts[1]))
+		if err != nil {
+			logging.DebugLogger.Printf(`[DEBUG] Could not parse number scale "%s", err: %v`, parts[1], err)
+			return nil, fmt.Errorf(`could not parse the number's scale: "%s"`, parts[1])
+		}
+		return &NumberDataType{precision, scale}, nil
+	default:
+		logging.DebugLogger.Printf("[DEBUG] Unexpected length of number arguments")
+		return nil, fmt.Errorf(`number cannot have %d arguments: "%s"; only precision and scale are allowed`, l, onlyArgs)
 	}
 }
 

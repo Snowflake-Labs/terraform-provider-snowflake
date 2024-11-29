@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ParseDataType(t *testing.T) {
+func Test_ParseDataType_Number(t *testing.T) {
 	type test struct {
 		input             string
 		expectedPrecision int
@@ -24,12 +24,34 @@ func Test_ParseDataType(t *testing.T) {
 	positiveTestCases := []test{
 		{input: "NUMBER(30)", expectedPrecision: 30, expectedScale: DefaultNumberScale},
 		{input: "NUMBER(30, 2)", expectedPrecision: 30, expectedScale: 2},
+		{input: "dec(30)", expectedPrecision: 30, expectedScale: DefaultNumberScale},
+		{input: "dec(30, 2)", expectedPrecision: 30, expectedScale: 2},
+		{input: "decimal(30)", expectedPrecision: 30, expectedScale: DefaultNumberScale},
 		{input: "decimal(30, 2)", expectedPrecision: 30, expectedScale: 2},
+		{input: "NuMeRiC(30)", expectedPrecision: 30, expectedScale: DefaultNumberScale},
+		{input: "NuMeRiC(30, 2)", expectedPrecision: 30, expectedScale: 2},
 		{input: "NUMBER(   30   ,  2   )", expectedPrecision: 30, expectedScale: 2},
 		{input: "    NUMBER   (   30   ,  2   )    ", expectedPrecision: 30, expectedScale: 2},
 
 		defaults("NUMBER"),
+		defaults("DEC"),
+		defaults("DECIMAL"),
+		defaults("NUMERIC"),
+		defaults("   NUMBER   "),
 		defaults(fmt.Sprintf("NUMBER(%d)", DefaultNumberPrecision)),
+
+		defaults("INT"),
+		defaults("INTEGER"),
+		defaults("BIGINT"),
+		defaults("SMALLINT"),
+		defaults("TINYINT"),
+		defaults("BYTEINT"),
+		defaults("int"),
+		defaults("integer"),
+		defaults("bigint"),
+		defaults("smallint"),
+		defaults("tinyint"),
+		defaults("byteint"),
 	}
 
 	negativeTestCases := []test{
@@ -41,6 +63,11 @@ func Test_ParseDataType(t *testing.T) {
 		negative(fmt.Sprintf("NUMBER(%d, x)", DefaultNumberPrecision)),
 		negative(fmt.Sprintf("NUMBER(x, %d)", DefaultNumberScale)),
 		negative("NUMBER(1, 2, 3)"),
+		negative("NUMBER("),
+		negative("NUMBER)"),
+		negative("NUM BER"),
+		negative("INT(30)"),
+		negative("INT(30, 2)"),
 	}
 
 	for _, tc := range positiveTestCases {
