@@ -165,3 +165,109 @@ func Test_ParseDataType_Float(t *testing.T) {
 		})
 	}
 }
+
+func Test_ParseDataType_Text(t *testing.T) {
+	type test struct {
+		input                  string
+		expectedLength         int
+		expectedUnderlyingType string
+	}
+	defaultsVarchar := func(input string) test {
+		return test{
+			input:                  input,
+			expectedLength:         DefaultVarcharLength,
+			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
+		}
+	}
+	defaultsChar := func(input string) test {
+		return test{
+			input:                  input,
+			expectedLength:         DefaultCharLength,
+			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
+		}
+	}
+	negative := func(input string) test {
+		return test{input: input}
+	}
+
+	positiveTestCases := []test{
+		{input: "VARCHAR(30)", expectedLength: 30, expectedUnderlyingType: "VARCHAR"},
+		{input: "string(30)", expectedLength: 30, expectedUnderlyingType: "STRING"},
+		{input: "VARCHAR(   30   )", expectedLength: 30, expectedUnderlyingType: "VARCHAR"},
+		{input: "    VARCHAR   (   30   )    ", expectedLength: 30, expectedUnderlyingType: "VARCHAR"},
+		{input: fmt.Sprintf("VARCHAR(%d)", DefaultVarcharLength), expectedLength: DefaultVarcharLength, expectedUnderlyingType: "VARCHAR"},
+
+		{input: "CHAR(30)", expectedLength: 30, expectedUnderlyingType: "CHAR"},
+		{input: "character(30)", expectedLength: 30, expectedUnderlyingType: "CHARACTER"},
+		{input: "CHAR(   30   )", expectedLength: 30, expectedUnderlyingType: "CHAR"},
+		{input: "    CHAR   (   30   )    ", expectedLength: 30, expectedUnderlyingType: "CHAR"},
+		{input: fmt.Sprintf("CHAR(%d)", DefaultCharLength), expectedLength: DefaultCharLength, expectedUnderlyingType: "CHAR"},
+
+		defaultsVarchar("   VARCHAR   "),
+		defaultsVarchar("VARCHAR"),
+		defaultsVarchar("STRING"),
+		defaultsVarchar("TEXT"),
+		defaultsVarchar("NVARCHAR"),
+		defaultsVarchar("NVARCHAR2"),
+		defaultsVarchar("CHAR VARYING"),
+		defaultsVarchar("NCHAR VARYING"),
+		defaultsVarchar("varchar"),
+		defaultsVarchar("string"),
+		defaultsVarchar("text"),
+		defaultsVarchar("nvarchar"),
+		defaultsVarchar("nvarchar2"),
+		defaultsVarchar("char varying"),
+		defaultsVarchar("nchar varying"),
+
+		defaultsChar("   CHAR   "),
+		defaultsChar("CHAR"),
+		defaultsChar("CHARACTER"),
+		defaultsChar("NCHAR"),
+		defaultsChar("char"),
+		defaultsChar("character"),
+		defaultsChar("nchar"),
+	}
+
+	negativeTestCases := []test{
+		negative("other(1, 2)"),
+		negative("other(1)"),
+		negative("other"),
+		negative("VARCHAR()"),
+		negative("VARCHAR(x)"),
+		negative("VARCHAR(   )"),
+		negative("CHAR()"),
+		negative("CHAR(x)"),
+		negative("CHAR(   )"),
+		negative("VARCHAR(1, 2)"),
+		negative("VARCHAR("),
+		negative("VARCHAR)"),
+		negative("VAR CHAR"),
+		negative("CHAR(1, 2)"),
+		negative("CHAR("),
+		negative("CHAR)"),
+		negative("CH AR"),
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &TextDataType{}, parsed)
+
+			assert.Equal(t, tc.expectedLength, parsed.(*TextDataType).length)
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TextDataType).underlyingType)
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}

@@ -47,30 +47,29 @@ func parseNumberDataTypeWithPrecisionAndScale(raw sanitizedDataTypeRaw) (*Number
 		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale, raw.matchedByType}, nil
 	}
 	if !strings.HasPrefix(r, "(") || !strings.HasSuffix(r, ")") {
-		logging.DebugLogger.Printf(`number %s could not be parsed, use "NUMBER(precision, scale) format"`, raw.raw)
-		return nil, fmt.Errorf(`number %s could not be parsed, use "NUMBER(precision, scale) format"`, raw.raw)
+		logging.DebugLogger.Printf(`number %s could not be parsed, use "%s(precision, scale)" format`, raw.raw, raw.matchedByType)
+		return nil, fmt.Errorf(`number %s could not be parsed, use "%s(precision, scale)" format`, raw.raw, raw.matchedByType)
 	}
 	onlyArgs := r[1 : len(r)-1]
 	parts := strings.Split(onlyArgs, ",")
 	switch l := len(parts); l {
 	case 1:
 		precision, err := strconv.Atoi(strings.TrimSpace(parts[0]))
-		if err == nil {
-			return &NumberDataType{precision, DefaultNumberScale, raw.matchedByType}, nil
-		} else {
+		if err != nil {
 			logging.DebugLogger.Printf(`[DEBUG] Could not parse number precision "%s", err: %v`, parts[0], err)
-			return nil, fmt.Errorf(`could not parse the number's precision: "%s"`, parts[0])
+			return nil, fmt.Errorf(`could not parse the number's precision: "%s", err: %w`, parts[0], err)
 		}
+		return &NumberDataType{precision, DefaultNumberScale, raw.matchedByType}, nil
 	case 2:
 		precision, err := strconv.Atoi(strings.TrimSpace(parts[0]))
 		if err != nil {
 			logging.DebugLogger.Printf(`[DEBUG] Could not parse number precision "%s", err: %v`, parts[0], err)
-			return nil, fmt.Errorf(`could not parse the number's precision: "%s"`, parts[0])
+			return nil, fmt.Errorf(`could not parse the number's precision: "%s", err: %w`, parts[0], err)
 		}
 		scale, err := strconv.Atoi(strings.TrimSpace(parts[1]))
 		if err != nil {
 			logging.DebugLogger.Printf(`[DEBUG] Could not parse number scale "%s", err: %v`, parts[1], err)
-			return nil, fmt.Errorf(`could not parse the number's scale: "%s"`, parts[1])
+			return nil, fmt.Errorf(`could not parse the number's scale: "%s", err: %w`, parts[1], err)
 		}
 		return &NumberDataType{precision, scale, raw.matchedByType}, nil
 	default:
