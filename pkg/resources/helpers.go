@@ -76,14 +76,18 @@ func ignoreCaseAndTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceDa
 	return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
 }
 
-func getTagObjectIdentifier(v map[string]any) sdk.ObjectIdentifier {
-	if _, ok := v["database"]; ok {
-		if _, ok := v["schema"]; ok {
-			return sdk.NewSchemaObjectIdentifier(v["database"].(string), v["schema"].(string), v["name"].(string))
-		}
-		return sdk.NewDatabaseObjectIdentifier(v["database"].(string), v["name"].(string))
+func getTagObjectIdentifier(obj map[string]any) sdk.ObjectIdentifier {
+	database := obj["database"].(string)
+	schema := obj["schema"].(string)
+	name := obj["name"].(string)
+	switch {
+	case schema != "":
+		return sdk.NewSchemaObjectIdentifier(database, schema, name)
+	case database != "":
+		return sdk.NewDatabaseObjectIdentifier(database, name)
+	default:
+		return sdk.NewAccountObjectIdentifier(name)
 	}
-	return sdk.NewAccountObjectIdentifier(v["name"].(string))
 }
 
 func getPropertyTags(d *schema.ResourceData, key string) []sdk.TagAssociation {
