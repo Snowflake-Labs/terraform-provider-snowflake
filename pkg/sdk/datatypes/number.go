@@ -18,8 +18,9 @@ const (
 // It does have synonyms that allow specifying precision and scale; here called synonyms.
 // It does have synonyms that does not allow specifying precision and scale; here called subtypes.
 type NumberDataType struct {
-	precision int
-	scale     int
+	precision      int
+	scale          int
+	underlyingType string
 }
 
 var NumberDataTypeSynonyms = []string{"NUMBER", "DECIMAL", "DEC", "NUMERIC"}
@@ -43,7 +44,7 @@ func parseNumberDataTypeWithPrecisionAndScale(raw sanitizedDataTypeRaw) (*Number
 	r := strings.TrimSpace(strings.TrimPrefix(raw.raw, raw.matchedByType))
 	if r == "" {
 		logging.DebugLogger.Printf("[DEBUG] Returning default number precision and scale")
-		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale}, nil
+		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale, raw.matchedByType}, nil
 	}
 	if !strings.HasPrefix(r, "(") || !strings.HasSuffix(r, ")") {
 		logging.DebugLogger.Printf(`number %s could not be parsed, use "NUMBER(precision, scale) format"`, raw.raw)
@@ -55,7 +56,7 @@ func parseNumberDataTypeWithPrecisionAndScale(raw sanitizedDataTypeRaw) (*Number
 	case 1:
 		precision, err := strconv.Atoi(strings.TrimSpace(parts[0]))
 		if err == nil {
-			return &NumberDataType{precision, DefaultNumberScale}, nil
+			return &NumberDataType{precision, DefaultNumberScale, raw.matchedByType}, nil
 		} else {
 			logging.DebugLogger.Printf(`[DEBUG] Could not parse number precision "%s", err: %v`, parts[0], err)
 			return nil, fmt.Errorf(`could not parse the number's precision: "%s"`, parts[0])
@@ -71,7 +72,7 @@ func parseNumberDataTypeWithPrecisionAndScale(raw sanitizedDataTypeRaw) (*Number
 			logging.DebugLogger.Printf(`[DEBUG] Could not parse number scale "%s", err: %v`, parts[1], err)
 			return nil, fmt.Errorf(`could not parse the number's scale: "%s"`, parts[1])
 		}
-		return &NumberDataType{precision, scale}, nil
+		return &NumberDataType{precision, scale, raw.matchedByType}, nil
 	default:
 		logging.DebugLogger.Printf("[DEBUG] Unexpected length of number arguments")
 		return nil, fmt.Errorf(`number cannot have %d arguments: "%s"; only precision and scale are allowed`, l, onlyArgs)
@@ -85,6 +86,6 @@ func parseNumberDataTypeWithoutPrecisionAndScale(raw sanitizedDataTypeRaw) (*Num
 		return nil, fmt.Errorf("number type %s cannot have arguments: %s", raw.matchedByType, args)
 	} else {
 		logging.DebugLogger.Printf("[DEBUG] Returning default number precision and scale")
-		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale}, nil
+		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale, raw.matchedByType}, nil
 	}
 }

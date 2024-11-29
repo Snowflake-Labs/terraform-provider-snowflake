@@ -8,7 +8,6 @@ import (
 
 const DefaultVarcharLength = 16777216
 
-// TODO [this PR]: do we need common struct/interface?
 type DataType interface {
 }
 
@@ -25,11 +24,13 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.IndexFunc(AllNumberDataTypes, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
 		return parseNumberDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, AllNumberDataTypes[idx]})
 	}
+	if idx := slices.Index(FloatDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+		return parseFloatDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, FloatDataTypeSynonyms[idx]})
+	}
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
 
 // TODO [this PR]: support all data types
-type FloatDataType struct{}
 type VarcharDataType struct{}
 type BinaryDataType struct{}
 type BooleanDataType struct{}
