@@ -23,7 +23,7 @@ func ParsePreciseDataType(raw string) (PreciseDataType, error) {
 	dataTypeRaw := strings.TrimSpace(strings.ToUpper(raw))
 
 	if idx := slices.IndexFunc(AllNumberDataTypes, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
-		return parseNumberDataType(sanitizedDataTypeRaw{dataTypeRaw, AllNumberDataTypes[idx]})
+		return parseNumberDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, AllNumberDataTypes[idx]})
 	}
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
