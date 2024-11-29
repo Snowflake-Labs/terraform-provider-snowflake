@@ -9,7 +9,7 @@ import (
 const DefaultVarcharLength = 16777216
 
 // TODO [this PR]: do we need common struct/interface?
-type PreciseDataType interface {
+type DataType interface {
 }
 
 type sanitizedDataTypeRaw struct {
@@ -19,7 +19,7 @@ type sanitizedDataTypeRaw struct {
 
 // TODO [this PR]: test
 // TODO [this PR]: support all data types
-func ParsePreciseDataType(raw string) (PreciseDataType, error) {
+func ParseDataType(raw string) (DataType, error) {
 	dataTypeRaw := strings.TrimSpace(strings.ToUpper(raw))
 
 	if idx := slices.IndexFunc(AllNumberDataTypes, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
