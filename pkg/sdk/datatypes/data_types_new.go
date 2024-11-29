@@ -1,4 +1,4 @@
-package sdk
+package datatypes
 
 import (
 	"fmt"
@@ -13,7 +13,6 @@ const (
 )
 
 // TODO [this PR]: do we need common struct/interface?
-// TODO [this PR]: do we want to extract data types to a separate package?
 type PreciseDataType interface {
 }
 

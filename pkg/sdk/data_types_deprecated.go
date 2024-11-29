@@ -113,6 +113,12 @@ func IsStringType(_type string) bool {
 		strings.HasPrefix(t, "NCHAR")
 }
 
+const (
+	DefaultNumberPrecision = 38
+	DefaultNumberScale     = 0
+	DefaultVarcharLength   = 16777216
+)
+
 // ParseNumberDataTypeRaw extracts precision and scale from the raw number data type input.
 // It returns defaults if it can't parse arguments, data type is different, or no arguments were provided.
 // TODO [SNOW-1348103 or SNOW-1348106]: visit with functions and procedures rework
