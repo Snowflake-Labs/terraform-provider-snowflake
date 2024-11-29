@@ -52,12 +52,6 @@ var (
 	DataTypeVectorSynonyms       = []string{"VECTOR"}
 )
 
-const (
-	DefaultNumberPrecision = 38
-	DefaultNumberScale     = 0
-	DefaultVarcharLength   = 16777216
-)
-
 func ToDataType(s string) (DataType, error) {
 	dType := strings.ToUpper(s)
 
