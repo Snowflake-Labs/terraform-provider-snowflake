@@ -1,0 +1,5 @@
+package config
+
+type ReplacementPlaceholder string
+
+const SnowflakeProviderConfigPrivateKey ReplacementPlaceholder = "SF_TF_TEST_MULTILINE_PLACEHOLDER_PRIVATE_KEY"
