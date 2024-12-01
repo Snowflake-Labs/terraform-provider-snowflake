@@ -339,3 +339,58 @@ func Test_ParseDataType_Binary(t *testing.T) {
 		})
 	}
 }
+
+func Test_ParseDataType_Boolean(t *testing.T) {
+	type test struct {
+		input                  string
+		expectedUnderlyingType string
+	}
+	defaults := func(input string) test {
+		return test{
+			input:                  input,
+			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
+		}
+	}
+	negative := func(input string) test {
+		return test{input: input}
+	}
+
+	positiveTestCases := []test{
+		defaults("   BOOLEAN   "),
+		defaults("BOOLEAN"),
+		defaults("BOOL"),
+		defaults("boolean"),
+		defaults("bool"),
+	}
+
+	negativeTestCases := []test{
+		negative("BOOLEAN(38, 0)"),
+		negative("BOOLEAN(38, 2)"),
+		negative("BOOLEAN(38)"),
+		negative("BOOLEAN()"),
+		negative("B O O L E A N"),
+		negative("other"),
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &BooleanDataType{}, parsed)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*BooleanDataType).underlyingType)
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}

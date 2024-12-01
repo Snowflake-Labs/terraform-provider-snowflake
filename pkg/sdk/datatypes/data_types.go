@@ -32,11 +32,13 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.IndexFunc(BinaryDataTypeSynonyms, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
 		return parseBinaryDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, BinaryDataTypeSynonyms[idx]})
 	}
+	if idx := slices.Index(BooleanDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+		return parseBooleanDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, BooleanDataTypeSynonyms[idx]})
+	}
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
 
 // TODO [this PR]: support all data types
-type BooleanDataType struct{}
 type TimestampLTZDataType struct{}
 type TimestampTZDataType struct{}
 type TimestampNTZDataType struct{}
