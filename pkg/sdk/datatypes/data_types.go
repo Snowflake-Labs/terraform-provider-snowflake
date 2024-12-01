@@ -50,10 +50,12 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.Index(TimestampNtzDataTypeSynonyms, dataTypeRaw); idx >= 0 {
 		return parseTimestampNtzDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimestampNtzDataTypeSynonyms[idx]})
 	}
+	if idx := slices.Index(TimestampTzDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+		return parseTimestampTzDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimestampTzDataTypeSynonyms[idx]})
+	}
 
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
 
 // TODO [this PR]: support all data types
-type TimestampTZDataType struct{}
 type VectorDataType struct{}
