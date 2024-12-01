@@ -859,3 +859,109 @@ func Test_ParseDataType_Array(t *testing.T) {
 		})
 	}
 }
+
+func Test_ParseDataType_Geography(t *testing.T) {
+	type test struct {
+		input                  string
+		expectedUnderlyingType string
+	}
+	defaults := func(input string) test {
+		return test{
+			input:                  input,
+			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
+		}
+	}
+	negative := func(input string) test {
+		return test{input: input}
+	}
+
+	positiveTestCases := []test{
+		defaults("   GEOGRAPHY   "),
+		defaults("GEOGRAPHY"),
+		defaults("geography"),
+	}
+
+	negativeTestCases := []test{
+		negative("GEOGRAPHY(38, 0)"),
+		negative("GEOGRAPHY(38, 2)"),
+		negative("GEOGRAPHY(38)"),
+		negative("GEOGRAPHY()"),
+		negative("G E O G R A P H Y"),
+		negative("other"),
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &GeographyDataType{}, parsed)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*GeographyDataType).underlyingType)
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}
+
+func Test_ParseDataType_Geometry(t *testing.T) {
+	type test struct {
+		input                  string
+		expectedUnderlyingType string
+	}
+	defaults := func(input string) test {
+		return test{
+			input:                  input,
+			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
+		}
+	}
+	negative := func(input string) test {
+		return test{input: input}
+	}
+
+	positiveTestCases := []test{
+		defaults("   GEOMETRY   "),
+		defaults("GEOMETRY"),
+		defaults("geometry"),
+	}
+
+	negativeTestCases := []test{
+		negative("GEOMETRY(38, 0)"),
+		negative("GEOMETRY(38, 2)"),
+		negative("GEOMETRY(38)"),
+		negative("GEOMETRY()"),
+		negative("G E O M E T R Y"),
+		negative("other"),
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &GeometryDataType{}, parsed)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*GeometryDataType).underlyingType)
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}

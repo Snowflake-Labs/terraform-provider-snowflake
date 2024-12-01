@@ -63,6 +63,12 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.Index(ArrayDataTypeSynonyms, dataTypeRaw); idx >= 0 {
 		return parseArrayDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, ArrayDataTypeSynonyms[idx]})
 	}
+	if idx := slices.Index(GeographyDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+		return parseGeographyDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, GeographyDataTypeSynonyms[idx]})
+	}
+	if idx := slices.Index(GeometryDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+		return parseGeometryDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, GeometryDataTypeSynonyms[idx]})
+	}
 
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
