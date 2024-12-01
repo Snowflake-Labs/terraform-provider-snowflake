@@ -500,3 +500,60 @@ func Test_ParseDataType_Time(t *testing.T) {
 		})
 	}
 }
+
+func Test_ParseDataType_TimestampLtz(t *testing.T) {
+	type test struct {
+		input                  string
+		expectedUnderlyingType string
+	}
+	defaults := func(input string) test {
+		return test{
+			input:                  input,
+			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
+		}
+	}
+	negative := func(input string) test {
+		return test{input: input}
+	}
+
+	positiveTestCases := []test{
+		defaults("   TIMESTAMP_LTZ   "),
+		defaults("TIMESTAMP_LTZ"),
+		defaults("TIMESTAMPLTZ"),
+		defaults("TIMESTAMP WITH LOCAL TIME ZONE"),
+		defaults("timestamp_ltz"),
+		defaults("timestampltz"),
+		defaults("timestamp with local time zone"),
+	}
+
+	negativeTestCases := []test{
+		negative("TIMESTAMP_LTZ(38, 0)"),
+		negative("TIMESTAMP_LTZ(38, 2)"),
+		negative("TIMESTAMP_LTZ(38)"),
+		negative("TIMESTAMP_LTZ()"),
+		negative("T I M E S T AM P _ L T Z"),
+		negative("other"),
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &TimestampLtzDataType{}, parsed)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TimestampLtzDataType).underlyingType)
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}
