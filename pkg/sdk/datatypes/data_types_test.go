@@ -394,3 +394,56 @@ func Test_ParseDataType_Boolean(t *testing.T) {
 		})
 	}
 }
+
+func Test_ParseDataType_Date(t *testing.T) {
+	type test struct {
+		input                  string
+		expectedUnderlyingType string
+	}
+	defaults := func(input string) test {
+		return test{
+			input:                  input,
+			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
+		}
+	}
+	negative := func(input string) test {
+		return test{input: input}
+	}
+
+	positiveTestCases := []test{
+		defaults("   DATE   "),
+		defaults("DATE"),
+		defaults("date"),
+	}
+
+	negativeTestCases := []test{
+		negative("DATE(38, 0)"),
+		negative("DATE(38, 2)"),
+		negative("DATE(38)"),
+		negative("DATE()"),
+		negative("D A T E"),
+		negative("other"),
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &DateDataType{}, parsed)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*DateDataType).underlyingType)
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}

@@ -35,6 +35,13 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.Index(BooleanDataTypeSynonyms, dataTypeRaw); idx >= 0 {
 		return parseBooleanDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, BooleanDataTypeSynonyms[idx]})
 	}
+	if idx := slices.Index(FloatDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+		return parseFloatDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, FloatDataTypeSynonyms[idx]})
+	}
+	if idx := slices.Index(DateDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+		return parseDateDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, DateDataTypeSynonyms[idx]})
+	}
+
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
 
