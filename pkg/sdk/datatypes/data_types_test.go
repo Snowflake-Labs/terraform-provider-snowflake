@@ -700,3 +700,56 @@ func Test_ParseDataType_TimestampTz(t *testing.T) {
 		})
 	}
 }
+
+func Test_ParseDataType_Variant(t *testing.T) {
+	type test struct {
+		input                  string
+		expectedUnderlyingType string
+	}
+	defaults := func(input string) test {
+		return test{
+			input:                  input,
+			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
+		}
+	}
+	negative := func(input string) test {
+		return test{input: input}
+	}
+
+	positiveTestCases := []test{
+		defaults("   VARIANT   "),
+		defaults("VARIANT"),
+		defaults("variant"),
+	}
+
+	negativeTestCases := []test{
+		negative("VARIANT(38, 0)"),
+		negative("VARIANT(38, 2)"),
+		negative("VARIANT(38)"),
+		negative("VARIANT()"),
+		negative("V A R I A N T"),
+		negative("other"),
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &VariantDataType{}, parsed)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*VariantDataType).underlyingType)
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}
