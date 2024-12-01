@@ -504,11 +504,13 @@ func Test_ParseDataType_Time(t *testing.T) {
 func Test_ParseDataType_TimestampLtz(t *testing.T) {
 	type test struct {
 		input                  string
+		expectedPrecision      int
 		expectedUnderlyingType string
 	}
 	defaults := func(input string) test {
 		return test{
 			input:                  input,
+			expectedPrecision:      DefaultTimestampPrecision,
 			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
 		}
 	}
@@ -517,6 +519,12 @@ func Test_ParseDataType_TimestampLtz(t *testing.T) {
 	}
 
 	positiveTestCases := []test{
+		{input: "TIMESTAMP_LTZ(4)", expectedPrecision: 4, expectedUnderlyingType: "TIMESTAMP_LTZ"},
+		{input: "timestamp with local time zone(5)", expectedPrecision: 5, expectedUnderlyingType: "TIMESTAMP WITH LOCAL TIME ZONE"},
+		{input: "TIMESTAMP_LTZ(   2   )", expectedPrecision: 2, expectedUnderlyingType: "TIMESTAMP_LTZ"},
+		{input: "    TIMESTAMP_LTZ   (   7   )    ", expectedPrecision: 7, expectedUnderlyingType: "TIMESTAMP_LTZ"},
+		{input: fmt.Sprintf("TIMESTAMP_LTZ(%d)", DefaultTimestampPrecision), expectedPrecision: DefaultTimestampPrecision, expectedUnderlyingType: "TIMESTAMP_LTZ"},
+
 		defaults("   TIMESTAMP_LTZ   "),
 		defaults("TIMESTAMP_LTZ"),
 		defaults("TIMESTAMPLTZ"),
@@ -529,10 +537,10 @@ func Test_ParseDataType_TimestampLtz(t *testing.T) {
 	negativeTestCases := []test{
 		negative("TIMESTAMP_LTZ(38, 0)"),
 		negative("TIMESTAMP_LTZ(38, 2)"),
-		negative("TIMESTAMP_LTZ(38)"),
 		negative("TIMESTAMP_LTZ()"),
 		negative("T I M E S T A M P _ L T Z"),
 		negative("other"),
+		negative("other(3)"),
 	}
 
 	for _, tc := range positiveTestCases {
@@ -543,6 +551,7 @@ func Test_ParseDataType_TimestampLtz(t *testing.T) {
 			require.NoError(t, err)
 			require.IsType(t, &TimestampLtzDataType{}, parsed)
 
+			assert.Equal(t, tc.expectedPrecision, parsed.(*TimestampLtzDataType).precision)
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TimestampLtzDataType).underlyingType)
 		})
 	}
@@ -561,11 +570,13 @@ func Test_ParseDataType_TimestampLtz(t *testing.T) {
 func Test_ParseDataType_TimestampNtz(t *testing.T) {
 	type test struct {
 		input                  string
+		expectedPrecision      int
 		expectedUnderlyingType string
 	}
 	defaults := func(input string) test {
 		return test{
 			input:                  input,
+			expectedPrecision:      DefaultTimestampPrecision,
 			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
 		}
 	}
@@ -574,6 +585,12 @@ func Test_ParseDataType_TimestampNtz(t *testing.T) {
 	}
 
 	positiveTestCases := []test{
+		{input: "TIMESTAMP_NTZ(4)", expectedPrecision: 4, expectedUnderlyingType: "TIMESTAMP_NTZ"},
+		{input: "timestamp without time zone(5)", expectedPrecision: 5, expectedUnderlyingType: "TIMESTAMP WITHOUT TIME ZONE"},
+		{input: "TIMESTAMP_NTZ(   2   )", expectedPrecision: 2, expectedUnderlyingType: "TIMESTAMP_NTZ"},
+		{input: "    TIMESTAMP_NTZ   (   7   )    ", expectedPrecision: 7, expectedUnderlyingType: "TIMESTAMP_NTZ"},
+		{input: fmt.Sprintf("TIMESTAMP_NTZ(%d)", DefaultTimestampPrecision), expectedPrecision: DefaultTimestampPrecision, expectedUnderlyingType: "TIMESTAMP_NTZ"},
+
 		defaults("   TIMESTAMP_NTZ   "),
 		defaults("TIMESTAMP_NTZ"),
 		defaults("TIMESTAMPNTZ"),
@@ -588,10 +605,10 @@ func Test_ParseDataType_TimestampNtz(t *testing.T) {
 	negativeTestCases := []test{
 		negative("TIMESTAMP_NTZ(38, 0)"),
 		negative("TIMESTAMP_NTZ(38, 2)"),
-		negative("TIMESTAMP_NTZ(38)"),
 		negative("TIMESTAMP_NTZ()"),
 		negative("T I M E S T A M P _ N T Z"),
 		negative("other"),
+		negative("other(3)"),
 	}
 
 	for _, tc := range positiveTestCases {
@@ -602,6 +619,7 @@ func Test_ParseDataType_TimestampNtz(t *testing.T) {
 			require.NoError(t, err)
 			require.IsType(t, &TimestampNtzDataType{}, parsed)
 
+			assert.Equal(t, tc.expectedPrecision, parsed.(*TimestampNtzDataType).precision)
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TimestampNtzDataType).underlyingType)
 		})
 	}
@@ -620,11 +638,13 @@ func Test_ParseDataType_TimestampNtz(t *testing.T) {
 func Test_ParseDataType_TimestampTz(t *testing.T) {
 	type test struct {
 		input                  string
+		expectedPrecision      int
 		expectedUnderlyingType string
 	}
 	defaults := func(input string) test {
 		return test{
 			input:                  input,
+			expectedPrecision:      DefaultTimestampPrecision,
 			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
 		}
 	}
@@ -633,6 +653,12 @@ func Test_ParseDataType_TimestampTz(t *testing.T) {
 	}
 
 	positiveTestCases := []test{
+		{input: "TIMESTAMP_TZ(4)", expectedPrecision: 4, expectedUnderlyingType: "TIMESTAMP_TZ"},
+		{input: "timestamp with time zone(5)", expectedPrecision: 5, expectedUnderlyingType: "TIMESTAMP WITH TIME ZONE"},
+		{input: "TIMESTAMP_TZ(   2   )", expectedPrecision: 2, expectedUnderlyingType: "TIMESTAMP_TZ"},
+		{input: "    TIMESTAMP_TZ   (   7   )    ", expectedPrecision: 7, expectedUnderlyingType: "TIMESTAMP_TZ"},
+		{input: fmt.Sprintf("TIMESTAMP_TZ(%d)", DefaultTimestampPrecision), expectedPrecision: DefaultTimestampPrecision, expectedUnderlyingType: "TIMESTAMP_TZ"},
+
 		defaults("   TIMESTAMP_TZ   "),
 		defaults("TIMESTAMP_TZ"),
 		defaults("TIMESTAMPTZ"),
@@ -645,10 +671,10 @@ func Test_ParseDataType_TimestampTz(t *testing.T) {
 	negativeTestCases := []test{
 		negative("TIMESTAMP_TZ(38, 0)"),
 		negative("TIMESTAMP_TZ(38, 2)"),
-		negative("TIMESTAMP_TZ(38)"),
 		negative("TIMESTAMP_TZ()"),
 		negative("T I M E S T A M P _ T Z"),
 		negative("other"),
+		negative("other(3)"),
 	}
 
 	for _, tc := range positiveTestCases {
@@ -659,6 +685,7 @@ func Test_ParseDataType_TimestampTz(t *testing.T) {
 			require.NoError(t, err)
 			require.IsType(t, &TimestampTzDataType{}, parsed)
 
+			assert.Equal(t, tc.expectedPrecision, parsed.(*TimestampTzDataType).precision)
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TimestampTzDataType).underlyingType)
 		})
 	}

@@ -17,6 +17,7 @@ type sanitizedDataTypeRaw struct {
 // TODO [this PR]: test
 // TODO [this PR]: support all data types
 // https://docs.snowflake.com/en/sql-reference/intro-summary-data-types
+// Session-configurable TIMESTAMP alias is currenlty not supported (https://docs.snowflake.com/en/sql-reference/data-types-datetime#timestamp).
 func ParseDataType(raw string) (DataType, error) {
 	dataTypeRaw := strings.TrimSpace(strings.ToUpper(raw))
 
@@ -44,13 +45,13 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.Index(TimeDataTypeSynonyms, dataTypeRaw); idx >= 0 {
 		return parseTimeDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimeDataTypeSynonyms[idx]})
 	}
-	if idx := slices.Index(TimestampLtzDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+	if idx := slices.IndexFunc(TimestampLtzDataTypeSynonyms, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
 		return parseTimestampLtzDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimestampLtzDataTypeSynonyms[idx]})
 	}
-	if idx := slices.Index(TimestampNtzDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+	if idx := slices.IndexFunc(TimestampNtzDataTypeSynonyms, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
 		return parseTimestampNtzDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimestampNtzDataTypeSynonyms[idx]})
 	}
-	if idx := slices.Index(TimestampTzDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+	if idx := slices.IndexFunc(TimestampTzDataTypeSynonyms, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
 		return parseTimestampTzDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimestampTzDataTypeSynonyms[idx]})
 	}
 
