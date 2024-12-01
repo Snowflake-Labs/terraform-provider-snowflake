@@ -57,6 +57,9 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.Index(VariantDataTypeSynonyms, dataTypeRaw); idx >= 0 {
 		return parseVariantDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, VariantDataTypeSynonyms[idx]})
 	}
+	if idx := slices.Index(ObjectDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+		return parseObjectDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, ObjectDataTypeSynonyms[idx]})
+	}
 
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }

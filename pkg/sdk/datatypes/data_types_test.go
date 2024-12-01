@@ -753,3 +753,56 @@ func Test_ParseDataType_Variant(t *testing.T) {
 		})
 	}
 }
+
+func Test_ParseDataType_Object(t *testing.T) {
+	type test struct {
+		input                  string
+		expectedUnderlyingType string
+	}
+	defaults := func(input string) test {
+		return test{
+			input:                  input,
+			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
+		}
+	}
+	negative := func(input string) test {
+		return test{input: input}
+	}
+
+	positiveTestCases := []test{
+		defaults("   OBJECT   "),
+		defaults("OBJECT"),
+		defaults("object"),
+	}
+
+	negativeTestCases := []test{
+		negative("OBJECT(38, 0)"),
+		negative("OBJECT(38, 2)"),
+		negative("OBJECT(38)"),
+		negative("OBJECT()"),
+		negative("O B J E C T"),
+		negative("other"),
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &ObjectDataType{}, parsed)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*ObjectDataType).underlyingType)
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}
