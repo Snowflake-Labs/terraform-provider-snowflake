@@ -47,11 +47,13 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.Index(TimestampLtzDataTypeSynonyms, dataTypeRaw); idx >= 0 {
 		return parseTimestampLtzDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimestampLtzDataTypeSynonyms[idx]})
 	}
+	if idx := slices.Index(TimestampNtzDataTypeSynonyms, dataTypeRaw); idx >= 0 {
+		return parseTimestampNtzDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimestampNtzDataTypeSynonyms[idx]})
+	}
 
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
 
 // TODO [this PR]: support all data types
 type TimestampTZDataType struct{}
-type TimestampNTZDataType struct{}
 type VectorDataType struct{}
