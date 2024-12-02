@@ -12,8 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// TODO [this PR]: add NormalizeAndCompare using func variant for data types diff suppresion
 func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema.SchemaDiffSuppressFunc {
+	return NormalizeAndCompareUsingFunc(normalize, func(a, b T) bool { return a == b })
+}
+
+// NormalizeAndCompareUsingFunc handles data type suppression taking into account data type attributes for each type.
+// It falls back to Snowflake defaults for arguments if no arguments were provided for the data type.
+func NormalizeAndCompareUsingFunc[T any](normalize func(string) (T, error), compareFunc func(a, b T) bool) schema.SchemaDiffSuppressFunc {
 	return func(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 		oldNormalized, err := normalize(oldValue)
 		if err != nil {
@@ -23,7 +28,8 @@ func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema
 		if err != nil {
 			return false
 		}
-		return oldNormalized == newNormalized
+
+		return compareFunc(oldNormalized, newNormalized)
 	}
 }
 

@@ -8,11 +8,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -60,9 +60,9 @@ var procedureSchema = map[string]*schema.Schema{
 				"type": {
 					Type:             schema.TypeString,
 					Required:         true,
-					ValidateFunc:     dataTypeValidateFunc,
-					DiffSuppressFunc: DataTypeDiffSuppressFunc,
 					Description:      "The argument type",
+					ValidateFunc:     dataTypeValidateFunc,
+					DiffSuppressFunc: NormalizeAndCompareUsingFunc(datatypes.ParseDataType, datatypes.AreTheSame),
 				},
 			},
 		},

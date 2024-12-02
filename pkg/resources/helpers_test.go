@@ -11,6 +11,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
@@ -398,7 +399,7 @@ func Test_DataTypeDiffSuppressFunc(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			result := resources.DataTypeDiffSuppressFunc("", tc.old, tc.new, nil)
+			result := resources.NormalizeAndCompareUsingFunc(datatypes.ParseDataType, datatypes.AreTheSame)("", tc.old, tc.new, nil)
 			require.Equal(t, tc.expected, result)
 		})
 	}

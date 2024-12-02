@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,21 +16,6 @@ func dataTypeValidateFunc(val interface{}, _ string) (warns []string, errs []err
 		errs = append(errs, fmt.Errorf("%v is not a valid data type", val))
 	}
 	return
-}
-
-// DataTypeDiffSuppressFunc handles data type suppression taking into account data type attributes for each type.
-// It falls back to Snowflake defaults for arguments if no arguments were provided for the data type.
-func DataTypeDiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	oldDT, err := datatypes.ParseDataType(old)
-	if err != nil {
-		return false
-	}
-	newDT, err := datatypes.ParseDataType(new)
-	if err != nil {
-		return false
-	}
-
-	return datatypes.AreTheSame(oldDT, newDT)
 }
 
 func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
