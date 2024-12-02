@@ -148,7 +148,7 @@ func ReadAccounts(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 		m["account_name"] = account.AccountName
 		m["region_group"] = account.RegionGroup
 		m["snowflake_region"] = account.SnowflakeRegion
-		m["edition"] = account.Edition
+		m["edition"] = string(*account.Edition)
 		m["account_url"] = account.AccountURL
 		m["created_on"] = account.CreatedOn.String()
 		m["comment"] = account.Comment
