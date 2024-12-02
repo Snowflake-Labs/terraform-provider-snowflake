@@ -2,9 +2,7 @@ package example
 
 //go:generate go run ./dto-builder-generator/main.go
 
-var (
-	_ optionsProvider[AlterToOptsOptionalExampleOptions] = new(AlterToOptsOptionalExampleRequest)
-)
+var _ optionsProvider[AlterToOptsOptionalExampleOptions] = new(AlterToOptsOptionalExampleRequest)
 
 type AlterToOptsOptionalExampleRequest struct {
 	IfExists      *bool
