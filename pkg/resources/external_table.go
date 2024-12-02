@@ -5,17 +5,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var externalTableSchema = map[string]*schema.Schema{
@@ -63,7 +61,7 @@ var externalTableSchema = map[string]*schema.Schema{
 					Required:     true,
 					Description:  "Column type, e.g. VARIANT",
 					ForceNew:     true,
-					ValidateFunc: IsDataType(),
+					ValidateFunc: dataTypeValidateFunc,
 				},
 				"as": {
 					Type:        schema.TypeString,
@@ -173,9 +171,13 @@ func CreateExternalTable(ctx context.Context, d *schema.ResourceData, meta any) 
 		for key, val := range col.(map[string]any) {
 			columnDef[key] = val.(string)
 		}
+		dt, err := datatypes.ParseDataType(columnDef["type"])
+		if err != nil {
+			return diag.FromErr(err)
+		}
 		columnRequests[i] = sdk.NewExternalTableColumnRequest(
 			columnDef["name"],
-			sdk.DataType(columnDef["type"]),
+			sdk.DataType(dt.ToLegacyDataTypeSql()),
 			columnDef["as"],
 		)
 	}
