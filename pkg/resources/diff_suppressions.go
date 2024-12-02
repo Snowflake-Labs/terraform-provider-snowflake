@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// TODO [this PR]: add NormalizeAndCompare using func variant for data types diff suppresion
 func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema.SchemaDiffSuppressFunc {
 	return func(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 		oldNormalized, err := normalize(oldValue)
