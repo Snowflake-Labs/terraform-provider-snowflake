@@ -69,9 +69,9 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.Index(GeometryDataTypeSynonyms, dataTypeRaw); idx >= 0 {
 		return parseGeometryDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, GeometryDataTypeSynonyms[idx]})
 	}
+	if idx := slices.IndexFunc(VectorDataTypeSynonyms, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
+		return parseVectorDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, VectorDataTypeSynonyms[idx]})
+	}
 
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
-
-// TODO [this PR]: support all data types
-type VectorDataType struct{}

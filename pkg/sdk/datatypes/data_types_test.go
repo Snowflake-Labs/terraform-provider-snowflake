@@ -965,3 +965,58 @@ func Test_ParseDataType_Geometry(t *testing.T) {
 		})
 	}
 }
+
+func Test_ParseDataType_Vector(t *testing.T) {
+	type test struct {
+		input             string
+		expectedInnerType string
+		expectedDimension int
+	}
+	negative := func(input string) test {
+		return test{input: input}
+	}
+
+	positiveTestCases := []test{
+		{input: "VECTOR(INT, 2)", expectedInnerType: "INT", expectedDimension: 2},
+		{input: "VECTOR(FLOAT, 2)", expectedInnerType: "FLOAT", expectedDimension: 2},
+		{input: "VeCtOr   ( InT    ,     40     )", expectedInnerType: "INT", expectedDimension: 40},
+		{input: "      VECTOR   ( INT    ,     40     )", expectedInnerType: "INT", expectedDimension: 40},
+	}
+
+	negativeTestCases := []test{
+		negative("VECTOR(1, 2)"),
+		negative("VECTOR(1)"),
+		negative("VECTOR(2, INT)"),
+		negative("VECTOR()"),
+		negative("VECTOR(INT, 2, 3)"),
+		negative("VECTOR(INT)"),
+		negative("VECTOR(x, 2)"),
+		negative("VECTOR("),
+		negative("VECTOR)"),
+		negative("VEC TOR"),
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &VectorDataType{}, parsed)
+
+			assert.Equal(t, tc.expectedInnerType, parsed.(*VectorDataType).innerType)
+			assert.Equal(t, tc.expectedDimension, parsed.(*VectorDataType).dimension)
+			assert.Equal(t, "VECTOR", parsed.(*VectorDataType).underlyingType)
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}
