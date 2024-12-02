@@ -6,6 +6,7 @@ resource "snowflake_streamlit" "streamlit" {
   stage     = "streamlit_db.streamlit_schema.streamlit_stage"
   main_file = "/streamlit_main.py"
 }
+
 # resource with all fields set
 resource "snowflake_streamlit" "streamlit" {
   database                     = "database"

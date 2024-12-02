@@ -46,3 +46,7 @@ func dataTypeFieldDescription(description string) string {
 func deprecatedResourceDescription(alternatives ...string) string {
 	return fmt.Sprintf(`This resource is deprecated and will be removed in a future major version release. Please use one of the new resources instead: %s`, possibleValuesListed(alternatives))
 }
+
+func copyGrantsDescription(description string) string {
+	return fmt.Sprintf("%s This is used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect during creating a new object with Terraform.", description)
+}

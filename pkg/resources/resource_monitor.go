@@ -32,7 +32,8 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies the list of users (their identifiers) to receive email notifications on resource monitors.",
 		Elem: &schema.Schema{
-			Type: schema.TypeString,
+			Type:             schema.TypeString,
+			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
 	},
 	"credit_quota": {

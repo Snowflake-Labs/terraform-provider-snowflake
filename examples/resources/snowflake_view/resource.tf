@@ -50,8 +50,9 @@ resource "snowflake_view" "test" {
     entity_key  = ["id"]
   }
   data_metric_function {
-    function_name = "data_metric_function"
-    on            = ["id"]
+    function_name   = "data_metric_function"
+    on              = ["id"]
+    schedule_status = "STARTED"
   }
   data_metric_schedule {
     using_cron = "15 * * * * UTC"

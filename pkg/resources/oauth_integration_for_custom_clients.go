@@ -119,13 +119,13 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
-		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource using `terraform taint`.",
+		Description:      externalChangesNotDetectedFieldDescription("Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers."),
 	},
 	"oauth_client_rsa_public_key_2": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
-		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource using `terraform taint`.",
+		Description:      externalChangesNotDetectedFieldDescription("Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers."),
 	},
 	"comment": {
 		Type:        schema.TypeString,

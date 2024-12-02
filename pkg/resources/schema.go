@@ -25,7 +25,7 @@ var schemaSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the identifier for the schema; must be unique for the database in which the schema is created. When the name is `PUBLIC`, during creation the provider checks if this schema has already been created and, in such case, `ALTER` is used to match the desired state.",
+		Description:      blocklistedCharactersFieldDescription("Specifies the identifier for the schema; must be unique for the database in which the schema is created. When the name is `PUBLIC`, during creation the provider checks if this schema has already been created and, in such case, `ALTER` is used to match the desired state."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
@@ -91,6 +91,8 @@ var schemaSchema = map[string]*schema.Schema{
 // Schema returns a pointer to the resource representing a schema.
 func Schema() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 2,
+
 		CreateContext: TrackingCreateWrapper(resources.Schema, CreateContextSchema),
 		ReadContext:   TrackingReadWrapper(resources.Schema, ReadContextSchema(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.Schema, UpdateContextSchema),
@@ -110,7 +112,6 @@ func Schema() *schema.Resource {
 			StateContext: TrackingImportWrapper(resources.Schema, ImportSchema),
 		},
 
-		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,

@@ -141,5 +141,5 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_database.example 'database_name'
+terraform import snowflake_database.example '"<database_name>"'
 ```

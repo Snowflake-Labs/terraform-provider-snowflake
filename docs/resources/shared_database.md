@@ -106,5 +106,5 @@ resource "snowflake_shared_database" "test" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_shared_database.example 'shared_database_name'
+terraform import snowflake_shared_database.example '"<shared_database_name>"'
 ```

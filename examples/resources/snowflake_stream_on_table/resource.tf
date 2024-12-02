@@ -9,6 +9,14 @@ resource "snowflake_table" "table" {
   }
 }
 
+# basic resource
+resource "snowflake_stream_on_table" "stream" {
+  name     = "stream"
+  schema   = "schema"
+  database = "database"
+
+  table = snowflake_table.table.fully_qualified_name
+}
 
 # resource with more fields set
 resource "snowflake_stream_on_table" "stream" {

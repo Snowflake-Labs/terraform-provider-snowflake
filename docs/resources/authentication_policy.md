@@ -5,8 +5,7 @@ description: |-
   Resource used to manage authentication policy objects. For more information, check authentication policy documentation https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy.
 ---
 
-> [!WARNING]
-> According to Snowflake [docs](https://docs.snowflake.com/en/sql-reference/sql/drop-authentication-policy#usage-notes), an authentication policy cannot be dropped successfully if it is currently assigned to another object. Currently, the provider does not unassign such objects automatically. Before dropping the resource, list the assigned objects with `SELECT * from table(information_schema.policy_references(policy_name=>'<string>'));` and unassign them manually with `ALTER ...` or with updated Terraform configuration, if possible.
+!> **Note** According to Snowflake [docs](https://docs.snowflake.com/en/sql-reference/sql/drop-authentication-policy#usage-notes), an authentication policy cannot be dropped successfully if it is currently assigned to another object. Currently, the provider does not unassign such objects automatically. Before dropping the resource, list the assigned objects with `SELECT * from table(information_schema.policy_references(policy_name=>'<string>'));` and unassign them manually with `ALTER ...` or with updated Terraform configuration, if possible.
 
 # snowflake_authentication_policy (Resource)
 

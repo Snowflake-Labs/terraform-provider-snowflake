@@ -41,8 +41,8 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Required:         true,
 		ForceNew:         true,
 		Description:      fmt.Sprintf("Specifies the client type for the scim integration. Valid options are: %v.", possibleValuesListed(sdk.AllScimSecurityIntegrationScimClients)),
-		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationScimClients), true),
-		DiffSuppressFunc: ignoreCaseAndTrimSpaceSuppressFunc,
+		ValidateDiagFunc: sdkValidation(sdk.ToScimSecurityIntegrationScimClientOption),
+		DiffSuppressFunc: NormalizeAndCompare(sdk.ToScimSecurityIntegrationScimClientOption),
 	},
 	"run_as_role": {
 		Type:     schema.TypeString,
@@ -50,13 +50,8 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		ForceNew: true,
 		Description: fmt.Sprintf("Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM."+
 			" Provider assumes that the specified role is already provided. Valid options are: %v.", possibleValuesListed(sdk.AllScimSecurityIntegrationRunAsRoles)),
-		ValidateDiagFunc: StringInSlice(sdk.AsStringList(sdk.AllScimSecurityIntegrationRunAsRoles), true),
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			normalize := func(s string) string {
-				return strings.ToUpper(strings.ReplaceAll(s, "-", ""))
-			}
-			return normalize(old) == normalize(new)
-		},
+		ValidateDiagFunc: sdkValidation(sdk.ToScimSecurityIntegrationRunAsRoleOption),
+		DiffSuppressFunc: NormalizeAndCompare(sdk.ToScimSecurityIntegrationRunAsRoleOption),
 	},
 	"network_policy": {
 		Type:             schema.TypeString,

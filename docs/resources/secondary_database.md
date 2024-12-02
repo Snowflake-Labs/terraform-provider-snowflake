@@ -126,5 +126,5 @@ resource "snowflake_task" "refresh_secondary_database" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_secondary_database.example 'secondary_database_name'
+terraform import snowflake_secondary_database.example '"<secondary_database_name>"'
 ```

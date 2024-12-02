@@ -25,9 +25,5 @@ resource "snowflake_stream_on_directory_table" "stream" {
   copy_grants = true
   stage       = snowflake_stage.stage.fully_qualified_name
 
-  at {
-    statement = "8e5d0ca9-005e-44e6-b858-a8f5b37c5726"
-  }
-
   comment = "A stream."
 }

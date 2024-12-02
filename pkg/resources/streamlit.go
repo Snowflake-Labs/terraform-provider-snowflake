@@ -24,7 +24,7 @@ var streamlitSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "String that specifies the identifier (i.e. name) for the streamlit; must be unique in your account.",
+		Description:      blocklistedCharactersFieldDescription("String that specifies the identifier (i.e. name) for the streamlit; must be unique in your account."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"database": {
@@ -57,7 +57,7 @@ var streamlitSchema = map[string]*schema.Schema{
 	"main_file": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the filename of the Streamlit Python application. This filename is relative to the value of `root_location`",
+		Description:      "Specifies the filename of the Streamlit Python application. This filename is relative to the value of `directory_location`",
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInDescribe("main_file"),
 	},
 	"query_warehouse": {
@@ -75,7 +75,7 @@ var streamlitSchema = map[string]*schema.Schema{
 		},
 		Optional:         true,
 		Description:      "External access integrations connected to the Streamlit.",
-		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInDescribe("external_access_integrations")),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompareIdentifiersInSet("external_access_integrations"), IgnoreChangeToCurrentSnowflakeValueInDescribe("external_access_integrations")),
 	},
 	"title": {
 		Type:        schema.TypeString,
@@ -108,6 +108,8 @@ var streamlitSchema = map[string]*schema.Schema{
 
 func Streamlit() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		CreateContext: TrackingCreateWrapper(resources.Streamlit, CreateContextStreamlit),
 		ReadContext:   TrackingReadWrapper(resources.Streamlit, ReadContextStreamlit),
 		UpdateContext: TrackingUpdateWrapper(resources.Streamlit, UpdateContextStreamlit),
@@ -125,7 +127,6 @@ func Streamlit() *schema.Resource {
 			ComputedIfAnyAttributeChanged(streamlitSchema, DescribeOutputAttributeName, "title", "comment", "root_location", "main_file", "query_warehouse", "external_access_integrations"),
 		)),
 
-		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,

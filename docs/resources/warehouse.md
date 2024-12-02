@@ -139,5 +139,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_warehouse.example warehouseName
+terraform import snowflake_warehouse.example '"<warehouse_name>"'
 ```

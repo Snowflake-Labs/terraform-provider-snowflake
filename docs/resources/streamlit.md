@@ -22,6 +22,7 @@ resource "snowflake_streamlit" "streamlit" {
   stage     = "streamlit_db.streamlit_schema.streamlit_stage"
   main_file = "/streamlit_main.py"
 }
+
 # resource with all fields set
 resource "snowflake_streamlit" "streamlit" {
   database                     = "database"
@@ -45,8 +46,8 @@ resource "snowflake_streamlit" "streamlit" {
 ### Required
 
 - `database` (String) The database in which to create the streamlit
-- `main_file` (String) Specifies the filename of the Streamlit Python application. This filename is relative to the value of `root_location`
-- `name` (String) String that specifies the identifier (i.e. name) for the streamlit; must be unique in your account.
+- `main_file` (String) Specifies the filename of the Streamlit Python application. This filename is relative to the value of `directory_location`
+- `name` (String) String that specifies the identifier (i.e. name) for the streamlit; must be unique in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `schema` (String) The schema in which to create the streamlit.
 - `stage` (String) The stage in which streamlit files are located.
 
@@ -104,6 +105,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-# format is <database_name>.<schema_name>.<streamlit_name>
 terraform import snowflake_schema.example '"<database_name>"."<schema_name>"."<streamlit_name>"'
 ```
