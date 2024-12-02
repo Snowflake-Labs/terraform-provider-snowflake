@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+// TODO [this PR]: describe this package
+// TODO [this PR]: add integration tests
+// TODO [next PR]: generalize definitions for different types; generalize the ParseDataType function
+// TODO [next PR]: generalize implementation in types (i.e. the internal struct implementing ToLegacyDataTypeSql and containing the underlyingType)
+// TODO [next PR]: consider known/unknown to use Snowflake defaults and allow better handling in terraform resources
+// TODO [next PR]: replace old DataTypes
+
 type DataType interface {
 	ToSql() string
 	ToLegacyDataTypeSql() string
