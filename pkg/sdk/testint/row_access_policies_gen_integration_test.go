@@ -6,6 +6,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -342,11 +343,11 @@ func TestInt_RowAccessPoliciesDescribe(t *testing.T) {
 		require.NoError(t, err)
 		wantArgs := make([]sdk.TableColumnSignature, len(args))
 		for i, arg := range args {
-			dataType, err := sdk.ToDataType(string(arg.Type))
+			dataType, err := datatypes.ParseDataType(string(arg.Type))
 			require.NoError(t, err)
 			wantArgs[i] = sdk.TableColumnSignature{
 				Name: arg.Name,
-				Type: dataType,
+				Type: sdk.DataType(dataType.ToLegacyDataTypeSql()),
 			}
 		}
 		assert.Equal(t, wantArgs, policyDetails.Signature)

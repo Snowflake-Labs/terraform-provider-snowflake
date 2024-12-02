@@ -7,6 +7,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/validators"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -80,6 +81,8 @@ func IntInSlice(valid []int) schema.SchemaValidateDiagFunc {
 func sdkValidation[T any](normalize func(string) (T, error)) schema.SchemaValidateDiagFunc {
 	return validators.NormalizeValidation(normalize)
 }
+
+var IsDataTypeValid = sdkValidation(datatypes.ParseDataType)
 
 func isNotEqualTo(notExpectedValue string, errorMessage string) schema.SchemaValidateDiagFunc {
 	return func(value any, path cty.Path) diag.Diagnostics {

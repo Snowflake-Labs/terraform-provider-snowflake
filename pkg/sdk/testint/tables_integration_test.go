@@ -13,6 +13,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -43,9 +44,9 @@ func TestInt_Table(t *testing.T) {
 		require.Len(t, createdColumns, len(expectedColumns))
 		for i, expectedColumn := range expectedColumns {
 			assert.Equal(t, strings.ToUpper(expectedColumn.Name), createdColumns[i].ColumnName)
-			createdColumnDataType, err := sdk.ToDataType(createdColumns[i].DataType)
+			createdColumnDataType, err := datatypes.ParseDataType(createdColumns[i].DataType)
 			assert.NoError(t, err)
-			assert.Equal(t, expectedColumn.Type, createdColumnDataType)
+			assert.Equal(t, expectedColumn.Type, sdk.DataType(createdColumnDataType.ToLegacyDataTypeSql()))
 		}
 	}
 

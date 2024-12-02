@@ -12,7 +12,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -63,8 +62,8 @@ var tableSchema = map[string]*schema.Schema{
 					Type:             schema.TypeString,
 					Required:         true,
 					Description:      "Column type, e.g. VARIANT. For a full list of column types, see [Summary of Data Types](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).",
-					ValidateFunc:     dataTypeValidateFunc,
-					DiffSuppressFunc: NormalizeAndCompareUsingFunc(datatypes.ParseDataType, datatypes.AreTheSame),
+					ValidateDiagFunc: IsDataTypeValid,
+					DiffSuppressFunc: DiffSuppressDataTypes,
 				},
 				"nullable": {
 					Type:        schema.TypeBool,

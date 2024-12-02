@@ -11,13 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataTypeValidateFunc(val interface{}, _ string) (warns []string, errs []error) {
-	if ok := sdk.IsValidDataType(val.(string)); !ok {
-		errs = append(errs, fmt.Errorf("%v is not a valid data type", val))
-	}
-	return
-}
-
 func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 	return strings.TrimSpace(old) == strings.TrimSpace(new)
 }

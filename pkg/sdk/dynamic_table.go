@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 type DynamicTables interface {
@@ -232,10 +233,10 @@ type dynamicTableDetailsRow struct {
 }
 
 func (row dynamicTableDetailsRow) convert() *DynamicTableDetails {
-	typ, _ := ToDataType(row.Type)
+	typ, _ := datatypes.ParseDataType(row.Type)
 	dtd := &DynamicTableDetails{
 		Name:       row.Name,
-		Type:       typ,
+		Type:       DataType(typ.ToLegacyDataTypeSql()),
 		Kind:       row.Kind,
 		IsNull:     row.IsNull == "Y",
 		PrimaryKey: row.PrimaryKey,

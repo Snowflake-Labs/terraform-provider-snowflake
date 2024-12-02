@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -54,8 +53,8 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 				"type": {
 					Type:             schema.TypeString,
 					Required:         true,
-					DiffSuppressFunc: NormalizeAndCompare(sdk.ToDataType),
-					ValidateDiagFunc: sdkValidation(sdk.ToDataType),
+					DiffSuppressFunc: DiffSuppressDataTypes,
+					ValidateDiagFunc: IsDataTypeValid,
 					Description:      dataTypeFieldDescription("The argument type. VECTOR data types are not yet supported."),
 					ForceNew:         true,
 				},
@@ -179,11 +178,11 @@ func CreateRowAccessPolicy(ctx context.Context, d *schema.ResourceData, meta any
 	args := make([]sdk.CreateRowAccessPolicyArgsRequest, 0)
 	for _, arg := range arguments {
 		v := arg.(map[string]any)
-		dataType, err := sdk.ToDataType(v["type"].(string))
+		dataType, err := datatypes.ParseDataType(v["type"].(string))
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		args = append(args, *sdk.NewCreateRowAccessPolicyArgsRequest(v["name"].(string), dataType))
+		args = append(args, *sdk.NewCreateRowAccessPolicyArgsRequest(v["name"].(string), sdk.DataType(dataType.ToLegacyDataTypeSql())))
 	}
 
 	createRequest := sdk.NewCreateRowAccessPolicyRequest(id, args, rowAccessExpression)

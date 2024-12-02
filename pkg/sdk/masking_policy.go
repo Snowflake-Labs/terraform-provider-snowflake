@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 var _ MaskingPolicies = (*maskingPolicies)(nil)
@@ -360,14 +361,14 @@ type maskingPolicyDetailsRow struct {
 }
 
 func (row maskingPolicyDetailsRow) toMaskingPolicyDetails() *MaskingPolicyDetails {
-	dataType, err := ToDataType(row.ReturnType)
+	dataType, err := datatypes.ParseDataType(row.ReturnType)
 	if err != nil {
 		return nil
 	}
 	v := &MaskingPolicyDetails{
 		Name:       row.Name,
 		Signature:  []TableColumnSignature{},
-		ReturnType: dataType,
+		ReturnType: DataType(dataType.ToLegacyDataTypeSql()),
 		Body:       row.Body,
 	}
 

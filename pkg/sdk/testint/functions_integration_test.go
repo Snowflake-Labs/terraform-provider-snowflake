@@ -9,6 +9,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -542,8 +543,9 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 
 		dataTypes := make([]sdk.DataType, len(args))
 		for i, arg := range args {
-			dataTypes[i], err = sdk.ToDataType(string(arg.ArgDataType))
+			dataType, err := datatypes.ParseDataType(string(arg.ArgDataType))
 			require.NoError(t, err)
+			dataTypes[i] = sdk.DataType(dataType.ToLegacyDataTypeSql())
 		}
 		idWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), dataTypes...)
 
