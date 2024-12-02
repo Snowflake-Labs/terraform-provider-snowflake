@@ -18,7 +18,7 @@
         func (v *{{ $impl }}) ShowByID(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error) {
             request := NewShow{{ .ObjectInterface.NameSingular }}Request()
             {{- if not .ShowByIDFiltering }}
-                // TODO: adjust request with resource supported filtering e.g. for LIKE use 'generator.ShowByIDLikeFiltering' in 'ShowByIdOperation()' inside the definition file.
+                // TODO: adjust request with resource supported filtering e.g. for LIKE use 'ShowByIDLikeFiltering' in 'ShowByIdOperation()' inside the definition file.
             {{ else }}
                 {{- range .ShowByIDFiltering }}.
                     {{ .WithFiltering }}
