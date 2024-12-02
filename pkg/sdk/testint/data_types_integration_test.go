@@ -2,6 +2,7 @@ package testint
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
@@ -35,6 +36,19 @@ func TestInt_DataTypes(t *testing.T) {
 		"NUMBER(x)",
 		"INT()",
 		"NUMBER(36, 5, 7)",
+	}
+	incorrectTextDatatypes := []string{
+		"VARCHAR()",
+		"VARCHAR(x)",
+		"VARCHAR(36, 5)",
+	}
+	vectorInnerTypesSynonyms := append(datatypes.AllNumberDataTypes, datatypes.FloatDataTypeSynonyms...)
+	vectorInnerTypeSynonymsThatWork := []string{
+		"INTEGER",
+		"INT",
+		"FLOAT8",
+		"FLOAT4",
+		"FLOAT",
 	}
 
 	for _, c := range datatypes.ArrayDataTypeSynonyms {
@@ -115,6 +129,7 @@ func TestInt_DataTypes(t *testing.T) {
 		})
 	}
 
+	// Testing on table creation here because casting (::GEOGRAPHY) was ending with errors (even for the "correct" cases).
 	for _, c := range datatypes.GeographyDataTypeSynonyms {
 		t.Run(fmt.Sprintf("check behavior of geography datatype: %s", c), func(t *testing.T) {
 			tableId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -131,6 +146,7 @@ func TestInt_DataTypes(t *testing.T) {
 		})
 	}
 
+	// Testing on table creation here because casting (::GEOMETRY) was ending with errors (even for the "correct" cases).
 	for _, c := range datatypes.GeometryDataTypeSynonyms {
 		t.Run(fmt.Sprintf("check behavior of geometry datatype: %s", c), func(t *testing.T) {
 			tableId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -184,7 +200,7 @@ func TestInt_DataTypes(t *testing.T) {
 	}
 
 	for _, c := range datatypes.ObjectDataTypeSynonyms {
-		t.Run(fmt.Sprintf("check behavior of object data type subtype: %s", c), func(t *testing.T) {
+		t.Run(fmt.Sprintf("check behavior of object data type: %s", c), func(t *testing.T) {
 			sql := fmt.Sprintf("SELECT {}::%s", c)
 			_, err := client.QueryUnsafe(ctx, sql)
 			assert.NoError(t, err)
@@ -192,6 +208,88 @@ func TestInt_DataTypes(t *testing.T) {
 			sql = fmt.Sprintf("SELECT {}::%s(36)", c)
 			_, err = client.QueryUnsafe(ctx, sql)
 			assert.Error(t, err)
+		})
+	}
+
+	for _, c := range datatypes.AllTextDataTypes {
+		t.Run(fmt.Sprintf("check behavior of text data type: %s", c), func(t *testing.T) {
+			sql := fmt.Sprintf("SELECT 'A'::%s", c)
+			_, err := client.QueryUnsafe(ctx, sql)
+			assert.NoError(t, err)
+
+			sql = fmt.Sprintf("SELECT 'ABC'::%s(36)", c)
+			_, err = client.QueryUnsafe(ctx, sql)
+			assert.NoError(t, err)
+		})
+	}
+
+	for _, c := range incorrectTextDatatypes {
+		t.Run(fmt.Sprintf("check behavior of text datatype: %s", c), func(t *testing.T) {
+			sql := fmt.Sprintf("SELECT ABC::%s", c)
+			_, err := client.QueryUnsafe(ctx, sql)
+			require.Error(t, err)
+		})
+	}
+
+	for _, c := range datatypes.TimeDataTypeSynonyms {
+		t.Run(fmt.Sprintf("check behavior of time data type: %s", c), func(t *testing.T) {
+			sql := fmt.Sprintf("SELECT '00:00:00'::%s", c)
+			_, err := client.QueryUnsafe(ctx, sql)
+			assert.NoError(t, err)
+
+			sql = fmt.Sprintf("SELECT '00:00:00'::%s(36)", c)
+			_, err = client.QueryUnsafe(ctx, sql)
+			assert.Error(t, err)
+		})
+	}
+
+	// timestamps here
+
+	for _, c := range datatypes.VariantDataTypeSynonyms {
+		t.Run(fmt.Sprintf("check behavior of variant data type: %s", c), func(t *testing.T) {
+			sql := fmt.Sprintf("SELECT TO_VARIANT(1)::%s", c)
+			_, err := client.QueryUnsafe(ctx, sql)
+			assert.NoError(t, err)
+
+			sql = fmt.Sprintf("SELECT TO_VARIANT(1)::%s(36)", c)
+			_, err = client.QueryUnsafe(ctx, sql)
+			assert.Error(t, err)
+		})
+	}
+
+	// Testing on table creation here because apparently VECTOR is not supported as query in the gosnowflake driver.
+	// It ends with "unsupported data type" from https://github.com/snowflakedb/gosnowflake/blob/171ddf2540f3a24f2a990e8453dc425ea864a4a0/converter.go#L1599.
+	for _, c := range datatypes.VectorDataTypeSynonyms {
+		for _, inner := range datatypes.VectorAllowedInnerTypes {
+			t.Run(fmt.Sprintf("check behavior of vector data type: %s, %s", c, inner), func(t *testing.T) {
+				tableId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+				sql := fmt.Sprintf("CREATE TABLE %s (i %s(%s, 2))", tableId.FullyQualifiedName(), c, inner)
+				_, err := client.QueryUnsafe(ctx, sql)
+				assert.NoError(t, err)
+				t.Cleanup(testClientHelper().Table.DropFunc(t, tableId))
+
+				tableId = testClientHelper().Ids.RandomSchemaObjectIdentifier()
+				sql = fmt.Sprintf("CREATE TABLE %s (i %s(%s))", tableId.FullyQualifiedName(), c, inner)
+				_, err = client.QueryUnsafe(ctx, sql)
+				assert.Error(t, err)
+				t.Cleanup(testClientHelper().Table.DropFunc(t, tableId))
+			})
+		}
+	}
+
+	// Testing on table creation here because apparently VECTOR is not supported as query in the gosnowflake driver.
+	// It ends with "unsupported data type" from https://github.com/snowflakedb/gosnowflake/blob/171ddf2540f3a24f2a990e8453dc425ea864a4a0/converter.go#L1599.
+	for _, c := range vectorInnerTypesSynonyms {
+		t.Run(fmt.Sprintf("document behavior of vector data type synonyms: %s", c), func(t *testing.T) {
+			tableId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+			sql := fmt.Sprintf("CREATE TABLE %s (i VECTOR(%s, 3))", tableId.FullyQualifiedName(), c)
+			_, err := client.QueryUnsafe(ctx, sql)
+			if slices.Contains(vectorInnerTypeSynonymsThatWork, c) {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+			t.Cleanup(testClientHelper().Table.DropFunc(t, tableId))
 		})
 	}
 }
