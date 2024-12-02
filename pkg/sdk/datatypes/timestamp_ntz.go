@@ -43,3 +43,7 @@ func parseTimestampNtzDataTypeRaw(raw sanitizedDataTypeRaw) (*TimestampNtzDataTy
 	}
 	return &TimestampNtzDataType{precision, raw.matchedByType}, nil
 }
+
+func areTimestampNtzDataTypesTheSame(a, b *TimestampNtzDataType) bool {
+	return a.precision == b.precision
+}

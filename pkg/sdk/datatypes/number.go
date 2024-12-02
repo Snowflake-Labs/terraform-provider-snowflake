@@ -96,3 +96,7 @@ func parseNumberDataTypeWithoutPrecisionAndScale(raw sanitizedDataTypeRaw) (*Num
 		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale, raw.matchedByType}, nil
 	}
 }
+
+func areNumberDataTypesTheSame(a, b *NumberDataType) bool {
+	return a.precision == b.precision && a.scale == b.scale
+}

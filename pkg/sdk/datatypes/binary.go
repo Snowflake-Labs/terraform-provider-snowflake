@@ -45,3 +45,7 @@ func parseBinaryDataTypeRaw(raw sanitizedDataTypeRaw) (*BinaryDataType, error) {
 	}
 	return &BinaryDataType{size, raw.matchedByType}, nil
 }
+
+func areBinaryDataTypesTheSame(a, b *BinaryDataType) bool {
+	return a.size == b.size
+}

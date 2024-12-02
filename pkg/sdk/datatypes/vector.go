@@ -56,3 +56,7 @@ func parseVectorDataTypeRaw(raw sanitizedDataTypeRaw) (*VectorDataType, error) {
 		return nil, fmt.Errorf(`vector cannot have %d arguments: "%s"; use "%s(type, dimension)" format`, l, onlyArgs, raw.matchedByType)
 	}
 }
+
+func areVectorDataTypesTheSame(a, b *VectorDataType) bool {
+	return a.innerType == b.innerType && a.dimension == b.dimension
+}

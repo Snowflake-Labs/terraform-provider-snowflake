@@ -61,7 +61,7 @@ var procedureSchema = map[string]*schema.Schema{
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateFunc:     dataTypeValidateFunc,
-					DiffSuppressFunc: dataTypeDiffSuppressFunc,
+					DiffSuppressFunc: DataTypeDiffSuppressFunc,
 					Description:      "The argument type",
 				},
 			},

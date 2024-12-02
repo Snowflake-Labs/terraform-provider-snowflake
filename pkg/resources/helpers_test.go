@@ -260,7 +260,7 @@ func TestListDiff(t *testing.T) {
 	}
 }
 
-func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
+func Test_DataTypeDiffSuppressFunc(t *testing.T) {
 	testCases := []struct {
 		name     string
 		old      string
@@ -398,7 +398,7 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			result := resources.DataTypeIssue3007DiffSuppressFunc("", tc.old, tc.new, nil)
+			result := resources.DataTypeDiffSuppressFunc("", tc.old, tc.new, nil)
 			require.Equal(t, tc.expected, result)
 		})
 	}

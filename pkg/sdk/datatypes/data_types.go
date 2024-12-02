@@ -2,6 +2,7 @@ package datatypes
 
 import (
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 )
@@ -79,4 +80,57 @@ func ParseDataType(raw string) (DataType, error) {
 	}
 
 	return nil, fmt.Errorf("invalid data type: %s", raw)
+}
+
+// TODO [this PR]: test
+func AreTheSame(a DataType, b DataType) bool {
+	if reflect.TypeOf(a) != reflect.TypeOf(b) {
+		return false
+	}
+	switch v := a.(type) {
+	case *ArrayDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+	case *BinaryDataType:
+		return castSuccessfully(v, b, areBinaryDataTypesTheSame)
+	case *BooleanDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+	case *DateDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+	case *FloatDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+	case *GeographyDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+	case *GeometryDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+	case *NumberDataType:
+		return castSuccessfully(v, b, areNumberDataTypesTheSame)
+	case *ObjectDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+	case *TextDataType:
+		return castSuccessfully(v, b, areTextDataTypesTheSame)
+	case *TimeDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+	case *TimestampLtzDataType:
+		return castSuccessfully(v, b, areTimestampLtzDataTypesTheSame)
+	case *TimestampNtzDataType:
+		return castSuccessfully(v, b, areTimestampNtzDataTypesTheSame)
+	case *TimestampTzDataType:
+		return castSuccessfully(v, b, areTimestampTzDataTypesTheSame)
+	case *VariantDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+	case *VectorDataType:
+		return castSuccessfully(v, b, areVectorDataTypesTheSame)
+	}
+	return false
+}
+
+func castSuccessfully[T any](a T, b DataType, invoke func(a T, b T) bool) bool {
+	if dCasted, ok := b.(T); ok {
+		return invoke(a, dCasted)
+	}
+	return false
+}
+
+func noArgsDataTypesAreTheSame[T DataType](_ T, _ T) bool {
+	return true
 }

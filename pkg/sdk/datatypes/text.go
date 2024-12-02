@@ -61,3 +61,7 @@ func parseTextDataTypeRaw(raw sanitizedDataTypeRaw) (*TextDataType, error) {
 	}
 	return &TextDataType{length, raw.matchedByType}, nil
 }
+
+func areTextDataTypesTheSame(a, b *TextDataType) bool {
+	return a.length == b.length
+}
