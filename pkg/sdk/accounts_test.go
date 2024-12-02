@@ -363,7 +363,7 @@ func TestAccountDrop(t *testing.T) {
 		id := randomAccountObjectIdentifier()
 		opts := &DropAccountOptions{
 			name:              id,
-			gracePeriodInDays: Int(10),
+			gracePeriodInDays: 10,
 		}
 		assertOptsValidAndSQLEquals(t, opts, `DROP ACCOUNT %s GRACE_PERIOD_IN_DAYS = 10`, id.FullyQualifiedName())
 	})
@@ -373,7 +373,7 @@ func TestAccountDrop(t *testing.T) {
 		opts := &DropAccountOptions{
 			name:              id,
 			IfExists:          Bool(true),
-			gracePeriodInDays: Int(10),
+			gracePeriodInDays: 10,
 		}
 		assertOptsValidAndSQLEquals(t, opts, `DROP ACCOUNT IF EXISTS %s GRACE_PERIOD_IN_DAYS = 10`, id.FullyQualifiedName())
 	})

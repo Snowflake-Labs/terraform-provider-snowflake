@@ -476,7 +476,7 @@ type DropAccountOptions struct {
 	account           bool                    `ddl:"static" sql:"ACCOUNT"`
 	IfExists          *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name              AccountObjectIdentifier `ddl:"identifier"`
-	gracePeriodInDays *int                    `ddl:"parameter" sql:"GRACE_PERIOD_IN_DAYS"`
+	gracePeriodInDays int                     `ddl:"parameter" sql:"GRACE_PERIOD_IN_DAYS"`
 }
 
 func (opts *DropAccountOptions) validate() error {
@@ -487,9 +487,6 @@ func (opts *DropAccountOptions) validate() error {
 	if !ValidObjectIdentifier(opts.name) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !valueSet(opts.gracePeriodInDays) {
-		errs = append(errs, errNotSet("DropAccountOptions", "gracePeriodInDays"))
-	}
 	return errors.Join(errs...)
 }
 
@@ -498,7 +495,7 @@ func (c *accounts) Drop(ctx context.Context, id AccountObjectIdentifier, gracePe
 		opts = &DropAccountOptions{}
 	}
 	opts.name = id
-	opts.gracePeriodInDays = &gracePeriodInDays
+	opts.gracePeriodInDays = gracePeriodInDays
 	return validateAndExec(c.client, ctx, opts)
 }
 

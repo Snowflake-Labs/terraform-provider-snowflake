@@ -53,6 +53,7 @@ func (c *AccountClient) GetAccountIdentifier(t *testing.T) sdk.AccountIdentifier
 }
 
 func (c *AccountClient) Create(t *testing.T) *sdk.Account {
+	t.Helper()
 	id := c.ids.RandomAccountObjectIdentifier()
 	name := c.ids.Alpha()
 	password := random.Password()
@@ -74,6 +75,7 @@ func (c *AccountClient) Create(t *testing.T) *sdk.Account {
 }
 
 func (c *AccountClient) CreateWithRequest(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateAccountOptions) *sdk.Account {
+	t.Helper()
 	err := c.client().Create(context.Background(), id, opts)
 	require.NoError(t, err)
 	t.Cleanup(c.DropFunc(t, id))
@@ -85,6 +87,7 @@ func (c *AccountClient) CreateWithRequest(t *testing.T, id sdk.AccountObjectIden
 }
 
 func (c *AccountClient) Alter(t *testing.T, opts *sdk.AlterAccountOptions) {
+	t.Helper()
 	err := c.client().Alter(context.Background(), opts)
 	require.NoError(t, err)
 }
@@ -142,6 +145,7 @@ func (c *AccountClient) ShowRegions(t *testing.T) []Region {
 }
 
 func (c *AccountClient) CreateAndLogIn(t *testing.T) (*sdk.Account, *sdk.Client) {
+	t.Helper()
 	id := c.ids.RandomAccountObjectIdentifier()
 	name := c.ids.Alpha()
 	privateKey := random.GenerateRSAPrivateKey(t)
@@ -168,7 +172,7 @@ func (c *AccountClient) CreateAndLogIn(t *testing.T) (*sdk.Account, *sdk.Client)
 		newClient, err := sdk.NewClient(&gosnowflake.Config{
 			Account:       fmt.Sprintf("%s-%s", account.OrganizationName, account.AccountName),
 			User:          name,
-			Host:          strings.TrimLeft(*account.AccountLocatorURL, `https://`),
+			Host:          strings.TrimPrefix(*account.AccountLocatorURL, `https://`),
 			Authenticator: gosnowflake.AuthTypeJwt,
 			PrivateKey:    privateKey,
 			Role:          snowflakeroles.Orgadmin.Name(),

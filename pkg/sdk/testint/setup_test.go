@@ -141,7 +141,7 @@ func (itc *integrationTestContext) initialize() error {
 		if err != nil {
 			return err
 		}
-		defer func() { c.Sessions.UseRole(context.Background(), snowflakeroles.Orgadmin) }()
+		defer func() { _ = c.Sessions.UseRole(context.Background(), snowflakeroles.Orgadmin) }()
 	}
 
 	db, dbCleanup, err := createDb(itc.client, itc.ctx, false)
@@ -206,7 +206,7 @@ func (itc *integrationTestContext) initialize() error {
 	itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 
 	// TODO(SNOW-1842271): Adjust test setup to work properly with Accountadmin role for object tests and Orgadmin for account tests
-	if currentRole == snowflakeroles.Orgadmin {
+	if currentRole != snowflakeroles.Orgadmin {
 		err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.client, itc.ctx)
 		if err != nil {
 			return err

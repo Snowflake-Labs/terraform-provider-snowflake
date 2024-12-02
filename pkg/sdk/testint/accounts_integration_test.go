@@ -531,6 +531,25 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterEnableUnredactedQuerySyntaxError))
 	})
 
+	assertPolicySet := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
+		t.Helper()
+
+		policies, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, sdk.NewAccountObjectIdentifier(client.GetAccountLocator()), sdk.PolicyEntityDomainAccount)
+		require.NoError(t, err)
+		_, err = collections.FindFirst(policies, func(reference sdk.PolicyReference) bool {
+			return reference.PolicyName == id.Name()
+		})
+		require.NoError(t, err)
+	}
+
+	assertPolicyNotSet := func(t *testing.T) {
+		t.Helper()
+
+		policies, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, sdk.NewAccountObjectIdentifier(client.GetAccountLocator()), sdk.PolicyEntityDomainAccount)
+		require.Len(t, policies, 0)
+		require.NoError(t, err)
+	}
+
 	t.Run("set / unset resource monitor", func(t *testing.T) {
 		resourceMonitor, resourceMonitorCleanup := testClientHelper().ResourceMonitor.CreateResourceMonitor(t)
 		t.Cleanup(resourceMonitorCleanup)
@@ -561,25 +580,6 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 	})
 
 	t.Run("set / unset policies", func(t *testing.T) {
-		assertPolicySet := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
-			t.Helper()
-
-			policies, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, sdk.NewAccountObjectIdentifier(client.GetAccountLocator()), sdk.PolicyEntityDomainAccount)
-			require.NoError(t, err)
-			_, err = collections.FindFirst(policies, func(reference sdk.PolicyReference) bool {
-				return reference.PolicyName == id.Name()
-			})
-			require.NoError(t, err)
-		}
-
-		assertPolicyNotSet := func(t *testing.T) {
-			t.Helper()
-
-			policies, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, sdk.NewAccountObjectIdentifier(client.GetAccountLocator()), sdk.PolicyEntityDomainAccount)
-			require.Len(t, policies, 0)
-			require.NoError(t, err)
-		}
-
 		authPolicy, authPolicyCleanup := testClientHelper().AuthenticationPolicy.Create(t)
 		t.Cleanup(authPolicyCleanup)
 		passwordPolicy, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
@@ -651,5 +651,46 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 		require.NoError(t, err)
 
 		assertPolicyNotSet(t)
+	})
+
+	t.Run("force new packages policy", func(t *testing.T) {
+		packagesPolicyId, packagesPolicyCleanup := testClientHelper().PackagesPolicy.Create(t)
+		t.Cleanup(packagesPolicyCleanup)
+
+		newPackagesPolicyId, newPackagesPolicyCleanup := testClientHelper().PackagesPolicy.Create(t)
+		t.Cleanup(newPackagesPolicyCleanup)
+
+		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
+				PackagesPolicy: packagesPolicyId,
+			},
+		})
+		require.NoError(t, err)
+		assertPolicySet(t, packagesPolicyId)
+		t.Cleanup(func() {
+			err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+				Unset: &sdk.AccountUnset{
+					PackagesPolicy: sdk.Bool(true),
+				},
+			})
+			require.NoError(t, err)
+			assertPolicyNotSet(t)
+		})
+
+		err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
+				PackagesPolicy: newPackagesPolicyId,
+			},
+		})
+		require.Error(t, err)
+
+		err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+			Set: &sdk.AccountSet{
+				PackagesPolicy: newPackagesPolicyId,
+				Force:          sdk.Bool(true),
+			},
+		})
+		require.NoError(t, err)
+		assertPolicySet(t, newPackagesPolicyId)
 	})
 }
