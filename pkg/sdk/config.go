@@ -110,7 +110,7 @@ func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config
 	if baseConfig.Port == 0 {
 		baseConfig.Port = mergeConfig.Port
 	}
-	if baseConfig.Authenticator == 0 {
+	if baseConfig.Authenticator == gosnowflakeAuthTypeEmpty {
 		baseConfig.Authenticator = mergeConfig.Authenticator
 	}
 	if baseConfig.Passcode == "" {
@@ -214,45 +214,46 @@ func GetConfigFileName() (string, error) {
 
 // TODO(SNOW-1787920): improve TOML parsing
 type ConfigDTO struct {
-	Account                        *string             `toml:"account"`
-	AccountName                    *string             `toml:"accountname"`
-	OrganizationName               *string             `toml:"organizationname"`
-	User                           *string             `toml:"user"`
-	Username                       *string             `toml:"username"`
-	Password                       *string             `toml:"password"`
-	Host                           *string             `toml:"host"`
-	Warehouse                      *string             `toml:"warehouse"`
-	Role                           *string             `toml:"role"`
-	Params                         *map[string]*string `toml:"params"`
-	ClientIp                       *string             `toml:"clientip"`
-	Protocol                       *string             `toml:"protocol"`
-	Passcode                       *string             `toml:"passcode"`
-	Port                           *int                `toml:"port"`
-	PasscodeInPassword             *bool               `toml:"passcodeinpassword"`
-	OktaUrl                        *string             `toml:"oktaurl"`
-	ClientTimeout                  *int                `toml:"clienttimeout"`
-	JwtClientTimeout               *int                `toml:"jwtclienttimeout"`
-	LoginTimeout                   *int                `toml:"logintimeout"`
-	RequestTimeout                 *int                `toml:"requesttimeout"`
-	JwtExpireTimeout               *int                `toml:"jwtexpiretimeout"`
-	ExternalBrowserTimeout         *int                `toml:"externalbrowsertimeout"`
-	MaxRetryCount                  *int                `toml:"maxretrycount"`
-	Authenticator                  *string             `toml:"authenticator"`
-	InsecureMode                   *bool               `toml:"insecuremode"`
-	OcspFailOpen                   *bool               `toml:"ocspfailopen"`
-	Token                          *string             `toml:"token"`
-	KeepSessionAlive               *bool               `toml:"keepsessionalive"`
-	PrivateKey                     *string             `toml:"privatekey,multiline"`
-	PrivateKeyPassphrase           *string             `toml:"privatekeypassphrase"`
-	DisableTelemetry               *bool               `toml:"disabletelemetry"`
-	ValidateDefaultParameters      *bool               `toml:"validatedefaultparameters"`
-	ClientRequestMfaToken          *bool               `toml:"clientrequestmfatoken"`
-	ClientStoreTemporaryCredential *bool               `toml:"clientstoretemporarycredential"`
-	Tracing                        *string             `toml:"tracing"`
-	TmpDirPath                     *string             `toml:"tmpdirpath"`
-	DisableQueryContextCache       *bool               `toml:"disablequerycontextcache"`
-	IncludeRetryReason             *bool               `toml:"includeretryreason"`
-	DisableConsoleLogin            *bool               `toml:"disableconsolelogin"`
+	Account                *string             `toml:"account"`
+	AccountName            *string             `toml:"accountname"`
+	OrganizationName       *string             `toml:"organizationname"`
+	User                   *string             `toml:"user"`
+	Username               *string             `toml:"username"`
+	Password               *string             `toml:"password"`
+	Host                   *string             `toml:"host"`
+	Warehouse              *string             `toml:"warehouse"`
+	Role                   *string             `toml:"role"`
+	Params                 *map[string]*string `toml:"params"`
+	ClientIp               *string             `toml:"clientip"`
+	Protocol               *string             `toml:"protocol"`
+	Passcode               *string             `toml:"passcode"`
+	Port                   *int                `toml:"port"`
+	PasscodeInPassword     *bool               `toml:"passcodeinpassword"`
+	OktaUrl                *string             `toml:"oktaurl"`
+	ClientTimeout          *int                `toml:"clienttimeout"`
+	JwtClientTimeout       *int                `toml:"jwtclienttimeout"`
+	LoginTimeout           *int                `toml:"logintimeout"`
+	RequestTimeout         *int                `toml:"requesttimeout"`
+	JwtExpireTimeout       *int                `toml:"jwtexpiretimeout"`
+	ExternalBrowserTimeout *int                `toml:"externalbrowsertimeout"`
+	MaxRetryCount          *int                `toml:"maxretrycount"`
+	Authenticator          *string             `toml:"authenticator"`
+	InsecureMode           *bool               `toml:"insecuremode"`
+	OcspFailOpen           *bool               `toml:"ocspfailopen"`
+	Token                  *string             `toml:"token"`
+	KeepSessionAlive       *bool               `toml:"keepsessionalive"`
+	PrivateKey             *string             `toml:"privatekey,multiline"`
+	PrivateKeyPassphrase   *string             `toml:"privatekeypassphrase"`
+	DisableTelemetry       *bool               `toml:"disabletelemetry"`
+	// TODO [SNOW-1827312]: handle and test 3-value booleans properly from TOML
+	ValidateDefaultParameters      *bool   `toml:"validatedefaultparameters"`
+	ClientRequestMfaToken          *bool   `toml:"clientrequestmfatoken"`
+	ClientStoreTemporaryCredential *bool   `toml:"clientstoretemporarycredential"`
+	Tracing                        *string `toml:"tracing"`
+	TmpDirPath                     *string `toml:"tmpdirpath"`
+	DisableQueryContextCache       *bool   `toml:"disablequerycontextcache"`
+	IncludeRetryReason             *bool   `toml:"includeretryreason"`
+	DisableConsoleLogin            *bool   `toml:"disableconsolelogin"`
 }
 
 func (c *ConfigDTO) DriverConfig() (gosnowflake.Config, error) {
@@ -337,6 +338,7 @@ func pointerTimeInSecondsAttributeSet(src *int, dst *time.Duration) {
 	}
 }
 
+// TODO [SNOW-1827312]: fix this method
 func pointerConfigBoolAttributeSet(src *bool, dst *gosnowflake.ConfigBool) {
 	if src != nil {
 		*dst = boolToConfigBool(*src)
@@ -414,6 +416,8 @@ const (
 	AuthenticationTypeJwt                 AuthenticationType = "SNOWFLAKE_JWT"
 	AuthenticationTypeTokenAccessor       AuthenticationType = "TOKENACCESSOR"
 	AuthenticationTypeUsernamePasswordMfa AuthenticationType = "USERNAMEPASSWORDMFA"
+
+	AuthenticationTypeEmpty AuthenticationType = ""
 )
 
 var AllAuthenticationTypes = []AuthenticationType{
@@ -445,6 +449,17 @@ func ToAuthenticatorType(s string) (gosnowflake.AuthType, error) {
 		return gosnowflake.AuthTypeUsernamePasswordMFA, nil
 	default:
 		return gosnowflake.AuthType(0), fmt.Errorf("invalid authenticator type: %s", s)
+	}
+}
+
+const gosnowflakeAuthTypeEmpty = gosnowflake.AuthType(-1)
+
+func ToExtendedAuthenticatorType(s string) (gosnowflake.AuthType, error) {
+	switch strings.ToUpper(s) {
+	case string(AuthenticationTypeEmpty):
+		return gosnowflakeAuthTypeEmpty, nil
+	default:
+		return ToAuthenticatorType(s)
 	}
 }
 

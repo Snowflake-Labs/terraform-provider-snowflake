@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO [SNOW-1827309]: use toml config builder instead of hardcoding
 func TestLoadConfigFile(t *testing.T) {
 	c := `
 	[default]
@@ -185,7 +186,7 @@ func Test_MergeConfig(t *testing.T) {
 		Protocol:                       "protocol1",
 		Host:                           "host1",
 		Port:                           1,
-		Authenticator:                  1,
+		Authenticator:                  gosnowflake.AuthTypeSnowflake,
 		Passcode:                       "passcode1",
 		PasscodeInPassword:             false,
 		OktaURL:                        oktaUrl1,
@@ -225,7 +226,7 @@ func Test_MergeConfig(t *testing.T) {
 		Protocol:                       "protocol2",
 		Host:                           "host2",
 		Port:                           2,
-		Authenticator:                  2,
+		Authenticator:                  gosnowflake.AuthTypeOAuth,
 		Passcode:                       "passcode2",
 		PasscodeInPassword:             true,
 		OktaURL:                        oktaUrl2,
@@ -267,9 +268,17 @@ func Test_MergeConfig(t *testing.T) {
 		config := MergeConfig(config1, config2)
 		require.Equal(t, config1, config)
 	})
+
+	t.Run("special authenticator value", func(t *testing.T) {
+		config := MergeConfig(&gosnowflake.Config{
+			Authenticator: gosnowflakeAuthTypeEmpty,
+		}, config1)
+
+		require.Equal(t, config1, config)
+	})
 }
 
-func Test_toAuthenticationType(t *testing.T) {
+func Test_ToAuthenticationType(t *testing.T) {
 	type test struct {
 		input string
 		want  gosnowflake.AuthType
@@ -306,6 +315,49 @@ func Test_toAuthenticationType(t *testing.T) {
 	for _, tc := range invalid {
 		t.Run(tc.input, func(t *testing.T) {
 			_, err := ToAuthenticatorType(tc.input)
+			require.Error(t, err)
+		})
+	}
+}
+
+func Test_ToExtendedAuthenticatorType(t *testing.T) {
+	type test struct {
+		input string
+		want  gosnowflake.AuthType
+	}
+
+	valid := []test{
+		// Case insensitive.
+		{input: "snowflake", want: gosnowflake.AuthTypeSnowflake},
+
+		// Supported Values.
+		{input: "SNOWFLAKE", want: gosnowflake.AuthTypeSnowflake},
+		{input: "OAUTH", want: gosnowflake.AuthTypeOAuth},
+		{input: "EXTERNALBROWSER", want: gosnowflake.AuthTypeExternalBrowser},
+		{input: "OKTA", want: gosnowflake.AuthTypeOkta},
+		{input: "JWT", want: gosnowflake.AuthTypeJwt},
+		{input: "SNOWFLAKE_JWT", want: gosnowflake.AuthTypeJwt},
+		{input: "TOKENACCESSOR", want: gosnowflake.AuthTypeTokenAccessor},
+		{input: "USERNAMEPASSWORDMFA", want: gosnowflake.AuthTypeUsernamePasswordMFA},
+		{input: "", want: gosnowflakeAuthTypeEmpty},
+	}
+
+	invalid := []test{
+		{input: "   "},
+		{input: "foo"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToExtendedAuthenticatorType(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToExtendedAuthenticatorType(tc.input)
 			require.Error(t, err)
 		})
 	}
