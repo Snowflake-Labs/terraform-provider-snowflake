@@ -2,11 +2,17 @@ package helpers
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 type AccountClient struct {
@@ -67,6 +73,22 @@ func (c *AccountClient) Create(t *testing.T) *sdk.Account {
 	return account
 }
 
+func (c *AccountClient) CreateWithRequest(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateAccountOptions) *sdk.Account {
+	err := c.client().Create(context.Background(), id, opts)
+	require.NoError(t, err)
+	t.Cleanup(c.DropFunc(t, id))
+
+	account, err := c.client().ShowByID(context.Background(), id)
+	require.NoError(t, err)
+
+	return account
+}
+
+func (c *AccountClient) Alter(t *testing.T, opts *sdk.AlterAccountOptions) {
+	err := c.client().Alter(context.Background(), opts)
+	require.NoError(t, err)
+}
+
 func (c *AccountClient) DropFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	return func() {
@@ -117,4 +139,43 @@ func (c *AccountClient) ShowRegions(t *testing.T) []Region {
 			DisplayName:     (*result["display_name"]).(string),
 		}
 	})
+}
+
+func (c *AccountClient) CreateAndLogIn(t *testing.T) (*sdk.Account, *sdk.Client) {
+	id := c.ids.RandomAccountObjectIdentifier()
+	name := c.ids.Alpha()
+	privateKey := random.GenerateRSAPrivateKey(t)
+	publicKey, _ := random.GenerateRSAPublicKeyBasedOnPrivateKey(t, privateKey)
+	email := random.Email()
+
+	account := c.CreateWithRequest(t, id, &sdk.CreateAccountOptions{
+		AdminName:         name,
+		AdminRSAPublicKey: sdk.String(publicKey),
+		AdminUserType:     sdk.Pointer(sdk.UserTypeService),
+		Email:             email,
+		Edition:           sdk.EditionStandard,
+	})
+
+	c.Alter(t, &sdk.AlterAccountOptions{
+		SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
+			Name:     id,
+			OrgAdmin: sdk.Bool(true),
+		},
+	})
+
+	var client *sdk.Client
+	require.Eventually(t, func() bool {
+		newClient, err := sdk.NewClient(&gosnowflake.Config{
+			Account:       fmt.Sprintf("%s-%s", account.OrganizationName, account.AccountName),
+			User:          name,
+			Host:          strings.TrimLeft(*account.AccountLocatorURL, `https://`),
+			Authenticator: gosnowflake.AuthTypeJwt,
+			PrivateKey:    privateKey,
+			Role:          snowflakeroles.Orgadmin.Name(),
+		})
+		client = newClient
+		return err == nil
+	}, 2*time.Minute, time.Second*15)
+
+	return account, client
 }

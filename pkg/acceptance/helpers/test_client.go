@@ -42,6 +42,7 @@ type TestClient struct {
 	NetworkPolicy                *NetworkPolicyClient
 	NetworkRule                  *NetworkRuleClient
 	NotificationIntegration      *NotificationIntegrationClient
+	PackagesPolicy               *PackagesPolicyClient
 	Parameter                    *ParameterClient
 	PasswordPolicy               *PasswordPolicyClient
 	Pipe                         *PipeClient
@@ -115,6 +116,7 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 		NetworkPolicy:                NewNetworkPolicyClient(context, idsGenerator),
 		NetworkRule:                  NewNetworkRuleClient(context, idsGenerator),
 		NotificationIntegration:      NewNotificationIntegrationClient(context, idsGenerator),
+		PackagesPolicy:               NewPackagesPolicyClient(context, idsGenerator),
 		Parameter:                    NewParameterClient(context),
 		PasswordPolicy:               NewPasswordPolicyClient(context, idsGenerator),
 		Pipe:                         NewPipeClient(context, idsGenerator),

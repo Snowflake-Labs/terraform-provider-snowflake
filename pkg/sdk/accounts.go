@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 var (
@@ -21,6 +22,7 @@ type Accounts interface {
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
 	Drop(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int, opts *DropAccountOptions) error
 	Undrop(ctx context.Context, id AccountObjectIdentifier) error
+	ShowParameters(ctx context.Context) ([]*Parameter, error)
 }
 
 var _ Accounts = (*accounts)(nil)
@@ -291,26 +293,26 @@ func (opts *ShowAccountOptions) validate() error {
 type Account struct {
 	OrganizationName                     string
 	AccountName                          string
-	RegionGroup                          *string
 	SnowflakeRegion                      string
-	Edition                              AccountEdition
-	AccountURL                           string
-	CreatedOn                            time.Time
-	Comment                              string
+	RegionGroup                          *string // shows only for organizations that span multiple region groups
+	Edition                              *AccountEdition
+	AccountURL                           *string
+	CreatedOn                            *time.Time
+	Comment                              *string
 	AccountLocator                       string
-	AccountLocatorURL                    string
-	ManagedAccounts                      int
-	ConsumptionBillingEntityName         string
+	AccountLocatorURL                    *string
+	ManagedAccounts                      *int
+	ConsumptionBillingEntityName         *string
 	MarketplaceConsumerBillingEntityName *string
 	MarketplaceProviderBillingEntityName *string
-	OldAccountURL                        string
-	IsOrgAdmin                           bool
+	OldAccountURL                        *string
+	IsOrgAdmin                           *bool
 	AccountOldUrlSavedOn                 *time.Time
 	AccountOldUrlLastUsed                *time.Time
-	OrganizationOldUrl                   string
+	OrganizationOldUrl                   *string
 	OrganizationOldUrlSavedOn            *time.Time
 	OrganizationOldUrlLastUsed           *time.Time
-	IsEventsAccount                      bool
+	IsEventsAccount                      *bool
 	IsOrganizationAccount                bool
 	// Available only with the History keyword set
 	DroppedOn                   *time.Time
@@ -334,24 +336,24 @@ type accountDBRow struct {
 	AccountName                          string         `db:"account_name"`
 	RegionGroup                          sql.NullString `db:"region_group"`
 	SnowflakeRegion                      string         `db:"snowflake_region"`
-	Edition                              string         `db:"edition"`
-	AccountURL                           string         `db:"account_url"`
-	CreatedOn                            time.Time      `db:"created_on"`
+	Edition                              sql.NullString `db:"edition"`
+	AccountURL                           sql.NullString `db:"account_url"`
+	CreatedOn                            sql.NullTime   `db:"created_on"`
 	Comment                              sql.NullString `db:"comment"`
 	AccountLocator                       string         `db:"account_locator"`
-	AccountLocatorURL                    string         `db:"account_locator_url"`
-	ManagedAccounts                      int            `db:"managed_accounts"`
-	ConsumptionBillingEntityName         string         `db:"consumption_billing_entity_name"`
+	AccountLocatorURL                    sql.NullString `db:"account_locator_url"`
+	ManagedAccounts                      sql.NullInt32  `db:"managed_accounts"`
+	ConsumptionBillingEntityName         sql.NullString `db:"consumption_billing_entity_name"`
 	MarketplaceConsumerBillingEntityName sql.NullString `db:"marketplace_consumer_billing_entity_name"`
 	MarketplaceProviderBillingEntityName sql.NullString `db:"marketplace_provider_billing_entity_name"`
-	OldAccountURL                        string         `db:"old_account_url"`
-	IsOrgAdmin                           bool           `db:"is_org_admin"`
+	OldAccountURL                        sql.NullString `db:"old_account_url"`
+	IsOrgAdmin                           sql.NullBool   `db:"is_org_admin"`
 	AccountOldUrlSavedOn                 sql.NullTime   `db:"account_old_url_saved_on"`
 	AccountOldUrlLastUsed                sql.NullTime   `db:"account_old_url_last_used"`
-	OrganizationOldUrl                   string         `db:"organization_old_url"`
+	OrganizationOldUrl                   sql.NullString `db:"organization_old_url"`
 	OrganizationOldUrlSavedOn            sql.NullTime   `db:"organization_old_url_saved_on"`
 	OrganizationOldUrlLastUsed           sql.NullTime   `db:"organization_old_url_last_used"`
-	IsEventsAccount                      bool           `db:"is_events_account"`
+	IsEventsAccount                      sql.NullBool   `db:"is_events_account"`
 	IsOrganizationAccount                bool           `db:"is_organization_account"`
 	// Available only with the History keyword set
 	DroppedOn                   sql.NullTime   `db:"dropped_on"`
@@ -364,31 +366,53 @@ type accountDBRow struct {
 
 func (row accountDBRow) convert() *Account {
 	acc := &Account{
-		OrganizationName:             row.OrganizationName,
-		AccountName:                  row.AccountName,
-		SnowflakeRegion:              row.SnowflakeRegion,
-		Edition:                      AccountEdition(row.Edition),
-		AccountURL:                   row.AccountURL,
-		CreatedOn:                    row.CreatedOn,
-		Comment:                      row.Comment.String,
-		AccountLocator:               row.AccountLocator,
-		AccountLocatorURL:            row.AccountLocatorURL,
-		ManagedAccounts:              row.ManagedAccounts,
-		ConsumptionBillingEntityName: row.ConsumptionBillingEntityName,
-		OldAccountURL:                row.OldAccountURL,
-		IsOrgAdmin:                   row.IsOrgAdmin,
-		OrganizationOldUrl:           row.OrganizationOldUrl,
-		IsEventsAccount:              row.IsEventsAccount,
-		IsOrganizationAccount:        row.IsOrganizationAccount,
+		OrganizationName:      row.OrganizationName,
+		AccountName:           row.AccountName,
+		SnowflakeRegion:       row.SnowflakeRegion,
+		AccountLocator:        row.AccountLocator,
+		IsOrganizationAccount: row.IsOrganizationAccount,
+	}
+	if row.RegionGroup.Valid {
+		acc.RegionGroup = &row.RegionGroup.String
+	}
+	if row.Edition.Valid {
+		acc.Edition = Pointer(AccountEdition(row.Edition.String))
+	}
+	if row.AccountURL.Valid {
+		acc.AccountURL = &row.AccountURL.String
+	}
+	if row.CreatedOn.Valid {
+		acc.CreatedOn = &row.CreatedOn.Time
+	}
+	if row.Comment.Valid {
+		acc.Comment = &row.Comment.String
+	}
+	if row.AccountLocatorURL.Valid {
+		acc.AccountLocatorURL = &row.AccountLocatorURL.String
+	}
+	if row.ManagedAccounts.Valid {
+		acc.ManagedAccounts = Int(int(row.ManagedAccounts.Int32))
+	}
+	if row.ConsumptionBillingEntityName.Valid {
+		acc.ConsumptionBillingEntityName = &row.ConsumptionBillingEntityName.String
+	}
+	if row.OldAccountURL.Valid {
+		acc.OldAccountURL = &row.OldAccountURL.String
+	}
+	if row.IsOrgAdmin.Valid {
+		acc.IsOrgAdmin = &row.IsOrgAdmin.Bool
+	}
+	if row.OrganizationOldUrl.Valid {
+		acc.OrganizationOldUrl = &row.OrganizationOldUrl.String
+	}
+	if row.IsEventsAccount.Valid {
+		acc.IsEventsAccount = &row.IsEventsAccount.Bool
 	}
 	if row.MarketplaceConsumerBillingEntityName.Valid {
 		acc.MarketplaceConsumerBillingEntityName = &row.MarketplaceConsumerBillingEntityName.String
 	}
 	if row.MarketplaceProviderBillingEntityName.Valid {
 		acc.MarketplaceProviderBillingEntityName = &row.MarketplaceProviderBillingEntityName.String
-	}
-	if row.RegionGroup.Valid {
-		acc.RegionGroup = &row.RegionGroup.String
 	}
 	if row.AccountOldUrlSavedOn.Valid {
 		acc.AccountOldUrlSavedOn = &row.AccountOldUrlSavedOn.Time
@@ -496,4 +520,12 @@ func (c *accounts) Undrop(ctx context.Context, id AccountObjectIdentifier) error
 	}
 	_, err = c.client.exec(ctx, sql)
 	return err
+}
+
+func (c *accounts) ShowParameters(ctx context.Context) ([]*Parameter, error) {
+	return c.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
+		In: &ParametersIn{
+			Account: Bool(true),
+		},
+	})
 }
