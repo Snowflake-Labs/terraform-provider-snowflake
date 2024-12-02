@@ -11,10 +11,10 @@ func (t *DateDataType) ToSql() string {
 }
 
 func (t *DateDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return DateLegacyDataType
 }
 
-var DateDataTypeSynonyms = []string{"DATE"}
+var DateDataTypeSynonyms = []string{DateLegacyDataType}
 
 func parseDateDataTypeRaw(raw sanitizedDataTypeRaw) (*DateDataType, error) {
 	return &DateDataType{raw.matchedByType}, nil

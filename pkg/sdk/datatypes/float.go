@@ -11,10 +11,10 @@ func (t *FloatDataType) ToSql() string {
 }
 
 func (t *FloatDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return FloatLegacyDataType
 }
 
-var FloatDataTypeSynonyms = []string{"FLOAT8", "FLOAT4", "FLOAT", "DOUBLE PRECISION", "DOUBLE", "REAL"}
+var FloatDataTypeSynonyms = []string{"FLOAT8", "FLOAT4", FloatLegacyDataType, "DOUBLE PRECISION", "DOUBLE", "REAL"}
 
 func parseFloatDataTypeRaw(raw sanitizedDataTypeRaw) (*FloatDataType, error) {
 	return &FloatDataType{raw.matchedByType}, nil

@@ -231,13 +231,14 @@ func TestInt_DataTypes(t *testing.T) {
 		})
 	}
 
+	// TODO [this PR]: fix time or not?
 	for _, c := range datatypes.TimeDataTypeSynonyms {
 		t.Run(fmt.Sprintf("check behavior of time data type: %s", c), func(t *testing.T) {
 			sql := fmt.Sprintf("SELECT '00:00:00'::%s", c)
 			_, err := client.QueryUnsafe(ctx, sql)
 			assert.NoError(t, err)
 
-			sql = fmt.Sprintf("SELECT '00:00:00'::%s(36)", c)
+			sql = fmt.Sprintf("SELECT '00:00:00'::%s(5)", c)
 			_, err = client.QueryUnsafe(ctx, sql)
 			assert.Error(t, err)
 		})

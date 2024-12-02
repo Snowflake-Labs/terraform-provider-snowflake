@@ -21,8 +21,9 @@ func (t *VectorDataType) ToSql() string {
 	return fmt.Sprintf("%s(%s, %d)", t.underlyingType, t.innerType, t.dimension)
 }
 
+// ToLegacyDataTypeSql for vector is the only one correct because in the old implementation it was returned as DataType(dType), so a proper format.
 func (t *VectorDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return t.ToSql()
 }
 
 var VectorDataTypeSynonyms = []string{"VECTOR"}

@@ -20,10 +20,10 @@ func (t *TimestampLtzDataType) ToSql() string {
 }
 
 func (t *TimestampLtzDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return TimestampLtzLegacyDataType
 }
 
-var TimestampLtzDataTypeSynonyms = []string{"TIMESTAMP_LTZ", "TIMESTAMPLTZ", "TIMESTAMP WITH LOCAL TIME ZONE"}
+var TimestampLtzDataTypeSynonyms = []string{TimestampLtzLegacyDataType, "TIMESTAMPLTZ", "TIMESTAMP WITH LOCAL TIME ZONE"}
 
 func parseTimestampLtzDataTypeRaw(raw sanitizedDataTypeRaw) (*TimestampLtzDataType, error) {
 	r := strings.TrimSpace(strings.TrimPrefix(raw.raw, raw.matchedByType))

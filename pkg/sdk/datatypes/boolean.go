@@ -11,10 +11,10 @@ func (t *BooleanDataType) ToSql() string {
 }
 
 func (t *BooleanDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return BooleanLegacyDataType
 }
 
-var BooleanDataTypeSynonyms = []string{"BOOLEAN"}
+var BooleanDataTypeSynonyms = []string{BooleanLegacyDataType}
 
 func parseBooleanDataTypeRaw(raw sanitizedDataTypeRaw) (*BooleanDataType, error) {
 	return &BooleanDataType{raw.matchedByType}, nil

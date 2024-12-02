@@ -11,10 +11,10 @@ func (t *ArrayDataType) ToSql() string {
 }
 
 func (t *ArrayDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return ArrayLegacyDataType
 }
 
-var ArrayDataTypeSynonyms = []string{"ARRAY"}
+var ArrayDataTypeSynonyms = []string{ArrayLegacyDataType}
 
 func parseArrayDataTypeRaw(raw sanitizedDataTypeRaw) (*ArrayDataType, error) {
 	return &ArrayDataType{raw.matchedByType}, nil

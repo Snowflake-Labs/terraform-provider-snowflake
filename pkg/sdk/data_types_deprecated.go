@@ -1,8 +1,6 @@
 package sdk
 
 import (
-	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -40,68 +38,9 @@ const (
 )
 
 var (
-	DataTypeNumberSynonyms       = []string{"NUMBER", "DECIMAL", "NUMERIC", "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
-	DataTypeFloatSynonyms        = []string{"FLOAT", "FLOAT4", "FLOAT8", "DOUBLE", "DOUBLE PRECISION", "REAL"}
-	DataTypeVarcharSynonyms      = []string{"VARCHAR", "CHAR", "CHARACTER", "STRING", "TEXT"}
-	DataTypeBinarySynonyms       = []string{"BINARY", "VARBINARY"}
-	DataTypeBooleanSynonyms      = []string{"BOOLEAN", "BOOL"}
-	DataTypeTimestampLTZSynonyms = []string{"TIMESTAMP_LTZ"}
-	DataTypeTimestampTZSynonyms  = []string{"TIMESTAMP_TZ"}
-	DataTypeTimestampNTZSynonyms = []string{"DATETIME", "TIMESTAMP", "TIMESTAMP_NTZ"}
-	DataTypeTimeSynonyms         = []string{"TIME"}
-	DataTypeVectorSynonyms       = []string{"VECTOR"}
+	DataTypeNumberSynonyms  = []string{"NUMBER", "DECIMAL", "NUMERIC", "INT", "INTEGER", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
+	DataTypeVarcharSynonyms = []string{"VARCHAR", "CHAR", "CHARACTER", "STRING", "TEXT"}
 )
-
-func ToDataType(s string) (DataType, error) {
-	dType := strings.ToUpper(s)
-
-	switch dType {
-	case "DATE":
-		return DataTypeDate, nil
-	case "VARIANT":
-		return DataTypeVariant, nil
-	case "OBJECT":
-		return DataTypeObject, nil
-	case "ARRAY":
-		return DataTypeArray, nil
-	case "GEOGRAPHY":
-		return DataTypeGeography, nil
-	case "GEOMETRY":
-		return DataTypeGeometry, nil
-	}
-
-	if slices.ContainsFunc(DataTypeNumberSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeNumber, nil
-	}
-	if slices.ContainsFunc(DataTypeFloatSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeFloat, nil
-	}
-	if slices.ContainsFunc(DataTypeVarcharSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeVARCHAR, nil
-	}
-	if slices.ContainsFunc(DataTypeBinarySynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeBinary, nil
-	}
-	if slices.Contains(DataTypeBooleanSynonyms, dType) {
-		return DataTypeBoolean, nil
-	}
-	if slices.ContainsFunc(DataTypeTimestampLTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeTimestampLTZ, nil
-	}
-	if slices.ContainsFunc(DataTypeTimestampTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeTimestampTZ, nil
-	}
-	if slices.ContainsFunc(DataTypeTimestampNTZSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeTimestampNTZ, nil
-	}
-	if slices.ContainsFunc(DataTypeTimeSynonyms, func(s string) bool { return strings.HasPrefix(dType, s) }) {
-		return DataTypeTime, nil
-	}
-	if slices.ContainsFunc(DataTypeVectorSynonyms, func(e string) bool { return strings.HasPrefix(dType, e) }) {
-		return DataType(dType), nil
-	}
-	return "", fmt.Errorf("invalid data type: %s", s)
-}
 
 func IsStringType(_type string) bool {
 	t := strings.ToUpper(_type)

@@ -11,10 +11,10 @@ func (t *GeographyDataType) ToSql() string {
 }
 
 func (t *GeographyDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return GeographyLegacyDataType
 }
 
-var GeographyDataTypeSynonyms = []string{"GEOGRAPHY"}
+var GeographyDataTypeSynonyms = []string{GeographyLegacyDataType}
 
 func parseGeographyDataTypeRaw(raw sanitizedDataTypeRaw) (*GeographyDataType, error) {
 	return &GeographyDataType{raw.matchedByType}, nil

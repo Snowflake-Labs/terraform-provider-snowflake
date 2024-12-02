@@ -11,10 +11,10 @@ func (t *TimeDataType) ToSql() string {
 }
 
 func (t *TimeDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return TimeLegacyDataType
 }
 
-var TimeDataTypeSynonyms = []string{"TIME"}
+var TimeDataTypeSynonyms = []string{TimeLegacyDataType}
 
 func parseTimeDataTypeRaw(raw sanitizedDataTypeRaw) (*TimeDataType, error) {
 	return &TimeDataType{raw.matchedByType}, nil

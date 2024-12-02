@@ -22,10 +22,10 @@ func (t *BinaryDataType) ToSql() string {
 }
 
 func (t *BinaryDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return BinaryLegacyDataType
 }
 
-var BinaryDataTypeSynonyms = []string{"BINARY", "VARBINARY"}
+var BinaryDataTypeSynonyms = []string{BinaryLegacyDataType, "VARBINARY"}
 
 func parseBinaryDataTypeRaw(raw sanitizedDataTypeRaw) (*BinaryDataType, error) {
 	r := strings.TrimSpace(strings.TrimPrefix(raw.raw, raw.matchedByType))

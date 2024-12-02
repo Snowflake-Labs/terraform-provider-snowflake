@@ -11,10 +11,10 @@ func (t *GeometryDataType) ToSql() string {
 }
 
 func (t *GeometryDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return GeometryLegacyDataType
 }
 
-var GeometryDataTypeSynonyms = []string{"GEOMETRY"}
+var GeometryDataTypeSynonyms = []string{GeometryLegacyDataType}
 
 func parseGeometryDataTypeRaw(raw sanitizedDataTypeRaw) (*GeometryDataType, error) {
 	return &GeometryDataType{raw.matchedByType}, nil

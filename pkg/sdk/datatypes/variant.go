@@ -11,10 +11,10 @@ func (t *VariantDataType) ToSql() string {
 }
 
 func (t *VariantDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return VariantLegacyDataType
 }
 
-var VariantDataTypeSynonyms = []string{"VARIANT"}
+var VariantDataTypeSynonyms = []string{VariantLegacyDataType}
 
 func parseVariantDataTypeRaw(raw sanitizedDataTypeRaw) (*VariantDataType, error) {
 	return &VariantDataType{raw.matchedByType}, nil

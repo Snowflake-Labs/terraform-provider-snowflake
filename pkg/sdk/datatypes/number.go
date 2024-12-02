@@ -28,10 +28,10 @@ func (t *NumberDataType) ToSql() string {
 }
 
 func (t *NumberDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return NumberLegacyDataType
 }
 
-var NumberDataTypeSynonyms = []string{"NUMBER", "DECIMAL", "DEC", "NUMERIC"}
+var NumberDataTypeSynonyms = []string{NumberLegacyDataType, "DECIMAL", "DEC", "NUMERIC"}
 var NumberDataTypeSubTypes = []string{"INTEGER", "INT", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
 var AllNumberDataTypes = append(NumberDataTypeSynonyms, NumberDataTypeSubTypes...)
 

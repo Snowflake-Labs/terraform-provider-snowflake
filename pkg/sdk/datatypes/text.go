@@ -27,10 +27,10 @@ func (t *TextDataType) ToSql() string {
 }
 
 func (t *TextDataType) ToLegacyDataTypeSql() string {
-	return t.underlyingType
+	return VarcharLegacyDataType
 }
 
-var TextDataTypeSynonyms = []string{"VARCHAR", "STRING", "TEXT", "NVARCHAR2", "NVARCHAR", "CHAR VARYING", "NCHAR VARYING"}
+var TextDataTypeSynonyms = []string{VarcharLegacyDataType, "STRING", "TEXT", "NVARCHAR2", "NVARCHAR", "CHAR VARYING", "NCHAR VARYING"}
 var TextDataTypeSubtypes = []string{"CHARACTER", "CHAR", "NCHAR"}
 var AllTextDataTypes = append(TextDataTypeSynonyms, TextDataTypeSubtypes...)
 
