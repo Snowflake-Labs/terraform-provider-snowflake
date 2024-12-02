@@ -103,7 +103,10 @@ var StreamlitsDef = g.NewInterface(
 		OptionalLike().
 		OptionalIn().
 		OptionalLimit(),
-).ShowByIdOperation().DescribeOperation(
+).ShowByIdOperation(
+	g.ShowByIDLikeFiltering,
+	g.ShowByIDInFiltering,
+).DescribeOperation(
 	g.DescriptionMappingKindSingleValue,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-streamlit",
 	g.DbStruct("streamlitsDetailRow").

@@ -38,7 +38,9 @@ func (v *streamlits) Show(ctx context.Context, request *ShowStreamlitRequest) ([
 }
 
 func (v *streamlits) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Streamlit, error) {
-	request := NewShowStreamlitRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())})
+	request := NewShowStreamlitRequest().
+		WithLike(Like{Pattern: String(id.Name())}).
+		WithIn(In{Schema: id.SchemaId()})
 	streamlits, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
@@ -88,6 +90,7 @@ func (r *AlterStreamlitRequest) toOpts() *AlterStreamlitOptions {
 	}
 
 	if r.Set != nil {
+
 		opts.Set = &StreamlitSet{
 			RootLocation:   r.Set.RootLocation,
 			MainFile:       r.Set.MainFile,
@@ -102,6 +105,7 @@ func (r *AlterStreamlitRequest) toOpts() *AlterStreamlitOptions {
 				ExternalAccessIntegrations: r.Set.ExternalAccessIntegrations.ExternalAccessIntegrations,
 			}
 		}
+
 	}
 
 	if r.Unset != nil {

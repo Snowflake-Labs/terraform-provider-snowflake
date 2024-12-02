@@ -34,7 +34,7 @@ func (s *showByIDFilter) WithFiltering() string {
 	return fmt.Sprintf("With%s(%s{%s})", s.Name, s.Kind, s.Args)
 }
 
-var filteringMap = map[ShowByIDFilteringKind]func(string) ShowByIDFiltering{
+var filteringMapping = map[ShowByIDFilteringKind]func(string) ShowByIDFiltering{
 	ShowByIDLikeFiltering:       newShowByIDLikeFiltering,
 	ShowByIDInFiltering:         newShowByIDInFiltering,
 	ShowByIDExtendedInFiltering: newShowByIDExtendedInFiltering,
@@ -71,7 +71,7 @@ func newShowByIDLimitFiltering(string) ShowByIDFiltering {
 
 func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation {
 	for _, filteringKind := range filtering {
-		if filter, ok := filteringMap[filteringKind]; ok {
+		if filter, ok := filteringMapping[filteringKind]; ok {
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, filter(s.ObjectInterface.ObjectIdentifierKind()))
 		} else {
 			log.Println("No showByID filtering found for kind:", filteringKind)
