@@ -167,7 +167,6 @@ func (opts *AccountLevelParameters) validate() error {
 }
 
 type AccountSet struct {
-	// TODO: validate all parameters are available
 	Parameters           *AccountLevelParameters `ddl:"list,no_parentheses"`
 	ResourceMonitor      AccountObjectIdentifier `ddl:"identifier,equals" sql:"RESOURCE_MONITOR"`
 	PackagesPolicy       SchemaObjectIdentifier  `ddl:"identifier" sql:"PACKAGES POLICY"`

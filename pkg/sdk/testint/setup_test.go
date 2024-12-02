@@ -135,7 +135,7 @@ func (itc *integrationTestContext) initialize() error {
 		return err
 	}
 
-	// TODO(TODO Ticket): Adjust test setup to work properly with Accountadmin role for object tests and Orgadmin for account tests
+	// TODO(SNOW-1842271): Adjust test setup to work properly with Accountadmin role for object tests and Orgadmin for account tests
 	if currentRole == snowflakeroles.Orgadmin {
 		err = c.Sessions.UseRole(context.Background(), snowflakeroles.Accountadmin)
 		if err != nil {
@@ -205,7 +205,7 @@ func (itc *integrationTestContext) initialize() error {
 	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 	itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 
-	// TODO(TODO Ticket): Adjust test setup to work properly with Accountadmin role for object tests and Orgadmin for account tests
+	// TODO(SNOW-1842271): Adjust test setup to work properly with Accountadmin role for object tests and Orgadmin for account tests
 	if currentRole == snowflakeroles.Orgadmin {
 		err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.client, itc.ctx)
 		if err != nil {

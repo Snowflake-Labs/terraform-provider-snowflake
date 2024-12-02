@@ -12,7 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: Change AccountObjectIdentifier to AccountIdentifier
+// TODO(SNOW-1342761): Adjust the tests, so they can be run in their own pipeline
+// For now, those tests should be run manually. The account/admin user running those tests is required to:
+// - Be privileged with ORGADMIN and ACCOUNTADMIN roles.
+// - Shouldn't be any of the "main" accounts/admin users, because those tests alter the current account.
 
 func TestInt_Account(t *testing.T) {
 	if !testClientHelper().Context.IsRoleInSession(t, snowflakeroles.Orgadmin) {
@@ -175,7 +178,7 @@ func TestInt_Account(t *testing.T) {
 			RegionGroup:        sdk.String("PUBLIC"),
 			Region:             sdk.String(currentRegion.SnowflakeRegion),
 			Comment:            sdk.String(comment),
-			// TODO(TODO: ticket): with polaris Snowflake returns an error saying: "invalid property polaris for account"
+			// TODO(file a ticket): with polaris Snowflake returns an error saying: "invalid property polaris for account"
 			// Polaris: sdk.Bool(true),
 		})
 		require.NoError(t, err)
@@ -312,7 +315,7 @@ func TestInt_Account(t *testing.T) {
 		require.Empty(t, acc.OldAccountURL)
 	})
 
-	// TODO(TODO: Ticket): This cannot be tested as it requires capabilities of moving accounts between organizations.
+	// TODO(create a Ticket?): This cannot be tested as it requires capabilities of moving accounts between organizations.
 	// From the documentation: https://docs.snowflake.com/en/sql-reference/sql/show-accounts#output
 	// `
 	// If the account’s organization was changed in a way that created a new account URL and the original account URL was saved,
