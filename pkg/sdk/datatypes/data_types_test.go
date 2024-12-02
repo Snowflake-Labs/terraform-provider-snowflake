@@ -370,9 +370,7 @@ func Test_ParseDataType_Boolean(t *testing.T) {
 	positiveTestCases := []test{
 		defaults("   BOOLEAN   "),
 		defaults("BOOLEAN"),
-		defaults("BOOL"),
 		defaults("boolean"),
-		defaults("bool"),
 	}
 
 	negativeTestCases := []test{
@@ -380,6 +378,8 @@ func Test_ParseDataType_Boolean(t *testing.T) {
 		negative("BOOLEAN(38, 2)"),
 		negative("BOOLEAN(38)"),
 		negative("BOOLEAN()"),
+		negative("BOOL"),
+		negative("bool"),
 		negative("B O O L E A N"),
 		negative("other"),
 	}
