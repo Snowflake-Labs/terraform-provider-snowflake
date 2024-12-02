@@ -5,20 +5,6 @@ import (
 	"log"
 )
 
-type ShowByIDFiltering interface {
-	WithFiltering() string
-}
-
-type ShowByIDFilter struct {
-	Name string
-	Kind string
-	Args string
-}
-
-func (s *ShowByIDFilter) WithFiltering() string {
-	return fmt.Sprintf("With%s(%s{%s})", s.Name, s.Kind, s.Args)
-}
-
 type ShowByIDFilteringKind uint
 
 const (
@@ -30,10 +16,33 @@ const (
 	// Enables filtering with: ExtendedIn
 	// Based on the identifier Kind
 	ShowByIDExtendedInFiltering
+	// Enables filtering with: Limit
+	ShowByIDLimitFiltering
 )
 
-func NewShowByIDFiltering(name, kind, args string, identifierKind *string) ShowByIDFiltering {
-	filter := &ShowByIDFilter{
+type ShowByIDFiltering interface {
+	WithFiltering() string
+}
+
+type showByIDFilter struct {
+	Name string
+	Kind string
+	Args string
+}
+
+func (s *showByIDFilter) WithFiltering() string {
+	return fmt.Sprintf("With%s(%s{%s})", s.Name, s.Kind, s.Args)
+}
+
+var filteringMap = map[ShowByIDFilteringKind]func(string) ShowByIDFiltering{
+	ShowByIDLikeFiltering:       newShowByIDLikeFiltering,
+	ShowByIDInFiltering:         newShowByIDInFiltering,
+	ShowByIDExtendedInFiltering: newShowByIDExtendedInFiltering,
+	ShowByIDLimitFiltering:      newShowByIDLimitFiltering,
+}
+
+func newShowByIDFiltering(name, kind, args string, identifierKind *string) ShowByIDFiltering {
+	filter := &showByIDFilter{
 		Name: name,
 		Kind: kind,
 		Args: args,
@@ -44,22 +53,20 @@ func NewShowByIDFiltering(name, kind, args string, identifierKind *string) ShowB
 	return filter
 }
 
-func NewShowByIDLikeFiltering(string) ShowByIDFiltering {
-	return NewShowByIDFiltering("Like", "Like", "Pattern: String(id.Name())", nil)
+func newShowByIDLikeFiltering(string) ShowByIDFiltering {
+	return newShowByIDFiltering("Like", "Like", "Pattern: String(id.Name())", nil)
 }
 
-func NewShowByIDInFiltering(identifierKind string) ShowByIDFiltering {
-	return NewShowByIDFiltering("In", "In", "%[1]v: id.%[1]vId()", &identifierKind)
+func newShowByIDInFiltering(identifierKind string) ShowByIDFiltering {
+	return newShowByIDFiltering("In", "In", "%[1]v: id.%[1]vId()", &identifierKind)
 }
 
-func NewShowByIDExtendedInFiltering(identifierKind string) ShowByIDFiltering {
-	return NewShowByIDFiltering("In", "ExtendedIn", "In: In{%[1]v: id.%[1]vId()}", &identifierKind)
+func newShowByIDExtendedInFiltering(identifierKind string) ShowByIDFiltering {
+	return newShowByIDFiltering("In", "ExtendedIn", "In: In{%[1]v: id.%[1]vId()}", &identifierKind)
 }
 
-var filteringMap = map[ShowByIDFilteringKind]func(string) ShowByIDFiltering{
-	ShowByIDLikeFiltering:       NewShowByIDLikeFiltering,
-	ShowByIDInFiltering:         NewShowByIDInFiltering,
-	ShowByIDExtendedInFiltering: NewShowByIDExtendedInFiltering,
+func newShowByIDLimitFiltering(string) ShowByIDFiltering {
+	return newShowByIDFiltering("Limit", "LimitFrom", "Rows: Int(1)", nil)
 }
 
 func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation {

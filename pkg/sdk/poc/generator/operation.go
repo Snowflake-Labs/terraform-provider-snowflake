@@ -164,7 +164,7 @@ func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resour
 
 func (i *Interface) ShowByIdOperation(filtering ...ShowByIDFilteringKind) *Interface {
 	op := i.newNoSqlOperation(string(OperationKindShowByID))
-    op.ObjectInterface = i
+	op.ObjectInterface = i
 	op.withFiltering(filtering...)
 	return i
 }
