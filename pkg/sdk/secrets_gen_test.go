@@ -341,7 +341,7 @@ func TestSecrets_Show(t *testing.T) {
 
 	t.Run("show with in", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ExtendedIn = &ExtendedIn{
+		opts.In = &ExtendedIn{
 			In: In{
 				Account: Bool(true),
 			},

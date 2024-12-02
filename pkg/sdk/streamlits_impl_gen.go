@@ -90,14 +90,12 @@ func (r *AlterStreamlitRequest) toOpts() *AlterStreamlitOptions {
 	}
 
 	if r.Set != nil {
-
 		opts.Set = &StreamlitSet{
 			RootLocation:   r.Set.RootLocation,
 			MainFile:       r.Set.MainFile,
 			QueryWarehouse: r.Set.QueryWarehouse,
-
-			Comment: r.Set.Comment,
-			Title:   r.Set.Title,
+			Comment:        r.Set.Comment,
+			Title:          r.Set.Title,
 		}
 
 		if r.Set.ExternalAccessIntegrations != nil {
@@ -105,7 +103,6 @@ func (r *AlterStreamlitRequest) toOpts() *AlterStreamlitOptions {
 				ExternalAccessIntegrations: r.Set.ExternalAccessIntegrations.ExternalAccessIntegrations,
 			}
 		}
-
 	}
 
 	if r.Unset != nil {

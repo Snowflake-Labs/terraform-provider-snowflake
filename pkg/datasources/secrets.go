@@ -109,7 +109,7 @@ func ReadSecrets(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 	req := sdk.NewShowSecretRequest()
 
 	handleLike(d, &req.Like)
-	err := handleExtendedIn(d, &req.ExtendedIn)
+	err := handleExtendedIn(d, &req.In)
 	if err != nil {
 		return diag.FromErr(err)
 	}

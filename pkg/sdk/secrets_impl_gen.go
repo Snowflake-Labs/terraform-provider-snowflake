@@ -66,7 +66,7 @@ func (v *secrets) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Sec
 func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error) {
 	request := NewShowSecretRequest().
 		WithLike(Like{Pattern: String(id.Name())}).
-		WithExtendedIn(ExtendedIn{In: In{Schema: id.SchemaId()}})
+		WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}})
 	secrets, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
@@ -193,8 +193,8 @@ func (r *DropSecretRequest) toOpts() *DropSecretOptions {
 
 func (r *ShowSecretRequest) toOpts() *ShowSecretOptions {
 	opts := &ShowSecretOptions{
-		Like:       r.Like,
-		ExtendedIn: r.ExtendedIn,
+		Like: r.Like,
+		In:   r.In,
 	}
 	return opts
 }

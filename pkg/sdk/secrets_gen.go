@@ -123,10 +123,10 @@ type DropSecretOptions struct {
 
 // ShowSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-secrets.
 type ShowSecretOptions struct {
-	show       bool        `ddl:"static" sql:"SHOW"`
-	secrets    bool        `ddl:"static" sql:"SECRETS"`
-	Like       *Like       `ddl:"keyword" sql:"LIKE"`
-	ExtendedIn *ExtendedIn `ddl:"keyword" sql:"IN"`
+	show    bool        `ddl:"static" sql:"SHOW"`
+	secrets bool        `ddl:"static" sql:"SECRETS"`
+	Like    *Like       `ddl:"keyword" sql:"LIKE"`
+	In      *ExtendedIn `ddl:"keyword" sql:"IN"`
 }
 type secretDBRow struct {
 	CreatedOn     time.Time      `db:"created_on"`

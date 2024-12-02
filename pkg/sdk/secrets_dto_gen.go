@@ -100,8 +100,8 @@ type DropSecretRequest struct {
 }
 
 type ShowSecretRequest struct {
-	Like       *Like
-	ExtendedIn *ExtendedIn
+	Like *Like
+	In   *ExtendedIn
 }
 
 type DescribeSecretRequest struct {

@@ -13,7 +13,7 @@ const (
 	// Enables filtering with: In
 	// Based on the identifier Kind
 	ShowByIDInFiltering
-	// Enables filtering with: ExtendedIn
+	// Enables filtering with: In
 	// Based on the identifier Kind
 	ShowByIDExtendedInFiltering
 	// Enables filtering with: Limit
@@ -62,7 +62,7 @@ func newShowByIDInFiltering(identifierKind string) ShowByIDFiltering {
 }
 
 func newShowByIDExtendedInFiltering(identifierKind string) ShowByIDFiltering {
-	return newShowByIDFiltering("In", "ExtendedIn", "In: In{%[1]v: id.%[1]vId()}", &identifierKind)
+	return newShowByIDFiltering("In", "In", "In: In{%[1]v: id.%[1]vId()}", &identifierKind)
 }
 
 func newShowByIDLimitFiltering(string) ShowByIDFiltering {

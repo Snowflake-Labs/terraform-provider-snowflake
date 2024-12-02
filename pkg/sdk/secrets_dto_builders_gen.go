@@ -261,8 +261,8 @@ func (s *ShowSecretRequest) WithLike(Like Like) *ShowSecretRequest {
 	return s
 }
 
-func (s *ShowSecretRequest) WithExtendedIn(ExtendedIn ExtendedIn) *ShowSecretRequest {
-	s.ExtendedIn = &ExtendedIn
+func (s *ShowSecretRequest) WithIn(In ExtendedIn) *ShowSecretRequest {
+	s.In = &In
 	return s
 }
 
