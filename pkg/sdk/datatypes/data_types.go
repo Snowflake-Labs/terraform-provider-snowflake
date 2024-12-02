@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+// TODO [this PR]: LegacyDataTypeFrom helper method in DataType
+// TODO [this PR]: remove unsued methods
+// TODO [this PR]: adjust new data type tests after changes
+// TODO [this PR]: check other methods and enum values usage (mby another helper?)
+
 // TODO [next PR]: generalize definitions for different types; generalize the ParseDataType function
 // TODO [next PR]: generalize implementation in types (i.e. the internal struct implementing ToLegacyDataTypeSql and containing the underlyingType)
 // TODO [next PR]: consider known/unknown to use Snowflake defaults and allow better handling in terraform resources
