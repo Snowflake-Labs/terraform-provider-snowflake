@@ -243,7 +243,41 @@ func TestInt_DataTypes(t *testing.T) {
 		})
 	}
 
-	// timestamps here
+	for _, c := range datatypes.TimestampLtzDataTypeSynonyms {
+		t.Run(fmt.Sprintf("check behavior of timestamp ltz data types: %s", c), func(t *testing.T) {
+			sql := fmt.Sprintf("SELECT '2024-12-02 00:00:00 +0000'::%s", c)
+			_, err := client.QueryUnsafe(ctx, sql)
+			assert.NoError(t, err)
+
+			sql = fmt.Sprintf("SELECT '2024-12-02 00:00:00 +0000'::%s(3)", c)
+			_, err = client.QueryUnsafe(ctx, sql)
+			assert.NoError(t, err)
+		})
+	}
+
+	for _, c := range datatypes.TimestampNtzDataTypeSynonyms {
+		t.Run(fmt.Sprintf("check behavior of timestamp ntz data types: %s", c), func(t *testing.T) {
+			sql := fmt.Sprintf("SELECT '2024-12-02 00:00:00 +0000'::%s", c)
+			_, err := client.QueryUnsafe(ctx, sql)
+			assert.NoError(t, err)
+
+			sql = fmt.Sprintf("SELECT '2024-12-02 00:00:00 +0000'::%s(3)", c)
+			_, err = client.QueryUnsafe(ctx, sql)
+			assert.NoError(t, err)
+		})
+	}
+
+	for _, c := range datatypes.TimestampTzDataTypeSynonyms {
+		t.Run(fmt.Sprintf("check behavior of timestamp tz data types: %s", c), func(t *testing.T) {
+			sql := fmt.Sprintf("SELECT '2024-12-02 00:00:00 +0000'::%s", c)
+			_, err := client.QueryUnsafe(ctx, sql)
+			assert.NoError(t, err)
+
+			sql = fmt.Sprintf("SELECT '2024-12-02 00:00:00 +0000'::%s(3)", c)
+			_, err = client.QueryUnsafe(ctx, sql)
+			assert.NoError(t, err)
+		})
+	}
 
 	for _, c := range datatypes.VariantDataTypeSynonyms {
 		t.Run(fmt.Sprintf("check behavior of variant data type: %s", c), func(t *testing.T) {
