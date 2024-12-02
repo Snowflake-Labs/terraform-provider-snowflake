@@ -6,6 +6,14 @@ type ObjectDataType struct {
 	underlyingType string
 }
 
+func (t *ObjectDataType) ToSql() string {
+	return t.underlyingType
+}
+
+func (t *ObjectDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var ObjectDataTypeSynonyms = []string{"OBJECT"}
 
 func parseObjectDataTypeRaw(raw sanitizedDataTypeRaw) (*ObjectDataType, error) {

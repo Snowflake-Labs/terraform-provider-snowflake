@@ -17,6 +17,14 @@ type VectorDataType struct {
 	underlyingType string
 }
 
+func (t *VectorDataType) ToSql() string {
+	return fmt.Sprintf("%s(%s, %d)", t.underlyingType, t.innerType, t.dimension)
+}
+
+func (t *VectorDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var VectorDataTypeSynonyms = []string{"VECTOR"}
 var VectorAllowedInnerTypes = []string{"INT", "FLOAT"} // TODO [this PR]: check synonyms for both
 

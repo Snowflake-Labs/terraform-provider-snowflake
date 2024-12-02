@@ -6,6 +6,14 @@ type DateDataType struct {
 	underlyingType string
 }
 
+func (t *DateDataType) ToSql() string {
+	return t.underlyingType
+}
+
+func (t *DateDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var DateDataTypeSynonyms = []string{"DATE"}
 
 func parseDateDataTypeRaw(raw sanitizedDataTypeRaw) (*DateDataType, error) {

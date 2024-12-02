@@ -6,6 +6,14 @@ type GeographyDataType struct {
 	underlyingType string
 }
 
+func (t *GeographyDataType) ToSql() string {
+	return t.underlyingType
+}
+
+func (t *GeographyDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var GeographyDataTypeSynonyms = []string{"GEOGRAPHY"}
 
 func parseGeographyDataTypeRaw(raw sanitizedDataTypeRaw) (*GeographyDataType, error) {

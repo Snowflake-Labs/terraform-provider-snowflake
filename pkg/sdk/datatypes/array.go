@@ -6,6 +6,14 @@ type ArrayDataType struct {
 	underlyingType string
 }
 
+func (t *ArrayDataType) ToSql() string {
+	return t.underlyingType
+}
+
+func (t *ArrayDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var ArrayDataTypeSynonyms = []string{"ARRAY"}
 
 func parseArrayDataTypeRaw(raw sanitizedDataTypeRaw) (*ArrayDataType, error) {

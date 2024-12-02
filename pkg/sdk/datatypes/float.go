@@ -6,6 +6,14 @@ type FloatDataType struct {
 	underlyingType string
 }
 
+func (t *FloatDataType) ToSql() string {
+	return t.underlyingType
+}
+
+func (t *FloatDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var FloatDataTypeSynonyms = []string{"FLOAT8", "FLOAT4", "FLOAT", "DOUBLE PRECISION", "DOUBLE", "REAL"}
 
 func parseFloatDataTypeRaw(raw sanitizedDataTypeRaw) (*FloatDataType, error) {

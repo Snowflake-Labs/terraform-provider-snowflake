@@ -6,6 +6,14 @@ type TimeDataType struct {
 	underlyingType string
 }
 
+func (t *TimeDataType) ToSql() string {
+	return t.underlyingType
+}
+
+func (t *TimeDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var TimeDataTypeSynonyms = []string{"TIME"}
 
 func parseTimeDataTypeRaw(raw sanitizedDataTypeRaw) (*TimeDataType, error) {

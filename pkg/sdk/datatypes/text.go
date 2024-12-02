@@ -22,6 +22,14 @@ type TextDataType struct {
 	underlyingType string
 }
 
+func (t *TextDataType) ToSql() string {
+	return fmt.Sprintf("%s(%d)", t.underlyingType, t.length)
+}
+
+func (t *TextDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var TextDataTypeSynonyms = []string{"VARCHAR", "STRING", "TEXT", "NVARCHAR2", "NVARCHAR", "CHAR VARYING", "NCHAR VARYING"}
 var TextDataTypeSubtypes = []string{"CHARACTER", "CHAR", "NCHAR"}
 var AllTextDataTypes = append(TextDataTypeSynonyms, TextDataTypeSubtypes...)

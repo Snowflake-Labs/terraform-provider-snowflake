@@ -89,6 +89,9 @@ func Test_ParseDataType_Number(t *testing.T) {
 			assert.Equal(t, tc.expectedPrecision, parsed.(*NumberDataType).precision)
 			assert.Equal(t, tc.expectedScale, parsed.(*NumberDataType).scale)
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*NumberDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d, %d)", parsed.(*NumberDataType).underlyingType, parsed.(*NumberDataType).precision, parsed.(*NumberDataType).scale), parsed.ToSql())
 		})
 	}
 
@@ -152,6 +155,9 @@ func Test_ParseDataType_Float(t *testing.T) {
 			require.IsType(t, &FloatDataType{}, parsed)
 
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*FloatDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
 		})
 	}
 
@@ -258,6 +264,9 @@ func Test_ParseDataType_Text(t *testing.T) {
 
 			assert.Equal(t, tc.expectedLength, parsed.(*TextDataType).length)
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TextDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", parsed.(*TextDataType).underlyingType, parsed.(*TextDataType).length), parsed.ToSql())
 		})
 	}
 
@@ -326,6 +335,9 @@ func Test_ParseDataType_Binary(t *testing.T) {
 
 			assert.Equal(t, tc.expectedSize, parsed.(*BinaryDataType).size)
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*BinaryDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", parsed.(*BinaryDataType).underlyingType, parsed.(*BinaryDataType).size), parsed.ToSql())
 		})
 	}
 
@@ -381,6 +393,9 @@ func Test_ParseDataType_Boolean(t *testing.T) {
 			require.IsType(t, &BooleanDataType{}, parsed)
 
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*BooleanDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
 		})
 	}
 
@@ -434,6 +449,9 @@ func Test_ParseDataType_Date(t *testing.T) {
 			require.IsType(t, &DateDataType{}, parsed)
 
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*DateDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
 		})
 	}
 
@@ -487,6 +505,9 @@ func Test_ParseDataType_Time(t *testing.T) {
 			require.IsType(t, &TimeDataType{}, parsed)
 
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TimeDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
 		})
 	}
 
@@ -553,6 +574,9 @@ func Test_ParseDataType_TimestampLtz(t *testing.T) {
 
 			assert.Equal(t, tc.expectedPrecision, parsed.(*TimestampLtzDataType).precision)
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TimestampLtzDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", parsed.(*TimestampLtzDataType).underlyingType, parsed.(*TimestampLtzDataType).precision), parsed.ToSql())
 		})
 	}
 
@@ -621,6 +645,9 @@ func Test_ParseDataType_TimestampNtz(t *testing.T) {
 
 			assert.Equal(t, tc.expectedPrecision, parsed.(*TimestampNtzDataType).precision)
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TimestampNtzDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", parsed.(*TimestampNtzDataType).underlyingType, parsed.(*TimestampNtzDataType).precision), parsed.ToSql())
 		})
 	}
 
@@ -687,6 +714,9 @@ func Test_ParseDataType_TimestampTz(t *testing.T) {
 
 			assert.Equal(t, tc.expectedPrecision, parsed.(*TimestampTzDataType).precision)
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TimestampTzDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", parsed.(*TimestampTzDataType).underlyingType, parsed.(*TimestampTzDataType).precision), parsed.ToSql())
 		})
 	}
 
@@ -740,6 +770,9 @@ func Test_ParseDataType_Variant(t *testing.T) {
 			require.IsType(t, &VariantDataType{}, parsed)
 
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*VariantDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
 		})
 	}
 
@@ -793,6 +826,9 @@ func Test_ParseDataType_Object(t *testing.T) {
 			require.IsType(t, &ObjectDataType{}, parsed)
 
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*ObjectDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
 		})
 	}
 
@@ -846,6 +882,9 @@ func Test_ParseDataType_Array(t *testing.T) {
 			require.IsType(t, &ArrayDataType{}, parsed)
 
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*ArrayDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
 		})
 	}
 
@@ -899,6 +938,9 @@ func Test_ParseDataType_Geography(t *testing.T) {
 			require.IsType(t, &GeographyDataType{}, parsed)
 
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*GeographyDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
 		})
 	}
 
@@ -952,6 +994,9 @@ func Test_ParseDataType_Geometry(t *testing.T) {
 			require.IsType(t, &GeometryDataType{}, parsed)
 
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*GeometryDataType).underlyingType)
+
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
 		})
 	}
 
@@ -1007,6 +1052,9 @@ func Test_ParseDataType_Vector(t *testing.T) {
 			assert.Equal(t, tc.expectedInnerType, parsed.(*VectorDataType).innerType)
 			assert.Equal(t, tc.expectedDimension, parsed.(*VectorDataType).dimension)
 			assert.Equal(t, "VECTOR", parsed.(*VectorDataType).underlyingType)
+
+			assert.Equal(t, "VECTOR", parsed.ToLegacyDataTypeSql())
+			assert.Equal(t, fmt.Sprintf("%s(%s, %d)", parsed.(*VectorDataType).underlyingType, parsed.(*VectorDataType).innerType, parsed.(*VectorDataType).dimension), parsed.ToSql())
 		})
 	}
 

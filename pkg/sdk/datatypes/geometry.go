@@ -6,6 +6,14 @@ type GeometryDataType struct {
 	underlyingType string
 }
 
+func (t *GeometryDataType) ToSql() string {
+	return t.underlyingType
+}
+
+func (t *GeometryDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var GeometryDataTypeSynonyms = []string{"GEOMETRY"}
 
 func parseGeometryDataTypeRaw(raw sanitizedDataTypeRaw) (*GeometryDataType, error) {

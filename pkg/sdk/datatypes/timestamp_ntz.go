@@ -15,6 +15,14 @@ type TimestampNtzDataType struct {
 	underlyingType string
 }
 
+func (t *TimestampNtzDataType) ToSql() string {
+	return fmt.Sprintf("%s(%d)", t.underlyingType, t.precision)
+}
+
+func (t *TimestampNtzDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var TimestampNtzDataTypeSynonyms = []string{"TIMESTAMP_NTZ", "TIMESTAMPNTZ", "TIMESTAMP WITHOUT TIME ZONE", "DATETIME"}
 
 func parseTimestampNtzDataTypeRaw(raw sanitizedDataTypeRaw) (*TimestampNtzDataType, error) {

@@ -23,6 +23,14 @@ type NumberDataType struct {
 	underlyingType string
 }
 
+func (t *NumberDataType) ToSql() string {
+	return fmt.Sprintf("%s(%d, %d)", t.underlyingType, t.precision, t.scale)
+}
+
+func (t *NumberDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var NumberDataTypeSynonyms = []string{"NUMBER", "DECIMAL", "DEC", "NUMERIC"}
 var NumberDataTypeSubTypes = []string{"INTEGER", "INT", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
 var AllNumberDataTypes = append(NumberDataTypeSynonyms, NumberDataTypeSubTypes...)

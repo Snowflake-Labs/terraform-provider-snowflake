@@ -6,6 +6,14 @@ type VariantDataType struct {
 	underlyingType string
 }
 
+func (t *VariantDataType) ToSql() string {
+	return t.underlyingType
+}
+
+func (t *VariantDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var VariantDataTypeSynonyms = []string{"VARIANT"}
 
 func parseVariantDataTypeRaw(raw sanitizedDataTypeRaw) (*VariantDataType, error) {

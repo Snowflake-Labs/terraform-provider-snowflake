@@ -17,6 +17,14 @@ type BinaryDataType struct {
 	underlyingType string
 }
 
+func (t *BinaryDataType) ToSql() string {
+	return fmt.Sprintf("%s(%d)", t.underlyingType, t.size)
+}
+
+func (t *BinaryDataType) ToLegacyDataTypeSql() string {
+	return t.underlyingType
+}
+
 var BinaryDataTypeSynonyms = []string{"BINARY", "VARBINARY"}
 
 func parseBinaryDataTypeRaw(raw sanitizedDataTypeRaw) (*BinaryDataType, error) {

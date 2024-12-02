@@ -7,6 +7,8 @@ import (
 )
 
 type DataType interface {
+	ToSql() string
+	ToLegacyDataTypeSql() string
 }
 
 type sanitizedDataTypeRaw struct {
@@ -14,8 +16,6 @@ type sanitizedDataTypeRaw struct {
 	matchedByType string
 }
 
-// TODO [this PR]: test
-// TODO [this PR]: support all data types
 // https://docs.snowflake.com/en/sql-reference/intro-summary-data-types
 // Session-configurable TIMESTAMP alias is currenlty not supported (https://docs.snowflake.com/en/sql-reference/data-types-datetime#timestamp).
 func ParseDataType(raw string) (DataType, error) {
