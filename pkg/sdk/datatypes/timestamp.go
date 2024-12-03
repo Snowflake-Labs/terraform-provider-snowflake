@@ -1,3 +1,3 @@
 package datatypes
 
-const DefaultTimestampPrecision = 3
+const DefaultTimestampPrecision = 9
