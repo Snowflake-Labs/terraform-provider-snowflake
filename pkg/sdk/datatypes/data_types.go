@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-// TODO [next PR]: generalize definitions for different types; generalize the ParseDataType function
-// TODO [next PR]: generalize implementation in types (i.e. the internal struct implementing ToLegacyDataTypeSql and containing the underlyingType)
-// TODO [next PR]: consider known/unknown to use Snowflake defaults and allow better handling in terraform resources
-// TODO [next PR]: replace old DataTypes
+// TODO [SNOW-1843440]: generalize definitions for different types; generalize the ParseDataType function
+// TODO [SNOW-1843440]: generalize implementation in types (i.e. the internal struct implementing ToLegacyDataTypeSql and containing the underlyingType)
+// TODO [SNOW-1843440]: consider known/unknown to use Snowflake defaults and allow better handling in terraform resources
+// TODO [SNOW-1843440]: replace old DataTypes
 
 // DataType is the common interface that represents all Snowflake datatypes documented in https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.
 type DataType interface {
@@ -24,7 +24,7 @@ type sanitizedDataTypeRaw struct {
 }
 
 // ParseDataType is the entry point to get the implementation of the DataType from input raw string.
-// TODO [next PR]: order currently matters (e.g. HasPrefix(TIME) can match also TIMESTAMP*, make the checks more precise and order-independent)
+// TODO [SNOW-1843440]: order currently matters (e.g. HasPrefix(TIME) can match also TIMESTAMP*, make the checks more precise and order-independent)
 func ParseDataType(raw string) (DataType, error) {
 	dataTypeRaw := strings.TrimSpace(strings.ToUpper(raw))
 
