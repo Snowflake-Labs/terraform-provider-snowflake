@@ -469,11 +469,13 @@ func Test_ParseDataType_Date(t *testing.T) {
 func Test_ParseDataType_Time(t *testing.T) {
 	type test struct {
 		input                  string
+		expectedPrecision      int
 		expectedUnderlyingType string
 	}
 	defaults := func(input string) test {
 		return test{
 			input:                  input,
+			expectedPrecision:      DefaultTimePrecision,
 			expectedUnderlyingType: strings.TrimSpace(strings.ToUpper(input)),
 		}
 	}
@@ -485,12 +487,13 @@ func Test_ParseDataType_Time(t *testing.T) {
 		defaults("   TIME   "),
 		defaults("TIME"),
 		defaults("time"),
+		test{input: "TIME(5)", expectedPrecision: 5, expectedUnderlyingType: "TIME"},
+		test{input: "time(5)", expectedPrecision: 5, expectedUnderlyingType: "TIME"},
 	}
 
 	negativeTestCases := []test{
 		negative("TIME(38, 0)"),
 		negative("TIME(38, 2)"),
-		negative("TIME(38)"),
 		negative("TIME()"),
 		negative("T I M E"),
 		negative("other"),
@@ -505,9 +508,10 @@ func Test_ParseDataType_Time(t *testing.T) {
 			require.IsType(t, &TimeDataType{}, parsed)
 
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*TimeDataType).underlyingType)
+			assert.Equal(t, tc.expectedPrecision, parsed.(*TimeDataType).precision)
 
 			assert.Equal(t, TimeLegacyDataType, parsed.ToLegacyDataTypeSql())
-			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", tc.expectedUnderlyingType, tc.expectedPrecision), parsed.ToSql())
 		})
 	}
 
@@ -1112,6 +1116,9 @@ func Test_AreTheSame(t *testing.T) {
 		{d1: "VECTOR(FLOAT, 20)", d2: "VECTOR(INT, 20)", expectedOutcome: false},
 		{d1: "VECTOR(FLOAT, 20)", d2: "VECTOR(FLOAT, 20)", expectedOutcome: true},
 		{d1: "VECTOR(FLOAT, 20)", d2: "FLOAT", expectedOutcome: false},
+		{d1: "TIME", d2: "TIME", expectedOutcome: true},
+		{d1: "TIME", d2: "TIME(5)", expectedOutcome: false},
+		{d1: "TIME", d2: fmt.Sprintf("TIME(%d)", DefaultTimePrecision), expectedOutcome: true},
 	}
 
 	for _, tc := range testCases {

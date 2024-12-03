@@ -24,6 +24,7 @@ type sanitizedDataTypeRaw struct {
 }
 
 // ParseDataType is the entry point to get the implementation of the DataType from input raw string.
+// TODO [next PR]: order currently matters (e.g. HasPrefix(TIME) can match also TIMESTAMP*, make the checks more precise and order-independent)
 func ParseDataType(raw string) (DataType, error) {
 	dataTypeRaw := strings.TrimSpace(strings.ToUpper(raw))
 
@@ -48,9 +49,6 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.Index(DateDataTypeSynonyms, dataTypeRaw); idx >= 0 {
 		return parseDateDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, DateDataTypeSynonyms[idx]})
 	}
-	if idx := slices.Index(TimeDataTypeSynonyms, dataTypeRaw); idx >= 0 {
-		return parseTimeDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimeDataTypeSynonyms[idx]})
-	}
 	if idx := slices.IndexFunc(TimestampLtzDataTypeSynonyms, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
 		return parseTimestampLtzDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimestampLtzDataTypeSynonyms[idx]})
 	}
@@ -59,6 +57,9 @@ func ParseDataType(raw string) (DataType, error) {
 	}
 	if idx := slices.IndexFunc(TimestampTzDataTypeSynonyms, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
 		return parseTimestampTzDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimestampTzDataTypeSynonyms[idx]})
+	}
+	if idx := slices.IndexFunc(TimeDataTypeSynonyms, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
+		return parseTimeDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, TimeDataTypeSynonyms[idx]})
 	}
 	if idx := slices.Index(VariantDataTypeSynonyms, dataTypeRaw); idx >= 0 {
 		return parseVariantDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, VariantDataTypeSynonyms[idx]})
@@ -108,7 +109,7 @@ func AreTheSame(a DataType, b DataType) bool {
 	case *TextDataType:
 		return castSuccessfully(v, b, areTextDataTypesTheSame)
 	case *TimeDataType:
-		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+		return castSuccessfully(v, b, areTimeDataTypesTheSame)
 	case *TimestampLtzDataType:
 		return castSuccessfully(v, b, areTimestampLtzDataTypesTheSame)
 	case *TimestampNtzDataType:
