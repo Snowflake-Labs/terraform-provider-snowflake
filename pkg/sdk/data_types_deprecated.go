@@ -35,6 +35,8 @@ const (
 	DataTypeGeometry     DataType = "GEOMETRY"
 )
 
+// IsStringType is a legacy method. datatypes.IsTextDataType should be used instead.
+// TODO [SNOW-1348114]: remove with tables rework
 func IsStringType(_type string) bool {
 	t := strings.ToUpper(_type)
 	return strings.HasPrefix(t, "STRING") ||

@@ -7,9 +7,6 @@ import (
 	"strings"
 )
 
-// TODO [this PR]: remove unsued methods
-// TODO [this PR]: check other methods and enum values usage (mby another helper?)
-
 // TODO [next PR]: generalize definitions for different types; generalize the ParseDataType function
 // TODO [next PR]: generalize implementation in types (i.e. the internal struct implementing ToLegacyDataTypeSql and containing the underlyingType)
 // TODO [next PR]: consider known/unknown to use Snowflake defaults and allow better handling in terraform resources
@@ -125,6 +122,11 @@ func AreTheSame(a DataType, b DataType) bool {
 		return castSuccessfully(v, b, areVectorDataTypesTheSame)
 	}
 	return false
+}
+
+func IsTextDataType(a DataType) bool {
+	_, ok := a.(*TextDataType)
+	return ok
 }
 
 func castSuccessfully[T any](a T, b DataType, invoke func(a T, b T) bool) bool {
