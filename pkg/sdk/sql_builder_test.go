@@ -475,6 +475,11 @@ func TestBuilder_sql(t *testing.T) {
 	})
 }
 
+// TODO [this PR]: add constructors for each data type?
+// TODO [this PR]: test printing all data types
+// TODO [this PR]: add optional alternatives to functions and procedures (arguments and return types)
+// TODO [this PR]: integration tests for both options
+// TODO [this PR]: integration test to check all data types in a new way + reading from snowflake?
 func TestBuilder_DataType(t *testing.T) {
 
 	type dataTypeTestHelper struct {
