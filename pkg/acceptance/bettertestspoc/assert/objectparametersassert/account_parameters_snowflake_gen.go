@@ -18,7 +18,10 @@ type AccountParametersAssert struct {
 func AccountParameters(t *testing.T, id sdk.AccountObjectIdentifier) *AccountParametersAssert {
 	t.Helper()
 	return &AccountParametersAssert{
-		assert.NewSnowflakeParametersAssertWithProvider(id, sdk.ObjectTypeAccount, acc.TestClient().Parameter.ShowAccountParameters),
+		// Modified manually, don't override
+		assert.NewSnowflakeParametersAssertWithProvider(id, sdk.ObjectTypeAccount, func(t *testing.T, identifier sdk.AccountObjectIdentifier) []*sdk.Parameter {
+			return acc.TestClient().Parameter.ShowAccountParameters(t)
+		}),
 	}
 }
 
