@@ -10,7 +10,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -171,13 +170,9 @@ func CreateExternalTable(ctx context.Context, d *schema.ResourceData, meta any) 
 		for key, val := range col.(map[string]any) {
 			columnDef[key] = val.(string)
 		}
-		dt, err := datatypes.ParseDataType(columnDef["type"])
-		if err != nil {
-			return diag.FromErr(err)
-		}
 		columnRequests[i] = sdk.NewExternalTableColumnRequest(
 			columnDef["name"],
-			sdk.LegacyDataTypeFrom(dt),
+			sdk.DataType(columnDef["type"]),
 			columnDef["as"],
 		)
 	}
