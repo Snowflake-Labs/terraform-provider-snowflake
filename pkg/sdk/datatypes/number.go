@@ -31,9 +31,11 @@ func (t *NumberDataType) ToLegacyDataTypeSql() string {
 	return NumberLegacyDataType
 }
 
-var NumberDataTypeSynonyms = []string{NumberLegacyDataType, "DECIMAL", "DEC", "NUMERIC"}
-var NumberDataTypeSubTypes = []string{"INTEGER", "INT", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
-var AllNumberDataTypes = append(NumberDataTypeSynonyms, NumberDataTypeSubTypes...)
+var (
+	NumberDataTypeSynonyms = []string{NumberLegacyDataType, "DECIMAL", "DEC", "NUMERIC"}
+	NumberDataTypeSubTypes = []string{"INTEGER", "INT", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}
+	AllNumberDataTypes     = append(NumberDataTypeSynonyms, NumberDataTypeSubTypes...)
+)
 
 func parseNumberDataTypeRaw(raw sanitizedDataTypeRaw) (*NumberDataType, error) {
 	switch {

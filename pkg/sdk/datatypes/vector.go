@@ -26,8 +26,10 @@ func (t *VectorDataType) ToLegacyDataTypeSql() string {
 	return t.ToSql()
 }
 
-var VectorDataTypeSynonyms = []string{"VECTOR"}
-var VectorAllowedInnerTypes = []string{"INT", "FLOAT"}
+var (
+	VectorDataTypeSynonyms  = []string{"VECTOR"}
+	VectorAllowedInnerTypes = []string{"INT", "FLOAT"}
+)
 
 // parseVectorDataTypeRaw extracts type and dimension from the raw vector data type input.
 // Both attributes are required so no defaults are returned in case any of them is missing.

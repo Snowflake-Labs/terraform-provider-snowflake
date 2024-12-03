@@ -487,8 +487,8 @@ func Test_ParseDataType_Time(t *testing.T) {
 		defaults("   TIME   "),
 		defaults("TIME"),
 		defaults("time"),
-		test{input: "TIME(5)", expectedPrecision: 5, expectedUnderlyingType: "TIME"},
-		test{input: "time(5)", expectedPrecision: 5, expectedUnderlyingType: "TIME"},
+		{input: "TIME(5)", expectedPrecision: 5, expectedUnderlyingType: "TIME"},
+		{input: "time(5)", expectedPrecision: 5, expectedUnderlyingType: "TIME"},
 	}
 
 	negativeTestCases := []test{

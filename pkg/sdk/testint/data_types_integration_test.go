@@ -42,7 +42,7 @@ func TestInt_DataTypes(t *testing.T) {
 		"VARCHAR(x)",
 		"VARCHAR(36, 5)",
 	}
-	vectorInnerTypesSynonyms := append(datatypes.AllNumberDataTypes, datatypes.FloatDataTypeSynonyms...)
+	vectorInnerTypesSynonyms := slices.Concat(datatypes.AllNumberDataTypes, datatypes.FloatDataTypeSynonyms)
 	vectorInnerTypeSynonymsThatWork := []string{
 		"INTEGER",
 		"INT",

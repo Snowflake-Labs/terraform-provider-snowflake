@@ -30,9 +30,11 @@ func (t *TextDataType) ToLegacyDataTypeSql() string {
 	return VarcharLegacyDataType
 }
 
-var TextDataTypeSynonyms = []string{VarcharLegacyDataType, "STRING", "TEXT", "NVARCHAR2", "NVARCHAR", "CHAR VARYING", "NCHAR VARYING"}
-var TextDataTypeSubtypes = []string{"CHARACTER", "CHAR", "NCHAR"}
-var AllTextDataTypes = append(TextDataTypeSynonyms, TextDataTypeSubtypes...)
+var (
+	TextDataTypeSynonyms = []string{VarcharLegacyDataType, "STRING", "TEXT", "NVARCHAR2", "NVARCHAR", "CHAR VARYING", "NCHAR VARYING"}
+	TextDataTypeSubtypes = []string{"CHARACTER", "CHAR", "NCHAR"}
+	AllTextDataTypes     = append(TextDataTypeSynonyms, TextDataTypeSubtypes...)
+)
 
 // parseTextDataTypeRaw extracts length from the raw text data type input.
 // It returns default if it can't parse arguments, data type is different, or no length argument was provided.
