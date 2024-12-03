@@ -45,10 +45,10 @@ resource "snowflake_streamlit" "streamlit" {
 
 ### Required
 
-- `database` (String) The database in which to create the streamlit
+- `database` (String) The database in which to create the streamlit Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `main_file` (String) Specifies the filename of the Streamlit Python application. This filename is relative to the value of `directory_location`
 - `name` (String) String that specifies the identifier (i.e. name) for the streamlit; must be unique in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `schema` (String) The schema in which to create the streamlit.
+- `schema` (String) The schema in which to create the streamlit. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `stage` (String) The stage in which streamlit files are located.
 
 ### Optional

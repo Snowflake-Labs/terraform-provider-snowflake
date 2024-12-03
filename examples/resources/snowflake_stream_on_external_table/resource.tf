@@ -9,11 +9,13 @@ resource "snowflake_external_table" "external_table" {
   column {
     name = "id"
     type = "int"
+    as   = "value:id::int"
   }
 
   column {
     name = "data"
     type = "text"
+    as   = "value:data::text"
   }
 }
 

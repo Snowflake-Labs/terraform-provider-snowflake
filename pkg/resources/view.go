@@ -577,7 +577,6 @@ func extractPolicyWithColumnsList(v any, columnsKey string) (sdk.SchemaObjectIde
 		return sdk.SchemaObjectIdentifier{}, nil, err
 	}
 	if policyConfig[columnsKey] == nil {
-		// TODO: fix
 		return id, nil, fmt.Errorf("unable to extract policy with column list, unable to find columnsKey: %s", columnsKey)
 	}
 	columnsRaw := expandStringList(policyConfig[columnsKey].([]any))
@@ -786,9 +785,7 @@ func handleColumns(d ResourceValueSetter, columns []sdk.ViewDetails, policyRefs 
 		projectionPolicy, err := collections.FindFirst(policyRefs, func(r sdk.PolicyReference) bool {
 			return r.PolicyKind == sdk.PolicyKindProjectionPolicy && r.RefColumnName != nil && *r.RefColumnName == column.Name
 		})
-		if err != nil {
-			columnsRaw[i]["projection_policy"] = nil
-		} else {
+		if err == nil {
 			if projectionPolicy.PolicyDb != nil && projectionPolicy.PolicySchema != nil {
 				columnsRaw[i]["projection_policy"] = []map[string]any{
 					{
@@ -802,9 +799,6 @@ func handleColumns(d ResourceValueSetter, columns []sdk.ViewDetails, policyRefs 
 		maskingPolicy, err := collections.FindFirst(policyRefs, func(r sdk.PolicyReference) bool {
 			return r.PolicyKind == sdk.PolicyKindMaskingPolicy && r.RefColumnName != nil && *r.RefColumnName == column.Name
 		})
-		// if err != nil {
-		// 	columnsRaw[i]["masking_policy"] = nil
-		// } else {
 		if err == nil {
 			if maskingPolicy.PolicyDb != nil && maskingPolicy.PolicySchema != nil {
 				var usingArgs []string

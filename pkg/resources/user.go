@@ -33,7 +33,7 @@ var userSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Sensitive:   true,
-		Description: "Password for the user. **WARNING:** this will put the password in the terraform state file. Use carefully.",
+		Description: externalChangesNotDetectedFieldDescription("Password for the user. **WARNING:** this will put the password in the terraform state file. Use carefully."),
 	},
 	"login_name": {
 		Type:             schema.TypeString,

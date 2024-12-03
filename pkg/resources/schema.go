@@ -31,7 +31,7 @@ var schemaSchema = map[string]*schema.Schema{
 	"database": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The database in which to create the schema.",
+		Description:      blocklistedCharactersFieldDescription("The database in which to create the schema."),
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},

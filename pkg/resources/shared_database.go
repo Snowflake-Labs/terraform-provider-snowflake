@@ -37,7 +37,7 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the database.",
 	},
-	// TODO(SNOW-1325381): Add it as an item to discuss and either remove or uncomment (and implement) it
+	// TODO(SNOW-1843347): Add it as an item to discuss and either remove or uncomment (and implement) it
 	// "is_transient": {
 	//	Type:        schema.TypeBool,
 	//	Optional:    true,
@@ -80,7 +80,7 @@ func CreateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	opts := &sdk.CreateSharedDatabaseOptions{
-		// TODO(SNOW-1325381)
+		// TODO(SNOW-1843347)
 		// Transient:                  GetPropertyAsPointer[bool](d, "is_transient"),
 		Comment: GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
 	}
@@ -179,7 +179,7 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 	}
 
-	// TODO(SNOW-1325381)
+	// TODO(SNOW-1843347)
 	// if err := d.Set("is_transient", database.Transient); err != nil {
 	//	return diag.FromErr(err)
 	// }

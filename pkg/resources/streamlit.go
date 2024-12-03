@@ -30,14 +30,14 @@ var streamlitSchema = map[string]*schema.Schema{
 	"database": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The database in which to create the streamlit",
+		Description:      blocklistedCharactersFieldDescription("The database in which to create the streamlit"),
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"schema": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The schema in which to create the streamlit.",
+		Description:      blocklistedCharactersFieldDescription("The schema in which to create the streamlit."),
 		ForceNew:         true,
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},

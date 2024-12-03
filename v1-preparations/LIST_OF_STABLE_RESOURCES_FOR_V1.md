@@ -37,7 +37,7 @@ We estimate the given list to be accurate, but it may be subject to small change
 * Network Policy
     * [snowflake_network_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/network_policy)
     * [snowflake_network_policies](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/network_policies) (datasource)
-* Procedure  (in progress)
+* Procedure (in progress)
     * snowflake_procedure_java
     * snowflake_procedure_javascript
     * snowflake_procedure_python
@@ -85,14 +85,11 @@ We estimate the given list to be accurate, but it may be subject to small change
 * Streamlit
     * [snowflake_streamlit](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/streamlit)
     * [snowflake_streamlits](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/streamlits) (datasource)
-* Table (in progress)
-    * [snowflake_table](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/table)
-    * [snowflake_tables](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/tables) (datasource)
 * Tag (in progress)
     * [snowflake_tag](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/tag)
     * [snowflake_tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/tag_association)
     * [snowflake_tags](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/tags) (datasource)
-* Task (in progress)
+* Task
     * [snowflake_task](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/task)
     * [snowflake_tasks](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/tasks) (datasource)
 * User
