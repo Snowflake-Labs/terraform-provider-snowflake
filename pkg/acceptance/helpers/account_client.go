@@ -183,3 +183,10 @@ func (c *AccountClient) CreateAndLogIn(t *testing.T) (*sdk.Account, *sdk.Client)
 
 	return account, client
 }
+
+func (c *AccountClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Account, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
+}

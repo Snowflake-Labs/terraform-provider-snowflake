@@ -197,11 +197,12 @@ var allObjectsParameters = []SnowflakeObjectParameters{
 		AdditionalImports: []string{"strings"},
 	},
 	{
-		Name:       "Account",
-		IdType:     "sdk.AccountObjectIdentifier",
-		Level:      sdk.ParameterTypeAccount,
+		Name:   "Account",
+		IdType: "sdk.AccountObjectIdentifier",
+		Level:  sdk.ParameterTypeAccount,
 		Parameters: []SnowflakeParameter{
 			// TODO: Parameters
+			{ParameterName: string(sdk.UserParameterEnableUnredactedQuerySyntaxError), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 		},
 	},
 }
