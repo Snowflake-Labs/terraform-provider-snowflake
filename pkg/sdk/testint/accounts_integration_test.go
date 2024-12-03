@@ -92,13 +92,30 @@ func TestInt_Account(t *testing.T) {
 		assert.Nil(t, account.OrganizationUrlExpirationOn)
 	}
 
+	assertCreateResponse := func(t *testing.T, response *sdk.AccountCreateResponse, account sdk.Account) {
+		t.Helper()
+		assert.NotNil(t, response)
+		if response != nil {
+			assert.Equal(t, account.AccountLocator, response.AccountLocator)
+			// TODO: Rename to Url
+			assert.Equal(t, *account.AccountLocatorURL, response.AccountLocatorUrl)
+			assert.Equal(t, account.AccountName, response.AccountName)
+			assert.Equal(t, *account.AccountURL, response.Url)
+			assert.Equal(t, account.OrganizationName, response.OrganizationName)
+			assert.Equal(t, *account.Edition, response.Edition)
+			assert.NotEmpty(t, response.RegionGroup)
+			assert.NotEmpty(t, response.Cloud)
+			assert.NotEmpty(t, response.Region)
+		}
+	}
+
 	t.Run("create: minimal", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		name := testClientHelper().Ids.Alpha()
 		password := random.Password()
 		email := random.Email()
 
-		err := client.Accounts.Create(ctx, id, &sdk.CreateAccountOptions{
+		createResponse, err := client.Accounts.Create(ctx, id, &sdk.CreateAccountOptions{
 			AdminName:     name,
 			AdminPassword: sdk.String(password),
 			Email:         email,
@@ -110,6 +127,7 @@ func TestInt_Account(t *testing.T) {
 		acc, err := client.Accounts.ShowByID(ctx, id)
 		require.NoError(t, err)
 		require.Equal(t, id, acc.ID())
+		assertCreateResponse(t, createResponse, *acc)
 	})
 
 	t.Run("create: user type service", func(t *testing.T) {
@@ -118,7 +136,7 @@ func TestInt_Account(t *testing.T) {
 		key, _ := random.GenerateRSAPublicKey(t)
 		email := random.Email()
 
-		err := client.Accounts.Create(ctx, id, &sdk.CreateAccountOptions{
+		createResponse, err := client.Accounts.Create(ctx, id, &sdk.CreateAccountOptions{
 			AdminName:         name,
 			AdminRSAPublicKey: sdk.String(key),
 			AdminUserType:     sdk.Pointer(sdk.UserTypeService),
@@ -131,6 +149,7 @@ func TestInt_Account(t *testing.T) {
 		acc, err := client.Accounts.ShowByID(ctx, id)
 		require.NoError(t, err)
 		require.Equal(t, id, acc.ID())
+		assertCreateResponse(t, createResponse, *acc)
 	})
 
 	t.Run("create: user type legacy service", func(t *testing.T) {
@@ -139,7 +158,7 @@ func TestInt_Account(t *testing.T) {
 		password := random.Password()
 		email := random.Email()
 
-		err := client.Accounts.Create(ctx, id, &sdk.CreateAccountOptions{
+		createResponse, err := client.Accounts.Create(ctx, id, &sdk.CreateAccountOptions{
 			AdminName:     name,
 			AdminPassword: sdk.String(password),
 			AdminUserType: sdk.Pointer(sdk.UserTypeLegacyService),
@@ -152,6 +171,7 @@ func TestInt_Account(t *testing.T) {
 		acc, err := client.Accounts.ShowByID(ctx, id)
 		require.NoError(t, err)
 		require.Equal(t, id, acc.ID())
+		assertCreateResponse(t, createResponse, *acc)
 	})
 
 	t.Run("create: complete", func(t *testing.T) {
@@ -167,7 +187,7 @@ func TestInt_Account(t *testing.T) {
 		require.NoError(t, err)
 		comment := random.Comment()
 
-		err = client.Accounts.Create(ctx, id, &sdk.CreateAccountOptions{
+		createResponse, err := client.Accounts.Create(ctx, id, &sdk.CreateAccountOptions{
 			AdminName:          name,
 			AdminPassword:      sdk.String(password),
 			FirstName:          sdk.String("firstName"),
@@ -187,6 +207,7 @@ func TestInt_Account(t *testing.T) {
 		acc, err := client.Accounts.ShowByID(ctx, id)
 		require.NoError(t, err)
 		require.Equal(t, id, acc.ID())
+		assertCreateResponse(t, createResponse, *acc)
 	})
 
 	t.Run("alter: set / unset is org admin", func(t *testing.T) {

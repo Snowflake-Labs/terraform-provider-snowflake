@@ -69,7 +69,7 @@ func (c *AccountClient) Create(t *testing.T) (*sdk.Account, func()) {
 
 func (c *AccountClient) CreateWithRequest(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateAccountOptions) (*sdk.Account, func()) {
 	t.Helper()
-	err := c.client().Create(context.Background(), id, opts)
+	_, err := c.client().Create(context.Background(), id, opts)
 	require.NoError(t, err)
 
 	account, err := c.client().ShowByID(context.Background(), id)

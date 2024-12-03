@@ -1,7 +1,9 @@
 package sdk
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -403,4 +405,117 @@ func TestAccountShow(t *testing.T) {
 		}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW ACCOUNTS LIKE 'myaccount'`)
 	})
+}
+
+func TestToAccountCreateResponse(t *testing.T) {
+	testCases := []struct {
+		Name           string
+		RawInput       string
+		Input          AccountCreateResponse
+		ExpectedOutput *AccountCreateResponse
+		Error          string
+	}{
+		{
+			Name:     "validation: empty input",
+			RawInput: "",
+			Error:    "unexpected end of JSON input",
+		},
+		{
+			Name: "validation: only a few fields filled",
+			Input: AccountCreateResponse{
+				AccountName: "acc_name",
+				Url:         `https://org_name-acc_name.snowflakecomputing.com`,
+				Edition:     EditionStandard,
+				RegionGroup: "region_group",
+				Cloud:       "cloud",
+				Region:      "region",
+			},
+			ExpectedOutput: &AccountCreateResponse{
+				AccountName:      "acc_name",
+				Url:              `https://org_name-acc_name.snowflakecomputing.com`,
+				OrganizationName: "ORG_NAME",
+				Edition:          EditionStandard,
+				RegionGroup:      "region_group",
+				Cloud:            "cloud",
+				Region:           "region",
+			},
+		},
+		{
+			Name: "validation: invalid url",
+			Input: AccountCreateResponse{
+				Url: `https://org_name_acc_name.snowflake.computing.com`,
+			},
+			ExpectedOutput: &AccountCreateResponse{
+				Url: `https://org_name_acc_name.snowflake.computing.com`,
+				// OrganizationName is not filled
+			},
+		},
+		{
+			Name: "validation: valid url",
+			Input: AccountCreateResponse{
+				Url: `https://org_name-acc_name.snowflakecomputing.com`,
+			},
+			ExpectedOutput: &AccountCreateResponse{
+				Url:              `https://org_name-acc_name.snowflakecomputing.com`,
+				OrganizationName: "ORG_NAME",
+			},
+		},
+		{
+			Name: "validation: valid http url",
+			Input: AccountCreateResponse{
+				Url: `http://org_name-acc_name.snowflakecomputing.com`,
+			},
+			ExpectedOutput: &AccountCreateResponse{
+				Url:              `http://org_name-acc_name.snowflakecomputing.com`,
+				OrganizationName: "ORG_NAME",
+			},
+		},
+		{
+			Name: "complete",
+			Input: AccountCreateResponse{
+				AccountLocator:    "locator",
+				AccountLocatorUrl: "locator_url",
+				AccountName:       "acc_name",
+				Url:               `https://org_name-acc_name.snowflakecomputing.com`,
+				Edition:           EditionBusinessCritical,
+				RegionGroup:       "region_group",
+				Cloud:             "cloud",
+				Region:            "region",
+			},
+			ExpectedOutput: &AccountCreateResponse{
+				AccountLocator:    "locator",
+				AccountLocatorUrl: "locator_url",
+				AccountName:       "acc_name",
+				Url:               `https://org_name-acc_name.snowflakecomputing.com`,
+				OrganizationName:  "ORG_NAME",
+				Edition:           EditionBusinessCritical,
+				RegionGroup:       "region_group",
+				Cloud:             "cloud",
+				Region:            "region",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			input := tc.RawInput
+			if tc.Input != (AccountCreateResponse{}) {
+				bytes, err := json.Marshal(tc.Input)
+				if err != nil {
+					assert.Fail(t, err.Error())
+				}
+				input = string(bytes)
+			}
+
+			createResponse, err := ToAccountCreateResponse(input)
+
+			if tc.Error != "" {
+				assert.EqualError(t, err, tc.Error)
+				assert.Nil(t, createResponse)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.ExpectedOutput, createResponse)
+			}
+		})
+	}
 }
