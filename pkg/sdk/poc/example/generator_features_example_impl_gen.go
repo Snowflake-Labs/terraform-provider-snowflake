@@ -4,19 +4,19 @@ import (
 	"context"
 )
 
-var _ ToOptsOptionalExamples = (*toOptsOptionalExamples)(nil)
+var _ FeaturesExample = (*featuresExample)(nil)
 
-type toOptsOptionalExamples struct {
+type featuresExample struct {
 	client *Client
 }
 
-func (v *toOptsOptionalExamples) Alter(ctx context.Context, request *AlterToOptsOptionalExampleRequest) error {
+func (v *featuresExample) Alter(ctx context.Context, request *AlterFeaturesExamplesRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
 }
 
-func (r *AlterToOptsOptionalExampleRequest) toOpts() *AlterToOptsOptionalExampleOptions {
-	opts := &AlterToOptsOptionalExampleOptions{
+func (r *AlterFeaturesExamplesRequest) toOpts() *AlterFeaturesExamplesOptions {
+	opts := &AlterFeaturesExamplesOptions{
 		IfExists: r.IfExists,
 		name:     r.name,
 	}

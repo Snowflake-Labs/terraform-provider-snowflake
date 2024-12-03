@@ -2,9 +2,9 @@ package example
 
 import "errors"
 
-var _ validatable = new(AlterToOptsOptionalExampleOptions)
+var _ validatable = new(AlterFeaturesExamplesOptions)
 
-func (opts *AlterToOptsOptionalExampleOptions) validate() error {
+func (opts *AlterFeaturesExamplesOptions) validate() error {
 	if opts == nil {
 		return ErrNilOptions
 	}

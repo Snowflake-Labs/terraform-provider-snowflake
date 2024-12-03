@@ -2,13 +2,15 @@ package example
 
 //go:generate go run ./dto-builder-generator/main.go
 
-var _ optionsProvider[AlterToOptsOptionalExampleOptions] = new(AlterToOptsOptionalExampleRequest)
+var (
+	_ optionsProvider[AlterFeaturesExamplesOptions] = new(AlterFeaturesExamplesRequest)
+)
 
-type AlterToOptsOptionalExampleRequest struct {
+type AlterFeaturesExamplesRequest struct {
 	IfExists      *bool
 	name          DatabaseObjectIdentifier // required
 	OptionalField *OptionalFieldRequest
-	RequiredField RequiredFieldRequest
+	RequiredField RequiredFieldRequest // required
 }
 
 type OptionalFieldRequest struct {
@@ -16,5 +18,5 @@ type OptionalFieldRequest struct {
 }
 
 type RequiredFieldRequest struct {
-	SomeRequiredList []DatabaseObjectIdentifier
+	SomeRequiredList []DatabaseObjectIdentifier // required
 }

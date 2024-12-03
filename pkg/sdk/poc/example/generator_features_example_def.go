@@ -6,9 +6,9 @@ import (
 
 //go:generate go run ../main.go
 
-var ToOptsOptionalExample = g.NewInterface(
-	"ToOptsOptionalExamples",
-	"ToOptsOptionalExample",
+var GeneratorFeaturesExample = g.NewInterface(
+	"FeaturesExample",
+	"FeaturesExamples",
 	g.KindOfT[DatabaseObjectIdentifier](),
 ).AlterOperation("https://example.com",
 	g.NewQueryStruct("Alter").
@@ -24,7 +24,7 @@ var ToOptsOptionalExample = g.NewInterface(
 		QueryStructField(
 			"RequiredField",
 			g.NewQueryStruct("RequiredField").
-				List("SomeRequiredList", "DatabaseObjectIdentifier", g.ListOptions()),
-			g.KeywordOptions(),
+				List("SomeRequiredList", "DatabaseObjectIdentifier", g.ListOptions().Required()),
+			g.KeywordOptions().Required(),
 		),
 )
