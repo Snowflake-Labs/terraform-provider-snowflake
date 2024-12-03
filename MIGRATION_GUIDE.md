@@ -33,7 +33,7 @@ resource "snowflake_tag_association" "silver_databases" {
 }
 ```
 
-Note that if you want to promote silver instances to gold, you can not simply change `tag_value` in `silver_warehouses`. Instead, you should merge `object_identifiers` from `silver_warehouses` and `gold_warehouses`, and use them only in `gold_warehouses`, like this (note that `silver_warehouses` resource was deleted):
+Note that if you want to promote silver instances to gold, you can not simply change `tag_value` in `silver_warehouses`. Instead, you should first remove `object_identifiers` from `silver_warehouses`, run `terraform apply`, and then add the relevant `object_identifiers` in `gold_warehouses`, like this (note that `silver_warehouses` resource was deleted):
 ```
 resource "snowflake_tag_association" "gold_warehouses" {
   object_identifiers = [snowflake_warehouse.w1.fully_qualified_name, snowflake_warehouse.w2.fully_qualified_name, snowflake_warehouse.w3.fully_qualified_name]
@@ -42,6 +42,9 @@ resource "snowflake_tag_association" "gold_warehouses" {
   tag_value   = "gold"
 }
 ```
+and run `terraform apply` again.
+
+Note that the order of operations is not deterministic in this case, and if you do these operations in one step, it is possible that the tag value will be changed first, and unset later because of removing the resource with old value.
 
 The state is migrated automatically. There is no need to adjust configuration files, unless you use resource id `snowflake_tag_association.example.id` as a reference in other resources.
 
