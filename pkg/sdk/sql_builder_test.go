@@ -1,9 +1,11 @@
 package sdk
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -471,4 +473,47 @@ func TestBuilder_sql(t *testing.T) {
 		s := builder.sql(clauses...)
 		assert.Equal(t, "EXAMPLE_STATIC EXAMPLE_KEYWORD = example", s)
 	})
+}
+
+func TestBuilder_DataType(t *testing.T) {
+
+	type dataTypeTestHelper struct {
+		DataType datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
+	}
+
+	dataTypes := []struct {
+		dataType    string
+		expectedSql string
+	}{
+		{dataType: "VARCHAR(20)", expectedSql: "VARCHAR(20)"},
+		{dataType: "VARCHAR", expectedSql: "VARCHAR(16777216)"},
+		{dataType: "CHAR", expectedSql: "CHAR(1)"},
+		{dataType: "NUMBER", expectedSql: "NUMBER(38, 0)"},
+	}
+
+	t.Run("test data type empty", func(t *testing.T) {
+		opts := dataTypeTestHelper{}
+
+		s, err := structToSQL(opts)
+
+		require.NoError(t, err)
+		assert.Equal(t, "", s)
+	})
+
+	for _, tc := range dataTypes {
+		tc := tc
+		t.Run(fmt.Sprintf(`cheking building SQL for data type "%s, expecting "%s"`, tc.dataType, tc.expectedSql), func(t *testing.T) {
+			dataType, err := datatypes.ParseDataType(tc.dataType)
+			require.NoError(t, err)
+
+			opts := dataTypeTestHelper{
+				DataType: dataType,
+			}
+
+			s, err := structToSQL(opts)
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedSql, s)
+		})
+	}
 }
