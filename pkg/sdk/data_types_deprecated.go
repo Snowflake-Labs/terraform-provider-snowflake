@@ -24,7 +24,6 @@ const (
 	DataTypeBoolean      DataType = "BOOLEAN"
 	DataTypeDate         DataType = "DATE"
 	DataTypeTime         DataType = "TIME"
-	DataTypeTimestamp    DataType = "TIMESTAMP"
 	DataTypeTimestampLTZ DataType = "TIMESTAMP_LTZ"
 	DataTypeTimestampNTZ DataType = "TIMESTAMP_NTZ"
 	DataTypeTimestampTZ  DataType = "TIMESTAMP_TZ"

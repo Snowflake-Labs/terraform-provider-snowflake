@@ -519,7 +519,6 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 			*sdk.NewFunctionArgumentRequest("M", sdk.DataTypeDate),
 			*sdk.NewFunctionArgumentRequest("N", "DATETIME"),
 			*sdk.NewFunctionArgumentRequest("O", sdk.DataTypeTime),
-			*sdk.NewFunctionArgumentRequest("P", sdk.DataTypeTimestamp),
 			*sdk.NewFunctionArgumentRequest("R", sdk.DataTypeTimestampLTZ),
 			*sdk.NewFunctionArgumentRequest("S", sdk.DataTypeTimestampNTZ),
 			*sdk.NewFunctionArgumentRequest("T", sdk.DataTypeTimestampTZ),
@@ -537,7 +536,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 			"add",
 		).
 			WithArguments(args).
-			WithFunctionDefinition("def add(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, R, S, T, U, V, W, X, Y, Z): A + A"),
+			WithFunctionDefinition("def add(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, R, S, T, U, V, W, X, Y, Z): A + A"),
 		)
 		require.NoError(t, err)
 

@@ -222,7 +222,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 
 	t.Run("describe row access policy: with timestamp data type normalization", func(t *testing.T) {
 		argName := random.AlphaN(5)
-		argType := sdk.DataTypeTimestamp
+		argType := sdk.DataTypeTimestampLTZ
 		args := sdk.NewCreateRowAccessPolicyArgsRequest(argName, argType)
 		body := "true"
 
@@ -235,7 +235,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 
 		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.TableColumnSignature{{
 			Name: argName,
-			Type: sdk.DataTypeTimestampNTZ,
+			Type: sdk.DataTypeTimestampLTZ,
 		}}, body)
 	})
 
@@ -318,7 +318,6 @@ func TestInt_RowAccessPoliciesDescribe(t *testing.T) {
 			*sdk.NewCreateRowAccessPolicyArgsRequest("M", sdk.DataTypeDate),
 			*sdk.NewCreateRowAccessPolicyArgsRequest("N", "DATETIME"),
 			*sdk.NewCreateRowAccessPolicyArgsRequest("O", sdk.DataTypeTime),
-			*sdk.NewCreateRowAccessPolicyArgsRequest("P", sdk.DataTypeTimestamp),
 			*sdk.NewCreateRowAccessPolicyArgsRequest("R", sdk.DataTypeTimestampLTZ),
 			*sdk.NewCreateRowAccessPolicyArgsRequest("S", sdk.DataTypeTimestampNTZ),
 			*sdk.NewCreateRowAccessPolicyArgsRequest("T", sdk.DataTypeTimestampTZ),

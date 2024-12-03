@@ -27,7 +27,7 @@ func TestInt_ExternalTables(t *testing.T) {
 		return []*sdk.ExternalTableColumnRequest{
 			sdk.NewExternalTableColumnRequest("filename", sdk.DataTypeString, "metadata$filename::string"),
 			sdk.NewExternalTableColumnRequest("city", sdk.DataTypeString, "value:city:findname::string"),
-			sdk.NewExternalTableColumnRequest("time", sdk.DataTypeTimestamp, "to_timestamp(value:time::int)"),
+			sdk.NewExternalTableColumnRequest("time", sdk.DataTypeTimestampLTZ, "to_timestamp_ltz(value:time::int)"),
 			sdk.NewExternalTableColumnRequest("weather", sdk.DataTypeVariant, "value:weather::variant"),
 		}
 	}
