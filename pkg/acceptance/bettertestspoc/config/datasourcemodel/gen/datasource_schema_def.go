@@ -30,4 +30,8 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		name:   "Databases",
 		schema: datasources.Databases().Schema,
 	},
+	{
+		name:   "Accounts",
+		schema: datasources.Accounts().Schema,
+	},
 }

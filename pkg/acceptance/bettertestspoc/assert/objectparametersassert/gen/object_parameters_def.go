@@ -196,4 +196,12 @@ var allObjectsParameters = []SnowflakeObjectParameters{
 		// for the quickfix above
 		AdditionalImports: []string{"strings"},
 	},
+	{
+		Name:       "Account",
+		IdType:     "sdk.AccountObjectIdentifier",
+		Level:      sdk.ParameterTypeAccount,
+		Parameters: []SnowflakeParameter{
+			// TODO: Parameters
+		},
+	},
 }
