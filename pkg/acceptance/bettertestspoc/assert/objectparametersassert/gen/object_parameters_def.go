@@ -201,8 +201,8 @@ var allObjectsParameters = []SnowflakeObjectParameters{
 		IdType: "sdk.AccountObjectIdentifier",
 		Level:  sdk.ParameterTypeAccount,
 		Parameters: []SnowflakeParameter{
-			// TODO: Parameters
 			{ParameterName: string(sdk.UserParameterEnableUnredactedQuerySyntaxError), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			// TODO(SNOW-1348092 - next prs): Add parameters
 		},
 	},
 }
