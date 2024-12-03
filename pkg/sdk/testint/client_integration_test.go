@@ -2,13 +2,77 @@ package testint
 
 import (
 	"context"
+	"database/sql"
+	"os"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/snowflakedb/gosnowflake"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// TODO [SNOW-1827310]: use generated config for these tests
+func TestInt_Client_NewClient(t *testing.T) {
+	t.Run("with default config", func(t *testing.T) {
+		config := sdk.DefaultConfig()
+		_, err := sdk.NewClient(config)
+		require.NoError(t, err)
+	})
+
+	t.Run("with missing config", func(t *testing.T) {
+		dir, err := os.UserHomeDir()
+		require.NoError(t, err)
+		t.Setenv(snowflakeenvs.ConfigPath, dir)
+
+		config := sdk.DefaultConfig()
+		_, err = sdk.NewClient(config)
+		require.ErrorContains(t, err, "260000: account is empty")
+	})
+
+	t.Run("with incorrect config", func(t *testing.T) {
+		tmpServiceUser := testClientHelper().SetUpTemporaryServiceUser(t)
+		tmpServiceUserConfig := testClientHelper().TempIncorrectTomlConfigForServiceUser(t, tmpServiceUser)
+
+		t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+
+		config, err := sdk.ProfileConfig(tmpServiceUserConfig.Profile)
+		require.NoError(t, err)
+		require.NotNil(t, config)
+
+		_, err = sdk.NewClient(config)
+		require.ErrorContains(t, err, "JWT token is invalid")
+	})
+
+	t.Run("with missing config - should not care about correct env variables", func(t *testing.T) {
+		config, err := sdk.ProfileConfig(testprofiles.Default)
+		require.NoError(t, err)
+		require.NotNil(t, config)
+
+		account := config.Account
+		t.Setenv(snowflakeenvs.Account, account)
+
+		dir, err := os.UserHomeDir()
+		require.NoError(t, err)
+		t.Setenv(snowflakeenvs.ConfigPath, dir)
+
+		config = sdk.DefaultConfig()
+		_, err = sdk.NewClient(config)
+		require.ErrorContains(t, err, "260000: account is empty")
+	})
+
+	t.Run("registers snowflake-instrumented driver", func(t *testing.T) {
+		config := sdk.DefaultConfig()
+		_, err := sdk.NewClient(config)
+		require.NoError(t, err)
+
+		assert.ElementsMatch(t, sql.Drivers(), []string{"snowflake-instrumented", "snowflake"})
+	})
+}
 
 func TestInt_Client_AdditionalMetadata(t *testing.T) {
 	client := testClient(t)
