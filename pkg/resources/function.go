@@ -311,7 +311,7 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	functionDefinition := d.Get("statement").(string)
 	handler := d.Get("handler").(string)
 	// create request with required
-	request := sdk.NewCreateForScalaFunctionRequest(id, sdk.DataType(returnDataType.ToLegacyDataTypeSql()), handler)
+	request := sdk.NewCreateForScalaFunctionRequest(id, sdk.LegacyDataTypeFrom(returnDataType), handler)
 	request.WithFunctionDefinition(functionDefinition)
 
 	// Set optionals
@@ -739,7 +739,7 @@ func parseFunctionArguments(d *schema.ResourceData) ([]sdk.FunctionArgumentReque
 			if diags != nil {
 				return nil, diags
 			}
-			args = append(args, sdk.FunctionArgumentRequest{ArgName: argName, ArgDataType: sdk.DataType(argDataType.ToLegacyDataTypeSql())})
+			args = append(args, sdk.FunctionArgumentRequest{ArgName: argName, ArgDataType: sdk.LegacyDataTypeFrom(argDataType)})
 		}
 	}
 	return args, nil
@@ -765,7 +765,7 @@ func convertFunctionColumns(s string) ([]sdk.FunctionColumn, diag.Diagnostics) {
 			}
 			columns = append(columns, sdk.FunctionColumn{
 				ColumnName:     match[1],
-				ColumnDataType: sdk.DataType(dataType.ToLegacyDataTypeSql()),
+				ColumnDataType: sdk.LegacyDataTypeFrom(dataType),
 			})
 		}
 	}
@@ -789,7 +789,7 @@ func parseFunctionReturnsRequest(s string) (*sdk.FunctionReturnsRequest, diag.Di
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataType(returnDataType.ToLegacyDataTypeSql())))
+		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }

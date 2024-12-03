@@ -347,7 +347,7 @@ func TestInt_RowAccessPoliciesDescribe(t *testing.T) {
 			require.NoError(t, err)
 			wantArgs[i] = sdk.TableColumnSignature{
 				Name: arg.Name,
-				Type: sdk.DataType(dataType.ToLegacyDataTypeSql()),
+				Type: sdk.LegacyDataTypeFrom(dataType),
 			}
 		}
 		assert.Equal(t, wantArgs, policyDetails.Signature)

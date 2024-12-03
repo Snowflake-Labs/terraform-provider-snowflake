@@ -177,7 +177,7 @@ func CreateExternalTable(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 		columnRequests[i] = sdk.NewExternalTableColumnRequest(
 			columnDef["name"],
-			sdk.DataType(dt.ToLegacyDataTypeSql()),
+			sdk.LegacyDataTypeFrom(dt),
 			columnDef["as"],
 		)
 	}

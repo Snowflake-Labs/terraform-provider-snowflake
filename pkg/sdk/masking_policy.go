@@ -368,7 +368,7 @@ func (row maskingPolicyDetailsRow) toMaskingPolicyDetails() *MaskingPolicyDetail
 	v := &MaskingPolicyDetails{
 		Name:       row.Name,
 		Signature:  []TableColumnSignature{},
-		ReturnType: DataType(dataType.ToLegacyDataTypeSql()),
+		ReturnType: LegacyDataTypeFrom(dataType),
 		Body:       row.Body,
 	}
 

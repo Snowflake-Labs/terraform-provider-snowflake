@@ -236,7 +236,7 @@ func (row dynamicTableDetailsRow) convert() *DynamicTableDetails {
 	typ, _ := datatypes.ParseDataType(row.Type)
 	dtd := &DynamicTableDetails{
 		Name:       row.Name,
-		Type:       DataType(typ.ToLegacyDataTypeSql()),
+		Type:       LegacyDataTypeFrom(typ),
 		Kind:       row.Kind,
 		IsNull:     row.IsNull == "Y",
 		PrimaryKey: row.PrimaryKey,

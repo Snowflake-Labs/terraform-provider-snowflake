@@ -382,7 +382,7 @@ func TestTableCreate(t *testing.T) {
 		columnName := "FIRST_COLUMN"
 		columnTypeRaw, err := datatypes.ParseDataType("VARCHAR")
 		require.NoError(t, err)
-		columnType := DataType(columnTypeRaw.ToLegacyDataTypeSql())
+		columnType := LegacyDataTypeFrom(columnTypeRaw)
 		maskingPolicy := ColumnMaskingPolicy{
 			Name:  randomSchemaObjectIdentifier(),
 			Using: []string{"FOO", "BAR"},
@@ -556,7 +556,7 @@ func TestTableCreateAsSelect(t *testing.T) {
 		columnName := "FIRST_COLUMN"
 		columnTypeRaw, err := datatypes.ParseDataType("VARCHAR")
 		require.NoError(t, err)
-		columnType := DataType(columnTypeRaw.ToLegacyDataTypeSql())
+		columnType := LegacyDataTypeFrom(columnTypeRaw)
 		maskingPolicy := TableAsSelectColumnMaskingPolicy{
 			Name: randomSchemaObjectIdentifier(),
 		}

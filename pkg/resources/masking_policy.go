@@ -203,7 +203,7 @@ func CreateMaskingPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 		args = append(args, sdk.TableColumnSignature{
 			Name: v["name"].(string),
-			Type: sdk.DataType(dataType.ToLegacyDataTypeSql()),
+			Type: sdk.LegacyDataTypeFrom(dataType),
 		})
 	}
 
@@ -225,7 +225,7 @@ func CreateMaskingPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		opts.ExemptOtherPolicies = sdk.Pointer(parsed)
 	}
 
-	err = client.MaskingPolicies.Create(ctx, id, args, sdk.DataType(returns.ToLegacyDataTypeSql()), expression, opts)
+	err = client.MaskingPolicies.Create(ctx, id, args, sdk.LegacyDataTypeFrom(returns), expression, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}

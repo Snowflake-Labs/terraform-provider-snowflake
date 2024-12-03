@@ -545,7 +545,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		for i, arg := range args {
 			dataType, err := datatypes.ParseDataType(string(arg.ArgDataType))
 			require.NoError(t, err)
-			dataTypes[i] = sdk.DataType(dataType.ToLegacyDataTypeSql())
+			dataTypes[i] = sdk.LegacyDataTypeFrom(dataType)
 		}
 		idWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), dataTypes...)
 

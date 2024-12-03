@@ -57,7 +57,7 @@ func v085ExternalFunctionStateUpgrader(ctx context.Context, rawState map[string]
 			if err != nil {
 				return nil, err
 			}
-			argDataTypes = append(argDataTypes, sdk.DataType(argDataType.ToLegacyDataTypeSql()))
+			argDataTypes = append(argDataTypes, sdk.LegacyDataTypeFrom(argDataType))
 		}
 	}
 

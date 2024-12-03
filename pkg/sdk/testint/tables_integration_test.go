@@ -46,7 +46,7 @@ func TestInt_Table(t *testing.T) {
 			assert.Equal(t, strings.ToUpper(expectedColumn.Name), createdColumns[i].ColumnName)
 			createdColumnDataType, err := datatypes.ParseDataType(createdColumns[i].DataType)
 			assert.NoError(t, err)
-			assert.Equal(t, expectedColumn.Type, sdk.DataType(createdColumnDataType.ToLegacyDataTypeSql()))
+			assert.Equal(t, expectedColumn.Type, sdk.LegacyDataTypeFrom(createdColumnDataType))
 		}
 	}
 

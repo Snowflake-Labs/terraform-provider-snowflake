@@ -6,6 +6,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 // DataType is based on https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.
@@ -110,4 +111,8 @@ func ParseVarcharDataTypeRaw(rawDataType string) int {
 	}
 	logging.DebugLogger.Printf("[DEBUG] Returning default varchar length")
 	return DefaultVarcharLength
+}
+
+func LegacyDataTypeFrom(newDataType datatypes.DataType) DataType {
+	return DataType(newDataType.ToLegacyDataTypeSql())
 }

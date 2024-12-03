@@ -231,7 +231,7 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			args = append(args, sdk.ExternalFunctionArgumentRequest{ArgName: argName, ArgDataType: sdk.DataType(argDataType.ToLegacyDataTypeSql())})
+			args = append(args, sdk.ExternalFunctionArgumentRequest{ArgName: argName, ArgDataType: sdk.LegacyDataTypeFrom(argDataType)})
 		}
 	}
 	argTypes := make([]sdk.DataType, 0, len(args))
@@ -247,7 +247,7 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 	}
 	apiIntegration := sdk.NewAccountObjectIdentifier(d.Get("api_integration").(string))
 	urlOfProxyAndResource := d.Get("url_of_proxy_and_resource").(string)
-	req := sdk.NewCreateExternalFunctionRequest(id.SchemaObjectId(), sdk.DataType(resultDataType.ToLegacyDataTypeSql()), &apiIntegration, urlOfProxyAndResource)
+	req := sdk.NewCreateExternalFunctionRequest(id.SchemaObjectId(), sdk.LegacyDataTypeFrom(resultDataType), &apiIntegration, urlOfProxyAndResource)
 
 	// Set optionals
 	if len(args) > 0 {

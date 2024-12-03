@@ -322,7 +322,7 @@ func createJavaScriptProcedure(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 	procedureDefinition := d.Get("statement").(string)
-	req := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), sdk.DataType(returnDataType.ToLegacyDataTypeSql()), procedureDefinition)
+	req := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), sdk.LegacyDataTypeFrom(returnDataType), procedureDefinition)
 	if len(args) > 0 {
 		req.WithArguments(args)
 	}
@@ -735,7 +735,7 @@ func getProcedureArguments(d *schema.ResourceData) ([]sdk.ProcedureArgumentReque
 			if diags != nil {
 				return nil, diags
 			}
-			args = append(args, sdk.ProcedureArgumentRequest{ArgName: argName, ArgDataType: sdk.DataType(argDataType.ToLegacyDataTypeSql())})
+			args = append(args, sdk.ProcedureArgumentRequest{ArgName: argName, ArgDataType: sdk.LegacyDataTypeFrom(argDataType)})
 		}
 	}
 	return args, nil
@@ -761,7 +761,7 @@ func convertProcedureColumns(s string) ([]sdk.ProcedureColumn, diag.Diagnostics)
 			}
 			columns = append(columns, sdk.ProcedureColumn{
 				ColumnName:     match[1],
-				ColumnDataType: sdk.DataType(dataType.ToLegacyDataTypeSql()),
+				ColumnDataType: sdk.LegacyDataTypeFrom(dataType),
 			})
 		}
 	}
@@ -785,7 +785,7 @@ func parseProcedureReturnsRequest(s string) (*sdk.ProcedureReturnsRequest, diag.
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataType(returnDataType.ToLegacyDataTypeSql())))
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }
@@ -807,7 +807,7 @@ func parseProcedureSQLReturnsRequest(s string) (*sdk.ProcedureSQLReturnsRequest,
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(sdk.DataType(returnDataType.ToLegacyDataTypeSql())))
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }

@@ -53,7 +53,7 @@ func v085FunctionIdStateUpgrader(ctx context.Context, rawState map[string]interf
 		if err != nil {
 			return nil, err
 		}
-		argDataTypes[i] = sdk.DataType(argDataType.ToLegacyDataTypeSql())
+		argDataTypes[i] = sdk.LegacyDataTypeFrom(argDataType)
 	}
 
 	schemaObjectIdentifierWithArguments := sdk.NewSchemaObjectIdentifierWithArgumentsOld(parsedV085FunctionId.DatabaseName, parsedV085FunctionId.SchemaName, parsedV085FunctionId.FunctionName, argDataTypes)

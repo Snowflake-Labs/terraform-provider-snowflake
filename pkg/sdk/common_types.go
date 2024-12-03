@@ -99,7 +99,7 @@ func ParseTableColumnSignature(signature string) ([]TableColumnSignature, error)
 		}
 		arguments[i] = TableColumnSignature{
 			Name: strings.Join(parts[:len(parts)-1], " "),
-			Type: DataType(dataType.ToLegacyDataTypeSql()),
+			Type: LegacyDataTypeFrom(dataType),
 		}
 	}
 	return arguments, nil

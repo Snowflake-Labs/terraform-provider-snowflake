@@ -250,7 +250,7 @@ func NewSchemaObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) 
 				continue
 			}
 			dt, _ := datatypes.ParseDataType(trimmedArg)
-			id.arguments = append(id.arguments, DataType(dt.ToLegacyDataTypeSql()))
+			id.arguments = append(id.arguments, LegacyDataTypeFrom(dt))
 		}
 	} else { // this is every other kind of schema object
 		id.name = strings.Trim(parts[2], `"`)
@@ -324,7 +324,7 @@ func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name strin
 		if err != nil {
 			log.Printf("[DEBUG] failed to normalize argument %d: %v, err = %v", i, argument, err)
 		}
-		normalizedArguments[i] = DataType(normalizedArgument.ToLegacyDataTypeSql())
+		normalizedArguments[i] = LegacyDataTypeFrom(normalizedArgument)
 	}
 	return SchemaObjectIdentifierWithArguments{
 		databaseName:      strings.Trim(databaseName, `"`),
