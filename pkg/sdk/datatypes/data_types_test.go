@@ -1033,6 +1033,7 @@ func Test_ParseDataType_Vector(t *testing.T) {
 		negative("VECTOR(1)"),
 		negative("VECTOR(2, INT)"),
 		negative("VECTOR()"),
+		negative("VECTOR"),
 		negative("VECTOR(INT, 2, 3)"),
 		negative("VECTOR(INT)"),
 		negative("VECTOR(x, 2)"),
@@ -1065,6 +1066,64 @@ func Test_ParseDataType_Vector(t *testing.T) {
 
 			require.Error(t, err)
 			require.Nil(t, parsed)
+		})
+	}
+}
+
+func Test_AreTheSame(t *testing.T) {
+	type test struct {
+		d1              string
+		d2              string
+		expectedOutcome bool
+	}
+
+	testCases := []test{
+		{d1: "NUMBER(20)", d2: "NUMBER(20, 2)", expectedOutcome: false},
+		{d1: "NUMBER(20, 1)", d2: "NUMBER(20, 2)", expectedOutcome: false},
+		{d1: "NUMBER", d2: "NUMBER(20, 2)", expectedOutcome: false},
+		{d1: "NUMBER", d2: fmt.Sprintf("NUMBER(%d, %d)", DefaultNumberPrecision, DefaultNumberScale), expectedOutcome: true},
+		{d1: fmt.Sprintf("NUMBER(%d)", DefaultNumberPrecision), d2: fmt.Sprintf("NUMBER(%d, %d)", DefaultNumberPrecision, DefaultNumberScale), expectedOutcome: true},
+		{d1: "NUMBER", d2: "NUMBER", expectedOutcome: true},
+		{d1: "NUMBER(20)", d2: "NUMBER(20)", expectedOutcome: true},
+		{d1: "NUMBER(20, 2)", d2: "NUMBER(20, 2)", expectedOutcome: true},
+		{d1: "INT", d2: "NUMBER", expectedOutcome: true},
+		{d1: "INT", d2: fmt.Sprintf("NUMBER(%d, %d)", DefaultNumberPrecision, DefaultNumberScale), expectedOutcome: true},
+		{d1: "INT", d2: "NUMBER(20)", expectedOutcome: false},
+		{d1: "NUMBER", d2: "VARCHAR", expectedOutcome: false},
+		{d1: "NUMBER(20)", d2: "VARCHAR(20)", expectedOutcome: false},
+		{d1: "CHAR", d2: "VARCHAR", expectedOutcome: false},
+		{d1: "CHAR", d2: fmt.Sprintf("VARCHAR(%d)", DefaultCharLength), expectedOutcome: true},
+		{d1: fmt.Sprintf("CHAR(%d)", DefaultVarcharLength), d2: "VARCHAR", expectedOutcome: true},
+		{d1: "BINARY", d2: "BINARY", expectedOutcome: true},
+		{d1: "BINARY", d2: "VARBINARY", expectedOutcome: true},
+		{d1: "BINARY(20)", d2: "BINARY(20)", expectedOutcome: true},
+		{d1: "BINARY(20)", d2: "BINARY(30)", expectedOutcome: false},
+		{d1: "BINARY", d2: "BINARY(30)", expectedOutcome: false},
+		{d1: fmt.Sprintf("BINARY(%d)", DefaultBinarySize), d2: "BINARY", expectedOutcome: true},
+		{d1: "FLOAT", d2: "FLOAT4", expectedOutcome: true},
+		{d1: "DOUBLE", d2: "FLOAT8", expectedOutcome: true},
+		{d1: "DOUBLE PRECISION", d2: "REAL", expectedOutcome: true},
+		{d1: "TIMESTAMPLTZ", d2: "TIMESTAMPNTZ", expectedOutcome: false},
+		{d1: "TIMESTAMPLTZ", d2: "TIMESTAMPTZ", expectedOutcome: false},
+		{d1: "TIMESTAMPLTZ", d2: fmt.Sprintf("TIMESTAMPLTZ(%d)", DefaultTimestampPrecision), expectedOutcome: true},
+		{d1: "VECTOR(INT, 20)", d2: "VECTOR(INT, 20)", expectedOutcome: true},
+		{d1: "VECTOR(INT, 20)", d2: "VECTOR(INT, 30)", expectedOutcome: false},
+		{d1: "VECTOR(FLOAT, 20)", d2: "VECTOR(INT, 30)", expectedOutcome: false},
+		{d1: "VECTOR(FLOAT, 20)", d2: "VECTOR(INT, 20)", expectedOutcome: false},
+		{d1: "VECTOR(FLOAT, 20)", d2: "VECTOR(FLOAT, 20)", expectedOutcome: true},
+		{d1: "VECTOR(FLOAT, 20)", d2: "FLOAT", expectedOutcome: false},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(fmt.Sprintf(`compare "%s" with "%s" expecting %t`, tc.d1, tc.d2, tc.expectedOutcome), func(t *testing.T) {
+			p1, err := ParseDataType(tc.d1)
+			require.NoError(t, err)
+
+			p2, err := ParseDataType(tc.d2)
+			require.NoError(t, err)
+
+			require.Equal(t, tc.expectedOutcome, AreTheSame(p1, p2))
 		})
 	}
 }

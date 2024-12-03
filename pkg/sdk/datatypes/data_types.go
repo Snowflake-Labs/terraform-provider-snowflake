@@ -82,7 +82,6 @@ func ParseDataType(raw string) (DataType, error) {
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
 
-// TODO [this PR]: test
 func AreTheSame(a DataType, b DataType) bool {
 	if reflect.TypeOf(a) != reflect.TypeOf(b) {
 		return false
