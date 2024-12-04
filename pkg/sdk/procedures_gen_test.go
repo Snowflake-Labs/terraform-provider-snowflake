@@ -66,17 +66,6 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
 	})
 
-	t.Run("validation: options are missing", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Returns = ProcedureReturns{
-			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeVARCHAR,
-			},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "Handler"))
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "RuntimeVersion"))
-	})
-
 	// TODO [next PR]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
@@ -136,6 +125,65 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		opts.ProcedureDefinition = String("return id + name;")
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (id NUMBER, name VARCHAR DEFAULT 'test') COPY GRANTS RETURNS TABLE (country_code VARCHAR) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return id + name;'`, id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.Secure = Bool(true)
+		opts.Arguments = []ProcedureArgument{
+			{
+				ArgName:     "id",
+				ArgDataType: dataTypeNumber,
+			},
+			{
+				ArgName:      "name",
+				ArgDataType:  dataTypeVarchar,
+				DefaultValue: String("'test'"),
+			},
+		}
+		opts.CopyGrants = Bool(true)
+		opts.Returns = ProcedureReturns{
+			Table: &ProcedureReturnsTable{
+				Columns: []ProcedureColumn{
+					{
+						ColumnName:     "country_code",
+						ColumnDataType: dataTypeVarchar,
+					},
+				},
+			},
+		}
+		opts.RuntimeVersion = "1.8"
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "com.snowflake:snowpark:1.2.0",
+			},
+		}
+		opts.Imports = []ProcedureImport{
+			{
+				Import: "test_jar.jar",
+			},
+		}
+		opts.Handler = "TestFunc.echoVarchar"
+		opts.ExternalAccessIntegrations = []AccountObjectIdentifier{
+			NewAccountObjectIdentifier("ext_integration"),
+		}
+		opts.Secrets = []SecretReference{
+			{
+				VariableName: "variable1",
+				Name:         "name1",
+			},
+			{
+				VariableName: "variable2",
+				Name:         "name2",
+			},
+		}
+		opts.TargetPath = String("@~/testfunc.jar")
+		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.Comment = String("test comment")
+		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
+		opts.ProcedureDefinition = String("return id + name;")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (id NUMBER(36, 2), name VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS TABLE (country_code VARCHAR(100)) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return id + name;'`, id.FullyQualifiedName())
+	})
 }
 
 func TestProcedures_CreateForJavaScript(t *testing.T) {
@@ -165,11 +213,6 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: options are missing", func(t *testing.T) {
-		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaScriptProcedureOptions", "ProcedureDefinition"))
-	})
-
 	// TODO [next PR]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
@@ -191,6 +234,28 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		opts.ProcedureDefinition = "return 1;"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (d DOUBLE DEFAULT 1.0) COPY GRANTS RETURNS DOUBLE NOT NULL LANGUAGE JAVASCRIPT STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return 1;'`, id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.Secure = Bool(true)
+		opts.Arguments = []ProcedureArgument{
+			{
+				ArgName:      "d",
+				ArgDataType:  dataTypeFloat,
+				DefaultValue: String("1.0"),
+			},
+		}
+		opts.CopyGrants = Bool(true)
+		opts.ResultDataType = dataTypeFloat
+		opts.NotNull = Bool(true)
+		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.Comment = String("test comment")
+		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
+		opts.ProcedureDefinition = "return 1;"
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (d FLOAT DEFAULT 1.0) COPY GRANTS RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return 1;'`, id.FullyQualifiedName())
+	})
+
 }
 
 func TestProcedures_CreateForPython(t *testing.T) {
@@ -242,17 +307,6 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonProcedureOptions.Returns", "ResultDataType", "Table"))
-	})
-
-	t.Run("validation: options are missing", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Returns = ProcedureReturns{
-			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeVARCHAR,
-			},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "Handler"))
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "RuntimeVersion"))
 	})
 
 	// TODO [next PR]: remove with old procedure removal for V1
@@ -310,6 +364,62 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("import numpy as np")
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (i int DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'import numpy as np'`, id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.Secure = Bool(true)
+		opts.Arguments = []ProcedureArgument{
+			{
+				ArgName:      "i",
+				ArgDataType:  dataTypeNumber,
+				DefaultValue: String("1"),
+			},
+		}
+		opts.CopyGrants = Bool(true)
+		opts.Returns = ProcedureReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{
+				ResultDataType: dataTypeVariant,
+				Null:           Bool(true),
+			},
+		}
+		opts.RuntimeVersion = "3.8"
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "numpy",
+			},
+			{
+				Package: "pandas",
+			},
+		}
+		opts.Imports = []ProcedureImport{
+			{
+				Import: "numpy",
+			},
+			{
+				Import: "pandas",
+			},
+		}
+		opts.Handler = "udf"
+		opts.ExternalAccessIntegrations = []AccountObjectIdentifier{
+			NewAccountObjectIdentifier("ext_integration"),
+		}
+		opts.Secrets = []SecretReference{
+			{
+				VariableName: "variable1",
+				Name:         "name1",
+			},
+			{
+				VariableName: "variable2",
+				Name:         "name2",
+			},
+		}
+		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.Comment = String("test comment")
+		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
+		opts.ProcedureDefinition = String("import numpy as np")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (i NUMBER(36, 2) DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'import numpy as np'`, id.FullyQualifiedName())
 	})
 }
 
@@ -375,17 +485,6 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
 	})
 
-	t.Run("validation: options are missing", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Returns = ProcedureReturns{
-			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeVARCHAR,
-			},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "Handler"))
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "RuntimeVersion"))
-	})
-
 	// TODO [next PR]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
@@ -424,6 +523,44 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		opts.ProcedureDefinition = String("return x")
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (x VARCHAR DEFAULT 'test') COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SCALA RUNTIME_VERSION = '2.0' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return x'`, id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.Secure = Bool(true)
+		opts.Arguments = []ProcedureArgument{
+			{
+				ArgName:      "x",
+				ArgDataType:  dataTypeVarchar,
+				DefaultValue: String("'test'"),
+			},
+		}
+		opts.CopyGrants = Bool(true)
+		opts.Returns = ProcedureReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{
+				ResultDataType: dataTypeVarchar,
+				NotNull:        Bool(true),
+			},
+		}
+		opts.RuntimeVersion = "2.0"
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "com.snowflake:snowpark:1.2.0",
+			},
+		}
+		opts.Imports = []ProcedureImport{
+			{
+				Import: "@udf_libs/echohandler.jar",
+			},
+		}
+		opts.Handler = "Echo.echoVarchar"
+		opts.TargetPath = String("@~/testfunc.jar")
+		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.Comment = String("test comment")
+		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
+		opts.ProcedureDefinition = String("return x")
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (x VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS VARCHAR(100) NOT NULL LANGUAGE SCALA RUNTIME_VERSION = '2.0' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return x'`, id.FullyQualifiedName())
+	})
 }
 
 func TestProcedures_CreateForSQL(t *testing.T) {
@@ -456,11 +593,6 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("validation: options are missing", func(t *testing.T) {
-		opts := defaultOpts()
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForSQLProcedureOptions", "ProcedureDefinition"))
 	})
 
 	t.Run("create with no arguments", func(t *testing.T) {
@@ -504,6 +636,31 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = "3.141592654::FLOAT"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (message VARCHAR DEFAULT 'test') COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SQL STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.OrReplace = Bool(true)
+		opts.Secure = Bool(true)
+		opts.Arguments = []ProcedureArgument{
+			{
+				ArgName:      "message",
+				ArgDataType:  dataTypeVarchar,
+				DefaultValue: String("'test'"),
+			},
+		}
+		opts.CopyGrants = Bool(true)
+		opts.Returns = ProcedureSQLReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{
+				ResultDataType: dataTypeVarchar,
+			},
+			NotNull: Bool(true),
+		}
+		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.Comment = String("test comment")
+		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
+		opts.ProcedureDefinition = "3.141592654::FLOAT"
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (message VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS VARCHAR(100) NOT NULL LANGUAGE SQL STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
 	})
 }
 
@@ -859,6 +1016,54 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 		opts.CallArguments = []string{"1", "rnd"}
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (id NUMBER, name VARCHAR) RETURNS TABLE (country_code VARCHAR) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []ProcedureArgument{
+			{
+				ArgName:     "id",
+				ArgDataType: dataTypeNumber,
+			},
+			{
+				ArgName:     "name",
+				ArgDataType: dataTypeVarchar,
+			},
+		}
+		opts.Returns = ProcedureReturns{
+			Table: &ProcedureReturnsTable{
+				Columns: []ProcedureColumn{
+					{
+						ColumnName:     "country_code",
+						ColumnDataType: dataTypeVarchar,
+					},
+				},
+			},
+		}
+		opts.RuntimeVersion = "1.8"
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "com.snowflake:snowpark:1.2.0",
+			},
+		}
+		opts.Imports = []ProcedureImport{
+			{
+				Import: "test_jar.jar",
+			},
+		}
+		opts.Handler = "TestFunc.echoVarchar"
+		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ProcedureDefinition = String("return id + name;")
+		cte := NewAccountObjectIdentifier("album_info_1976")
+		opts.WithClause = &ProcedureWithClause{
+			CteName:    cte,
+			CteColumns: []string{"x", "y"},
+			Statement:  "(select m.album_ID, m.album_name, b.band_name from music_albums)",
+		}
+		opts.ProcedureName = id
+		opts.ScriptingVariable = String(":ret")
+		opts.CallArguments = []string{"1", "rnd"}
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (id NUMBER(36, 2), name VARCHAR(100)) RETURNS TABLE (country_code VARCHAR(100)) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+	})
 }
 
 func TestProcedures_CreateAndCallForScala(t *testing.T) {
@@ -983,6 +1188,56 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 		opts.CallArguments = []string{"1", "rnd"}
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (id NUMBER, name VARCHAR) RETURNS TABLE (country_code VARCHAR) LANGUAGE SCALA RUNTIME_VERSION = '2.12' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []ProcedureArgument{
+			{
+				ArgName:     "id",
+				ArgDataType: dataTypeNumber,
+			},
+			{
+				ArgName:     "name",
+				ArgDataType: dataTypeVarchar,
+			},
+		}
+		opts.Returns = ProcedureReturns{
+			Table: &ProcedureReturnsTable{
+				Columns: []ProcedureColumn{
+					{
+						ColumnName:     "country_code",
+						ColumnDataType: dataTypeVarchar,
+					},
+				},
+			},
+		}
+		opts.RuntimeVersion = "2.12"
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "com.snowflake:snowpark:1.2.0",
+			},
+		}
+		opts.Imports = []ProcedureImport{
+			{
+				Import: "test_jar.jar",
+			},
+		}
+		opts.Handler = "TestFunc.echoVarchar"
+		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ProcedureDefinition = String("return id + name;")
+		cte := NewAccountObjectIdentifier("album_info_1976")
+		opts.WithClauses = []ProcedureWithClause{
+			{
+				CteName:    cte,
+				CteColumns: []string{"x", "y"},
+				Statement:  "(select m.album_ID, m.album_name, b.band_name from music_albums)",
+			},
+		}
+		opts.ProcedureName = id
+		opts.ScriptingVariable = String(":ret")
+		opts.CallArguments = []string{"1", "rnd"}
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (id NUMBER(36, 2), name VARCHAR(100)) RETURNS TABLE (country_code VARCHAR(100)) LANGUAGE SCALA RUNTIME_VERSION = '2.12' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+	})
 }
 
 func TestProcedures_CreateAndCallForPython(t *testing.T) {
@@ -1106,6 +1361,55 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 		opts.CallArguments = []string{"1"}
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (i int DEFAULT 1) RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' STRICT AS 'import numpy as np' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []ProcedureArgument{
+			{
+				ArgName:      "i",
+				ArgDataType:  dataTypeNumber,
+				DefaultValue: String("1"),
+			},
+		}
+		opts.Returns = ProcedureReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{
+				ResultDataType: dataTypeVariant,
+				Null:           Bool(true),
+			},
+		}
+		opts.RuntimeVersion = "3.8"
+		opts.Packages = []ProcedurePackage{
+			{
+				Package: "numpy",
+			},
+			{
+				Package: "pandas",
+			},
+		}
+		opts.Imports = []ProcedureImport{
+			{
+				Import: "numpy",
+			},
+			{
+				Import: "pandas",
+			},
+		}
+		opts.Handler = "udf"
+		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ProcedureDefinition = String("import numpy as np")
+		cte := NewAccountObjectIdentifier("album_info_1976")
+		opts.WithClauses = []ProcedureWithClause{
+			{
+				CteName:    cte,
+				CteColumns: []string{"x", "y"},
+				Statement:  "(select m.album_ID, m.album_name, b.band_name from music_albums)",
+			},
+		}
+		opts.ProcedureName = id
+		opts.ScriptingVariable = String(":ret")
+		opts.CallArguments = []string{"1"}
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (i NUMBER(36, 2) DEFAULT 1) RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' STRICT AS 'import numpy as np' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+	})
 }
 
 func TestProcedures_CreateAndCallForJavaScript(t *testing.T) {
@@ -1168,6 +1472,33 @@ func TestProcedures_CreateAndCallForJavaScript(t *testing.T) {
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1"}
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (d DOUBLE DEFAULT 1.0) RETURNS DOUBLE NOT NULL LANGUAGE JAVASCRIPT STRICT AS 'return 1;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []ProcedureArgument{
+			{
+				ArgName:      "d",
+				ArgDataType:  dataTypeFloat,
+				DefaultValue: String("1.0"),
+			},
+		}
+		opts.ResultDataType = dataTypeFloat
+		opts.NotNull = Bool(true)
+		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ProcedureDefinition = "return 1;"
+		cte := NewAccountObjectIdentifier("album_info_1976")
+		opts.WithClauses = []ProcedureWithClause{
+			{
+				CteName:    cte,
+				CteColumns: []string{"x", "y"},
+				Statement:  "(select m.album_ID, m.album_name, b.band_name from music_albums)",
+			},
+		}
+		opts.ProcedureName = id
+		opts.ScriptingVariable = String(":ret")
+		opts.CallArguments = []string{"1"}
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (d FLOAT DEFAULT 1.0) RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT STRICT AS 'return 1;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 }
 
@@ -1260,5 +1591,35 @@ func TestProcedures_CreateAndCallForSQL(t *testing.T) {
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1"}
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (message VARCHAR DEFAULT 'test') RETURNS FLOAT LANGUAGE SQL STRICT AS '3.141592654::FLOAT' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+	})
+
+	t.Run("all options", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []ProcedureArgument{
+			{
+				ArgName:      "message",
+				ArgDataType:  dataTypeVarchar,
+				DefaultValue: String("'test'"),
+			},
+		}
+		opts.Returns = ProcedureReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{
+				ResultDataType: dataTypeFloat,
+			},
+		}
+		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ProcedureDefinition = "3.141592654::FLOAT"
+		cte := NewAccountObjectIdentifier("album_info_1976")
+		opts.WithClauses = []ProcedureWithClause{
+			{
+				CteName:    cte,
+				CteColumns: []string{"x", "y"},
+				Statement:  "(select m.album_ID, m.album_name, b.band_name from music_albums)",
+			},
+		}
+		opts.ProcedureName = id
+		opts.ScriptingVariable = String(":ret")
+		opts.CallArguments = []string{"1"}
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (message VARCHAR(100) DEFAULT 'test') RETURNS FLOAT LANGUAGE SQL STRICT AS '3.141592654::FLOAT' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 }
