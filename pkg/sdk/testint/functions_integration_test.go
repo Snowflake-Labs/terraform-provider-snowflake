@@ -498,7 +498,8 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		require.Equal(t, *e, *es)
 	})
 
-	t.Run("function returns non detailed data types of arguments", func(t *testing.T) {
+	// TODO [next PR]: remove with old function removal for V1
+	t.Run("function returns non detailed data types of arguments - old data types", func(t *testing.T) {
 		// This test proves that every detailed data types (e.g. VARCHAR(20) and NUMBER(10, 0)) are generalized
 		// on Snowflake side (to e.g. VARCHAR and NUMBER) and that sdk.ToDataType mapping function maps detailed types
 		// correctly to their generalized counterparts (same as in Snowflake).
@@ -553,4 +554,78 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, dataTypes, function.ArgumentsOld)
 	})
+
+	// This test shows behavior of detailed types (e.g. VARCHAR(20) and NUMBER(10, 0)) on Snowflake side.
+	// For SHOW, data type is generalized both for argument and return type (to e.g. VARCHAR and NUMBER).
+	// FOR DESCRIBE, data type is generalized for argument and works weirdly for the return type: type is generalized to the canonical one, but we get also the attributes.
+	for _, tc := range []string{
+		"NUMBER(36, 5)",
+		"NUMBER(36)",
+		"NUMBER",
+		"DECIMAL",
+		"INTEGER",
+		"FLOAT",
+		"DOUBLE",
+		"VARCHAR",
+		"VARCHAR(20)",
+		"CHAR",
+		"CHAR(10)",
+		"TEXT",
+		"BINARY",
+		"BINARY(1000)",
+		"VARBINARY",
+		"BOOLEAN",
+		"DATE",
+		"DATETIME",
+		"TIME",
+		"TIMESTAMP_LTZ",
+		"TIMESTAMP_NTZ",
+		"TIMESTAMP_TZ",
+		"VARIANT",
+		"OBJECT",
+		"ARRAY",
+		"GEOGRAPHY",
+		"GEOMETRY",
+		"VECTOR(INT, 16)",
+		"VECTOR(FLOAT, 8)",
+	} {
+		tc := tc
+		t.Run(fmt.Sprintf("function returns non detailed data types of arguments for %s", tc), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+			argName := "A"
+			dataType, err := datatypes.ParseDataType(tc)
+			require.NoError(t, err)
+			args := []sdk.FunctionArgumentRequest{
+				*sdk.NewFunctionArgumentRequest(argName, dataType),
+			}
+
+			err = client.Functions.CreateForPython(ctx, sdk.NewCreateForPythonFunctionRequest(
+				id,
+				*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(dataType)),
+				"3.8",
+				"add",
+			).
+				WithArguments(args).
+				WithFunctionDefinition(fmt.Sprintf("def add(%[1]s): %[1]s", argName)),
+			)
+			require.NoError(t, err)
+
+			oldDataType := sdk.LegacyDataTypeFrom(dataType)
+			idWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), oldDataType)
+
+			function, err := client.Functions.ShowByID(ctx, idWithArguments)
+			require.NoError(t, err)
+			assert.Equal(t, []sdk.DataType{oldDataType}, function.ArgumentsOld)
+			assert.Equal(t, fmt.Sprintf("%[1]s(%[2]s) RETURN %[2]s", id.Name(), oldDataType), function.ArgumentsRaw)
+
+			details, err := client.Functions.Describe(ctx, idWithArguments)
+			require.NoError(t, err)
+			pairs := make(map[string]string)
+			for _, detail := range details {
+				pairs[detail.Property] = detail.Value
+			}
+			assert.Equal(t, fmt.Sprintf("(%s %s)", argName, oldDataType), pairs["signature"])
+			assert.Equal(t, dataType.Canonical(), pairs["returns"])
+		})
+	}
 }

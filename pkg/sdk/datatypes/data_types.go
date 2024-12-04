@@ -16,6 +16,7 @@ import (
 type DataType interface {
 	ToSql() string
 	ToLegacyDataTypeSql() string
+	Canonical() string
 }
 
 type sanitizedDataTypeRaw struct {

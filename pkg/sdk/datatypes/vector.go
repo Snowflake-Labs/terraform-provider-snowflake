@@ -26,6 +26,10 @@ func (t *VectorDataType) ToLegacyDataTypeSql() string {
 	return t.ToSql()
 }
 
+func (t *VectorDataType) Canonical() string {
+	return fmt.Sprintf("%s(%s, %d)", t.underlyingType, t.innerType, t.dimension)
+}
+
 var (
 	VectorDataTypeSynonyms  = []string{"VECTOR"}
 	VectorAllowedInnerTypes = []string{"INT", "FLOAT"}

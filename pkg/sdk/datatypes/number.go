@@ -34,6 +34,10 @@ func (t *NumberDataType) ToLegacyDataTypeSql() string {
 	return NumberLegacyDataType
 }
 
+func (t *NumberDataType) Canonical() string {
+	return fmt.Sprintf("%s(%d,%d)", NumberLegacyDataType, t.precision, t.scale)
+}
+
 var (
 	NumberDataTypeSynonyms = []string{NumberLegacyDataType, "DECIMAL", "DEC", "NUMERIC"}
 	NumberDataTypeSubTypes = []string{"INTEGER", "INT", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}

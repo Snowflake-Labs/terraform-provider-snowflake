@@ -14,6 +14,10 @@ func (t *FloatDataType) ToLegacyDataTypeSql() string {
 	return FloatLegacyDataType
 }
 
+func (t *FloatDataType) Canonical() string {
+	return FloatLegacyDataType
+}
+
 var FloatDataTypeSynonyms = []string{"FLOAT8", "FLOAT4", FloatLegacyDataType, "DOUBLE PRECISION", "DOUBLE", "REAL"}
 
 func parseFloatDataTypeRaw(raw sanitizedDataTypeRaw) (*FloatDataType, error) {
