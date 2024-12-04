@@ -3,6 +3,9 @@ package sdk
 import (
 	"context"
 	"database/sql"
+
+	// import added manually
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 type Procedures interface {
@@ -49,9 +52,10 @@ type CreateForJavaProcedureOptions struct {
 }
 
 type ProcedureArgument struct {
-	ArgName        string   `ddl:"keyword,no_quotes"`
-	ArgDataTypeOld DataType `ddl:"keyword,no_quotes"`
-	DefaultValue   *string  `ddl:"parameter,no_equals" sql:"DEFAULT"`
+	ArgName        string             `ddl:"keyword,no_quotes"`
+	ArgDataTypeOld DataType           `ddl:"keyword,no_quotes"`
+	ArgDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
+	DefaultValue   *string            `ddl:"parameter,no_equals" sql:"DEFAULT"`
 }
 
 type ProcedureReturns struct {
@@ -60,9 +64,10 @@ type ProcedureReturns struct {
 }
 
 type ProcedureReturnsResultDataType struct {
-	ResultDataTypeOld DataType `ddl:"keyword,no_quotes"`
-	Null              *bool    `ddl:"keyword" sql:"NULL"`
-	NotNull           *bool    `ddl:"keyword" sql:"NOT NULL"`
+	ResultDataTypeOld DataType           `ddl:"keyword,no_quotes"`
+	ResultDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
+	Null              *bool              `ddl:"keyword" sql:"NULL"`
+	NotNull           *bool              `ddl:"keyword" sql:"NOT NULL"`
 }
 
 type ProcedureReturnsTable struct {
@@ -70,8 +75,9 @@ type ProcedureReturnsTable struct {
 }
 
 type ProcedureColumn struct {
-	ColumnName        string   `ddl:"keyword,no_quotes"`
-	ColumnDataTypeOld DataType `ddl:"keyword,no_quotes"`
+	ColumnName        string             `ddl:"keyword,no_quotes"`
+	ColumnDataTypeOld DataType           `ddl:"keyword,no_quotes"`
+	ColumnDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
 }
 
 type ProcedurePackage struct {
@@ -91,7 +97,9 @@ type CreateForJavaScriptProcedureOptions struct {
 	name                SchemaObjectIdentifier `ddl:"identifier"`
 	Arguments           []ProcedureArgument    `ddl:"list,must_parentheses"`
 	CopyGrants          *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
-	ResultDataTypeOld   DataType               `ddl:"parameter,no_equals" sql:"RETURNS"`
+	returns             bool                   `ddl:"static" sql:"RETURNS"`
+	ResultDataTypeOld   DataType               `ddl:"parameter,no_equals"`
+	ResultDataType      datatypes.DataType     `ddl:"parameter,no_quotes,no_equals"`
 	NotNull             *bool                  `ddl:"keyword" sql:"NOT NULL"`
 	languageJavascript  bool                   `ddl:"static" sql:"LANGUAGE JAVASCRIPT"`
 	NullInputBehavior   *NullInputBehavior     `ddl:"keyword"`
@@ -314,7 +322,9 @@ type CreateAndCallForJavaScriptProcedureOptions struct {
 	Name                AccountObjectIdentifier `ddl:"identifier"`
 	asProcedure         bool                    `ddl:"static" sql:"AS PROCEDURE"`
 	Arguments           []ProcedureArgument     `ddl:"list,must_parentheses"`
-	ResultDataTypeOld   DataType                `ddl:"parameter,no_equals" sql:"RETURNS"`
+	returns             bool                    `ddl:"static" sql:"RETURNS"`
+	ResultDataTypeOld   DataType                `ddl:"parameter,no_equals"`
+	ResultDataType      datatypes.DataType      `ddl:"parameter,no_quotes,no_equals"`
 	NotNull             *bool                   `ddl:"keyword" sql:"NOT NULL"`
 	languageJavascript  bool                    `ddl:"static" sql:"LANGUAGE JAVASCRIPT"`
 	NullInputBehavior   *NullInputBehavior      `ddl:"keyword"`

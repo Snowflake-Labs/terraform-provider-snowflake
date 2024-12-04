@@ -258,8 +258,8 @@ func (opts *CreateAndCallForJavaScriptProcedureOptions) validate() error {
 	if !valueSet(opts.ProcedureDefinition) {
 		errs = append(errs, errNotSet("CreateAndCallForJavaScriptProcedureOptions", "ProcedureDefinition"))
 	}
-	if !valueSet(opts.ResultDataTypeOld) {
-		errs = append(errs, errNotSet("CreateAndCallForJavaScriptProcedureOptions", "ResultDataTypeOld"))
+	if !anyValueSet(opts.ResultDataTypeOld, opts.ResultDataType) {
+		errs = append(errs, errAtLeastOneOf("CreateAndCallForJavaScriptProcedureOptions", "ResultDataTypeOld", "ResultDataType"))
 	}
 	if !ValidObjectIdentifier(opts.ProcedureName) {
 		// altered manually

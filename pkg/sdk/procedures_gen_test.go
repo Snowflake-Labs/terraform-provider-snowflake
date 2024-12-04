@@ -9,7 +9,14 @@ func TestProcedures_CreateForJava(t *testing.T) {
 
 	defaultOpts := func() *CreateForJavaProcedureOptions {
 		return &CreateForJavaProcedureOptions{
-			name: id,
+			name:    id,
+			Handler: "TestFunc.echoVarchar",
+			Packages: []ProcedurePackage{
+				{
+					Package: "com.snowflake:snowpark:1.2.0",
+				},
+			},
+			RuntimeVersion: "1.8",
 		}
 	}
 
@@ -24,7 +31,25 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: returns", func(t *testing.T) {
+	t.Run("validation: [opts.RuntimeVersion] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.RuntimeVersion = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "RuntimeVersion"))
+	})
+
+	t.Run("validation: [opts.Packages] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Packages = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "Packages"))
+	})
+
+	t.Run("validation: [opts.Handler] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Handler = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "Handler"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
@@ -118,13 +143,20 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 
 	defaultOpts := func() *CreateForJavaScriptProcedureOptions {
 		return &CreateForJavaScriptProcedureOptions{
-			name: id,
+			name:                id,
+			ProcedureDefinition: "return 1;",
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateForJavaScriptProcedureOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: [opts.ProcedureDefinition] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ProcedureDefinition = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaScriptProcedureOptions", "ProcedureDefinition"))
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -166,7 +198,14 @@ func TestProcedures_CreateForPython(t *testing.T) {
 
 	defaultOpts := func() *CreateForPythonProcedureOptions {
 		return &CreateForPythonProcedureOptions{
-			name: id,
+			name:           id,
+			RuntimeVersion: "3.8",
+			Packages: []ProcedurePackage{
+				{
+					Package: "numpy",
+				},
+			},
+			Handler: "udf",
 		}
 	}
 
@@ -175,13 +214,31 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
+	t.Run("validation: [opts.RuntimeVersion] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.RuntimeVersion = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "RuntimeVersion"))
+	})
+
+	t.Run("validation: [opts.Packages] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Packages = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "Packages"))
+	})
+
+	t.Run("validation: [opts.Handler] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Handler = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "Handler"))
+	})
+
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: returns", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonProcedureOptions.Returns", "ResultDataType", "Table"))
@@ -261,7 +318,14 @@ func TestProcedures_CreateForScala(t *testing.T) {
 
 	defaultOpts := func() *CreateForScalaProcedureOptions {
 		return &CreateForScalaProcedureOptions{
-			name: id,
+			name:           id,
+			RuntimeVersion: "2.0",
+			Packages: []ProcedurePackage{
+				{
+					Package: "com.snowflake:snowpark:1.2.0",
+				},
+			},
+			Handler: "Echo.echoVarchar",
 		}
 	}
 
@@ -270,13 +334,31 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
+	t.Run("validation: [opts.RuntimeVersion] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.RuntimeVersion = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "RuntimeVersion"))
+	})
+
+	t.Run("validation: [opts.Packages] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Packages = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "Packages"))
+	})
+
+	t.Run("validation: [opts.Handler] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Handler = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "Handler"))
+	})
+
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: returns", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaProcedureOptions.Returns", "ResultDataType", "Table"))
@@ -349,13 +431,25 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 
 	defaultOpts := func() *CreateForSQLProcedureOptions {
 		return &CreateForSQLProcedureOptions{
-			name: id,
+			name:                id,
+			ProcedureDefinition: "3.141592654::FLOAT",
+			Returns: ProcedureSQLReturns{
+				ResultDataType: &ProcedureReturnsResultDataType{
+					ResultDataTypeOld: "VARCHAR",
+				},
+			},
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *CreateForSQLProcedureOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
+	})
+
+	t.Run("validation: [opts.ProcedureDefinition] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ProcedureDefinition = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForSQLProcedureOptions", "ProcedureDefinition"))
 	})
 
 	t.Run("validation: incorrect identifier", func(t *testing.T) {
@@ -378,6 +472,12 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		}
 		opts.ProcedureDefinition = "3.141592654::FLOAT"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE PROCEDURE %s () RETURNS FLOAT LANGUAGE SQL AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureSQLReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLProcedureOptions.Returns", "ResultDataType", "Table"))
 	})
 
 	// TODO [next PR]: remove with old procedure removal for V1

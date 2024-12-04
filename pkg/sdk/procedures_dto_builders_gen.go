@@ -2,7 +2,10 @@
 
 package sdk
 
-import ()
+// imports added manually
+import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+)
 
 func NewCreateForJavaProcedureRequest(
 	name SchemaObjectIdentifier,
@@ -82,12 +85,17 @@ func (s *CreateForJavaProcedureRequest) WithProcedureDefinition(ProcedureDefinit
 
 func NewProcedureArgumentRequest(
 	ArgName string,
-	ArgDataTypeOld DataType,
+	ArgDataType datatypes.DataType,
 ) *ProcedureArgumentRequest {
 	s := ProcedureArgumentRequest{}
 	s.ArgName = ArgName
-	s.ArgDataTypeOld = ArgDataTypeOld
+	s.ArgDataType = ArgDataType
 	return &s
+}
+
+func (s *ProcedureArgumentRequest) WithArgDataTypeOld(ArgDataTypeOld DataType) *ProcedureArgumentRequest {
+	s.ArgDataTypeOld = ArgDataTypeOld
+	return s
 }
 
 func (s *ProcedureArgumentRequest) WithDefaultValue(DefaultValue string) *ProcedureArgumentRequest {
@@ -110,11 +118,16 @@ func (s *ProcedureReturnsRequest) WithTable(Table ProcedureReturnsTableRequest) 
 }
 
 func NewProcedureReturnsResultDataTypeRequest(
-	ResultDataTypeOld DataType,
+	ResultDataType datatypes.DataType,
 ) *ProcedureReturnsResultDataTypeRequest {
 	s := ProcedureReturnsResultDataTypeRequest{}
-	s.ResultDataTypeOld = ResultDataTypeOld
+	s.ResultDataType = ResultDataType
 	return &s
+}
+
+func (s *ProcedureReturnsResultDataTypeRequest) WithResultDataTypeOld(ResultDataTypeOld DataType) *ProcedureReturnsResultDataTypeRequest {
+	s.ResultDataTypeOld = ResultDataTypeOld
+	return s
 }
 
 func (s *ProcedureReturnsResultDataTypeRequest) WithNull(Null bool) *ProcedureReturnsResultDataTypeRequest {
@@ -138,12 +151,17 @@ func (s *ProcedureReturnsTableRequest) WithColumns(Columns []ProcedureColumnRequ
 
 func NewProcedureColumnRequest(
 	ColumnName string,
-	ColumnDataTypeOld DataType,
+	ColumnDataType datatypes.DataType,
 ) *ProcedureColumnRequest {
 	s := ProcedureColumnRequest{}
 	s.ColumnName = ColumnName
-	s.ColumnDataTypeOld = ColumnDataTypeOld
+	s.ColumnDataType = ColumnDataType
 	return &s
+}
+
+func (s *ProcedureColumnRequest) WithColumnDataTypeOld(ColumnDataTypeOld DataType) *ProcedureColumnRequest {
+	s.ColumnDataTypeOld = ColumnDataTypeOld
+	return s
 }
 
 func NewProcedurePackageRequest(
@@ -164,12 +182,12 @@ func NewProcedureImportRequest(
 
 func NewCreateForJavaScriptProcedureRequest(
 	name SchemaObjectIdentifier,
-	ResultDataTypeOld DataType,
+	ResultDataType datatypes.DataType,
 	ProcedureDefinition string,
 ) *CreateForJavaScriptProcedureRequest {
 	s := CreateForJavaScriptProcedureRequest{}
 	s.name = name
-	s.ResultDataTypeOld = ResultDataTypeOld
+	s.ResultDataType = ResultDataType
 	s.ProcedureDefinition = ProcedureDefinition
 	return &s
 }
@@ -191,6 +209,11 @@ func (s *CreateForJavaScriptProcedureRequest) WithArguments(Arguments []Procedur
 
 func (s *CreateForJavaScriptProcedureRequest) WithCopyGrants(CopyGrants bool) *CreateForJavaScriptProcedureRequest {
 	s.CopyGrants = &CopyGrants
+	return s
+}
+
+func (s *CreateForJavaScriptProcedureRequest) WithResultDataTypeOld(ResultDataTypeOld DataType) *CreateForJavaScriptProcedureRequest {
+	s.ResultDataTypeOld = ResultDataTypeOld
 	return s
 }
 
@@ -646,13 +669,13 @@ func (s *CreateAndCallForScalaProcedureRequest) WithScriptingVariable(ScriptingV
 
 func NewCreateAndCallForJavaScriptProcedureRequest(
 	Name AccountObjectIdentifier,
-	ResultDataTypeOld DataType,
+	ResultDataType datatypes.DataType,
 	ProcedureDefinition string,
 	ProcedureName AccountObjectIdentifier,
 ) *CreateAndCallForJavaScriptProcedureRequest {
 	s := CreateAndCallForJavaScriptProcedureRequest{}
 	s.Name = Name
-	s.ResultDataTypeOld = ResultDataTypeOld
+	s.ResultDataType = ResultDataType
 	s.ProcedureDefinition = ProcedureDefinition
 	s.ProcedureName = ProcedureName
 	return &s
@@ -660,6 +683,11 @@ func NewCreateAndCallForJavaScriptProcedureRequest(
 
 func (s *CreateAndCallForJavaScriptProcedureRequest) WithArguments(Arguments []ProcedureArgumentRequest) *CreateAndCallForJavaScriptProcedureRequest {
 	s.Arguments = Arguments
+	return s
+}
+
+func (s *CreateAndCallForJavaScriptProcedureRequest) WithResultDataTypeOld(ResultDataTypeOld DataType) *CreateAndCallForJavaScriptProcedureRequest {
+	s.ResultDataTypeOld = ResultDataTypeOld
 	return s
 }
 

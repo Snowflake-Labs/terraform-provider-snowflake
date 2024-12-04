@@ -1,5 +1,8 @@
 package sdk
 
+// imports added manually
+import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
@@ -41,8 +44,9 @@ type CreateForJavaProcedureRequest struct {
 }
 
 type ProcedureArgumentRequest struct {
-	ArgName        string   // required
-	ArgDataTypeOld DataType // required
+	ArgName        string // required
+	ArgDataTypeOld DataType
+	ArgDataType    datatypes.DataType // required
 	DefaultValue   *string
 }
 
@@ -52,7 +56,8 @@ type ProcedureReturnsRequest struct {
 }
 
 type ProcedureReturnsResultDataTypeRequest struct {
-	ResultDataTypeOld DataType // required
+	ResultDataTypeOld DataType
+	ResultDataType    datatypes.DataType // required
 	Null              *bool
 	NotNull           *bool
 }
@@ -62,8 +67,9 @@ type ProcedureReturnsTableRequest struct {
 }
 
 type ProcedureColumnRequest struct {
-	ColumnName        string   // required
-	ColumnDataTypeOld DataType // required
+	ColumnName        string // required
+	ColumnDataTypeOld DataType
+	ColumnDataType    datatypes.DataType // required
 }
 
 type ProcedurePackageRequest struct {
@@ -80,7 +86,8 @@ type CreateForJavaScriptProcedureRequest struct {
 	name                SchemaObjectIdentifier // required
 	Arguments           []ProcedureArgumentRequest
 	CopyGrants          *bool
-	ResultDataTypeOld   DataType // required
+	ResultDataTypeOld   DataType
+	ResultDataType      datatypes.DataType // required
 	NotNull             *bool
 	NullInputBehavior   *NullInputBehavior
 	Comment             *string
@@ -218,7 +225,8 @@ type CreateAndCallForScalaProcedureRequest struct {
 type CreateAndCallForJavaScriptProcedureRequest struct {
 	Name                AccountObjectIdentifier // required
 	Arguments           []ProcedureArgumentRequest
-	ResultDataTypeOld   DataType // required
+	ResultDataTypeOld   DataType
+	ResultDataType      datatypes.DataType // required
 	NotNull             *bool
 	NullInputBehavior   *NullInputBehavior
 	ProcedureDefinition string // required

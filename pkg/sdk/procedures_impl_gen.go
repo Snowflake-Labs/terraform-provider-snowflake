@@ -138,6 +138,7 @@ func (r *CreateForJavaProcedureRequest) toOpts() *CreateForJavaProcedureOptions 
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 			Null:              r.Returns.ResultDataType.Null,
 			NotNull:           r.Returns.ResultDataType.NotNull,
 		}
@@ -177,6 +178,7 @@ func (r *CreateForJavaScriptProcedureRequest) toOpts() *CreateForJavaScriptProce
 
 		CopyGrants:          r.CopyGrants,
 		ResultDataTypeOld:   r.ResultDataTypeOld,
+		ResultDataType:      r.ResultDataType,
 		NotNull:             r.NotNull,
 		NullInputBehavior:   r.NullInputBehavior,
 		Comment:             r.Comment,
@@ -222,6 +224,7 @@ func (r *CreateForPythonProcedureRequest) toOpts() *CreateForPythonProcedureOpti
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 			Null:              r.Returns.ResultDataType.Null,
 			NotNull:           r.Returns.ResultDataType.NotNull,
 		}
@@ -281,6 +284,7 @@ func (r *CreateForScalaProcedureRequest) toOpts() *CreateForScalaProcedureOption
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 			Null:              r.Returns.ResultDataType.Null,
 			NotNull:           r.Returns.ResultDataType.NotNull,
 		}
@@ -338,6 +342,7 @@ func (r *CreateForSQLProcedureRequest) toOpts() *CreateForSQLProcedureOptions {
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -467,6 +472,7 @@ func (r *CreateAndCallForJavaProcedureRequest) toOpts() *CreateAndCallForJavaPro
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 			Null:              r.Returns.ResultDataType.Null,
 			NotNull:           r.Returns.ResultDataType.NotNull,
 		}
@@ -530,6 +536,7 @@ func (r *CreateAndCallForScalaProcedureRequest) toOpts() *CreateAndCallForScalaP
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 			Null:              r.Returns.ResultDataType.Null,
 			NotNull:           r.Returns.ResultDataType.NotNull,
 		}
@@ -577,6 +584,7 @@ func (r *CreateAndCallForJavaScriptProcedureRequest) toOpts() *CreateAndCallForJ
 		Name: r.Name,
 
 		ResultDataTypeOld:   r.ResultDataTypeOld,
+		ResultDataType:      r.ResultDataType,
 		NotNull:             r.NotNull,
 		NullInputBehavior:   r.NullInputBehavior,
 		ProcedureDefinition: r.ProcedureDefinition,
@@ -631,6 +639,7 @@ func (r *CreateAndCallForPythonProcedureRequest) toOpts() *CreateAndCallForPytho
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 			Null:              r.Returns.ResultDataType.Null,
 			NotNull:           r.Returns.ResultDataType.NotNull,
 		}
@@ -695,6 +704,7 @@ func (r *CreateAndCallForSQLProcedureRequest) toOpts() *CreateAndCallForSQLProce
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 			Null:              r.Returns.ResultDataType.Null,
 			NotNull:           r.Returns.ResultDataType.NotNull,
 		}
