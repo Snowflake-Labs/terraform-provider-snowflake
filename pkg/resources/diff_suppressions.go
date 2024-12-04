@@ -264,3 +264,15 @@ func IgnoreNewEmptyListOrSubfields(ignoredSubfields ...string) schema.SchemaDiff
 		return len(parts) == 3 && slices.Contains(ignoredSubfields, parts[2]) && new == ""
 	}
 }
+
+func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.TrimSpace(old) == strings.TrimSpace(new)
+}
+
+func ignoreCaseSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.EqualFold(old, new)
+}
+
+func ignoreCaseAndTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
+}

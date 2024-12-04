@@ -60,7 +60,8 @@ func TestInt_DataTypes(t *testing.T) {
 
 			sql = fmt.Sprintf("SELECT []::%s(36)", c)
 			_, err = client.QueryUnsafe(ctx, sql)
-			assert.Error(t, err)
+			assert.ErrorContains(t, err, "SQL compilation error")
+			assert.ErrorContains(t, err, "unexpected '36'")
 		})
 	}
 
@@ -76,7 +77,9 @@ func TestInt_DataTypes(t *testing.T) {
 
 			sql = fmt.Sprintf("SELECT TO_BINARY('AB')::%s(36, 2)", c)
 			_, err = client.QueryUnsafe(ctx, sql)
-			assert.Error(t, err)
+			assert.ErrorContains(t, err, "SQL compilation error")
+			assert.ErrorContains(t, err, "','")
+			assert.ErrorContains(t, err, "')'")
 		})
 	}
 
@@ -142,7 +145,8 @@ func TestInt_DataTypes(t *testing.T) {
 			tableId = testClientHelper().Ids.RandomSchemaObjectIdentifier()
 			sql = fmt.Sprintf("CREATE TABLE %s (i %s())", tableId.FullyQualifiedName(), c)
 			_, err = client.QueryUnsafe(ctx, sql)
-			assert.Error(t, err)
+			assert.ErrorContains(t, err, "SQL compilation error")
+			assert.ErrorContains(t, err, "unexpected '('")
 			t.Cleanup(testClientHelper().Table.DropFunc(t, tableId))
 		})
 	}
@@ -159,7 +163,8 @@ func TestInt_DataTypes(t *testing.T) {
 			tableId = testClientHelper().Ids.RandomSchemaObjectIdentifier()
 			sql = fmt.Sprintf("CREATE TABLE %s (i %s())", tableId.FullyQualifiedName(), c)
 			_, err = client.QueryUnsafe(ctx, sql)
-			assert.Error(t, err)
+			assert.ErrorContains(t, err, "SQL compilation error")
+			assert.ErrorContains(t, err, "unexpected '('")
 			t.Cleanup(testClientHelper().Table.DropFunc(t, tableId))
 		})
 	}
@@ -188,7 +193,8 @@ func TestInt_DataTypes(t *testing.T) {
 
 			sql = fmt.Sprintf("SELECT 1::%s(36)", c)
 			_, err = client.QueryUnsafe(ctx, sql)
-			assert.Error(t, err)
+			assert.ErrorContains(t, err, "SQL compilation error")
+			assert.ErrorContains(t, err, "unexpected '36'")
 		})
 	}
 
@@ -208,7 +214,8 @@ func TestInt_DataTypes(t *testing.T) {
 
 			sql = fmt.Sprintf("SELECT {}::%s(36)", c)
 			_, err = client.QueryUnsafe(ctx, sql)
-			assert.Error(t, err)
+			assert.ErrorContains(t, err, "SQL compilation error")
+			assert.ErrorContains(t, err, "unexpected '36'")
 		})
 	}
 
@@ -288,7 +295,8 @@ func TestInt_DataTypes(t *testing.T) {
 
 			sql = fmt.Sprintf("SELECT TO_VARIANT(1)::%s(36)", c)
 			_, err = client.QueryUnsafe(ctx, sql)
-			assert.Error(t, err)
+			assert.ErrorContains(t, err, "SQL compilation error")
+			assert.ErrorContains(t, err, "unexpected '36'")
 		})
 	}
 
@@ -306,7 +314,8 @@ func TestInt_DataTypes(t *testing.T) {
 				tableId = testClientHelper().Ids.RandomSchemaObjectIdentifier()
 				sql = fmt.Sprintf("CREATE TABLE %s (i %s(%s))", tableId.FullyQualifiedName(), c, inner)
 				_, err = client.QueryUnsafe(ctx, sql)
-				assert.Error(t, err)
+				assert.ErrorContains(t, err, "SQL compilation error")
+				assert.ErrorContains(t, err, "unexpected ')'")
 				t.Cleanup(testClientHelper().Table.DropFunc(t, tableId))
 			})
 		}
@@ -322,7 +331,17 @@ func TestInt_DataTypes(t *testing.T) {
 			if slices.Contains(vectorInnerTypeSynonymsThatWork, c) {
 				assert.NoError(t, err)
 			} else {
-				assert.Error(t, err)
+				assert.ErrorContains(t, err, "SQL compilation error")
+				switch {
+				case slices.Contains(datatypes.NumberDataTypeSynonyms, c):
+					assert.ErrorContains(t, err, fmt.Sprintf("unexpected '%s'", c))
+				case slices.Contains(datatypes.NumberDataTypeSubTypes, c):
+					assert.ErrorContains(t, err, "Unsupported vector element type 'NUMBER(38,0)'")
+				case slices.Contains(datatypes.FloatDataTypeSynonyms, c):
+					assert.ErrorContains(t, err, "Unsupported vector element type 'FLOAT'")
+				default:
+					t.Fail()
+				}
 			}
 			t.Cleanup(testClientHelper().Table.DropFunc(t, tableId))
 		})

@@ -3,25 +3,12 @@ package resources
 import (
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	return strings.TrimSpace(old) == strings.TrimSpace(new)
-}
-
-func ignoreCaseSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	return strings.EqualFold(old, new)
-}
-
-func ignoreCaseAndTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
-}
 
 func getTagObjectIdentifier(v map[string]any) sdk.ObjectIdentifier {
 	if _, ok := v["database"]; ok {
