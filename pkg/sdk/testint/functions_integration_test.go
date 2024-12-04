@@ -209,7 +209,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 			assert.Equal(t, 0, function.MaxNumArguments)
 		}
 		assert.NotEmpty(t, function.ArgumentsRaw)
-		assert.NotEmpty(t, function.Arguments)
+		assert.NotEmpty(t, function.ArgumentsOld)
 		assert.NotEmpty(t, function.Description)
 		assert.NotEmpty(t, function.CatalogName)
 		assert.Equal(t, false, function.IsTableFunction)
@@ -542,7 +542,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 
 		dataTypes := make([]sdk.DataType, len(args))
 		for i, arg := range args {
-			dataType, err := datatypes.ParseDataType(string(arg.ArgDataType))
+			dataType, err := datatypes.ParseDataType(string(arg.ArgDataTypeOld))
 			require.NoError(t, err)
 			dataTypes[i] = sdk.LegacyDataTypeFrom(dataType)
 		}
@@ -550,6 +550,6 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 
 		function, err := client.Functions.ShowByID(ctx, idWithArguments)
 		require.NoError(t, err)
-		require.Equal(t, dataTypes, function.Arguments)
+		require.Equal(t, dataTypes, function.ArgumentsOld)
 	})
 }

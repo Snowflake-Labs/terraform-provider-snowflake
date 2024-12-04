@@ -282,7 +282,7 @@ var FunctionsDef = g.NewInterface(
 		Field("IsAnsi", "bool").
 		Field("MinNumArguments", "int").
 		Field("MaxNumArguments", "int").
-		Field("Arguments", "string").
+		Field("ArgumentsRaw", "string").
 		Field("Description", "string").
 		Field("CatalogName", "string").
 		Field("IsTableFunction", "bool").

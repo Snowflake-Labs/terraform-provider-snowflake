@@ -103,11 +103,11 @@ func (s *CreateForJavaFunctionRequest) WithFunctionDefinition(FunctionDefinition
 
 func NewFunctionArgumentRequest(
 	ArgName string,
-	ArgDataType DataType,
+	ArgDataTypeOld DataType,
 ) *FunctionArgumentRequest {
 	s := FunctionArgumentRequest{}
 	s.ArgName = ArgName
-	s.ArgDataType = ArgDataType
+	s.ArgDataTypeOld = ArgDataTypeOld
 	return &s
 }
 
@@ -131,10 +131,10 @@ func (s *FunctionReturnsRequest) WithTable(Table FunctionReturnsTableRequest) *F
 }
 
 func NewFunctionReturnsResultDataTypeRequest(
-	ResultDataType DataType,
+	ResultDataTypeOld DataType,
 ) *FunctionReturnsResultDataTypeRequest {
 	s := FunctionReturnsResultDataTypeRequest{}
-	s.ResultDataType = ResultDataType
+	s.ResultDataTypeOld = ResultDataTypeOld
 	return &s
 }
 
@@ -149,11 +149,11 @@ func (s *FunctionReturnsTableRequest) WithColumns(Columns []FunctionColumnReques
 
 func NewFunctionColumnRequest(
 	ColumnName string,
-	ColumnDataType DataType,
+	ColumnDataTypeOld DataType,
 ) *FunctionColumnRequest {
 	s := FunctionColumnRequest{}
 	s.ColumnName = ColumnName
-	s.ColumnDataType = ColumnDataType
+	s.ColumnDataTypeOld = ColumnDataTypeOld
 	return &s
 }
 
@@ -323,12 +323,12 @@ func (s *CreateForPythonFunctionRequest) WithFunctionDefinition(FunctionDefiniti
 
 func NewCreateForScalaFunctionRequest(
 	name SchemaObjectIdentifier,
-	ResultDataType DataType,
+	ResultDataTypeOld DataType,
 	Handler string,
 ) *CreateForScalaFunctionRequest {
 	s := CreateForScalaFunctionRequest{}
 	s.name = name
-	s.ResultDataType = ResultDataType
+	s.ResultDataTypeOld = ResultDataTypeOld
 	s.Handler = Handler
 	return &s
 }

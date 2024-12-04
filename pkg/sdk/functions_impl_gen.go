@@ -110,7 +110,7 @@ func (r *CreateForJavaFunctionRequest) toOpts() *CreateForJavaFunctionOptions {
 	opts.Returns = FunctionReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
-			ResultDataType: r.Returns.ResultDataType.ResultDataType,
+			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -165,7 +165,7 @@ func (r *CreateForJavascriptFunctionRequest) toOpts() *CreateForJavascriptFuncti
 	opts.Returns = FunctionReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
-			ResultDataType: r.Returns.ResultDataType.ResultDataType,
+			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -212,7 +212,7 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 	opts.Returns = FunctionReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
-			ResultDataType: r.Returns.ResultDataType.ResultDataType,
+			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -251,7 +251,7 @@ func (r *CreateForScalaFunctionRequest) toOpts() *CreateForScalaFunctionOptions 
 		name:        r.name,
 
 		CopyGrants:            r.CopyGrants,
-		ResultDataType:        r.ResultDataType,
+		ResultDataTypeOld:     r.ResultDataTypeOld,
 		ReturnNullValues:      r.ReturnNullValues,
 		NullInputBehavior:     r.NullInputBehavior,
 		ReturnResultsBehavior: r.ReturnResultsBehavior,
@@ -311,7 +311,7 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 	opts.Returns = FunctionReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
-			ResultDataType: r.Returns.ResultDataType.ResultDataType,
+			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -386,7 +386,7 @@ func (r functionRow) convert() *Function {
 	if err != nil {
 		log.Printf("[DEBUG] failed to parse function arguments, err = %s", err)
 	} else {
-		e.Arguments = dataTypes
+		e.ArgumentsOld = dataTypes
 	}
 
 	if r.IsSecure.Valid {

@@ -38,9 +38,9 @@ type CreateForJavaFunctionRequest struct {
 }
 
 type FunctionArgumentRequest struct {
-	ArgName      string   // required
-	ArgDataType  DataType // required
-	DefaultValue *string
+	ArgName        string   // required
+	ArgDataTypeOld DataType // required
+	DefaultValue   *string
 }
 
 type FunctionReturnsRequest struct {
@@ -49,7 +49,7 @@ type FunctionReturnsRequest struct {
 }
 
 type FunctionReturnsResultDataTypeRequest struct {
-	ResultDataType DataType // required
+	ResultDataTypeOld DataType // required
 }
 
 type FunctionReturnsTableRequest struct {
@@ -57,8 +57,8 @@ type FunctionReturnsTableRequest struct {
 }
 
 type FunctionColumnRequest struct {
-	ColumnName     string   // required
-	ColumnDataType DataType // required
+	ColumnName        string   // required
+	ColumnDataTypeOld DataType // required
 }
 
 type FunctionImportRequest struct {
@@ -114,7 +114,7 @@ type CreateForScalaFunctionRequest struct {
 	name                  SchemaObjectIdentifier // required
 	Arguments             []FunctionArgumentRequest
 	CopyGrants            *bool
-	ResultDataType        DataType // required
+	ResultDataTypeOld     DataType // required
 	ReturnNullValues      *ReturnNullValues
 	NullInputBehavior     *NullInputBehavior
 	ReturnResultsBehavior *ReturnResultsBehavior

@@ -31,6 +31,7 @@ func (opts *CreateForJavaFunctionOptions) validate() error {
 			errs = append(errs, errExactlyOneOf("CreateForJavaFunctionOptions.Returns", "ResultDataType", "Table"))
 		}
 	}
+	// added manually
 	if opts.FunctionDefinition == nil {
 		if opts.TargetPath != nil {
 			errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
@@ -86,6 +87,7 @@ func (opts *CreateForPythonFunctionOptions) validate() error {
 			errs = append(errs, errExactlyOneOf("CreateForPythonFunctionOptions.Returns", "ResultDataType", "Table"))
 		}
 	}
+	// added manually
 	if opts.FunctionDefinition == nil {
 		if len(opts.Imports) == 0 {
 			errs = append(errs, NewError("IMPORTS must not be empty when AS is nil"))
@@ -108,6 +110,7 @@ func (opts *CreateForScalaFunctionOptions) validate() error {
 	if everyValueSet(opts.OrReplace, opts.IfNotExists) {
 		errs = append(errs, errOneOf("CreateForScalaFunctionOptions", "OrReplace", "IfNotExists"))
 	}
+	// added manually
 	if opts.FunctionDefinition == nil {
 		if opts.TargetPath != nil {
 			errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
