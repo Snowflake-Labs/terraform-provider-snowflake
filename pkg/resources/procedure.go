@@ -322,7 +322,7 @@ func createJavaScriptProcedure(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 	procedureDefinition := d.Get("statement").(string)
-	req := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), sdk.LegacyDataTypeFrom(returnDataType), procedureDefinition)
+	req := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), nil, procedureDefinition).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType))
 	if len(args) > 0 {
 		req.WithArguments(args)
 	}
@@ -777,7 +777,7 @@ func parseProcedureReturnsRequest(s string) (*sdk.ProcedureReturnsRequest, diag.
 		}
 		var cr []sdk.ProcedureColumnRequest
 		for _, item := range columns {
-			cr = append(cr, *sdk.NewProcedureColumnRequest(item.ColumnName, item.ColumnDataTypeOld))
+			cr = append(cr, *sdk.NewProcedureColumnRequest(item.ColumnName, nil).WithColumnDataTypeOld(item.ColumnDataTypeOld))
 		}
 		returns.WithTable(*sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
 	} else {
@@ -785,7 +785,7 @@ func parseProcedureReturnsRequest(s string) (*sdk.ProcedureReturnsRequest, diag.
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }
@@ -799,7 +799,7 @@ func parseProcedureSQLReturnsRequest(s string) (*sdk.ProcedureSQLReturnsRequest,
 		}
 		var cr []sdk.ProcedureColumnRequest
 		for _, item := range columns {
-			cr = append(cr, *sdk.NewProcedureColumnRequest(item.ColumnName, item.ColumnDataTypeOld))
+			cr = append(cr, *sdk.NewProcedureColumnRequest(item.ColumnName, nil).WithColumnDataTypeOld(item.ColumnDataTypeOld))
 		}
 		returns.WithTable(*sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
 	} else {
@@ -807,7 +807,7 @@ func parseProcedureSQLReturnsRequest(s string) (*sdk.ProcedureSQLReturnsRequest,
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }
