@@ -6,18 +6,18 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 var procedureArgument = g.NewQueryStruct("ProcedureArgument").
 	Text("ArgName", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("ArgDataType", "DataType", g.KeywordOptions().NoQuotes().Required()).
+	PredefinedQueryStructField("ArgDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required()).
 	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT"))
 
 var procedureColumn = g.NewQueryStruct("ProcedureColumn").
 	Text("ColumnName", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("ColumnDataType", "DataType", g.KeywordOptions().NoQuotes().Required())
+	PredefinedQueryStructField("ColumnDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required())
 
 var procedureReturns = g.NewQueryStruct("ProcedureReturns").
 	OptionalQueryStructField(
 		"ResultDataType",
 		g.NewQueryStruct("ProcedureReturnsResultDataType").
-			PredefinedQueryStructField("ResultDataType", "DataType", g.KeywordOptions().NoQuotes().Required()).
+			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required()).
 			OptionalSQL("NULL").OptionalSQL("NOT NULL"),
 		g.KeywordOptions(),
 	).
@@ -36,7 +36,7 @@ var procedureSQLReturns = g.NewQueryStruct("ProcedureSQLReturns").
 	OptionalQueryStructField(
 		"ResultDataType",
 		g.NewQueryStruct("ProcedureReturnsResultDataType").
-			PredefinedQueryStructField("ResultDataType", "DataType", g.KeywordOptions().NoQuotes().Required()),
+			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required()),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
@@ -126,7 +126,7 @@ var ProceduresDef = g.NewInterface(
 			g.ListOptions().MustParentheses(),
 		).
 		OptionalSQL("COPY GRANTS").
-		PredefinedQueryStructField("ResultDataType", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
+		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
 		OptionalSQL("NOT NULL").
 		SQL("LANGUAGE JAVASCRIPT").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
@@ -299,7 +299,7 @@ var ProceduresDef = g.NewInterface(
 		Field("IsAnsi", "bool").
 		Field("MinNumArguments", "int").
 		Field("MaxNumArguments", "int").
-		Field("Arguments", "string").
+		Field("ArgumentsRaw", "string").
 		Field("Description", "string").
 		Field("CatalogName", "string").
 		Field("IsTableFunction", "bool").
@@ -437,7 +437,7 @@ var ProceduresDef = g.NewInterface(
 			procedureArgument,
 			g.ListOptions().MustParentheses(),
 		).
-		PredefinedQueryStructField("ResultDataType", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
+		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
 		OptionalSQL("NOT NULL").
 		SQL("LANGUAGE JAVASCRIPT").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
@@ -452,7 +452,7 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("CallArguments", "[]string", g.KeywordOptions().MustParentheses()).
 		PredefinedQueryStructField("ScriptingVariable", "*string", g.ParameterOptions().NoEquals().NoQuotes().SQL("INTO")).
 		WithValidation(g.ValidateValueSet, "ProcedureDefinition").
-		WithValidation(g.ValidateValueSet, "ResultDataType").
+		WithValidation(g.ValidateValueSet, "ResultDataTypeOld").
 		WithValidation(g.ValidIdentifier, "ProcedureName").
 		WithValidation(g.ValidIdentifier, "Name"),
 ).CustomOperation(

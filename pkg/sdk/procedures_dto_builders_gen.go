@@ -82,11 +82,11 @@ func (s *CreateForJavaProcedureRequest) WithProcedureDefinition(ProcedureDefinit
 
 func NewProcedureArgumentRequest(
 	ArgName string,
-	ArgDataType DataType,
+	ArgDataTypeOld DataType,
 ) *ProcedureArgumentRequest {
 	s := ProcedureArgumentRequest{}
 	s.ArgName = ArgName
-	s.ArgDataType = ArgDataType
+	s.ArgDataTypeOld = ArgDataTypeOld
 	return &s
 }
 
@@ -110,10 +110,10 @@ func (s *ProcedureReturnsRequest) WithTable(Table ProcedureReturnsTableRequest) 
 }
 
 func NewProcedureReturnsResultDataTypeRequest(
-	ResultDataType DataType,
+	ResultDataTypeOld DataType,
 ) *ProcedureReturnsResultDataTypeRequest {
 	s := ProcedureReturnsResultDataTypeRequest{}
-	s.ResultDataType = ResultDataType
+	s.ResultDataTypeOld = ResultDataTypeOld
 	return &s
 }
 
@@ -138,11 +138,11 @@ func (s *ProcedureReturnsTableRequest) WithColumns(Columns []ProcedureColumnRequ
 
 func NewProcedureColumnRequest(
 	ColumnName string,
-	ColumnDataType DataType,
+	ColumnDataTypeOld DataType,
 ) *ProcedureColumnRequest {
 	s := ProcedureColumnRequest{}
 	s.ColumnName = ColumnName
-	s.ColumnDataType = ColumnDataType
+	s.ColumnDataTypeOld = ColumnDataTypeOld
 	return &s
 }
 
@@ -164,12 +164,12 @@ func NewProcedureImportRequest(
 
 func NewCreateForJavaScriptProcedureRequest(
 	name SchemaObjectIdentifier,
-	ResultDataType DataType,
+	ResultDataTypeOld DataType,
 	ProcedureDefinition string,
 ) *CreateForJavaScriptProcedureRequest {
 	s := CreateForJavaScriptProcedureRequest{}
 	s.name = name
-	s.ResultDataType = ResultDataType
+	s.ResultDataTypeOld = ResultDataTypeOld
 	s.ProcedureDefinition = ProcedureDefinition
 	return &s
 }
@@ -646,13 +646,13 @@ func (s *CreateAndCallForScalaProcedureRequest) WithScriptingVariable(ScriptingV
 
 func NewCreateAndCallForJavaScriptProcedureRequest(
 	Name AccountObjectIdentifier,
-	ResultDataType DataType,
+	ResultDataTypeOld DataType,
 	ProcedureDefinition string,
 	ProcedureName AccountObjectIdentifier,
 ) *CreateAndCallForJavaScriptProcedureRequest {
 	s := CreateAndCallForJavaScriptProcedureRequest{}
 	s.Name = Name
-	s.ResultDataType = ResultDataType
+	s.ResultDataTypeOld = ResultDataTypeOld
 	s.ProcedureDefinition = ProcedureDefinition
 	s.ProcedureName = ProcedureName
 	return &s

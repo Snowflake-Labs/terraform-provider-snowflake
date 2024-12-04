@@ -41,9 +41,9 @@ type CreateForJavaProcedureRequest struct {
 }
 
 type ProcedureArgumentRequest struct {
-	ArgName      string   // required
-	ArgDataType  DataType // required
-	DefaultValue *string
+	ArgName        string   // required
+	ArgDataTypeOld DataType // required
+	DefaultValue   *string
 }
 
 type ProcedureReturnsRequest struct {
@@ -52,9 +52,9 @@ type ProcedureReturnsRequest struct {
 }
 
 type ProcedureReturnsResultDataTypeRequest struct {
-	ResultDataType DataType // required
-	Null           *bool
-	NotNull        *bool
+	ResultDataTypeOld DataType // required
+	Null              *bool
+	NotNull           *bool
 }
 
 type ProcedureReturnsTableRequest struct {
@@ -62,8 +62,8 @@ type ProcedureReturnsTableRequest struct {
 }
 
 type ProcedureColumnRequest struct {
-	ColumnName     string   // required
-	ColumnDataType DataType // required
+	ColumnName        string   // required
+	ColumnDataTypeOld DataType // required
 }
 
 type ProcedurePackageRequest struct {
@@ -80,7 +80,7 @@ type CreateForJavaScriptProcedureRequest struct {
 	name                SchemaObjectIdentifier // required
 	Arguments           []ProcedureArgumentRequest
 	CopyGrants          *bool
-	ResultDataType      DataType // required
+	ResultDataTypeOld   DataType // required
 	NotNull             *bool
 	NullInputBehavior   *NullInputBehavior
 	Comment             *string
@@ -218,7 +218,7 @@ type CreateAndCallForScalaProcedureRequest struct {
 type CreateAndCallForJavaScriptProcedureRequest struct {
 	Name                AccountObjectIdentifier // required
 	Arguments           []ProcedureArgumentRequest
-	ResultDataType      DataType // required
+	ResultDataTypeOld   DataType // required
 	NotNull             *bool
 	NullInputBehavior   *NullInputBehavior
 	ProcedureDefinition string // required

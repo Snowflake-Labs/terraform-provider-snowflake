@@ -40,6 +40,7 @@ func (opts *CreateForJavaProcedureOptions) validate() error {
 			errs = append(errs, errExactlyOneOf("CreateForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
 		}
 	}
+	// added manually
 	if opts.ProcedureDefinition == nil && opts.TargetPath != nil {
 		errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
 	}
@@ -107,6 +108,7 @@ func (opts *CreateForScalaProcedureOptions) validate() error {
 			errs = append(errs, errExactlyOneOf("CreateForScalaProcedureOptions.Returns", "ResultDataType", "Table"))
 		}
 	}
+	// added manually
 	if opts.ProcedureDefinition == nil && opts.TargetPath != nil {
 		errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
 	}
@@ -205,6 +207,7 @@ func (opts *CreateAndCallForJavaProcedureOptions) validate() error {
 		errs = append(errs, errNotSet("CreateAndCallForJavaProcedureOptions", "Handler"))
 	}
 	if !ValidObjectIdentifier(opts.ProcedureName) {
+		// altered manually
 		errs = append(errs, errInvalidIdentifier("CreateAndCallForJavaProcedureOptions", "ProcedureName"))
 	}
 	if !ValidObjectIdentifier(opts.Name) {
@@ -233,6 +236,7 @@ func (opts *CreateAndCallForScalaProcedureOptions) validate() error {
 		errs = append(errs, errNotSet("CreateAndCallForScalaProcedureOptions", "Handler"))
 	}
 	if !ValidObjectIdentifier(opts.ProcedureName) {
+		// altered manually
 		errs = append(errs, errInvalidIdentifier("CreateAndCallForScalaProcedureOptions", "ProcedureName"))
 	}
 	if !ValidObjectIdentifier(opts.Name) {
@@ -254,10 +258,11 @@ func (opts *CreateAndCallForJavaScriptProcedureOptions) validate() error {
 	if !valueSet(opts.ProcedureDefinition) {
 		errs = append(errs, errNotSet("CreateAndCallForJavaScriptProcedureOptions", "ProcedureDefinition"))
 	}
-	if !valueSet(opts.ResultDataType) {
-		errs = append(errs, errNotSet("CreateAndCallForJavaScriptProcedureOptions", "ResultDataType"))
+	if !valueSet(opts.ResultDataTypeOld) {
+		errs = append(errs, errNotSet("CreateAndCallForJavaScriptProcedureOptions", "ResultDataTypeOld"))
 	}
 	if !ValidObjectIdentifier(opts.ProcedureName) {
+		// altered manually
 		errs = append(errs, errInvalidIdentifier("CreateAndCallForJavaScriptProcedureOptions", "ProcedureName"))
 	}
 	if !ValidObjectIdentifier(opts.Name) {
@@ -281,6 +286,7 @@ func (opts *CreateAndCallForPythonProcedureOptions) validate() error {
 		errs = append(errs, errNotSet("CreateAndCallForPythonProcedureOptions", "Handler"))
 	}
 	if !ValidObjectIdentifier(opts.ProcedureName) {
+		// altered manually
 		errs = append(errs, errInvalidIdentifier("CreateAndCallForPythonProcedureOptions", "ProcedureName"))
 	}
 	if !ValidObjectIdentifier(opts.Name) {
@@ -303,6 +309,7 @@ func (opts *CreateAndCallForSQLProcedureOptions) validate() error {
 		errs = append(errs, errNotSet("CreateAndCallForSQLProcedureOptions", "ProcedureDefinition"))
 	}
 	if !ValidObjectIdentifier(opts.ProcedureName) {
+		// altered manually
 		errs = append(errs, errInvalidIdentifier("CreateAndCallForSQLProcedureOptions", "ProcedureName"))
 	}
 	if !ValidObjectIdentifier(opts.Name) {
