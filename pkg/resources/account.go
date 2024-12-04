@@ -210,20 +210,22 @@ var accountSchema = map[string]*schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
+		// TODO: Sensitive?
 		Description:      "TODO",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"admin_name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "TODO",
+		// TODO: Sensitive?
+		Description:      externalChangesNotDetectedFieldDescription("TODO"),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"admin_password": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      "TODO",
+		Description:      externalChangesNotDetectedFieldDescription("TODO"),
 		DiffSuppressFunc: IgnoreAfterCreation,
 		AtLeastOneOf:     []string{"admin_password", "admin_rsa_public_key"},
 	},
@@ -231,7 +233,7 @@ var accountSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      "TODO",
+		Description:      externalChangesNotDetectedFieldDescription("TODO"),
 		DiffSuppressFunc: IgnoreAfterCreation,
 		AtLeastOneOf:     []string{"admin_password", "admin_rsa_public_key"},
 	},
@@ -239,7 +241,7 @@ var accountSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 		// TODO: Valid options
-		Description:      "TODO",
+		Description:      externalChangesNotDetectedFieldDescription("TODO"),
 		DiffSuppressFunc: SuppressIfAny(IgnoreAfterCreation, NormalizeAndCompare(sdk.ToUserType)),
 		ValidateDiagFunc: sdkValidation(sdk.ToUserType),
 	},
@@ -247,28 +249,28 @@ var accountSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      "TODO",
+		Description:      externalChangesNotDetectedFieldDescription("TODO"),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"last_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      "",
+		Description:      externalChangesNotDetectedFieldDescription("TODO")
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"email": {
 		Type:             schema.TypeString,
 		Required:         true,
 		Sensitive:        true,
-		Description:      "TODO",
+		Description:      externalChangesNotDetectedFieldDescription("TODO"),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"must_change_password": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Default:          BooleanDefault,
-		Description:      "TODO",
+		Description:      externalChangesNotDetectedFieldDescription("TODO"),
 		DiffSuppressFunc: IgnoreAfterCreation,
 		ValidateDiagFunc: validateBooleanString,
 	},
@@ -433,7 +435,30 @@ func ReadAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 	}
 
 	if errs := errors.Join(
+		attributeMappedValueReadOrDefault(d, "edition", account.Edition, func(edition *sdk.AccountEdition) (string, error) {
+			if edition != nil {
+				return string(*edition), nil
+			}
+			return "", nil
+		}, nil),
+		// TODO: use SHOW REGIONS?
+		// TODO: Should region group be read ?
+		// TODO: Should region be read ?
+		// TODO: There's default SNOWFLAKE comment
+		attributeMappedValueReadOrNil(d, "comment", account.Comment, func(comment *string) (string, error) {
+			if comment != nil {
+				return *comment, nil
+			}
+			return "", nil
+		}),
+		attributeMappedValueReadOrNil(d, "is_org_admin", account.IsOrgAdmin, func(isOrgAdmin *bool) (string, error) {
+			if isOrgAdmin != nil {
+				return booleanStringFromBool(*isOrgAdmin), nil
+			}
+			return BooleanDefault, nil
+		}),
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+		d.Set(ParametersAttributeName, []map[string]any{schemas.AccountParametersToSchema(accountParameters)}),
 	); errs != nil {
 		return diag.FromErr(errs)
 	}
