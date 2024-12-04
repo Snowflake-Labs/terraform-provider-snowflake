@@ -475,8 +475,6 @@ func TestBuilder_sql(t *testing.T) {
 	})
 }
 
-// TODO [this PR]: add constructors for each data type?
-// TODO [this PR]: test printing all data types
 // TODO [this PR]: add optional alternatives to functions and procedures (arguments and return types)
 // TODO [this PR]: integration tests for both options
 // TODO [this PR]: integration test to check all data types in a new way + reading from snowflake?
@@ -490,10 +488,57 @@ func TestBuilder_DataType(t *testing.T) {
 		dataType    string
 		expectedSql string
 	}{
+		{dataType: "ARRAY", expectedSql: "ARRAY"},
+		{dataType: "array", expectedSql: "ARRAY"},
+		{dataType: "BINARY", expectedSql: "BINARY(8388608)"},
+		{dataType: "binary(120)", expectedSql: "BINARY(120)"},
+		{dataType: "BOOLEAN", expectedSql: "BOOLEAN"},
+		{dataType: "boolean", expectedSql: "BOOLEAN"},
+		{dataType: "DATE", expectedSql: "DATE"},
+		{dataType: "date", expectedSql: "DATE"},
+		{dataType: "FLOAT", expectedSql: "FLOAT"},
+		{dataType: "float4", expectedSql: "FLOAT4"},
+		{dataType: "real", expectedSql: "REAL"},
+		{dataType: "GEOGRAPHY", expectedSql: "GEOGRAPHY"},
+		{dataType: "geography", expectedSql: "GEOGRAPHY"},
+		{dataType: "GEOMETRY", expectedSql: "GEOMETRY"},
+		{dataType: "geometry", expectedSql: "GEOMETRY"},
+		{dataType: "NUMBER", expectedSql: "NUMBER(38, 0)"},
+		{dataType: "NUMBER(36)", expectedSql: "NUMBER(36, 0)"},
+		{dataType: "NUMBER(36, 2)", expectedSql: "NUMBER(36, 2)"},
+		{dataType: "number(36, 2)", expectedSql: "NUMBER(36, 2)"},
+		{dataType: "INT", expectedSql: "INT"},
+		{dataType: "integer", expectedSql: "INTEGER"},
+		{dataType: "OBJECT", expectedSql: "OBJECT"},
+		{dataType: "object", expectedSql: "OBJECT"},
 		{dataType: "VARCHAR(20)", expectedSql: "VARCHAR(20)"},
 		{dataType: "VARCHAR", expectedSql: "VARCHAR(16777216)"},
+		{dataType: "varchar", expectedSql: "VARCHAR(16777216)"},
 		{dataType: "CHAR", expectedSql: "CHAR(1)"},
-		{dataType: "NUMBER", expectedSql: "NUMBER(38, 0)"},
+		{dataType: "char(34)", expectedSql: "CHAR(34)"},
+		{dataType: "TIME", expectedSql: "TIME(9)"},
+		{dataType: "time", expectedSql: "TIME(9)"},
+		{dataType: "time(5)", expectedSql: "TIME(5)"},
+		{dataType: "TIMESTAMP_LTZ", expectedSql: "TIMESTAMP_LTZ(9)"},
+		{dataType: "timestamp_ltz", expectedSql: "TIMESTAMP_LTZ(9)"},
+		{dataType: "timestampltz", expectedSql: "TIMESTAMPLTZ(9)"},
+		{dataType: "timestampltz(5)", expectedSql: "TIMESTAMPLTZ(5)"},
+		{dataType: "TIMESTAMP_NTZ", expectedSql: "TIMESTAMP_NTZ(9)"},
+		{dataType: "timestamp_ntz", expectedSql: "TIMESTAMP_NTZ(9)"},
+		{dataType: "timestamp_ntz(5)", expectedSql: "TIMESTAMP_NTZ(5)"},
+		{dataType: "timestampntz", expectedSql: "TIMESTAMPNTZ(9)"},
+		{dataType: "timestampntz(5)", expectedSql: "TIMESTAMPNTZ(5)"},
+		{dataType: "TIMESTAMP_TZ", expectedSql: "TIMESTAMP_TZ(9)"},
+		{dataType: "timestamp_tz", expectedSql: "TIMESTAMP_TZ(9)"},
+		{dataType: "timestamp_tz(5)", expectedSql: "TIMESTAMP_TZ(5)"},
+		{dataType: "timestamptz", expectedSql: "TIMESTAMPTZ(9)"},
+		{dataType: "timestamptz(5)", expectedSql: "TIMESTAMPTZ(5)"},
+		{dataType: "VARIANT", expectedSql: "VARIANT"},
+		{dataType: "variant", expectedSql: "VARIANT"},
+		{dataType: "VECTOR(INT, 20)", expectedSql: "VECTOR(INT, 20)"},
+		{dataType: "VECTOR(FLOAT, 20)", expectedSql: "VECTOR(FLOAT, 20)"},
+		{dataType: "VECTOR(int, 20)", expectedSql: "VECTOR(INT, 20)"},
+		{dataType: "VECTOR(float, 20)", expectedSql: "VECTOR(FLOAT, 20)"},
 	}
 
 	t.Run("test data type empty", func(t *testing.T) {

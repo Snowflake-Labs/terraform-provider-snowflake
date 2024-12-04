@@ -24,6 +24,9 @@ type NumberDataType struct {
 }
 
 func (t *NumberDataType) ToSql() string {
+	if slices.Contains(NumberDataTypeSubTypes, t.underlyingType) {
+		return t.underlyingType
+	}
 	return fmt.Sprintf("%s(%d, %d)", t.underlyingType, t.precision, t.scale)
 }
 
