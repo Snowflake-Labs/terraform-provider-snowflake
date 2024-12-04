@@ -476,7 +476,6 @@ func TestBuilder_sql(t *testing.T) {
 }
 
 func TestBuilder_DataType(t *testing.T) {
-
 	type dataTypeTestHelper struct {
 		DataType datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
 	}

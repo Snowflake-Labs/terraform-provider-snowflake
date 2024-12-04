@@ -273,7 +273,6 @@ func TestFunctions_CreateForJavascript(t *testing.T) {
 		opts.FunctionDefinition = "return 1;"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s (d FLOAT DEFAULT 1.0) COPY GRANTS RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT CALLED ON NULL INPUT IMMUTABLE COMMENT = 'comment' AS 'return 1;'`, id.FullyQualifiedName())
 	})
-
 }
 
 func TestFunctions_CreateForPython(t *testing.T) {

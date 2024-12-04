@@ -261,7 +261,7 @@ func createJavaProcedure(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	procedureDefinition := d.Get("statement").(string)
 	runtimeVersion := d.Get("runtime_version").(string)
-	var packages []sdk.ProcedurePackageRequest
+	packages := make([]sdk.ProcedurePackageRequest, 0)
 	for _, item := range d.Get("packages").([]interface{}) {
 		packages = append(packages, *sdk.NewProcedurePackageRequest(item.(string)))
 	}
@@ -373,7 +373,7 @@ func createScalaProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	procedureDefinition := d.Get("statement").(string)
 	runtimeVersion := d.Get("runtime_version").(string)
-	var packages []sdk.ProcedurePackageRequest
+	packages := make([]sdk.ProcedurePackageRequest, 0)
 	for _, item := range d.Get("packages").([]interface{}) {
 		packages = append(packages, *sdk.NewProcedurePackageRequest(item.(string)))
 	}
@@ -484,7 +484,7 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	procedureDefinition := d.Get("statement").(string)
 	runtimeVersion := d.Get("runtime_version").(string)
-	var packages []sdk.ProcedurePackageRequest
+	packages := make([]sdk.ProcedurePackageRequest, 0)
 	for _, item := range d.Get("packages").([]interface{}) {
 		packages = append(packages, *sdk.NewProcedurePackageRequest(item.(string)))
 	}

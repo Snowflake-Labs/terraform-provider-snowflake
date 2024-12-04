@@ -255,7 +255,6 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		opts.ProcedureDefinition = "return 1;"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (d FLOAT DEFAULT 1.0) COPY GRANTS RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return 1;'`, id.FullyQualifiedName())
 	})
-
 }
 
 func TestProcedures_CreateForPython(t *testing.T) {

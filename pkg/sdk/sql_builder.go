@@ -644,7 +644,7 @@ func (v sqlParameterClause) String() string {
 	if v.value == nil {
 		return s
 	}
-	var value = v.value
+	value := v.value
 	if dataType, ok := value.(datatypes.DataType); ok {
 		// We check like this and not by `dataType == nil` because for e.g. `var *datatypes.ArrayDataType` return false in a normal nil check
 		if reflect.ValueOf(dataType).IsZero() {
