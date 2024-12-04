@@ -5,6 +5,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -42,10 +43,7 @@ func TestInt_DataTypes(t *testing.T) {
 		"VARCHAR(x)",
 		"VARCHAR(36, 5)",
 	}
-	// can't use slices.Concat on 1.21
-	vectorInnerTypesSynonyms := make([]string, 0)
-	vectorInnerTypesSynonyms = append(vectorInnerTypesSynonyms, datatypes.AllNumberDataTypes...)
-	vectorInnerTypesSynonyms = append(vectorInnerTypesSynonyms, datatypes.FloatDataTypeSynonyms...)
+	vectorInnerTypesSynonyms := helpers.ConcatSlices(datatypes.AllNumberDataTypes, datatypes.FloatDataTypeSynonyms)
 	vectorInnerTypeSynonymsThatWork := []string{
 		"INTEGER",
 		"INT",

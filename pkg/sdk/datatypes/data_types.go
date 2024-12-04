@@ -83,7 +83,18 @@ func ParseDataType(raw string) (DataType, error) {
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
 
+// AreTheSame compares any two data types.
+// If both data types are nil it returns true.
+// If only one data type is nil it returns false.
+// It returns false for different underlying types.
+// For the same type it performs type-specific comparison.
 func AreTheSame(a DataType, b DataType) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil && b != nil || a != nil && b == nil {
+		return false
+	}
 	if reflect.TypeOf(a) != reflect.TypeOf(b) {
 		return false
 	}
