@@ -572,7 +572,7 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 			ProcedureDefinition: "3.141592654::FLOAT",
 			Returns: ProcedureSQLReturns{
 				ResultDataType: &ProcedureReturnsResultDataType{
-					ResultDataTypeOld: "VARCHAR",
+					ResultDataType: dataTypeVarchar,
 				},
 			},
 		}
@@ -599,7 +599,7 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureSQLReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeFloat,
+				ResultDataType: dataTypeFloat,
 			},
 		}
 		opts.ProcedureDefinition = "3.141592654::FLOAT"
@@ -928,13 +928,13 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:        "name",
-						ColumnDataTypeOld: DataTypeVARCHAR,
+						ColumnName:     "name",
+						ColumnDataType: dataTypeVarchar,
 					},
 				},
 			},
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeFloat,
+				ResultDataType: dataTypeFloat,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
@@ -944,7 +944,7 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeVARCHAR,
+				ResultDataType: dataTypeVarchar,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForJavaProcedureOptions", "Handler"))
@@ -1098,13 +1098,13 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:        "name",
-						ColumnDataTypeOld: DataTypeVARCHAR,
+						ColumnName:     "name",
+						ColumnDataType: dataTypeVarchar,
 					},
 				},
 			},
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeFloat,
+				ResultDataType: dataTypeFloat,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForScalaProcedureOptions.Returns", "ResultDataType", "Table"))
@@ -1114,7 +1114,7 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeVARCHAR,
+				ResultDataType: dataTypeVarchar,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForScalaProcedureOptions", "Handler"))
@@ -1272,13 +1272,13 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:        "name",
-						ColumnDataTypeOld: DataTypeVARCHAR,
+						ColumnName:     "name",
+						ColumnDataType: dataTypeVarchar,
 					},
 				},
 			},
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeFloat,
+				ResultDataType: dataTypeFloat,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForPythonProcedureOptions.Returns", "ResultDataType", "Table"))
@@ -1288,7 +1288,7 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeVARCHAR,
+				ResultDataType: dataTypeVarchar,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForPythonProcedureOptions", "Handler"))
@@ -1440,10 +1440,10 @@ func TestProcedures_CreateAndCallForJavaScript(t *testing.T) {
 
 	t.Run("no arguments", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ResultDataTypeOld = "DOUBLE"
+		opts.ResultDataType = dataTypeFloat
 		opts.ProcedureDefinition = "return 1;"
 		opts.ProcedureName = id
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS DOUBLE LANGUAGE JAVASCRIPT AS 'return 1;' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS FLOAT LANGUAGE JAVASCRIPT AS 'return 1;' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
 	// TODO [next PR]: remove with old procedure removal for V1
@@ -1534,13 +1534,13 @@ func TestProcedures_CreateAndCallForSQL(t *testing.T) {
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:        "name",
-						ColumnDataTypeOld: DataTypeVARCHAR,
+						ColumnName:     "name",
+						ColumnDataType: dataTypeVarchar,
 					},
 				},
 			},
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataTypeOld: DataTypeFloat,
+				ResultDataType: dataTypeFloat,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForSQLProcedureOptions.Returns", "ResultDataType", "Table"))
