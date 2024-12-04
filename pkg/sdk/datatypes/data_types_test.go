@@ -2,6 +2,7 @@ package datatypes
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -91,7 +92,12 @@ func Test_ParseDataType_Number(t *testing.T) {
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.(*NumberDataType).underlyingType)
 
 			assert.Equal(t, NumberLegacyDataType, parsed.ToLegacyDataTypeSql())
-			assert.Equal(t, fmt.Sprintf("%s(%d, %d)", parsed.(*NumberDataType).underlyingType, parsed.(*NumberDataType).precision, parsed.(*NumberDataType).scale), parsed.ToSql())
+			if slices.Contains(NumberDataTypeSubTypes, parsed.(*NumberDataType).underlyingType) {
+				assert.Equal(t, parsed.(*NumberDataType).underlyingType, parsed.ToSql())
+			} else {
+				assert.Equal(t, fmt.Sprintf("%s(%d, %d)", parsed.(*NumberDataType).underlyingType, parsed.(*NumberDataType).precision, parsed.(*NumberDataType).scale), parsed.ToSql())
+			}
+			assert.Equal(t, fmt.Sprintf("%s(%d,%d)", NumberLegacyDataType, parsed.(*NumberDataType).precision, parsed.(*NumberDataType).scale), parsed.Canonical())
 		})
 	}
 
@@ -158,6 +164,7 @@ func Test_ParseDataType_Float(t *testing.T) {
 
 			assert.Equal(t, FloatLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
+			assert.Equal(t, FloatLegacyDataType, parsed.Canonical())
 		})
 	}
 
@@ -267,6 +274,7 @@ func Test_ParseDataType_Text(t *testing.T) {
 
 			assert.Equal(t, VarcharLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, fmt.Sprintf("%s(%d)", parsed.(*TextDataType).underlyingType, parsed.(*TextDataType).length), parsed.ToSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", VarcharLegacyDataType, parsed.(*TextDataType).length), parsed.Canonical())
 		})
 	}
 
@@ -338,6 +346,7 @@ func Test_ParseDataType_Binary(t *testing.T) {
 
 			assert.Equal(t, BinaryLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, fmt.Sprintf("%s(%d)", parsed.(*BinaryDataType).underlyingType, parsed.(*BinaryDataType).size), parsed.ToSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", BinaryLegacyDataType, parsed.(*BinaryDataType).size), parsed.Canonical())
 		})
 	}
 
@@ -396,6 +405,7 @@ func Test_ParseDataType_Boolean(t *testing.T) {
 
 			assert.Equal(t, BooleanLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
+			assert.Equal(t, BooleanLegacyDataType, parsed.Canonical())
 		})
 	}
 
@@ -452,6 +462,7 @@ func Test_ParseDataType_Date(t *testing.T) {
 
 			assert.Equal(t, DateLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
+			assert.Equal(t, DateLegacyDataType, parsed.Canonical())
 		})
 	}
 
@@ -512,6 +523,7 @@ func Test_ParseDataType_Time(t *testing.T) {
 
 			assert.Equal(t, TimeLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, fmt.Sprintf("%s(%d)", tc.expectedUnderlyingType, tc.expectedPrecision), parsed.ToSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", TimeLegacyDataType, tc.expectedPrecision), parsed.Canonical())
 		})
 	}
 
@@ -581,6 +593,7 @@ func Test_ParseDataType_TimestampLtz(t *testing.T) {
 
 			assert.Equal(t, TimestampLtzLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, fmt.Sprintf("%s(%d)", parsed.(*TimestampLtzDataType).underlyingType, parsed.(*TimestampLtzDataType).precision), parsed.ToSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", TimestampLtzLegacyDataType, parsed.(*TimestampLtzDataType).precision), parsed.Canonical())
 		})
 	}
 
@@ -652,6 +665,7 @@ func Test_ParseDataType_TimestampNtz(t *testing.T) {
 
 			assert.Equal(t, TimestampNtzLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, fmt.Sprintf("%s(%d)", parsed.(*TimestampNtzDataType).underlyingType, parsed.(*TimestampNtzDataType).precision), parsed.ToSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", TimestampNtzLegacyDataType, parsed.(*TimestampNtzDataType).precision), parsed.Canonical())
 		})
 	}
 
@@ -721,6 +735,7 @@ func Test_ParseDataType_TimestampTz(t *testing.T) {
 
 			assert.Equal(t, TimestampTzLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, fmt.Sprintf("%s(%d)", parsed.(*TimestampTzDataType).underlyingType, parsed.(*TimestampTzDataType).precision), parsed.ToSql())
+			assert.Equal(t, fmt.Sprintf("%s(%d)", TimestampTzLegacyDataType, parsed.(*TimestampTzDataType).precision), parsed.Canonical())
 		})
 	}
 
@@ -777,6 +792,7 @@ func Test_ParseDataType_Variant(t *testing.T) {
 
 			assert.Equal(t, VariantLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
+			assert.Equal(t, VariantLegacyDataType, parsed.Canonical())
 		})
 	}
 
@@ -833,6 +849,7 @@ func Test_ParseDataType_Object(t *testing.T) {
 
 			assert.Equal(t, ObjectLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
+			assert.Equal(t, ObjectLegacyDataType, parsed.Canonical())
 		})
 	}
 
@@ -889,6 +906,7 @@ func Test_ParseDataType_Array(t *testing.T) {
 
 			assert.Equal(t, ArrayLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
+			assert.Equal(t, ArrayLegacyDataType, parsed.Canonical())
 		})
 	}
 
@@ -945,6 +963,7 @@ func Test_ParseDataType_Geography(t *testing.T) {
 
 			assert.Equal(t, GeographyLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
+			assert.Equal(t, GeographyLegacyDataType, parsed.Canonical())
 		})
 	}
 
@@ -1001,6 +1020,7 @@ func Test_ParseDataType_Geometry(t *testing.T) {
 
 			assert.Equal(t, GeometryLegacyDataType, parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, tc.expectedUnderlyingType, parsed.ToSql())
+			assert.Equal(t, GeometryLegacyDataType, parsed.Canonical())
 		})
 	}
 
@@ -1060,6 +1080,7 @@ func Test_ParseDataType_Vector(t *testing.T) {
 
 			assert.Equal(t, fmt.Sprintf("%s(%s, %d)", parsed.(*VectorDataType).underlyingType, parsed.(*VectorDataType).innerType, parsed.(*VectorDataType).dimension), parsed.ToLegacyDataTypeSql())
 			assert.Equal(t, fmt.Sprintf("%s(%s, %d)", parsed.(*VectorDataType).underlyingType, parsed.(*VectorDataType).innerType, parsed.(*VectorDataType).dimension), parsed.ToSql())
+			assert.Equal(t, fmt.Sprintf("%s(%s, %d)", parsed.(*VectorDataType).underlyingType, parsed.(*VectorDataType).innerType, parsed.(*VectorDataType).dimension), parsed.Canonical())
 		})
 	}
 
