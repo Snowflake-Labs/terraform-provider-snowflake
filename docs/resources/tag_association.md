@@ -11,7 +11,7 @@ description: |-
 
 -> **Note** Tag association resource ID has the following format: `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This means that a tuple of tag ID, tag value and object type should be unique across the resources. If you want to specify this combination for more than one object, you should use only one `tag_association` resource with specified `object_identifiers` set.
 
--> **Note** If you want to change tag value to a value that has already present in another resource, first remove needed `object_identifiers` from the resource with the old value, run `terraform apply`, then add the relevant `object_identifiers` in the resource with new value, and run `terrafrom apply` once again.
+-> **Note** If you want to change tag value to a value that is already present in another `tag_association` resource, first remove the relevant `object_identifiers` from the resource with the old value, run `terraform apply`, then add the relevant `object_identifiers` in the resource with new value, and run `terrafrom apply` once again.
 
 # snowflake_tag_association (Resource)
 
