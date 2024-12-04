@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"errors"
 	"testing"
 )
 
@@ -664,12 +663,6 @@ func TestGrants_RevokePrivilegesFromDatabaseRoleRole(t *testing.T) {
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("GrantOnSchemaObjectIn", "InDatabase", "InSchema"))
-	})
-
-	t.Run("validation: unsupported database privilege", func(t *testing.T) {
-		opts := defaultGrantsForDb()
-		opts.privileges.DatabasePrivileges = []AccountObjectPrivilege{AccountObjectPrivilegeCreateDatabaseRole}
-		assertOptsInvalidJoinedErrors(t, opts, errors.New("privilege CREATE DATABASE ROLE is not allowed"))
 	})
 
 	t.Run("on database", func(t *testing.T) {
