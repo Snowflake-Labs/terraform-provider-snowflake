@@ -139,8 +139,9 @@ type CreateForScalaFunctionOptions struct {
 	name                  SchemaObjectIdentifier `ddl:"identifier"`
 	Arguments             []FunctionArgument     `ddl:"list,must_parentheses"`
 	CopyGrants            *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
-	ResultDataTypeOld     DataType               `ddl:"parameter,no_equals" sql:"RETURNS"`
-	ResultDataType        datatypes.DataType     `ddl:"parameter,no_quotes,no_equals" sql:"RETURNS"`
+	returns               bool                   `ddl:"static" sql:"RETURNS"`
+	ResultDataTypeOld     DataType               `ddl:"parameter,no_equals"`
+	ResultDataType        datatypes.DataType     `ddl:"parameter,no_quotes,no_equals"`
 	ReturnNullValues      *ReturnNullValues      `ddl:"keyword"`
 	languageScala         bool                   `ddl:"static" sql:"LANGUAGE SCALA"`
 	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`

@@ -20,7 +20,7 @@ var functionReturns = g.NewQueryStruct("FunctionReturns").
 		"ResultDataType",
 		g.NewQueryStruct("FunctionReturnsResultDataType").
 			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
-			PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.KeywordOptions().NoQuotes().Required()),
+			PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
@@ -177,8 +177,9 @@ var FunctionsDef = g.NewInterface(
 			functionArgument,
 			g.ListOptions().MustParentheses()).
 		OptionalSQL("COPY GRANTS").
-		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS")).
-		PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
+		SQL("RETURNS").
+		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals()).
+		PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 		PredefinedQueryStructField("ReturnNullValues", "*ReturnNullValues", g.KeywordOptions()).
 		SQL("LANGUAGE SCALA").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
