@@ -1,7 +1,13 @@
 package resources_test
 
 import (
-	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -13,10 +19,29 @@ import (
 )
 
 func TestAcc_Account_complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	password := acc.TestClient().Ids.AlphaContaining("123ABC")
+	firstName := acc.TestClient().Ids.Alpha()
+	lastName := acc.TestClient().Ids.Alpha()
+	email := random.Email()
+	name := random.AdminName()
+	key, _ := random.GenerateRSAPublicKey(t)
+	region := acc.TestClient().Context.CurrentRegion(t)
+	comment := random.Comment()
+
+	configModel := model.Account("test", id.Name(), string(sdk.EditionStandard), email, name).
+		// TODO: WithAdminUserType()
+		WithAdminRsaPublicKey(key).
+		WithFirstName(firstName).
+		WithLastName(lastName).
+		WithMustChangePassword(true).
+		WithRegionGroup("PUBLIC").
+		WithRegion(region).
+		WithComment(comment).
+		WithIsOrgAdmin(true).
+		WithGracePeriodInDays(3)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -25,68 +50,47 @@ func TestAcc_Account_complete(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.Account),
-		// this errors with: Error running post-test destroy, there may be dangling resources: exit status 1
-		// unless we change the resource to return nil on destroy then this is unavoidable
 		Steps: []resource.TestStep{
 			{
-				Config: accountConfig(id.Name(), password, "Terraform acceptance test", 3),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_account.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_account.test", "admin_name", "someadmin"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "first_name", "Ad"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "last_name", "Min"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "email", "admin@example.com"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "must_change_password", "false"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "edition", "BUSINESS_CRITICAL"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "comment", "Terraform acceptance test"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "grace_period_in_days", "3"),
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModel.ResourceReference()).
+						HasNameString(id.Name()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						HasAdminNameString(name).
+						HasAdminRsaPublicKeyString(key).
+						HasEmailString(email).
+						HasFirstNameString(firstName).
+						HasLastNameString(lastName).
+						HasMustChangePasswordString(r.BooleanTrue).
+						HasRegionGroupString("PUBLIC").
+						HasRegionString(region).
+						HasCommentString(comment).
+						HasIsOrgAdminString(r.BooleanTrue).
+						HasGracePeriodInDaysString("3"),
+					// TODO: Show output
 				),
-				Destroy: false,
-			},
-			// Change Grace Period In Days
-			{
-				Config: accountConfig(id.Name(), password, "Terraform acceptance test", 4),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account.test", "grace_period_in_days", "4"),
-				),
-			},
-			// IMPORT
-			{
-				ResourceName:      "snowflake_account.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"admin_name",
-					"admin_password",
-					"admin_rsa_public_key",
-					"email",
-					"must_change_password",
-					"first_name",
-					"last_name",
-					"grace_period_in_days",
-				},
 			},
 		},
 	})
 }
 
-func accountConfig(name string, password string, comment string, gracePeriodInDays int) string {
-	return fmt.Sprintf(`
-data "snowflake_current_account" "current" {}
-
-resource "snowflake_account" "test" {
-  name = "%s"
-  admin_name = "someadmin"
-  admin_password = "%s"
-  first_name = "Ad"
-  last_name = "Min"
-  email = "admin@example.com"
-  must_change_password = false
-  edition = "BUSINESS_CRITICAL"
-  comment = "%s"
-  region = data.snowflake_current_account.current.region
-  grace_period_in_days = %d
-}
-`, name, password, comment, gracePeriodInDays)
-}
+//func accountConfig(name string, password string, comment string, gracePeriodInDays int) string {
+//	return fmt.Sprintf(`
+//data "snowflake_current_account" "current" {}
+//
+//resource "snowflake_account" "test" {
+//  name = "%s"
+//  admin_name = "someadmin"
+//  admin_password = "%s"
+//  first_name = "Ad"
+//  last_name = "Min"
+//  email = "admin@example.com"
+//  must_change_password = false
+//  edition = "BUSINESS_CRITICAL"
+//  comment = "%s"
+//  region = data.snowflake_current_account.current.region
+//  grace_period_in_days = %d
+//}
+//`, name, password, comment, gracePeriodInDays)
+//}

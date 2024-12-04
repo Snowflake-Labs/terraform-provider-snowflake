@@ -134,6 +134,7 @@ func AccountToSchema(account *sdk.Account) map[string]any {
 	accountSchema["organization_name"] = account.OrganizationName
 	accountSchema["account_name"] = account.AccountName
 	accountSchema["snowflake_region"] = account.SnowflakeRegion
+	// TODO: Check if populated or have to deref
 	if account.RegionGroup != nil {
 		accountSchema["region_group"] = account.RegionGroup
 	}

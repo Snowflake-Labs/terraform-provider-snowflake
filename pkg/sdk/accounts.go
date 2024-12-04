@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/snowflakedb/gosnowflake"
 	"strings"
 	"time"
@@ -41,6 +42,16 @@ var (
 	EditionEnterprise       AccountEdition = "ENTERPRISE"
 	EditionBusinessCritical AccountEdition = "BUSINESS_CRITICAL"
 )
+
+// TODO: test
+func ToAccountEdition(edition string) (AccountEdition, error) {
+	switch typedEdition := AccountEdition(strings.ToUpper(edition)); typedEdition {
+	case EditionStandard, EditionEnterprise, EditionBusinessCritical:
+		return typedEdition, nil
+	default:
+		return "", fmt.Errorf("unknown account edition: %s", edition)
+	}
+}
 
 // CreateAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-account.
 type CreateAccountOptions struct {

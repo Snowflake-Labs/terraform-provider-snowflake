@@ -55,3 +55,14 @@ func ToFloat64(s string) float64 {
 func Pointer[K any](v K) *K {
 	return &v
 }
+
+// TODO: Test
+// DerefIfNotNil is a generic function that returns a dereferenced value if a given value is not nil
+func DerefIfNotNil(v any) any {
+	if v != nil {
+		if pointerValue, ok := v.(*any); ok {
+			return *pointerValue
+		}
+	}
+	return nil
+}

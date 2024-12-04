@@ -208,15 +208,15 @@ import (
 
 var accountSchema = map[string]*schema.Schema{
 	"name": {
-		Type:             schema.TypeString,
-		Required:         true,
+		Type:     schema.TypeString,
+		Required: true,
 		// TODO: Sensitive?
 		Description:      "TODO",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"admin_name": {
-		Type:             schema.TypeString,
-		Required:         true,
+		Type:     schema.TypeString,
+		Required: true,
 		// TODO: Sensitive?
 		Description:      externalChangesNotDetectedFieldDescription("TODO"),
 		DiffSuppressFunc: IgnoreAfterCreation,
@@ -256,7 +256,7 @@ var accountSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      externalChangesNotDetectedFieldDescription("TODO")
+		Description:      externalChangesNotDetectedFieldDescription("TODO"),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"email": {
@@ -275,25 +275,23 @@ var accountSchema = map[string]*schema.Schema{
 		ValidateDiagFunc: validateBooleanString,
 	},
 	"edition": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-		// TODO: Desc
-		Description: "[Snowflake Edition](https://docs.snowflake.com/en/user-guide/intro-editions.html) of the account. Valid values are: STANDARD | ENTERPRISE | BUSINESS_CRITICAL",
-		// TODO: Valid options
-		ValidateFunc: validation.StringInSlice([]string{string(sdk.EditionStandard), string(sdk.EditionEnterprise), string(sdk.EditionBusinessCritical)}, false),
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "TODO",
+		ValidateDiagFunc: sdkValidation(sdk.ToAccountEdition),
 	},
 	"region_group": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "ID of the Snowflake Region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)",
+		Description: "TODO",
 	},
 	"region": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "ID of the Snowflake Region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)",
+		Description: "TODO",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -323,15 +321,6 @@ var accountSchema = map[string]*schema.Schema{
 			Schema: schemas.ShowAccountSchema,
 		},
 	},
-	// TODO: This one will be pretty big (possibly over 200 parameters)
-	//ParametersAttributeName: {
-	//	Type:        schema.TypeList,
-	//	Computed:    true,
-	//	Description: "Outputs the result of `SHOW PARAMETERS IN TASK` for the given task.",
-	//	Elem: &schema.Resource{
-	//		Schema: schemas.ShowTaskParametersSchema,
-	//	},
-	//},
 }
 
 func Account() *schema.Resource {
@@ -339,18 +328,21 @@ func Account() *schema.Resource {
 		// TODO: Desc
 		Description:   "The account resource allows you to create and manage Snowflake accounts.",
 		CreateContext: TrackingCreateWrapper(resources.Account, CreateAccount),
-		ReadContext:   TrackingReadWrapper(resources.Account, ReadAccount),
+		ReadContext:   TrackingReadWrapper(resources.Account, ReadAccount(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.Account, UpdateAccount),
 		DeleteContext: TrackingDeleteWrapper(resources.Account, DeleteAccount),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Account, customdiff.All(
 			ComputedIfAnyAttributeChanged(accountSchema, FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(accountSchema, ShowOutputAttributeName, "name", "is_org_admin"),
 		)),
 
 		Schema: accountSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		// TODO: State upgrader and import
 	}
 }
 
@@ -399,13 +391,15 @@ func CreateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 	if v, ok := d.GetOk("comment"); ok {
 		opts.Comment = sdk.String(v.(string))
 	}
-	if v := d.Get("polaris"); v != BooleanDefault {
-		parsedBool, err := booleanStringToBool(v.(string))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		opts.Polaris = &parsedBool
-	}
+
+	// TODO(TODO): next prs
+	//if v := d.Get("polaris"); v != BooleanDefault {
+	//	parsedBool, err := booleanStringToBool(v.(string))
+	//	if err != nil {
+	//		return diag.FromErr(err)
+	//	}
+	//	opts.Polaris = &parsedBool
+	//}
 
 	createResponse, err := client.Accounts.Create(ctx, id, opts)
 	if err != nil {
@@ -414,56 +408,75 @@ func CreateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 
 	d.SetId(helpers.EncodeResourceIdentifier(sdk.NewAccountIdentifier(createResponse.OrganizationName, createResponse.AccountName)))
 
-	return ReadAccount(ctx, d, meta)
+	return ReadAccount(false)(ctx, d, meta)
 }
 
-func ReadAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseAccountIdentifier(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
+func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id, err := sdk.ParseAccountIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
-	account, err := client.Accounts.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.AccountName()))
-	if err != nil {
-		return diag.FromErr(err)
-	}
+		account, err := client.Accounts.ShowByID(ctx, sdk.NewAccountObjectIdentifier(id.AccountName()))
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
-	accountParameters, err := client.Accounts.ShowParameters(ctx)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if errs := errors.Join(
-		attributeMappedValueReadOrDefault(d, "edition", account.Edition, func(edition *sdk.AccountEdition) (string, error) {
-			if edition != nil {
-				return string(*edition), nil
+		if withExternalChangesMarking {
+			if err = handleExternalChangesToObjectInShow(d,
+				outputMapping{"region_group", "region_group", account.RegionGroup, sdk.DerefIfNotNil(account.RegionGroup), sdk.DerefIfNotNil},
+				outputMapping{"snowflake_region", "region", account.SnowflakeRegion, account.SnowflakeRegion, nil},
+				outputMapping{"comment", "comment", account.Comment, sdk.DerefIfNotNil(account.Comment), sdk.DerefIfNotNil},
+			); err != nil {
+				return diag.FromErr(err)
 			}
-			return "", nil
-		}, nil),
-		// TODO: use SHOW REGIONS?
-		// TODO: Should region group be read ?
-		// TODO: Should region be read ?
-		// TODO: There's default SNOWFLAKE comment
-		attributeMappedValueReadOrNil(d, "comment", account.Comment, func(comment *string) (string, error) {
-			if comment != nil {
-				return *comment, nil
+		} else {
+			if err = setStateToValuesFromConfig(d, taskSchema, []string{
+				"allow_overlapping_execution",
+			}); err != nil {
+				return diag.FromErr(err)
 			}
-			return "", nil
-		}),
-		attributeMappedValueReadOrNil(d, "is_org_admin", account.IsOrgAdmin, func(isOrgAdmin *bool) (string, error) {
-			if isOrgAdmin != nil {
-				return booleanStringFromBool(*isOrgAdmin), nil
-			}
-			return BooleanDefault, nil
-		}),
-		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
-		d.Set(ParametersAttributeName, []map[string]any{schemas.AccountParametersToSchema(accountParameters)}),
-	); errs != nil {
-		return diag.FromErr(errs)
-	}
+		}
 
-	return nil
+		if errs := errors.Join(
+			attributeMappedValueReadOrDefault(d, "edition", account.Edition, func(edition *sdk.AccountEdition) (string, error) {
+				if edition != nil {
+					return string(*edition), nil
+				}
+				return "", nil
+			}, nil),
+			// TODO: Region group is only returned when org is span on multiple region groups, but you can explicitly set it (e.g. PUBLIC)
+			//attributeMappedValueReadOrNil(d, "region_group", account.RegionGroup, func(regionGroup *string) (string, error) {
+			//	if regionGroup != nil {
+			//		return *regionGroup, nil
+			//	}
+			//	return "", nil
+			//}),
+			// TODO: Can be left empty and it will be populated with current account's region
+			//d.Set("region", account.SnowflakeRegion),
+			// TODO: Default comment is "SNOWFLAKE"
+			//attributeMappedValueReadOrNil(d, "comment", account.Comment, func(comment *string) (string, error) {
+			//	if comment != nil {
+			//		return *comment, nil
+			//	}
+			//	return "", nil
+			//}),
+			attributeMappedValueReadOrNil(d, "is_org_admin", account.IsOrgAdmin, func(isOrgAdmin *bool) (string, error) {
+				if isOrgAdmin != nil {
+					return booleanStringFromBool(*isOrgAdmin), nil
+				}
+				return BooleanDefault, nil
+			}),
+			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+			d.Set(ShowOutputAttributeName, []map[string]any{schemas.AccountToSchema(account)}),
+		); errs != nil {
+			return diag.FromErr(errs)
+		}
+
+		return nil
+	}
 }
 
 func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
