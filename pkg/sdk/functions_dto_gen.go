@@ -1,5 +1,7 @@
 package sdk
 
+import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
@@ -38,8 +40,9 @@ type CreateForJavaFunctionRequest struct {
 }
 
 type FunctionArgumentRequest struct {
-	ArgName        string   // required
-	ArgDataTypeOld DataType // required
+	ArgName        string // required
+	ArgDataTypeOld DataType
+	ArgDataType    datatypes.DataType // required
 	DefaultValue   *string
 }
 
@@ -49,7 +52,8 @@ type FunctionReturnsRequest struct {
 }
 
 type FunctionReturnsResultDataTypeRequest struct {
-	ResultDataTypeOld DataType // required
+	ResultDataTypeOld DataType
+	ResultDataType    datatypes.DataType // required
 }
 
 type FunctionReturnsTableRequest struct {
@@ -57,8 +61,9 @@ type FunctionReturnsTableRequest struct {
 }
 
 type FunctionColumnRequest struct {
-	ColumnName        string   // required
-	ColumnDataTypeOld DataType // required
+	ColumnName        string // required
+	ColumnDataTypeOld DataType
+	ColumnDataType    datatypes.DataType // required
 }
 
 type FunctionImportRequest struct {
@@ -114,7 +119,8 @@ type CreateForScalaFunctionRequest struct {
 	name                  SchemaObjectIdentifier // required
 	Arguments             []FunctionArgumentRequest
 	CopyGrants            *bool
-	ResultDataTypeOld     DataType // required
+	ResultDataTypeOld     DataType
+	ResultDataType        datatypes.DataType // required
 	ReturnNullValues      *ReturnNullValues
 	NullInputBehavior     *NullInputBehavior
 	ReturnResultsBehavior *ReturnResultsBehavior

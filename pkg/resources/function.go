@@ -311,7 +311,7 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	functionDefinition := d.Get("statement").(string)
 	handler := d.Get("handler").(string)
 	// create request with required
-	request := sdk.NewCreateForScalaFunctionRequest(id, sdk.LegacyDataTypeFrom(returnDataType), handler)
+	request := sdk.NewCreateForScalaFunctionRequest(id, nil, handler).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType))
 	request.WithFunctionDefinition(functionDefinition)
 
 	// Set optionals
@@ -781,7 +781,7 @@ func parseFunctionReturnsRequest(s string) (*sdk.FunctionReturnsRequest, diag.Di
 		}
 		var cr []sdk.FunctionColumnRequest
 		for _, item := range columns {
-			cr = append(cr, *sdk.NewFunctionColumnRequest(item.ColumnName, item.ColumnDataTypeOld))
+			cr = append(cr, *sdk.NewFunctionColumnRequest(item.ColumnName, nil).WithColumnDataTypeOld(item.ColumnDataTypeOld))
 		}
 		returns.WithTable(*sdk.NewFunctionReturnsTableRequest().WithColumns(cr))
 	} else {
@@ -789,7 +789,7 @@ func parseFunctionReturnsRequest(s string) (*sdk.FunctionReturnsRequest, diag.Di
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
+		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }

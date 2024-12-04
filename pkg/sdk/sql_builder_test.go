@@ -550,6 +550,19 @@ func TestBuilder_DataType(t *testing.T) {
 		assert.Equal(t, "", s)
 	})
 
+	// TODO [this PR]: test all types as nil
+	t.Run("test data type nil", func(t *testing.T) {
+		var a *datatypes.BooleanDataType
+		opts := dataTypeTestHelper{
+			DataType: a,
+		}
+
+		s, err := structToSQL(opts)
+
+		require.NoError(t, err)
+		assert.Equal(t, "", s)
+	})
+
 	for _, tc := range dataTypes {
 		tc := tc
 		t.Run(fmt.Sprintf(`cheking building SQL for data type "%s, expecting "%s"`, tc.dataType, tc.expectedSql), func(t *testing.T) {

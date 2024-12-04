@@ -111,6 +111,7 @@ func (r *CreateForJavaFunctionRequest) toOpts() *CreateForJavaFunctionOptions {
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -166,6 +167,7 @@ func (r *CreateForJavascriptFunctionRequest) toOpts() *CreateForJavascriptFuncti
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -213,6 +215,7 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -252,6 +255,7 @@ func (r *CreateForScalaFunctionRequest) toOpts() *CreateForScalaFunctionOptions 
 
 		CopyGrants:            r.CopyGrants,
 		ResultDataTypeOld:     r.ResultDataTypeOld,
+		ResultDataType:        r.ResultDataType,
 		ReturnNullValues:      r.ReturnNullValues,
 		NullInputBehavior:     r.NullInputBehavior,
 		ReturnResultsBehavior: r.ReturnResultsBehavior,
@@ -312,6 +316,7 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 		}
 	}
 	if r.Returns.Table != nil {

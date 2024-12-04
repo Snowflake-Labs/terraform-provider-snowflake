@@ -47,7 +47,7 @@ func TestFunctions_CreateForJava(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = FunctionReturns{
 			ResultDataType: &FunctionReturnsResultDataType{
-				ResultDataType: DataTypeVARCHAR,
+				ResultDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaFunctionOptions", "Handler"))
@@ -60,13 +60,13 @@ func TestFunctions_CreateForJava(t *testing.T) {
 		opts.Secure = Bool(true)
 		opts.Arguments = []FunctionArgument{
 			{
-				ArgName:     "id",
-				ArgDataType: DataTypeNumber,
+				ArgName:        "id",
+				ArgDataTypeOld: DataTypeNumber,
 			},
 			{
-				ArgName:      "name",
-				ArgDataType:  DataTypeVARCHAR,
-				DefaultValue: String("'test'"),
+				ArgName:        "name",
+				ArgDataTypeOld: DataTypeVARCHAR,
+				DefaultValue:   String("'test'"),
 			},
 		}
 		opts.CopyGrants = Bool(true)
@@ -74,12 +74,12 @@ func TestFunctions_CreateForJava(t *testing.T) {
 			Table: &FunctionReturnsTable{
 				Columns: []FunctionColumn{
 					{
-						ColumnName:     "country_code",
-						ColumnDataType: DataTypeVARCHAR,
+						ColumnName:        "country_code",
+						ColumnDataTypeOld: DataTypeVARCHAR,
 					},
 					{
-						ColumnName:     "country_name",
-						ColumnDataType: DataTypeVARCHAR,
+						ColumnName:        "country_name",
+						ColumnDataTypeOld: DataTypeVARCHAR,
 					},
 				},
 			},
@@ -149,7 +149,7 @@ func TestFunctions_CreateForJavascript(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = FunctionReturns{
 			ResultDataType: &FunctionReturnsResultDataType{
-				ResultDataType: DataTypeVARCHAR,
+				ResultDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavascriptFunctionOptions", "FunctionDefinition"))
@@ -162,15 +162,15 @@ func TestFunctions_CreateForJavascript(t *testing.T) {
 		opts.Secure = Bool(true)
 		opts.Arguments = []FunctionArgument{
 			{
-				ArgName:      "d",
-				ArgDataType:  DataTypeFloat,
-				DefaultValue: String("1.0"),
+				ArgName:        "d",
+				ArgDataTypeOld: DataTypeFloat,
+				DefaultValue:   String("1.0"),
 			},
 		}
 		opts.CopyGrants = Bool(true)
 		opts.Returns = FunctionReturns{
 			ResultDataType: &FunctionReturnsResultDataType{
-				ResultDataType: DataTypeFloat,
+				ResultDataTypeOld: DataTypeFloat,
 			},
 		}
 		opts.ReturnNullValues = ReturnNullValuesPointer(ReturnNullValuesNotNull)
@@ -212,7 +212,7 @@ func TestFunctions_CreateForPython(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = FunctionReturns{
 			ResultDataType: &FunctionReturnsResultDataType{
-				ResultDataType: DataTypeVARCHAR,
+				ResultDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonFunctionOptions", "RuntimeVersion"))
@@ -236,15 +236,15 @@ func TestFunctions_CreateForPython(t *testing.T) {
 		opts.Secure = Bool(true)
 		opts.Arguments = []FunctionArgument{
 			{
-				ArgName:      "i",
-				ArgDataType:  DataTypeNumber,
-				DefaultValue: String("1"),
+				ArgName:        "i",
+				ArgDataTypeOld: DataTypeNumber,
+				DefaultValue:   String("1"),
 			},
 		}
 		opts.CopyGrants = Bool(true)
 		opts.Returns = FunctionReturns{
 			ResultDataType: &FunctionReturnsResultDataType{
-				ResultDataType: DataTypeVariant,
+				ResultDataTypeOld: DataTypeVariant,
 			},
 		}
 		opts.ReturnNullValues = ReturnNullValuesPointer(ReturnNullValuesNotNull)
@@ -322,7 +322,7 @@ func TestFunctions_CreateForScala(t *testing.T) {
 
 	t.Run("validation: options are missing", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ResultDataType = DataTypeVARCHAR
+		opts.ResultDataTypeOld = DataTypeVARCHAR
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaFunctionOptions", "Handler"))
 	})
 
@@ -333,13 +333,13 @@ func TestFunctions_CreateForScala(t *testing.T) {
 		opts.Secure = Bool(true)
 		opts.Arguments = []FunctionArgument{
 			{
-				ArgName:      "x",
-				ArgDataType:  DataTypeVARCHAR,
-				DefaultValue: String("'test'"),
+				ArgName:        "x",
+				ArgDataTypeOld: DataTypeVARCHAR,
+				DefaultValue:   String("'test'"),
 			},
 		}
 		opts.CopyGrants = Bool(true)
-		opts.ResultDataType = DataTypeVARCHAR
+		opts.ResultDataTypeOld = DataTypeVARCHAR
 		opts.ReturnNullValues = ReturnNullValuesPointer(ReturnNullValuesNotNull)
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorCalledOnNullInput)
 		opts.ReturnResultsBehavior = ReturnResultsBehaviorPointer(ReturnResultsBehaviorImmutable)
@@ -386,7 +386,7 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = FunctionReturns{
 			ResultDataType: &FunctionReturnsResultDataType{
-				ResultDataType: DataTypeVARCHAR,
+				ResultDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForSQLFunctionOptions", "FunctionDefinition"))
@@ -396,7 +396,7 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = FunctionReturns{
 			ResultDataType: &FunctionReturnsResultDataType{
-				ResultDataType: DataTypeFloat,
+				ResultDataTypeOld: DataTypeFloat,
 			},
 		}
 		opts.FunctionDefinition = "3.141592654::FLOAT"
@@ -410,15 +410,15 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 		opts.Secure = Bool(true)
 		opts.Arguments = []FunctionArgument{
 			{
-				ArgName:      "message",
-				ArgDataType:  "VARCHAR",
-				DefaultValue: String("'test'"),
+				ArgName:        "message",
+				ArgDataTypeOld: "VARCHAR",
+				DefaultValue:   String("'test'"),
 			},
 		}
 		opts.CopyGrants = Bool(true)
 		opts.Returns = FunctionReturns{
 			ResultDataType: &FunctionReturnsResultDataType{
-				ResultDataType: DataTypeFloat,
+				ResultDataTypeOld: DataTypeFloat,
 			},
 		}
 		opts.ReturnNullValues = ReturnNullValuesPointer(ReturnNullValuesNotNull)

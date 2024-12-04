@@ -1,8 +1,11 @@
 package sdk
 
+// imports edited manually
 import (
 	"context"
 	"database/sql"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 type Functions interface {
@@ -46,9 +49,10 @@ type CreateForJavaFunctionOptions struct {
 }
 
 type FunctionArgument struct {
-	ArgName        string   `ddl:"keyword,no_quotes"`
-	ArgDataTypeOld DataType `ddl:"keyword,no_quotes"`
-	DefaultValue   *string  `ddl:"parameter,no_equals" sql:"DEFAULT"`
+	ArgName        string             `ddl:"keyword,no_quotes"`
+	ArgDataTypeOld DataType           `ddl:"keyword,no_quotes"`
+	ArgDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
+	DefaultValue   *string            `ddl:"parameter,no_equals" sql:"DEFAULT"`
 }
 
 type FunctionReturns struct {
@@ -57,7 +61,8 @@ type FunctionReturns struct {
 }
 
 type FunctionReturnsResultDataType struct {
-	ResultDataTypeOld DataType `ddl:"keyword,no_quotes"`
+	ResultDataTypeOld DataType           `ddl:"keyword,no_quotes"`
+	ResultDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
 }
 
 type FunctionReturnsTable struct {
@@ -65,8 +70,9 @@ type FunctionReturnsTable struct {
 }
 
 type FunctionColumn struct {
-	ColumnName        string   `ddl:"keyword,no_quotes"`
-	ColumnDataTypeOld DataType `ddl:"keyword,no_quotes"`
+	ColumnName        string             `ddl:"keyword,no_quotes"`
+	ColumnDataTypeOld DataType           `ddl:"keyword,no_quotes"`
+	ColumnDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
 }
 
 type FunctionImport struct {
@@ -134,6 +140,7 @@ type CreateForScalaFunctionOptions struct {
 	Arguments             []FunctionArgument     `ddl:"list,must_parentheses"`
 	CopyGrants            *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	ResultDataTypeOld     DataType               `ddl:"parameter,no_equals" sql:"RETURNS"`
+	ResultDataType        datatypes.DataType     `ddl:"parameter,no_quotes,no_equals" sql:"RETURNS"`
 	ReturnNullValues      *ReturnNullValues      `ddl:"keyword"`
 	languageScala         bool                   `ddl:"static" sql:"LANGUAGE SCALA"`
 	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
