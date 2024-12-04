@@ -4,6 +4,7 @@ import (
 	"testing"
 )
 
+// TODO [this PR]: unit test new data types
 func TestFunctions_CreateForJava(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
 
