@@ -555,9 +555,9 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		require.Equal(t, dataTypes, function.ArgumentsOld)
 	})
 
-	// This test shows behavior of detailed types (e.g. VARCHAR(20) and NUMBER(10, 0)) on Snowflake side.
+	// This test shows behavior of detailed types (e.g. VARCHAR(20) and NUMBER(10, 0)) on Snowflake side for functions.
 	// For SHOW, data type is generalized both for argument and return type (to e.g. VARCHAR and NUMBER).
-	// FOR DESCRIBE, data type is generalized for argument and works weirdly for the return type: type is generalized to the canonical one, but we get also the attributes.
+	// FOR DESCRIBE, data type is generalized for argument and works weirdly for the return type: type is generalized to the canonical one, but we also get the attributes.
 	for _, tc := range []string{
 		"NUMBER(36, 5)",
 		"NUMBER(36)",

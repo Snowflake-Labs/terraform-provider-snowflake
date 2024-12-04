@@ -7,6 +7,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -356,7 +357,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		assert.Equal(t, false, procedure.IsAnsi)
 		assert.Equal(t, 1, procedure.MinNumArguments)
 		assert.Equal(t, 1, procedure.MaxNumArguments)
-		assert.NotEmpty(t, procedure.Arguments)
+		assert.NotEmpty(t, procedure.ArgumentsOld)
 		assert.NotEmpty(t, procedure.ArgumentsRaw)
 		assert.NotEmpty(t, procedure.Description)
 		assert.NotEmpty(t, procedure.CatalogName)
@@ -499,7 +500,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		require.Equal(t, 0, len(procedures))
 	})
 
-	t.Run("describe function for SQL", func(t *testing.T) {
+	t.Run("describe procedure for SQL", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 		id := f.ID()
 
@@ -1022,4 +1023,81 @@ func TestInt_ProceduresShowByID(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, *e, *es)
 	})
+
+	// This test shows behavior of detailed types (e.g. VARCHAR(20) and NUMBER(10, 0)) on Snowflake side for procedures.
+	// For SHOW, data type is generalized both for argument and return type (to e.g. VARCHAR and NUMBER).
+	// FOR DESCRIBE, data type is generalized for argument and works weirdly for the return type: type is generalized to the canonical one, but we also get the attributes.
+	for _, tc := range []string{
+		"NUMBER(36, 5)",
+		"NUMBER(36)",
+		"NUMBER",
+		"DECIMAL",
+		"INTEGER",
+		"FLOAT",
+		"DOUBLE",
+		"VARCHAR",
+		"VARCHAR(20)",
+		"CHAR",
+		"CHAR(10)",
+		"TEXT",
+		"BINARY",
+		"BINARY(1000)",
+		"VARBINARY",
+		"BOOLEAN",
+		"DATE",
+		"DATETIME",
+		"TIME",
+		"TIMESTAMP_LTZ",
+		"TIMESTAMP_NTZ",
+		"TIMESTAMP_TZ",
+		"VARIANT",
+		"OBJECT",
+		"ARRAY",
+		"GEOGRAPHY",
+		"GEOMETRY",
+		"VECTOR(INT, 16)",
+		"VECTOR(FLOAT, 8)",
+	} {
+		tc := tc
+		t.Run(fmt.Sprintf("procedure returns non detailed data types of arguments for %s", tc), func(t *testing.T) {
+			procName := "add"
+			argName := "A"
+			dataType, err := datatypes.ParseDataType(tc)
+			require.NoError(t, err)
+			args := []sdk.ProcedureArgumentRequest{
+				*sdk.NewProcedureArgumentRequest(argName, dataType),
+			}
+			oldDataType := sdk.LegacyDataTypeFrom(dataType)
+			idWithArguments := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(oldDataType)
+
+			packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("snowflake-snowpark-python")}
+			definition := fmt.Sprintf("def add(%[1]s): %[1]s", argName)
+
+			err = client.Procedures.CreateForPython(ctx, sdk.NewCreateForPythonProcedureRequest(
+				idWithArguments.SchemaObjectId(),
+				*sdk.NewProcedureReturnsRequest().WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(dataType)),
+				"3.8",
+				packages,
+				procName,
+			).
+				WithArguments(args).
+				WithProcedureDefinition(definition),
+			)
+			require.NoError(t, err)
+
+			procedure, err := client.Procedures.ShowByID(ctx, idWithArguments)
+			require.NoError(t, err)
+			assert.Equal(t, []sdk.DataType{oldDataType}, procedure.ArgumentsOld)
+			assert.Equal(t, fmt.Sprintf("%[1]s(%[2]s) RETURN %[2]s", idWithArguments.Name(), oldDataType), procedure.ArgumentsRaw)
+
+			details, err := client.Procedures.Describe(ctx, idWithArguments)
+			require.NoError(t, err)
+			pairs := make(map[string]string)
+			for _, detail := range details {
+				pairs[detail.Property] = detail.Value
+			}
+			assert.Equal(t, fmt.Sprintf("(%s %s)", argName, oldDataType), pairs["signature"])
+			assert.Equal(t, dataType.Canonical(), pairs["returns"])
+		})
+	}
 }

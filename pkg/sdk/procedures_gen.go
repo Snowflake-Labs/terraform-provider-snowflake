@@ -234,7 +234,7 @@ type Procedure struct {
 	IsAnsi             bool
 	MinNumArguments    int
 	MaxNumArguments    int
-	Arguments          []DataType
+	ArgumentsOld       []DataType
 	ArgumentsRaw       string
 	Description        string
 	CatalogName        string

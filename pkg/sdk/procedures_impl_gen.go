@@ -412,7 +412,7 @@ func (r procedureRow) convert() *Procedure {
 	if err != nil {
 		log.Printf("[DEBUG] failed to parse procedure arguments, err = %s", err)
 	} else {
-		e.Arguments = dataTypes
+		e.ArgumentsOld = dataTypes
 	}
 	if r.IsSecure.Valid {
 		e.IsSecure = r.IsSecure.String == "Y"

@@ -475,9 +475,6 @@ func TestBuilder_sql(t *testing.T) {
 	})
 }
 
-// TODO [this PR]: add optional alternatives to procedures (arguments and return types)
-// TODO [this PR]: integration tests for procedures
-// TODO [this PR]: integration test to check all data types in a new way + reading from snowflake?
 func TestBuilder_DataType(t *testing.T) {
 
 	type dataTypeTestHelper struct {
