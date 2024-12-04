@@ -205,17 +205,17 @@ func (itc *integrationTestContext) initialize() error {
 	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 	itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 
+	err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.client, itc.ctx)
+	if err != nil {
+		return err
+	}
+	err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.secondaryClient, itc.secondaryCtx)
+	if err != nil {
+		return err
+	}
+
 	// TODO(SNOW-1842271): Adjust test setup to work properly with Accountadmin role for object tests and Orgadmin for account tests
 	if currentRole != snowflakeroles.Orgadmin {
-		err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.client, itc.ctx)
-		if err != nil {
-			return err
-		}
-		err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.secondaryClient, itc.secondaryCtx)
-		if err != nil {
-			return err
-		}
-
 		err = helpers.EnsureScimProvisionerRolesExist(itc.client, itc.ctx)
 		if err != nil {
 			return err

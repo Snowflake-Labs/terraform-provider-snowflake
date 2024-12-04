@@ -55,8 +55,8 @@ type CreateAccountOptions struct {
 	Email              string         `ddl:"parameter,single_quotes" sql:"EMAIL"`
 	MustChangePassword *bool          `ddl:"parameter" sql:"MUST_CHANGE_PASSWORD"`
 	Edition            AccountEdition `ddl:"parameter" sql:"EDITION"`
-	RegionGroup        *string        `ddl:"parameter,single_quotes" sql:"REGION_GROUP"`
-	Region             *string        `ddl:"parameter,single_quotes" sql:"REGION"`
+	RegionGroup        *string        `ddl:"parameter" sql:"REGION_GROUP"`
+	Region             *string        `ddl:"parameter" sql:"REGION"`
 	Comment            *string        `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Polaris            *bool          `ddl:"parameter" sql:"POLARIS"`
 }
@@ -230,7 +230,7 @@ func (opts *AccountUnset) validate() error {
 
 type AccountSetIsOrgAdmin struct {
 	Name     AccountObjectIdentifier `ddl:"identifier"`
-	OrgAdmin *bool                   `ddl:"parameter" sql:"SET IS_ORG_ADMIN"`
+	OrgAdmin bool                    `ddl:"parameter" sql:"SET IS_ORG_ADMIN"`
 }
 
 type AccountRename struct {

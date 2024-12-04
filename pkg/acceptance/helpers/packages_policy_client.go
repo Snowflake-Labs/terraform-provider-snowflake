@@ -24,12 +24,14 @@ func NewPackagesPolicyClient(context *TestClientContext, idsGenerator *IdsGenera
 func (c *PackagesPolicyClient) Create(t *testing.T) (sdk.SchemaObjectIdentifier, func()) {
 	t.Helper()
 
+	// TODO(SNOW-1348357): Replace raw SQL with SDK
+
 	id := c.ids.RandomSchemaObjectIdentifier()
-	_, err := c.context.client.ExecUnsafe(context.Background(), fmt.Sprintf("CREATE PACKAGES POLICY %s LANGUAGE PYTHON", id.FullyQualifiedName()))
+	_, err := c.context.client.ExecForTests(context.Background(), fmt.Sprintf("CREATE PACKAGES POLICY %s LANGUAGE PYTHON", id.FullyQualifiedName()))
 	require.NoError(t, err)
 
 	return id, func() {
-		_, err = c.context.client.ExecUnsafe(context.Background(), fmt.Sprintf("DROP PACKAGES POLICY IF EXISTS %s", id.FullyQualifiedName()))
+		_, err = c.context.client.ExecForTests(context.Background(), fmt.Sprintf("DROP PACKAGES POLICY IF EXISTS %s", id.FullyQualifiedName()))
 		require.NoError(t, err)
 	}
 }

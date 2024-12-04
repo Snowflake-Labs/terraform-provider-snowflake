@@ -178,7 +178,7 @@ func TestInt_Account(t *testing.T) {
 			RegionGroup:        sdk.String("PUBLIC"),
 			Region:             sdk.String(currentRegion.SnowflakeRegion),
 			Comment:            sdk.String(comment),
-			// TODO(file a ticket): with polaris Snowflake returns an error saying: "invalid property polaris for account"
+			// TODO(SNOW-1844776): with polaris Snowflake returns an error saying: "invalid property polaris for account"
 			// Polaris: sdk.Bool(true),
 		})
 		require.NoError(t, err)
@@ -190,15 +190,15 @@ func TestInt_Account(t *testing.T) {
 	})
 
 	t.Run("alter: set / unset is org admin", func(t *testing.T) {
-		account := testClientHelper().Account.Create(t)
-		t.Cleanup(testClientHelper().Account.DropFunc(t, account.ID()))
+		account, accountCleanup := testClientHelper().Account.Create(t)
+		t.Cleanup(accountCleanup)
 
 		require.Equal(t, false, *account.IsOrgAdmin)
 
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
 				Name:     account.ID(),
-				OrgAdmin: sdk.Bool(true),
+				OrgAdmin: true,
 			},
 		})
 		require.NoError(t, err)
@@ -210,7 +210,7 @@ func TestInt_Account(t *testing.T) {
 		err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
 				Name:     account.ID(),
-				OrgAdmin: sdk.Bool(false),
+				OrgAdmin: false,
 			},
 		})
 		require.NoError(t, err)
@@ -221,33 +221,33 @@ func TestInt_Account(t *testing.T) {
 	})
 
 	t.Run("alter: rename", func(t *testing.T) {
-		account := testClientHelper().Account.Create(t)
-		t.Cleanup(testClientHelper().Account.DropFunc(t, account.ID()))
+		oldAccount, oldAccountCleanup := testClientHelper().Account.Create(t)
+		t.Cleanup(oldAccountCleanup)
 
 		newName := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		t.Cleanup(testClientHelper().Account.DropFunc(t, newName))
 
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			Rename: &sdk.AccountRename{
-				Name:    account.ID(),
+				Name:    oldAccount.ID(),
 				NewName: newName,
 			},
 		})
 		require.NoError(t, err)
 
-		_, err = client.Accounts.ShowByID(ctx, account.ID())
+		_, err = client.Accounts.ShowByID(ctx, oldAccount.ID())
 		require.ErrorIs(t, err, collections.ErrObjectNotFound)
 
-		acc, err := client.Accounts.ShowByID(ctx, newName)
+		newAccount, err := client.Accounts.ShowByID(ctx, newName)
 		require.NoError(t, err)
-		require.NotNil(t, acc)
-		require.NotEqual(t, account.AccountURL, acc.AccountURL)
-		require.Equal(t, account.AccountURL, acc.OldAccountURL)
+		require.NotNil(t, newAccount)
+		require.NotEqual(t, oldAccount.AccountURL, newAccount.AccountURL)
+		require.Equal(t, oldAccount.AccountURL, newAccount.OldAccountURL)
 	})
 
 	t.Run("alter: rename with new url", func(t *testing.T) {
-		account := testClientHelper().Account.Create(t)
-		t.Cleanup(testClientHelper().Account.DropFunc(t, account.ID()))
+		account, accountCleanup := testClientHelper().Account.Create(t)
+		t.Cleanup(accountCleanup)
 
 		newName := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		t.Cleanup(testClientHelper().Account.DropFunc(t, newName))
@@ -271,8 +271,8 @@ func TestInt_Account(t *testing.T) {
 	})
 
 	t.Run("alter: drop url when there's no old url", func(t *testing.T) {
-		account := testClientHelper().Account.Create(t)
-		t.Cleanup(testClientHelper().Account.DropFunc(t, account.ID()))
+		account, accountCleanup := testClientHelper().Account.Create(t)
+		t.Cleanup(accountCleanup)
 
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			Drop: &sdk.AccountDrop{
@@ -284,8 +284,8 @@ func TestInt_Account(t *testing.T) {
 	})
 
 	t.Run("alter: drop url after rename", func(t *testing.T) {
-		account := testClientHelper().Account.Create(t)
-		t.Cleanup(testClientHelper().Account.DropFunc(t, account.ID()))
+		account, accountCleanup := testClientHelper().Account.Create(t)
+		t.Cleanup(accountCleanup)
 
 		newName := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		t.Cleanup(testClientHelper().Account.DropFunc(t, newName))
@@ -315,43 +315,14 @@ func TestInt_Account(t *testing.T) {
 		require.Empty(t, acc.OldAccountURL)
 	})
 
-	// TODO(create a Ticket?): This cannot be tested as it requires capabilities of moving accounts between organizations.
-	// From the documentation: https://docs.snowflake.com/en/sql-reference/sql/show-accounts#output
-	// `
-	// If the account’s organization was changed in a way that created a new account URL and the original account URL was saved,
-	// provides the original account URL. If the original account URL was dropped, the value is NULL even if the organization changed.
-	// `
-	// t.Run("alter: drop organization url after rename", func(t *testing.T) {
-	//	account := testClientHelper().Account.Create(t)
-	//	t.Cleanup(testClientHelper().Account.DropFunc(t, account.ID()))
-	//
-	//	newName := testClientHelper().Ids.RandomAccountObjectIdentifier()
-	//	t.Cleanup(testClientHelper().Account.DropFunc(t, newName))
-	//
-	//  // move the account to another organization
-	//
-	//	acc, err := client.Accounts.ShowByID(ctx, newName)
-	//	require.NoError(t, err)
-	//	require.NotEmpty(t, acc.OrganizationOldUrl)
-	//
-	//	err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
-	//		Drop: &sdk.AccountDrop{
-	//			Name:               newName,
-	//			OldOrganizationUrl: sdk.Bool(true),
-	//		},
-	//	})
-	//	require.NoError(t, err)
-	//
-	//	acc, err = client.Accounts.ShowByID(ctx, newName)
-	//	require.NoError(t, err)
-	//	require.Empty(t, acc.OrganizationOldUrl)
-	// })
+	// TODO(SNOW-1844776): This cannot be tested as it requires capabilities of moving accounts between organizations.
 
 	t.Run("drop: without options", func(t *testing.T) {
 		err := client.Accounts.Drop(ctx, sdk.NewAccountObjectIdentifier("non-existing-account"), 3, &sdk.DropAccountOptions{})
 		require.Error(t, err)
 
-		account := testClientHelper().Account.Create(t)
+		account, accountCleanup := testClientHelper().Account.Create(t)
+		t.Cleanup(accountCleanup)
 
 		err = client.Accounts.Drop(ctx, account.ID(), 3, &sdk.DropAccountOptions{})
 		require.NoError(t, err)
@@ -364,7 +335,8 @@ func TestInt_Account(t *testing.T) {
 		err := client.Accounts.Drop(ctx, sdk.NewAccountObjectIdentifier("non-existing-account"), 3, &sdk.DropAccountOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
 
-		account := testClientHelper().Account.Create(t)
+		account, accountCleanup := testClientHelper().Account.Create(t)
+		t.Cleanup(accountCleanup)
 
 		err = client.Accounts.Drop(ctx, account.ID(), 3, &sdk.DropAccountOptions{IfExists: sdk.Bool(true)})
 		require.NoError(t, err)
@@ -374,8 +346,8 @@ func TestInt_Account(t *testing.T) {
 	})
 
 	t.Run("undrop", func(t *testing.T) {
-		account := testClientHelper().Account.Create(t)
-		t.Cleanup(testClientHelper().Account.DropFunc(t, account.ID()))
+		account, accountCleanup := testClientHelper().Account.Create(t)
+		t.Cleanup(accountCleanup)
 
 		require.NoError(t, testClientHelper().Account.Drop(t, account.ID()))
 
@@ -582,12 +554,17 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 	t.Run("set / unset policies", func(t *testing.T) {
 		authPolicy, authPolicyCleanup := testClientHelper().AuthenticationPolicy.Create(t)
 		t.Cleanup(authPolicyCleanup)
+
 		passwordPolicy, passwordPolicyCleanup := testClientHelper().PasswordPolicy.CreatePasswordPolicy(t)
 		t.Cleanup(passwordPolicyCleanup)
+
 		sessionPolicy, sessionPolicyCleanup := testClientHelper().SessionPolicy.CreateSessionPolicy(t)
 		t.Cleanup(sessionPolicyCleanup)
+
 		packagesPolicyId, packagesPolicyCleanup := testClientHelper().PackagesPolicy.Create(t)
 		t.Cleanup(packagesPolicyCleanup)
+
+		t.Cleanup(testClientHelper().Account.UnsetPoliciesFunc(t))
 
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{

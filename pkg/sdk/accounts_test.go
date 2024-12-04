@@ -289,7 +289,7 @@ func TestAccountAlter(t *testing.T) {
 		opts := &AlterAccountOptions{
 			SetIsOrgAdmin: &AccountSetIsOrgAdmin{
 				Name:     id,
-				OrgAdmin: Bool(true),
+				OrgAdmin: true,
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT %s SET IS_ORG_ADMIN = true`, id.FullyQualifiedName())
