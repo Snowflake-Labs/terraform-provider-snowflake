@@ -498,7 +498,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		require.Equal(t, *e, *es)
 	})
 
-	// TODO [next PR]: remove with old function removal for V1
+	// TODO [SNOW-1348103]: remove with old function removal for V1
 	t.Run("function returns non detailed data types of arguments - old data types", func(t *testing.T) {
 		// This test proves that every detailed data types (e.g. VARCHAR(20) and NUMBER(10, 0)) are generalized
 		// on Snowflake side (to e.g. VARCHAR and NUMBER) and that sdk.ToDataType mapping function maps detailed types

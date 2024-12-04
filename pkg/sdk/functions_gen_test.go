@@ -53,7 +53,7 @@ func TestFunctions_CreateForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaFunctionOptions", "Handler"))
 	})
 
-	// TODO [next PR]: remove with old function removal for V1
+	// TODO [SNOW-1348103]: remove with old function removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -221,7 +221,7 @@ func TestFunctions_CreateForJavascript(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavascriptFunctionOptions", "FunctionDefinition"))
 	})
 
-	// TODO [next PR]: remove with old function removal for V1
+	// TODO [SNOW-1348103]: remove with old function removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -323,7 +323,7 @@ func TestFunctions_CreateForPython(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, NewError("IMPORTS must not be empty when AS is nil"))
 	})
 
-	// TODO [next PR]: remove with old function removal for V1
+	// TODO [SNOW-1348103]: remove with old function removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -478,7 +478,7 @@ func TestFunctions_CreateForScala(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaFunctionOptions", "Handler"))
 	})
 
-	// TODO [next PR]: remove with old function removal for V1
+	// TODO [SNOW-1348103]: remove with old function removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -585,7 +585,7 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `CREATE FUNCTION %s () RETURNS FLOAT AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
 	})
 
-	// TODO [next PR]: remove with old function removal for V1
+	// TODO [SNOW-1348103]: remove with old function removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)

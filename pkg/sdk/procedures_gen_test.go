@@ -66,7 +66,7 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
 	})
 
-	// TODO [next PR]: remove with old procedure removal for V1
+	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -213,7 +213,7 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	// TODO [next PR]: remove with old procedure removal for V1
+	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -309,7 +309,7 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonProcedureOptions.Returns", "ResultDataType", "Table"))
 	})
 
-	// TODO [next PR]: remove with old procedure removal for V1
+	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -485,7 +485,7 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
 	})
 
-	// TODO [next PR]: remove with old procedure removal for V1
+	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -612,7 +612,7 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLProcedureOptions.Returns", "ResultDataType", "Table"))
 	})
 
-	// TODO [next PR]: remove with old procedure removal for V1
+	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
@@ -968,7 +968,7 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:latest') HANDLER = 'TestFunc.echoVarchar' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
-	// TODO [next PR]: remove with old procedure removal for V1
+	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []ProcedureArgument{
@@ -1138,7 +1138,7 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE SCALA RUNTIME_VERSION = '2.12' PACKAGES = ('com.snowflake:snowpark:1.2.0') HANDLER = 'TestFunc.echoVarchar' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
-	// TODO [next PR]: remove with old procedure removal for V1
+	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []ProcedureArgument{
@@ -1312,7 +1312,7 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('snowflake-snowpark-python') HANDLER = 'udf' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
-	// TODO [next PR]: remove with old procedure removal for V1
+	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []ProcedureArgument{
@@ -1446,7 +1446,7 @@ func TestProcedures_CreateAndCallForJavaScript(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS FLOAT LANGUAGE JAVASCRIPT AS 'return 1;' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
-	// TODO [next PR]: remove with old procedure removal for V1
+	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []ProcedureArgument{
@@ -1562,7 +1562,7 @@ func TestProcedures_CreateAndCallForSQL(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE SQL AS '3.141592654::FLOAT' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
-	// TODO [next PR]: remove with old procedure removal for V1
+	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []ProcedureArgument{
