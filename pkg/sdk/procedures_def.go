@@ -6,18 +6,21 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 var procedureArgument = g.NewQueryStruct("ProcedureArgument").
 	Text("ArgName", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("ArgDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required()).
+	PredefinedQueryStructField("ArgDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+	PredefinedQueryStructField("ArgDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT"))
 
 var procedureColumn = g.NewQueryStruct("ProcedureColumn").
 	Text("ColumnName", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("ColumnDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required())
+	PredefinedQueryStructField("ColumnDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+	PredefinedQueryStructField("ColumnDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required())
 
 var procedureReturns = g.NewQueryStruct("ProcedureReturns").
 	OptionalQueryStructField(
 		"ResultDataType",
 		g.NewQueryStruct("ProcedureReturnsResultDataType").
-			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required()).
+			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+			PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 			OptionalSQL("NULL").OptionalSQL("NOT NULL"),
 		g.KeywordOptions(),
 	).
@@ -36,7 +39,8 @@ var procedureSQLReturns = g.NewQueryStruct("ProcedureSQLReturns").
 	OptionalQueryStructField(
 		"ResultDataType",
 		g.NewQueryStruct("ProcedureReturnsResultDataType").
-			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required()),
+			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+			PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
@@ -126,7 +130,9 @@ var ProceduresDef = g.NewInterface(
 			g.ListOptions().MustParentheses(),
 		).
 		OptionalSQL("COPY GRANTS").
-		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
+		SQL("RETURNS").
+		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals()).
+		PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 		OptionalSQL("NOT NULL").
 		SQL("LANGUAGE JAVASCRIPT").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
@@ -437,7 +443,9 @@ var ProceduresDef = g.NewInterface(
 			procedureArgument,
 			g.ListOptions().MustParentheses(),
 		).
-		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
+		SQL("RETURNS").
+		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals()).
+		PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 		OptionalSQL("NOT NULL").
 		SQL("LANGUAGE JAVASCRIPT").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
@@ -452,7 +460,7 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("CallArguments", "[]string", g.KeywordOptions().MustParentheses()).
 		PredefinedQueryStructField("ScriptingVariable", "*string", g.ParameterOptions().NoEquals().NoQuotes().SQL("INTO")).
 		WithValidation(g.ValidateValueSet, "ProcedureDefinition").
-		WithValidation(g.ValidateValueSet, "ResultDataTypeOld").
+		WithValidation(g.AtLeastOneValueSet, "ResultDataTypeOld", "ResultDataType").
 		WithValidation(g.ValidIdentifier, "ProcedureName").
 		WithValidation(g.ValidIdentifier, "Name"),
 ).CustomOperation(
