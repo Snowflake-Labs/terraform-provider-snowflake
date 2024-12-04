@@ -541,6 +541,26 @@ func TestBuilder_DataType(t *testing.T) {
 		{dataType: "VECTOR(float, 20)", expectedSql: "VECTOR(FLOAT, 20)"},
 	}
 
+	nilTestCases := func() []datatypes.DataType {
+		var a *datatypes.ArrayDataType
+		var b *datatypes.BinaryDataType
+		var c *datatypes.BooleanDataType
+		var d *datatypes.DateDataType
+		var e *datatypes.FloatDataType
+		var f *datatypes.GeographyDataType
+		var g *datatypes.GeometryDataType
+		var h *datatypes.NumberDataType
+		var i *datatypes.ObjectDataType
+		var j *datatypes.TextDataType
+		var k *datatypes.TimeDataType
+		var l *datatypes.TimestampLtzDataType
+		var m *datatypes.TimestampNtzDataType
+		var n *datatypes.TimestampTzDataType
+		var o *datatypes.VariantDataType
+		var p *datatypes.VectorDataType
+
+		return []datatypes.DataType{a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p}
+	}()
 	t.Run("test data type empty", func(t *testing.T) {
 		opts := dataTypeTestHelper{}
 
@@ -550,18 +570,19 @@ func TestBuilder_DataType(t *testing.T) {
 		assert.Equal(t, "", s)
 	})
 
-	// TODO [this PR]: test all types as nil
-	t.Run("test data type nil", func(t *testing.T) {
-		var a *datatypes.BooleanDataType
-		opts := dataTypeTestHelper{
-			DataType: a,
-		}
+	for _, tc := range nilTestCases {
+		tc := tc
+		t.Run(fmt.Sprintf(`test for nil data type "%s"`, reflect.TypeOf(tc)), func(t *testing.T) {
+			opts := dataTypeTestHelper{
+				DataType: tc,
+			}
 
-		s, err := structToSQL(opts)
+			s, err := structToSQL(opts)
 
-		require.NoError(t, err)
-		assert.Equal(t, "", s)
-	})
+			require.NoError(t, err)
+			assert.Equal(t, "", s)
+		})
+	}
 
 	for _, tc := range dataTypes {
 		tc := tc

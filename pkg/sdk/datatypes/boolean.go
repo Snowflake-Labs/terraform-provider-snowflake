@@ -7,9 +7,6 @@ type BooleanDataType struct {
 }
 
 func (t *BooleanDataType) ToSql() string {
-	if t == nil {
-		return ""
-	}
 	return t.underlyingType
 }
 

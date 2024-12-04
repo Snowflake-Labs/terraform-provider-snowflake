@@ -646,6 +646,10 @@ func (v sqlParameterClause) String() string {
 	}
 	var value = v.value
 	if dataType, ok := value.(datatypes.DataType); ok {
+		// We check like this and not by `dataType == nil` because for e.g. `var *datatypes.ArrayDataType` return false in a normal nil check
+		if reflect.ValueOf(dataType).IsZero() {
+			return s
+		}
 		value = dataType.ToSql()
 	}
 	// key = "value"
