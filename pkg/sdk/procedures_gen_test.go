@@ -45,26 +45,27 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeVARCHAR,
+				ResultDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "Handler"))
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "RuntimeVersion"))
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	// TODO [next PR]: remove with old procedure removal for V1
+	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.Secure = Bool(true)
 		opts.Arguments = []ProcedureArgument{
 			{
-				ArgName:     "id",
-				ArgDataType: DataTypeNumber,
+				ArgName:        "id",
+				ArgDataTypeOld: DataTypeNumber,
 			},
 			{
-				ArgName:      "name",
-				ArgDataType:  DataTypeVARCHAR,
-				DefaultValue: String("'test'"),
+				ArgName:        "name",
+				ArgDataTypeOld: DataTypeVARCHAR,
+				DefaultValue:   String("'test'"),
 			},
 		}
 		opts.CopyGrants = Bool(true)
@@ -72,8 +73,8 @@ func TestProcedures_CreateForJava(t *testing.T) {
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:     "country_code",
-						ColumnDataType: DataTypeVARCHAR,
+						ColumnName:        "country_code",
+						ColumnDataTypeOld: DataTypeVARCHAR,
 					},
 				},
 			},
@@ -137,19 +138,20 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaScriptProcedureOptions", "ProcedureDefinition"))
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	// TODO [next PR]: remove with old procedure removal for V1
+	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.Secure = Bool(true)
 		opts.Arguments = []ProcedureArgument{
 			{
-				ArgName:      "d",
-				ArgDataType:  "DOUBLE",
-				DefaultValue: String("1.0"),
+				ArgName:        "d",
+				ArgDataTypeOld: "DOUBLE",
+				DefaultValue:   String("1.0"),
 			},
 		}
 		opts.CopyGrants = Bool(true)
-		opts.ResultDataType = "DOUBLE"
+		opts.ResultDataTypeOld = "DOUBLE"
 		opts.NotNull = Bool(true)
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
 		opts.Comment = String("test comment")
@@ -189,29 +191,30 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeVARCHAR,
+				ResultDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "Handler"))
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "RuntimeVersion"))
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	// TODO [next PR]: remove with old procedure removal for V1
+	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.Secure = Bool(true)
 		opts.Arguments = []ProcedureArgument{
 			{
-				ArgName:      "i",
-				ArgDataType:  "int",
-				DefaultValue: String("1"),
+				ArgName:        "i",
+				ArgDataTypeOld: "int",
+				DefaultValue:   String("1"),
 			},
 		}
 		opts.CopyGrants = Bool(true)
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: "VARIANT",
-				Null:           Bool(true),
+				ResultDataTypeOld: "VARIANT",
+				Null:              Bool(true),
 			},
 		}
 		opts.RuntimeVersion = "3.8"
@@ -294,29 +297,30 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeVARCHAR,
+				ResultDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "Handler"))
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "RuntimeVersion"))
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	// TODO [next PR]: remove with old procedure removal for V1
+	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.Secure = Bool(true)
 		opts.Arguments = []ProcedureArgument{
 			{
-				ArgName:      "x",
-				ArgDataType:  "VARCHAR",
-				DefaultValue: String("'test'"),
+				ArgName:        "x",
+				ArgDataTypeOld: "VARCHAR",
+				DefaultValue:   String("'test'"),
 			},
 		}
 		opts.CopyGrants = Bool(true)
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: "VARCHAR",
-				NotNull:        Bool(true),
+				ResultDataTypeOld: "VARCHAR",
+				NotNull:           Bool(true),
 			},
 		}
 		opts.RuntimeVersion = "2.0"
@@ -369,28 +373,29 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureSQLReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeFloat,
+				ResultDataTypeOld: DataTypeFloat,
 			},
 		}
 		opts.ProcedureDefinition = "3.141592654::FLOAT"
 		assertOptsValidAndSQLEquals(t, opts, `CREATE PROCEDURE %s () RETURNS FLOAT LANGUAGE SQL AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	// TODO [next PR]: remove with old procedure removal for V1
+	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.OrReplace = Bool(true)
 		opts.Secure = Bool(true)
 		opts.Arguments = []ProcedureArgument{
 			{
-				ArgName:      "message",
-				ArgDataType:  "VARCHAR",
-				DefaultValue: String("'test'"),
+				ArgName:        "message",
+				ArgDataTypeOld: "VARCHAR",
+				DefaultValue:   String("'test'"),
 			},
 		}
 		opts.CopyGrants = Bool(true)
 		opts.Returns = ProcedureSQLReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: "VARCHAR",
+				ResultDataTypeOld: "VARCHAR",
 			},
 			NotNull: Bool(true),
 		}
@@ -666,13 +671,13 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:     "name",
-						ColumnDataType: DataTypeVARCHAR,
+						ColumnName:        "name",
+						ColumnDataTypeOld: DataTypeVARCHAR,
 					},
 				},
 			},
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeFloat,
+				ResultDataTypeOld: DataTypeFloat,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
@@ -682,7 +687,7 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeVARCHAR,
+				ResultDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForJavaProcedureOptions", "Handler"))
@@ -706,24 +711,25 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:latest') HANDLER = 'TestFunc.echoVarchar' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	// TODO [next PR]: remove with old procedure removal for V1
+	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []ProcedureArgument{
 			{
-				ArgName:     "id",
-				ArgDataType: DataTypeNumber,
+				ArgName:        "id",
+				ArgDataTypeOld: DataTypeNumber,
 			},
 			{
-				ArgName:     "name",
-				ArgDataType: DataTypeVARCHAR,
+				ArgName:        "name",
+				ArgDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		opts.Returns = ProcedureReturns{
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:     "country_code",
-						ColumnDataType: DataTypeVARCHAR,
+						ColumnName:        "country_code",
+						ColumnDataTypeOld: DataTypeVARCHAR,
 					},
 				},
 			},
@@ -787,13 +793,13 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:     "name",
-						ColumnDataType: DataTypeVARCHAR,
+						ColumnName:        "name",
+						ColumnDataTypeOld: DataTypeVARCHAR,
 					},
 				},
 			},
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeFloat,
+				ResultDataTypeOld: DataTypeFloat,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForScalaProcedureOptions.Returns", "ResultDataType", "Table"))
@@ -803,7 +809,7 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeVARCHAR,
+				ResultDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForScalaProcedureOptions", "Handler"))
@@ -827,24 +833,25 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE SCALA RUNTIME_VERSION = '2.12' PACKAGES = ('com.snowflake:snowpark:1.2.0') HANDLER = 'TestFunc.echoVarchar' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	// TODO [next PR]: remove with old procedure removal for V1
+	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []ProcedureArgument{
 			{
-				ArgName:     "id",
-				ArgDataType: DataTypeNumber,
+				ArgName:        "id",
+				ArgDataTypeOld: DataTypeNumber,
 			},
 			{
-				ArgName:     "name",
-				ArgDataType: DataTypeVARCHAR,
+				ArgName:        "name",
+				ArgDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		opts.Returns = ProcedureReturns{
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:     "country_code",
-						ColumnDataType: DataTypeVARCHAR,
+						ColumnName:        "country_code",
+						ColumnDataTypeOld: DataTypeVARCHAR,
 					},
 				},
 			},
@@ -910,13 +917,13 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:     "name",
-						ColumnDataType: DataTypeVARCHAR,
+						ColumnName:        "name",
+						ColumnDataTypeOld: DataTypeVARCHAR,
 					},
 				},
 			},
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeFloat,
+				ResultDataTypeOld: DataTypeFloat,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForPythonProcedureOptions.Returns", "ResultDataType", "Table"))
@@ -926,7 +933,7 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeVARCHAR,
+				ResultDataTypeOld: DataTypeVARCHAR,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForPythonProcedureOptions", "Handler"))
@@ -950,19 +957,20 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('snowflake-snowpark-python') HANDLER = 'udf' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	// TODO [next PR]: remove with old procedure removal for V1
+	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []ProcedureArgument{
 			{
-				ArgName:      "i",
-				ArgDataType:  "int",
-				DefaultValue: String("1"),
+				ArgName:        "i",
+				ArgDataTypeOld: "int",
+				DefaultValue:   String("1"),
 			},
 		}
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: "VARIANT",
-				Null:           Bool(true),
+				ResultDataTypeOld: "VARIANT",
+				Null:              Bool(true),
 			},
 		}
 		opts.RuntimeVersion = "3.8"
@@ -1028,22 +1036,23 @@ func TestProcedures_CreateAndCallForJavaScript(t *testing.T) {
 
 	t.Run("no arguments", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.ResultDataType = "DOUBLE"
+		opts.ResultDataTypeOld = "DOUBLE"
 		opts.ProcedureDefinition = "return 1;"
 		opts.ProcedureName = id
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS DOUBLE LANGUAGE JAVASCRIPT AS 'return 1;' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	// TODO [next PR]: remove with old procedure removal for V1
+	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []ProcedureArgument{
 			{
-				ArgName:      "d",
-				ArgDataType:  "DOUBLE",
-				DefaultValue: String("1.0"),
+				ArgName:        "d",
+				ArgDataTypeOld: "DOUBLE",
+				DefaultValue:   String("1.0"),
 			},
 		}
-		opts.ResultDataType = "DOUBLE"
+		opts.ResultDataTypeOld = "DOUBLE"
 		opts.NotNull = Bool(true)
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
 		opts.ProcedureDefinition = "return 1;"
@@ -1094,13 +1103,13 @@ func TestProcedures_CreateAndCallForSQL(t *testing.T) {
 			Table: &ProcedureReturnsTable{
 				Columns: []ProcedureColumn{
 					{
-						ColumnName:     "name",
-						ColumnDataType: DataTypeVARCHAR,
+						ColumnName:        "name",
+						ColumnDataTypeOld: DataTypeVARCHAR,
 					},
 				},
 			},
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeFloat,
+				ResultDataTypeOld: DataTypeFloat,
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForSQLProcedureOptions.Returns", "ResultDataType", "Table"))
@@ -1122,18 +1131,19 @@ func TestProcedures_CreateAndCallForSQL(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE () RETURNS TABLE () LANGUAGE SQL AS '3.141592654::FLOAT' CALL %s ()`, id.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
-	t.Run("all options", func(t *testing.T) {
+	// TODO [next PR]: remove with old procedure removal for V1
+	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []ProcedureArgument{
 			{
-				ArgName:      "message",
-				ArgDataType:  "VARCHAR",
-				DefaultValue: String("'test'"),
+				ArgName:        "message",
+				ArgDataTypeOld: "VARCHAR",
+				DefaultValue:   String("'test'"),
 			},
 		}
 		opts.Returns = ProcedureReturns{
 			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: DataTypeFloat,
+				ResultDataTypeOld: DataTypeFloat,
 			},
 		}
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
