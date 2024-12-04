@@ -617,7 +617,7 @@ func ReadTask(withExternalChangesMarking bool) schema.ReadContextFunc {
 			d.Set("config", task.Config),
 			d.Set("comment", task.Comment),
 			d.Set("sql_statement", task.Definition),
-			d.Set("after", collections.Map(task.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName)),
+			d.Set("after", collections.Map(task.TaskRelations.Predecessors, sdk.SchemaObjectIdentifier.FullyQualifiedName)),
 			handleTaskParameterRead(d, taskParameters),
 			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 			d.Set(ShowOutputAttributeName, []map[string]any{schemas.TaskToSchema(task)}),

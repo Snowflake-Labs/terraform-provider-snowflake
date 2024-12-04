@@ -1724,7 +1724,7 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 						HasSuspendTaskAfterNumFailuresString("2"),
 					resourceshowoutputassert.TaskShowOutput(t, rootTaskModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						// TODO(SNOW-1348116 - next pr): Create ticket and report; this field in task relations seems to have mixed chances of appearing (needs deeper digging, doesn't affect the resource; could be removed for now)
+						// TODO(SNOW-1843489): Create ticket and report; this field in task relations seems to have mixed chances of appearing (needs deeper digging, doesn't affect the resource; could be removed for now)
 						// HasTaskRelations(sdk.TaskRelations{FinalizerTask: &finalizerTaskId}).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
