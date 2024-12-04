@@ -6,18 +6,21 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 var functionArgument = g.NewQueryStruct("FunctionArgument").
 	Text("ArgName", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("ArgDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required()).
+	PredefinedQueryStructField("ArgDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+	PredefinedQueryStructField("ArgDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT"))
 
 var functionColumn = g.NewQueryStruct("FunctionColumn").
 	Text("ColumnName", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("ColumnDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required())
+	PredefinedQueryStructField("ColumnDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+	PredefinedQueryStructField("ColumnDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required())
 
 var functionReturns = g.NewQueryStruct("FunctionReturns").
 	OptionalQueryStructField(
 		"ResultDataType",
 		g.NewQueryStruct("FunctionReturnsResultDataType").
-			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes().Required()),
+			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+			PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.KeywordOptions().NoQuotes().Required()),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
@@ -174,7 +177,8 @@ var FunctionsDef = g.NewInterface(
 			functionArgument,
 			g.ListOptions().MustParentheses()).
 		OptionalSQL("COPY GRANTS").
-		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
+		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS")).
+		PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
 		PredefinedQueryStructField("ReturnNullValues", "*ReturnNullValues", g.KeywordOptions()).
 		SQL("LANGUAGE SCALA").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
