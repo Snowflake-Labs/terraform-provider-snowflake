@@ -22,15 +22,16 @@ type Functions interface {
 }
 
 // CreateForJavaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#java-handler.
-// TODO [SNOW-1348103 - this PR]: test secret (= missing, multiple secretes) + add helper for secret
 // TODO [SNOW-1348103 - this PR]: test secure (for each type, with owner and underprivileged role), read https://docs.snowflake.com/en/developer-guide/secure-udf-procedure
 // TODO [SNOW-1348103 - this PR]: test setting the paths for all types (like imports, target paths)
+// TODO [SNOW-1348103 - this PR]: test weird names for arg name
+// TODO [SNOW-1348103 - this PR]: test two types of creation for each func
 // TODO [SNOW-1348103 - next PRs]: check data type mappings https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages (signature + returns)
 // TODO [SNOW-1348103 - this PR]: setting RUNTIME_VERSION (only 11.x, 17.x supported, 11.x being the default)
 // TODO [SNOW-1348103 - this PR]: packages: package_name:version_number; do we validate? - check SELECT * FROM INFORMATION_SCHEMA.PACKAGES WHERE LANGUAGE = 'java';
 // TODO [SNOW-1348103 - next PRs]: add to the resource docs https://docs.snowflake.com/en/sql-reference/sql/create-function#access-control-requirements
-// TODO [SNOW-1348103 - this PR]: what delimiter do we use for <function_definition>: ' versus $?
-// TODO [SNOW-1348103 - this PR]: escaping single quotes test
+// TODO [SNOW-1348103 - this PR]: what delimiter do we use for <function_definition>: ' versus $$? - we use $$ as tasks
+// TODO [SNOW-1348103 - this PR]: escaping single quotes test - don't have to do this with $$
 // TODO [SNOW-1348103 - this PR]: validation of JAR (check https://docs.snowflake.com/en/sql-reference/sql/create-function#id6)
 // TODO [SNOW-1348103 - next PRs]: active warehouse vs validations
 // TODO [SNOW-1348103 - this PR]: check creation of all functions (using examples and more)
@@ -115,7 +116,7 @@ type CreateForJavascriptFunctionOptions struct {
 }
 
 // CreateForPythonFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#python-handler.
-// TODO [SNOW-1348103 - this PR]: add aggregate (PuPr)
+// TODO [SNOW-1348103 - this PR]: test aggregate func creation
 // TODO [SNOW-1348103 - this PR]: what about [==<version>] - SDK level or resource level? check also: SELECT * FROM INFORMATION_SCHEMA.PACKAGES WHERE LANGUAGE = 'python';
 // TODO [SNOW-1348103 - this PR]: what about preview feature >= ?
 // TODO [SNOW-1348103 - this PR]: what about '<module_file_name>.<function_name>' for non-inline functions?
@@ -192,6 +193,10 @@ type CreateForSQLFunctionOptions struct {
 }
 
 // AlterFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-function.
+// TODO [this PR]: can we run multiple sets/unsets?
+// TODO [this PR]: add setting EXTERNAL_ACCESS_INTEGRATIONS/SECRETS
+// TODO [this PR]: unset EXTERNAL_ACCESS_INTEGRATIONS or SECRETS?
+// TODO [this PR]: EXTERNAL_ACCESS_INTEGRATIONS or SECRETS in Javascript or SQL
 type AlterFunctionOptions struct {
 	alter           bool                                `ddl:"static" sql:"ALTER"`
 	function        bool                                `ddl:"static" sql:"FUNCTION"`
@@ -219,6 +224,10 @@ type DropFunctionOptions struct {
 }
 
 // ShowFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-user-functions.
+// TODO [this PR]: extended in
+// TODO [this PR]: check mapping for is_ columns
+// TODO [this PR]: add is_data_metric
+// TODO [this PR]: example does not list is_data_metric
 type ShowFunctionOptions struct {
 	show          bool  `ddl:"static" sql:"SHOW"`
 	userFunctions bool  `ddl:"static" sql:"USER FUNCTIONS"`
@@ -268,6 +277,8 @@ type Function struct {
 }
 
 // DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.
+// TODO [this PR]: create details struct similar to the one in user
+// TODO [this PR]: list properties for all types of functions
 type DescribeFunctionOptions struct {
 	describe bool                                `ddl:"static" sql:"DESCRIBE"`
 	function bool                                `ddl:"static" sql:"FUNCTION"`
