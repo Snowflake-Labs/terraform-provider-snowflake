@@ -275,7 +275,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 - `on_account_object` (Block List, Max: 1) Specifies the account object on which privileges will be granted (see [below for nested schema](#nestedblock--on_account_object))
 - `on_schema` (Block List, Max: 1) Specifies the schema on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema))
 - `on_schema_object` (Block List, Max: 1) Specifies the schema object on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema_object))
-- `privileges` (Set of String) The privileges to grant on the account role.
+- `privileges` (Set of String) The privileges to grant on the account role. This field is case-sensitive; use only upper-case privileges.
 - `with_grant_option` (Boolean) Specifies whether the grantee can grant the privileges to other users.
 
 ### Read-Only

@@ -70,7 +70,6 @@ locals {
 resource "snowflake_database" "primary" {
   name     = "database_name"
   for_each = { for rc in local.replication_configs : rc.account_identifier => rc }
-  # for_each = local.replication_configs
 
   replication {
     enable_to_account {

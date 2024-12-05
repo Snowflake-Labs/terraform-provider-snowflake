@@ -7,6 +7,8 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+!> **Note** Setting a network policy with lowercase letters does not work correctly in Snowflake (see [issue](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3229)). As a workaround, set the network policy with uppercase letters only, or use unsafe_execute with network policy ID wrapped in `'`.
+
 !> **Note** The provider does not detect external changes on security integration type. In this case, remove the integration of wrong type manually with `terraform destroy` and recreate the resource. It will be addressed in the future.
 
 # snowflake_oauth_integration_for_custom_clients (Resource)
@@ -18,7 +20,7 @@ Resource used to manage oauth security integration for custom clients objects. F
 ```terraform
 # basic resource
 resource "snowflake_oauth_integration_for_custom_clients" "basic" {
-  name               = "saml_integration"
+  name               = "integration"
   oauth_client_type  = "CONFIDENTIAL"
   oauth_redirect_uri = "https://example.com"
   blocked_roles_list = ["ACCOUNTADMIN", "SECURITYADMIN"]
@@ -26,7 +28,7 @@ resource "snowflake_oauth_integration_for_custom_clients" "basic" {
 
 # resource with all fields set
 resource "snowflake_oauth_integration_for_custom_clients" "complete" {
-  name                             = "saml_integration"
+  name                             = "integration"
   oauth_client_type                = "CONFIDENTIAL"
   oauth_redirect_uri               = "https://example.com"
   enabled                          = "true"
