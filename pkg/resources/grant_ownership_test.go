@@ -89,7 +89,7 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 	for _, tt := range testCases {
 		tt := tt
 		t.Run(tt.Name, func(t *testing.T) {
-			id, err := getOnObjectIdentifier(tt.ObjectType, tt.ObjectName)
+			id, err := GetOnObjectIdentifier(tt.ObjectType, tt.ObjectName)
 			if tt.Error == "" {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.Expected, id)

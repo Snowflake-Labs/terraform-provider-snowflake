@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(SNOW-1813223): cleanup tests
 func TestInt_Tags(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -153,6 +154,16 @@ func TestInt_Tags(t *testing.T) {
 		set := sdk.NewTagSetRequest().WithMaskingPolicies(policies)
 		err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithSet(set))
 		require.NoError(t, err)
+
+		ref, err := testClientHelper().PolicyReferences.GetPolicyReference(t, tag.ID(), sdk.PolicyEntityDomainTag)
+		require.NoError(t, err)
+		assert.Equal(t, policyTest.ID().Name(), ref.PolicyName)
+		assert.Equal(t, sdk.PolicyKindMaskingPolicy, ref.PolicyKind)
+
+		// assert that setting masking policy does not apply the tag on the masking policy
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, id, policyTest.ID(), sdk.ObjectTypeMaskingPolicy)
+		require.NoError(t, err)
+		assert.Nil(t, returnedTagValue)
 
 		unset := sdk.NewTagUnsetRequest().WithMaskingPolicies(policies)
 		err = client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithUnset(unset))
@@ -309,19 +320,28 @@ func TestInt_TagsAssociations(t *testing.T) {
 		tag.ID(),
 	}
 
+	assertTagSet := func(id sdk.ObjectIdentifier, objectType sdk.ObjectType) {
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
+		require.NoError(t, err)
+		assert.Equal(t, sdk.Pointer(tagValue), returnedTagValue)
+	}
+
+	assertTagUnset := func(id sdk.ObjectIdentifier, objectType sdk.ObjectType) {
+		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
+		require.NoError(t, err)
+		assert.Nil(t, returnedTagValue)
+	}
+
 	testTagSet := func(id sdk.ObjectIdentifier, objectType sdk.ObjectType) {
 		err := client.Tags.Set(ctx, sdk.NewSetTagRequest(objectType, id).WithSetTags(tags))
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
-		require.NoError(t, err)
-		assert.Equal(t, tagValue, returnedTagValue)
+		assertTagSet(id, objectType)
 
 		err = client.Tags.Unset(ctx, sdk.NewUnsetTagRequest(objectType, id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, objectType)
-		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+		assertTagUnset(id, objectType)
 	}
 
 	t.Run("TestInt_TagAssociationForAccountLocator", func(t *testing.T) {
@@ -331,31 +351,25 @@ func TestInt_TagsAssociations(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Equal(t, tagValue, returnedTagValue)
+		assertTagSet(id, sdk.ObjectTypeAccount)
 
 		err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			UnsetTag: unsetTags,
 		})
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+		assertTagUnset(id, sdk.ObjectTypeAccount)
 
 		// test tag sdk method
 		err = client.Tags.SetOnCurrentAccount(ctx, sdk.NewSetTagOnCurrentAccountRequest().WithSetTags(tags))
 		require.NoError(t, err)
 
-		returnedTagValue, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Equal(t, tagValue, returnedTagValue)
+		assertTagSet(id, sdk.ObjectTypeAccount)
 
 		err = client.Tags.UnsetOnCurrentAccount(ctx, sdk.NewUnsetTagOnCurrentAccountRequest().WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+		assertTagUnset(id, sdk.ObjectTypeAccount)
 	})
 
 	t.Run("TestInt_TagAssociationForAccount", func(t *testing.T) {
@@ -363,15 +377,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 		err := client.Tags.Set(ctx, sdk.NewSetTagRequest(sdk.ObjectTypeAccount, id).WithSetTags(tags))
 		require.NoError(t, err)
 
-		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.NoError(t, err)
-		assert.Equal(t, tagValue, returnedTagValue)
+		assertTagSet(id, sdk.ObjectTypeAccount)
 
 		err = client.Tags.Unset(ctx, sdk.NewUnsetTagRequest(sdk.ObjectTypeAccount, id).WithUnsetTags(unsetTags))
 		require.NoError(t, err)
 
-		_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeAccount)
-		require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+		assertTagUnset(id, sdk.ObjectTypeAccount)
 	})
 
 	accountObjectTestCases := []struct {
@@ -634,15 +645,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
-			returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Equal(t, tagValue, returnedTagValue)
+			assertTagSet(id, tc.objectType)
 
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+			assertTagUnset(id, tc.objectType)
 
 			// test object methods
 			testTagSet(id, tc.objectType)
@@ -725,15 +733,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
-			returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Equal(t, tagValue, returnedTagValue)
+			assertTagSet(id, tc.objectType)
 
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+			assertTagUnset(id, tc.objectType)
 
 			// test object methods
 			testTagSet(id, tc.objectType)
@@ -790,23 +795,6 @@ func TestInt_TagsAssociations(t *testing.T) {
 			},
 			unsetTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.ObjectIdentifier) error {
 				return client.Pipes.Alter(ctx, id, &sdk.AlterPipeOptions{
-					UnsetTag: tags,
-				})
-			},
-		},
-		{
-			name:       "MaskingPolicy",
-			objectType: sdk.ObjectTypeMaskingPolicy,
-			setupObject: func() (IDProvider[sdk.SchemaObjectIdentifier], func()) {
-				return testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
-			},
-			setTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.TagAssociation) error {
-				return client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
-					SetTag: tags,
-				})
-			},
-			unsetTags: func(id sdk.SchemaObjectIdentifier, tags []sdk.ObjectIdentifier) error {
-				return client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
 					UnsetTag: tags,
 				})
 			},
@@ -929,20 +917,44 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
-			returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Equal(t, tagValue, returnedTagValue)
+			assertTagSet(id, tc.objectType)
 
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+			assertTagUnset(id, tc.objectType)
 
 			// test object methods
 			testTagSet(id, tc.objectType)
 		})
 	}
+
+	t.Run("schema object MaskingPolicy", func(t *testing.T) {
+		maskingPolicy, cleanup := testClientHelper().MaskingPolicy.CreateMaskingPolicy(t)
+		t.Cleanup(cleanup)
+		id := maskingPolicy.ID()
+		err := client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
+			SetTag: tags,
+		})
+		require.NoError(t, err)
+
+		assertTagSet(id, sdk.ObjectTypeMaskingPolicy)
+
+		// assert that setting masking policy does not apply the tag on the masking policy
+		refs, err := testClientHelper().PolicyReferences.GetPolicyReferences(t, tag.ID(), sdk.PolicyEntityDomainTag)
+		require.NoError(t, err)
+		assert.Len(t, refs, 0)
+
+		err = client.MaskingPolicies.Alter(ctx, id, &sdk.AlterMaskingPolicyOptions{
+			UnsetTag: unsetTags,
+		})
+		require.NoError(t, err)
+
+		assertTagUnset(id, sdk.ObjectTypeMaskingPolicy)
+
+		// test object methods
+		testTagSet(id, sdk.ObjectTypeMaskingPolicy)
+	})
 
 	columnTestCases := []struct {
 		name        string
@@ -994,15 +1006,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
-			returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeColumn)
-			require.NoError(t, err)
-			assert.Equal(t, tagValue, returnedTagValue)
+			assertTagSet(id, sdk.ObjectTypeColumn)
 
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, sdk.ObjectTypeColumn)
-			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+			assertTagUnset(id, sdk.ObjectTypeColumn)
 
 			// test object methods
 			testTagSet(id, sdk.ObjectTypeColumn)
@@ -1071,15 +1080,12 @@ func TestInt_TagsAssociations(t *testing.T) {
 			err := tc.setTags(id, tags)
 			require.NoError(t, err)
 
-			returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.NoError(t, err)
-			assert.Equal(t, tagValue, returnedTagValue)
+			assertTagSet(id, tc.objectType)
 
 			err = tc.unsetTags(id, unsetTags)
 			require.NoError(t, err)
 
-			_, err = client.SystemFunctions.GetTag(ctx, tag.ID(), id, tc.objectType)
-			require.ErrorContains(t, err, "sql: Scan error on column index 0, name \"TAG\": converting NULL to string is unsupported")
+			assertTagUnset(id, tc.objectType)
 
 			// test object methods
 			testTagSet(id, tc.objectType)

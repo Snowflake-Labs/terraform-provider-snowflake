@@ -24,17 +24,9 @@ resource "snowflake_table" "test2" {
 }
 
 resource "snowflake_tag_association" "test" {
-  object_identifier {
-    database = var.database
-    schema   = var.schema
-    name     = "${snowflake_table.test.name}.${snowflake_table.test.column[0].name}"
-  }
-  object_identifier {
-    database = var.database
-    schema   = var.schema
-    name     = "${snowflake_table.test2.name}.${snowflake_table.test2.column[0].name}"
-  }
-  object_type = "COLUMN"
-  tag_id      = snowflake_tag.test.id
-  tag_value   = "v1"
+  object_identifiers = [var.column_fully_qualified_name, var.column2_fully_qualified_name]
+  object_type        = "COLUMN"
+  tag_id             = snowflake_tag.test.fully_qualified_name
+  tag_value          = "v1"
+  depends_on         = [snowflake_table.test, snowflake_table.test2]
 }

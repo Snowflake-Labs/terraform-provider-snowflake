@@ -24,6 +24,11 @@ func (s *UnsetTagRequest) WithUnsetTags(tags []ObjectIdentifier) *UnsetTagReques
 	return s
 }
 
+func (s *UnsetTagRequest) WithIfExists(ifExists bool) *UnsetTagRequest {
+	s.IfExists = &ifExists
+	return s
+}
+
 func NewSetTagOnCurrentAccountRequest() *SetTagOnCurrentAccountRequest {
 	return &SetTagOnCurrentAccountRequest{}
 }

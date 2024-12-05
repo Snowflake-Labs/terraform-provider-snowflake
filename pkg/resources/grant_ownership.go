@@ -408,7 +408,7 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 }
 
 // TODO(SNOW-1229218): Make sdk.ObjectType + string objectName to sdk.ObjectIdentifier mapping available in the sdk (for all object types).
-func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.ObjectIdentifier, error) {
+func GetOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.ObjectIdentifier, error) {
 	switch objectType {
 	case sdk.ObjectTypeComputePool,
 		sdk.ObjectTypeDatabase,
@@ -458,6 +458,9 @@ func getOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeProcedure,
 		sdk.ObjectTypeExternalFunction:
 		return sdk.ParseSchemaObjectIdentifierWithArguments(objectName)
+	case sdk.ObjectTypeColumn:
+		return sdk.ParseTableColumnIdentifier(objectName)
+
 	default:
 		return nil, sdk.NewError(fmt.Sprintf("object_type %s is not supported, please create a feature request for the provider if given object_type should be supported", objectType))
 	}
@@ -475,7 +478,7 @@ func getOwnershipGrantOn(d *schema.ResourceData) (*sdk.OwnershipGrantOn, error) 
 	switch {
 	case len(onObjectType) > 0 && len(onObjectName) > 0:
 		objectType := sdk.ObjectType(strings.ToUpper(onObjectType))
-		objectName, err := getOnObjectIdentifier(objectType, onObjectName)
+		objectName, err := GetOnObjectIdentifier(objectType, onObjectName)
 		if err != nil {
 			return nil, err
 		}
@@ -626,7 +629,7 @@ func createGrantOwnershipIdFromSchema(d *schema.ResourceData) (*GrantOwnershipId
 	case len(objectType) > 0 && len(objectName) > 0:
 		id.Kind = OnObjectGrantOwnershipKind
 		objectType := sdk.ObjectType(objectType)
-		objectName, err := getOnObjectIdentifier(objectType, objectName)
+		objectName, err := GetOnObjectIdentifier(objectType, objectName)
 		if err != nil {
 			return nil, err
 		}
