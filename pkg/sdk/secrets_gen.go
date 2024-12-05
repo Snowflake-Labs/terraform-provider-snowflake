@@ -14,8 +14,8 @@ type Secrets interface {
 	Alter(ctx context.Context, request *AlterSecretRequest) error
 	Drop(ctx context.Context, request *DropSecretRequest) error
 	Show(ctx context.Context, request *ShowSecretRequest) ([]Secret, error)
-	Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error)
+	Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error)
 }
 
 // CreateWithOAuthClientCredentialsFlowSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-secret.

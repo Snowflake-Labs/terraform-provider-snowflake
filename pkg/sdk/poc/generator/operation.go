@@ -87,10 +87,9 @@ func addDescriptionMapping(op *Operation, from, to *Field) {
 	op.DescribeMapping = newMapping("convert", from, to)
 }
 
-func (i *Interface) newNoSqlOperation(kind string) *Operation {
+func newNoSqlOperation(kind string) *Operation {
 	operation := newOperation(kind, "placeholder").
 		withOptionsStruct(nil)
-	i.Operations = append(i.Operations, operation)
 	return operation
 }
 
@@ -162,10 +161,17 @@ func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resour
 	return i
 }
 
-func (i *Interface) ShowByIdOperation(filtering ...ShowByIDFilteringKind) *Interface {
-	op := i.newNoSqlOperation(string(OperationKindShowByID))
+func (i *Interface) ShowByIdOperation() *Interface {
+	op := newNoSqlOperation(string(OperationKindShowByID))
+	i.Operations = append(i.Operations, op)
+	return i
+}
+
+func (i *Interface) ShowByIdOperationWithFiltering(filter ShowByIDFilteringKind, filtering ...ShowByIDFilteringKind) *Interface {
+	op := newNoSqlOperation(string(OperationKindShowByID))
 	op.ObjectInterface = i
-	op.withFiltering(filtering...)
+	op.withFiltering(append([]ShowByIDFilteringKind{filter}, filtering...)...)
+	i.Operations = append(i.Operations, op)
 	return i
 }
 

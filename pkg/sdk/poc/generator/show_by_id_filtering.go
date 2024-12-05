@@ -8,27 +8,22 @@ import (
 type ShowByIDFilteringKind uint
 
 const (
-	// Enables filtering with: Like
 	ShowByIDLikeFiltering ShowByIDFilteringKind = iota
-	// Enables filtering with: In
-	// Based on the identifier Kind
 	ShowByIDInFiltering
-	// Enables filtering with: In
-	// Based on the identifier Kind
 	ShowByIDExtendedInFiltering
-	// Enables filtering with: Limit
-	ShowByIDLimitFiltering
+	ShowByIDApplicationNameFiltering
+	ShowByIDNoFiltering
 )
 
-type identifierPrefix string
+type idPrefix string
 
 const (
-	AccountIdentifierPrefix  identifierPrefix = "Account"
-	DatabaseIdentifierPrefix identifierPrefix = "Database"
-	SchemaIdentifierPrefix   identifierPrefix = "Schema"
+	AccountIdentifierPrefix  idPrefix = "Account"
+	DatabaseIdentifierPrefix idPrefix = "Database"
+	SchemaIdentifierPrefix   idPrefix = "Schema"
 )
 
-func identifierStringToPrefix(s string) identifierPrefix {
+func identifierStringToPrefix(s string) idPrefix {
 	switch s {
 	case "AccountObjectIdentifier":
 		return AccountIdentifierPrefix
@@ -55,46 +50,70 @@ func (s *showByIDFilter) WithFiltering() string {
 	return fmt.Sprintf("With%s(%s{%s})", s.Name, s.Kind, s.Args)
 }
 
-var filteringMapping = map[ShowByIDFilteringKind]func(identifierPrefix) ShowByIDFiltering{
-	ShowByIDLikeFiltering:       newShowByIDLikeFiltering,
-	ShowByIDInFiltering:         newShowByIDInFiltering,
-	ShowByIDExtendedInFiltering: newShowByIDExtendedInFiltering,
-	ShowByIDLimitFiltering:      newShowByIDLimitFiltering,
-}
-
-func newShowByIDFiltering(name, kind, args string, identifierKind *identifierPrefix) ShowByIDFiltering {
-	filter := &showByIDFilter{
+func newShowByIDFiltering(name, kind, args string) ShowByIDFiltering {
+	return &showByIDFilter{
 		Name: name,
 		Kind: kind,
 		Args: args,
 	}
-	if identifierKind != nil {
-		filter.Args = fmt.Sprintf(args, *identifierKind)
+}
+
+func newShowByIDLikeFiltering() ShowByIDFiltering {
+	return newShowByIDFiltering("Like", "Like", "Pattern: String(id.Name())")
+}
+
+func newShowByIDInFiltering(identifierKind idPrefix) ShowByIDFiltering {
+	return newShowByIDFiltering("In", "In", fmt.Sprintf("%[1]v: id.%[1]vId()", identifierKind))
+}
+
+func newShowByIDExtendedInFiltering(identifierKind idPrefix) ShowByIDFiltering {
+	return newShowByIDFiltering("In", "ExtendedIn", fmt.Sprintf("In: In{%[1]v: id.%[1]vId()}", identifierKind))
+}
+
+// ApplicationName filtering for application_roles
+type showByIDApplicationFilter struct {
+	showByIDFilter
+}
+
+func (s *showByIDApplicationFilter) WithFiltering() string {
+	return fmt.Sprintf("With%s(%s)", s.Name, s.Args)
+}
+
+func newShowByIDApplicationFiltering() ShowByIDFiltering {
+	return &showByIDApplicationFilter{
+		showByIDFilter: showByIDFilter{
+			Name: "ApplicationName",
+			Kind: "",
+			Args: "id.DatabaseId()",
+		},
 	}
-	return filter
 }
 
-func newShowByIDLikeFiltering(identifierPrefix) ShowByIDFiltering {
-	return newShowByIDFiltering("Like", "Like", "Pattern: String(id.Name())", nil)
+// noop for NoFiltering
+type showByIDNoFilter struct{}
+
+func (s *showByIDNoFilter) WithFiltering() string {
+	return ""
 }
 
-func newShowByIDInFiltering(identifierKind identifierPrefix) ShowByIDFiltering {
-	return newShowByIDFiltering("In", "In", "%[1]v: id.%[1]vId()", &identifierKind)
-}
-
-func newShowByIDExtendedInFiltering(identifierKind identifierPrefix) ShowByIDFiltering {
-	return newShowByIDFiltering("In", "ExtendedIn", "In: In{%[1]v: id.%[1]vId()}", &identifierKind)
-}
-
-func newShowByIDLimitFiltering(identifierPrefix) ShowByIDFiltering {
-	return newShowByIDFiltering("Limit", "LimitFrom", "Rows: Int(1)", nil)
+func newShowByIDNoFiltering() ShowByIDFiltering {
+	return &showByIDNoFilter{}
 }
 
 func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation {
 	for _, filteringKind := range filtering {
-		if filter, ok := filteringMapping[filteringKind]; ok {
-			s.ShowByIDFiltering = append(s.ShowByIDFiltering, filter(s.ObjectInterface.ObjectIdentifierKind()))
-		} else {
+		switch filteringKind {
+		case ShowByIDInFiltering:
+			s.ShowByIDFiltering = append(s.ShowByIDFiltering, newShowByIDInFiltering(s.ObjectInterface.ObjectIdentifierPrefix()))
+		case ShowByIDExtendedInFiltering:
+			s.ShowByIDFiltering = append(s.ShowByIDFiltering, newShowByIDExtendedInFiltering(s.ObjectInterface.ObjectIdentifierPrefix()))
+		case ShowByIDLikeFiltering:
+			s.ShowByIDFiltering = append(s.ShowByIDFiltering, newShowByIDLikeFiltering())
+		case ShowByIDApplicationNameFiltering:
+			s.ShowByIDFiltering = append(s.ShowByIDFiltering, newShowByIDApplicationFiltering())
+		case ShowByIDNoFiltering:
+			s.ShowByIDFiltering = []ShowByIDFiltering{newShowByIDNoFiltering()}
+		default:
 			log.Println("No showByID filtering found for kind:", filteringKind)
 		}
 	}

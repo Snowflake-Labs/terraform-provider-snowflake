@@ -40,10 +40,9 @@ func (v *connections) Show(ctx context.Context, request *ShowConnectionRequest) 
 }
 
 func (v *connections) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Connection, error) {
-	connections, err := v.Show(ctx, NewShowConnectionRequest().WithLike(
-		Like{
-			Pattern: String(id.Name()),
-		}))
+	request := NewShowConnectionRequest().
+		WithLike(Like{Pattern: String(id.Name())})
+	connections, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}

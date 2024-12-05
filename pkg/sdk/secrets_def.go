@@ -241,6 +241,9 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRETS").
 		OptionalLike().
 		OptionalExtendedIn(),
+).ShowByIdOperationWithFiltering(
+	g.ShowByIDLikeFiltering,
+	g.ShowByIDExtendedInFiltering,
 ).DescribeOperation(
 	g.DescriptionMappingKindSingleValue,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-secret",
@@ -251,7 +254,4 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		Name().
 		WithValidation(g.ValidIdentifier, "name"),
-).ShowByIdOperation(
-	g.ShowByIDLikeFiltering,
-	g.ShowByIDExtendedInFiltering,
 )

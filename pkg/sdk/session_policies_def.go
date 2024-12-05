@@ -89,6 +89,9 @@ var SessionPoliciesDef = g.NewInterface(
 			Show().
 			SQL("SESSION POLICIES"),
 	).
+	ShowByIdOperationWithFiltering(
+		g.ShowByIDNoFiltering,
+	).
 	DescribeOperation(
 		g.DescriptionMappingKindSingleValue,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-session-policy",

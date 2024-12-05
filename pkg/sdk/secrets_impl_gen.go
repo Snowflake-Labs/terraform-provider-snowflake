@@ -52,17 +52,6 @@ func (v *secrets) Show(ctx context.Context, request *ShowSecretRequest) ([]Secre
 	return resultList, nil
 }
 
-func (v *secrets) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error) {
-	opts := &DescribeSecretOptions{
-		name: id,
-	}
-	result, err := validateAndQueryOne[secretDetailsDBRow](v.client, ctx, opts)
-	if err != nil {
-		return nil, err
-	}
-	return result.convert(), nil
-}
-
 func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error) {
 	request := NewShowSecretRequest().
 		WithLike(Like{Pattern: String(id.Name())}).
@@ -72,6 +61,17 @@ func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Sec
 		return nil, err
 	}
 	return collections.FindFirst(secrets, func(r Secret) bool { return r.Name == id.Name() })
+}
+
+func (v *secrets) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error) {
+	opts := &DescribeSecretOptions{
+		name: id,
+	}
+	result, err := validateAndQueryOne[secretDetailsDBRow](v.client, ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+	return result.convert(), nil
 }
 
 func (r *CreateWithOAuthClientCredentialsFlowSecretRequest) toOpts() *CreateWithOAuthClientCredentialsFlowSecretOptions {
