@@ -81,3 +81,10 @@ func (c *FunctionClient) DropFunctionFunc(t *testing.T, id sdk.SchemaObjectIdent
 		require.NoError(t, err)
 	}
 }
+
+func (c *FunctionClient) Show(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) (*sdk.Function, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
+}
