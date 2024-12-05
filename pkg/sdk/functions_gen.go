@@ -22,6 +22,18 @@ type Functions interface {
 }
 
 // CreateForJavaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#java-handler.
+// TODO [SNOW-1348103 - this PR]: test secret (= missing, multiple secretes) + add helper for secret
+// TODO [SNOW-1348103 - this PR]: test secure (for each type, with owner and underprivileged role), read https://docs.snowflake.com/en/developer-guide/secure-udf-procedure
+// TODO [SNOW-1348103 - this PR]: test setting the paths for all types (like imports, target paths)
+// TODO [SNOW-1348103 - next PRs]: check data type mappings https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages (signature + returns)
+// TODO [SNOW-1348103 - this PR]: setting RUNTIME_VERSION (only 11.x, 17.x supported, 11.x being the default)
+// TODO [SNOW-1348103 - this PR]: packages: package_name:version_number; do we validate? - check SELECT * FROM INFORMATION_SCHEMA.PACKAGES WHERE LANGUAGE = 'java';
+// TODO [SNOW-1348103 - next PRs]: add to the resource docs https://docs.snowflake.com/en/sql-reference/sql/create-function#access-control-requirements
+// TODO [SNOW-1348103 - this PR]: what delimiter do we use for <function_definition>: ' versus $?
+// TODO [SNOW-1348103 - this PR]: escaping single quotes test
+// TODO [SNOW-1348103 - this PR]: validation of JAR (check https://docs.snowflake.com/en/sql-reference/sql/create-function#id6)
+// TODO [SNOW-1348103 - next PRs]: active warehouse vs validations
+// TODO [SNOW-1348103 - this PR]: check creation of all functions (using examples and more)
 type CreateForJavaFunctionOptions struct {
 	create                     bool                      `ddl:"static" sql:"CREATE"`
 	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
@@ -103,6 +115,11 @@ type CreateForJavascriptFunctionOptions struct {
 }
 
 // CreateForPythonFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#python-handler.
+// TODO [SNOW-1348103 - this PR]: add aggregate (PuPr)
+// TODO [SNOW-1348103 - this PR]: what about [==<version>] - SDK level or resource level? check also: SELECT * FROM INFORMATION_SCHEMA.PACKAGES WHERE LANGUAGE = 'python';
+// TODO [SNOW-1348103 - this PR]: what about preview feature >= ?
+// TODO [SNOW-1348103 - this PR]: what about '<module_file_name>.<function_name>' for non-inline functions?
+// TODO [SNOW-1348103 - this PR]: setting RUNTIME_VERSION (only 3.8, 3.9, 3.10, 3.11 supported, which one is a default?)
 type CreateForPythonFunctionOptions struct {
 	create                     bool                      `ddl:"static" sql:"CREATE"`
 	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
@@ -129,6 +146,7 @@ type CreateForPythonFunctionOptions struct {
 }
 
 // CreateForScalaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#scala-handler.
+// TODO [SNOW-1348103 - this PR]: setting RUNTIME_VERSION (only 2.12 supported, which is the default)
 type CreateForScalaFunctionOptions struct {
 	create                bool                   `ddl:"static" sql:"CREATE"`
 	OrReplace             *bool                  `ddl:"keyword" sql:"OR REPLACE"`
