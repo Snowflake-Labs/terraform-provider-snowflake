@@ -43,7 +43,7 @@ func TestFunctions_CreateForJava(t *testing.T) {
 	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present - one valid, one invalid", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Arguments = []FunctionArgument{
-			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat, ArgDataType: dataTypeFloat},
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat},
 			{ArgName: "arg"},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
