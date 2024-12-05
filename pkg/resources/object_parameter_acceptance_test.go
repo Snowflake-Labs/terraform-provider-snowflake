@@ -13,6 +13,16 @@ import (
 )
 
 func TestAcc_ObjectParameter(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+
+	// TODO(SNOW-1528546): Remove after parameter-setting resources are using UNSET in the delete operation.
+	t.Cleanup(func() {
+		acc.TestClient().Database.Alter(t, acc.TestClient().Ids.DatabaseId(), &sdk.AlterDatabaseOptions{
+			Unset: &sdk.DatabaseUnset{
+				UserTaskTimeoutMs: sdk.Bool(true),
+			},
+		})
+	})
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -34,6 +44,8 @@ func TestAcc_ObjectParameter(t *testing.T) {
 }
 
 func TestAcc_ObjectParameterAccount(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+
 	// TODO(SNOW-1528546): Remove after parameter-setting resources are using UNSET in the delete operation.
 	t.Cleanup(func() {
 		acc.TestClient().Parameter.UnsetAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
