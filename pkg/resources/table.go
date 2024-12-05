@@ -7,16 +7,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -64,8 +63,8 @@ var tableSchema = map[string]*schema.Schema{
 					Type:             schema.TypeString,
 					Required:         true,
 					Description:      "Column type, e.g. VARIANT. For a full list of column types, see [Summary of Data Types](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).",
-					ValidateFunc:     dataTypeValidateFunc,
-					DiffSuppressFunc: DataTypeIssue3007DiffSuppressFunc,
+					ValidateDiagFunc: IsDataTypeValid,
+					DiffSuppressFunc: DiffSuppressDataTypes,
 				},
 				"nullable": {
 					Type:        schema.TypeBool,
@@ -388,9 +387,13 @@ func getColumns(from interface{}) (to columns) {
 	return to
 }
 
-func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
+func getTableColumnRequest(from interface{}) (*sdk.TableColumnRequest, error) {
 	c := from.(map[string]interface{})
 	_type := c["type"].(string)
+	dataType, err := datatypes.ParseDataType(_type)
+	if err != nil {
+		return nil, err
+	}
 
 	nameInQuotes := fmt.Sprintf(`"%v"`, snowflake.EscapeString(c["name"].(string)))
 	request := sdk.NewTableColumnRequest(nameInQuotes, sdk.DataType(_type))
@@ -400,7 +403,7 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 	if len(_default) == 1 {
 		if c, ok := _default[0].(map[string]interface{})["constant"]; ok {
 			if constant, ok := c.(string); ok && len(constant) > 0 {
-				if sdk.IsStringType(_type) {
+				if datatypes.IsTextDataType(dataType) {
 					expression = snowflake.EscapeSnowflakeString(constant)
 				} else {
 					expression = constant
@@ -415,7 +418,7 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 		}
 
 		if s, ok := _default[0].(map[string]interface{})["sequence"]; ok {
-			if seq := s.(string); ok && len(seq) > 0 {
+			if seq, ok2 := s.(string); ok2 && len(seq) > 0 {
 				expression = fmt.Sprintf(`%v.NEXTVAL`, seq)
 			}
 		}
@@ -435,22 +438,26 @@ func getTableColumnRequest(from interface{}) *sdk.TableColumnRequest {
 		request.WithMaskingPolicy(sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(maskingPolicy)))
 	}
 
-	if sdk.IsStringType(_type) {
+	if datatypes.IsTextDataType(dataType) {
 		request.WithCollate(sdk.String(c["collate"].(string)))
 	}
 
 	return request.
 		WithNotNull(sdk.Bool(!c["nullable"].(bool))).
-		WithComment(sdk.String(c["comment"].(string)))
+		WithComment(sdk.String(c["comment"].(string))), nil
 }
 
-func getTableColumnRequests(from interface{}) []sdk.TableColumnRequest {
+func getTableColumnRequests(from interface{}) ([]sdk.TableColumnRequest, error) {
 	cols := from.([]interface{})
 	to := make([]sdk.TableColumnRequest, len(cols))
 	for i, c := range cols {
-		to[i] = *getTableColumnRequest(c)
+		cReq, err := getTableColumnRequest(c)
+		if err != nil {
+			return nil, err
+		}
+		to[i] = *cReq
 	}
-	return to
+	return to, nil
 }
 
 type primarykey struct {
@@ -577,7 +584,10 @@ func CreateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 	name := d.Get("name").(string)
 	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
 
-	tableColumnRequests := getTableColumnRequests(d.Get("column").([]interface{}))
+	tableColumnRequests, err := getTableColumnRequests(d.Get("column").([]interface{}))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	createRequest := sdk.NewCreateTableRequest(id, tableColumnRequests)
 
@@ -620,7 +630,7 @@ func CreateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 		createRequest.WithTags(tagAssociationRequests)
 	}
 
-	err := client.Tables.Create(ctx, createRequest)
+	err = client.Tables.Create(ctx, createRequest)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating table %v err = %w", name, err))
 	}

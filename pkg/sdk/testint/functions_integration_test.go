@@ -9,6 +9,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -518,7 +519,6 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 			*sdk.NewFunctionArgumentRequest("M", sdk.DataTypeDate),
 			*sdk.NewFunctionArgumentRequest("N", "DATETIME"),
 			*sdk.NewFunctionArgumentRequest("O", sdk.DataTypeTime),
-			*sdk.NewFunctionArgumentRequest("P", sdk.DataTypeTimestamp),
 			*sdk.NewFunctionArgumentRequest("R", sdk.DataTypeTimestampLTZ),
 			*sdk.NewFunctionArgumentRequest("S", sdk.DataTypeTimestampNTZ),
 			*sdk.NewFunctionArgumentRequest("T", sdk.DataTypeTimestampTZ),
@@ -536,14 +536,15 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 			"add",
 		).
 			WithArguments(args).
-			WithFunctionDefinition("def add(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, R, S, T, U, V, W, X, Y, Z): A + A"),
+			WithFunctionDefinition("def add(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, R, S, T, U, V, W, X, Y, Z): A + A"),
 		)
 		require.NoError(t, err)
 
 		dataTypes := make([]sdk.DataType, len(args))
 		for i, arg := range args {
-			dataTypes[i], err = sdk.ToDataType(string(arg.ArgDataType))
+			dataType, err := datatypes.ParseDataType(string(arg.ArgDataType))
 			require.NoError(t, err)
+			dataTypes[i] = sdk.LegacyDataTypeFrom(dataType)
 		}
 		idWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), dataTypes...)
 

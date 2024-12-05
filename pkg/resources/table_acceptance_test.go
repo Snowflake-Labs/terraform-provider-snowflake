@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -2097,7 +2098,7 @@ func TestAcc_Table_issue3007_textColumn(t *testing.T) {
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_table.test_table"
 
-	defaultVarchar := fmt.Sprintf("VARCHAR(%d)", sdk.DefaultVarcharLength)
+	defaultVarchar := fmt.Sprintf("VARCHAR(%d)", datatypes.DefaultVarcharLength)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -2170,7 +2171,7 @@ func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resourceName := "snowflake_table.test_table"
 
-	defaultNumber := fmt.Sprintf("NUMBER(%d,%d)", sdk.DefaultNumberPrecision, sdk.DefaultNumberScale)
+	defaultNumber := fmt.Sprintf("NUMBER(%d,%d)", datatypes.DefaultNumberPrecision, datatypes.DefaultNumberScale)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },

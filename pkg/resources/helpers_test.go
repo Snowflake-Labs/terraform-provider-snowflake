@@ -11,6 +11,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
@@ -260,7 +261,84 @@ func TestListDiff(t *testing.T) {
 	}
 }
 
-func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
+func TestListDiffWithCommonItems(t *testing.T) {
+	testCases := []struct {
+		Name    string
+		Before  []any
+		After   []any
+		Added   []any
+		Removed []any
+		Common  []any
+	}{
+		{
+			Name:    "no changes",
+			Before:  []any{1, 2, 3, 4},
+			After:   []any{1, 2, 3, 4},
+			Removed: []any{},
+			Added:   []any{},
+			Common:  []any{1, 2, 3, 4},
+		},
+		{
+			Name:    "only removed",
+			Before:  []any{1, 2, 3, 4},
+			After:   []any{},
+			Removed: []any{1, 2, 3, 4},
+			Added:   []any{},
+			Common:  []any{},
+		},
+		{
+			Name:    "only added",
+			Before:  []any{},
+			After:   []any{1, 2, 3, 4},
+			Removed: []any{},
+			Added:   []any{1, 2, 3, 4},
+			Common:  []any{},
+		},
+		{
+			Name:    "added repeated items",
+			Before:  []any{2},
+			After:   []any{1, 2, 1},
+			Removed: []any{},
+			Added:   []any{1, 1},
+			Common:  []any{2},
+		},
+		{
+			Name:    "removed repeated items",
+			Before:  []any{1, 2, 1},
+			After:   []any{2},
+			Removed: []any{1, 1},
+			Added:   []any{},
+			Common:  []any{2},
+		},
+		{
+			Name:    "simple diff: ints",
+			Before:  []any{1, 2, 3, 4, 5, 6, 7, 8, 9},
+			After:   []any{1, 3, 5, 7, 9, 12, 13, 14},
+			Removed: []any{2, 4, 6, 8},
+			Added:   []any{12, 13, 14},
+			Common:  []any{1, 3, 5, 7, 9},
+		},
+		{
+			Name:    "simple diff: strings",
+			Before:  []any{"one", "two", "three", "four"},
+			After:   []any{"five", "two", "four", "six"},
+			Removed: []any{"one", "three"},
+			Added:   []any{"five", "six"},
+			Common:  []any{"two", "four"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			added, removed, common := resources.ListDiffWithCommonItems(tc.Before, tc.After)
+			assert.Equal(t, tc.Added, added)
+			assert.Equal(t, tc.Removed, removed)
+			assert.Equal(t, tc.Common, common)
+		})
+	}
+}
+
+func Test_DataTypeDiffSuppressFunc(t *testing.T) {
 	testCases := []struct {
 		name     string
 		old      string
@@ -324,7 +402,7 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 		{
 			name:     "synonym number data type precision implicit and same",
 			old:      "NUMBER",
-			new:      fmt.Sprintf("DECIMAL(%d)", sdk.DefaultNumberPrecision),
+			new:      fmt.Sprintf("DECIMAL(%d)", datatypes.DefaultNumberPrecision),
 			expected: true,
 		},
 		{
@@ -348,7 +426,7 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 		{
 			name:     "synonym number data type default scale implicit and explicit",
 			old:      "NUMBER(30)",
-			new:      fmt.Sprintf("DECIMAL(30, %d)", sdk.DefaultNumberScale),
+			new:      fmt.Sprintf("DECIMAL(30, %d)", datatypes.DefaultNumberScale),
 			expected: true,
 		},
 		{
@@ -360,13 +438,13 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 		{
 			name:     "synonym number data type both precision and scale implicit and explicit",
 			old:      "NUMBER",
-			new:      fmt.Sprintf("DECIMAL(%d, %d)", sdk.DefaultNumberPrecision, sdk.DefaultNumberScale),
+			new:      fmt.Sprintf("DECIMAL(%d, %d)", datatypes.DefaultNumberPrecision, datatypes.DefaultNumberScale),
 			expected: true,
 		},
 		{
 			name:     "synonym number data type both precision and scale implicit and scale different",
 			old:      "NUMBER",
-			new:      fmt.Sprintf("DECIMAL(%d, 2)", sdk.DefaultNumberPrecision),
+			new:      fmt.Sprintf("DECIMAL(%d, 2)", datatypes.DefaultNumberPrecision),
 			expected: false,
 		},
 		{
@@ -384,7 +462,7 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 		{
 			name:     "synonym text data type length implicit and same",
 			old:      "VARCHAR",
-			new:      fmt.Sprintf("TEXT(%d)", sdk.DefaultVarcharLength),
+			new:      fmt.Sprintf("TEXT(%d)", datatypes.DefaultVarcharLength),
 			expected: true,
 		},
 		{
@@ -398,7 +476,7 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			result := resources.DataTypeIssue3007DiffSuppressFunc("", tc.old, tc.new, nil)
+			result := resources.DiffSuppressDataTypes("", tc.old, tc.new, nil)
 			require.Equal(t, tc.expected, result)
 		})
 	}

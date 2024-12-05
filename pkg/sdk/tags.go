@@ -30,6 +30,7 @@ type setTagOptions struct {
 type unsetTagOptions struct {
 	alter      bool               `ddl:"static" sql:"ALTER"`
 	objectType ObjectType         `ddl:"keyword"`
+	IfExists   *bool              `ddl:"keyword" sql:"IF EXISTS"`
 	objectName ObjectIdentifier   `ddl:"identifier"`
 	column     *string            `ddl:"parameter,no_equals,double_quotes" sql:"MODIFY COLUMN"`
 	UnsetTags  []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`

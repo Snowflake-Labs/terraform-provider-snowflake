@@ -9,10 +9,15 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema.SchemaDiffSuppressFunc {
+	return NormalizeAndCompareUsingFunc(normalize, func(a, b T) bool { return a == b })
+}
+
+func NormalizeAndCompareUsingFunc[T any](normalize func(string) (T, error), compareFunc func(a, b T) bool) schema.SchemaDiffSuppressFunc {
 	return func(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 		oldNormalized, err := normalize(oldValue)
 		if err != nil {
@@ -22,9 +27,14 @@ func NormalizeAndCompare[T comparable](normalize func(string) (T, error)) schema
 		if err != nil {
 			return false
 		}
-		return oldNormalized == newNormalized
+
+		return compareFunc(oldNormalized, newNormalized)
 	}
 }
+
+// DiffSuppressDataTypes handles data type suppression taking into account data type attributes for each type.
+// It falls back to Snowflake defaults for arguments if no arguments were provided for the data type.
+var DiffSuppressDataTypes = NormalizeAndCompareUsingFunc(datatypes.ParseDataType, datatypes.AreTheSame)
 
 // NormalizeAndCompareIdentifiersInSet is a diff suppression function that should be used at top-level TypeSet fields that
 // hold identifiers to avoid diffs like:
@@ -274,4 +284,16 @@ func IgnoreMatchingColumnNameAndMaskingPolicyUsingFirstElem() schema.SchemaDiffS
 
 		return new == "" && old == colName
 	}
+}
+
+func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.TrimSpace(old) == strings.TrimSpace(new)
+}
+
+func ignoreCaseSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.EqualFold(old, new)
+}
+
+func ignoreCaseAndTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
 }

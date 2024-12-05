@@ -8,11 +8,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -60,9 +60,9 @@ var procedureSchema = map[string]*schema.Schema{
 				"type": {
 					Type:             schema.TypeString,
 					Required:         true,
-					ValidateFunc:     dataTypeValidateFunc,
-					DiffSuppressFunc: dataTypeDiffSuppressFunc,
 					Description:      "The argument type",
+					ValidateDiagFunc: IsDataTypeValid,
+					DiffSuppressFunc: DiffSuppressDataTypes,
 				},
 			},
 		},
@@ -322,7 +322,7 @@ func createJavaScriptProcedure(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 	procedureDefinition := d.Get("statement").(string)
-	req := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), returnDataType, procedureDefinition)
+	req := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), sdk.LegacyDataTypeFrom(returnDataType), procedureDefinition)
 	if len(args) > 0 {
 		req.WithArguments(args)
 	}
@@ -735,16 +735,16 @@ func getProcedureArguments(d *schema.ResourceData) ([]sdk.ProcedureArgumentReque
 			if diags != nil {
 				return nil, diags
 			}
-			args = append(args, sdk.ProcedureArgumentRequest{ArgName: argName, ArgDataType: argDataType})
+			args = append(args, sdk.ProcedureArgumentRequest{ArgName: argName, ArgDataType: sdk.LegacyDataTypeFrom(argDataType)})
 		}
 	}
 	return args, nil
 }
 
-func convertProcedureDataType(s string) (sdk.DataType, diag.Diagnostics) {
-	dataType, err := sdk.ToDataType(s)
+func convertProcedureDataType(s string) (datatypes.DataType, diag.Diagnostics) {
+	dataType, err := datatypes.ParseDataType(s)
 	if err != nil {
-		return dataType, diag.FromErr(err)
+		return nil, diag.FromErr(err)
 	}
 	return dataType, nil
 }
@@ -755,13 +755,13 @@ func convertProcedureColumns(s string) ([]sdk.ProcedureColumn, diag.Diagnostics)
 	var columns []sdk.ProcedureColumn
 	for _, match := range matches {
 		if len(match) == 3 {
-			dataType, err := sdk.ToDataType(match[2])
+			dataType, err := datatypes.ParseDataType(match[2])
 			if err != nil {
 				return nil, diag.FromErr(err)
 			}
 			columns = append(columns, sdk.ProcedureColumn{
 				ColumnName:     match[1],
-				ColumnDataType: dataType,
+				ColumnDataType: sdk.LegacyDataTypeFrom(dataType),
 			})
 		}
 	}
@@ -785,7 +785,7 @@ func parseProcedureReturnsRequest(s string) (*sdk.ProcedureReturnsRequest, diag.
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }
@@ -807,7 +807,7 @@ func parseProcedureSQLReturnsRequest(s string) (*sdk.ProcedureSQLReturnsRequest,
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(returnDataType))
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }

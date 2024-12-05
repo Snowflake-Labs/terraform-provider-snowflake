@@ -6,12 +6,9 @@ resource "snowflake_tag" "test" {
 }
 
 resource "snowflake_tag_association" "test" {
-  object_identifier {
-    database = var.database
-    name     = var.schema
-  }
+  object_identifiers = [var.schema_fully_qualified_name]
 
   object_type = "SCHEMA"
-  tag_id      = snowflake_tag.test.id
+  tag_id      = snowflake_tag.test.fully_qualified_name
   tag_value   = "TAG_VALUE"
 }
