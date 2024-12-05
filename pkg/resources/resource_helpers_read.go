@@ -50,17 +50,6 @@ func setBooleanStringFromBoolProperty(d *schema.ResourceData, key string, proper
 	return nil
 }
 
-func attributeMappedValueReadOrNil[T, R any](d *schema.ResourceData, key string, value *T, mapper func(*T) (R, error)) error {
-	if value != nil {
-		mappedValue, err := mapper(value)
-		if err != nil {
-			return err
-		}
-		return d.Set(key, mappedValue)
-	}
-	return d.Set(key, nil)
-}
-
 func attributeMappedValueReadOrDefault[T, R any](d *schema.ResourceData, key string, value *T, mapper func(*T) (R, error), defaultValue *R) error {
 	if value != nil {
 		mappedValue, err := mapper(value)

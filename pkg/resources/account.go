@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"errors"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -298,13 +299,20 @@ var accountSchema = map[string]*schema.Schema{
 		Optional:    true,
 		ForceNew:    true,
 		Description: "Specifies a comment for the account.",
+		DiffSuppressFunc: SuppressIfAny(
+			IgnoreChangeToCurrentSnowflakeValueInShow("comment"),
+			func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+				return oldValue == "SNOWFLAKE" && newValue == ""
+			},
+		),
 	},
 	"is_org_admin": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Default:          BooleanDefault,
-		Description:      "TODO",
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("is_org_admin"),
 		ValidateDiagFunc: validateBooleanString,
+		Description:      "TODO",
 	},
 	"grace_period_in_days": {
 		Type:             schema.TypeInt,
@@ -348,6 +356,15 @@ func Account() *schema.Resource {
 
 func CreateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
+
+	isOrgAdmin, err := client.ContextFunctions.IsRoleInSession(ctx, snowflakeroles.Orgadmin)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if !isOrgAdmin {
+		return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+	}
+
 	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
 
 	opts := &sdk.CreateAccountOptions{
@@ -408,12 +425,33 @@ func CreateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 
 	d.SetId(helpers.EncodeResourceIdentifier(sdk.NewAccountIdentifier(createResponse.OrganizationName, createResponse.AccountName)))
 
+	if v, ok := d.GetOk("is_org_admin"); ok && v == BooleanTrue {
+		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+			SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
+				Name:     id,
+				OrgAdmin: true,
+			},
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return ReadAccount(false)(ctx, d, meta)
 }
 
 func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
+
+		isOrgAdmin, err := client.ContextFunctions.IsRoleInSession(ctx, snowflakeroles.Orgadmin)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !isOrgAdmin {
+			return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+		}
+
 		id, err := sdk.ParseAccountIdentifier(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -425,16 +463,35 @@ func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 		}
 
 		if withExternalChangesMarking {
+			var regionGroup string
+			if account.RegionGroup != nil {
+				regionGroup = *account.RegionGroup
+			}
 			if err = handleExternalChangesToObjectInShow(d,
-				outputMapping{"region_group", "region_group", account.RegionGroup, sdk.DerefIfNotNil(account.RegionGroup), sdk.DerefIfNotNil},
+				outputMapping{"is_org_admin", "is_org_admin", *account.IsOrgAdmin, booleanStringFromBool(*account.IsOrgAdmin), nil},
+				outputMapping{"region_group", "region_group", regionGroup, regionGroup, nil},
 				outputMapping{"snowflake_region", "region", account.SnowflakeRegion, account.SnowflakeRegion, nil},
-				outputMapping{"comment", "comment", account.Comment, sdk.DerefIfNotNil(account.Comment), sdk.DerefIfNotNil},
+				outputMapping{"comment", "comment", *account.Comment, *account.Comment, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
 			if err = setStateToValuesFromConfig(d, taskSchema, []string{
-				"allow_overlapping_execution",
+				"name",
+				"admin_name",
+				"admin_password",
+				"admin_rsa_public_key",
+				"admin_user_type",
+				"first_name",
+				"last_name",
+				"email",
+				"must_change_password",
+				"edition",
+				"region_group",
+				"region",
+				"comment",
+				"is_org_admin",
+				"grace_period_in_days",
 			}); err != nil {
 				return diag.FromErr(err)
 			}
@@ -463,12 +520,12 @@ func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 			//	}
 			//	return "", nil
 			//}),
-			attributeMappedValueReadOrNil(d, "is_org_admin", account.IsOrgAdmin, func(isOrgAdmin *bool) (string, error) {
-				if isOrgAdmin != nil {
-					return booleanStringFromBool(*isOrgAdmin), nil
-				}
-				return BooleanDefault, nil
-			}),
+			//attributeMappedValueReadOrNil(d, "is_org_admin", account.IsOrgAdmin, func(isOrgAdmin *bool) (string, error) {
+			//	if isOrgAdmin != nil {
+			//		return booleanStringFromBool(*isOrgAdmin), nil
+			//	}
+			//	return BooleanDefault, nil
+			//}),
 			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 			d.Set(ShowOutputAttributeName, []map[string]any{schemas.AccountToSchema(account)}),
 		); errs != nil {
@@ -480,6 +537,16 @@ func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 }
 
 func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+
+	isOrgAdmin, err := client.ContextFunctions.IsRoleInSession(ctx, snowflakeroles.Orgadmin)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if !isOrgAdmin {
+		return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+	}
+
 	/*
 		todo: comments may eventually work again for accounts, so this can be uncommented when that happens
 		client := meta.(*provider.Context).Client
@@ -506,12 +573,21 @@ func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 
 func DeleteAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
+
+	isOrgAdmin, err := client.ContextFunctions.IsRoleInSession(ctx, snowflakeroles.Orgadmin)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if !isOrgAdmin {
+		return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+	}
+
+	id, err := sdk.ParseAccountIdentifier(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	err = client.Accounts.Drop(ctx, id, d.Get("grace_period_in_days").(int), &sdk.DropAccountOptions{
+	err = client.Accounts.Drop(ctx, sdk.NewAccountObjectIdentifier(id.AccountName()), d.Get("grace_period_in_days").(int), &sdk.DropAccountOptions{
 		IfExists: sdk.Bool(true),
 	})
 	if err != nil {
