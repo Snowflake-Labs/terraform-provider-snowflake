@@ -6,6 +6,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -221,7 +222,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 
 	t.Run("describe row access policy: with timestamp data type normalization", func(t *testing.T) {
 		argName := random.AlphaN(5)
-		argType := sdk.DataTypeTimestamp
+		argType := sdk.DataTypeTimestampLTZ
 		args := sdk.NewCreateRowAccessPolicyArgsRequest(argName, argType)
 		body := "true"
 
@@ -234,7 +235,7 @@ func TestInt_RowAccessPolicies(t *testing.T) {
 
 		assertRowAccessPolicyDescription(t, returnedRowAccessPolicyDescription, rowAccessPolicy.ID(), []sdk.TableColumnSignature{{
 			Name: argName,
-			Type: sdk.DataTypeTimestampNTZ,
+			Type: sdk.DataTypeTimestampLTZ,
 		}}, body)
 	})
 
@@ -317,7 +318,6 @@ func TestInt_RowAccessPoliciesDescribe(t *testing.T) {
 			*sdk.NewCreateRowAccessPolicyArgsRequest("M", sdk.DataTypeDate),
 			*sdk.NewCreateRowAccessPolicyArgsRequest("N", "DATETIME"),
 			*sdk.NewCreateRowAccessPolicyArgsRequest("O", sdk.DataTypeTime),
-			*sdk.NewCreateRowAccessPolicyArgsRequest("P", sdk.DataTypeTimestamp),
 			*sdk.NewCreateRowAccessPolicyArgsRequest("R", sdk.DataTypeTimestampLTZ),
 			*sdk.NewCreateRowAccessPolicyArgsRequest("S", sdk.DataTypeTimestampNTZ),
 			*sdk.NewCreateRowAccessPolicyArgsRequest("T", sdk.DataTypeTimestampTZ),
@@ -342,11 +342,11 @@ func TestInt_RowAccessPoliciesDescribe(t *testing.T) {
 		require.NoError(t, err)
 		wantArgs := make([]sdk.TableColumnSignature, len(args))
 		for i, arg := range args {
-			dataType, err := sdk.ToDataType(string(arg.Type))
+			dataType, err := datatypes.ParseDataType(string(arg.Type))
 			require.NoError(t, err)
 			wantArgs[i] = sdk.TableColumnSignature{
 				Name: arg.Name,
-				Type: dataType,
+				Type: sdk.LegacyDataTypeFrom(dataType),
 			}
 		}
 		assert.Equal(t, wantArgs, policyDetails.Signature)

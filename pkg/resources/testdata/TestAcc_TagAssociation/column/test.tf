@@ -10,19 +10,16 @@ resource "snowflake_table" "test" {
   schema   = var.schema
 
   column {
-    name = "column_name"
+    name = var.column
     type = "VARIANT"
   }
 }
 
 resource "snowflake_tag_association" "test" {
-  object_identifier {
-    database = var.database
-    schema   = var.schema
-    name     = "${snowflake_table.test.name}.${snowflake_table.test.column[0].name}"
-  }
+  object_identifiers = [var.column_fully_qualified_name]
 
   object_type = "COLUMN"
-  tag_id      = snowflake_tag.test.id
+  tag_id      = snowflake_tag.test.fully_qualified_name
   tag_value   = "TAG_VALUE"
+  depends_on  = [snowflake_table.test]
 }

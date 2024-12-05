@@ -356,25 +356,25 @@ func TestInt_Tasks(t *testing.T) {
 		rootId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		root, rootCleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(rootId, sql).WithSchedule("10 MINUTE"))
 		t.Cleanup(rootCleanup)
-		require.Empty(t, root.Predecessors)
+		require.Empty(t, root.TaskRelations.Predecessors)
 
 		t1, t1Cleanup := testClientHelper().Task.CreateWithAfter(t, rootId)
 		t.Cleanup(t1Cleanup)
-		require.Equal(t, []sdk.SchemaObjectIdentifier{rootId}, t1.Predecessors)
+		require.Equal(t, []sdk.SchemaObjectIdentifier{rootId}, t1.TaskRelations.Predecessors)
 
 		t2, t2Cleanup := testClientHelper().Task.CreateWithAfter(t, t1.ID(), rootId)
 		t.Cleanup(t2Cleanup)
 
-		require.Contains(t, t2.Predecessors, rootId)
-		require.Contains(t, t2.Predecessors, t1.ID())
-		require.Len(t, t2.Predecessors, 2)
+		require.Contains(t, t2.TaskRelations.Predecessors, rootId)
+		require.Contains(t, t2.TaskRelations.Predecessors, t1.ID())
+		require.Len(t, t2.TaskRelations.Predecessors, 2)
 
 		t3, t3Cleanup := testClientHelper().Task.CreateWithAfter(t, t2.ID(), t1.ID())
 		t.Cleanup(t3Cleanup)
 
-		require.Contains(t, t3.Predecessors, t2.ID())
-		require.Contains(t, t3.Predecessors, t1.ID())
-		require.Len(t, t3.Predecessors, 2)
+		require.Contains(t, t3.TaskRelations.Predecessors, t2.ID())
+		require.Contains(t, t3.TaskRelations.Predecessors, t1.ID())
+		require.Len(t, t3.TaskRelations.Predecessors, 2)
 
 		rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, rootId)
 		require.NoError(t, err)
@@ -433,19 +433,19 @@ func TestInt_Tasks(t *testing.T) {
 		root1Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		root1, root1Cleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(root1Id, sql).WithSchedule("10 MINUTE"))
 		t.Cleanup(root1Cleanup)
-		require.Empty(t, root1.Predecessors)
+		require.Empty(t, root1.TaskRelations.Predecessors)
 
 		root2Id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		root2, root2Cleanup := testClientHelper().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(root2Id, sql).WithSchedule("10 MINUTE"))
 		t.Cleanup(root2Cleanup)
-		require.Empty(t, root2.Predecessors)
+		require.Empty(t, root2.TaskRelations.Predecessors)
 
 		t1, t1Cleanup := testClientHelper().Task.CreateWithAfter(t, root1.ID(), root2.ID())
 		t.Cleanup(t1Cleanup)
 
-		require.Contains(t, t1.Predecessors, root1Id)
-		require.Contains(t, t1.Predecessors, root2Id)
-		require.Len(t, t1.Predecessors, 2)
+		require.Contains(t, t1.TaskRelations.Predecessors, root1Id)
+		require.Contains(t, t1.TaskRelations.Predecessors, root2Id)
+		require.Len(t, t1.TaskRelations.Predecessors, 2)
 
 		rootTasks, err := sdk.GetRootTasks(client.Tasks, ctx, t1.ID())
 		require.NoError(t, err)
@@ -493,7 +493,7 @@ func TestInt_Tasks(t *testing.T) {
 		returnedTagValue, err := client.SystemFunctions.GetTag(ctx, tag.ID(), task.ID(), sdk.ObjectTypeTask)
 		require.NoError(t, err)
 
-		assert.Equal(t, "v1", returnedTagValue)
+		assert.Equal(t, sdk.Pointer("v1"), returnedTagValue)
 	})
 
 	t.Run("clone task: default", func(t *testing.T) {
@@ -522,7 +522,7 @@ func TestInt_Tasks(t *testing.T) {
 		assert.Equal(t, sourceTask.Config, task.Config)
 		assert.Equal(t, sourceTask.Condition, task.Condition)
 		assert.Equal(t, sourceTask.Warehouse, task.Warehouse)
-		assert.Equal(t, sourceTask.Predecessors, task.Predecessors)
+		assert.Equal(t, sourceTask.TaskRelations.Predecessors, task.TaskRelations.Predecessors)
 		assert.Equal(t, sourceTask.AllowOverlappingExecution, task.AllowOverlappingExecution)
 		assert.Equal(t, sourceTask.Comment, task.Comment)
 		assert.Equal(t, sourceTask.ErrorIntegration, task.ErrorIntegration)
@@ -613,7 +613,7 @@ func TestInt_Tasks(t *testing.T) {
 		t.Cleanup(taskCleanup)
 
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSet(*sdk.NewTaskSetRequest().
-			// TODO(SNOW-1348116): Cannot set warehouse due to Snowflake error
+			// TODO(SNOW-1843489): Cannot set warehouse due to Snowflake error
 			// WithWarehouse(testClientHelper().Ids.WarehouseId()).
 			WithErrorIntegration(errorIntegration.ID()).
 			WithSessionParameters(sessionParametersSet).
@@ -754,7 +754,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, taskCleanup := testClientHelper().Task.CreateWithAfter(t, rootTask.ID())
 		t.Cleanup(taskCleanup)
 
-		assert.Contains(t, task.Predecessors, rootTask.ID())
+		assert.Contains(t, task.TaskRelations.Predecessors, rootTask.ID())
 
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithRemoveAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
 		require.NoError(t, err)
@@ -762,7 +762,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err = client.Tasks.ShowByID(ctx, task.ID())
 
 		require.NoError(t, err)
-		assert.Empty(t, task.Predecessors)
+		assert.Empty(t, task.TaskRelations.Predecessors)
 
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithAddAfter([]sdk.SchemaObjectIdentifier{rootTask.ID()}))
 		require.NoError(t, err)
@@ -770,7 +770,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err = client.Tasks.ShowByID(ctx, task.ID())
 
 		require.NoError(t, err)
-		assert.Contains(t, task.Predecessors, rootTask.ID())
+		assert.Contains(t, task.TaskRelations.Predecessors, rootTask.ID())
 	})
 
 	t.Run("alter task: set and unset final task", func(t *testing.T) {

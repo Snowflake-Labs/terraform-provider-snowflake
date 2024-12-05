@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -488,6 +489,75 @@ func CheckUserAuthenticationPolicyAttachmentDestroy(t *testing.T) func(*terrafor
 		}
 		return nil
 	}
+}
+
+// CheckResourceTagUnset is a custom check that should be later incorporated into generic CheckDestroy
+func CheckResourceTagUnset(t *testing.T) func(*terraform.State) error {
+	t.Helper()
+
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_tag_association" {
+				continue
+			}
+			objectType := sdk.ObjectType(rs.Primary.Attributes["object_type"])
+			tagId, err := sdk.ParseSchemaObjectIdentifier(rs.Primary.Attributes["tag_id"])
+			if err != nil {
+				return err
+			}
+			idLen, err := strconv.Atoi(rs.Primary.Attributes["object_identifiers.#"])
+			if err != nil {
+				return err
+			}
+			for i := 0; i < idLen; i++ {
+				idRaw := rs.Primary.Attributes[fmt.Sprintf("object_identifiers.%d", i)]
+				var id sdk.ObjectIdentifier
+				// TODO(SNOW-1229218): Use a common mapper to get object id.
+				if objectType == sdk.ObjectTypeAccount {
+					id, err = sdk.ParseAccountIdentifier(idRaw)
+					if err != nil {
+						return fmt.Errorf("invalid account id: %w", err)
+					}
+				} else {
+					id, err = sdk.ParseObjectIdentifierString(idRaw)
+					if err != nil {
+						return fmt.Errorf("invalid object id: %w", err)
+					}
+				}
+				if err := assertTagUnset(t, tagId, id, objectType); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+}
+
+// CheckTagUnset is a custom check that should be later incorporated into generic CheckDestroy
+func CheckTagUnset(t *testing.T, tagId sdk.SchemaObjectIdentifier, id sdk.ObjectIdentifier, objectType sdk.ObjectType) func(*terraform.State) error {
+	t.Helper()
+
+	return func(s *terraform.State) error {
+		return assertTagUnset(t, tagId, id, objectType)
+	}
+}
+
+func assertTagUnset(t *testing.T, tagId sdk.SchemaObjectIdentifier, id sdk.ObjectIdentifier, objectType sdk.ObjectType) error {
+	t.Helper()
+
+	tag, err := TestClient().Tag.GetForObject(t, tagId, id, objectType)
+	if err != nil {
+		if strings.Contains(err.Error(), "does not exist or not authorized") {
+			// Note: this can happen if the referenced object was deleted before; in this case, ignore the error
+			t.Logf("could not get tag for %v : %v, continuing...", id.FullyQualifiedName(), err)
+			return nil
+		}
+		return err
+	}
+	if tag != nil {
+		return fmt.Errorf("tag %s for object %s expected to be empty, got %s", tagId.FullyQualifiedName(), id.FullyQualifiedName(), *tag)
+	}
+	return err
 }
 
 func TestAccCheckGrantApplicationRoleDestroy(s *terraform.State) error {

@@ -166,10 +166,10 @@ func TestInt_Warehouses(t *testing.T) {
 
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)
-		assert.Equal(t, "v1", tag1Value)
+		assert.Equal(t, sdk.Pointer("v1"), tag1Value)
 		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)
-		assert.Equal(t, "v2", tag2Value)
+		assert.Equal(t, sdk.Pointer("v2"), tag2Value)
 	})
 
 	t.Run("create: no options", func(t *testing.T) {
@@ -616,7 +616,7 @@ func TestInt_Warehouses(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, result.Running)
 		assert.Equal(t, 0, result.Queued)
-		assert.Equal(t, sdk.WarehouseStateSuspended, result.State)
+		assert.Eventually(t, func() bool { return sdk.WarehouseStateSuspended == result.State }, 5*time.Second, time.Second)
 	})
 
 	t.Run("alter: resize with a long running-query", func(t *testing.T) {

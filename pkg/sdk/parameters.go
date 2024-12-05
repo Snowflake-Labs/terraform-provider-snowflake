@@ -656,7 +656,6 @@ var AllUserParameters = []UserParameter{
 
 type TaskParameter string
 
-// TODO(SNOW-1348116 - next prs): Handle task parameters
 const (
 	// Task Parameters
 	TaskParameterSuspendTaskAfterNumFailures             TaskParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"

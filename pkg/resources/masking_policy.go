@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -55,8 +54,8 @@ var maskingPolicySchema = map[string]*schema.Schema{
 				"type": {
 					Type:             schema.TypeString,
 					Required:         true,
-					DiffSuppressFunc: NormalizeAndCompare(sdk.ToDataType),
-					ValidateDiagFunc: sdkValidation(sdk.ToDataType),
+					DiffSuppressFunc: DiffSuppressDataTypes,
+					ValidateDiagFunc: IsDataTypeValid,
 					Description:      dataTypeFieldDescription("The argument type. VECTOR data types are not yet supported."),
 					ForceNew:         true,
 				},
@@ -77,8 +76,8 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Required:         true,
 		Description:      dataTypeFieldDescription("The return data type must match the input data type of the first column that is specified as an input column."),
 		ForceNew:         true,
-		DiffSuppressFunc: NormalizeAndCompare(sdk.ToDataType),
-		ValidateDiagFunc: sdkValidation(sdk.ToDataType),
+		DiffSuppressFunc: DiffSuppressDataTypes,
+		ValidateDiagFunc: IsDataTypeValid,
 	},
 	"exempt_other_policies": {
 		Type:             schema.TypeString,
@@ -198,17 +197,17 @@ func CreateMaskingPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 	args := make([]sdk.TableColumnSignature, 0)
 	for _, arg := range arguments {
 		v := arg.(map[string]any)
-		dataType, err := sdk.ToDataType(v["type"].(string))
+		dataType, err := datatypes.ParseDataType(v["type"].(string))
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		args = append(args, sdk.TableColumnSignature{
 			Name: v["name"].(string),
-			Type: dataType,
+			Type: sdk.LegacyDataTypeFrom(dataType),
 		})
 	}
 
-	returns, err := sdk.ToDataType(returnDataType)
+	returns, err := datatypes.ParseDataType(returnDataType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -226,7 +225,7 @@ func CreateMaskingPolicy(ctx context.Context, d *schema.ResourceData, meta any) 
 		opts.ExemptOtherPolicies = sdk.Pointer(parsed)
 	}
 
-	err = client.MaskingPolicies.Create(ctx, id, args, returns, expression, opts)
+	err = client.MaskingPolicies.Create(ctx, id, args, sdk.LegacyDataTypeFrom(returns), expression, opts)
 	if err != nil {
 		return diag.FromErr(err)
 	}

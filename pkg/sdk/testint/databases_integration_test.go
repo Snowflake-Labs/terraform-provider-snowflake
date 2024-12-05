@@ -138,11 +138,11 @@ func TestInt_DatabasesCreate(t *testing.T) {
 
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), database.ID(), sdk.ObjectTypeDatabase)
 		require.NoError(t, err)
-		assert.Equal(t, "v1", tag1Value)
+		assert.Equal(t, sdk.Pointer("v1"), tag1Value)
 
 		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2Test.ID(), database.ID(), sdk.ObjectTypeDatabase)
 		require.NoError(t, err)
-		assert.Equal(t, "v2", tag2Value)
+		assert.Equal(t, sdk.Pointer("v2"), tag2Value)
 	})
 }
 
@@ -249,7 +249,7 @@ func TestInt_DatabasesCreateShared(t *testing.T) {
 
 	tag1Value, err := client.SystemFunctions.GetTag(ctx, testTag.ID(), database.ID(), sdk.ObjectTypeDatabase)
 	require.NoError(t, err)
-	assert.Equal(t, "v1", tag1Value)
+	assert.Equal(t, sdk.Pointer("v1"), tag1Value)
 }
 
 func TestInt_DatabasesCreateSecondary(t *testing.T) {

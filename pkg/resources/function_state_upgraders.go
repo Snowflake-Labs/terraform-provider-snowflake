@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 type v085FunctionId struct {
@@ -48,11 +49,11 @@ func v085FunctionIdStateUpgrader(ctx context.Context, rawState map[string]interf
 
 	argDataTypes := make([]sdk.DataType, len(parsedV085FunctionId.ArgTypes))
 	for i, argType := range parsedV085FunctionId.ArgTypes {
-		argDataType, err := sdk.ToDataType(argType)
+		argDataType, err := datatypes.ParseDataType(argType)
 		if err != nil {
 			return nil, err
 		}
-		argDataTypes[i] = argDataType
+		argDataTypes[i] = sdk.LegacyDataTypeFrom(argDataType)
 	}
 
 	schemaObjectIdentifierWithArguments := sdk.NewSchemaObjectIdentifierWithArgumentsOld(parsedV085FunctionId.DatabaseName, parsedV085FunctionId.SchemaName, parsedV085FunctionId.FunctionName, argDataTypes)
