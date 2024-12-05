@@ -77,6 +77,32 @@ resource "snowflake_tag_association" "table_association" {
 
 The state is migrated automatically. Please adjust your configuration files.
 
+### Data type changes
+
+As part of reworking functions, procedures, and any other resource utilizing Snowflake data types, we adjusted the parsing of data types to be more aligned with Snowflake (according to [docs](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types)).
+
+Affected resources:
+- `snowflake_function`
+- `snowflake_procedure`
+- `snowflake_table`
+- `snowflake_external_function`
+- `snowflake_masking_policy`
+- `snowflake_row_access_policy`
+- `snowflake_dynamic_table`
+You may encounter non-empty plans in these resources after bumping.
+
+Changes to the previous implementation/limitations:
+- `BOOL` is no longer supported; use `BOOLEAN` instead.
+- Following the change described [here](#bugfix-handle-data-type-diff-suppression-better-for-text-and-number), comparing and suppressing changes of data types was extended for all other data types with the following rules:
+  - `CHARACTER`, `CHAR`, `NCHAR` now have the default size set to 1 if not provided (following the [docs](https://docs.snowflake.com/en/sql-reference/data-types-text#char-character-nchar))
+  - `BINARY` has default size set to 8388608 if not provided (following the [docs](https://docs.snowflake.com/en/sql-reference/data-types-text#binary))
+  - `TIME` has default precision set to 9 if not provided (following the [docs](https://docs.snowflake.com/en/sql-reference/data-types-datetime#time))
+  - `TIMESTAMP_LTZ` has default precision set to 9 if not provided (following the [docs](https://docs.snowflake.com/en/sql-reference/data-types-datetime#timestamp)); supported aliases: `TIMESTAMPLTZ`, `TIMESTAMP WITH LOCAL TIME ZONE`.
+  - `TIMESTAMP_NTZ` has default precision set to 9 if not provided (following the [docs](https://docs.snowflake.com/en/sql-reference/data-types-datetime#timestamp)); supported aliases: `TIMESTAMPNTZ`, `TIMESTAMP WITHOUT TIME ZONE`, `DATETIME`.
+  - `TIMESTAMP_TZ` has default precision set to 9 if not provided (following the [docs](https://docs.snowflake.com/en/sql-reference/data-types-datetime#timestamp)); supported aliases: `TIMESTAMPTZ`, `TIMESTAMP WITH TIME ZONE`.
+- The session-settable `TIMESTAMP` is NOT supported ([docs](https://docs.snowflake.com/en/sql-reference/data-types-datetime#timestamp))
+- `VECTOR` type still is limited and will be addressed soon (probably before the release so it will be edited)
+
 ## v0.98.0 ➞ v0.99.0
 
 ### snowflake_tasks data source changes

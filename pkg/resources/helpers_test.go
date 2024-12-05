@@ -11,6 +11,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/stretchr/testify/assert"
@@ -337,7 +338,7 @@ func TestListDiffWithCommonItems(t *testing.T) {
 	}
 }
 
-func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
+func Test_DataTypeDiffSuppressFunc(t *testing.T) {
 	testCases := []struct {
 		name     string
 		old      string
@@ -401,7 +402,7 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 		{
 			name:     "synonym number data type precision implicit and same",
 			old:      "NUMBER",
-			new:      fmt.Sprintf("DECIMAL(%d)", sdk.DefaultNumberPrecision),
+			new:      fmt.Sprintf("DECIMAL(%d)", datatypes.DefaultNumberPrecision),
 			expected: true,
 		},
 		{
@@ -425,7 +426,7 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 		{
 			name:     "synonym number data type default scale implicit and explicit",
 			old:      "NUMBER(30)",
-			new:      fmt.Sprintf("DECIMAL(30, %d)", sdk.DefaultNumberScale),
+			new:      fmt.Sprintf("DECIMAL(30, %d)", datatypes.DefaultNumberScale),
 			expected: true,
 		},
 		{
@@ -437,13 +438,13 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 		{
 			name:     "synonym number data type both precision and scale implicit and explicit",
 			old:      "NUMBER",
-			new:      fmt.Sprintf("DECIMAL(%d, %d)", sdk.DefaultNumberPrecision, sdk.DefaultNumberScale),
+			new:      fmt.Sprintf("DECIMAL(%d, %d)", datatypes.DefaultNumberPrecision, datatypes.DefaultNumberScale),
 			expected: true,
 		},
 		{
 			name:     "synonym number data type both precision and scale implicit and scale different",
 			old:      "NUMBER",
-			new:      fmt.Sprintf("DECIMAL(%d, 2)", sdk.DefaultNumberPrecision),
+			new:      fmt.Sprintf("DECIMAL(%d, 2)", datatypes.DefaultNumberPrecision),
 			expected: false,
 		},
 		{
@@ -461,7 +462,7 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 		{
 			name:     "synonym text data type length implicit and same",
 			old:      "VARCHAR",
-			new:      fmt.Sprintf("TEXT(%d)", sdk.DefaultVarcharLength),
+			new:      fmt.Sprintf("TEXT(%d)", datatypes.DefaultVarcharLength),
 			expected: true,
 		},
 		{
@@ -475,7 +476,7 @@ func Test_DataTypeIssue3007DiffSuppressFunc(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			result := resources.DataTypeIssue3007DiffSuppressFunc("", tc.old, tc.new, nil)
+			result := resources.DiffSuppressDataTypes("", tc.old, tc.new, nil)
 			require.Equal(t, tc.expected, result)
 		})
 	}
