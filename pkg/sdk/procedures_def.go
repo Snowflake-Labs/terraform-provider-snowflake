@@ -8,12 +8,14 @@ var procedureArgument = g.NewQueryStruct("ProcedureArgument").
 	Text("ArgName", g.KeywordOptions().NoQuotes().Required()).
 	PredefinedQueryStructField("ArgDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
 	PredefinedQueryStructField("ArgDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
-	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT"))
+	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT")).
+	WithValidation(g.ExactlyOneValueSet, "ArgDataTypeOld", "ArgDataType")
 
 var procedureColumn = g.NewQueryStruct("ProcedureColumn").
 	Text("ColumnName", g.KeywordOptions().NoQuotes().Required()).
 	PredefinedQueryStructField("ColumnDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
-	PredefinedQueryStructField("ColumnDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required())
+	PredefinedQueryStructField("ColumnDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
+	WithValidation(g.ExactlyOneValueSet, "ColumnDataTypeOld", "ColumnDataType")
 
 var procedureReturns = g.NewQueryStruct("ProcedureReturns").
 	OptionalQueryStructField(
@@ -21,7 +23,8 @@ var procedureReturns = g.NewQueryStruct("ProcedureReturns").
 		g.NewQueryStruct("ProcedureReturnsResultDataType").
 			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
 			PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
-			OptionalSQL("NULL").OptionalSQL("NOT NULL"),
+			OptionalSQL("NULL").OptionalSQL("NOT NULL").
+			WithValidation(g.ExactlyOneValueSet, "ResultDataTypeOld", "ResultDataType"),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
@@ -40,7 +43,8 @@ var procedureSQLReturns = g.NewQueryStruct("ProcedureSQLReturns").
 		"ResultDataType",
 		g.NewQueryStruct("ProcedureReturnsResultDataType").
 			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
-			PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()),
+			PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
+			WithValidation(g.ExactlyOneValueSet, "ResultDataTypeOld", "ResultDataType"),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
@@ -140,7 +144,8 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
 		WithValidation(g.ValidateValueSet, "ProcedureDefinition").
-		WithValidation(g.ValidIdentifier, "name"),
+		WithValidation(g.ValidIdentifier, "name").
+		WithValidation(g.ExactlyOneValueSet, "ResultDataTypeOld", "ResultDataType"),
 ).CustomOperation(
 	"CreateForPython",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-procedure#python-handler",
@@ -460,7 +465,7 @@ var ProceduresDef = g.NewInterface(
 		PredefinedQueryStructField("CallArguments", "[]string", g.KeywordOptions().MustParentheses()).
 		PredefinedQueryStructField("ScriptingVariable", "*string", g.ParameterOptions().NoEquals().NoQuotes().SQL("INTO")).
 		WithValidation(g.ValidateValueSet, "ProcedureDefinition").
-		WithValidation(g.AtLeastOneValueSet, "ResultDataTypeOld", "ResultDataType").
+		WithValidation(g.ExactlyOneValueSet, "ResultDataTypeOld", "ResultDataType").
 		WithValidation(g.ValidIdentifier, "ProcedureName").
 		WithValidation(g.ValidIdentifier, "Name"),
 ).CustomOperation(
