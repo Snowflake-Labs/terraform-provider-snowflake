@@ -1,6 +1,9 @@
 package sdk
 
-import "strconv"
+import (
+	"context"
+	"strconv"
+)
 
 func (v *Function) ID() SchemaObjectIdentifierWithArguments {
 	return NewSchemaObjectIdentifierWithArguments(v.CatalogName, v.SchemaName, v.Name, v.ArgumentsOld...)
@@ -15,7 +18,7 @@ type FunctionDetails struct {
 	D *BoolProperty
 }
 
-func functionDetailsFromRows(rows []functionDetailRow) *FunctionDetails {
+func functionDetailsFromRows(rows []FunctionDetail) *FunctionDetails {
 	v := &FunctionDetails{}
 	for _, row := range rows {
 		switch row.Property {
@@ -32,54 +35,58 @@ func functionDetailsFromRows(rows []functionDetailRow) *FunctionDetails {
 	return v
 }
 
-func (r functionDetailRow) toStringProperty() *StringProperty {
-	prop := &StringProperty{}
-	if r.Value.Valid {
-		prop.Value = r.Value.String
+func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*FunctionDetails, error) {
+	rows, err := v.Describe(ctx, id)
+	if err != nil {
+		return nil, err
 	}
-	return prop
+	return functionDetailsFromRows(rows), nil
 }
 
-func (r functionDetailRow) toIntProperty() *IntProperty {
-	prop := &IntProperty{}
-	if r.Value.Valid {
-		var value *int
-		v, err := strconv.Atoi(r.Value.String)
-		if err == nil {
-			value = &v
-		} else {
-			value = nil
-		}
-		prop.Value = value
+func (d *FunctionDetail) toStringProperty() *StringProperty {
+	return &StringProperty{
+		Value:       d.Value,
+		Description: d.Property,
 	}
-	return prop
 }
 
-func (r functionDetailRow) toFloatProperty() *FloatProperty {
-	prop := &FloatProperty{}
-	if r.Value.Valid {
-		var value *float64
-		v, err := strconv.ParseFloat(r.Value.String, 64)
-		if err == nil {
-			value = &v
-		} else {
-			value = nil
-		}
-		prop.Value = value
+func (d *FunctionDetail) toIntProperty() *IntProperty {
+	var value *int
+	v, err := strconv.Atoi(d.Value)
+	if err == nil {
+		value = &v
+	} else {
+		value = nil
 	}
-	return prop
+	return &IntProperty{
+		Value:       value,
+		Description: d.Property,
+	}
 }
 
-func (r functionDetailRow) toBoolProperty() *BoolProperty {
-	prop := &BoolProperty{}
-	if r.Value.Valid {
-		var value bool
-		if r.Value.String != "" && r.Value.String != "null" {
-			value = ToBool(r.Value.String)
-		} else {
-			value = false
-		}
-		prop.Value = value
+func (d *FunctionDetail) toFloatProperty() *FloatProperty {
+	var value *float64
+	v, err := strconv.ParseFloat(d.Value, 64)
+	if err == nil {
+		value = &v
+	} else {
+		value = nil
 	}
-	return prop
+	return &FloatProperty{
+		Value:       value,
+		Description: d.Property,
+	}
+}
+
+func (d *FunctionDetail) toBoolProperty() *BoolProperty {
+	var value bool
+	if d.Value != "" && d.Value != "null" {
+		value = ToBool(d.Value)
+	} else {
+		value = false
+	}
+	return &BoolProperty{
+		Value:       value,
+		Description: d.Property,
+	}
 }
