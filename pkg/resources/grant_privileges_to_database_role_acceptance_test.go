@@ -27,6 +27,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 	configVariables := config.Variables{
 		"name": config.StringVariable(databaseRoleId.Name()),
 		"privileges": config.ListVariable(
+			config.StringVariable(string(sdk.AccountObjectPrivilegeApplyBudget)),
 			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
 			config.StringVariable(string(sdk.AccountObjectPrivilegeModify)),
 			config.StringVariable(string(sdk.AccountObjectPrivilegeUsage)),
@@ -53,13 +54,14 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr(resourceName, "privileges.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeCreateSchema)),
-					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeModify)),
-					resource.TestCheckResourceAttr(resourceName, "privileges.2", string(sdk.AccountObjectPrivilegeUsage)),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeApplyBudget)),
+					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeCreateSchema)),
+					resource.TestCheckResourceAttr(resourceName, "privileges.2", string(sdk.AccountObjectPrivilegeModify)),
+					resource.TestCheckResourceAttr(resourceName, "privileges.3", string(sdk.AccountObjectPrivilegeUsage)),
 					resource.TestCheckResourceAttr(resourceName, "on_database", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|CREATE SCHEMA,MODIFY,USAGE|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|APPLYBUDGET,CREATE SCHEMA,MODIFY,USAGE|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{

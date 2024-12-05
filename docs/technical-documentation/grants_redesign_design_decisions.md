@@ -13,7 +13,7 @@ Here’s a list of resources and data sources we introduced during the grant red
 - [snowflake_grant_privileges_to_account_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role)
 - [snowflake_grant_account_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_account_role)
 - [snowflake_grant_database_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_database_role)
-- snowflake_grant_application_role (coming soon)
+- [snowflake_grant_application_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_application_role)
 - [snowflake_grant_privileges_to_share](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_share)
 - [snowflake_grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership)
 
