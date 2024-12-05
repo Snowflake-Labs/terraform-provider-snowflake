@@ -10,6 +10,11 @@ var ToOptsOptionalExample = g.NewInterface(
 	"ToOptsOptionalExamples",
 	"ToOptsOptionalExample",
 	g.KindOfT[DatabaseObjectIdentifier](),
+).CreateOperation("https://example.com",
+	g.NewQueryStruct("Alter").
+		Alter().
+		IfExists().
+		Name(),
 ).AlterOperation("https://example.com",
 	g.NewQueryStruct("Alter").
 		Alter().

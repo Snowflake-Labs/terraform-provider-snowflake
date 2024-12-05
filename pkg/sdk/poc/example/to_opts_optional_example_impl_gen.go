@@ -10,9 +10,22 @@ type toOptsOptionalExamples struct {
 	client *Client
 }
 
+func (v *toOptsOptionalExamples) Create(ctx context.Context, request *CreateToOptsOptionalExampleRequest) error {
+	opts := request.toOpts()
+	return validateAndExec(v.client, ctx, opts)
+}
+
 func (v *toOptsOptionalExamples) Alter(ctx context.Context, request *AlterToOptsOptionalExampleRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
+}
+
+func (r *CreateToOptsOptionalExampleRequest) toOpts() *CreateToOptsOptionalExampleOptions {
+	opts := &CreateToOptsOptionalExampleOptions{
+		IfExists: r.IfExists,
+		name:     r.name,
+	}
+	return opts
 }
 
 func (r *AlterToOptsOptionalExampleRequest) toOpts() *AlterToOptsOptionalExampleOptions {

@@ -2,7 +2,15 @@ package example
 
 //go:generate go run ./dto-builder-generator/main.go
 
-var _ optionsProvider[AlterToOptsOptionalExampleOptions] = new(AlterToOptsOptionalExampleRequest)
+var (
+	_ optionsProvider[CreateToOptsOptionalExampleOptions] = new(CreateToOptsOptionalExampleRequest)
+	_ optionsProvider[AlterToOptsOptionalExampleOptions]  = new(AlterToOptsOptionalExampleRequest)
+)
+
+type CreateToOptsOptionalExampleRequest struct {
+	IfExists *bool
+	name     DatabaseObjectIdentifier // required
+}
 
 type AlterToOptsOptionalExampleRequest struct {
 	IfExists      *bool
