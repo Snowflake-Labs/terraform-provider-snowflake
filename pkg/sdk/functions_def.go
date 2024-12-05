@@ -87,7 +87,7 @@ var FunctionsDef = g.NewInterface(
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
 		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
@@ -116,7 +116,7 @@ var FunctionsDef = g.NewInterface(
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
 		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("FunctionDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		PredefinedQueryStructField("FunctionDefinition", "string", g.ParameterOptions().NoEquals().SQL("AS").Required()).
 		WithValidation(g.ValidateValueSet, "FunctionDefinition").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
@@ -127,6 +127,7 @@ var FunctionsDef = g.NewInterface(
 		OrReplace().
 		OptionalSQL("TEMPORARY").
 		OptionalSQL("SECURE").
+		OptionalSQL("AGGREGATE").
 		SQL("FUNCTION").
 		IfNotExists().
 		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -159,7 +160,7 @@ var FunctionsDef = g.NewInterface(
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
 		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
-		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
 		WithValidation(g.ValidateValueSet, "Handler").
@@ -201,7 +202,7 @@ var FunctionsDef = g.NewInterface(
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists").
@@ -230,7 +231,7 @@ var FunctionsDef = g.NewInterface(
 		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalSQL("MEMOIZABLE").
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("FunctionDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		PredefinedQueryStructField("FunctionDefinition", "string", g.ParameterOptions().NoEquals().SQL("AS").Required()).
 		WithValidation(g.ValidateValueSet, "FunctionDefinition").
 		WithValidation(g.ValidIdentifier, "name"),
 ).AlterOperation(
