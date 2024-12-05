@@ -2,10 +2,12 @@ package sdk
 
 import (
 	"reflect"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 func IsValidDataType(v string) bool {
-	_, err := ToDataType(v)
+	_, err := datatypes.ParseDataType(v)
 	return err == nil
 }
 

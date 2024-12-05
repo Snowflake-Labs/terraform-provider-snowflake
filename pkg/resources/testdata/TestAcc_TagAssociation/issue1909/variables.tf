@@ -21,3 +21,11 @@ variable "database" {
 variable "schema" {
   type = string
 }
+
+variable "column_fully_qualified_name" {
+  type = string
+}
+
+variable "column2_fully_qualified_name" {
+  type = string
+}

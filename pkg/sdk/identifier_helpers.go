@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 type Identifier interface {
@@ -247,8 +249,8 @@ func NewSchemaObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) 
 			if trimmedArg == "" {
 				continue
 			}
-			dt, _ := ToDataType(trimmedArg)
-			id.arguments = append(id.arguments, dt)
+			dt, _ := datatypes.ParseDataType(trimmedArg)
+			id.arguments = append(id.arguments, LegacyDataTypeFrom(dt))
 		}
 	} else { // this is every other kind of schema object
 		id.name = strings.Trim(parts[2], `"`)
@@ -318,11 +320,11 @@ func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name strin
 	// Arguments have to be "normalized" with ToDataType, so the signature would match with the one returned by Snowflake.
 	normalizedArguments := make([]DataType, len(argumentDataTypes))
 	for i, argument := range argumentDataTypes {
-		normalizedArgument, err := ToDataType(string(argument))
+		normalizedArgument, err := datatypes.ParseDataType(string(argument))
 		if err != nil {
 			log.Printf("[DEBUG] failed to normalize argument %d: %v, err = %v", i, argument, err)
 		}
-		normalizedArguments[i] = normalizedArgument
+		normalizedArguments[i] = LegacyDataTypeFrom(normalizedArgument)
 	}
 	return SchemaObjectIdentifierWithArguments{
 		databaseName:      strings.Trim(databaseName, `"`),

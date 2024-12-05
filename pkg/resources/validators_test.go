@@ -9,48 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsDataType(t *testing.T) {
-	isDataType := IsDataType()
-	key := "tag"
-
-	testCases := []struct {
-		Name  string
-		Value any
-		Error string
-	}{
-		{
-			Name:  "validation: correct DataType value",
-			Value: "NUMBER",
-		},
-		{
-			Name:  "validation: correct DataType value in lowercase",
-			Value: "number",
-		},
-		{
-			Name:  "validation: incorrect DataType value",
-			Value: "invalid data type",
-			Error: "expected tag to be one of",
-		},
-		{
-			Name:  "validation: incorrect value type",
-			Value: 123,
-			Error: "expected type of tag to be string",
-		},
-	}
-
-	for _, tt := range testCases {
-		t.Run(tt.Name, func(t *testing.T) {
-			_, errors := isDataType(tt.Value, key)
-			if tt.Error != "" {
-				assert.Len(t, errors, 1)
-				assert.ErrorContains(t, errors[0], tt.Error)
-			} else {
-				assert.Len(t, errors, 0)
-			}
-		})
-	}
-}
-
 func Test_sdkValidation(t *testing.T) {
 	genericNormalize := func(value string) (any, error) {
 		if value == "ok" {

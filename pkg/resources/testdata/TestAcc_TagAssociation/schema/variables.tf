@@ -9,3 +9,7 @@ variable "database" {
 variable "schema" {
   type = string
 }
+
+variable "schema_fully_qualified_name" {
+  type = string
+}

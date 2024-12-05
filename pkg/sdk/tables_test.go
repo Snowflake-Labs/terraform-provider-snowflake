@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -379,7 +380,9 @@ func TestTableCreate(t *testing.T) {
 		tableComment := random.Comment()
 		collation := "de"
 		columnName := "FIRST_COLUMN"
-		columnType, err := ToDataType("VARCHAR")
+		columnTypeRaw, err := datatypes.ParseDataType("VARCHAR")
+		require.NoError(t, err)
+		columnType := LegacyDataTypeFrom(columnTypeRaw)
 		maskingPolicy := ColumnMaskingPolicy{
 			Name:  randomSchemaObjectIdentifier(),
 			Using: []string{"FOO", "BAR"},
@@ -551,8 +554,9 @@ func TestTableCreateAsSelect(t *testing.T) {
 	t.Run("with complete options", func(t *testing.T) {
 		id := randomSchemaObjectIdentifier()
 		columnName := "FIRST_COLUMN"
-		columnType, err := ToDataType("VARCHAR")
+		columnTypeRaw, err := datatypes.ParseDataType("VARCHAR")
 		require.NoError(t, err)
+		columnType := LegacyDataTypeFrom(columnTypeRaw)
 		maskingPolicy := TableAsSelectColumnMaskingPolicy{
 			Name: randomSchemaObjectIdentifier(),
 		}

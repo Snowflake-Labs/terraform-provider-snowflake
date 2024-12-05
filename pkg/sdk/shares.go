@@ -341,6 +341,7 @@ type shareDetailsRow struct {
 func (row *shareDetailsRow) toShareInfo() *ShareInfo {
 	objectType := ObjectType(row.Kind)
 	trimmedS := strings.Trim(row.Name, "\"")
+	// TODO(SNOW-1229218): Use a common mapper to get object id.
 	id := objectType.GetObjectIdentifier(trimmedS)
 	return &ShareInfo{
 		Kind:     objectType,

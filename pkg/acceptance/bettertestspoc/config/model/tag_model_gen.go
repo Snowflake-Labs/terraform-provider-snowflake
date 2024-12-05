@@ -71,7 +71,7 @@ func (t *TagModel) WithFullyQualifiedName(fullyQualifiedName string) *TagModel {
 	return t
 }
 
-// masking_policy attribute type is not yet supported, so WithMaskingPolicy can't be generated
+// masking_policies attribute type is not yet supported, so WithMaskingPolicies can't be generated
 
 func (t *TagModel) WithName(name string) *TagModel {
 	t.Name = tfconfig.StringVariable(name)
