@@ -84,32 +84,6 @@ func (c *AccountClient) Alter(t *testing.T, opts *sdk.AlterAccountOptions) {
 	require.NoError(t, err)
 }
 
-func (c *AccountClient) UnsetPoliciesFunc(t *testing.T) func() {
-	t.Helper()
-	return func() {
-		_ = c.client().Alter(context.Background(), &sdk.AlterAccountOptions{
-			Unset: &sdk.AccountUnset{
-				PackagesPolicy: sdk.Bool(true),
-			},
-		})
-		_ = c.client().Alter(context.Background(), &sdk.AlterAccountOptions{
-			Unset: &sdk.AccountUnset{
-				PasswordPolicy: sdk.Bool(true),
-			},
-		})
-		_ = c.client().Alter(context.Background(), &sdk.AlterAccountOptions{
-			Unset: &sdk.AccountUnset{
-				SessionPolicy: sdk.Bool(true),
-			},
-		})
-		_ = c.client().Alter(context.Background(), &sdk.AlterAccountOptions{
-			Unset: &sdk.AccountUnset{
-				AuthenticationPolicy: sdk.Bool(true),
-			},
-		})
-	}
-}
-
 func (c *AccountClient) DropFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
 	t.Helper()
 	return func() {

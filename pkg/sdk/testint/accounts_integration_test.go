@@ -3,6 +3,8 @@ package testint
 import (
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -18,9 +20,7 @@ import (
 // - Shouldn't be any of the "main" accounts/admin users, because those tests alter the current account.
 
 func TestInt_Account(t *testing.T) {
-	if !testClientHelper().Context.IsRoleInSession(t, snowflakeroles.Orgadmin) {
-		t.Skip("ORGADMIN role is not in current session")
-	}
+	testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
 	client := testClient(t)
 	ctx := testContext(t)
@@ -405,9 +405,8 @@ func TestInt_Account(t *testing.T) {
 }
 
 func TestInt_Account_SelfAlter(t *testing.T) {
-	if !testClientHelper().Context.IsRoleInSession(t, snowflakeroles.Orgadmin) {
-		t.Skip("ORGADMIN role is not in current session")
-	}
+	t.Skip("TODO(SNOW-1844776): Adjust the test so that self alters will be done on newly created account - not the main test one")
+	testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
 	// This client should be operating on a different account than the "main" one (because it will be altered here).
 	// Cannot use a newly created account because ORGADMIN role is necessary,
@@ -564,14 +563,19 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 		packagesPolicyId, packagesPolicyCleanup := testClientHelper().PackagesPolicy.Create(t)
 		t.Cleanup(packagesPolicyCleanup)
 
-		t.Cleanup(testClientHelper().Account.UnsetPoliciesFunc(t))
-
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
 				PackagesPolicy: packagesPolicyId,
 			},
 		})
 		require.NoError(t, err)
+		t.Cleanup(func() {
+			assert.NoError(t, client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+				Unset: &sdk.AccountUnset{
+					PackagesPolicy: sdk.Bool(true),
+				},
+			}))
+		})
 
 		err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
@@ -579,6 +583,13 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+		t.Cleanup(func() {
+			assert.NoError(t, client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+				Unset: &sdk.AccountUnset{
+					PasswordPolicy: sdk.Bool(true),
+				},
+			}))
+		})
 
 		err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
@@ -586,6 +597,13 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+		t.Cleanup(func() {
+			assert.NoError(t, client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+				Unset: &sdk.AccountUnset{
+					SessionPolicy: sdk.Bool(true),
+				},
+			}))
+		})
 
 		err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			Set: &sdk.AccountSet{
@@ -593,6 +611,13 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+		t.Cleanup(func() {
+			assert.NoError(t, client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+				Unset: &sdk.AccountUnset{
+					AuthenticationPolicy: sdk.Bool(true),
+				},
+			}))
+		})
 
 		assertPolicySet(t, authPolicy.ID())
 		assertPolicySet(t, passwordPolicy.ID())
