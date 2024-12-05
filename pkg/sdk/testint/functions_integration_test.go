@@ -34,6 +34,24 @@ func TestInt_CreateFunctions(t *testing.T) {
 		}
 	}
 
+	t.Run("create function for Java - inline minimal", func(t *testing.T) {})
+	t.Run("create function for Java - inline full", func(t *testing.T) {})
+	t.Run("create function for Java - staged", func(t *testing.T) {})
+
+	t.Run("create function for JavaScript - inline minimal", func(t *testing.T) {})
+	t.Run("create function for JavaScript - inline full", func(t *testing.T) {})
+
+	t.Run("create function for Python - inline minimal", func(t *testing.T) {})
+	t.Run("create function for Python - inline full", func(t *testing.T) {})
+	t.Run("create function for Python - staged", func(t *testing.T) {})
+
+	t.Run("create function for Scala - inline minimal", func(t *testing.T) {})
+	t.Run("create function for Scala - inline full", func(t *testing.T) {})
+	t.Run("create function for Scala - staged", func(t *testing.T) {})
+
+	t.Run("create function for SQL - inline minimal", func(t *testing.T) {})
+	t.Run("create function for SQL - inline full", func(t *testing.T) {})
+
 	t.Run("create function for Java", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 
