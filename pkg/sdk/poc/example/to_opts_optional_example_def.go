@@ -7,8 +7,8 @@ import (
 //go:generate go run ../main.go
 
 var ToOptsOptionalExample = g.NewInterface(
-	"FeaturesExample",
-	"FeaturesExamples",
+	"ToOptsOptionalExamples",
+	"ToOptsOptionalExample",
 	g.KindOfT[DatabaseObjectIdentifier](),
 ).AlterOperation("https://example.com",
 	g.NewQueryStruct("Alter").

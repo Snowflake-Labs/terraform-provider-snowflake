@@ -2,12 +2,12 @@ package example
 
 import "context"
 
-type FeaturesExample interface {
-	Alter(ctx context.Context, request *AlterFeaturesExamplesRequest) error
+type ToOptsOptionalExamples interface {
+	Alter(ctx context.Context, request *AlterToOptsOptionalExampleRequest) error
 }
 
-// AlterFeaturesExamplesOptions is based on https://example.com.
-type AlterFeaturesExamplesOptions struct {
+// AlterToOptsOptionalExampleOptions is based on https://example.com.
+type AlterToOptsOptionalExampleOptions struct {
 	alter         bool                     `ddl:"static" sql:"ALTER"`
 	IfExists      *bool                    `ddl:"keyword" sql:"IF EXISTS"`
 	name          DatabaseObjectIdentifier `ddl:"identifier"`

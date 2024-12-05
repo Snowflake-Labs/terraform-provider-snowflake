@@ -2,17 +2,17 @@ package example
 
 import "testing"
 
-func TestFeaturesExample_Alter(t *testing.T) {
+func TestToOptsOptionalExamples_Alter(t *testing.T) {
 	id := RandomDatabaseObjectIdentifier(t)
-	// Minimal valid AlterFeaturesExamplesOptions
-	defaultOpts := func() *AlterFeaturesExamplesOptions {
-		return &AlterFeaturesExamplesOptions{
+	// Minimal valid AlterToOptsOptionalExampleOptions
+	defaultOpts := func() *AlterToOptsOptionalExampleOptions {
+		return &AlterToOptsOptionalExampleOptions{
 			name: id,
 		}
 	}
 
 	t.Run("validation: nil options", func(t *testing.T) {
-		var opts *AlterFeaturesExamplesOptions = nil
+		var opts *AlterToOptsOptionalExampleOptions = nil
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
