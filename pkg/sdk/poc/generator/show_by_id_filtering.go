@@ -58,6 +58,10 @@ func newShowByIDFiltering(name, kind, args string) ShowByIDFiltering {
 	}
 }
 
+func newShowByIDNoFiltering() ShowByIDFiltering {
+	return newShowByIDFiltering("NoFiltering", "", "")
+}
+
 func newShowByIDLikeFiltering() ShowByIDFiltering {
 	return newShowByIDFiltering("Like", "Like", "Pattern: String(id.Name())")
 }
@@ -70,7 +74,6 @@ func newShowByIDExtendedInFiltering(identifierKind idPrefix) ShowByIDFiltering {
 	return newShowByIDFiltering("In", "ExtendedIn", fmt.Sprintf("In: In{%[1]v: id.%[1]vId()}", identifierKind))
 }
 
-// ApplicationName filtering for application_roles
 type showByIDApplicationFilter struct {
 	showByIDFilter
 }
@@ -87,17 +90,6 @@ func newShowByIDApplicationFiltering() ShowByIDFiltering {
 			Args: "id.DatabaseId()",
 		},
 	}
-}
-
-// noop for NoFiltering
-type showByIDNoFilter struct{}
-
-func (s *showByIDNoFilter) WithFiltering() string {
-	return ""
-}
-
-func newShowByIDNoFiltering() ShowByIDFiltering {
-	return &showByIDNoFilter{}
 }
 
 func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation {
