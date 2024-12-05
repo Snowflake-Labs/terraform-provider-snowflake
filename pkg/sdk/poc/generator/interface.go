@@ -1,7 +1,5 @@
 package generator
 
-import "strings"
-
 // Interface groups operations for particular object or objects family (e.g. DATABASE ROLE)
 type Interface struct {
 	// Name is the interface's name, e.g. "DatabaseRoles"
@@ -28,7 +26,8 @@ func (i *Interface) NameLowerCased() string {
 	return startingWithLowerCase(i.Name)
 }
 
-// ObjectIdentifierKind returns the level of the object identifier (e.g. for DatabaseObjectIdentifier, it returns "Database")
-func (i *Interface) ObjectIdentifierKind() string {
-	return strings.Replace(i.IdentifierKind, "ObjectIdentifier", "", 1)
+// ObjectIdentifierKind returns the level of the object identifier (e.g. for DatabaseObjectIdentifier, it returns the prefix "Database")
+func (i *Interface) ObjectIdentifierKind() identifierPrefix {
+	// return strings.Replace(i.IdentifierKind, "ObjectIdentifier", "", 1)
+	return identifierStringToPrefix(i.IdentifierKind)
 }
