@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -142,4 +143,10 @@ func (c *FunctionClient) SampleSqlDefinition(t *testing.T) string {
 	t.Helper()
 
 	return "3.141592654::FLOAT"
+}
+
+func (c *FunctionClient) PythonIdentityDefinition(t *testing.T, funcName string, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf("def %[1]s(%[2]s): %[2]s", funcName, argName)
 }

@@ -567,6 +567,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		t.Run(fmt.Sprintf("function returns non detailed data types of arguments for %s", tc), func(t *testing.T) {
 			id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 			argName := "A"
+			funcName := "identity"
 			dataType, err := datatypes.ParseDataType(tc)
 			require.NoError(t, err)
 			args := []sdk.FunctionArgumentRequest{
@@ -577,10 +578,10 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 				id,
 				*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(dataType)),
 				"3.8",
-				"add",
+				funcName,
 			).
 				WithArguments(args).
-				WithFunctionDefinition(fmt.Sprintf("def add(%[1]s): %[1]s", argName)),
+				WithFunctionDefinition(testClientHelper().Function.PythonIdentityDefinition(t, funcName, argName)),
 			)
 			require.NoError(t, err)
 
