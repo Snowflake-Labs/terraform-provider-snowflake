@@ -1,6 +1,6 @@
 # basic resource
 resource "snowflake_oauth_integration_for_custom_clients" "basic" {
-  name               = "saml_integration"
+  name               = "integration"
   oauth_client_type  = "CONFIDENTIAL"
   oauth_redirect_uri = "https://example.com"
   blocked_roles_list = ["ACCOUNTADMIN", "SECURITYADMIN"]
@@ -8,7 +8,7 @@ resource "snowflake_oauth_integration_for_custom_clients" "basic" {
 
 # resource with all fields set
 resource "snowflake_oauth_integration_for_custom_clients" "complete" {
-  name                             = "saml_integration"
+  name                             = "integration"
   oauth_client_type                = "CONFIDENTIAL"
   oauth_redirect_uri               = "https://example.com"
   enabled                          = "true"

@@ -36,7 +36,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 	"privileges": {
 		Type:        schema.TypeSet,
 		Optional:    true,
-		Description: "The privileges to grant on the account role.",
+		Description: "The privileges to grant on the account role. This field is case-sensitive; use only upper-case privileges.",
 		ExactlyOneOf: []string{
 			"privileges",
 			"all_privileges",
