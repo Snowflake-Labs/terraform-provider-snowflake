@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -11,7 +12,7 @@ import (
 )
 
 type SystemFunctions interface {
-	GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (string, error)
+	GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (*string, error)
 	PipeStatus(pipeId SchemaObjectIdentifier) (PipeExecutionState, error)
 	// PipeForceResume unpauses a pipe after ownership transfer. Snowflake will throw an error whenever a pipe changes its owner,
 	// and someone tries to unpause it. To unpause a pipe after ownership transfer, this system function has to be called instead of ALTER PIPE.
@@ -26,21 +27,24 @@ type systemFunctions struct {
 	client *Client
 }
 
-func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (string, error) {
+func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, objectID ObjectIdentifier, objectType ObjectType) (*string, error) {
 	objectType, err := normalizeGetTagObjectType(objectType)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	s := &struct {
-		Tag string `db:"TAG"`
+		Tag sql.NullString `db:"TAG"`
 	}{}
 	sql := fmt.Sprintf(`SELECT SYSTEM$GET_TAG('%s', '%s', '%v') AS "TAG"`, tagID.FullyQualifiedName(), objectID.FullyQualifiedName(), objectType)
 	err = c.client.queryOne(ctx, s, sql)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return s.Tag, nil
+	if !s.Tag.Valid {
+		return nil, nil
+	}
+	return &s.Tag.String, nil
 }
 
 // normalize object types for some values because of errors like below

@@ -166,10 +166,10 @@ func TestInt_Warehouses(t *testing.T) {
 
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)
-		assert.Equal(t, "v1", tag1Value)
+		assert.Equal(t, sdk.Pointer("v1"), tag1Value)
 		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2.ID(), warehouse.ID(), sdk.ObjectTypeWarehouse)
 		require.NoError(t, err)
-		assert.Equal(t, "v2", tag2Value)
+		assert.Equal(t, sdk.Pointer("v2"), tag2Value)
 	})
 
 	t.Run("create: no options", func(t *testing.T) {

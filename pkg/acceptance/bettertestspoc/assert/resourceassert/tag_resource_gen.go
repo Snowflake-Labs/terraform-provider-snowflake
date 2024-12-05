@@ -52,8 +52,8 @@ func (t *TagResourceAssert) HasFullyQualifiedNameString(expected string) *TagRes
 	return t
 }
 
-func (t *TagResourceAssert) HasMaskingPolicyString(expected string) *TagResourceAssert {
-	t.AddAssertion(assert.ValueSet("masking_policy", expected))
+func (t *TagResourceAssert) HasMaskingPoliciesString(expected string) *TagResourceAssert {
+	t.AddAssertion(assert.ValueSet("masking_policies", expected))
 	return t
 }
 

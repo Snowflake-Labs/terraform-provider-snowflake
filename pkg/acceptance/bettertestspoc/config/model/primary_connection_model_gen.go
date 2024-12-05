@@ -13,6 +13,7 @@ type PrimaryConnectionModel struct {
 	Comment                  tfconfig.Variable `json:"comment,omitempty"`
 	EnableFailoverToAccounts tfconfig.Variable `json:"enable_failover_to_accounts,omitempty"`
 	FullyQualifiedName       tfconfig.Variable `json:"fully_qualified_name,omitempty"`
+	IsPrimary                tfconfig.Variable `json:"is_primary,omitempty"`
 	Name                     tfconfig.Variable `json:"name,omitempty"`
 
 	*config.ResourceModelMeta
@@ -55,6 +56,11 @@ func (p *PrimaryConnectionModel) WithFullyQualifiedName(fullyQualifiedName strin
 	return p
 }
 
+func (p *PrimaryConnectionModel) WithIsPrimary(isPrimary bool) *PrimaryConnectionModel {
+	p.IsPrimary = tfconfig.BoolVariable(isPrimary)
+	return p
+}
+
 func (p *PrimaryConnectionModel) WithName(name string) *PrimaryConnectionModel {
 	p.Name = tfconfig.StringVariable(name)
 	return p
@@ -76,6 +82,11 @@ func (p *PrimaryConnectionModel) WithEnableFailoverToAccountsValue(value tfconfi
 
 func (p *PrimaryConnectionModel) WithFullyQualifiedNameValue(value tfconfig.Variable) *PrimaryConnectionModel {
 	p.FullyQualifiedName = value
+	return p
+}
+
+func (p *PrimaryConnectionModel) WithIsPrimaryValue(value tfconfig.Variable) *PrimaryConnectionModel {
+	p.IsPrimary = value
 	return p
 }
 

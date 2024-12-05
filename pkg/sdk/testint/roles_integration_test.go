@@ -78,11 +78,11 @@ func TestInt_Roles(t *testing.T) {
 		// verify tags
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), sdk.ObjectTypeRole)
 		require.NoError(t, err)
-		assert.Equal(t, "v1", tag1Value)
+		assert.Equal(t, sdk.Pointer("v1"), tag1Value)
 
 		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2.ID(), role.ID(), sdk.ObjectTypeRole)
 		require.NoError(t, err)
-		assert.Equal(t, "v2", tag2Value)
+		assert.Equal(t, sdk.Pointer("v2"), tag2Value)
 	})
 
 	t.Run("alter rename to", func(t *testing.T) {

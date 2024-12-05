@@ -261,6 +261,83 @@ func TestListDiff(t *testing.T) {
 	}
 }
 
+func TestListDiffWithCommonItems(t *testing.T) {
+	testCases := []struct {
+		Name    string
+		Before  []any
+		After   []any
+		Added   []any
+		Removed []any
+		Common  []any
+	}{
+		{
+			Name:    "no changes",
+			Before:  []any{1, 2, 3, 4},
+			After:   []any{1, 2, 3, 4},
+			Removed: []any{},
+			Added:   []any{},
+			Common:  []any{1, 2, 3, 4},
+		},
+		{
+			Name:    "only removed",
+			Before:  []any{1, 2, 3, 4},
+			After:   []any{},
+			Removed: []any{1, 2, 3, 4},
+			Added:   []any{},
+			Common:  []any{},
+		},
+		{
+			Name:    "only added",
+			Before:  []any{},
+			After:   []any{1, 2, 3, 4},
+			Removed: []any{},
+			Added:   []any{1, 2, 3, 4},
+			Common:  []any{},
+		},
+		{
+			Name:    "added repeated items",
+			Before:  []any{2},
+			After:   []any{1, 2, 1},
+			Removed: []any{},
+			Added:   []any{1, 1},
+			Common:  []any{2},
+		},
+		{
+			Name:    "removed repeated items",
+			Before:  []any{1, 2, 1},
+			After:   []any{2},
+			Removed: []any{1, 1},
+			Added:   []any{},
+			Common:  []any{2},
+		},
+		{
+			Name:    "simple diff: ints",
+			Before:  []any{1, 2, 3, 4, 5, 6, 7, 8, 9},
+			After:   []any{1, 3, 5, 7, 9, 12, 13, 14},
+			Removed: []any{2, 4, 6, 8},
+			Added:   []any{12, 13, 14},
+			Common:  []any{1, 3, 5, 7, 9},
+		},
+		{
+			Name:    "simple diff: strings",
+			Before:  []any{"one", "two", "three", "four"},
+			After:   []any{"five", "two", "four", "six"},
+			Removed: []any{"one", "three"},
+			Added:   []any{"five", "six"},
+			Common:  []any{"two", "four"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			added, removed, common := resources.ListDiffWithCommonItems(tc.Before, tc.After)
+			assert.Equal(t, tc.Added, added)
+			assert.Equal(t, tc.Removed, removed)
+			assert.Equal(t, tc.Common, common)
+		})
+	}
+}
+
 func Test_DataTypeDiffSuppressFunc(t *testing.T) {
 	testCases := []struct {
 		name     string

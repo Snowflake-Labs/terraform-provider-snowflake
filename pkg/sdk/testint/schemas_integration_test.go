@@ -153,7 +153,7 @@ func TestInt_Schemas(t *testing.T) {
 
 		tv, err := client.SystemFunctions.GetTag(ctx, tag.ID(), schemaID, sdk.ObjectTypeSchema)
 		require.NoError(t, err)
-		assert.Equal(t, tagValue, tv)
+		assert.Equal(t, &tagValue, tv)
 	})
 
 	t.Run("create: complete", func(t *testing.T) {
@@ -245,11 +245,11 @@ func TestInt_Schemas(t *testing.T) {
 
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), schema.ID(), sdk.ObjectTypeSchema)
 		require.NoError(t, err)
-		assert.Equal(t, "v1", tag1Value)
+		assert.Equal(t, sdk.Pointer("v1"), tag1Value)
 
 		tag2Value, err := client.SystemFunctions.GetTag(ctx, tag2Test.ID(), schema.ID(), sdk.ObjectTypeSchema)
 		require.NoError(t, err)
-		assert.Equal(t, "v2", tag2Value)
+		assert.Equal(t, sdk.Pointer("v2"), tag2Value)
 	})
 
 	t.Run("alter: rename to", func(t *testing.T) {
