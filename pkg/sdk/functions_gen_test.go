@@ -24,10 +24,91 @@ func TestFunctions_CreateForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg"},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat, ArgDataType: dataTypeFloat},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present - one valid, one invalid", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat, ArgDataType: dataTypeFloat},
+			{ArgName: "arg"},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
 	t.Run("validation: returns", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = FunctionReturns{}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaFunctionOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.ResultDataType", "ResultDataTypeOld", "ResultDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{
+				ResultDataTypeOld: DataTypeFloat,
+				ResultDataType:    dataTypeFloat,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.ResultDataType", "ResultDataTypeOld", "ResultDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg"},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg", ColumnDataTypeOld: DataTypeFloat, ColumnDataType: dataTypeFloat},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present - one valid, one invalid", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg", ColumnDataTypeOld: DataTypeFloat},
+					{ColumnName: "arg"},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
 	})
 
 	t.Run("validation: function definition", func(t *testing.T) {
@@ -205,6 +286,87 @@ func TestFunctions_CreateForJavascript(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg"},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavascriptFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat, ArgDataType: dataTypeFloat},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavascriptFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present - one valid, one invalid", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat},
+			{ArgName: "arg"},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavascriptFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.ResultDataType", "ResultDataTypeOld", "ResultDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{
+				ResultDataTypeOld: DataTypeFloat,
+				ResultDataType:    dataTypeFloat,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.ResultDataType", "ResultDataTypeOld", "ResultDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg"},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg", ColumnDataTypeOld: DataTypeFloat, ColumnDataType: dataTypeFloat},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present - one valid, one invalid", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg", ColumnDataTypeOld: DataTypeFloat},
+					{ColumnName: "arg"},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
+	})
+
 	t.Run("validation: returns", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = FunctionReturns{}
@@ -293,6 +455,87 @@ func TestFunctions_CreateForPython(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg"},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat, ArgDataType: dataTypeFloat},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present - one correct, one incorrect", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat},
+			{ArgName: "arg"},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.ResultDataType", "ResultDataTypeOld", "ResultDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{
+				ResultDataTypeOld: DataTypeFloat,
+				ResultDataType:    dataTypeFloat,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.ResultDataType", "ResultDataTypeOld", "ResultDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg", ColumnDataTypeOld: DataTypeFloat},
+					{ColumnName: "arg"},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg", ColumnDataTypeOld: DataTypeFloat, ColumnDataType: dataTypeFloat},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present - one valid, one invalid", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg"},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
 	})
 
 	t.Run("validation: returns", func(t *testing.T) {
@@ -458,6 +701,43 @@ func TestFunctions_CreateForScala(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg"},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat, ArgDataType: dataTypeFloat},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present - one valid, one invalid", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat},
+			{ArgName: "arg"},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.ResultDataTypeOld opts.ResultDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaFunctionOptions", "ResultDataTypeOld", "ResultDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.ResultDataTypeOld opts.ResultDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.ResultDataTypeOld = DataTypeFloat
+		opts.ResultDataType = dataTypeFloat
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaFunctionOptions", "ResultDataTypeOld", "ResultDataType"))
+	})
+
 	t.Run("validation: function definition", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.TargetPath = String("@~/testfunc.jar")
@@ -555,6 +835,87 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg"},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat, ArgDataType: dataTypeFloat},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Arguments = []FunctionArgument{
+			{ArgName: "arg", ArgDataTypeOld: DataTypeFloat, ArgDataType: dataTypeFloat},
+			{ArgName: "arg"},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.ResultDataType", "ResultDataTypeOld", "ResultDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			ResultDataType: &FunctionReturnsResultDataType{
+				ResultDataTypeOld: DataTypeFloat,
+				ResultDataType:    dataTypeFloat,
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.ResultDataType", "ResultDataTypeOld", "ResultDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg", ColumnDataTypeOld: DataTypeFloat},
+					{ColumnName: "arg"},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg", ColumnDataTypeOld: DataTypeFloat, ColumnDataType: dataTypeFloat},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.Table.Columns.ColumnDataTypeOld opts.Returns.Table.Columns.ColumnDataType] should be present - one valid, one invalid", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = FunctionReturns{
+			Table: &FunctionReturnsTable{
+				Columns: []FunctionColumn{
+					{ColumnName: "arg"},
+				},
+			},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLFunctionOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
 	})
 
 	t.Run("validation: returns", func(t *testing.T) {
