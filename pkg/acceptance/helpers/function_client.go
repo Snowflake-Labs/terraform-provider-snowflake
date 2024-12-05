@@ -88,3 +88,58 @@ func (c *FunctionClient) Show(t *testing.T, id sdk.SchemaObjectIdentifierWithArg
 
 	return c.client().ShowByID(ctx, id)
 }
+
+func (c *FunctionClient) SampleJavaDefinition(t *testing.T) string {
+	t.Helper()
+
+	return `
+	class TestFunc {
+		public static String echoVarchar(String x) {
+			return x;
+		}
+	}
+`
+}
+
+func (c *FunctionClient) SampleJavaScriptDefinition(t *testing.T) string {
+	t.Helper()
+
+	return `
+	if (D <= 0) {
+		return 1;
+	} else {
+		var result = 1;
+		for (var i = 2; i <= D; i++) {
+			result = result * i;
+		}
+		return result;
+	}
+`
+}
+
+func (c *FunctionClient) SamplePythonDefinition(t *testing.T) string {
+	t.Helper()
+
+	return `
+	def dump(i):
+	print("Hello World!")
+`
+}
+
+func (c *FunctionClient) SampleScalaDefinition(t *testing.T) string {
+	t.Helper()
+
+	return `
+	class Echo {
+		def echoVarchar(x : String): String = {
+			return x
+		}
+	}
+`
+}
+
+func (c *FunctionClient) SampleSqlDefinition(t *testing.T) string {
+	t.Helper()
+
+	return "3.141592654::FLOAT"
+}

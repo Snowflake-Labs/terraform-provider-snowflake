@@ -37,12 +37,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 	t.Run("create function for Java", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 
-		definition := `
-		class TestFunc {
-			public static String echoVarchar(String x) {
-				return x;
-			}
-		}`
+		definition := testClientHelper().Function.SampleJavaDefinition(t)
 		target := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
@@ -66,17 +61,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 	t.Run("create function for Javascript", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
 
-		definition := `
-		if (D <= 0) {
-			return 1;
-		} else {
-			var result = 1;
-			for (var i = 2; i <= D; i++) {
-				result = result * i;
-			}
-			return result;
-		}`
-
+		definition := testClientHelper().Function.SampleJavaScriptDefinition(t)
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest("d", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
@@ -97,9 +82,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 	t.Run("create function for Python", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeNumber)
 
-		definition := `
-def dump(i):
-	print("Hello World!")`
+		definition := testClientHelper().Function.SamplePythonDefinition(t)
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVariant)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest("i", nil).WithArgDataTypeOld(sdk.DataTypeNumber)
@@ -120,13 +103,7 @@ def dump(i):
 	t.Run("create function for Scala", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 
-		definition := `
-		class Echo {
-			def echoVarchar(x : String): String = {
-				return x
-			}
-		}`
-
+		definition := testClientHelper().Function.SampleScalaDefinition(t)
 		argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), nil, "Echo.echoVarchar").
 			WithResultDataTypeOld(sdk.DataTypeVARCHAR).
@@ -147,8 +124,7 @@ def dump(i):
 	t.Run("create function for SQL", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
 
-		definition := "3.141592654::FLOAT"
-
+		definition := testClientHelper().Function.SampleSqlDefinition(t)
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
@@ -169,8 +145,7 @@ def dump(i):
 	t.Run("create function for SQL with no arguments", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
 
-		definition := "3.141592654::FLOAT"
-
+		definition := testClientHelper().Function.SampleSqlDefinition(t)
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
@@ -240,8 +215,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 			id = testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
 		}
 
-		definition := "3.141592654::FLOAT"
-
+		definition := testClientHelper().Function.SampleSqlDefinition(t)
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
@@ -438,7 +412,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 	createFunctionForSQLHandle := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) {
 		t.Helper()
 
-		definition := "3.141592654::FLOAT"
+		definition := testClientHelper().Function.SampleSqlDefinition(t)
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).WithOrReplace(true)
