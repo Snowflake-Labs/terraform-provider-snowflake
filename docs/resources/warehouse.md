@@ -7,6 +7,9 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+<!-- TODO(SNOW-1844996): Remove this note.-->
+-> **Note** Field `RESOURCE_CONSTRAINT` is currently missing. It will be added in the future.
+
 # snowflake_warehouse (Resource)
 
 Resource used to manage warehouse objects. For more information, check [warehouse documentation](https://docs.snowflake.com/en/sql-reference/commands-warehouse).
@@ -61,7 +64,7 @@ resource "snowflake_warehouse" "warehouse" {
 - `max_concurrency_level` (Number) Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.
 - `min_cluster_count` (Number) Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).
 - `query_acceleration_max_scale_factor` (Number) Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.
-- `resource_monitor` (String) Specifies the name of a resource monitor that is explicitly assigned to the warehouse.
+- `resource_monitor` (String) Specifies the name of a resource monitor that is explicitly assigned to the warehouse. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/resource_monitor).
 - `scaling_policy` (String) Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode. Valid values are (case-insensitive): `STANDARD` | `ECONOMY`.
 - `statement_queued_timeout_in_seconds` (Number) Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.
 - `statement_timeout_in_seconds` (Number) Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system

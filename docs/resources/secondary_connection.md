@@ -17,13 +17,13 @@ Resource used to manage secondary (replicated) connections. To manage primary co
 ## Minimal
 resource "snowflake_secondary_connection" "basic" {
   name          = "connection_name"
-  as_replica_of = "<organization_name>.<account_name>.<connection_name>"
+  as_replica_of = "\"<organization_name>\".\"<account_name>\".\"<connection_name>\""
 }
 
 ## Complete (with every optional set)
 resource "snowflake_secondary_connection" "complete" {
   name          = "connection_name"
-  as_replica_of = "<organization_name>.<account_name>.<connection_name>"
+  as_replica_of = "\"<organization_name>\".\"<account_name>\".\"<connection_name>\""
   comment       = "my complete secondary connection"
 }
 ```
@@ -42,7 +42,7 @@ and then import it as the `snowflake_primary_connection`.
 
 ### Required
 
-- `as_replica_of` (String) Specifies the identifier for a primary connection from which to create a replica (i.e. a secondary connection).
+- `as_replica_of` (String) Specifies the identifier for a primary connection from which to create a replica (i.e. a secondary connection). For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/primary_connection).
 - `name` (String) String that specifies the identifier (i.e. name) for the connection. Must start with an alphabetic character and may only contain letters, decimal digits (0-9), and underscores (_). For a secondary connection, the name must match the name of its primary connection. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 
 ### Optional

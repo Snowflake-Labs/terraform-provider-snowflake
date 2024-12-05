@@ -7,6 +7,9 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0930--v0940) to use it.
 
+<!-- TODO(SNOW-1844996): Remove this note.-->
+-> **Note** Field `IMPORTS` is currently missing. It will be added in the future.
+
 # snowflake_streamlit (Resource)
 
 Resource used to manage streamlits objects. For more information, check [streamlit documentation](https://docs.snowflake.com/en/sql-reference/commands-streamlit).
@@ -19,7 +22,7 @@ resource "snowflake_streamlit" "streamlit" {
   database  = "database"
   schema    = "schema"
   name      = "streamlit"
-  stage     = "streamlit_db.streamlit_schema.streamlit_stage"
+  stage     = snowflake_stage.example.fully_qualified_name
   main_file = "/streamlit_main.py"
 }
 
@@ -28,10 +31,10 @@ resource "snowflake_streamlit" "streamlit" {
   database                     = "database"
   schema                       = "schema"
   name                         = "streamlit"
-  stage                        = "streamlit_db.streamlit_schema.streamlit_stage"
+  stage                        = snowflake_stage.example.fully_qualified_name
   directory_location           = "src"
   main_file                    = "streamlit_main.py"
-  query_warehouse              = "warehouse"
+  query_warehouse              = snowflake_warehouse.example.fully_qualified_name
   external_access_integrations = ["integration_id"]
   title                        = "title"
   comment                      = "comment"
@@ -49,14 +52,14 @@ resource "snowflake_streamlit" "streamlit" {
 - `main_file` (String) Specifies the filename of the Streamlit Python application. This filename is relative to the value of `directory_location`
 - `name` (String) String that specifies the identifier (i.e. name) for the streamlit; must be unique in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `schema` (String) The schema in which to create the streamlit. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `stage` (String) The stage in which streamlit files are located.
+- `stage` (String) The stage in which streamlit files are located. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/stage).
 
 ### Optional
 
 - `comment` (String) Specifies a comment for the streamlit.
 - `directory_location` (String) Specifies the full path to the named stage containing the Streamlit Python files, media files, and the environment.yml file.
 - `external_access_integrations` (Set of String) External access integrations connected to the Streamlit.
-- `query_warehouse` (String) Specifies the warehouse where SQL queries issued by the Streamlit application are run.
+- `query_warehouse` (String) Specifies the warehouse where SQL queries issued by the Streamlit application are run. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/warehouse).
 - `title` (String) Specifies a title for the Streamlit app to display in Snowsight.
 
 ### Read-Only

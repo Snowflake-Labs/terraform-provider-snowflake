@@ -11,8 +11,8 @@ resource "snowflake_database" "primary" {
 
   data_retention_time_in_days                   = 10
   max_data_extension_time_in_days               = 20
-  external_volume                               = "<external_volume_name>"
-  catalog                                       = "<catalog_name>"
+  external_volume                               = snowflake_external_volume.example.fully_qualified_name
+  catalog                                       = snowflake_catalog.example.fully_qualified_name
   replace_invalid_characters                    = false
   default_ddl_collation                         = "en_US"
   storage_serialization_policy                  = "COMPATIBLE"
@@ -39,11 +39,11 @@ resource "snowflake_database" "primary" {
 locals {
   replication_configs = [
     {
-      account_identifier = "<secondary_account_organization_1_name>.<secondary_account_1_name>"
+      account_identifier = "\"<secondary_account_organization_1_name>\".\"<secondary_account_1_name>\""
       with_failover      = true
     },
     {
-      account_identifier = "<secondary_account_organization_2_name>.<secondary_account_2_name>"
+      account_identifier = "\"<secondary_account_organization_2_name>\".\"<secondary_account_2_name>\""
       with_failover      = true
     },
   ]

@@ -66,7 +66,7 @@ var taskSchema = map[string]*schema.Schema{
 		Optional:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
-		Description:      "The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. Due to Snowflake limitations warehouse identifier can consist of only upper-cased letters. (Conflicts with user_task_managed_initial_warehouse_size)",
+		Description:      relatedResourceDescription("The warehouse the task will use. Omit this parameter to use Snowflake-managed compute resources for runs of this task. Due to Snowflake limitations warehouse identifier can consist of only upper-cased letters. (Conflicts with user_task_managed_initial_warehouse_size)", resources.Warehouse),
 		ConflictsWith:    []string{"user_task_managed_initial_warehouse_size"},
 	},
 	"schedule": {
@@ -113,7 +113,7 @@ var taskSchema = map[string]*schema.Schema{
 		Optional:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("error_integration")),
-		Description:      blocklistedCharactersFieldDescription("Specifies the name of the notification integration used for error notifications."),
+		Description:      relatedResourceDescription(blocklistedCharactersFieldDescription("Specifies the name of the notification integration used for error notifications."), resources.NotificationIntegration),
 	},
 	"comment": {
 		Type:        schema.TypeString,

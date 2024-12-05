@@ -31,7 +31,7 @@ resource "snowflake_resource_monitor" "minimal_working" {
   name            = "resource-monitor-name"
   credit_quota    = 100
   suspend_trigger = 100
-  notify_users    = ["USERONE", "USERTWO"]
+  notify_users    = [snowflake_user.one.fully_qualified_name, snowflake_user.two.fully_qualified_name]
 }
 
 resource "snowflake_resource_monitor" "complete" {
@@ -46,7 +46,7 @@ resource "snowflake_resource_monitor" "complete" {
   suspend_trigger           = 50
   suspend_immediate_trigger = 90
 
-  notify_users = ["USERONE", "USERTWO"]
+  notify_users = [snowflake_user.one.fully_qualified_name, snowflake_user.two.fully_qualified_name]
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -65,7 +65,7 @@ resource "snowflake_resource_monitor" "complete" {
 - `end_timestamp` (String) The date and time when the resource monitor suspends the assigned warehouses.
 - `frequency` (String) The frequency interval at which the credit usage resets to 0. Valid values are (case-insensitive): `MONTHLY` | `DAILY` | `WEEKLY` | `YEARLY` | `NEVER`. If you set a `frequency` for a resource monitor, you must also set `start_timestamp`. If you specify `NEVER` for the frequency, the credit usage for the warehouse does not reset. After removing this field from the config, the previously set value will be preserved on the Snowflake side, not the default value. That's due to Snowflake limitation and the lack of unset functionality for this parameter.
 - `notify_triggers` (Set of Number) Specifies a list of percentages of the credit quota. After reaching any of the values the users passed in the notify_users field will be notified (to receive the notification they should have notifications enabled). Values over 100 are supported.
-- `notify_users` (Set of String) Specifies the list of users (their identifiers) to receive email notifications on resource monitors.
+- `notify_users` (Set of String) Specifies the list of users (their identifiers) to receive email notifications on resource monitors. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user).
 - `start_timestamp` (String) The date and time when the resource monitor starts monitoring credit usage for the assigned warehouses. If you set a `start_timestamp` for a resource monitor, you must also set `frequency`.  After removing this field from the config, the previously set value will be preserved on the Snowflake side, not the default value. That's due to Snowflake limitation and the lack of unset functionality for this parameter.
 - `suspend_immediate_trigger` (Number) Represents a numeric value specified as a percentage of the credit quota. Values over 100 are supported. After reaching this value, all assigned warehouses immediately cancel any currently running queries or statements. In addition, this action sends a notification to all users who have enabled notifications for themselves.
 - `suspend_trigger` (Number) Represents a numeric value specified as a percentage of the credit quota. Values over 100 are supported. After reaching this value, all assigned warehouses while allowing currently running queries to complete will be suspended. No new queries can be executed by the warehouses until the credit quota for the resource monitor is increased. In addition, this action sends a notification to all users who have enabled notifications for themselves.

@@ -30,7 +30,7 @@ var resourceMonitorSchema = map[string]*schema.Schema{
 	"notify_users": {
 		Type:        schema.TypeSet,
 		Optional:    true,
-		Description: "Specifies the list of users (their identifiers) to receive email notifications on resource monitors.",
+		Description: relatedResourceDescription("Specifies the list of users (their identifiers) to receive email notifications on resource monitors.", resources.User),
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
 			DiffSuppressFunc: suppressIdentifierQuoting,

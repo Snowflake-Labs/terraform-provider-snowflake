@@ -24,7 +24,7 @@ resource "snowflake_primary_connection" "complete" {
   name    = "connection_name"
   comment = "my complete connection"
   enable_failover_to_accounts = [
-    "<secondary_account_organization_name>.<secondary_account_name>"
+    "\"<secondary_account_organization_name>\".\"<secondary_account_name>\""
   ]
 }
 ```
@@ -48,7 +48,7 @@ and then import it as the `snowflake_secondary_connection`.
 ### Optional
 
 - `comment` (String) Specifies a comment for the connection.
-- `enable_failover_to_accounts` (List of String) Enables failover for given connection to provided accounts. Specifies a list of accounts in your organization where a secondary connection for this primary connection can be promoted to serve as the primary connection. Include your organization name for each account in the list.
+- `enable_failover_to_accounts` (List of String) Enables failover for given connection to provided accounts. Specifies a list of accounts in your organization where a secondary connection for this primary connection can be promoted to serve as the primary connection. Include your organization name for each account in the list. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/account).
 
 ### Read-Only
 

@@ -59,12 +59,12 @@ resource "snowflake_view" "test" {
       policy_name = "projection_policy"
     }
     masking_policy {
-      policy_name = "masking_policy"
+      policy_name = snowflake_masking_policy.example.fully_qualified_name
       using       = ["address"]
     }
   }
   row_access_policy {
-    policy_name = "row_access_policy"
+    policy_name = snowflake_row_access_policy.example.fully_qualified_name
     on          = ["id"]
   }
   aggregation_policy {
@@ -148,7 +148,7 @@ Optional:
 
 Required:
 
-- `policy_name` (String) Specifies the masking policy to set on a column.
+- `policy_name` (String) Specifies the masking policy to set on a column. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/masking_policy).
 
 Optional:
 
@@ -189,7 +189,7 @@ Optional:
 Required:
 
 - `on` (Set of String) Defines which columns are affected by the policy.
-- `policy_name` (String) Row access policy name.
+- `policy_name` (String) Row access policy name. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/row_access_policy).
 
 
 <a id="nestedatt--describe_output"></a>

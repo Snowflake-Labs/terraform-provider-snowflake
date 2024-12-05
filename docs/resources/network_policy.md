@@ -26,8 +26,8 @@ resource "snowflake_network_policy" "basic" {
 ## Complete (with every optional set)
 resource "snowflake_network_policy" "complete" {
   name                      = "network_policy_name"
-  allowed_network_rule_list = ["<fully qualified network rule id>"]
-  blocked_network_rule_list = ["<fully qualified network rule id>"]
+  allowed_network_rule_list = [snowflake_network_rule.one.fully_qualified_name]
+  blocked_network_rule_list = [snowflake_network_rule.two.fully_qualified_name]
   allowed_ip_list           = ["192.168.1.0/24"]
   blocked_ip_list           = ["192.168.1.99"]
   comment                   = "my network policy"
@@ -46,9 +46,9 @@ resource "snowflake_network_policy" "complete" {
 ### Optional
 
 - `allowed_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are allowed access to your Snowflake account.
-- `allowed_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.
+- `allowed_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/network_rule).
 - `blocked_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are denied access to your Snowflake account. **Do not** add `0.0.0.0/0` to `blocked_ip_list`, in order to block all IP addresses except a select list, you only need to add IP addresses to `allowed_ip_list`.
-- `blocked_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.
+- `blocked_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/network_rule).
 - `comment` (String) Specifies a comment for the network policy.
 
 ### Read-Only

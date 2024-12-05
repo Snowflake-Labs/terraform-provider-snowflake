@@ -57,7 +57,7 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Optional:         true,
-		Description:      "Specifies an existing network policy that controls SCIM network traffic.",
+		Description:      relatedResourceDescription("Specifies an existing network policy that controls SCIM network traffic.", resources.NetworkPolicy),
 		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeListValueInDescribe("network_policy")),
 	},
 	"sync_password": {

@@ -16,24 +16,13 @@ Resource used to manage streams on tables. For more information, check [stream d
 ## Example Usage
 
 ```terraform
-resource "snowflake_table" "table" {
-  database = "database"
-  schema   = "schema"
-  name     = "name"
-
-  column {
-    type = "NUMBER(38,0)"
-    name = "id"
-  }
-}
-
 # basic resource
 resource "snowflake_stream_on_table" "stream" {
   name     = "stream"
   schema   = "schema"
   database = "database"
 
-  table = snowflake_table.table.fully_qualified_name
+  table = snowflake_table.example.fully_qualified_name
 }
 
 # resource with more fields set
@@ -43,7 +32,7 @@ resource "snowflake_stream_on_table" "stream" {
   database = "database"
 
   copy_grants       = true
-  table             = snowflake_table.table.fully_qualified_name
+  table             = snowflake_table.example.fully_qualified_name
   append_only       = "true"
   show_initial_rows = "true"
 
@@ -65,7 +54,7 @@ resource "snowflake_stream_on_table" "stream" {
 - `database` (String) The database in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `name` (String) Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `schema` (String) The schema in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `table` (String) Specifies an identifier for the table the stream will monitor. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `table` (String) Specifies an identifier for the table the stream will monitor. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"` For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/external_table).
 
 ### Optional
 

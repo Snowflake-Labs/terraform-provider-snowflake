@@ -16,21 +16,13 @@ Resource used to manage streams on directory tables. For more information, check
 ## Example Usage
 
 ```terraform
-resource "snowflake_stage" "example_stage" {
-  name        = "EXAMPLE_STAGE"
-  url         = "s3://com.example.bucket/prefix"
-  database    = "EXAMPLE_DB"
-  schema      = "EXAMPLE_SCHEMA"
-  credentials = "AWS_KEY_ID='${var.example_aws_key_id}' AWS_SECRET_KEY='${var.example_aws_secret_key}'"
-}
-
 # basic resource
 resource "snowflake_stream_on_directory_table" "stream" {
   name     = "stream"
   schema   = "schema"
   database = "database"
 
-  stage = snowflake_stage.stage.fully_qualified_name
+  stage = snowflake_stage.example.fully_qualified_name
 }
 
 
@@ -41,7 +33,7 @@ resource "snowflake_stream_on_directory_table" "stream" {
   database = "database"
 
   copy_grants = true
-  stage       = snowflake_stage.stage.fully_qualified_name
+  stage       = snowflake_stage.example.fully_qualified_name
 
   comment = "A stream."
 }
@@ -57,7 +49,7 @@ resource "snowflake_stream_on_directory_table" "stream" {
 - `database` (String) The database in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `name` (String) Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `schema` (String) The schema in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `stage` (String) Specifies an identifier for the stage the stream will monitor. Due to Snowflake limitations, the provider can not read the stage's database and schema. For stages, Snowflake returns only partially qualified name instead of fully qualified name. Please use stages located in the same schema as the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `stage` (String) Specifies an identifier for the stage the stream will monitor. Due to Snowflake limitations, the provider can not read the stage's database and schema. For stages, Snowflake returns only partially qualified name instead of fully qualified name. Please use stages located in the same schema as the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"` For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/stage).
 
 ### Optional
 

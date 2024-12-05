@@ -59,7 +59,7 @@ var tagSchema = map[string]*schema.Schema{
 		},
 		Optional:         true,
 		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("masking_policies"),
-		Description:      "Set of masking policies for the tag. A tag can support one masking policy for each data type. If masking policies are assigned to the tag, before dropping the tag, the provider automatically unassigns them.",
+		Description:      relatedResourceDescription("Set of masking policies for the tag. A tag can support one masking policy for each data type. If masking policies are assigned to the tag, before dropping the tag, the provider automatically unassigns them.", resources.MaskingPolicy),
 	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
 	ShowOutputAttributeName: {
@@ -114,7 +114,7 @@ func Tag() *schema.Resource {
 		ReadContext:   TrackingReadWrapper(resources.Tag, ReadContextTag),
 		UpdateContext: TrackingUpdateWrapper(resources.Tag, UpdateContextTag),
 		DeleteContext: TrackingDeleteWrapper(resources.Tag, DeleteContextTag),
-		Description:   "Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag).",
+		Description:   "Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag). For asssigning tags to Snowflake objects, see [tag_association resource](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Tag, customdiff.All(
 			ComputedIfAnyAttributeChanged(tagSchema, ShowOutputAttributeName, "name", "comment", "allowed_values"),

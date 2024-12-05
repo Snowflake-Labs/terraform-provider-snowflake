@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
+	providerresources "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 )
 
 func possibleValuesListed[T ~string | ~int](values []T) string {
@@ -49,4 +50,8 @@ func deprecatedResourceDescription(alternatives ...string) string {
 
 func copyGrantsDescription(description string) string {
 	return fmt.Sprintf("%s This is used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect during creating a new object with Terraform.", description)
+}
+
+func relatedResourceDescription(description string, resource providerresources.Resource) string {
+	return fmt.Sprintf(`%s For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/%s).`, description, strings.TrimPrefix(resource.String(), "snowflake_"))
 }

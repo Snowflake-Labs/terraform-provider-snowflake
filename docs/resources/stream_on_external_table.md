@@ -16,34 +16,13 @@ Resource used to manage streams on external tables. For more information, check 
 ## Example Usage
 
 ```terraform
-resource "snowflake_external_table" "external_table" {
-  database    = "db"
-  schema      = "schema"
-  name        = "external_table"
-  comment     = "External table"
-  file_format = "TYPE = CSV FIELD_DELIMITER = '|'"
-  location    = "@stage/directory/"
-
-  column {
-    name = "id"
-    type = "int"
-    as   = "value:id::int"
-  }
-
-  column {
-    name = "data"
-    type = "text"
-    as   = "value:data::text"
-  }
-}
-
 # basic resource
 resource "snowflake_stream_on_external_table" "stream" {
   name     = "stream"
   schema   = "schema"
   database = "database"
 
-  external_table = snowflake_external_table.external_table.fully_qualified_name
+  external_table = snowflake_external_table.example.fully_qualified_name
 }
 
 
@@ -54,7 +33,7 @@ resource "snowflake_stream_on_external_table" "stream" {
   database = "database"
 
   copy_grants    = true
-  external_table = snowflake_external_table.external_table.fully_qualified_name
+  external_table = snowflake_external_table.example.fully_qualified_name
   insert_only    = "true"
 
   at {
@@ -73,7 +52,7 @@ resource "snowflake_stream_on_external_table" "stream" {
 ### Required
 
 - `database` (String) The database in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `external_table` (String) Specifies an identifier for the external table the stream will monitor. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `external_table` (String) Specifies an identifier for the external table the stream will monitor. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"` For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/external_table).
 - `name` (String) Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `schema` (String) The schema in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 

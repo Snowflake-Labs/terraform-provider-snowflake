@@ -161,7 +161,7 @@ var viewSchema = map[string]*schema.Schema{
 								Required:         true,
 								DiffSuppressFunc: suppressIdentifierQuoting,
 								ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
-								Description:      "Specifies the masking policy to set on a column.",
+								Description:      relatedResourceDescription("Specifies the masking policy to set on a column.", resources.MaskingPolicy),
 							},
 							"using": {
 								Type:     schema.TypeList,
@@ -217,7 +217,7 @@ var viewSchema = map[string]*schema.Schema{
 					Required:         true,
 					DiffSuppressFunc: suppressIdentifierQuoting,
 					ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
-					Description:      "Row access policy name.",
+					Description:      relatedResourceDescription("Row access policy name.", resources.RowAccessPolicy),
 				},
 				"on": {
 					Type:     schema.TypeSet,

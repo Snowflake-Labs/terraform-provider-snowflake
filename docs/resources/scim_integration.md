@@ -7,6 +7,8 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+!> **Note** The provider does not detect external changes on security integration type. In this case, remove the integration of wrong type manually with `terraform destroy` and recreate the resource. It will be addressed in the future.
+
 # snowflake_scim_integration (Resource)
 
 Resource used to manage scim security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim).
@@ -29,7 +31,7 @@ resource "snowflake_scim_integration" "test" {
   enabled        = true
   scim_client    = "GENERIC"
   sync_password  = true
-  network_policy = "network_policy_test"
+  network_policy = snowflake_network_policy.example.fully_qualified_name
   run_as_role    = "GENERIC_SCIM_PROVISIONER"
   comment        = "foo"
 }
@@ -50,7 +52,7 @@ resource "snowflake_scim_integration" "test" {
 ### Optional
 
 - `comment` (String) Specifies a comment for the integration.
-- `network_policy` (String) Specifies an existing network policy that controls SCIM network traffic.
+- `network_policy` (String) Specifies an existing network policy that controls SCIM network traffic. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/network_policy).
 - `sync_password` (String) Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake. This property is not supported for Azure SCIM. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 
 ### Read-Only

@@ -25,7 +25,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "The fully qualified name of the account role to which privileges will be granted.",
+		Description:      relatedResourceDescription("The fully qualified name of the account role to which privileges will be granted.", resources.AccountRole),
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},

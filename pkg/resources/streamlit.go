@@ -44,7 +44,7 @@ var streamlitSchema = map[string]*schema.Schema{
 	"stage": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The stage in which streamlit files are located.",
+		Description:      relatedResourceDescription("The stage in which streamlit files are located.", resources.Stage),
 		ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInDescribe("root_location")),
 	},
@@ -64,7 +64,7 @@ var streamlitSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Optional:         true,
-		Description:      "Specifies the warehouse where SQL queries issued by the Streamlit application are run.",
+		Description:      relatedResourceDescription("Specifies the warehouse where SQL queries issued by the Streamlit application are run.", resources.Warehouse),
 		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("query_warehouse")),
 	},
 	"external_access_integrations": {
