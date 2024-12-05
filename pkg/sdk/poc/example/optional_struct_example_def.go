@@ -6,7 +6,7 @@ import (
 
 //go:generate go run ../main.go
 
-var GeneratorFeaturesExample = g.NewInterface(
+var ToOptsOptionalExample = g.NewInterface(
 	"FeaturesExample",
 	"FeaturesExamples",
 	g.KindOfT[DatabaseObjectIdentifier](),

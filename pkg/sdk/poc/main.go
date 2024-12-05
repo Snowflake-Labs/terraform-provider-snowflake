@@ -18,7 +18,7 @@ import (
 
 var definitionMapping = map[string]*generator.Interface{
 	"database_role_def.go":                   example.DatabaseRole,
-	"generator_features_example_def.go":      example.GeneratorFeaturesExample,
+	"optional_struct_example_def.go":         example.ToOptsOptionalExample,
 	"network_policies_def.go":                sdk.NetworkPoliciesDef,
 	"session_policies_def.go":                sdk.SessionPoliciesDef,
 	"tasks_def.go":                           sdk.TasksDef,
