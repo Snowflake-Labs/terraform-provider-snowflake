@@ -6,7 +6,77 @@ across different versions.
 
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
- 
+
+## v0.99.0 ➞ v0.100.0
+
+### snowflake_tag_association resource changes
+#### *(behavior change)* new id format
+In order to provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type in one resource.
+```
+resource "snowflake_tag_association" "gold_warehouses" {
+  object_identifiers = [snowflake_warehouse.w1.fully_qualified_name, snowflake_warehouse.w2.fully_qualified_name]
+  object_type = "WAREHOUSE"
+  tag_id      = snowflake_tag.tier.fully_qualified_name
+  tag_value   = "gold"
+}
+resource "snowflake_tag_association" "silver_warehouses" {
+  object_identifiers = [snowflake_warehouse.w3.fully_qualified_name]
+  object_type = "WAREHOUSE"
+  tag_id      = snowflake_tag.tier.fully_qualified_name
+  tag_value   = "silver"
+}
+resource "snowflake_tag_association" "silver_databases" {
+  object_identifiers = [snowflake_database.d1.fully_qualified_name]
+  object_type = "DATABASE"
+  tag_id      = snowflake_tag.tier.fully_qualified_name
+  tag_value   = "silver"
+}
+```
+
+Note that if you want to promote silver instances to gold, you can not simply change `tag_value` in `silver_warehouses`. Instead, you should first remove `object_identifiers` from `silver_warehouses`, run `terraform apply`, and then add the relevant `object_identifiers` in `gold_warehouses`, like this (note that `silver_warehouses` resource was deleted):
+```
+resource "snowflake_tag_association" "gold_warehouses" {
+  object_identifiers = [snowflake_warehouse.w1.fully_qualified_name, snowflake_warehouse.w2.fully_qualified_name, snowflake_warehouse.w3.fully_qualified_name]
+  object_type = "WAREHOUSE"
+  tag_id      = snowflake_tag.tier.fully_qualified_name
+  tag_value   = "gold"
+}
+```
+and run `terraform apply` again.
+
+Note that the order of operations is not deterministic in this case, and if you do these operations in one step, it is possible that the tag value will be changed first, and unset later because of removing the resource with old value.
+
+The state is migrated automatically. There is no need to adjust configuration files, unless you use resource id `snowflake_tag_association.example.id` as a reference in other resources.
+
+#### *(behavior change)* changed fields
+Behavior of some fields was changed:
+- `object_identifier` was renamed to `object_identifiers` and it is now a set of fully qualified names. Change your configurations from
+```
+resource "snowflake_tag_association" "table_association" {
+  object_identifier {
+    name     = snowflake_table.test.name
+    database = snowflake_database.test.name
+    schema   = snowflake_schema.test.name
+  }
+  object_type = "TABLE"
+  tag_id      = snowflake_tag.test.fully_qualified_name
+  tag_value   = "engineering"
+}
+```
+to
+```
+resource "snowflake_tag_association" "table_association" {
+  object_identifiers = [snowflake_table.test.fully_qualified_name]
+  object_type = "TABLE"
+  tag_id      = snowflake_tag.test.fully_qualified_name
+  tag_value   = "engineering"
+}
+```
+- `tag_id`  has now suppressed identifier quoting to prevent issues with Terraform showing permament differences, like [this one](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2982)
+- `object_type` and `tag_id` are now marked as ForceNew
+
+The state is migrated automatically. Please adjust your configuration files.
+
 ## v0.98.0 ➞ v0.99.0
 
 ### snowflake_tasks data source changes
@@ -39,7 +109,7 @@ data "snowflake_tasks" "new_tasks" {
   in {
     # for IN SCHEMA specify:
     schema = "<database_name>.<schema_name>"
-    
+
     # for IN DATABASE specify:
     database = "<database_name>"
   }
@@ -65,7 +135,7 @@ New fields:
 - `config` - enables to specify JSON-formatted metadata that can be retrieved in the `sql_statement` by using [SYSTEM$GET_TASK_GRAPH_CONFIG](https://docs.snowflake.com/en/sql-reference/functions/system_get_task_graph_config).
 - `show_output` and `parameters` fields added for holding SHOW and SHOW PARAMETERS output (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
 - Added support for finalizer tasks with `finalize` field. It conflicts with `after` and `schedule` (see [finalizer tasks](https://docs.snowflake.com/en/user-guide/tasks-graphs#release-and-cleanup-of-task-graphs)).
- 
+
 Changes:
 - `enabled` field changed to `started` and type changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). It is also now required field, so make sure it's explicitly set (previously it was optional with the default value set to `false`).
 - `allow_overlapping_execution` type was changed to string with only boolean values available (see ["empty" values](./v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). Previously, it had the default set to `false` which will be migrated. If nothing will be set the provider will plan the change to `default` value. If you want to make sure it's turned off, set it explicitly to `false`.
@@ -132,7 +202,7 @@ resource "snowflake_task" "example" {
 ```
 
 - `after` field type was changed from `list` to `set` and the values were changed from names to fully qualified names.
- 
+
 Before:
 ```terraform
 resource "snowflake_task" "example" {

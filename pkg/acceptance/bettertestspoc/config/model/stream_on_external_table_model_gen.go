@@ -20,6 +20,8 @@ type StreamOnExternalTableModel struct {
 	InsertOnly         tfconfig.Variable `json:"insert_only,omitempty"`
 	Name               tfconfig.Variable `json:"name,omitempty"`
 	Schema             tfconfig.Variable `json:"schema,omitempty"`
+	Stale              tfconfig.Variable `json:"stale,omitempty"`
+	StreamType         tfconfig.Variable `json:"stream_type,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -105,6 +107,16 @@ func (s *StreamOnExternalTableModel) WithSchema(schema string) *StreamOnExternal
 	return s
 }
 
+func (s *StreamOnExternalTableModel) WithStale(stale bool) *StreamOnExternalTableModel {
+	s.Stale = tfconfig.BoolVariable(stale)
+	return s
+}
+
+func (s *StreamOnExternalTableModel) WithStreamType(streamType string) *StreamOnExternalTableModel {
+	s.StreamType = tfconfig.StringVariable(streamType)
+	return s
+}
+
 //////////////////////////////////////////
 // below it's possible to set any value //
 //////////////////////////////////////////
@@ -156,5 +168,15 @@ func (s *StreamOnExternalTableModel) WithNameValue(value tfconfig.Variable) *Str
 
 func (s *StreamOnExternalTableModel) WithSchemaValue(value tfconfig.Variable) *StreamOnExternalTableModel {
 	s.Schema = value
+	return s
+}
+
+func (s *StreamOnExternalTableModel) WithStaleValue(value tfconfig.Variable) *StreamOnExternalTableModel {
+	s.Stale = value
+	return s
+}
+
+func (s *StreamOnExternalTableModel) WithStreamTypeValue(value tfconfig.Variable) *StreamOnExternalTableModel {
+	s.StreamType = value
 	return s
 }

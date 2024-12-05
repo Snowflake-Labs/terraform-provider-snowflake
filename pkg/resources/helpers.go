@@ -76,14 +76,18 @@ func ignoreCaseAndTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceDa
 	return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
 }
 
-func getTagObjectIdentifier(v map[string]any) sdk.ObjectIdentifier {
-	if _, ok := v["database"]; ok {
-		if _, ok := v["schema"]; ok {
-			return sdk.NewSchemaObjectIdentifier(v["database"].(string), v["schema"].(string), v["name"].(string))
-		}
-		return sdk.NewDatabaseObjectIdentifier(v["database"].(string), v["name"].(string))
+func getTagObjectIdentifier(obj map[string]any) sdk.ObjectIdentifier {
+	database := obj["database"].(string)
+	schema := obj["schema"].(string)
+	name := obj["name"].(string)
+	switch {
+	case schema != "":
+		return sdk.NewSchemaObjectIdentifier(database, schema, name)
+	case database != "":
+		return sdk.NewDatabaseObjectIdentifier(database, name)
+	default:
+		return sdk.NewAccountObjectIdentifier(name)
 	}
-	return sdk.NewAccountObjectIdentifier(v["name"].(string))
 }
 
 func getPropertyTags(d *schema.ResourceData, key string) []sdk.TagAssociation {
@@ -310,25 +314,35 @@ func JoinDiags(diagnostics ...diag.Diagnostics) diag.Diagnostics {
 	return result
 }
 
-// ListDiff Compares two lists (before and after), then compares and returns two lists that include
+// ListDiff compares two lists (before and after), then compares and returns two lists that include
 // added and removed items between those lists.
 func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed []T) {
+	added, removed, _ = ListDiffWithCommonItems(beforeList, afterList)
+	return
+}
+
+// ListDiffWithCommonItems compares two lists (before and after), then compares and returns three lists that include
+// added, removed and common items between those lists.
+func ListDiffWithCommonItems[T comparable](beforeList []T, afterList []T) (added []T, removed []T, common []T) {
 	added = make([]T, 0)
 	removed = make([]T, 0)
+	common = make([]T, 0)
 
-	for _, privilegeBeforeChange := range beforeList {
-		if !slices.Contains(afterList, privilegeBeforeChange) {
-			removed = append(removed, privilegeBeforeChange)
+	for _, beforeItem := range beforeList {
+		if !slices.Contains(afterList, beforeItem) {
+			removed = append(removed, beforeItem)
+		} else {
+			common = append(common, beforeItem)
 		}
 	}
 
-	for _, privilegeAfterChange := range afterList {
-		if !slices.Contains(beforeList, privilegeAfterChange) {
-			added = append(added, privilegeAfterChange)
+	for _, afterItem := range afterList {
+		if !slices.Contains(beforeList, afterItem) {
+			added = append(added, afterItem)
 		}
 	}
 
-	return added, removed
+	return added, removed, common
 }
 
 // parseSchemaObjectIdentifierSet is a helper function to parse a given schema object identifier list from ResourceData.
