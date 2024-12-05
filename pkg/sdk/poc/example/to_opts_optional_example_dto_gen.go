@@ -2,9 +2,7 @@ package example
 
 //go:generate go run ./dto-builder-generator/main.go
 
-var (
-	_ optionsProvider[AlterFeaturesExamplesOptions] = new(AlterFeaturesExamplesRequest)
-)
+var _ optionsProvider[AlterFeaturesExamplesOptions] = new(AlterFeaturesExamplesRequest)
 
 type AlterFeaturesExamplesRequest struct {
 	IfExists      *bool
