@@ -81,7 +81,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		},
 		Optional:    true,
-		Description: "A set of Snowflake roles that a user does not need to explicitly consent to using after authenticating.",
+		Description: relatedResourceDescription("A set of Snowflake roles that a user does not need to explicitly consent to using after authenticating.", resources.AccountRole),
 	},
 	"blocked_roles_list": {
 		Type: schema.TypeSet,
@@ -91,7 +91,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		},
 		// TODO(SNOW-1517937): Check if can make optional
 		Required:    true,
-		Description: "A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.",
+		Description: relatedResourceDescription("A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.", resources.AccountRole),
 	},
 	"oauth_issue_refresh_tokens": {
 		Type:             schema.TypeString,
@@ -111,7 +111,7 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 	"network_policy": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "Specifies an existing network policy. This network policy controls network traffic that is attempting to exchange an authorization code for an access or refresh token or to use a refresh token to obtain a new access token.",
+		Description:      relatedResourceDescription("Specifies an existing network policy. This network policy controls network traffic that is attempting to exchange an authorization code for an access or refresh token or to use a refresh token to obtain a new access token.", resources.NetworkPolicy),
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
@@ -119,13 +119,13 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
-		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource using `terraform taint`.",
+		Description:      externalChangesNotDetectedFieldDescription("Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers."),
 	},
 	"oauth_client_rsa_public_key_2": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		DiffSuppressFunc: ignoreTrimSpaceSuppressFunc,
-		Description:      "Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource using `terraform taint`.",
+		Description:      externalChangesNotDetectedFieldDescription("Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers."),
 	},
 	"comment": {
 		Type:        schema.TypeString,

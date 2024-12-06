@@ -19,7 +19,7 @@ resource "snowflake_secret_with_authorization_code_grant" "test" {
   name                            = "EXAMPLE_SECRET"
   database                        = "EXAMPLE_DB"
   schema                          = "EXAMPLE_SCHEMA"
-  api_authentication              = "EXAMPLE_SECURITY_INTEGRATION_NAME"
+  api_authentication              = snowflake_api_authentication_integration_with_authorization_code_grant.example.fully_qualified_name
   oauth_refresh_token             = "EXAMPLE_TOKEN"
   oauth_refresh_token_expiry_time = "2025-01-02 15:04:01"
 }
@@ -29,7 +29,7 @@ resource "snowflake_secret_with_authorization_code_grant" "test" {
   name                            = "EXAMPLE_SECRET"
   database                        = "EXAMPLE_DB"
   schema                          = "EXAMPLE_SCHEMA"
-  api_authentication              = "EXAMPLE_SECURITY_INTEGRATION_NAME"
+  api_authentication              = snowflake_api_authentication_integration_with_authorization_code_grant.example.fully_qualified_name
   oauth_refresh_token             = "EXAMPLE_TOKEN"
   oauth_refresh_token_expiry_time = "2025-01-02 15:04:01"
   comment                         = "EXAMPLE_COMMENT"
@@ -43,7 +43,7 @@ resource "snowflake_secret_with_authorization_code_grant" "test" {
 
 ### Required
 
-- `api_authentication` (String) Specifies the name value of the Snowflake security integration that connects Snowflake to an external service.
+- `api_authentication` (String) Specifies the name value of the Snowflake security integration that connects Snowflake to an external service. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/api_authentication_integration_with_authorization_code_grant).
 - `database` (String) The database in which to create the secret Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `name` (String) String that specifies the identifier (i.e. name) for the secret, must be unique in your schema. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
 - `oauth_refresh_token` (String, Sensitive) Specifies the token as a string that is used to obtain a new access token from the OAuth authorization server when the access token expires. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".

@@ -34,7 +34,7 @@ var networkPolicySchema = map[string]*schema.Schema{
 		},
 		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("allowed_network_rule_list"),
 		Optional:         true,
-		Description:      "Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.",
+		Description:      relatedResourceDescription("Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.", resources.NetworkRule),
 	},
 	"blocked_network_rule_list": {
 		Type: schema.TypeSet,
@@ -44,7 +44,7 @@ var networkPolicySchema = map[string]*schema.Schema{
 		},
 		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("blocked_network_rule_list"),
 		Optional:         true,
-		Description:      "Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.",
+		Description:      relatedResourceDescription("Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.", resources.NetworkRule),
 	},
 	"allowed_ip_list": {
 		Type:        schema.TypeSet,

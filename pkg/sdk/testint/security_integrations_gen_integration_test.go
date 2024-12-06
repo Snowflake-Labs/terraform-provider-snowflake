@@ -530,6 +530,18 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assertSecurityIntegration(t, integration, id, "OAUTH - CUSTOM", true, "a")
 	})
 
+	// Prove that creating a security integration with a specified network policy id with lower case characters fails. This is a bug in Snowflake.
+	// https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3229
+	t.Run("CreateOauthCustom_issue3229", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifierWithPrefix("test")
+		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicyWithRequest(t, sdk.NewCreateNetworkPolicyRequest(id))
+		t.Cleanup(networkPolicyCleanup)
+
+		req := sdk.NewCreateOauthForCustomClientsSecurityIntegrationRequest(id, sdk.OauthSecurityIntegrationClientTypePublic, "https://example.com").WithNetworkPolicy(networkPolicy.ID())
+		err := client.SecurityIntegrations.CreateOauthForCustomClients(ctx, req)
+		require.ErrorContains(t, err, "object does not exist or not authorized")
+	})
+
 	t.Run("CreateSaml2", func(t *testing.T) {
 		_, id, issuer := createSAML2Integration(t, func(r *sdk.CreateSaml2SecurityIntegrationRequest) {
 			r.WithAllowedEmailPatterns([]sdk.EmailPattern{{Pattern: "^(.+dev)@example.com$"}}).
@@ -922,6 +934,24 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "NETWORK_POLICY", Type: "String", Value: "", Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_RSA_PUBLIC_KEY_FP", Type: "String", Value: "", Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "OAUTH_CLIENT_RSA_PUBLIC_KEY_2_FP", Type: "String", Value: "", Default: ""})
+	})
+
+	// Prove that altering a security integration with a specified network policy id with lower case characters fails. This is a bug in Snowflake.
+	// https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3229
+	t.Run("AlterOauthCustom_issue3229", func(t *testing.T) {
+		neworkPolicyId := testClientHelper().Ids.RandomAccountObjectIdentifierWithPrefix("test")
+		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicyWithRequest(t, sdk.NewCreateNetworkPolicyRequest(neworkPolicyId))
+		t.Cleanup(networkPolicyCleanup)
+
+		_, id := createOauthCustom(t, nil)
+
+		setRequest := sdk.NewAlterOauthForCustomClientsSecurityIntegrationRequest(id).
+			WithSet(
+				*sdk.NewOauthForCustomClientsIntegrationSetRequest().
+					WithNetworkPolicy(networkPolicy.ID()),
+			)
+		err := client.SecurityIntegrations.AlterOauthForCustomClients(ctx, setRequest)
+		require.ErrorContains(t, err, "object does not exist or not authorized")
 	})
 
 	t.Run("AlterSAML2Integration", func(t *testing.T) {

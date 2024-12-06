@@ -282,7 +282,7 @@ func TestAcc_ScimIntegration_InvalidScimClient(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
 				ConfigVariables: m(),
-				ExpectError:     regexp.MustCompile(`expected \[{{} scim_client}] to be one of \["OKTA" "AZURE" "GENERIC"], got invalid`),
+				ExpectError:     regexp.MustCompile(`invalid ScimSecurityIntegrationScimClientOption: INVALID`),
 			},
 		},
 	})
@@ -311,7 +311,7 @@ func TestAcc_ScimIntegration_InvalidRunAsRole(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ScimIntegration/complete"),
 				ConfigVariables: m(),
-				ExpectError:     regexp.MustCompile(`expected \[{{} run_as_role}] to be one of \["OKTA_PROVISIONER" "AAD_PROVISIONER" "GENERIC_SCIM_PROVISIONER"], got invalid`),
+				ExpectError:     regexp.MustCompile(`invalid ScimSecurityIntegrationRunAsRoleOption: INVALID`),
 			},
 		},
 	})

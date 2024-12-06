@@ -24,7 +24,7 @@ var secretClientCredentialsSchema = func() map[string]*schema.Schema {
 			Type:             schema.TypeString,
 			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			Required:         true,
-			Description:      "Specifies the name value of the Snowflake security integration that connects Snowflake to an external service.",
+			Description:      relatedResourceDescription("Specifies the name value of the Snowflake security integration that connects Snowflake to an external service.", resources.ApiAuthenticationIntegrationWithClientCredentials),
 			DiffSuppressFunc: suppressIdentifierQuoting,
 		},
 		"oauth_scopes": {

@@ -7,6 +7,8 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+!> **Note** The provider does not detect external changes on database type. In this case, remove the database of wrong type manually with `terraform destroy` and recreate the resource. It will be addressed in the future.
+
 # snowflake_database (Resource)
 
 Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.
@@ -26,10 +28,9 @@ resource "snowflake_database" "primary" {
   comment      = "my standard database"
 
   data_retention_time_in_days                   = 10
-  data_retention_time_in_days_save              = 10
   max_data_extension_time_in_days               = 20
-  external_volume                               = "<external_volume_name>"
-  catalog                                       = "<catalog_name>"
+  external_volume                               = snowflake_external_volume.example.fully_qualified_name
+  catalog                                       = snowflake_catalog.example.fully_qualified_name
   replace_invalid_characters                    = false
   default_ddl_collation                         = "en_US"
   storage_serialization_policy                  = "COMPATIBLE"
@@ -56,11 +57,11 @@ resource "snowflake_database" "primary" {
 locals {
   replication_configs = [
     {
-      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      account_identifier = "\"<secondary_account_organization_1_name>\".\"<secondary_account_1_name>\""
       with_failover      = true
     },
     {
-      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      account_identifier = "\"<secondary_account_organization_2_name>\".\"<secondary_account_2_name>\""
       with_failover      = true
     },
   ]
@@ -68,10 +69,13 @@ locals {
 
 resource "snowflake_database" "primary" {
   name     = "database_name"
-  for_each = local.replication_configs
+  for_each = { for rc in local.replication_configs : rc.account_identifier => rc }
 
   replication {
-    enable_to_account    = each.value
+    enable_to_account {
+      account_identifier = each.value.account_identifier
+      with_failover      = each.value.with_failover
+    }
     ignore_edition_check = true
   }
 }
@@ -130,7 +134,7 @@ Optional:
 
 Required:
 
-- `account_identifier` (String) Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `"<organization_name>"."<account_name>"`.
+- `account_identifier` (String) Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `"<organization_name>"."<account_name>"`. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/account).
 
 Optional:
 
@@ -141,5 +145,5 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_database.example 'database_name'
+terraform import snowflake_database.example '"<database_name>"'
 ```

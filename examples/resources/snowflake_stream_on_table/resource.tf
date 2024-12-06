@@ -1,14 +1,11 @@
-resource "snowflake_table" "table" {
-  database = "database"
+# basic resource
+resource "snowflake_stream_on_table" "stream" {
+  name     = "stream"
   schema   = "schema"
-  name     = "name"
+  database = "database"
 
-  column {
-    type = "NUMBER(38,0)"
-    name = "id"
-  }
+  table = snowflake_table.example.fully_qualified_name
 }
-
 
 # resource with more fields set
 resource "snowflake_stream_on_table" "stream" {
@@ -17,7 +14,7 @@ resource "snowflake_stream_on_table" "stream" {
   database = "database"
 
   copy_grants       = true
-  table             = snowflake_table.table.fully_qualified_name
+  table             = snowflake_table.example.fully_qualified_name
   append_only       = "true"
   show_initial_rows = "true"
 

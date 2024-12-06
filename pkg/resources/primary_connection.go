@@ -32,7 +32,7 @@ var primaryConnectionSchema = map[string]*schema.Schema{
 	"enable_failover_to_accounts": {
 		Type:        schema.TypeList,
 		Optional:    true,
-		Description: "Enables failover for given connection to provided accounts. Specifies a list of accounts in your organization where a secondary connection for this primary connection can be promoted to serve as the primary connection. Include your organization name for each account in the list.",
+		Description: relatedResourceDescription("Enables failover for given connection to provided accounts. Specifies a list of accounts in your organization where a secondary connection for this primary connection can be promoted to serve as the primary connection. Include your organization name for each account in the list.", resources.Account),
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
 			DiffSuppressFunc: suppressIdentifierQuoting,

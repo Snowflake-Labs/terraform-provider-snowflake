@@ -265,6 +265,27 @@ func IgnoreNewEmptyListOrSubfields(ignoredSubfields ...string) schema.SchemaDiff
 	}
 }
 
+// IgnoreMatchingColumnNameAndMaskingPolicyUsingFirstElem ignores when the first element of USING is matching the column name.
+// see USING section in https://docs.snowflake.com/en/sql-reference/sql/create-view#optional-parameters
+func IgnoreMatchingColumnNameAndMaskingPolicyUsingFirstElem() schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		// suppress diff when the name of the column matches the name of using
+		parts := strings.SplitN(k, ".", 6)
+		if len(parts) < 6 {
+			log.Printf("[DEBUG] invalid resource key: %s", parts)
+			return false
+		}
+		// key is element count
+		if parts[5] == "#" && old == "1" && new == "0" {
+			return true
+		}
+		colNameKey := strings.Join([]string{parts[0], parts[1], "column_name"}, ".")
+		colName := d.Get(colNameKey).(string)
+
+		return new == "" && old == colName
+	}
+}
+
 func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
 	return strings.TrimSpace(old) == strings.TrimSpace(new)
 }

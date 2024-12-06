@@ -2,6 +2,7 @@ package datasources_test
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -220,4 +221,34 @@ func connectionAndSecondaryConnectionDatasourceWithLike(like string) string {
         like = "%s"
     }
 `, like)
+}
+
+func TestAcc_Connections_NotFound_WithPostConditions(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      connectionNonExisting(),
+				ExpectError: regexp.MustCompile("there should be at least one connection"),
+			},
+		},
+	})
+}
+
+func connectionNonExisting() string {
+	return `
+data "snowflake_connections" "test" {
+  like = "non-existing-connection"
+
+  lifecycle {
+    postcondition {
+      condition     = length(self.connections) > 0
+      error_message = "there should be at least one connection"
+    }
+  }
+}
+`
 }

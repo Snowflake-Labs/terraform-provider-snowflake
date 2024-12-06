@@ -27,7 +27,7 @@ output "only_show_output" {
 
 # Ensure the number of network policies is equal to at least one element (with the use of postcondition)
 data "snowflake_network_policies" "assert_with_postcondition" {
-  starts_with = "network-policy-name"
+  like = "network-policy-name"
   lifecycle {
     postcondition {
       condition     = length(self.network_policies) > 0
