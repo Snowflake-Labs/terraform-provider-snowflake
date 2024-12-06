@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 	"regexp"
 	"testing"
 
@@ -37,7 +38,7 @@ func TestAcc_Account_Minimal(t *testing.T) {
 	key, _ := random.GenerateRSAPublicKey(t)
 	region := acc.TestClient().Context.CurrentRegion(t)
 
-	configModel := model.Account("test", name, string(sdk.UserTypeService), string(sdk.EditionStandard), email, 3, id).
+	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
 		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
@@ -55,6 +56,7 @@ func TestAcc_Account_Minimal(t *testing.T) {
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
 						HasAdminNameString(name).
 						HasAdminRsaPublicKeyString(key).
+						HasNoAdminUserType().
 						HasEmailString(email).
 						HasNoFirstName().
 						HasNoLastName().
@@ -106,6 +108,7 @@ func TestAcc_Account_Minimal(t *testing.T) {
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
 						HasNoAdminName().
 						HasNoAdminRsaPublicKey().
+						HasNoAdminUserType().
 						HasNoEmail().
 						HasNoFirstName().
 						HasNoLastName().
@@ -137,7 +140,8 @@ func TestAcc_Account_Complete(t *testing.T) {
 	region := acc.TestClient().Context.CurrentRegion(t)
 	comment := random.Comment()
 
-	configModel := model.Account("test", name, string(sdk.UserTypePerson), string(sdk.EditionStandard), email, 3, id).
+	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypePerson).
 		WithAdminRsaPublicKey(key).
 		WithFirstName(firstName).
 		WithLastName(lastName).
@@ -162,6 +166,7 @@ func TestAcc_Account_Complete(t *testing.T) {
 						HasFullyQualifiedNameString(sdk.NewAccountIdentifier(organizationName, id).FullyQualifiedName()).
 						HasAdminNameString(name).
 						HasAdminRsaPublicKeyString(key).
+						HasAdminUserType(sdk.UserTypePerson).
 						HasEmailString(email).
 						HasFirstNameString(firstName).
 						HasLastNameString(lastName).
@@ -216,6 +221,7 @@ func TestAcc_Account_Complete(t *testing.T) {
 						HasNoEmail().
 						HasNoFirstName().
 						HasNoLastName().
+						HasNoAdminUserType().
 						HasNoMustChangePassword().
 						HasEditionString(string(sdk.EditionStandard)).
 						HasNoRegionGroup().
@@ -244,9 +250,11 @@ func TestAcc_Account_Rename(t *testing.T) {
 	name := random.AdminName()
 	key, _ := random.GenerateRSAPublicKey(t)
 
-	configModel := model.Account("test", name, string(sdk.UserTypeService), string(sdk.EditionStandard), email, 3, id).
+	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminRsaPublicKey(key)
-	newConfigModel := model.Account("test", name, string(sdk.UserTypeService), string(sdk.EditionStandard), email, 3, newId).
+	newConfigModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, newId).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
@@ -261,7 +269,8 @@ func TestAcc_Account_Rename(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(id).
-						HasFullyQualifiedNameString(accountId.FullyQualifiedName()),
+						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService),
 					resourceshowoutputassert.AccountShowOutput(t, configModel.ResourceReference()).
 						HasOrganizationName(organizationName).
 						HasAccountName(id),
@@ -277,7 +286,8 @@ func TestAcc_Account_Rename(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, newConfigModel.ResourceReference()).
 						HasNameString(newId).
-						HasFullyQualifiedNameString(newAccountId.FullyQualifiedName()),
+						HasFullyQualifiedNameString(newAccountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService),
 					resourceshowoutputassert.AccountShowOutput(t, newConfigModel.ResourceReference()).
 						HasOrganizationName(organizationName).
 						HasAccountName(newId),
@@ -299,15 +309,18 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 	name := random.AdminName()
 	key, _ := random.GenerateRSAPublicKey(t)
 
-	configModelWithOrgAdminTrue := model.Account("test", name, string(sdk.UserTypeService), string(sdk.EditionStandard), email, 3, id).
+	configModelWithOrgAdminTrue := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminRsaPublicKey(key).
 		WithIsOrgAdmin(r.BooleanTrue)
 
-	configModelWithOrgAdminFalse := model.Account("test", name, string(sdk.UserTypeService), string(sdk.EditionStandard), email, 3, id).
+	configModelWithOrgAdminFalse := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminRsaPublicKey(key).
 		WithIsOrgAdmin(r.BooleanFalse)
 
-	configModelWithoutOrgAdmin := model.Account("test", name, string(sdk.UserTypeService), string(sdk.EditionStandard), email, 3, id).
+	configModelWithoutOrgAdmin := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
@@ -324,6 +337,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 					resourceassert.AccountResource(t, configModelWithOrgAdminTrue.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService).
 						HasIsOrgAdminString(r.BooleanTrue),
 					resourceshowoutputassert.AccountShowOutput(t, configModelWithOrgAdminTrue.ResourceReference()).
 						HasOrganizationName(organizationName).
@@ -343,6 +357,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 					resourceassert.AccountResource(t, configModelWithOrgAdminFalse.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService).
 						HasIsOrgAdminString(r.BooleanFalse),
 					resourceshowoutputassert.AccountShowOutput(t, configModelWithOrgAdminFalse.ResourceReference()).
 						HasOrganizationName(organizationName).
@@ -362,6 +377,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 					resourceassert.AccountResource(t, configModelWithoutOrgAdmin.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService).
 						HasIsOrgAdminString(r.BooleanDefault),
 					resourceshowoutputassert.AccountShowOutput(t, configModelWithoutOrgAdmin.ResourceReference()).
 						HasOrganizationName(organizationName).
@@ -389,6 +405,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 					resourceassert.AccountResource(t, configModelWithoutOrgAdmin.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService).
 						HasIsOrgAdminString(r.BooleanDefault),
 					resourceshowoutputassert.AccountShowOutput(t, configModelWithoutOrgAdmin.ResourceReference()).
 						HasOrganizationName(organizationName).
@@ -420,13 +437,15 @@ func TestAcc_Account_IgnoreUpdateAfterCreationOnCertainFields(t *testing.T) {
 	newName := random.AdminName()
 	newPass := random.Password()
 
-	configModel := model.Account("test", name, string(sdk.UserTypePerson), string(sdk.EditionStandard), email, 3, id).
+	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypePerson).
 		WithFirstName(firstName).
 		WithLastName(lastName).
 		WithMustChangePassword(r.BooleanTrue).
 		WithAdminPassword(pass)
 
-	newConfigModel := model.Account("test", newName, string(sdk.UserTypeService), string(sdk.EditionStandard), newEmail, 3, id).
+	newConfigModel := model.Account("test", newName, string(sdk.EditionStandard), newEmail, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminPassword(newPass).
 		WithFirstName(newFirstName).
 		WithLastName(newLastName)
@@ -446,7 +465,7 @@ func TestAcc_Account_IgnoreUpdateAfterCreationOnCertainFields(t *testing.T) {
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
 						HasAdminNameString(name).
 						HasAdminPasswordString(pass).
-						// HasAdminUserType(). TODO
+						HasAdminUserType(sdk.UserTypePerson).
 						HasEmailString(email).
 						HasFirstNameString(firstName).
 						HasLastNameString(lastName).
@@ -466,6 +485,7 @@ func TestAcc_Account_IgnoreUpdateAfterCreationOnCertainFields(t *testing.T) {
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
 						HasAdminNameString(name).
 						HasAdminPasswordString(pass).
+						HasAdminUserType(sdk.UserTypePerson).
 						HasEmailString(email).
 						HasFirstNameString(firstName).
 						HasLastNameString(lastName).
@@ -488,7 +508,8 @@ func TestAcc_Account_TryToCreateWithoutOrgadmin(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	t.Setenv(snowflakeenvs.Role, snowflakeroles.Accountadmin.Name())
 
-	configModel := model.Account("test", name, string(sdk.UserTypeService), string(sdk.EditionStandard), email, 3, id).
+	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
@@ -515,13 +536,16 @@ func TestAcc_Account_InvalidValues(t *testing.T) {
 	name := random.AdminName()
 	key, _ := random.GenerateRSAPublicKey(t)
 
-	configModelInvalidUserType := model.Account("test", name, "invalid_user_type", string(sdk.EditionStandard), email, 3, id).
+	configModelInvalidUserType := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserType("invalid_user_type").
 		WithAdminRsaPublicKey(key)
 
-	configModelInvalidAccountEdition := model.Account("test", name, string(sdk.UserTypeService), "invalid_account_edition", email, 3, id).
+	configModelInvalidAccountEdition := model.Account("test", name, "invalid_account_edition", email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminRsaPublicKey(key)
 
-	configModelInvalidGracePeriodInDays := model.Account("test", name, string(sdk.UserTypeService), string(sdk.EditionStandard), email, 2, id).
+	configModelInvalidGracePeriodInDays := model.Account("test", name, string(sdk.EditionStandard), email, 2, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
@@ -560,11 +584,12 @@ func TestAcc_Account_UpgradeFrom_v0_99_0(t *testing.T) {
 	region := acc.TestClient().Context.CurrentRegion(t)
 	comment := random.Comment()
 
-	configModel := model.Account("test", adminName, string(sdk.UserTypeService), string(sdk.EditionStandard), email, 3, name).
+	configModel := model.Account("test", adminName, string(sdk.EditionStandard), email, 3, name).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminPassword(adminPassword).
 		WithFirstName(firstName).
 		WithLastName(lastName).
-		WithMustChangePassword(r.BooleanTrue).
+		WithMustChangePasswordValue(tfconfig.BoolVariable(true)).
 		WithRegion(region).
 		WithIsOrgAdmin(r.BooleanFalse).
 		WithComment(comment)

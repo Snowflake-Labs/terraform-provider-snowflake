@@ -47,6 +47,11 @@ func (a *AccountResourceAssert) HasAdminRsaPublicKeyString(expected string) *Acc
 	return a
 }
 
+func (a *AccountResourceAssert) HasAdminUserTypeString(expected string) *AccountResourceAssert {
+	a.AddAssertion(assert.ValueSet("admin_user_type", expected))
+	return a
+}
+
 func (a *AccountResourceAssert) HasCommentString(expected string) *AccountResourceAssert {
 	a.AddAssertion(assert.ValueSet("comment", expected))
 	return a
@@ -123,6 +128,11 @@ func (a *AccountResourceAssert) HasNoAdminPassword() *AccountResourceAssert {
 
 func (a *AccountResourceAssert) HasNoAdminRsaPublicKey() *AccountResourceAssert {
 	a.AddAssertion(assert.ValueNotSet("admin_rsa_public_key"))
+	return a
+}
+
+func (a *AccountResourceAssert) HasNoAdminUserType() *AccountResourceAssert {
+	a.AddAssertion(assert.ValueNotSet("admin_user_type"))
 	return a
 }
 

@@ -37,7 +37,6 @@ type AccountModel struct {
 func Account(
 	resourceName string,
 	adminName string,
-	adminUserType string,
 	edition string,
 	email string,
 	gracePeriodInDays int,
@@ -45,7 +44,6 @@ func Account(
 ) *AccountModel {
 	a := &AccountModel{ResourceModelMeta: config.Meta(resourceName, resources.Account)}
 	a.WithAdminName(adminName)
-	a.WithAdminUserType(adminUserType)
 	a.WithEdition(edition)
 	a.WithEmail(email)
 	a.WithGracePeriodInDays(gracePeriodInDays)
@@ -55,7 +53,6 @@ func Account(
 
 func AccountWithDefaultMeta(
 	adminName string,
-	adminUserType string,
 	edition string,
 	email string,
 	gracePeriodInDays int,
@@ -63,7 +60,6 @@ func AccountWithDefaultMeta(
 ) *AccountModel {
 	a := &AccountModel{ResourceModelMeta: config.DefaultMeta(resources.Account)}
 	a.WithAdminName(adminName)
-	a.WithAdminUserType(adminUserType)
 	a.WithEdition(edition)
 	a.WithEmail(email)
 	a.WithGracePeriodInDays(gracePeriodInDays)

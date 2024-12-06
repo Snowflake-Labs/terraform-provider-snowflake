@@ -24,10 +24,9 @@ import (
 
 var accountSchema = map[string]*schema.Schema{
 	"name": {
-		Type:             schema.TypeString,
-		Required:         true,
-		Description:      "Specifies the identifier (i.e. name) for the account. It be unique within an organization, regardless of which Snowflake Region the account is in and must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.",
-		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "Specifies the identifier (i.e. name) for the account. It be unique within an organization, regardless of which Snowflake Region the account is in and must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.",
 	},
 	"admin_name": {
 		Type:             schema.TypeString,
@@ -40,7 +39,7 @@ var accountSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      externalChangesNotDetectedFieldDescription("Password for the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified."),
+		Description:      externalChangesNotDetectedFieldDescription("Password for the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified. This field cannot be used whenever admin_user_type is set to SERVICE."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 		AtLeastOneOf:     []string{"admin_password", "admin_rsa_public_key"},
 	},
@@ -63,14 +62,14 @@ var accountSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      externalChangesNotDetectedFieldDescription("First name of the initial administrative user of the account."),
+		Description:      externalChangesNotDetectedFieldDescription("First name of the initial administrative user of the account. This field cannot be used whenever admin_user_type is set to SERVICE."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"last_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      externalChangesNotDetectedFieldDescription("Last name of the initial administrative user of the account."),
+		Description:      externalChangesNotDetectedFieldDescription("Last name of the initial administrative user of the account. This field cannot be used whenever admin_user_type is set to SERVICE."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"email": {
@@ -84,7 +83,7 @@ var accountSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Default:          BooleanDefault,
-		Description:      externalChangesNotDetectedFieldDescription("Specifies whether the new user created to administer the account is forced to change their password upon first login into the account."),
+		Description:      externalChangesNotDetectedFieldDescription("Specifies whether the new user created to administer the account is forced to change their password upon first login into the account. This field cannot be used whenever admin_user_type is set to SERVICE."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 		ValidateDiagFunc: validateBooleanString,
 	},
@@ -93,6 +92,7 @@ var accountSchema = map[string]*schema.Schema{
 		Required:         true,
 		ForceNew:         true,
 		Description:      fmt.Sprintf("Snowflake Edition of the account. See more about Snowflake Editions in the [official documentation](https://docs.snowflake.com/en/user-guide/intro-editions). Valid options are: %s", docs.PossibleValuesListed(sdk.AllAccountEditions)),
+		DiffSuppressFunc: NormalizeAndCompare(sdk.ToAccountEdition),
 		ValidateDiagFunc: sdkValidation(sdk.ToAccountEdition),
 	},
 	"region_group": {
