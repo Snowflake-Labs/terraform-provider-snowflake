@@ -227,9 +227,9 @@ func CreateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	sc := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, sc, name)
 
 	// Set required
 	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
@@ -266,14 +266,14 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 		request.WithComment(v.(string))
 	}
 	if _, ok := d.GetOk("imports"); ok {
-		imports := []sdk.FunctionImportRequest{}
+		var imports []sdk.FunctionImportRequest
 		for _, item := range d.Get("imports").([]interface{}) {
 			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(item.(string)))
 		}
 		request.WithImports(imports)
 	}
 	if _, ok := d.GetOk("packages"); ok {
-		packages := []sdk.FunctionPackageRequest{}
+		var packages []sdk.FunctionPackageRequest
 		for _, item := range d.Get("packages").([]interface{}) {
 			packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
 		}
@@ -288,9 +288,9 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	argumentTypes := make([]sdk.DataType, 0, len(arguments))
 	for _, item := range arguments {
-		argumentTypes = append(argumentTypes, item.ArgDataType)
+		argumentTypes = append(argumentTypes, item.ArgDataTypeOld)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, sc, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -298,9 +298,9 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	sc := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, sc, name)
 
 	// Set required
 	returnType := d.Get("return_type").(string)
@@ -311,7 +311,7 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	functionDefinition := d.Get("statement").(string)
 	handler := d.Get("handler").(string)
 	// create request with required
-	request := sdk.NewCreateForScalaFunctionRequest(id, sdk.LegacyDataTypeFrom(returnDataType), handler)
+	request := sdk.NewCreateForScalaFunctionRequest(id, nil, handler).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType))
 	request.WithFunctionDefinition(functionDefinition)
 
 	// Set optionals
@@ -338,14 +338,14 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 		request.WithComment(v.(string))
 	}
 	if _, ok := d.GetOk("imports"); ok {
-		imports := []sdk.FunctionImportRequest{}
+		var imports []sdk.FunctionImportRequest
 		for _, item := range d.Get("imports").([]interface{}) {
 			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(item.(string)))
 		}
 		request.WithImports(imports)
 	}
 	if _, ok := d.GetOk("packages"); ok {
-		packages := []sdk.FunctionPackageRequest{}
+		var packages []sdk.FunctionPackageRequest
 		for _, item := range d.Get("packages").([]interface{}) {
 			packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
 		}
@@ -360,9 +360,9 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	argumentTypes := make([]sdk.DataType, 0, len(arguments))
 	for _, item := range arguments {
-		argumentTypes = append(argumentTypes, item.ArgDataType)
+		argumentTypes = append(argumentTypes, item.ArgDataTypeOld)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, sc, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -370,9 +370,9 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	sc := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, sc, name)
 
 	// Set required
 	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
@@ -406,9 +406,9 @@ func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	argumentTypes := make([]sdk.DataType, 0, len(arguments))
 	for _, item := range arguments {
-		argumentTypes = append(argumentTypes, item.ArgDataType)
+		argumentTypes = append(argumentTypes, item.ArgDataTypeOld)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, sc, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -416,9 +416,9 @@ func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interfa
 func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	sc := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, sc, name)
 
 	// Set required
 	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
@@ -454,14 +454,14 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 		request.WithComment(v.(string))
 	}
 	if _, ok := d.GetOk("imports"); ok {
-		imports := []sdk.FunctionImportRequest{}
+		var imports []sdk.FunctionImportRequest
 		for _, item := range d.Get("imports").([]interface{}) {
 			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(item.(string)))
 		}
 		request.WithImports(imports)
 	}
 	if _, ok := d.GetOk("packages"); ok {
-		packages := []sdk.FunctionPackageRequest{}
+		var packages []sdk.FunctionPackageRequest
 		for _, item := range d.Get("packages").([]interface{}) {
 			packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
 		}
@@ -473,9 +473,9 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	argumentTypes := make([]sdk.DataType, 0, len(arguments))
 	for _, item := range arguments {
-		argumentTypes = append(argumentTypes, item.ArgDataType)
+		argumentTypes = append(argumentTypes, item.ArgDataTypeOld)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, sc, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -483,9 +483,9 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	sc := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, sc, name)
 
 	// Set required
 	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
@@ -522,9 +522,9 @@ func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	argumentTypes := make([]sdk.DataType, 0, len(arguments))
 	for _, item := range arguments {
-		argumentTypes = append(argumentTypes, item.ArgDataType)
+		argumentTypes = append(argumentTypes, item.ArgDataTypeOld)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, sc, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -575,7 +575,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 			if value != "" { // Do nothing for functions without arguments
 				pairs := strings.Split(value, ", ")
 
-				arguments := []interface{}{}
+				var arguments []interface{}
 				for _, pair := range pairs {
 					item := strings.Split(pair, " ")
 					argument := map[string]interface{}{}
@@ -739,7 +739,7 @@ func parseFunctionArguments(d *schema.ResourceData) ([]sdk.FunctionArgumentReque
 			if diags != nil {
 				return nil, diags
 			}
-			args = append(args, sdk.FunctionArgumentRequest{ArgName: argName, ArgDataType: sdk.LegacyDataTypeFrom(argDataType)})
+			args = append(args, sdk.FunctionArgumentRequest{ArgName: argName, ArgDataTypeOld: sdk.LegacyDataTypeFrom(argDataType)})
 		}
 	}
 	return args, nil
@@ -764,8 +764,8 @@ func convertFunctionColumns(s string) ([]sdk.FunctionColumn, diag.Diagnostics) {
 				return nil, diag.FromErr(err)
 			}
 			columns = append(columns, sdk.FunctionColumn{
-				ColumnName:     match[1],
-				ColumnDataType: sdk.LegacyDataTypeFrom(dataType),
+				ColumnName:        match[1],
+				ColumnDataTypeOld: sdk.LegacyDataTypeFrom(dataType),
 			})
 		}
 	}
@@ -781,7 +781,7 @@ func parseFunctionReturnsRequest(s string) (*sdk.FunctionReturnsRequest, diag.Di
 		}
 		var cr []sdk.FunctionColumnRequest
 		for _, item := range columns {
-			cr = append(cr, *sdk.NewFunctionColumnRequest(item.ColumnName, item.ColumnDataType))
+			cr = append(cr, *sdk.NewFunctionColumnRequest(item.ColumnName, nil).WithColumnDataTypeOld(item.ColumnDataTypeOld))
 		}
 		returns.WithTable(*sdk.NewFunctionReturnsTableRequest().WithColumns(cr))
 	} else {
@@ -789,7 +789,7 @@ func parseFunctionReturnsRequest(s string) (*sdk.FunctionReturnsRequest, diag.Di
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
+		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }

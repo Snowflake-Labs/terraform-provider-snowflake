@@ -14,6 +14,10 @@ func (t *BooleanDataType) ToLegacyDataTypeSql() string {
 	return BooleanLegacyDataType
 }
 
+func (t *BooleanDataType) Canonical() string {
+	return BooleanLegacyDataType
+}
+
 var BooleanDataTypeSynonyms = []string{BooleanLegacyDataType}
 
 func parseBooleanDataTypeRaw(raw sanitizedDataTypeRaw) (*BooleanDataType, error) {

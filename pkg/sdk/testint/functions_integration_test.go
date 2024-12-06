@@ -44,9 +44,9 @@ func TestInt_CreateFunctions(t *testing.T) {
 			}
 		}`
 		target := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeVARCHAR)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeVARCHAR).WithDefaultValue("'abc'")
+		argument := sdk.NewFunctionArgumentRequest("x", nil).WithDefaultValue("'abc'").WithArgDataTypeOld(sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, "TestFunc.echoVarchar").
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
@@ -77,9 +77,9 @@ func TestInt_CreateFunctions(t *testing.T) {
 			return result;
 		}`
 
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewFunctionArgumentRequest("d", sdk.DataTypeFloat)
+		argument := sdk.NewFunctionArgumentRequest("d", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
 		request := sdk.NewCreateForJavascriptFunctionRequest(id.SchemaObjectId(), *returns, definition).
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
@@ -100,9 +100,9 @@ func TestInt_CreateFunctions(t *testing.T) {
 		definition := `
 def dump(i):
 	print("Hello World!")`
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeVariant)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVariant)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewFunctionArgumentRequest("i", sdk.DataTypeNumber)
+		argument := sdk.NewFunctionArgumentRequest("i", nil).WithArgDataTypeOld(sdk.DataTypeNumber)
 		request := sdk.NewCreateForPythonFunctionRequest(id.SchemaObjectId(), *returns, "3.8", "dump").
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
@@ -127,8 +127,9 @@ def dump(i):
 			}
 		}`
 
-		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), sdk.DataTypeVARCHAR, "Echo.echoVarchar").
+		argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
+		request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), nil, "Echo.echoVarchar").
+			WithResultDataTypeOld(sdk.DataTypeVARCHAR).
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithRuntimeVersion("2.12").
@@ -148,9 +149,9 @@ def dump(i):
 
 		definition := "3.141592654::FLOAT"
 
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
+		argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
 		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithOrReplace(true).
@@ -170,7 +171,7 @@ def dump(i):
 
 		definition := "3.141592654::FLOAT"
 
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
 			WithOrReplace(true).
@@ -209,7 +210,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 			assert.Equal(t, 0, function.MaxNumArguments)
 		}
 		assert.NotEmpty(t, function.ArgumentsRaw)
-		assert.NotEmpty(t, function.Arguments)
+		assert.NotEmpty(t, function.ArgumentsOld)
 		assert.NotEmpty(t, function.Description)
 		assert.NotEmpty(t, function.CatalogName)
 		assert.Equal(t, false, function.IsTableFunction)
@@ -241,12 +242,12 @@ func TestInt_OtherFunctions(t *testing.T) {
 
 		definition := "3.141592654::FLOAT"
 
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
 			WithOrReplace(true)
 		if withArguments {
-			argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
+			argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
 			request = request.WithArguments([]sdk.FunctionArgumentRequest{*argument})
 		}
 		err := client.Functions.CreateForSQL(ctx, request)
@@ -438,11 +439,11 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		t.Helper()
 
 		definition := "3.141592654::FLOAT"
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeFloat)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).WithOrReplace(true)
 
-		argument := sdk.NewFunctionArgumentRequest("x", sdk.DataTypeFloat)
+		argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
 		request = request.WithArguments([]sdk.FunctionArgumentRequest{*argument})
 		err := client.Functions.CreateForSQL(ctx, request)
 		require.NoError(t, err)
@@ -497,41 +498,42 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		require.Equal(t, *e, *es)
 	})
 
-	t.Run("function returns non detailed data types of arguments", func(t *testing.T) {
+	// TODO [SNOW-1348103]: remove with old function removal for V1
+	t.Run("function returns non detailed data types of arguments - old data types", func(t *testing.T) {
 		// This test proves that every detailed data types (e.g. VARCHAR(20) and NUMBER(10, 0)) are generalized
 		// on Snowflake side (to e.g. VARCHAR and NUMBER) and that sdk.ToDataType mapping function maps detailed types
 		// correctly to their generalized counterparts (same as in Snowflake).
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		args := []sdk.FunctionArgumentRequest{
-			*sdk.NewFunctionArgumentRequest("A", "NUMBER(2, 0)"),
-			*sdk.NewFunctionArgumentRequest("B", "DECIMAL"),
-			*sdk.NewFunctionArgumentRequest("C", "INTEGER"),
-			*sdk.NewFunctionArgumentRequest("D", sdk.DataTypeFloat),
-			*sdk.NewFunctionArgumentRequest("E", "DOUBLE"),
-			*sdk.NewFunctionArgumentRequest("F", "VARCHAR(20)"),
-			*sdk.NewFunctionArgumentRequest("G", "CHAR"),
-			*sdk.NewFunctionArgumentRequest("H", sdk.DataTypeString),
-			*sdk.NewFunctionArgumentRequest("I", "TEXT"),
-			*sdk.NewFunctionArgumentRequest("J", sdk.DataTypeBinary),
-			*sdk.NewFunctionArgumentRequest("K", "VARBINARY"),
-			*sdk.NewFunctionArgumentRequest("L", sdk.DataTypeBoolean),
-			*sdk.NewFunctionArgumentRequest("M", sdk.DataTypeDate),
-			*sdk.NewFunctionArgumentRequest("N", "DATETIME"),
-			*sdk.NewFunctionArgumentRequest("O", sdk.DataTypeTime),
-			*sdk.NewFunctionArgumentRequest("R", sdk.DataTypeTimestampLTZ),
-			*sdk.NewFunctionArgumentRequest("S", sdk.DataTypeTimestampNTZ),
-			*sdk.NewFunctionArgumentRequest("T", sdk.DataTypeTimestampTZ),
-			*sdk.NewFunctionArgumentRequest("U", sdk.DataTypeVariant),
-			*sdk.NewFunctionArgumentRequest("V", sdk.DataTypeObject),
-			*sdk.NewFunctionArgumentRequest("W", sdk.DataTypeArray),
-			*sdk.NewFunctionArgumentRequest("X", sdk.DataTypeGeography),
-			*sdk.NewFunctionArgumentRequest("Y", sdk.DataTypeGeometry),
-			*sdk.NewFunctionArgumentRequest("Z", "VECTOR(INT, 16)"),
+			*sdk.NewFunctionArgumentRequest("A", nil).WithArgDataTypeOld("NUMBER(2, 0)"),
+			*sdk.NewFunctionArgumentRequest("B", nil).WithArgDataTypeOld("DECIMAL"),
+			*sdk.NewFunctionArgumentRequest("C", nil).WithArgDataTypeOld("INTEGER"),
+			*sdk.NewFunctionArgumentRequest("D", nil).WithArgDataTypeOld(sdk.DataTypeFloat),
+			*sdk.NewFunctionArgumentRequest("E", nil).WithArgDataTypeOld("DOUBLE"),
+			*sdk.NewFunctionArgumentRequest("F", nil).WithArgDataTypeOld("VARCHAR(20)"),
+			*sdk.NewFunctionArgumentRequest("G", nil).WithArgDataTypeOld("CHAR"),
+			*sdk.NewFunctionArgumentRequest("H", nil).WithArgDataTypeOld(sdk.DataTypeString),
+			*sdk.NewFunctionArgumentRequest("I", nil).WithArgDataTypeOld("TEXT"),
+			*sdk.NewFunctionArgumentRequest("J", nil).WithArgDataTypeOld(sdk.DataTypeBinary),
+			*sdk.NewFunctionArgumentRequest("K", nil).WithArgDataTypeOld("VARBINARY"),
+			*sdk.NewFunctionArgumentRequest("L", nil).WithArgDataTypeOld(sdk.DataTypeBoolean),
+			*sdk.NewFunctionArgumentRequest("M", nil).WithArgDataTypeOld(sdk.DataTypeDate),
+			*sdk.NewFunctionArgumentRequest("N", nil).WithArgDataTypeOld("DATETIME"),
+			*sdk.NewFunctionArgumentRequest("O", nil).WithArgDataTypeOld(sdk.DataTypeTime),
+			*sdk.NewFunctionArgumentRequest("R", nil).WithArgDataTypeOld(sdk.DataTypeTimestampLTZ),
+			*sdk.NewFunctionArgumentRequest("S", nil).WithArgDataTypeOld(sdk.DataTypeTimestampNTZ),
+			*sdk.NewFunctionArgumentRequest("T", nil).WithArgDataTypeOld(sdk.DataTypeTimestampTZ),
+			*sdk.NewFunctionArgumentRequest("U", nil).WithArgDataTypeOld(sdk.DataTypeVariant),
+			*sdk.NewFunctionArgumentRequest("V", nil).WithArgDataTypeOld(sdk.DataTypeObject),
+			*sdk.NewFunctionArgumentRequest("W", nil).WithArgDataTypeOld(sdk.DataTypeArray),
+			*sdk.NewFunctionArgumentRequest("X", nil).WithArgDataTypeOld(sdk.DataTypeGeography),
+			*sdk.NewFunctionArgumentRequest("Y", nil).WithArgDataTypeOld(sdk.DataTypeGeometry),
+			*sdk.NewFunctionArgumentRequest("Z", nil).WithArgDataTypeOld("VECTOR(INT, 16)"),
 		}
 		err := client.Functions.CreateForPython(ctx, sdk.NewCreateForPythonFunctionRequest(
 			id,
-			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.DataTypeVariant)),
+			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVariant)),
 			"3.8",
 			"add",
 		).
@@ -542,7 +544,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 
 		dataTypes := make([]sdk.DataType, len(args))
 		for i, arg := range args {
-			dataType, err := datatypes.ParseDataType(string(arg.ArgDataType))
+			dataType, err := datatypes.ParseDataType(string(arg.ArgDataTypeOld))
 			require.NoError(t, err)
 			dataTypes[i] = sdk.LegacyDataTypeFrom(dataType)
 		}
@@ -550,6 +552,80 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 
 		function, err := client.Functions.ShowByID(ctx, idWithArguments)
 		require.NoError(t, err)
-		require.Equal(t, dataTypes, function.Arguments)
+		require.Equal(t, dataTypes, function.ArgumentsOld)
 	})
+
+	// This test shows behavior of detailed types (e.g. VARCHAR(20) and NUMBER(10, 0)) on Snowflake side for functions.
+	// For SHOW, data type is generalized both for argument and return type (to e.g. VARCHAR and NUMBER).
+	// FOR DESCRIBE, data type is generalized for argument and works weirdly for the return type: type is generalized to the canonical one, but we also get the attributes.
+	for _, tc := range []string{
+		"NUMBER(36, 5)",
+		"NUMBER(36)",
+		"NUMBER",
+		"DECIMAL",
+		"INTEGER",
+		"FLOAT",
+		"DOUBLE",
+		"VARCHAR",
+		"VARCHAR(20)",
+		"CHAR",
+		"CHAR(10)",
+		"TEXT",
+		"BINARY",
+		"BINARY(1000)",
+		"VARBINARY",
+		"BOOLEAN",
+		"DATE",
+		"DATETIME",
+		"TIME",
+		"TIMESTAMP_LTZ",
+		"TIMESTAMP_NTZ",
+		"TIMESTAMP_TZ",
+		"VARIANT",
+		"OBJECT",
+		"ARRAY",
+		"GEOGRAPHY",
+		"GEOMETRY",
+		"VECTOR(INT, 16)",
+		"VECTOR(FLOAT, 8)",
+	} {
+		tc := tc
+		t.Run(fmt.Sprintf("function returns non detailed data types of arguments for %s", tc), func(t *testing.T) {
+			id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+			argName := "A"
+			dataType, err := datatypes.ParseDataType(tc)
+			require.NoError(t, err)
+			args := []sdk.FunctionArgumentRequest{
+				*sdk.NewFunctionArgumentRequest(argName, dataType),
+			}
+
+			err = client.Functions.CreateForPython(ctx, sdk.NewCreateForPythonFunctionRequest(
+				id,
+				*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(dataType)),
+				"3.8",
+				"add",
+			).
+				WithArguments(args).
+				WithFunctionDefinition(fmt.Sprintf("def add(%[1]s): %[1]s", argName)),
+			)
+			require.NoError(t, err)
+
+			oldDataType := sdk.LegacyDataTypeFrom(dataType)
+			idWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(id.DatabaseName(), id.SchemaName(), id.Name(), oldDataType)
+
+			function, err := client.Functions.ShowByID(ctx, idWithArguments)
+			require.NoError(t, err)
+			assert.Equal(t, []sdk.DataType{oldDataType}, function.ArgumentsOld)
+			assert.Equal(t, fmt.Sprintf("%[1]s(%[2]s) RETURN %[2]s", id.Name(), oldDataType), function.ArgumentsRaw)
+
+			details, err := client.Functions.Describe(ctx, idWithArguments)
+			require.NoError(t, err)
+			pairs := make(map[string]string)
+			for _, detail := range details {
+				pairs[detail.Property] = detail.Value
+			}
+			assert.Equal(t, fmt.Sprintf("(%s %s)", argName, oldDataType), pairs["signature"])
+			assert.Equal(t, dataType.Canonical(), pairs["returns"])
+		})
+	}
 }

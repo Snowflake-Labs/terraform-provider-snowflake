@@ -109,6 +109,7 @@ find a better solution to solve the issue (add more logic to the templates ?)
   - there should be no need to define custom types every time
   - more clear definition of lists that can be empty vs cannot be empty
 - add empty ids in generated tests (TODO in random_test.go)
+- add optional imports (currently they have to be added manually, e.g. `datatypes.DataType`)
 
 ##### Known issues
 - generating two converts when Show and Desc use the same data structure

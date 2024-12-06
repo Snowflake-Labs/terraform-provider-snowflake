@@ -23,6 +23,10 @@ func (t *TimestampTzDataType) ToLegacyDataTypeSql() string {
 	return TimestampTzLegacyDataType
 }
 
+func (t *TimestampTzDataType) Canonical() string {
+	return fmt.Sprintf("%s(%d)", TimestampTzLegacyDataType, t.precision)
+}
+
 var TimestampTzDataTypeSynonyms = []string{TimestampTzLegacyDataType, "TIMESTAMPTZ", "TIMESTAMP WITH TIME ZONE"}
 
 func parseTimestampTzDataTypeRaw(raw sanitizedDataTypeRaw) (*TimestampTzDataType, error) {

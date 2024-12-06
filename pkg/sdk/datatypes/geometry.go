@@ -14,6 +14,10 @@ func (t *GeometryDataType) ToLegacyDataTypeSql() string {
 	return GeometryLegacyDataType
 }
 
+func (t *GeometryDataType) Canonical() string {
+	return GeometryLegacyDataType
+}
+
 var GeometryDataTypeSynonyms = []string{GeometryLegacyDataType}
 
 func parseGeometryDataTypeRaw(raw sanitizedDataTypeRaw) (*GeometryDataType, error) {

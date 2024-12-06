@@ -2,7 +2,10 @@
 
 package sdk
 
-import ()
+// imports edited manually
+import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+)
 
 func NewCreateForJavaFunctionRequest(
 	name SchemaObjectIdentifier,
@@ -103,12 +106,17 @@ func (s *CreateForJavaFunctionRequest) WithFunctionDefinition(FunctionDefinition
 
 func NewFunctionArgumentRequest(
 	ArgName string,
-	ArgDataType DataType,
+	ArgDataType datatypes.DataType,
 ) *FunctionArgumentRequest {
 	s := FunctionArgumentRequest{}
 	s.ArgName = ArgName
 	s.ArgDataType = ArgDataType
 	return &s
+}
+
+func (s *FunctionArgumentRequest) WithArgDataTypeOld(ArgDataTypeOld DataType) *FunctionArgumentRequest {
+	s.ArgDataTypeOld = ArgDataTypeOld
+	return s
 }
 
 func (s *FunctionArgumentRequest) WithDefaultValue(DefaultValue string) *FunctionArgumentRequest {
@@ -131,11 +139,16 @@ func (s *FunctionReturnsRequest) WithTable(Table FunctionReturnsTableRequest) *F
 }
 
 func NewFunctionReturnsResultDataTypeRequest(
-	ResultDataType DataType,
+	ResultDataType datatypes.DataType,
 ) *FunctionReturnsResultDataTypeRequest {
 	s := FunctionReturnsResultDataTypeRequest{}
 	s.ResultDataType = ResultDataType
 	return &s
+}
+
+func (s *FunctionReturnsResultDataTypeRequest) WithResultDataTypeOld(ResultDataTypeOld DataType) *FunctionReturnsResultDataTypeRequest {
+	s.ResultDataTypeOld = ResultDataTypeOld
+	return s
 }
 
 func NewFunctionReturnsTableRequest() *FunctionReturnsTableRequest {
@@ -149,12 +162,17 @@ func (s *FunctionReturnsTableRequest) WithColumns(Columns []FunctionColumnReques
 
 func NewFunctionColumnRequest(
 	ColumnName string,
-	ColumnDataType DataType,
+	ColumnDataType datatypes.DataType,
 ) *FunctionColumnRequest {
 	s := FunctionColumnRequest{}
 	s.ColumnName = ColumnName
 	s.ColumnDataType = ColumnDataType
 	return &s
+}
+
+func (s *FunctionColumnRequest) WithColumnDataTypeOld(ColumnDataTypeOld DataType) *FunctionColumnRequest {
+	s.ColumnDataTypeOld = ColumnDataTypeOld
+	return s
 }
 
 func NewFunctionImportRequest() *FunctionImportRequest {
@@ -323,7 +341,7 @@ func (s *CreateForPythonFunctionRequest) WithFunctionDefinition(FunctionDefiniti
 
 func NewCreateForScalaFunctionRequest(
 	name SchemaObjectIdentifier,
-	ResultDataType DataType,
+	ResultDataType datatypes.DataType,
 	Handler string,
 ) *CreateForScalaFunctionRequest {
 	s := CreateForScalaFunctionRequest{}
@@ -360,6 +378,11 @@ func (s *CreateForScalaFunctionRequest) WithArguments(Arguments []FunctionArgume
 
 func (s *CreateForScalaFunctionRequest) WithCopyGrants(CopyGrants bool) *CreateForScalaFunctionRequest {
 	s.CopyGrants = &CopyGrants
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithResultDataTypeOld(ResultDataTypeOld DataType) *CreateForScalaFunctionRequest {
+	s.ResultDataTypeOld = ResultDataTypeOld
 	return s
 }
 
