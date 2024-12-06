@@ -122,7 +122,7 @@ func (c *FunctionClient) SamplePythonDefinition(t *testing.T) string {
 	t.Helper()
 
 	return `
-	def dump(i):
+def dump(i):
 	print("Hello World!")
 `
 }
