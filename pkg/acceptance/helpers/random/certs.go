@@ -60,24 +60,6 @@ func GenerateRSAPublicKeyFromPrivateKey(t *testing.T, key *rsa.PrivateKey) (stri
 	return encode(t, "RSA PUBLIC KEY", b), hash(t, b)
 }
 
-func GenerateRSAPublicKeyBasedOnPrivateKey(t *testing.T, key *rsa.PrivateKey) (string, string) {
-	t.Helper()
-
-	pub := key.Public()
-	b, err := x509.MarshalPKIXPublicKey(pub.(*rsa.PublicKey))
-	require.NoError(t, err)
-	return encode(t, "RSA PUBLIC KEY", b), hash(t, b)
-}
-
-func GenerateRSAPublicKeyBasedOnPrivateKey(t *testing.T, key *rsa.PrivateKey) (string, string) {
-	t.Helper()
-
-	pub := key.Public()
-	b, err := x509.MarshalPKIXPublicKey(pub.(*rsa.PublicKey))
-	require.NoError(t, err)
-	return encode(t, "RSA PUBLIC KEY", b), hash(t, b)
-}
-
 // GenerateRSAPrivateKey returns an RSA private key.
 func GenerateRSAPrivateKey(t *testing.T) *rsa.PrivateKey {
 	t.Helper()

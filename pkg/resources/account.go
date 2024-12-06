@@ -3,11 +3,15 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -20,24 +24,23 @@ import (
 
 var accountSchema = map[string]*schema.Schema{
 	"name": {
-		Type:     schema.TypeString,
-		Required: true,
-		// TODO: Sensitive?
-		Description:      "TODO",
+		Type:             schema.TypeString,
+		Required:         true,
+		Description:      "Specifies the identifier (i.e. name) for the account. It be unique within an organization, regardless of which Snowflake Region the account is in and must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.",
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
 	"admin_name": {
-		Type:     schema.TypeString,
-		Required: true,
-		// TODO: Sensitive?
-		Description:      externalChangesNotDetectedFieldDescription("TODO"),
+		Type:             schema.TypeString,
+		Required:         true,
+		Sensitive:        true,
+		Description:      externalChangesNotDetectedFieldDescription("Login name of the initial administrative user of the account. A new user is created in the new account with this name and password and granted the ACCOUNTADMIN role in the account. A login name can be any string consisting of letters, numbers, and underscores. Login names are always case-insensitive."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"admin_password": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      externalChangesNotDetectedFieldDescription("TODO"),
+		Description:      externalChangesNotDetectedFieldDescription("Password for the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 		AtLeastOneOf:     []string{"admin_password", "admin_rsa_public_key"},
 	},
@@ -45,15 +48,14 @@ var accountSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      externalChangesNotDetectedFieldDescription("TODO"),
+		Description:      externalChangesNotDetectedFieldDescription("Assigns a public key to the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 		AtLeastOneOf:     []string{"admin_password", "admin_rsa_public_key"},
 	},
 	"admin_user_type": {
-		Type:     schema.TypeString,
-		Required: true,
-		// TODO: Valid options
-		Description:      externalChangesNotDetectedFieldDescription("TODO"),
+		Type:             schema.TypeString,
+		Optional:         true,
+		Description:      externalChangesNotDetectedFieldDescription(fmt.Sprintf("Used for setting the type of the first user that is assigned the ACCOUNTADMIN role during account creation. Valid options are: %s", docs.PossibleValuesListed(sdk.AllUserTypes))),
 		DiffSuppressFunc: SuppressIfAny(IgnoreAfterCreation, NormalizeAndCompare(sdk.ToUserType)),
 		ValidateDiagFunc: sdkValidation(sdk.ToUserType),
 	},
@@ -61,28 +63,28 @@ var accountSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      externalChangesNotDetectedFieldDescription("TODO"),
+		Description:      externalChangesNotDetectedFieldDescription("First name of the initial administrative user of the account."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"last_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Sensitive:        true,
-		Description:      externalChangesNotDetectedFieldDescription("TODO"),
+		Description:      externalChangesNotDetectedFieldDescription("Last name of the initial administrative user of the account."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"email": {
 		Type:             schema.TypeString,
 		Required:         true,
 		Sensitive:        true,
-		Description:      externalChangesNotDetectedFieldDescription("TODO"),
+		Description:      externalChangesNotDetectedFieldDescription("Email address of the initial administrative user of the account. This email address is used to send any notifications about the account."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"must_change_password": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		Default:          BooleanDefault,
-		Description:      externalChangesNotDetectedFieldDescription("TODO"),
+		Description:      externalChangesNotDetectedFieldDescription("Specifies whether the new user created to administer the account is forced to change their password upon first login into the account."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 		ValidateDiagFunc: validateBooleanString,
 	},
@@ -90,20 +92,20 @@ var accountSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "TODO",
+		Description:      fmt.Sprintf("Snowflake Edition of the account. See more about Snowflake Editions in the [official documentation](https://docs.snowflake.com/en/user-guide/intro-editions). Valid options are: %s", docs.PossibleValuesListed(sdk.AllAccountEditions)),
 		ValidateDiagFunc: sdkValidation(sdk.ToAccountEdition),
 	},
 	"region_group": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "TODO",
+		Description: "ID of the region group where the account is created. To retrieve the region group ID for existing accounts in your organization, execute the [SHOW REGIONS](https://docs.snowflake.com/en/sql-reference/sql/show-regions) command. For information about when you might need to specify region group, see [Region groups](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#label-region-groups).",
 	},
 	"region": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    true,
-		Description: "TODO",
+		Description: "[Snowflake Region ID](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#label-snowflake-region-ids) of the region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)",
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -123,12 +125,12 @@ var accountSchema = map[string]*schema.Schema{
 		Default:          BooleanDefault,
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("is_org_admin"),
 		ValidateDiagFunc: validateBooleanString,
-		Description:      "TODO",
+		Description:      "Sets an account property that determines whether the ORGADMIN role is enabled in the account. Only an organization administrator (i.e. user with the ORGADMIN role) can set the property.",
 	},
 	"grace_period_in_days": {
 		Type:             schema.TypeInt,
 		Required:         true,
-		Description:      "TODO",
+		Description:      "Specifies the number of days during which the account can be restored (“undropped”). The minimum is 3 days and the maximum is 90 days.",
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(3)),
 	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
@@ -144,8 +146,7 @@ var accountSchema = map[string]*schema.Schema{
 
 func Account() *schema.Resource {
 	return &schema.Resource{
-		// TODO: Desc
-		Description:   "The account resource allows you to create and manage Snowflake accounts.",
+		Description:   "The account resource allows you to create and manage Snowflake accounts. To use this resource, make sure you use an account with the ORGADMIN role.",
 		CreateContext: TrackingCreateWrapper(resources.Account, CreateAccount),
 		ReadContext:   TrackingReadWrapper(resources.Account, ReadAccount(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.Account, UpdateAccount),
@@ -161,7 +162,6 @@ func Account() *schema.Resource {
 			StateContext: TrackingImportWrapper(resources.Account, ImportAccount),
 		},
 
-		// TODO: State upgrader
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -172,20 +172,6 @@ func Account() *schema.Resource {
 			},
 		},
 	}
-}
-
-func v0_99_0_AccountStateUpgrader(ctx context.Context, state map[string]any, meta any) (map[string]any, error) {
-	client := meta.(*provider.Context).Client
-	state["must_change_password"] = booleanStringFromBool(state["must_change_password"].(bool))
-	state["is_org_admin"] = booleanStringFromBool(state["is_org_admin"].(bool))
-	account, err := client.Accounts.ShowByID(ctx, sdk.NewAccountObjectIdentifier(state["name"].(string)))
-	if err != nil {
-		return nil, err
-	}
-
-	state["id"] = helpers.EncodeResourceIdentifier(sdk.NewAccountIdentifier(account.OrganizationName, account.AccountName))
-
-	return state, nil
 }
 
 func ImportAccount(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
@@ -286,15 +272,6 @@ func CreateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 	if v, ok := d.GetOk("comment"); ok {
 		opts.Comment = sdk.String(v.(string))
 	}
-
-	// TODO(TODO): next prs
-	//if v := d.Get("polaris"); v != BooleanDefault {
-	//	parsedBool, err := booleanStringToBool(v.(string))
-	//	if err != nil {
-	//		return diag.FromErr(err)
-	//	}
-	//	opts.Polaris = &parsedBool
-	//}
 
 	createResponse, err := client.Accounts.Create(ctx, id, opts)
 	if err != nil {
@@ -441,7 +418,8 @@ func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 					Name:     id.AccountId(),
 					OrgAdmin: false,
 				},
-			}); err != nil && !strings.Contains(err.Error(), "already has ORGADMIN disabled") { // TODO: What to do about this error?
+				// This error may happen when a user removes is_org_admin, and previously it was explicitly set to false.
+			}); err != nil && !strings.Contains(err.Error(), "already has ORGADMIN disabled") {
 				return diag.FromErr(err)
 			}
 		}

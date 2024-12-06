@@ -2,12 +2,12 @@
 page_title: "snowflake_account Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  The account resource allows you to create and manage Snowflake accounts.
+  The account resource allows you to create and manage Snowflake accounts. To use this resource, make sure you use an account with the ORGADMIN role.
 ---
 
 # snowflake_account (Resource)
 
-The account resource allows you to create and manage Snowflake accounts.
+The account resource allows you to create and manage Snowflake accounts. To use this resource, make sure you use an account with the ORGADMIN role.
 
 !> **Warning** This resource cannot be destroyed!!! The only way to delete accounts is to go through [Snowflake Support](https://docs.snowflake.com/en/user-guide/organizations-manage-accounts.html#deleting-an-account)
 
@@ -16,23 +16,14 @@ The account resource allows you to create and manage Snowflake accounts.
 ## Example Usage
 
 ```terraform
-provider "snowflake" {
-  role  = "ORGADMIN"
-  alias = "orgadmin"
+## TODO:
+
+## Minimal
+resource "snowflake_account" "minimal" {
 }
 
-resource "snowflake_account" "ac1" {
-  provider             = snowflake.orgadmin
-  name                 = "SNOWFLAKE_TEST_ACCOUNT"
-  admin_name           = "John Doe"
-  admin_password       = "Abcd1234!"
-  email                = "john.doe@snowflake.com"
-  first_name           = "John"
-  last_name            = "Doe"
-  must_change_password = true
-  edition              = "STANDARD"
-  comment              = "Snowflake Test Account"
-  region               = "AWS_US_WEST_2"
+## Complete (with every optional set)
+resource "snowflake_account" "complete" {
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -43,28 +34,65 @@ resource "snowflake_account" "ac1" {
 
 ### Required
 
-- `admin_name` (String) Login name of the initial administrative user of the account. A new user is created in the new account with this name and password and granted the ACCOUNTADMIN role in the account. A login name can be any string consisting of letters, numbers, and underscores. Login names are always case-insensitive.
-- `edition` (String) [Snowflake Edition](https://docs.snowflake.com/en/user-guide/intro-editions.html) of the account. Valid values are: STANDARD | ENTERPRISE | BUSINESS_CRITICAL
-- `email` (String, Sensitive) Email address of the initial administrative user of the account. This email address is used to send any notifications about the account.
-- `name` (String) Specifies the identifier (i.e. name) for the account; must be unique within an organization, regardless of which Snowflake Region the account is in. In addition, the identifier must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.
+- `admin_name` (String, Sensitive) Login name of the initial administrative user of the account. A new user is created in the new account with this name and password and granted the ACCOUNTADMIN role in the account. A login name can be any string consisting of letters, numbers, and underscores. Login names are always case-insensitive. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `edition` (String) Snowflake Edition of the account. See more about Snowflake Editions in the [official documentation](https://docs.snowflake.com/en/user-guide/intro-editions). Valid options are: `STANDARD` | `ENTERPRISE` | `BUSINESS_CRITICAL`
+- `email` (String, Sensitive) Email address of the initial administrative user of the account. This email address is used to send any notifications about the account. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `grace_period_in_days` (Number) Specifies the number of days during which the account can be restored (“undropped”). The minimum is 3 days and the maximum is 90 days.
+- `name` (String) Specifies the identifier (i.e. name) for the account. It be unique within an organization, regardless of which Snowflake Region the account is in and must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.
 
 ### Optional
 
-- `admin_password` (String, Sensitive) Password for the initial administrative user of the account. Optional if the `ADMIN_RSA_PUBLIC_KEY` parameter is specified. For more information about passwords in Snowflake, see [Snowflake-provided Password Policy](https://docs.snowflake.com/en/sql-reference/sql/create-account.html#:~:text=Snowflake%2Dprovided%20Password%20Policy).
-- `admin_rsa_public_key` (String, Sensitive) Assigns a public key to the initial administrative user of the account in order to implement [key pair authentication](https://docs.snowflake.com/en/sql-reference/sql/create-account.html#:~:text=key%20pair%20authentication) for the user. Optional if the `ADMIN_PASSWORD` parameter is specified.
+- `admin_password` (String, Sensitive) Password for the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `admin_rsa_public_key` (String, Sensitive) Assigns a public key to the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `admin_user_type` (String) Used for setting the type of the first user that is assigned the ACCOUNTADMIN role during account creation. Valid options are: `PERSON` | `SERVICE` | `LEGACY_SERVICE` External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `comment` (String) Specifies a comment for the account.
-- `first_name` (String, Sensitive) First name of the initial administrative user of the account
-- `grace_period_in_days` (Number) Specifies the number of days to wait before dropping the account. The default is 3 days.
-- `last_name` (String, Sensitive) Last name of the initial administrative user of the account
-- `must_change_password` (Boolean) Specifies whether the new user created to administer the account is forced to change their password upon first login into the account.
-- `region` (String) ID of the Snowflake Region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)
-- `region_group` (String) ID of the Snowflake Region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)
+- `first_name` (String, Sensitive) First name of the initial administrative user of the account. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `is_org_admin` (String) Sets an account property that determines whether the ORGADMIN role is enabled in the account. Only an organization administrator (i.e. user with the ORGADMIN role) can set the property.
+- `last_name` (String, Sensitive) Last name of the initial administrative user of the account. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `must_change_password` (String) Specifies whether the new user created to administer the account is forced to change their password upon first login into the account. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `region` (String) [Snowflake Region ID](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#label-snowflake-region-ids) of the region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)
+- `region_group` (String) ID of the region group where the account is created. To retrieve the region group ID for existing accounts in your organization, execute the [SHOW REGIONS](https://docs.snowflake.com/en/sql-reference/sql/show-regions) command. For information about when you might need to specify region group, see [Region groups](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#label-region-groups).
 
 ### Read-Only
 
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
-- `is_org_admin` (Boolean) Indicates whether the ORGADMIN role is enabled in an account. If TRUE, the role is enabled.
+- `show_output` (List of Object) Outputs the result of `SHOW ACCOUNTS` for the given account. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedatt--show_output"></a>
+### Nested Schema for `show_output`
+
+Read-Only:
+
+- `account_locator` (String)
+- `account_locator_url` (String)
+- `account_name` (String)
+- `account_old_url_last_used` (String)
+- `account_old_url_saved_on` (String)
+- `account_url` (String)
+- `comment` (String)
+- `consumption_billing_entity_name` (String)
+- `created_on` (String)
+- `dropped_on` (String)
+- `edition` (String)
+- `is_events_account` (Boolean)
+- `is_org_admin` (Boolean)
+- `is_organization_account` (Boolean)
+- `managed_accounts` (Number)
+- `marketplace_consumer_billing_entity_name` (String)
+- `marketplace_provider_billing_entity_name` (String)
+- `moved_on` (String)
+- `moved_to_organization` (String)
+- `old_account_url` (String)
+- `organization_name` (String)
+- `organization_old_url` (String)
+- `organization_old_url_last_used` (String)
+- `organization_old_url_saved_on` (String)
+- `organization_url_expiration_on` (String)
+- `region_group` (String)
+- `restored_on` (String)
+- `scheduled_deletion_time` (String)
+- `snowflake_region` (String)
 
 ## Import
 

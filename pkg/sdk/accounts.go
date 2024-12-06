@@ -6,9 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/snowflakedb/gosnowflake"
 	"strings"
 	"time"
+
+	"github.com/snowflakedb/gosnowflake"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
@@ -42,6 +43,12 @@ var (
 	EditionEnterprise       AccountEdition = "ENTERPRISE"
 	EditionBusinessCritical AccountEdition = "BUSINESS_CRITICAL"
 )
+
+var AllAccountEditions = []AccountEdition{
+	EditionStandard,
+	EditionEnterprise,
+	EditionBusinessCritical,
+}
 
 // TODO: test
 func ToAccountEdition(edition string) (AccountEdition, error) {
@@ -137,7 +144,7 @@ func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts 
 
 	queryId := <-queryChanId
 	rows, err := c.client.QueryUnsafe(gosnowflake.WithFetchResultByID(ctx, queryId), "")
-	if len(rows) == 1 && rows[0]["status"] != nil {
+	if err != nil && len(rows) == 1 && rows[0]["status"] != nil {
 		if status, ok := (*rows[0]["status"]).(string); ok {
 			return ToAccountCreateResponse(status)
 		}

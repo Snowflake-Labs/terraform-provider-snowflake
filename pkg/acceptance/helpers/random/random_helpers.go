@@ -1,9 +1,10 @@
 package random
 
 import (
+	"strings"
+
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/hashicorp/go-uuid"
-	"strings"
 )
 
 func UUID() string {

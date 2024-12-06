@@ -2,6 +2,9 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
+	"testing"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
@@ -15,8 +18,6 @@ import (
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"regexp"
-	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -445,7 +446,7 @@ func TestAcc_Account_IgnoreUpdateAfterCreationOnCertainFields(t *testing.T) {
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
 						HasAdminNameString(name).
 						HasAdminPasswordString(pass).
-						//HasAdminUserType(). TODO
+						// HasAdminUserType(). TODO
 						HasEmailString(email).
 						HasFirstNameString(firstName).
 						HasLastNameString(lastName).
@@ -540,7 +541,7 @@ func TestAcc_Account_InvalidValues(t *testing.T) {
 			},
 			{
 				Config:      config.FromModel(t, configModelInvalidGracePeriodInDays),
-				ExpectError: regexp.MustCompile("Error: expected grace_period_in_days to be at least \\(3\\), got 2"),
+				ExpectError: regexp.MustCompile(`Error: expected grace_period_in_days to be at least \(3\), got 2`),
 			},
 		},
 	})
@@ -647,5 +648,3 @@ resource "snowflake_account" "test" {
 		comment,
 	)
 }
-
-// TODO: State upgrader
