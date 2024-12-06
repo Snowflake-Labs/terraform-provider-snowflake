@@ -1,7 +1,10 @@
 package resources
 
 import (
+	"fmt"
 	"slices"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 // borrowed from https://github.com/terraform-providers/terraform-provider-aws/blob/master/aws/structure.go#L924:6
@@ -25,6 +28,29 @@ func expandStringList(configured []interface{}) []string {
 		}
 	}
 	return vs
+}
+
+func ExpandObjectIdentifierSet(configured []any, objectType sdk.ObjectType) ([]sdk.ObjectIdentifier, error) {
+	vs := expandStringList(configured)
+	ids := make([]sdk.ObjectIdentifier, len(vs))
+	for i, idRaw := range vs {
+		var id sdk.ObjectIdentifier
+		var err error
+		// TODO(SNOW-1229218): Use a common mapper to get object id.
+		if objectType == sdk.ObjectTypeAccount {
+			id, err = sdk.ParseAccountIdentifier(idRaw)
+			if err != nil {
+				return nil, fmt.Errorf("invalid account id: %w", err)
+			}
+		} else {
+			id, err = GetOnObjectIdentifier(objectType, idRaw)
+			if err != nil {
+				return nil, fmt.Errorf("invalid object id: %w", err)
+			}
+		}
+		ids[i] = id
+	}
+	return ids, nil
 }
 
 func expandStringListAllowEmpty(configured []interface{}) []string {

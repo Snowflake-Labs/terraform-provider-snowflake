@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 )
@@ -87,6 +88,82 @@ func (o ObjectType) String() string {
 
 func (o ObjectType) IsWithArguments() bool {
 	return slices.Contains([]ObjectType{ObjectTypeExternalFunction, ObjectTypeFunction, ObjectTypeProcedure}, o)
+}
+
+var allObjectTypes = []ObjectType{
+	ObjectTypeAccount,
+	ObjectTypeManagedAccount,
+	ObjectTypeUser,
+	ObjectTypeDatabaseRole,
+	ObjectTypeDataset,
+	ObjectTypeRole,
+	ObjectTypeIntegration,
+	ObjectTypeNetworkPolicy,
+	ObjectTypePasswordPolicy,
+	ObjectTypeSessionPolicy,
+	ObjectTypePrivacyPolicy,
+	ObjectTypeReplicationGroup,
+	ObjectTypeFailoverGroup,
+	ObjectTypeConnection,
+	ObjectTypeParameter,
+	ObjectTypeWarehouse,
+	ObjectTypeResourceMonitor,
+	ObjectTypeDatabase,
+	ObjectTypeSchema,
+	ObjectTypeShare,
+	ObjectTypeTable,
+	ObjectTypeDynamicTable,
+	ObjectTypeCortexSearchService,
+	ObjectTypeExternalTable,
+	ObjectTypeEventTable,
+	ObjectTypeView,
+	ObjectTypeMaterializedView,
+	ObjectTypeSequence,
+	ObjectTypeSnapshot,
+	ObjectTypeFunction,
+	ObjectTypeExternalFunction,
+	ObjectTypeProcedure,
+	ObjectTypeStream,
+	ObjectTypeTask,
+	ObjectTypeMaskingPolicy,
+	ObjectTypeRowAccessPolicy,
+	ObjectTypeTag,
+	ObjectTypeSecret,
+	ObjectTypeStage,
+	ObjectTypeFileFormat,
+	ObjectTypePipe,
+	ObjectTypeAlert,
+	ObjectTypeBudget,
+	ObjectTypeClassification,
+	ObjectTypeApplication,
+	ObjectTypeApplicationPackage,
+	ObjectTypeApplicationRole,
+	ObjectTypeStreamlit,
+	ObjectTypeColumn,
+	ObjectTypeIcebergTable,
+	ObjectTypeExternalVolume,
+	ObjectTypeNetworkRule,
+	ObjectTypeNotebook,
+	ObjectTypePackagesPolicy,
+	ObjectTypeComputePool,
+	ObjectTypeAggregationPolicy,
+	ObjectTypeAuthenticationPolicy,
+	ObjectTypeHybridTable,
+	ObjectTypeImageRepository,
+	ObjectTypeProjectionPolicy,
+	ObjectTypeDataMetricFunction,
+	ObjectTypeGitRepository,
+	ObjectTypeModel,
+	ObjectTypeService,
+}
+
+// TODO(SNOW-1834370): use ToObjectType in other places with type conversion (instead of sdk.ObjectType)
+func ToObjectType(s string) (ObjectType, error) {
+	s = strings.ToUpper(s)
+	if !slices.Contains(allObjectTypes, ObjectType(s)) {
+		return "", fmt.Errorf("invalid object type: %s", s)
+	}
+	return ObjectType(s), nil
 }
 
 func objectTypeSingularToPluralMap() map[ObjectType]PluralObjectType {

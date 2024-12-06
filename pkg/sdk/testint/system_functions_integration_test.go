@@ -34,7 +34,7 @@ func TestInt_GetTag(t *testing.T) {
 		require.NoError(t, err)
 		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID(), sdk.ObjectTypeMaskingPolicy)
 		require.NoError(t, err)
-		assert.Equal(t, tagValue, s)
+		assert.Equal(t, &tagValue, s)
 	})
 
 	t.Run("masking policy with no set tag", func(t *testing.T) {
@@ -42,8 +42,8 @@ func TestInt_GetTag(t *testing.T) {
 		t.Cleanup(maskingPolicyCleanup)
 
 		s, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), maskingPolicyTest.ID(), sdk.ObjectTypeMaskingPolicy)
-		require.Error(t, err)
-		assert.Equal(t, "", s)
+		require.NoError(t, err)
+		assert.Nil(t, s)
 	})
 	t.Run("unsupported object type", func(t *testing.T) {
 		_, err := client.SystemFunctions.GetTag(ctx, tagTest.ID(), testClientHelper().Ids.RandomAccountObjectIdentifier(), sdk.ObjectTypeSequence)

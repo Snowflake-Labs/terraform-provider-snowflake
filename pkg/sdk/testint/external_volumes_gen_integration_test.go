@@ -20,7 +20,7 @@ func TestInt_ExternalVolumes(t *testing.T) {
 	awsKmsKeyId := testenvs.GetOrSkipTest(t, testenvs.AwsExternalKeyId)
 	awsExternalId := "123456789"
 
-	gcsBaseUrl := testenvs.GetOrSkipTest(t, testenvs.GcsExternalBuckerUrl)
+	gcsBaseUrl := testenvs.GetOrSkipTest(t, testenvs.GcsExternalBucketUrl)
 	gcsKmsKeyId := "123456789"
 
 	azureBaseUrl := testenvs.GetOrSkipTest(t, testenvs.AzureExternalBucketUrl)

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 type v085ExternalFunctionId struct {
@@ -52,11 +53,11 @@ func v085ExternalFunctionStateUpgrader(ctx context.Context, rawState map[string]
 	argDataTypes := make([]sdk.DataType, 0)
 	if parsedV085ExternalFunctionId.ExternalFunctionArgTypes != "" {
 		for _, argType := range strings.Split(parsedV085ExternalFunctionId.ExternalFunctionArgTypes, "-") {
-			argDataType, err := sdk.ToDataType(argType)
+			argDataType, err := datatypes.ParseDataType(argType)
 			if err != nil {
 				return nil, err
 			}
-			argDataTypes = append(argDataTypes, argDataType)
+			argDataTypes = append(argDataTypes, sdk.LegacyDataTypeFrom(argDataType))
 		}
 	}
 

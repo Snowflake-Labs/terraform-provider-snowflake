@@ -39,7 +39,7 @@ func TestAccountCreate(t *testing.T) {
 			Comment:            String("Test account"),
 			Polaris:            Bool(true),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT %s ADMIN_NAME = 'someadmin' ADMIN_RSA_PUBLIC_KEY = '%s' ADMIN_USER_TYPE = SERVICE FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = true EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account' POLARIS = true`, id.FullyQualifiedName(), key)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT %s ADMIN_NAME = 'someadmin' ADMIN_RSA_PUBLIC_KEY = '%s' ADMIN_USER_TYPE = SERVICE FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = true EDITION = BUSINESS_CRITICAL REGION_GROUP = groupid REGION = regionid COMMENT = 'Test account' POLARIS = true`, id.FullyQualifiedName(), key)
 	})
 
 	t.Run("static password", func(t *testing.T) {
@@ -58,7 +58,7 @@ func TestAccountCreate(t *testing.T) {
 			Region:             String("regionid"),
 			Comment:            String("Test account"),
 		}
-		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT %s ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = '%s' FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = false EDITION = BUSINESS_CRITICAL REGION_GROUP = 'groupid' REGION = 'regionid' COMMENT = 'Test account'`, id.FullyQualifiedName(), password)
+		assertOptsValidAndSQLEquals(t, opts, `CREATE ACCOUNT %s ADMIN_NAME = 'someadmin' ADMIN_PASSWORD = '%s' FIRST_NAME = 'Ad' LAST_NAME = 'Min' EMAIL = 'admin@example.com' MUST_CHANGE_PASSWORD = false EDITION = BUSINESS_CRITICAL REGION_GROUP = groupid REGION = regionid COMMENT = 'Test account'`, id.FullyQualifiedName(), password)
 	})
 }
 
@@ -289,7 +289,7 @@ func TestAccountAlter(t *testing.T) {
 		opts := &AlterAccountOptions{
 			SetIsOrgAdmin: &AccountSetIsOrgAdmin{
 				Name:     id,
-				OrgAdmin: Bool(true),
+				OrgAdmin: true,
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `ALTER ACCOUNT %s SET IS_ORG_ADMIN = true`, id.FullyQualifiedName())
@@ -356,7 +356,7 @@ func TestAccountAlter(t *testing.T) {
 func TestAccountDrop(t *testing.T) {
 	t.Run("validate: empty options", func(t *testing.T) {
 		opts := &DropAccountOptions{}
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier, errNotSet("DropAccountOptions", "gracePeriodInDays"))
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("minimal", func(t *testing.T) {

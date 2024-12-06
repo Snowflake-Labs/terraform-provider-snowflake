@@ -3,87 +3,25 @@ package resources
 import (
 	"fmt"
 	"slices"
-	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataTypeValidateFunc(val interface{}, _ string) (warns []string, errs []error) {
-	if ok := sdk.IsValidDataType(val.(string)); !ok {
-		errs = append(errs, fmt.Errorf("%v is not a valid data type", val))
-	}
-	return
-}
-
-func dataTypeDiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	oldDT, err := sdk.ToDataType(old)
-	if err != nil {
-		return false
-	}
-	newDT, err := sdk.ToDataType(new)
-	if err != nil {
-		return false
-	}
-	return oldDT == newDT
-}
-
-// DataTypeIssue3007DiffSuppressFunc is a temporary solution to handle data type suppression problems.
-// Currently, it handles only number and text data types.
-// It falls back to Snowflake defaults for arguments if no arguments were provided for the data type.
-// TODO [SNOW-1348103 or SNOW-1348106]: visit with functions and procedures rework
-func DataTypeIssue3007DiffSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	oldDataType, err := sdk.ToDataType(old)
-	if err != nil {
-		return false
-	}
-	newDataType, err := sdk.ToDataType(new)
-	if err != nil {
-		return false
-	}
-	if oldDataType != newDataType {
-		return false
-	}
-	switch v := oldDataType; v {
-	case sdk.DataTypeNumber:
-		logging.DebugLogger.Printf("[DEBUG] DataTypeIssue3007DiffSuppressFunc: Handling number data type diff suppression")
-		oldPrecision, oldScale := sdk.ParseNumberDataTypeRaw(old)
-		newPrecision, newScale := sdk.ParseNumberDataTypeRaw(new)
-		return oldPrecision == newPrecision && oldScale == newScale
-	case sdk.DataTypeVARCHAR:
-		logging.DebugLogger.Printf("[DEBUG] DataTypeIssue3007DiffSuppressFunc: Handling text data type diff suppression")
-		oldLength := sdk.ParseVarcharDataTypeRaw(old)
-		newLength := sdk.ParseVarcharDataTypeRaw(new)
-		return oldLength == newLength
+func getTagObjectIdentifier(obj map[string]any) sdk.ObjectIdentifier {
+	database := obj["database"].(string)
+	schema := obj["schema"].(string)
+	name := obj["name"].(string)
+	switch {
+	case schema != "":
+		return sdk.NewSchemaObjectIdentifier(database, schema, name)
+	case database != "":
+		return sdk.NewDatabaseObjectIdentifier(database, name)
 	default:
-		logging.DebugLogger.Printf("[DEBUG] DataTypeIssue3007DiffSuppressFunc: Diff suppression for %s can't be currently handled", v)
+		return sdk.NewAccountObjectIdentifier(name)
 	}
-	return true
-}
-
-func ignoreTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	return strings.TrimSpace(old) == strings.TrimSpace(new)
-}
-
-func ignoreCaseSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	return strings.EqualFold(old, new)
-}
-
-func ignoreCaseAndTrimSpaceSuppressFunc(_, old, new string, _ *schema.ResourceData) bool {
-	return strings.EqualFold(strings.TrimSpace(old), strings.TrimSpace(new))
-}
-
-func getTagObjectIdentifier(v map[string]any) sdk.ObjectIdentifier {
-	if _, ok := v["database"]; ok {
-		if _, ok := v["schema"]; ok {
-			return sdk.NewSchemaObjectIdentifier(v["database"].(string), v["schema"].(string), v["name"].(string))
-		}
-		return sdk.NewDatabaseObjectIdentifier(v["database"].(string), v["name"].(string))
-	}
-	return sdk.NewAccountObjectIdentifier(v["name"].(string))
 }
 
 func getPropertyTags(d *schema.ResourceData, key string) []sdk.TagAssociation {
@@ -310,25 +248,35 @@ func JoinDiags(diagnostics ...diag.Diagnostics) diag.Diagnostics {
 	return result
 }
 
-// ListDiff Compares two lists (before and after), then compares and returns two lists that include
+// ListDiff compares two lists (before and after), then compares and returns two lists that include
 // added and removed items between those lists.
 func ListDiff[T comparable](beforeList []T, afterList []T) (added []T, removed []T) {
+	added, removed, _ = ListDiffWithCommonItems(beforeList, afterList)
+	return
+}
+
+// ListDiffWithCommonItems compares two lists (before and after), then compares and returns three lists that include
+// added, removed and common items between those lists.
+func ListDiffWithCommonItems[T comparable](beforeList []T, afterList []T) (added []T, removed []T, common []T) {
 	added = make([]T, 0)
 	removed = make([]T, 0)
+	common = make([]T, 0)
 
-	for _, privilegeBeforeChange := range beforeList {
-		if !slices.Contains(afterList, privilegeBeforeChange) {
-			removed = append(removed, privilegeBeforeChange)
+	for _, beforeItem := range beforeList {
+		if !slices.Contains(afterList, beforeItem) {
+			removed = append(removed, beforeItem)
+		} else {
+			common = append(common, beforeItem)
 		}
 	}
 
-	for _, privilegeAfterChange := range afterList {
-		if !slices.Contains(beforeList, privilegeAfterChange) {
-			added = append(added, privilegeAfterChange)
+	for _, afterItem := range afterList {
+		if !slices.Contains(beforeList, afterItem) {
+			added = append(added, afterItem)
 		}
 	}
 
-	return added, removed
+	return added, removed, common
 }
 
 // parseSchemaObjectIdentifierSet is a helper function to parse a given schema object identifier list from ResourceData.

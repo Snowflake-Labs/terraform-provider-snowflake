@@ -7,11 +7,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -311,7 +311,7 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	functionDefinition := d.Get("statement").(string)
 	handler := d.Get("handler").(string)
 	// create request with required
-	request := sdk.NewCreateForScalaFunctionRequest(id, returnDataType, handler)
+	request := sdk.NewCreateForScalaFunctionRequest(id, sdk.LegacyDataTypeFrom(returnDataType), handler)
 	request.WithFunctionDefinition(functionDefinition)
 
 	// Set optionals
@@ -739,16 +739,16 @@ func parseFunctionArguments(d *schema.ResourceData) ([]sdk.FunctionArgumentReque
 			if diags != nil {
 				return nil, diags
 			}
-			args = append(args, sdk.FunctionArgumentRequest{ArgName: argName, ArgDataType: argDataType})
+			args = append(args, sdk.FunctionArgumentRequest{ArgName: argName, ArgDataType: sdk.LegacyDataTypeFrom(argDataType)})
 		}
 	}
 	return args, nil
 }
 
-func convertFunctionDataType(s string) (sdk.DataType, diag.Diagnostics) {
-	dataType, err := sdk.ToDataType(s)
+func convertFunctionDataType(s string) (datatypes.DataType, diag.Diagnostics) {
+	dataType, err := datatypes.ParseDataType(s)
 	if err != nil {
-		return dataType, diag.FromErr(err)
+		return nil, diag.FromErr(err)
 	}
 	return dataType, nil
 }
@@ -759,13 +759,13 @@ func convertFunctionColumns(s string) ([]sdk.FunctionColumn, diag.Diagnostics) {
 	var columns []sdk.FunctionColumn
 	for _, match := range matches {
 		if len(match) == 3 {
-			dataType, err := sdk.ToDataType(match[2])
+			dataType, err := datatypes.ParseDataType(match[2])
 			if err != nil {
 				return nil, diag.FromErr(err)
 			}
 			columns = append(columns, sdk.FunctionColumn{
 				ColumnName:     match[1],
-				ColumnDataType: dataType,
+				ColumnDataType: sdk.LegacyDataTypeFrom(dataType),
 			})
 		}
 	}
@@ -789,7 +789,7 @@ func parseFunctionReturnsRequest(s string) (*sdk.FunctionReturnsRequest, diag.Di
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(returnDataType))
+		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }
