@@ -227,10 +227,6 @@ type DropFunctionOptions struct {
 }
 
 // ShowFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-user-functions.
-// TODO [this PR]: extended in
-// TODO [this PR]: check mapping for is_ columns
-// TODO [this PR]: add is_data_metric
-// TODO [this PR]: example does not list is_data_metric
 type ShowFunctionOptions struct {
 	show          bool  `ddl:"static" sql:"SHOW"`
 	userFunctions bool  `ddl:"static" sql:"USER FUNCTIONS"`

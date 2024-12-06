@@ -282,7 +282,8 @@ var FunctionsDef = g.NewInterface(
 		Field("is_secure", "sql.NullString").
 		Field("is_external_function", "string").
 		Field("language", "string").
-		Field("is_memoizable", "sql.NullString"),
+		Field("is_memoizable", "sql.NullString").
+		Field("is_data_metric", "sql.NullString"),
 	g.PlainStruct("Function").
 		Field("CreatedOn", "string").
 		Field("Name", "string").
@@ -300,12 +301,13 @@ var FunctionsDef = g.NewInterface(
 		Field("IsSecure", "bool").
 		Field("IsExternalFunction", "bool").
 		Field("Language", "string").
-		Field("IsMemoizable", "bool"),
+		Field("IsMemoizable", "bool").
+		Field("IsDataMetric", "bool"),
 	g.NewQueryStruct("ShowFunctions").
 		Show().
 		SQL("USER FUNCTIONS").
 		OptionalLike().
-		OptionalIn(),
+		OptionalExtendedIn(),
 ).ShowByIdOperation().DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-function",
