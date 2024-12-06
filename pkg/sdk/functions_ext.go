@@ -185,6 +185,8 @@ func (d *FunctionDetail) toBoolProperty() *BoolProperty {
 //- volatility
 //- [hidden for secure] body
 
+// TODO [SNOW-1348103 - this PR]: test creation with specifying parameters in the same query
+
 // CreateForJavaFunctionOptions
 // TODO [SNOW-1348103 - this PR]: test setting the paths for all types (like imports, target paths)
 // TODO [SNOW-1348103 - this PR]: test weird names for arg name - lower/upper if used with double quotes, to upper without quotes, dots, spaces, and both quotes not permitted

@@ -197,9 +197,9 @@ type FunctionSet struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	SecretsList                *SecretsList              `ddl:"parameter,parentheses" sql:"SECRETS"`
 	EnableConsoleOutput        *bool                     `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
-	LogLevel                   *LogLevel                 `ddl:"parameter" sql:"LOG_LEVEL"`
-	MetricLevel                *MetricLevel              `ddl:"parameter" sql:"METRIC_LEVEL"`
-	TraceLevel                 *TraceLevel               `ddl:"parameter" sql:"TRACE_LEVEL"`
+	LogLevel                   *LogLevel                 `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel                *MetricLevel              `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel                 *TraceLevel               `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
 }
 
 type SecretsList struct {
