@@ -25,3 +25,9 @@ func NewInterface(name string, nameSingular string, identifierKind string, opera
 func (i *Interface) NameLowerCased() string {
 	return startingWithLowerCase(i.Name)
 }
+
+// ObjectIdentifierKind returns the level of the object identifier (e.g. for DatabaseObjectIdentifier, it returns the prefix "Database")
+func (i *Interface) ObjectIdentifierPrefix() idPrefix {
+	// return strings.Replace(i.IdentifierKind, "ObjectIdentifier", "", 1)
+	return identifierStringToPrefix(i.IdentifierKind)
+}

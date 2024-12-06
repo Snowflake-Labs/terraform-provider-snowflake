@@ -53,7 +53,9 @@ func (v *secrets) Show(ctx context.Context, request *ShowSecretRequest) ([]Secre
 }
 
 func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error) {
-	request := NewShowSecretRequest().WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).WithLike(Like{String(id.Name())})
+	request := NewShowSecretRequest().
+		WithLike(Like{Pattern: String(id.Name())}).
+		WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}})
 	secrets, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
@@ -78,8 +80,7 @@ func (r *CreateWithOAuthClientCredentialsFlowSecretRequest) toOpts() *CreateWith
 		IfNotExists:    r.IfNotExists,
 		name:           r.name,
 		ApiIntegration: r.ApiIntegration,
-
-		Comment: r.Comment,
+		Comment:        r.Comment,
 	}
 
 	if r.OauthScopes != nil {

@@ -33,7 +33,8 @@ func (v *applicationRoles) Show(ctx context.Context, request *ShowApplicationRol
 }
 
 func (v *applicationRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*ApplicationRole, error) {
-	request := NewShowApplicationRoleRequest().WithApplicationName(id.DatabaseId())
+	request := NewShowApplicationRoleRequest().
+		WithApplicationName(id.DatabaseId())
 	applicationRoles, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

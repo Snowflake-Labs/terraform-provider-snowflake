@@ -2,8 +2,6 @@
 
 package sdk
 
-import ()
-
 func NewCreateWithOAuthClientCredentialsFlowSecretRequest(
 	name SchemaObjectIdentifier,
 	ApiIntegration AccountObjectIdentifier,
