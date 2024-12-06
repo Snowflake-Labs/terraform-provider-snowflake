@@ -9,9 +9,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
@@ -116,6 +113,11 @@ func (c *AccountClient) ShowRegions(t *testing.T) []Region {
 	require.NoError(t, err)
 
 	return regions
+}
+
+func (c *AccountClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Account, error) {
+	t.Helper()
+	return c.client().ShowByID(context.Background(), id)
 }
 
 func (c *AccountClient) CreateAndLogIn(t *testing.T) (*sdk.Account, *sdk.Client, func()) {
