@@ -115,6 +115,11 @@ func (c *AccountClient) ShowRegions(t *testing.T) []Region {
 	return regions
 }
 
+func (c *AccountClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Account, error) {
+	t.Helper()
+	return c.client().ShowByID(context.Background(), id)
+}
+
 func (c *AccountClient) CreateAndLogIn(t *testing.T) (*sdk.Account, *sdk.Client, func()) {
 	t.Helper()
 	id := c.ids.RandomAccountObjectIdentifier()
