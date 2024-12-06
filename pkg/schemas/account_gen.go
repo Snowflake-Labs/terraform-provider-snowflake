@@ -83,7 +83,7 @@ func AccountToSchema(account *sdk.Account) map[string]any {
 	accountSchema["account_name"] = account.AccountName
 	accountSchema["region_group"] = account.RegionGroup
 	accountSchema["snowflake_region"] = account.SnowflakeRegion
-	accountSchema["edition"] = string(account.Edition)
+	accountSchema["edition"] = account.Edition
 	accountSchema["account_url"] = account.AccountURL
 	accountSchema["created_on"] = account.CreatedOn.String()
 	accountSchema["comment"] = account.Comment
