@@ -5,14 +5,14 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 //go:generate go run ./poc/main.go
 
 var functionArgument = g.NewQueryStruct("FunctionArgument").
-	Text("ArgName", g.KeywordOptions().NoQuotes().Required()).
+	Text("ArgName", g.KeywordOptions().DoubleQuotes().Required()).
 	PredefinedQueryStructField("ArgDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
 	PredefinedQueryStructField("ArgDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT")).
 	WithValidation(g.ExactlyOneValueSet, "ArgDataTypeOld", "ArgDataType")
 
 var functionColumn = g.NewQueryStruct("FunctionColumn").
-	Text("ColumnName", g.KeywordOptions().NoQuotes().Required()).
+	Text("ColumnName", g.KeywordOptions().DoubleQuotes().Required()).
 	PredefinedQueryStructField("ColumnDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
 	PredefinedQueryStructField("ColumnDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 	WithValidation(g.ExactlyOneValueSet, "ColumnDataTypeOld", "ColumnDataType")
