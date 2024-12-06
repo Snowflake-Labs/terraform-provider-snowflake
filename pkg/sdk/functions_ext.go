@@ -90,3 +90,63 @@ func (d *FunctionDetail) toBoolProperty() *BoolProperty {
 		Description: d.Property,
 	}
 }
+
+//python function describe:
+//- signature
+//- returns
+//- language
+//- null handling
+//- volatility
+//- [hidden for secure] body
+//- external_access_integrations
+//- secrets
+//- [hidden for secure] imports
+//- [hidden for secure] handler
+//- [hidden for secure] runtime_version
+//- [hidden for secure] packages
+//- [hidden for secure] installed_packages
+//- is_aggregate
+//
+//SQL function describe:
+//- signature
+//- returns
+//- language
+//- [hidden for secure] body
+//
+//scala function describe:
+//- signature
+//- returns
+//- language
+//- null handling
+//- volatility
+//- [hidden for secure] body
+//- [hidden for secure] imports
+//- [hidden for secure] handler
+//- [hidden for secure] target_path - test with target path set
+//- [hidden for secure] runtime_version
+//- [hidden for secure] packages
+//- external_access_integrations
+//- secrets
+//
+//java:
+//- signature
+//- returns
+//- language
+//- null handling
+//- volatility
+//- [hidden for secure] body
+//- [hidden for secure] imports
+//- [hidden for secure] handler
+//- [hidden for secure] target_path
+//- [hidden for secure] runtime_version
+//- [hidden for secure] packages
+//- external_access_integrations
+//- secrets
+//
+//javascript:
+//- signature
+//- returns
+//- language
+//- null handling
+//- volatility
+//- [hidden for secure] body
