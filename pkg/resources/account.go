@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
@@ -161,7 +162,30 @@ func Account() *schema.Resource {
 		},
 
 		// TODO: State upgrader
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0_99_0_AccountStateUpgrader,
+			},
+		},
 	}
+}
+
+func v0_99_0_AccountStateUpgrader(ctx context.Context, state map[string]any, meta any) (map[string]any, error) {
+	client := meta.(*provider.Context).Client
+	state["must_change_password"] = booleanStringFromBool(state["must_change_password"].(bool))
+	state["is_org_admin"] = booleanStringFromBool(state["is_org_admin"].(bool))
+	account, err := client.Accounts.ShowByID(ctx, sdk.NewAccountObjectIdentifier(state["name"].(string)))
+	if err != nil {
+		return nil, err
+	}
+
+	state["id"] = helpers.EncodeResourceIdentifier(sdk.NewAccountIdentifier(account.OrganizationName, account.AccountName))
+
+	return state, nil
 }
 
 func ImportAccount(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {

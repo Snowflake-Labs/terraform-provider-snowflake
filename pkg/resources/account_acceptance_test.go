@@ -1,6 +1,7 @@
 package resources_test
 
 import (
+	"fmt"
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
@@ -543,6 +544,108 @@ func TestAcc_Account_InvalidValues(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAcc_Account_UpgradeFrom_v0_99_0(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
+
+	email := random.Email()
+	name := random.AdminName()
+	adminName := random.AdminName()
+	adminPassword := random.Password()
+	firstName := random.AdminName()
+	lastName := random.AdminName()
+	region := acc.TestClient().Context.CurrentRegion(t)
+	comment := random.Comment()
+
+	configModel := model.Account("test", adminName, string(sdk.UserTypeService), string(sdk.EditionStandard), email, 3, name).
+		WithAdminPassword(adminPassword).
+		WithFirstName(firstName).
+		WithLastName(lastName).
+		WithMustChangePassword(r.BooleanTrue).
+		WithRegion(region).
+		WithIsOrgAdmin(r.BooleanFalse).
+		WithComment(comment)
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Account),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.99.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: accountConfig_v0_99_0(name, adminName, adminPassword, email, sdk.EditionStandard, firstName, lastName, true, region, 3, comment),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModel.ResourceReference()).
+						HasNameString(name).
+						HasAdminNameString(adminName).
+						HasAdminPasswordString(adminPassword).
+						HasEmailString(email).
+						HasFirstNameString(firstName).
+						HasLastNameString(lastName).
+						HasMustChangePasswordString(r.BooleanTrue).
+						HasRegionGroupString("").
+						HasRegionString(region).
+						HasCommentString(comment).
+						HasIsOrgAdminString(r.BooleanFalse).
+						HasGracePeriodInDaysString("3"),
+				),
+			},
+		},
+	})
+}
+
+func accountConfig_v0_99_0(
+	name string,
+	adminName string,
+	adminPassword string,
+	email string,
+	edition sdk.AccountEdition,
+	firstName string,
+	lastName string,
+	mustChangePassword bool,
+	region string,
+	gracePeriodInDays int,
+	comment string,
+) string {
+	return fmt.Sprintf(`
+resource "snowflake_account" "test" {
+	name = "%[1]s"
+	admin_name = "%[2]s"
+	admin_password = "%[3]s"
+	email = "%[4]s"
+	edition = "%[5]s"
+	first_name = "%[6]s"
+	last_name = "%[7]s"
+	must_change_password = %[8]t
+	region = "%[9]s"
+	grace_period_in_days = %[10]d 
+	comment = "%[11]s"
+}
+`,
+		name,
+		adminName,
+		adminPassword,
+		email,
+		edition,
+		firstName,
+		lastName,
+		mustChangePassword,
+		region,
+		gracePeriodInDays,
+		comment,
+	)
 }
 
 // TODO: State upgrader
