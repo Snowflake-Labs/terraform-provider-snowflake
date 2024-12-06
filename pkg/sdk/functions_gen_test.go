@@ -1129,6 +1129,26 @@ func TestFunctions_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET COMMENT = 'comment', TRACE_LEVEL = 'OFF'`, id.FullyQualifiedName())
 	})
 
+	t.Run("alter: set empty secrets", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &FunctionSet{
+			SecretsList: &SecretsList{},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET SECRETS = ()`, id.FullyQualifiedName())
+	})
+
+	t.Run("alter: set non-empty secrets", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &FunctionSet{
+			SecretsList: &SecretsList{
+				[]SecretReference{
+					{VariableName: "abc", Name: "secret_name"},
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET SECRETS = ('abc' = secret_name)`, id.FullyQualifiedName())
+	})
+
 	t.Run("alter: unset", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Unset = &FunctionUnset{
