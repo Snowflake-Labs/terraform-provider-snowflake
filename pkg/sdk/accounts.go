@@ -362,7 +362,7 @@ type Account struct {
 	CreatedOn                            *time.Time
 	Comment                              *string
 	AccountLocator                       string
-	AccountLocatorURL                    *string
+	AccountLocatorUrl                    *string
 	ManagedAccounts                      *int
 	ConsumptionBillingEntityName         *string
 	MarketplaceConsumerBillingEntityName *string
@@ -450,7 +450,7 @@ func (row accountDBRow) convert() *Account {
 		acc.Comment = &row.Comment.String
 	}
 	if row.AccountLocatorURL.Valid {
-		acc.AccountLocatorURL = &row.AccountLocatorURL.String
+		acc.AccountLocatorUrl = &row.AccountLocatorURL.String
 	}
 	if row.ManagedAccounts.Valid {
 		acc.ManagedAccounts = Int(int(row.ManagedAccounts.Int32))

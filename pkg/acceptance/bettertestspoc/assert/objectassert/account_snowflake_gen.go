@@ -148,11 +148,11 @@ func (a *AccountAssert) HasAccountLocator(expected string) *AccountAssert {
 func (a *AccountAssert) HasAccountLocatorURL(expected string) *AccountAssert {
 	a.AddAssertion(func(t *testing.T, o *sdk.Account) error {
 		t.Helper()
-		if o.AccountLocatorURL == nil {
+		if o.AccountLocatorUrl == nil {
 			return fmt.Errorf("expected account locator url to have value; got: nil")
 		}
-		if *o.AccountLocatorURL != expected {
-			return fmt.Errorf("expected account locator url: %v; got: %v", expected, *o.AccountLocatorURL)
+		if *o.AccountLocatorUrl != expected {
+			return fmt.Errorf("expected account locator url: %v; got: %v", expected, *o.AccountLocatorUrl)
 		}
 		return nil
 	})

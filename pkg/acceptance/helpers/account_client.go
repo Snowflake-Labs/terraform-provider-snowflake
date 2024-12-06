@@ -141,7 +141,7 @@ func (c *AccountClient) CreateAndLogIn(t *testing.T) (*sdk.Account, *sdk.Client,
 		newClient, err := sdk.NewClient(&gosnowflake.Config{
 			Account:       fmt.Sprintf("%s-%s", account.OrganizationName, account.AccountName),
 			User:          name,
-			Host:          strings.TrimPrefix(*account.AccountLocatorURL, `https://`),
+			Host:          strings.TrimPrefix(*account.AccountLocatorUrl, `https://`),
 			Authenticator: gosnowflake.AuthTypeJwt,
 			PrivateKey:    privateKey,
 			Role:          snowflakeroles.Accountadmin.Name(),

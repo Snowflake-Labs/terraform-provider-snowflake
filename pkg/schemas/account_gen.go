@@ -151,8 +151,8 @@ func AccountToSchema(account *sdk.Account) map[string]any {
 		accountSchema["comment"] = account.Comment
 	}
 	accountSchema["account_locator"] = account.AccountLocator
-	if account.AccountLocatorURL != nil {
-		accountSchema["account_locator_url"] = account.AccountLocatorURL
+	if account.AccountLocatorUrl != nil {
+		accountSchema["account_locator_url"] = account.AccountLocatorUrl
 	}
 	if account.ManagedAccounts != nil {
 		accountSchema["managed_accounts"] = account.ManagedAccounts

@@ -37,7 +37,7 @@ func TestInt_Account(t *testing.T) {
 		assert.NotEmpty(t, *account.CreatedOn)
 		assert.Equal(t, "SNOWFLAKE", *account.Comment)
 		assert.NotEmpty(t, account.AccountLocator)
-		assert.NotEmpty(t, *account.AccountLocatorURL)
+		assert.NotEmpty(t, *account.AccountLocatorUrl)
 		assert.Zero(t, *account.ManagedAccounts)
 		assert.NotEmpty(t, *account.ConsumptionBillingEntityName)
 		assert.Nil(t, account.MarketplaceConsumerBillingEntityName)
@@ -65,7 +65,7 @@ func TestInt_Account(t *testing.T) {
 		assert.Nil(t, account.AccountURL)
 		assert.Nil(t, account.CreatedOn)
 		assert.Nil(t, account.Comment)
-		assert.Nil(t, account.AccountLocatorURL)
+		assert.Nil(t, account.AccountLocatorUrl)
 		assert.Nil(t, account.ManagedAccounts)
 		assert.Nil(t, account.ConsumptionBillingEntityName)
 		assert.Nil(t, account.MarketplaceConsumerBillingEntityName)
@@ -97,8 +97,7 @@ func TestInt_Account(t *testing.T) {
 		assert.NotNil(t, response)
 		if response != nil {
 			assert.Equal(t, account.AccountLocator, response.AccountLocator)
-			// TODO: Rename to Url
-			assert.Equal(t, *account.AccountLocatorURL, response.AccountLocatorUrl)
+			assert.Equal(t, *account.AccountLocatorUrl, response.AccountLocatorUrl)
 			assert.Equal(t, account.AccountName, response.AccountName)
 			assert.Equal(t, *account.AccountURL, response.Url)
 			assert.Equal(t, account.OrganizationName, response.OrganizationName)
