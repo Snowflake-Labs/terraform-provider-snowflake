@@ -26,8 +26,7 @@ type Functions interface {
 
 // CreateForJavaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#java-handler.
 // TODO [SNOW-1348103 - this PR]: test setting the paths for all types (like imports, target paths)
-// TODO [SNOW-1348103 - this PR]: test weird names for arg name
-// TODO [SNOW-1348103 - this PR]: test two types of creation for each func
+// TODO [SNOW-1348103 - this PR]: test weird names for arg name - lower/upper if used with double quotes, to upper without quotes, dots, spaces, and both quotes not permitted
 // TODO [SNOW-1348103 - next PRs]: check data type mappings https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages (signature + returns)
 // TODO [SNOW-1348103 - this PR]: setting RUNTIME_VERSION (only 11.x, 17.x supported, 11.x being the default)
 // TODO [SNOW-1348103 - this PR]: packages: package_name:version_number; do we validate? - check SELECT * FROM INFORMATION_SCHEMA.PACKAGES WHERE LANGUAGE = 'java';
