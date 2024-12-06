@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.100.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.99.0...v0.100.0) (2024-12-06)
+
+
+### 🎉 **What's new:**
+
+* Account v1 readiness ([#3236](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3236)) ([5df33a8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5df33a8c1abe38c29124bac1e03727202c556347))
+* Account v1 readiness generated files ([#3242](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3242)) ([3df59dd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3df59dd51b53acae9155b732811cfda56d7f20b8))
+* Rework data types ([#3244](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3244)) ([05ada91](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/05ada917414ea7c574be3974c7de4f09535961fd))
+* Tag association v1 readiness ([#3210](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3210)) ([04f6d54](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/04f6d54a83cf4e9ea4b292087eefa056114eb5b5))
+* Use new data types in sql builder for functions and procedures ([#3247](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3247)) ([69f677a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/69f677a6f86faa79cdece4d422eb61284c1599a6))
+
+
+### 🔧 **Misc**
+
+* Adress small task-related todos ([#3243](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3243)) ([40de9ae](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/40de9ae93796afbc3091aa2fbb2c5dfba71f911c))
+* Apply masking ([#3234](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3234)) ([c209a8a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c209a8ae6c15fa9515e933d18add962070b60257))
+* Improve config builders ([#3207](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3207)) ([425787c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/425787c5938e88895af1157f505889611bdef398))
+* Revert to proper env ([#3238](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3238)) ([5d4ed3b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5d4ed3bc233a77196f01351d9c972bb56730298e))
+* Use service user for ci ([#3228](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3228)) ([2fb50d7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2fb50d7b5beb1f361d3c761b344bab3216f6ea59))
+
+
+### 🐛 **Bug fixes:**
+
+* Minor fixes ([#3231](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3231)) ([1863bf6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1863bf697f05177f27c351c0687c4bee24fe2c1b))
+
 ## [0.99.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.98.0...v0.99.0) (2024-11-26)
 
 
