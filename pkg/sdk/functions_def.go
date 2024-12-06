@@ -38,8 +38,10 @@ var functionReturns = g.NewQueryStruct("FunctionReturns").
 	).WithValidation(g.ExactlyOneValueSet, "ResultDataType", "Table")
 
 var (
-	functionImports  = g.NewQueryStruct("FunctionImport").Text("Import", g.KeywordOptions().SingleQuotes())
-	functionPackages = g.NewQueryStruct("FunctionPackage").Text("Package", g.KeywordOptions().SingleQuotes())
+	functionImports            = g.NewQueryStruct("FunctionImport").Text("Import", g.KeywordOptions().SingleQuotes())
+	functionPackages           = g.NewQueryStruct("FunctionPackage").Text("Package", g.KeywordOptions().SingleQuotes())
+	functionSecretsListWrapper = g.NewQueryStruct("SecretsList").
+					List("SecretsList", "SecretReference", g.ListOptions().Required().MustParentheses())
 )
 
 var FunctionsDef = g.NewInterface(
@@ -242,19 +244,39 @@ var FunctionsDef = g.NewInterface(
 		IfExists().
 		Name().
 		Identifier("RenameTo", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
-		OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
-		OptionalTextAssignment("SET LOG_LEVEL", g.ParameterOptions().SingleQuotes()).
-		OptionalTextAssignment("SET TRACE_LEVEL", g.ParameterOptions().SingleQuotes()).
+		OptionalQueryStructField(
+			"Set",
+			g.NewQueryStruct("FunctionSet").
+				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
+				ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
+				OptionalQueryStructField("SecretsList", functionSecretsListWrapper, g.ParameterOptions().SQL("SECRETS").Parentheses()).
+				OptionalBooleanAssignment("ENABLE_CONSOLE_OUTPUT", nil).
+				OptionalAssignment("LOG_LEVEL", g.KindOfTPointer[LogLevel](), g.ParameterOptions()).
+				OptionalAssignment("METRIC_LEVEL", g.KindOfTPointer[MetricLevel](), g.ParameterOptions()).
+				OptionalAssignment("TRACE_LEVEL", g.KindOfTPointer[TraceLevel](), g.ParameterOptions()).
+				// TODO [this PR]: test setting secrets to empty (nil versus empty list)
+				WithValidation(g.AtLeastOneValueSet, "Comment", "ExternalAccessIntegrations", "SecretsList", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"),
+			g.ListOptions().SQL("SET"),
+		).
+		OptionalQueryStructField(
+			"Unset",
+			g.NewQueryStruct("FunctionUnset").
+				OptionalSQL("COMMENT").
+				OptionalSQL("EXTERNAL_ACCESS_INTEGRATIONS").
+				OptionalSQL("ENABLE_CONSOLE_OUTPUT").
+				OptionalSQL("LOG_LEVEL").
+				OptionalSQL("METRIC_LEVEL").
+				OptionalSQL("TRACE_LEVEL").
+				WithValidation(g.AtLeastOneValueSet, "Comment", "ExternalAccessIntegrations", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"),
+			g.ListOptions().SQL("UNSET"),
+		).
 		OptionalSQL("SET SECURE").
 		OptionalSQL("UNSET SECURE").
-		OptionalSQL("UNSET LOG_LEVEL").
-		OptionalSQL("UNSET TRACE_LEVEL").
-		OptionalSQL("UNSET COMMENT").
 		OptionalSetTags().
 		OptionalUnsetTags().
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidIdentifierIfSet, "RenameTo").
-		WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "SetLogLevel", "SetTraceLevel", "SetSecure", "UnsetLogLevel", "UnsetTraceLevel", "UnsetSecure", "UnsetComment", "SetTags", "UnsetTags"),
+		WithValidation(g.ExactlyOneValueSet, "RenameTo", "Set", "Unset", "SetSecure", "UnsetSecure", "SetTags", "UnsetTags"),
 ).DropOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/drop-function",
 	g.NewQueryStruct("DropFunction").

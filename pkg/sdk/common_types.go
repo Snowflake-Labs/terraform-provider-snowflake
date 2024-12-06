@@ -259,6 +259,7 @@ func ReturnNullValuesPointer(v ReturnNullValues) *ReturnNullValues {
 	return &v
 }
 
+// TODO [this PR]: Name -> Identifier?
 type SecretReference struct {
 	VariableName string `ddl:"keyword,single_quotes"`
 	Name         string `ddl:"parameter,no_quotes"`
@@ -354,6 +355,29 @@ var AllTraceLevels = []TraceLevel{
 	TraceLevelAlways,
 	TraceLevelOnEvent,
 	TraceLevelOff,
+}
+
+type MetricLevel string
+
+const (
+	MetricLevelAll  MetricLevel = "ALL"
+	MetricLevelNone MetricLevel = "NONE"
+)
+
+func ToMetricLevel(value string) (MetricLevel, error) {
+	switch strings.ToUpper(value) {
+	case string(MetricLevelAll):
+		return MetricLevelAll, nil
+	case string(MetricLevelNone):
+		return MetricLevelNone, nil
+	default:
+		return "", fmt.Errorf("unknown metric level: %s", value)
+	}
+}
+
+var AllMetricLevels = []MetricLevel{
+	MetricLevelAll,
+	MetricLevelNone,
 }
 
 // StringAllowEmpty is a wrapper on string to allow using empty strings in SQL.

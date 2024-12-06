@@ -207,9 +207,3 @@ func (d *FunctionDetail) toBoolProperty() *BoolProperty {
 
 // CreateForScalaFunctionOptions
 // TODO [SNOW-1348103 - this PR]: setting RUNTIME_VERSION (only 2.12 supported, which is the default)
-
-// AlterFunctionOptions
-// TODO [this PR]: can we run multiple sets/unsets? - yes, parameters + all besides SECURE
-// TODO [this PR]: add setting EXTERNAL_ACCESS_INTEGRATIONS/SECRETS
-// TODO [this PR]: unset EXTERNAL_ACCESS_INTEGRATIONS or SECRETS? - works for external access integrations, passes for secrets but does nothing SET to () works for secrets
-// TODO [this PR]: EXTERNAL_ACCESS_INTEGRATIONS or SECRETS in Javascript or SQL - not working, working in SCALA though
