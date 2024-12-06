@@ -25,7 +25,6 @@ type Functions interface {
 }
 
 // CreateForJavaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#java-handler.
-// TODO [SNOW-1348103 - this PR]: test secure (for each type, with owner and underprivileged role), read https://docs.snowflake.com/en/developer-guide/secure-udf-procedure
 // TODO [SNOW-1348103 - this PR]: test setting the paths for all types (like imports, target paths)
 // TODO [SNOW-1348103 - this PR]: test weird names for arg name
 // TODO [SNOW-1348103 - this PR]: test two types of creation for each func
@@ -196,10 +195,10 @@ type CreateForSQLFunctionOptions struct {
 }
 
 // AlterFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-function.
-// TODO [this PR]: can we run multiple sets/unsets?
+// TODO [this PR]: can we run multiple sets/unsets? - yes, parameters + all besides SECURE
 // TODO [this PR]: add setting EXTERNAL_ACCESS_INTEGRATIONS/SECRETS
-// TODO [this PR]: unset EXTERNAL_ACCESS_INTEGRATIONS or SECRETS?
-// TODO [this PR]: EXTERNAL_ACCESS_INTEGRATIONS or SECRETS in Javascript or SQL
+// TODO [this PR]: unset EXTERNAL_ACCESS_INTEGRATIONS or SECRETS? - works for external access integrations, passes for secrets but does nothing SET to () works for secrets
+// TODO [this PR]: EXTERNAL_ACCESS_INTEGRATIONS or SECRETS in Javascript or SQL - not working, working in SCALA though
 type AlterFunctionOptions struct {
 	alter           bool                                `ddl:"static" sql:"ALTER"`
 	function        bool                                `ddl:"static" sql:"FUNCTION"`
