@@ -93,6 +93,7 @@ type CreateForPythonFunctionRequest struct {
 	OrReplace                  *bool
 	Temporary                  *bool
 	Secure                     *bool
+	Aggregate                  *bool
 	IfNotExists                *bool
 	name                       SchemaObjectIdentifier // required
 	Arguments                  []FunctionArgumentRequest
@@ -149,19 +150,38 @@ type CreateForSQLFunctionRequest struct {
 }
 
 type AlterFunctionRequest struct {
-	IfExists        *bool
-	name            SchemaObjectIdentifierWithArguments // required
-	RenameTo        *SchemaObjectIdentifier
-	SetComment      *string
-	SetLogLevel     *string
-	SetTraceLevel   *string
-	SetSecure       *bool
-	UnsetSecure     *bool
-	UnsetLogLevel   *bool
-	UnsetTraceLevel *bool
-	UnsetComment    *bool
-	SetTags         []TagAssociation
-	UnsetTags       []ObjectIdentifier
+	IfExists    *bool
+	name        SchemaObjectIdentifierWithArguments // required
+	RenameTo    *SchemaObjectIdentifier
+	Set         *FunctionSetRequest
+	Unset       *FunctionUnsetRequest
+	SetSecure   *bool
+	UnsetSecure *bool
+	SetTags     []TagAssociation
+	UnsetTags   []ObjectIdentifier
+}
+
+type FunctionSetRequest struct {
+	Comment                    *string
+	ExternalAccessIntegrations []AccountObjectIdentifier
+	SecretsList                *SecretsListRequest
+	EnableConsoleOutput        *bool
+	LogLevel                   *LogLevel
+	MetricLevel                *MetricLevel
+	TraceLevel                 *TraceLevel
+}
+
+type SecretsListRequest struct {
+	SecretsList []SecretReference // required
+}
+
+type FunctionUnsetRequest struct {
+	Comment                    *bool
+	ExternalAccessIntegrations *bool
+	EnableConsoleOutput        *bool
+	LogLevel                   *bool
+	MetricLevel                *bool
+	TraceLevel                 *bool
 }
 
 type DropFunctionRequest struct {
@@ -171,7 +191,7 @@ type DropFunctionRequest struct {
 
 type ShowFunctionRequest struct {
 	Like *Like
-	In   *In
+	In   *ExtendedIn
 }
 
 type DescribeFunctionRequest struct {

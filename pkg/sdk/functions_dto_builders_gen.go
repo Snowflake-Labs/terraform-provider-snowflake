@@ -279,6 +279,11 @@ func (s *CreateForPythonFunctionRequest) WithSecure(Secure bool) *CreateForPytho
 	return s
 }
 
+func (s *CreateForPythonFunctionRequest) WithAggregate(Aggregate bool) *CreateForPythonFunctionRequest {
+	s.Aggregate = &Aggregate
+	return s
+}
+
 func (s *CreateForPythonFunctionRequest) WithIfNotExists(IfNotExists bool) *CreateForPythonFunctionRequest {
 	s.IfNotExists = &IfNotExists
 	return s
@@ -506,18 +511,13 @@ func (s *AlterFunctionRequest) WithRenameTo(RenameTo SchemaObjectIdentifier) *Al
 	return s
 }
 
-func (s *AlterFunctionRequest) WithSetComment(SetComment string) *AlterFunctionRequest {
-	s.SetComment = &SetComment
+func (s *AlterFunctionRequest) WithSet(Set FunctionSetRequest) *AlterFunctionRequest {
+	s.Set = &Set
 	return s
 }
 
-func (s *AlterFunctionRequest) WithSetLogLevel(SetLogLevel string) *AlterFunctionRequest {
-	s.SetLogLevel = &SetLogLevel
-	return s
-}
-
-func (s *AlterFunctionRequest) WithSetTraceLevel(SetTraceLevel string) *AlterFunctionRequest {
-	s.SetTraceLevel = &SetTraceLevel
+func (s *AlterFunctionRequest) WithUnset(Unset FunctionUnsetRequest) *AlterFunctionRequest {
+	s.Unset = &Unset
 	return s
 }
 
@@ -531,21 +531,6 @@ func (s *AlterFunctionRequest) WithUnsetSecure(UnsetSecure bool) *AlterFunctionR
 	return s
 }
 
-func (s *AlterFunctionRequest) WithUnsetLogLevel(UnsetLogLevel bool) *AlterFunctionRequest {
-	s.UnsetLogLevel = &UnsetLogLevel
-	return s
-}
-
-func (s *AlterFunctionRequest) WithUnsetTraceLevel(UnsetTraceLevel bool) *AlterFunctionRequest {
-	s.UnsetTraceLevel = &UnsetTraceLevel
-	return s
-}
-
-func (s *AlterFunctionRequest) WithUnsetComment(UnsetComment bool) *AlterFunctionRequest {
-	s.UnsetComment = &UnsetComment
-	return s
-}
-
 func (s *AlterFunctionRequest) WithSetTags(SetTags []TagAssociation) *AlterFunctionRequest {
 	s.SetTags = SetTags
 	return s
@@ -553,6 +538,87 @@ func (s *AlterFunctionRequest) WithSetTags(SetTags []TagAssociation) *AlterFunct
 
 func (s *AlterFunctionRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterFunctionRequest {
 	s.UnsetTags = UnsetTags
+	return s
+}
+
+func NewFunctionSetRequest() *FunctionSetRequest {
+	return &FunctionSetRequest{}
+}
+
+func (s *FunctionSetRequest) WithComment(Comment string) *FunctionSetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func (s *FunctionSetRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *FunctionSetRequest {
+	s.ExternalAccessIntegrations = ExternalAccessIntegrations
+	return s
+}
+
+func (s *FunctionSetRequest) WithSecretsList(SecretsList SecretsListRequest) *FunctionSetRequest {
+	s.SecretsList = &SecretsList
+	return s
+}
+
+func (s *FunctionSetRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *FunctionSetRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *FunctionSetRequest) WithLogLevel(LogLevel LogLevel) *FunctionSetRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *FunctionSetRequest) WithMetricLevel(MetricLevel MetricLevel) *FunctionSetRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *FunctionSetRequest) WithTraceLevel(TraceLevel TraceLevel) *FunctionSetRequest {
+	s.TraceLevel = &TraceLevel
+	return s
+}
+
+func NewSecretsListRequest(
+	SecretsList []SecretReference,
+) *SecretsListRequest {
+	s := SecretsListRequest{}
+	s.SecretsList = SecretsList
+	return &s
+}
+
+func NewFunctionUnsetRequest() *FunctionUnsetRequest {
+	return &FunctionUnsetRequest{}
+}
+
+func (s *FunctionUnsetRequest) WithComment(Comment bool) *FunctionUnsetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func (s *FunctionUnsetRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations bool) *FunctionUnsetRequest {
+	s.ExternalAccessIntegrations = &ExternalAccessIntegrations
+	return s
+}
+
+func (s *FunctionUnsetRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *FunctionUnsetRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *FunctionUnsetRequest) WithLogLevel(LogLevel bool) *FunctionUnsetRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *FunctionUnsetRequest) WithMetricLevel(MetricLevel bool) *FunctionUnsetRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *FunctionUnsetRequest) WithTraceLevel(TraceLevel bool) *FunctionUnsetRequest {
+	s.TraceLevel = &TraceLevel
 	return s
 }
 
@@ -578,7 +644,7 @@ func (s *ShowFunctionRequest) WithLike(Like Like) *ShowFunctionRequest {
 	return s
 }
 
-func (s *ShowFunctionRequest) WithIn(In In) *ShowFunctionRequest {
+func (s *ShowFunctionRequest) WithIn(In ExtendedIn) *ShowFunctionRequest {
 	s.In = &In
 	return s
 }

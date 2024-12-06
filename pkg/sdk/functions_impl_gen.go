@@ -60,7 +60,7 @@ func (v *functions) Show(ctx context.Context, request *ShowFunctionRequest) ([]F
 }
 
 func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error) {
-	functions, err := v.Show(ctx, NewShowFunctionRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())}))
+	functions, err := v.Show(ctx, NewShowFunctionRequest().WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).WithLike(Like{String(id.Name())}))
 	if err != nil {
 		return nil, err
 	}
@@ -210,6 +210,7 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 		OrReplace:   r.OrReplace,
 		Temporary:   r.Temporary,
 		Secure:      r.Secure,
+		Aggregate:   r.Aggregate,
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
 
@@ -387,19 +388,39 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 
 func (r *AlterFunctionRequest) toOpts() *AlterFunctionOptions {
 	opts := &AlterFunctionOptions{
-		IfExists:        r.IfExists,
-		name:            r.name,
-		RenameTo:        r.RenameTo,
-		SetComment:      r.SetComment,
-		SetLogLevel:     r.SetLogLevel,
-		SetTraceLevel:   r.SetTraceLevel,
-		SetSecure:       r.SetSecure,
-		UnsetSecure:     r.UnsetSecure,
-		UnsetLogLevel:   r.UnsetLogLevel,
-		UnsetTraceLevel: r.UnsetTraceLevel,
-		UnsetComment:    r.UnsetComment,
-		SetTags:         r.SetTags,
-		UnsetTags:       r.UnsetTags,
+		IfExists:    r.IfExists,
+		name:        r.name,
+		RenameTo:    r.RenameTo,
+		SetSecure:   r.SetSecure,
+		UnsetSecure: r.UnsetSecure,
+		SetTags:     r.SetTags,
+		UnsetTags:   r.UnsetTags,
+	}
+	if r.Set != nil {
+		opts.Set = &FunctionSet{
+			Comment:                    r.Set.Comment,
+			ExternalAccessIntegrations: r.Set.ExternalAccessIntegrations,
+
+			EnableConsoleOutput: r.Set.EnableConsoleOutput,
+			LogLevel:            r.Set.LogLevel,
+			MetricLevel:         r.Set.MetricLevel,
+			TraceLevel:          r.Set.TraceLevel,
+		}
+		if r.Set.SecretsList != nil {
+			opts.Set.SecretsList = &SecretsList{
+				SecretsList: r.Set.SecretsList.SecretsList,
+			}
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &FunctionUnset{
+			Comment:                    r.Unset.Comment,
+			ExternalAccessIntegrations: r.Unset.ExternalAccessIntegrations,
+			EnableConsoleOutput:        r.Unset.EnableConsoleOutput,
+			LogLevel:                   r.Unset.LogLevel,
+			MetricLevel:                r.Unset.MetricLevel,
+			TraceLevel:                 r.Unset.TraceLevel,
+		}
 	}
 	return opts
 }
@@ -452,6 +473,9 @@ func (r functionRow) convert() *Function {
 	}
 	if r.IsMemoizable.Valid {
 		e.IsMemoizable = r.IsMemoizable.String == "Y"
+	}
+	if r.IsDataMetric.Valid {
+		e.IsDataMetric = r.IsDataMetric.String == "Y"
 	}
 	return e
 }

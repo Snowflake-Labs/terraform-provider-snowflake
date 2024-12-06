@@ -48,11 +48,11 @@ type CreateForJavaFunctionOptions struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	FunctionDefinition         *string                   `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	FunctionDefinition         *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 type FunctionArgument struct {
-	ArgName        string             `ddl:"keyword,no_quotes"`
+	ArgName        string             `ddl:"keyword,double_quotes"`
 	ArgDataTypeOld DataType           `ddl:"keyword,no_quotes"`
 	ArgDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
 	DefaultValue   *string            `ddl:"parameter,no_equals" sql:"DEFAULT"`
@@ -73,7 +73,7 @@ type FunctionReturnsTable struct {
 }
 
 type FunctionColumn struct {
-	ColumnName        string             `ddl:"keyword,no_quotes"`
+	ColumnName        string             `ddl:"keyword,double_quotes"`
 	ColumnDataTypeOld DataType           `ddl:"keyword,no_quotes"`
 	ColumnDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
 }
@@ -102,7 +102,7 @@ type CreateForJavascriptFunctionOptions struct {
 	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
 	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
 	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	FunctionDefinition    string                 `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	FunctionDefinition    string                 `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // CreateForPythonFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#python-handler.
@@ -111,6 +111,7 @@ type CreateForPythonFunctionOptions struct {
 	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
 	Temporary                  *bool                     `ddl:"keyword" sql:"TEMPORARY"`
 	Secure                     *bool                     `ddl:"keyword" sql:"SECURE"`
+	Aggregate                  *bool                     `ddl:"keyword" sql:"AGGREGATE"`
 	function                   bool                      `ddl:"static" sql:"FUNCTION"`
 	IfNotExists                *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                       SchemaObjectIdentifier    `ddl:"identifier"`
@@ -128,7 +129,7 @@ type CreateForPythonFunctionOptions struct {
 	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
-	FunctionDefinition         *string                   `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	FunctionDefinition         *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // CreateForScalaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#scala-handler.
@@ -155,7 +156,7 @@ type CreateForScalaFunctionOptions struct {
 	Packages              []FunctionPackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Handler               string                 `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	TargetPath            *string                `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	FunctionDefinition    *string                `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	FunctionDefinition    *string                `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // CreateForSQLFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#sql-handler.
@@ -173,26 +174,45 @@ type CreateForSQLFunctionOptions struct {
 	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
 	Memoizable            *bool                  `ddl:"keyword" sql:"MEMOIZABLE"`
 	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	FunctionDefinition    string                 `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	FunctionDefinition    string                 `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // AlterFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-function.
 type AlterFunctionOptions struct {
-	alter           bool                                `ddl:"static" sql:"ALTER"`
-	function        bool                                `ddl:"static" sql:"FUNCTION"`
-	IfExists        *bool                               `ddl:"keyword" sql:"IF EXISTS"`
-	name            SchemaObjectIdentifierWithArguments `ddl:"identifier"`
-	RenameTo        *SchemaObjectIdentifier             `ddl:"identifier" sql:"RENAME TO"`
-	SetComment      *string                             `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
-	SetLogLevel     *string                             `ddl:"parameter,single_quotes" sql:"SET LOG_LEVEL"`
-	SetTraceLevel   *string                             `ddl:"parameter,single_quotes" sql:"SET TRACE_LEVEL"`
-	SetSecure       *bool                               `ddl:"keyword" sql:"SET SECURE"`
-	UnsetSecure     *bool                               `ddl:"keyword" sql:"UNSET SECURE"`
-	UnsetLogLevel   *bool                               `ddl:"keyword" sql:"UNSET LOG_LEVEL"`
-	UnsetTraceLevel *bool                               `ddl:"keyword" sql:"UNSET TRACE_LEVEL"`
-	UnsetComment    *bool                               `ddl:"keyword" sql:"UNSET COMMENT"`
-	SetTags         []TagAssociation                    `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags       []ObjectIdentifier                  `ddl:"keyword" sql:"UNSET TAG"`
+	alter       bool                                `ddl:"static" sql:"ALTER"`
+	function    bool                                `ddl:"static" sql:"FUNCTION"`
+	IfExists    *bool                               `ddl:"keyword" sql:"IF EXISTS"`
+	name        SchemaObjectIdentifierWithArguments `ddl:"identifier"`
+	RenameTo    *SchemaObjectIdentifier             `ddl:"identifier" sql:"RENAME TO"`
+	Set         *FunctionSet                        `ddl:"list" sql:"SET"`
+	Unset       *FunctionUnset                      `ddl:"list" sql:"UNSET"`
+	SetSecure   *bool                               `ddl:"keyword" sql:"SET SECURE"`
+	UnsetSecure *bool                               `ddl:"keyword" sql:"UNSET SECURE"`
+	SetTags     []TagAssociation                    `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags   []ObjectIdentifier                  `ddl:"keyword" sql:"UNSET TAG"`
+}
+
+type FunctionSet struct {
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
+	SecretsList                *SecretsList              `ddl:"parameter,parentheses" sql:"SECRETS"`
+	EnableConsoleOutput        *bool                     `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel                   *LogLevel                 `ddl:"parameter" sql:"LOG_LEVEL"`
+	MetricLevel                *MetricLevel              `ddl:"parameter" sql:"METRIC_LEVEL"`
+	TraceLevel                 *TraceLevel               `ddl:"parameter" sql:"TRACE_LEVEL"`
+}
+
+type SecretsList struct {
+	SecretsList []SecretReference `ddl:"list,must_parentheses"`
+}
+
+type FunctionUnset struct {
+	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
+	ExternalAccessIntegrations *bool `ddl:"keyword" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
+	EnableConsoleOutput        *bool `ddl:"keyword" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel                   *bool `ddl:"keyword" sql:"LOG_LEVEL"`
+	MetricLevel                *bool `ddl:"keyword" sql:"METRIC_LEVEL"`
+	TraceLevel                 *bool `ddl:"keyword" sql:"TRACE_LEVEL"`
 }
 
 // DropFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-function.
@@ -205,10 +225,10 @@ type DropFunctionOptions struct {
 
 // ShowFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-user-functions.
 type ShowFunctionOptions struct {
-	show          bool  `ddl:"static" sql:"SHOW"`
-	userFunctions bool  `ddl:"static" sql:"USER FUNCTIONS"`
-	Like          *Like `ddl:"keyword" sql:"LIKE"`
-	In            *In   `ddl:"keyword" sql:"IN"`
+	show          bool        `ddl:"static" sql:"SHOW"`
+	userFunctions bool        `ddl:"static" sql:"USER FUNCTIONS"`
+	Like          *Like       `ddl:"keyword" sql:"LIKE"`
+	In            *ExtendedIn `ddl:"keyword" sql:"IN"`
 }
 
 type functionRow struct {
@@ -229,6 +249,7 @@ type functionRow struct {
 	IsExternalFunction string         `db:"is_external_function"`
 	Language           string         `db:"language"`
 	IsMemoizable       sql.NullString `db:"is_memoizable"`
+	IsDataMetric       sql.NullString `db:"is_data_metric"`
 }
 
 type Function struct {
@@ -250,6 +271,7 @@ type Function struct {
 	IsExternalFunction bool
 	Language           string
 	IsMemoizable       bool
+	IsDataMetric       bool
 }
 
 // DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.
