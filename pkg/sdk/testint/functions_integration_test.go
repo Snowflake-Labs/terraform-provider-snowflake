@@ -120,12 +120,14 @@ func TestInt_CreateFunctions(t *testing.T) {
 	t.Run("create function for Scala", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 
+		target := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
 		definition := testClientHelper().Function.SampleScalaDefinition(t)
 		argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), nil, "Echo.echoVarchar").
 			WithResultDataTypeOld(sdk.DataTypeVARCHAR).
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithTargetPath(target).
 			WithRuntimeVersion("2.12").
 			WithFunctionDefinition(definition)
 		err := client.Functions.CreateForScala(ctx, request)
