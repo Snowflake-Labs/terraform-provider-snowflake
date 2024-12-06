@@ -3,6 +3,7 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -517,6 +518,45 @@ func TestToAccountCreateResponse(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.ExpectedOutput, createResponse)
 			}
+		})
+	}
+}
+
+func TestToAccountEdition(t *testing.T) {
+	type test struct {
+		input string
+		want  AccountEdition
+	}
+
+	valid := []test{
+		// case insensitive.
+		{input: "standard", want: EditionStandard},
+
+		// Supported Values
+		{input: "STANDARD", want: EditionStandard},
+		{input: "ENTERPRISE", want: EditionEnterprise},
+		{input: "BUSINESS_CRITICAL", want: EditionBusinessCritical},
+	}
+
+	invalid := []test{
+		// bad values
+		{input: ""},
+		{input: "foo"},
+		{input: "businesscritical"},
+	}
+
+	for _, tc := range valid {
+		t.Run(tc.input, func(t *testing.T) {
+			got, err := ToAccountEdition(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.want, got)
+		})
+	}
+
+	for _, tc := range invalid {
+		t.Run(tc.input, func(t *testing.T) {
+			_, err := ToAccountEdition(tc.input)
+			require.Error(t, err)
 		})
 	}
 }

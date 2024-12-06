@@ -146,7 +146,7 @@ var accountSchema = map[string]*schema.Schema{
 
 func Account() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The account resource allows you to create and manage Snowflake accounts. To use this resource, make sure you use an account with the ORGADMIN role.",
+		Description:   "The account resource allows you to create and manage Snowflake accounts.",
 		CreateContext: TrackingCreateWrapper(resources.Account, CreateAccount),
 		ReadContext:   TrackingReadWrapper(resources.Account, ReadAccount(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.Account, UpdateAccount),
@@ -182,7 +182,6 @@ func ImportAccount(ctx context.Context, d *schema.ResourceData, meta any) ([]*sc
 		return nil, err
 	}
 	if !isOrgAdmin {
-		// TODO:
 		return nil, errors.New("current user doesn't have the orgadmin role in session")
 	}
 
@@ -314,6 +313,16 @@ func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		account, err := client.Accounts.ShowByID(ctx, id.AccountId())
 		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query account. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("Account: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
+			}
 			return diag.FromErr(err)
 		}
 
@@ -321,6 +330,12 @@ func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 			var regionGroup string
 			if account.RegionGroup != nil {
 				regionGroup = *account.RegionGroup
+
+				// For organizations that have accounts in multiple region groups, returns <region_group>.<region> so we need to split on "."
+				parts := strings.Split(regionGroup, ".")
+				if len(parts) == 2 {
+					regionGroup = parts[0]
+				}
 			}
 			if err = handleExternalChangesToObjectInShow(d,
 				outputMapping{"edition", "edition", *account.Edition, *account.Edition, nil},
@@ -398,29 +413,39 @@ func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 	}
 
 	if d.HasChange("is_org_admin") {
-		if v := d.Get("is_org_admin").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			if err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
-				SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
-					Name:     id.AccountId(),
-					OrgAdmin: parsed,
-				},
-			}); err != nil {
-				return diag.FromErr(err)
-			}
-		} else {
-			// No unset available for this field (setting Snowflake default)
-			if err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
-				SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
-					Name:     id.AccountId(),
-					OrgAdmin: false,
-				},
-				// This error may happen when a user removes is_org_admin, and previously it was explicitly set to false.
-			}); err != nil && !strings.Contains(err.Error(), "already has ORGADMIN disabled") {
-				return diag.FromErr(err)
+		oldIsOrgAdmin, newIsOrgAdmin := d.GetChange("is_org_admin")
+
+		// Setting from default to false and vice versa is not allowed because Snowflake throws an error on already disabled IsOrgAdmin
+		canUpdate := true
+		if (oldIsOrgAdmin.(string) == BooleanFalse && newIsOrgAdmin.(string) == BooleanDefault) ||
+			(oldIsOrgAdmin.(string) == BooleanDefault && newIsOrgAdmin.(string) == BooleanFalse) {
+			canUpdate = false
+		}
+
+		if canUpdate {
+			if newIsOrgAdmin.(string) != BooleanDefault {
+				parsed, err := booleanStringToBool(newIsOrgAdmin.(string))
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				if err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+					SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
+						Name:     id.AccountId(),
+						OrgAdmin: parsed,
+					},
+				}); err != nil {
+					return diag.FromErr(err)
+				}
+			} else {
+				// No unset available for this field (setting Snowflake default)
+				if err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+					SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
+						Name:     id.AccountId(),
+						OrgAdmin: false,
+					},
+				}); err != nil {
+					return diag.FromErr(err)
+				}
 			}
 		}
 	}

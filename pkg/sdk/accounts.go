@@ -50,7 +50,6 @@ var AllAccountEditions = []AccountEdition{
 	EditionBusinessCritical,
 }
 
-// TODO: test
 func ToAccountEdition(edition string) (AccountEdition, error) {
 	switch typedEdition := AccountEdition(strings.ToUpper(edition)); typedEdition {
 	case EditionStandard, EditionEnterprise, EditionBusinessCritical:

@@ -2,9 +2,10 @@ package resources_test
 
 import (
 	"fmt"
-	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 	"regexp"
 	"testing"
+
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"

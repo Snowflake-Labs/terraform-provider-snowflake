@@ -16,7 +16,7 @@ Changes:
 - `is_org_admin` is a settable field (previously it was read-only field). Changing its value is also supported.
 - `must_change_password` and `is_org_admin` type was changed from `bool` to bool-string (more on that [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). No action should be required during the migration.
 - The underlying resource identifier was changed from `<account_locator>` to `<organization_name>.<account_name>`. Migration will be done automatically. Notice this introduces changes in how `snowflake_account` resource is imported.
-
+- New `show_output` field was added (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
 
 ### snowflake_tag_association resource changes
 #### *(behavior change)* new id format

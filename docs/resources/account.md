@@ -2,28 +2,61 @@
 page_title: "snowflake_account Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  The account resource allows you to create and manage Snowflake accounts. To use this resource, make sure you use an account with the ORGADMIN role.
+  The account resource allows you to create and manage Snowflake accounts.
 ---
+
+!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0990--v01000) to use it.
 
 # snowflake_account (Resource)
 
-The account resource allows you to create and manage Snowflake accounts. To use this resource, make sure you use an account with the ORGADMIN role.
+The account resource allows you to create and manage Snowflake accounts.
 
-!> **Warning** This resource cannot be destroyed!!! The only way to delete accounts is to go through [Snowflake Support](https://docs.snowflake.com/en/user-guide/organizations-manage-accounts.html#deleting-an-account)
-
-~> **Note** ORGADMIN priviliges are required for this resource
+~> **Note** To use this resource you have to use an account with a privilege to use the ORGADMIN role.
 
 ## Example Usage
 
 ```terraform
-## TODO:
-
 ## Minimal
 resource "snowflake_account" "minimal" {
+  name                 = "ACCOUNT_NAME"
+  admin_name           = "ADMIN_NAME"
+  admin_password       = "ADMIN_PASSWORD"
+  email                = "admin@email.com"
+  edition              = "STANDARD"
+  grace_period_in_days = 3
 }
 
-## Complete (with every optional set)
+## Complete (with SERVICE user type)
 resource "snowflake_account" "complete" {
+  name                 = "ACCOUNT_NAME"
+  admin_name           = "ADMIN_NAME"
+  admin_rsa_public_key = "<public_key>"
+  admin_user_type      = "SERVICE"
+  email                = "admin@email.com"
+  edition              = "STANDARD"
+  region_group         = "PUBLIC"
+  region               = "AWS_US_WEST_2"
+  comment              = "some comment"
+  is_org_admin         = "true"
+  grace_period_in_days = 3
+}
+
+## Complete (with PERSON user type)
+resource "snowflake_account" "complete" {
+  name                 = "ACCOUNT_NAME"
+  admin_name           = "ADMIN_NAME"
+  admin_password       = "ADMIN_PASSWORD"
+  admin_user_type      = "PERSON"
+  first_name           = "first_name"
+  last_name            = "last_name"
+  email                = "admin@email.com"
+  must_change_password = "false"
+  edition              = "STANDARD"
+  region_group         = "PUBLIC"
+  region               = "AWS_US_WEST_2"
+  comment              = "some comment"
+  is_org_admin         = "true"
+  grace_period_in_days = 3
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -42,14 +75,14 @@ resource "snowflake_account" "complete" {
 
 ### Optional
 
-- `admin_password` (String, Sensitive) Password for the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `admin_password` (String, Sensitive) Password for the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified. This field cannot be used whenever admin_user_type is set to SERVICE. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `admin_rsa_public_key` (String, Sensitive) Assigns a public key to the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `admin_user_type` (String) Used for setting the type of the first user that is assigned the ACCOUNTADMIN role during account creation. Valid options are: `PERSON` | `SERVICE` | `LEGACY_SERVICE` External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `comment` (String) Specifies a comment for the account.
-- `first_name` (String, Sensitive) First name of the initial administrative user of the account. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `first_name` (String, Sensitive) First name of the initial administrative user of the account. This field cannot be used whenever admin_user_type is set to SERVICE. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `is_org_admin` (String) Sets an account property that determines whether the ORGADMIN role is enabled in the account. Only an organization administrator (i.e. user with the ORGADMIN role) can set the property.
-- `last_name` (String, Sensitive) Last name of the initial administrative user of the account. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
-- `must_change_password` (String) Specifies whether the new user created to administer the account is forced to change their password upon first login into the account. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `last_name` (String, Sensitive) Last name of the initial administrative user of the account. This field cannot be used whenever admin_user_type is set to SERVICE. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `must_change_password` (String) Specifies whether the new user created to administer the account is forced to change their password upon first login into the account. This field cannot be used whenever admin_user_type is set to SERVICE. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `region` (String) [Snowflake Region ID](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#label-snowflake-region-ids) of the region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)
 - `region_group` (String) ID of the region group where the account is created. To retrieve the region group ID for existing accounts in your organization, execute the [SHOW REGIONS](https://docs.snowflake.com/en/sql-reference/sql/show-regions) command. For information about when you might need to specify region group, see [Region groups](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#label-region-groups).
 
@@ -99,5 +132,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_account.account <account_locator>
+terraform import snowflake_account.example '"<organization_name>"."<account_name>"'
 ```
