@@ -10,29 +10,63 @@ func (v *Function) ID() SchemaObjectIdentifierWithArguments {
 }
 
 // FunctionDetails contains aggregated describe results for the given function.
-// TODO [this PR]: fill out
+// TODO [this PR]: do we keep *Property or types directly? -> types
 type FunctionDetails struct {
-	A *StringProperty
-	B *IntProperty
-	C *FloatProperty
-	D *BoolProperty
+	Signature                  *StringProperty
+	Returns                    *StringProperty
+	Language                   *StringProperty
+	NullHandling               *StringProperty
+	Volatility                 *StringProperty
+	Body                       *StringProperty
+	ExternalAccessIntegrations *StringProperty // list
+	Secrets                    *StringProperty // map
+	Imports                    *StringProperty // list
+	Handler                    *StringProperty
+	RuntimeVersion             *StringProperty
+	Packages                   *StringProperty // list
+	InstalledPackages          *StringProperty // list
+	IsAggregate                *BoolProperty
+	TargetPath                 *StringProperty
 }
 
-func functionDetailsFromRows(rows []FunctionDetail) *FunctionDetails {
+// TODO [this PR]: handle errors
+func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 	v := &FunctionDetails{}
 	for _, row := range rows {
 		switch row.Property {
-		case "A":
-			v.A = row.toStringProperty()
-		case "B":
-			v.B = row.toIntProperty()
-		case "C":
-			v.C = row.toFloatProperty()
-		case "D":
-			v.D = row.toBoolProperty()
+		case "signature":
+			v.Signature = row.toStringProperty()
+		case "returns":
+			v.Returns = row.toStringProperty()
+		case "language":
+			v.Language = row.toStringProperty()
+		case "null handling":
+			v.NullHandling = row.toStringProperty()
+		case "volatility":
+			v.Volatility = row.toStringProperty()
+		case "body":
+			v.Body = row.toStringProperty()
+		case "external_access_integrations":
+			v.ExternalAccessIntegrations = row.toStringProperty()
+		case "secrets":
+			v.Secrets = row.toStringProperty()
+		case "imports":
+			v.Imports = row.toStringProperty()
+		case "handler":
+			v.Handler = row.toStringProperty()
+		case "runtime_version":
+			v.RuntimeVersion = row.toStringProperty()
+		case "packages":
+			v.Packages = row.toStringProperty()
+		case "installed_packages":
+			v.InstalledPackages = row.toStringProperty()
+		case "is_aggregate":
+			v.IsAggregate = row.toBoolProperty()
+		case "targetPath":
+			v.TargetPath = row.toStringProperty()
 		}
 	}
-	return v
+	return v, nil
 }
 
 func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*FunctionDetails, error) {
@@ -40,7 +74,7 @@ func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifi
 	if err != nil {
 		return nil, err
 	}
-	return functionDetailsFromRows(rows), nil
+	return functionDetailsFromRows(rows)
 }
 
 func (d *FunctionDetail) toStringProperty() *StringProperty {
@@ -122,7 +156,7 @@ func (d *FunctionDetail) toBoolProperty() *BoolProperty {
 //- [hidden for secure] body
 //- [hidden for secure] imports
 //- [hidden for secure] handler
-//- [hidden for secure] target_path - test with target path set
+//- [hidden for secure] target_path
 //- [hidden for secure] runtime_version
 //- [hidden for secure] packages
 //- external_access_integrations

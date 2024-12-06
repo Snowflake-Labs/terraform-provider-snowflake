@@ -274,8 +274,6 @@ type Function struct {
 }
 
 // DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.
-// TODO [this PR]: create details struct similar to the one in user
-// TODO [this PR]: list properties for all types of functions
 type DescribeFunctionOptions struct {
 	describe bool                                `ddl:"static" sql:"DESCRIBE"`
 	function bool                                `ddl:"static" sql:"FUNCTION"`
