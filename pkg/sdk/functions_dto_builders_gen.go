@@ -99,6 +99,26 @@ func (s *CreateForJavaFunctionRequest) WithTargetPath(TargetPath string) *Create
 	return s
 }
 
+func (s *CreateForJavaFunctionRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *CreateForJavaFunctionRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *CreateForJavaFunctionRequest) WithLogLevel(LogLevel LogLevel) *CreateForJavaFunctionRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *CreateForJavaFunctionRequest) WithMetricLevel(MetricLevel MetricLevel) *CreateForJavaFunctionRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *CreateForJavaFunctionRequest) WithTraceLevel(TraceLevel TraceLevel) *CreateForJavaFunctionRequest {
+	s.TraceLevel = &TraceLevel
+	return s
+}
+
 func (s *CreateForJavaFunctionRequest) WithFunctionDefinition(FunctionDefinition string) *CreateForJavaFunctionRequest {
 	s.FunctionDefinition = &FunctionDefinition
 	return s
@@ -250,6 +270,26 @@ func (s *CreateForJavascriptFunctionRequest) WithComment(Comment string) *Create
 	return s
 }
 
+func (s *CreateForJavascriptFunctionRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *CreateForJavascriptFunctionRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *CreateForJavascriptFunctionRequest) WithLogLevel(LogLevel LogLevel) *CreateForJavascriptFunctionRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *CreateForJavascriptFunctionRequest) WithMetricLevel(MetricLevel MetricLevel) *CreateForJavascriptFunctionRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *CreateForJavascriptFunctionRequest) WithTraceLevel(TraceLevel TraceLevel) *CreateForJavascriptFunctionRequest {
+	s.TraceLevel = &TraceLevel
+	return s
+}
+
 func NewCreateForPythonFunctionRequest(
 	name SchemaObjectIdentifier,
 	Returns FunctionReturnsRequest,
@@ -336,6 +376,26 @@ func (s *CreateForPythonFunctionRequest) WithExternalAccessIntegrations(External
 
 func (s *CreateForPythonFunctionRequest) WithSecrets(Secrets []SecretReference) *CreateForPythonFunctionRequest {
 	s.Secrets = Secrets
+	return s
+}
+
+func (s *CreateForPythonFunctionRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *CreateForPythonFunctionRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *CreateForPythonFunctionRequest) WithLogLevel(LogLevel LogLevel) *CreateForPythonFunctionRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *CreateForPythonFunctionRequest) WithMetricLevel(MetricLevel MetricLevel) *CreateForPythonFunctionRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *CreateForPythonFunctionRequest) WithTraceLevel(TraceLevel TraceLevel) *CreateForPythonFunctionRequest {
+	s.TraceLevel = &TraceLevel
 	return s
 }
 
@@ -431,6 +491,26 @@ func (s *CreateForScalaFunctionRequest) WithTargetPath(TargetPath string) *Creat
 	return s
 }
 
+func (s *CreateForScalaFunctionRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *CreateForScalaFunctionRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithLogLevel(LogLevel LogLevel) *CreateForScalaFunctionRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithMetricLevel(MetricLevel MetricLevel) *CreateForScalaFunctionRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithTraceLevel(TraceLevel TraceLevel) *CreateForScalaFunctionRequest {
+	s.TraceLevel = &TraceLevel
+	return s
+}
+
 func (s *CreateForScalaFunctionRequest) WithFunctionDefinition(FunctionDefinition string) *CreateForScalaFunctionRequest {
 	s.FunctionDefinition = &FunctionDefinition
 	return s
@@ -490,6 +570,26 @@ func (s *CreateForSQLFunctionRequest) WithMemoizable(Memoizable bool) *CreateFor
 
 func (s *CreateForSQLFunctionRequest) WithComment(Comment string) *CreateForSQLFunctionRequest {
 	s.Comment = &Comment
+	return s
+}
+
+func (s *CreateForSQLFunctionRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *CreateForSQLFunctionRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *CreateForSQLFunctionRequest) WithLogLevel(LogLevel LogLevel) *CreateForSQLFunctionRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *CreateForSQLFunctionRequest) WithMetricLevel(MetricLevel MetricLevel) *CreateForSQLFunctionRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *CreateForSQLFunctionRequest) WithTraceLevel(TraceLevel TraceLevel) *CreateForSQLFunctionRequest {
+	s.TraceLevel = &TraceLevel
 	return s
 }
 

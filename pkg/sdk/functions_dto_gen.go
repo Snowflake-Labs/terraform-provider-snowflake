@@ -36,6 +36,10 @@ type CreateForJavaFunctionRequest struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier
 	Secrets                    []SecretReference
 	TargetPath                 *string
+	EnableConsoleOutput        *bool
+	LogLevel                   *LogLevel
+	MetricLevel                *MetricLevel
+	TraceLevel                 *TraceLevel
 	FunctionDefinition         *string
 }
 
@@ -86,6 +90,10 @@ type CreateForJavascriptFunctionRequest struct {
 	NullInputBehavior     *NullInputBehavior
 	ReturnResultsBehavior *ReturnResultsBehavior
 	Comment               *string
+	EnableConsoleOutput   *bool
+	LogLevel              *LogLevel
+	MetricLevel           *MetricLevel
+	TraceLevel            *TraceLevel
 	FunctionDefinition    string // required
 }
 
@@ -109,6 +117,10 @@ type CreateForPythonFunctionRequest struct {
 	Handler                    string // required
 	ExternalAccessIntegrations []AccountObjectIdentifier
 	Secrets                    []SecretReference
+	EnableConsoleOutput        *bool
+	LogLevel                   *LogLevel
+	MetricLevel                *MetricLevel
+	TraceLevel                 *TraceLevel
 	FunctionDefinition         *string
 }
 
@@ -131,6 +143,10 @@ type CreateForScalaFunctionRequest struct {
 	Packages              []FunctionPackageRequest
 	Handler               string // required
 	TargetPath            *string
+	EnableConsoleOutput   *bool
+	LogLevel              *LogLevel
+	MetricLevel           *MetricLevel
+	TraceLevel            *TraceLevel
 	FunctionDefinition    *string
 }
 
@@ -146,6 +162,10 @@ type CreateForSQLFunctionRequest struct {
 	ReturnResultsBehavior *ReturnResultsBehavior
 	Memoizable            *bool
 	Comment               *string
+	EnableConsoleOutput   *bool
+	LogLevel              *LogLevel
+	MetricLevel           *MetricLevel
+	TraceLevel            *TraceLevel
 	FunctionDefinition    string // required
 }
 

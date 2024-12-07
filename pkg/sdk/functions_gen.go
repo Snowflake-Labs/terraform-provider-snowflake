@@ -48,6 +48,10 @@ type CreateForJavaFunctionOptions struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
+	EnableConsoleOutput        *bool                     `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel                   *LogLevel                 `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel                *MetricLevel              `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel                 *TraceLevel               `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
 	FunctionDefinition         *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
@@ -102,6 +106,10 @@ type CreateForJavascriptFunctionOptions struct {
 	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
 	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
 	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	EnableConsoleOutput   *bool                  `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel              *LogLevel              `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel           *MetricLevel           `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel            *TraceLevel            `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
 	FunctionDefinition    string                 `ddl:"parameter,no_equals" sql:"AS"`
 }
 
@@ -129,6 +137,10 @@ type CreateForPythonFunctionOptions struct {
 	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
+	EnableConsoleOutput        *bool                     `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel                   *LogLevel                 `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel                *MetricLevel              `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel                 *TraceLevel               `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
 	FunctionDefinition         *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
@@ -155,8 +167,12 @@ type CreateForScalaFunctionOptions struct {
 	Imports               []FunctionImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Packages              []FunctionPackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Handler               string                 `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	TargetPath            *string                `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	FunctionDefinition    *string                `ddl:"parameter,no_equals" sql:"AS"`
+	TargetPath            *string
+	EnableConsoleOutput   *bool        `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel              *LogLevel    `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel           *MetricLevel `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel            *TraceLevel  `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	FunctionDefinition    *string      `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // CreateForSQLFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#sql-handler.
@@ -174,6 +190,10 @@ type CreateForSQLFunctionOptions struct {
 	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
 	Memoizable            *bool                  `ddl:"keyword" sql:"MEMOIZABLE"`
 	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	EnableConsoleOutput   *bool                  `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel              *LogLevel              `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel           *MetricLevel           `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel            *TraceLevel            `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
 	FunctionDefinition    string                 `ddl:"parameter,no_equals" sql:"AS"`
 }
 
