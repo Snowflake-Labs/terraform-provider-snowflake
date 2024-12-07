@@ -10,6 +10,7 @@ import (
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -35,6 +36,15 @@ func TestInt_CreateFunctions(t *testing.T) {
 
 	externalAccessIntegration, externalAccessIntegrationCleanup := testClientHelper().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
+
+	//assertParametersSet := func(t *testing.T, functionParametersAssert *objectparametersassert.FunctionParametersAssert) {
+	//	assertions.AssertThatObject(t, functionParametersAssert.
+	//		HasEnableConsoleOutput(true).
+	//		HasLogLevel(sdk.LogLevelWarn).
+	//		HasMetricLevel(sdk.MetricLevelAll).
+	//		HasTraceLevel(sdk.TraceLevelAlways),
+	//	)
+	//}
 
 	t.Run("create function for Java - inline minimal", func(t *testing.T) {
 		className := "TestFunc"
@@ -99,7 +109,10 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		// TODO [this PR]: check function parameters
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
 	})
 
 	t.Run("create function for Java - inline full", func(t *testing.T) {
@@ -132,6 +145,10 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
 			WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}}).
 			WithTargetPath(targetPath).
+			WithEnableConsoleOutput(true).
+			WithLogLevel(sdk.LogLevelWarn).
+			WithMetricLevel(sdk.MetricLevelAll).
+			WithTraceLevel(sdk.TraceLevelAlways).
 			WithFunctionDefinitionWrapped(definition)
 
 		err := client.Functions.CreateForJava(ctx, request)
@@ -182,6 +199,20 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		// TODO [this PR]: will check after alter
+		// TODO [this PR]: add a test documenting that we can't set parameters in create (and revert adding these parametrs directly in object...)
+		//assertParametersSet(t, objectparametersassert.FunctionParameters(t, id))
+		//
+		//// check that ShowParameters works too
+		//parameters, err := client.Functions.ShowParameters(ctx, id)
+		//require.NoError(t, err)
+		//assertParametersSet(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters))
 	})
 
 	t.Run("create function for Java - staged minimal", func(t *testing.T) {})

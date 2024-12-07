@@ -98,6 +98,10 @@ func (r *CreateForJavaFunctionRequest) toOpts() *CreateForJavaFunctionOptions {
 		ExternalAccessIntegrations: r.ExternalAccessIntegrations,
 		Secrets:                    r.Secrets,
 		TargetPath:                 r.TargetPath,
+		EnableConsoleOutput:        r.EnableConsoleOutput,
+		LogLevel:                   r.LogLevel,
+		MetricLevel:                r.MetricLevel,
+		TraceLevel:                 r.TraceLevel,
 		FunctionDefinition:         r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
@@ -167,6 +171,10 @@ func (r *CreateForJavascriptFunctionRequest) toOpts() *CreateForJavascriptFuncti
 		NullInputBehavior:     r.NullInputBehavior,
 		ReturnResultsBehavior: r.ReturnResultsBehavior,
 		Comment:               r.Comment,
+		EnableConsoleOutput:   r.EnableConsoleOutput,
+		LogLevel:              r.LogLevel,
+		MetricLevel:           r.MetricLevel,
+		TraceLevel:            r.TraceLevel,
 		FunctionDefinition:    r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
@@ -225,6 +233,10 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 		Handler:                    r.Handler,
 		ExternalAccessIntegrations: r.ExternalAccessIntegrations,
 		Secrets:                    r.Secrets,
+		EnableConsoleOutput:        r.EnableConsoleOutput,
+		LogLevel:                   r.LogLevel,
+		MetricLevel:                r.MetricLevel,
+		TraceLevel:                 r.TraceLevel,
 		FunctionDefinition:         r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
@@ -298,9 +310,13 @@ func (r *CreateForScalaFunctionRequest) toOpts() *CreateForScalaFunctionOptions 
 		RuntimeVersion:        r.RuntimeVersion,
 		Comment:               r.Comment,
 
-		Handler:            r.Handler,
-		TargetPath:         r.TargetPath,
-		FunctionDefinition: r.FunctionDefinition,
+		Handler:             r.Handler,
+		TargetPath:          r.TargetPath,
+		EnableConsoleOutput: r.EnableConsoleOutput,
+		LogLevel:            r.LogLevel,
+		MetricLevel:         r.MetricLevel,
+		TraceLevel:          r.TraceLevel,
+		FunctionDefinition:  r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
@@ -348,6 +364,10 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 		ReturnResultsBehavior: r.ReturnResultsBehavior,
 		Memoizable:            r.Memoizable,
 		Comment:               r.Comment,
+		EnableConsoleOutput:   r.EnableConsoleOutput,
+		LogLevel:              r.LogLevel,
+		MetricLevel:           r.MetricLevel,
+		TraceLevel:            r.TraceLevel,
 		FunctionDefinition:    r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
