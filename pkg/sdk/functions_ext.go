@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -10,63 +12,62 @@ func (v *Function) ID() SchemaObjectIdentifierWithArguments {
 }
 
 // FunctionDetails contains aggregated describe results for the given function.
-// TODO [this PR]: do we keep *Property or types directly? -> types
 type FunctionDetails struct {
-	Signature                  *StringProperty
-	Returns                    *StringProperty
-	Language                   *StringProperty
-	NullHandling               *StringProperty
-	Volatility                 *StringProperty
-	Body                       *StringProperty
-	ExternalAccessIntegrations *StringProperty // list
-	Secrets                    *StringProperty // map
-	Imports                    *StringProperty // list
-	Handler                    *StringProperty
-	RuntimeVersion             *StringProperty
-	Packages                   *StringProperty // list
-	InstalledPackages          *StringProperty // list
-	IsAggregate                *BoolProperty
-	TargetPath                 *StringProperty
+	Signature                  string  // present for all function types
+	Returns                    string  // present for all function types
+	Language                   string  // present for all function types
+	Body                       *string // present for all function types (hidden when SECURE)
+	NullHandling               *string // present for all function types but SQL
+	Volatility                 *string // present for all function types but SQL
+	ExternalAccessIntegrations *string // list present for python, java, and scala
+	Secrets                    *string // map present for python, java, and scala
+	Imports                    *string // list present for python, java, and scala (hidden when SECURE)
+	Handler                    *string // present for python, java, and scala (hidden when SECURE)
+	RuntimeVersion             *string // present for python, java, and scala (hidden when SECURE)
+	Packages                   *string // list // present for python, java, and scala
+	TargetPath                 *string // list present for scala and java (hidden when SECURE)
+	InstalledPackages          *string // list present for python (hidden when SECURE)
+	IsAggregate                *bool   // present for python
 }
 
-// TODO [this PR]: handle errors
 func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 	v := &FunctionDetails{}
+	var errs []error
 	for _, row := range rows {
 		switch row.Property {
 		case "signature":
-			v.Signature = row.toStringProperty()
+			errs = append(errs, row.setStringValueOrError("signature", &v.Signature))
 		case "returns":
-			v.Returns = row.toStringProperty()
+			errs = append(errs, row.setStringValueOrError("returns", &v.Returns))
 		case "language":
-			v.Language = row.toStringProperty()
+			errs = append(errs, row.setStringValueOrError("language", &v.Language))
 		case "null handling":
-			v.NullHandling = row.toStringProperty()
+			v.NullHandling = row.Value
 		case "volatility":
-			v.Volatility = row.toStringProperty()
+			v.Volatility = row.Value
 		case "body":
-			v.Body = row.toStringProperty()
+			v.Body = row.Value
 		case "external_access_integrations":
-			v.ExternalAccessIntegrations = row.toStringProperty()
+			v.ExternalAccessIntegrations = row.Value
 		case "secrets":
-			v.Secrets = row.toStringProperty()
+			v.Secrets = row.Value
 		case "imports":
-			v.Imports = row.toStringProperty()
+			v.Imports = row.Value
 		case "handler":
-			v.Handler = row.toStringProperty()
+			v.Handler = row.Value
 		case "runtime_version":
-			v.RuntimeVersion = row.toStringProperty()
+			v.RuntimeVersion = row.Value
 		case "packages":
-			v.Packages = row.toStringProperty()
+			v.Packages = row.Value
 		case "installed_packages":
-			v.InstalledPackages = row.toStringProperty()
+			v.InstalledPackages = row.Value
 		case "is_aggregate":
-			v.IsAggregate = row.toBoolProperty()
+			errs = append(errs, row.setOptionalBoolValueOrError("is_aggregate", &v.IsAggregate))
 		case "targetPath":
-			v.TargetPath = row.toStringProperty()
+			v.TargetPath = row.Value
 		}
 	}
-	return v, nil
+	return v, errors.Join(errs...)
 }
 
 func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*FunctionDetails, error) {
@@ -77,113 +78,26 @@ func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifi
 	return functionDetailsFromRows(rows)
 }
 
-func (d *FunctionDetail) toStringProperty() *StringProperty {
-	return &StringProperty{
-		Value:       d.Value,
-		Description: d.Property,
-	}
-}
-
-func (d *FunctionDetail) toIntProperty() *IntProperty {
-	var value *int
-	v, err := strconv.Atoi(d.Value)
-	if err == nil {
-		value = &v
+func (d *FunctionDetail) setStringValueOrError(property string, field *string) error {
+	if d.Value == nil {
+		return fmt.Errorf("value expected for field %s", property)
 	} else {
-		value = nil
+		*field = *d.Value
 	}
-	return &IntProperty{
-		Value:       value,
-		Description: d.Property,
-	}
+	return nil
 }
 
-func (d *FunctionDetail) toFloatProperty() *FloatProperty {
-	var value *float64
-	v, err := strconv.ParseFloat(d.Value, 64)
-	if err == nil {
-		value = &v
-	} else {
-		value = nil
+func (d *FunctionDetail) setOptionalBoolValueOrError(property string, field **bool) error {
+	if d.Value != nil && *d.Value != "" {
+		v, err := strconv.ParseBool(*d.Value)
+		if err != nil {
+			return fmt.Errorf("invalid value for field %s, err: %w", property, err)
+		} else {
+			*field = Bool(v)
+		}
 	}
-	return &FloatProperty{
-		Value:       value,
-		Description: d.Property,
-	}
+	return nil
 }
-
-func (d *FunctionDetail) toBoolProperty() *BoolProperty {
-	var value bool
-	if d.Value != "" && d.Value != "null" {
-		value = ToBool(d.Value)
-	} else {
-		value = false
-	}
-	return &BoolProperty{
-		Value:       value,
-		Description: d.Property,
-	}
-}
-
-//python function describe:
-//- signature
-//- returns
-//- language
-//- null handling
-//- volatility
-//- [hidden for secure] body
-//- external_access_integrations
-//- secrets
-//- [hidden for secure] imports
-//- [hidden for secure] handler
-//- [hidden for secure] runtime_version
-//- [hidden for secure] packages
-//- [hidden for secure] installed_packages
-//- is_aggregate
-//
-//SQL function describe:
-//- signature
-//- returns
-//- language
-//- [hidden for secure] body
-//
-//scala function describe:
-//- signature
-//- returns
-//- language
-//- null handling
-//- volatility
-//- [hidden for secure] body
-//- [hidden for secure] imports
-//- [hidden for secure] handler
-//- [hidden for secure] target_path
-//- [hidden for secure] runtime_version
-//- [hidden for secure] packages
-//- external_access_integrations
-//- secrets
-//
-//java:
-//- signature
-//- returns
-//- language
-//- null handling
-//- volatility
-//- [hidden for secure] body
-//- [hidden for secure] imports
-//- [hidden for secure] handler
-//- [hidden for secure] target_path
-//- [hidden for secure] runtime_version
-//- [hidden for secure] packages
-//- external_access_integrations
-//- secrets
-//
-//javascript:
-//- signature
-//- returns
-//- language
-//- null handling
-//- volatility
-//- [hidden for secure] body
 
 // TODO [SNOW-1348103 - this PR]: test creation with specifying parameters in the same query
 

@@ -288,5 +288,5 @@ type functionDetailRow struct {
 
 type FunctionDetail struct {
 	Property string
-	Value    string
+	Value    *string
 }

@@ -336,8 +336,8 @@ var FunctionsDef = g.NewInterface(
 		Field("property", "string").
 		Field("value", "sql.NullString"),
 	g.PlainStruct("FunctionDetail").
-		Field("Property", "string").
-		Field("Value", "string"),
+		Text("Property").
+		OptionalText("Value"),
 	g.NewQueryStruct("DescribeFunction").
 		Describe().
 		SQL("FUNCTION").

@@ -491,8 +491,8 @@ func (r functionDetailRow) convert() *FunctionDetail {
 	e := &FunctionDetail{
 		Property: r.Property,
 	}
-	if r.Value.Valid {
-		e.Value = r.Value.String
+	if r.Value.Valid && r.Value.String != "null" {
+		e.Value = String(r.Value.String)
 	}
 	return e
 }
