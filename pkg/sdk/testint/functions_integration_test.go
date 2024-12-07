@@ -11,6 +11,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -126,7 +127,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		handler := fmt.Sprintf("%s.%s", className, funcName)
 		definition := testClientHelper().Function.SampleJavaDefinition(t, className, funcName, argName)
-		targetPath := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
+		jarName := fmt.Sprintf("tf-%d-%s.jar", time.Now().Unix(), random.AlphaN(5))
+		targetPath := fmt.Sprintf("@~/%s", jarName)
 
 		request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
 			WithOrReplace(true).
@@ -215,7 +217,90 @@ func TestInt_CreateFunctions(t *testing.T) {
 		//assertParametersSet(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters))
 	})
 
-	t.Run("create function for Java - staged minimal", func(t *testing.T) {})
+	// TODO [next PR]: create jar for java func before all tests and reuse where needed; also, move it to helper
+	t.Run("create function for Java - staged minimal", func(t *testing.T) {
+		className := "TestFunc"
+		funcName := "echoVarchar"
+		argName := "x"
+
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+		argument := sdk.NewFunctionArgumentRequest(argName, testdatatypes.DataTypeVarchar_100)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(testdatatypes.DataTypeVarchar_100)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		handler := fmt.Sprintf("%s.%s", className, funcName)
+		definition := testClientHelper().Function.SampleJavaDefinition(t, className, funcName, argName)
+		jarName := fmt.Sprintf("tf-%d-%s.jar", time.Now().Unix(), random.AlphaN(5))
+		targetPath := fmt.Sprintf("@~/%s", jarName)
+
+		request := sdk.NewCreateForJavaFunctionRequest(id1.SchemaObjectId(), *returns, handler).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithTargetPath(targetPath).
+			WithFunctionDefinitionWrapped(definition)
+
+		err := client.Functions.CreateForJava(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id1))
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+
+		requestStaged := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(targetPath)})
+
+		err = client.Functions.CreateForJava(ctx, requestStaged)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+		t.Cleanup(testClientHelper().Stage.RemoveFromUserStageFunc(t, jarName))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.DataTypeVARCHAR}).
+			HasArgumentsRaw(fmt.Sprintf(`%s(VARCHAR) RETURN VARCHAR`, function.ID().Name())).
+			HasDescription(sdk.DefaultFunctionComment).
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("JAVA").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, testdatatypes.DataTypeVarchar_100.ToLegacyDataTypeSql())).
+			HasReturns(testdatatypes.DataTypeVarchar_100.ToSql()).
+			HasLanguage("JAVA").
+			HasBodyNil().
+			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImports(fmt.Sprintf(`[%s]`, targetPath)).
+			HasHandler(handler).
+			HasRuntimeVersionNil().
+			HasPackages(`[]`).
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasIsAggregateNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
 	t.Run("create function for Java - staged full", func(t *testing.T) {})
 
 	t.Run("create function for JavaScript - inline minimal", func(t *testing.T) {})

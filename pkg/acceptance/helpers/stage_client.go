@@ -96,6 +96,21 @@ func (c *StageClient) PutOnStage(t *testing.T, id sdk.SchemaObjectIdentifier, fi
 	require.NoError(t, err)
 }
 
+func (c *StageClient) RemoveFromUserStage(t *testing.T, pathOnStage string) {
+	t.Helper()
+	ctx := context.Background()
+
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @~/%s`, pathOnStage))
+	require.NoError(t, err)
+}
+
+func (c *StageClient) RemoveFromUserStageFunc(t *testing.T, pathOnStage string) func() {
+	t.Helper()
+	return func() {
+		c.RemoveFromUserStage(t, pathOnStage)
+	}
+}
+
 func (c *StageClient) PutOnStageWithContent(t *testing.T, id sdk.SchemaObjectIdentifier, filename string, content string) {
 	t.Helper()
 	ctx := context.Background()
