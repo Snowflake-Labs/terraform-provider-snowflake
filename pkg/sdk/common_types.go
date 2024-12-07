@@ -233,7 +233,7 @@ func NullInputBehaviorPointer(v NullInputBehavior) *NullInputBehavior {
 
 const (
 	NullInputBehaviorCalledOnNullInput NullInputBehavior = "CALLED ON NULL INPUT"
-	NullInputBehaviorReturnNullInput   NullInputBehavior = "RETURN NULL ON NULL INPUT"
+	NullInputBehaviorReturnNullInput   NullInputBehavior = "RETURNS NULL ON NULL INPUT"
 	NullInputBehaviorStrict            NullInputBehavior = "STRICT"
 )
 

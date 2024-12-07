@@ -90,6 +90,13 @@ func (c *FunctionClient) Show(t *testing.T, id sdk.SchemaObjectIdentifierWithArg
 	return c.client().ShowByID(ctx, id)
 }
 
+func (c *FunctionClient) DescribeDetails(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) (*sdk.FunctionDetails, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().DescribeDetails(ctx, id)
+}
+
 func (c *FunctionClient) SampleJavaDefinition(t *testing.T, className string, funcName string, argName string) string {
 	t.Helper()
 

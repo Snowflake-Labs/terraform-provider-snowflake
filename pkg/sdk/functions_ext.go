@@ -65,7 +65,7 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 			v.InstalledPackages = row.Value
 		case "is_aggregate":
 			errs = append(errs, row.setOptionalBoolValueOrError("is_aggregate", &v.IsAggregate))
-		case "targetPath":
+		case "target_path":
 			v.TargetPath = row.Value
 		}
 	}

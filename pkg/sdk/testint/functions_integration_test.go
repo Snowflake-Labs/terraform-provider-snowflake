@@ -80,6 +80,26 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasIsMemoizable(false).
 			HasIsDataMetric(false),
 		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, testdatatypes.DataTypeVarchar_100.ToLegacyDataTypeSql())).
+			HasReturns(testdatatypes.DataTypeVarchar_100.ToSql()).
+			HasLanguage("JAVA").
+			HasBody(definition).
+			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImports(`[]`).
+			HasHandler(handler).
+			HasRuntimeVersionNil().
+			HasPackages(`[]`).
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasIsAggregateNil(),
+		)
+
+		// TODO [this PR]: check function parameters
 	})
 
 	t.Run("create function for Java - inline full", func(t *testing.T) {
@@ -93,21 +113,25 @@ func TestInt_CreateFunctions(t *testing.T) {
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		handler := fmt.Sprintf("%s.%s", className, funcName)
 		definition := testClientHelper().Function.SampleJavaDefinition(t, className, funcName, argName)
+		targetPath := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
 
-		target := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
 		request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithCopyGrants(true).
-			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput)).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithRuntimeVersion("11").
 			WithComment("comment").
-			//WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport("lang.*")}).
-			WithPackages([]sdk.FunctionPackageRequest{*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:latest")}).
+			// TODO [this PR]: test imports
+			// WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport("lang.*")}).
+			WithPackages([]sdk.FunctionPackageRequest{
+				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:1.14.0"),
+				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:telemetry:0.1.0"),
+			}).
 			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
 			WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}}).
-			WithTargetPath(target).
+			WithTargetPath(targetPath).
 			WithFunctionDefinitionWrapped(definition)
 
 		err := client.Functions.CreateForJava(ctx, request)
@@ -137,6 +161,26 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasLanguage("JAVA").
 			HasIsMemoizable(false).
 			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, testdatatypes.DataTypeVarchar_100.ToLegacyDataTypeSql())).
+			HasReturns(testdatatypes.DataTypeVarchar_100.ToSql()).
+			HasLanguage("JAVA").
+			HasBody(definition).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			// TODO [this PR]: parse to identifier list
+			// TODO [this PR]: check multiple secrets (to know how to parse)
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasImports(`[]`).
+			HasHandler(handler).
+			HasRuntimeVersion("11").
+			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasTargetPath(targetPath).
+			HasInstalledPackagesNil().
+			HasIsAggregateNil(),
 		)
 	})
 
