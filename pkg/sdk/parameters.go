@@ -833,6 +833,15 @@ const (
 	DatabaseParameterEnableConsoleOutput                     DatabaseParameter = "ENABLE_CONSOLE_OUTPUT"
 )
 
+type FunctionParameter string
+
+const (
+	FunctionParameterEnableConsoleOutput FunctionParameter = "ENABLE_CONSOLE_OUTPUT"
+	FunctionParameterLogLevel            FunctionParameter = "LOG_LEVEL"
+	FunctionParameterMetricLevel         FunctionParameter = "METRIC_LEVEL"
+	FunctionParameterTraceLevel          FunctionParameter = "TRACE_LEVEL"
+)
+
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {
 	// Account Parameters
@@ -1370,6 +1379,7 @@ const (
 	ParameterTypeDatabase         ParameterType = "DATABASE"
 	ParameterTypeSchema           ParameterType = "SCHEMA"
 	ParameterTypeTask             ParameterType = "TASK"
+	ParameterTypeFunction         ParameterType = "FUNCTION"
 )
 
 type Parameter struct {
