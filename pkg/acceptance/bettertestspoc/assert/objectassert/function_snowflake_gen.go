@@ -230,3 +230,14 @@ func (f *FunctionAssert) HasIsMemoizable(expected bool) *FunctionAssert {
 	})
 	return f
 }
+
+func (f *FunctionAssert) HasIsDataMetric(expected bool) *FunctionAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.Function) error {
+		t.Helper()
+		if o.IsDataMetric != expected {
+			return fmt.Errorf("expected is data metric: %v; got: %v", expected, o.IsDataMetric)
+		}
+		return nil
+	})
+	return f
+}

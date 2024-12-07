@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -15,9 +18,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO [next PR]: schemaName and catalog name are quoted (because we use lowercase)
+// TODO [next PR]: HasArgumentsRawFrom(functionId, arguments, return)
+// TODO [next PR]: WithImports - creation and cleanup on stage needed
+// TODO [next PR]: extract show assertions with commons fields
 func TestInt_CreateFunctions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
+	secretId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+	networkRule, networkRuleCleanup := testClientHelper().NetworkRule.Create(t)
+	t.Cleanup(networkRuleCleanup)
+
+	secret, secretCleanup := testClientHelper().Secret.CreateWithGenericString(t, secretId, "test_secret_string")
+	t.Cleanup(secretCleanup)
+
+	externalAccessIntegration, externalAccessIntegrationCleanup := testClientHelper().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret.ID())
+	t.Cleanup(externalAccessIntegrationCleanup)
 
 	t.Run("create function for Java - inline minimal", func(t *testing.T) {
 		className := "TestFunc"
@@ -41,8 +58,28 @@ func TestInt_CreateFunctions(t *testing.T) {
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
-		require.Equal(t, id.Name(), function.Name)
-		require.Equal(t, "JAVA", function.Language)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.DataTypeVARCHAR}).
+			HasArgumentsRaw(fmt.Sprintf(`%s(VARCHAR) RETURN VARCHAR`, function.ID().Name())).
+			HasDescription(sdk.DefaultFunctionComment).
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("JAVA").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
 	})
 
 	t.Run("create function for Java - inline full", func(t *testing.T) {
@@ -68,8 +105,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithComment("comment").
 			//WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport("lang.*")}).
 			WithPackages([]sdk.FunctionPackageRequest{*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:latest")}).
-			//WithExternalAccessIntegrations().
-			//WithSecrets().
+			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
+			WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}}).
 			WithTargetPath(target).
 			WithFunctionDefinitionWrapped(definition)
 
@@ -79,8 +116,28 @@ func TestInt_CreateFunctions(t *testing.T) {
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
-		require.Equal(t, id.Name(), function.Name)
-		require.Equal(t, "JAVA", function.Language)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.DataTypeVARCHAR}).
+			HasArgumentsRaw(fmt.Sprintf(`%s(VARCHAR) RETURN VARCHAR`, function.ID().Name())).
+			HasDescription("comment").
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("JAVA").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
 	})
 
 	t.Run("create function for Java - staged minimal", func(t *testing.T) {})
