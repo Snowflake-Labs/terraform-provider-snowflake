@@ -22,6 +22,7 @@ type Functions interface {
 
 	// DescribeDetails is added manually; it returns aggregated describe results for the given function.
 	DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*FunctionDetails, error)
+	ShowParameters(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]*Parameter, error)
 }
 
 // CreateForJavaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#java-handler.

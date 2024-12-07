@@ -1350,19 +1350,20 @@ func (opts *ShowParametersOptions) validate() error {
 }
 
 type ParametersIn struct {
-	Session   *bool                    `ddl:"keyword" sql:"SESSION"`
-	Account   *bool                    `ddl:"keyword" sql:"ACCOUNT"`
-	User      AccountObjectIdentifier  `ddl:"identifier" sql:"USER"`
-	Warehouse AccountObjectIdentifier  `ddl:"identifier" sql:"WAREHOUSE"`
-	Database  AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
-	Schema    DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
-	Task      SchemaObjectIdentifier   `ddl:"identifier" sql:"TASK"`
-	Table     SchemaObjectIdentifier   `ddl:"identifier" sql:"TABLE"`
+	Session   *bool                               `ddl:"keyword" sql:"SESSION"`
+	Account   *bool                               `ddl:"keyword" sql:"ACCOUNT"`
+	User      AccountObjectIdentifier             `ddl:"identifier" sql:"USER"`
+	Warehouse AccountObjectIdentifier             `ddl:"identifier" sql:"WAREHOUSE"`
+	Database  AccountObjectIdentifier             `ddl:"identifier" sql:"DATABASE"`
+	Schema    DatabaseObjectIdentifier            `ddl:"identifier" sql:"SCHEMA"`
+	Task      SchemaObjectIdentifier              `ddl:"identifier" sql:"TASK"`
+	Table     SchemaObjectIdentifier              `ddl:"identifier" sql:"TABLE"`
+	Function  SchemaObjectIdentifierWithArguments `ddl:"identifier" sql:"FUNCTION"`
 }
 
 func (v *ParametersIn) validate() error {
-	if !anyValueSet(v.Session, v.Account, v.User, v.Warehouse, v.Database, v.Schema, v.Task, v.Table) {
-		return errors.Join(errAtLeastOneOf("Session", "Account", "User", "Warehouse", "Database", "Schema", "Task", "Table"))
+	if !anyValueSet(v.Session, v.Account, v.User, v.Warehouse, v.Database, v.Schema, v.Task, v.Table, v.Function) {
+		return errors.Join(errAtLeastOneOf("Session", "Account", "User", "Warehouse", "Database", "Schema", "Task", "Table", "Function"))
 	}
 	return nil
 }
@@ -1488,6 +1489,7 @@ func (v *parameters) ShowUserParameter(ctx context.Context, parameter UserParame
 	return parameters[0], nil
 }
 
+// TODO [this PR]: test for functions
 func (v *parameters) ShowObjectParameter(ctx context.Context, parameter ObjectParameter, object Object) (*Parameter, error) {
 	opts := &ShowParametersOptions{
 		Like: &Like{
@@ -1508,6 +1510,8 @@ func (v *parameters) ShowObjectParameter(ctx context.Context, parameter ObjectPa
 		opts.In.Table = object.Name.(SchemaObjectIdentifier)
 	case ObjectTypeUser:
 		opts.In.User = object.Name.(AccountObjectIdentifier)
+	case ObjectTypeFunction:
+		opts.In.Function = object.Name.(SchemaObjectIdentifierWithArguments)
 	default:
 		return nil, fmt.Errorf("unsupported object type %s", object.Name)
 	}

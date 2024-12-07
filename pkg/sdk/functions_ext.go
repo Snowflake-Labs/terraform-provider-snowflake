@@ -80,6 +80,14 @@ func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifi
 	return functionDetailsFromRows(rows)
 }
 
+func (v *functions) ShowParameters(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]*Parameter, error) {
+	return v.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
+		In: &ParametersIn{
+			Function: id,
+		},
+	})
+}
+
 func (d *FunctionDetail) setStringValueOrError(property string, field *string) error {
 	if d.Value == nil {
 		return fmt.Errorf("value expected for field %s", property)
