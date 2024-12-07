@@ -140,8 +140,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithRuntimeVersion("11").
 			WithComment("comment").
-			// TODO [this PR]: test imports
-			// WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport("lang.*")}).
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpFunction.JarLocation())}).
 			WithPackages([]sdk.FunctionPackageRequest{
 				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:1.14.0"),
 				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:telemetry:0.1.0"),
@@ -195,7 +194,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			// TODO [this PR]: parse to identifier list
 			// TODO [this PR]: check multiple secrets (to know how to parse)
 			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
-			HasImports(`[]`).
+			HasImports(fmt.Sprintf(`[%s]`, tmpFunction.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
