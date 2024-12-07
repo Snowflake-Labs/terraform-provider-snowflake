@@ -42,6 +42,7 @@ func (c *FunctionClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectI
 	)
 }
 
+// TODO [next PR]: improve this helper (all  other types creation)
 func (c *FunctionClient) CreateSecure(t *testing.T, arguments ...sdk.DataType) *sdk.Function {
 	t.Helper()
 	id := c.ids.RandomSchemaObjectIdentifierWithArguments(arguments...)
@@ -101,9 +102,9 @@ func (c *FunctionClient) SampleJavaDefinition(t *testing.T, className string, fu
 	t.Helper()
 
 	return fmt.Sprintf(`
-	class %s {
-		public static String %s(String %s) {
-			return x;
+	class %[1]s {
+		public static String %[2]s(String %[3]s) {
+			return %[3]s;
 		}
 	}
 `, className, funcName, argName)
