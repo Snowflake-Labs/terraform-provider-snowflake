@@ -501,11 +501,11 @@ func UpdateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 
 	req := sdk.NewAlterFunctionRequest(id)
 	if d.HasChange("comment") {
-		_, new := d.GetChange("comment")
-		if new == "" {
-			req.UnsetComment = sdk.Bool(true)
+		_, newComment := d.GetChange("comment")
+		if newComment.(string) == "" {
+			req.WithUnset(*sdk.NewFunctionUnsetRequest().WithComment(true))
 		} else {
-			req.SetComment = sdk.String(new.(string))
+			req.WithSet(*sdk.NewFunctionSetRequest().WithComment(newComment.(string)))
 		}
 		err := client.Functions.Alter(ctx, req)
 		if err != nil {

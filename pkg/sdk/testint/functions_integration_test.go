@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
@@ -14,66 +15,92 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-/*
-todo: add tests for:
-  - creating functions with different languages (java, javascript, python, scala, sql) from stages  using [ TARGET_PATH = '<stage_path_and_file_name_to_write>' ]
-*/
-
 func TestInt_CreateFunctions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 
-	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
-		return func() {
-			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
-			require.NoError(t, err)
-		}
-	}
+	t.Run("create function for Java - inline minimal", func(t *testing.T) {
+		className := "TestFunc"
+		funcName := "echoVarchar"
+		argName := "x"
 
-	t.Run("create function for Java - inline minimal", func(t *testing.T) {})
-	t.Run("create function for Java - inline full", func(t *testing.T) {})
-	t.Run("create function for Java - staged", func(t *testing.T) {})
-
-	t.Run("create function for JavaScript - inline minimal", func(t *testing.T) {})
-	t.Run("create function for JavaScript - inline full", func(t *testing.T) {})
-
-	t.Run("create function for Python - inline minimal", func(t *testing.T) {})
-	t.Run("create function for Python - inline full", func(t *testing.T) {})
-	t.Run("create function for Python - staged", func(t *testing.T) {})
-
-	t.Run("create function for Scala - inline minimal", func(t *testing.T) {})
-	t.Run("create function for Scala - inline full", func(t *testing.T) {})
-	t.Run("create function for Scala - staged", func(t *testing.T) {})
-
-	t.Run("create function for SQL - inline minimal", func(t *testing.T) {})
-	t.Run("create function for SQL - inline full", func(t *testing.T) {})
-
-	t.Run("create function for Java", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
-
-		definition := testClientHelper().Function.SampleJavaDefinition(t)
-		target := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
+		argument := sdk.NewFunctionArgumentRequest(argName, testdatatypes.DataTypeVarchar_100)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(testdatatypes.DataTypeVarchar_100)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewFunctionArgumentRequest("x", nil).WithDefaultValue("'abc'").WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, "TestFunc.echoVarchar").
-			WithOrReplace(true).
+		handler := fmt.Sprintf("%s.%s", className, funcName)
+		definition := testClientHelper().Function.SampleJavaDefinition(t, className, funcName, argName)
+
+		request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput)).
-			WithTargetPath(target).
-			WithFunctionDefinition(definition)
+			WithFunctionDefinitionWrapped(definition)
+
 		err := client.Functions.CreateForJava(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id))
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 		require.Equal(t, id.Name(), function.Name)
 		require.Equal(t, "JAVA", function.Language)
 	})
+
+	t.Run("create function for Java - inline full", func(t *testing.T) {
+		className := "TestFunc"
+		funcName := "echoVarchar"
+		argName := "x"
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+		argument := sdk.NewFunctionArgumentRequest(argName, testdatatypes.DataTypeVarchar_100)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(testdatatypes.DataTypeVarchar_100)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		handler := fmt.Sprintf("%s.%s", className, funcName)
+		definition := testClientHelper().Function.SampleJavaDefinition(t, className, funcName, argName)
+
+		target := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
+		request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
+			WithOrReplace(true).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithCopyGrants(true).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput)).
+			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
+			WithRuntimeVersion("11").
+			WithComment("comment").
+			//WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport("lang.*")}).
+			WithPackages([]sdk.FunctionPackageRequest{*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:latest")}).
+			//WithExternalAccessIntegrations().
+			//WithSecrets().
+			WithTargetPath(target).
+			WithFunctionDefinitionWrapped(definition)
+
+		err := client.Functions.CreateForJava(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+		require.Equal(t, id.Name(), function.Name)
+		require.Equal(t, "JAVA", function.Language)
+	})
+
+	t.Run("create function for Java - staged minimal", func(t *testing.T) {})
+	t.Run("create function for Java - staged full", func(t *testing.T) {})
+
+	t.Run("create function for JavaScript - inline minimal", func(t *testing.T) {})
+	t.Run("create function for JavaScript - inline full", func(t *testing.T) {})
+
+	t.Run("create function for Python - inline minimal", func(t *testing.T) {})
+	t.Run("create function for Python - inline full", func(t *testing.T) {})
+	t.Run("create function for Python - staged minimal", func(t *testing.T) {})
+	t.Run("create function for Python - staged full", func(t *testing.T) {})
+
+	t.Run("create function for Scala - inline minimal", func(t *testing.T) {})
+	t.Run("create function for Scala - inline full", func(t *testing.T) {})
+	t.Run("create function for Scala - staged minimal", func(t *testing.T) {})
+	t.Run("create function for Scala - staged full", func(t *testing.T) {})
+
+	t.Run("create function for SQL - inline minimal", func(t *testing.T) {})
+	t.Run("create function for SQL - inline full", func(t *testing.T) {})
 
 	t.Run("create function for Javascript", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
@@ -88,7 +115,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput))
 		err := client.Functions.CreateForJavascript(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id))
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -109,7 +136,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithFunctionDefinition(definition)
 		err := client.Functions.CreateForPython(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id))
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -132,7 +159,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithFunctionDefinition(definition)
 		err := client.Functions.CreateForScala(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id))
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -153,7 +180,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithComment("comment")
 		err := client.Functions.CreateForSQL(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id))
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -172,7 +199,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithComment("comment")
 		err := client.Functions.CreateForSQL(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id))
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -278,7 +305,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetLogLevel(string(sdk.LogLevelDebug)))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().WithLogLevel(sdk.LogLevelDebug)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -287,7 +314,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetLogLevel(true))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().WithLogLevel(true)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -296,7 +323,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetTraceLevel(string(sdk.TraceLevelAlways)))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().WithTraceLevel(sdk.TraceLevelAlways)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -305,7 +332,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetTraceLevel(true))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().WithTraceLevel(true)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -314,7 +341,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetComment("test comment"))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().WithComment("test comment")))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -323,7 +350,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		f := createFunctionForSQLHandle(t, true, true)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetComment(true))
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().WithComment(true)))
 		require.NoError(t, err)
 		assertFunction(t, id, false, true)
 	})
@@ -390,7 +417,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		require.NoError(t, err)
 		pairs := make(map[string]string)
 		for _, detail := range details {
-			pairs[detail.Property] = detail.Value
+			pairs[detail.Property] = *detail.Value
 		}
 		require.Equal(t, "SQL", pairs["language"])
 		require.Equal(t, "FLOAT", pairs["returns"])
@@ -405,7 +432,7 @@ func TestInt_OtherFunctions(t *testing.T) {
 		require.NoError(t, err)
 		pairs := make(map[string]string)
 		for _, detail := range details {
-			pairs[detail.Property] = detail.Value
+			pairs[detail.Property] = *detail.Value
 		}
 		require.Equal(t, "SQL", pairs["language"])
 		require.Equal(t, "FLOAT", pairs["returns"])
@@ -616,7 +643,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 			require.NoError(t, err)
 			pairs := make(map[string]string)
 			for _, detail := range details {
-				pairs[detail.Property] = detail.Value
+				pairs[detail.Property] = *detail.Value
 			}
 			assert.Equal(t, fmt.Sprintf("(%s %s)", argName, oldDataType), pairs["signature"])
 			assert.Equal(t, dataType.Canonical(), pairs["returns"])

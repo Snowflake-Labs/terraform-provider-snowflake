@@ -90,16 +90,16 @@ func (c *FunctionClient) Show(t *testing.T, id sdk.SchemaObjectIdentifierWithArg
 	return c.client().ShowByID(ctx, id)
 }
 
-func (c *FunctionClient) SampleJavaDefinition(t *testing.T) string {
+func (c *FunctionClient) SampleJavaDefinition(t *testing.T, className string, funcName string, argName string) string {
 	t.Helper()
 
-	return `
-	class TestFunc {
-		public static String echoVarchar(String x) {
+	return fmt.Sprintf(`
+	class %s {
+		public static String %s(String %s) {
 			return x;
 		}
 	}
-`
+`, className, funcName, argName)
 }
 
 func (c *FunctionClient) SampleJavaScriptDefinition(t *testing.T) string {

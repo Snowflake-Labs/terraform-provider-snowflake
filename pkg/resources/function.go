@@ -571,7 +571,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 		switch desc.Property {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
-			value := strings.ReplaceAll(strings.ReplaceAll(desc.Value, "(", ""), ")", "")
+			value := strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "(", ""), ")", "")
 			if value != "" { // Do nothing for functions without arguments
 				pairs := strings.Split(value, ", ")
 
@@ -602,8 +602,8 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 		case "returns":
 			// Format in Snowflake DB is returnType(<some number>)
 			re := regexp.MustCompile(`^(.*)\([0-9]*\)$`)
-			match := re.FindStringSubmatch(desc.Value)
-			rt := desc.Value
+			rt := *desc.Value
+			match := re.FindStringSubmatch(rt)
 			if match != nil {
 				rt = match[1]
 			}
@@ -611,7 +611,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 				diag.FromErr(err)
 			}
 		case "language":
-			if snowflake.Contains(languages, strings.ToLower(desc.Value)) {
+			if snowflake.Contains(languages, strings.ToLower(*desc.Value)) {
 				if err := d.Set("language", desc.Value); err != nil {
 					diag.FromErr(err)
 				}
@@ -619,7 +619,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 				log.Printf("[INFO] Unexpected language for function %v returned from Snowflake", desc.Value)
 			}
 		case "packages":
-			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", "")
+			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", "")
 			if value != "" { // Do nothing for Java / Python functions without packages
 				packages := strings.Split(value, ",")
 				if err := d.Set("packages", packages); err != nil {
@@ -627,7 +627,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 				}
 			}
 		case "imports":
-			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", "")
+			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", "")
 			if value != "" { // Do nothing for Java functions without imports
 				imports := strings.Split(value, ",")
 				if err := d.Set("imports", imports); err != nil {
@@ -702,11 +702,11 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		if comment != "" {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetComment(comment.(string))); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().WithComment(comment.(string)))); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetComment(true)); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().WithComment(true))); err != nil {
 				return diag.FromErr(err)
 			}
 		}

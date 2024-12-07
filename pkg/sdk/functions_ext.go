@@ -99,6 +99,45 @@ func (d *FunctionDetail) setOptionalBoolValueOrError(property string, field **bo
 	return nil
 }
 
+func (s *CreateForJavaFunctionRequest) WithFunctionDefinitionWrapped(FunctionDefinition string) *CreateForJavaFunctionRequest {
+	s.FunctionDefinition = String(fmt.Sprintf(`$$%s$$`, FunctionDefinition))
+	return s
+}
+
+func (s *CreateForPythonFunctionRequest) WithFunctionDefinitionWrapped(FunctionDefinition string) *CreateForPythonFunctionRequest {
+	s.FunctionDefinition = String(fmt.Sprintf(`$$%s$$`, FunctionDefinition))
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithFunctionDefinitionWrapped(FunctionDefinition string) *CreateForScalaFunctionRequest {
+	s.FunctionDefinition = String(fmt.Sprintf(`$$%s$$`, FunctionDefinition))
+	return s
+}
+
+func NewCreateForSQLFunctionRequestDefinitionWrapped(
+	name SchemaObjectIdentifier,
+	Returns FunctionReturnsRequest,
+	FunctionDefinition string,
+) *CreateForSQLFunctionRequest {
+	s := CreateForSQLFunctionRequest{}
+	s.name = name
+	s.Returns = Returns
+	s.FunctionDefinition = fmt.Sprintf(`$$%s$$`, FunctionDefinition)
+	return &s
+}
+
+func NewCreateForJavascriptFunctionRequestDefinitionWrapped(
+	name SchemaObjectIdentifier,
+	Returns FunctionReturnsRequest,
+	FunctionDefinition string,
+) *CreateForJavascriptFunctionRequest {
+	s := CreateForJavascriptFunctionRequest{}
+	s.name = name
+	s.Returns = Returns
+	s.FunctionDefinition = fmt.Sprintf(`$$%s$$`, FunctionDefinition)
+	return &s
+}
+
 // CreateForJavaFunctionOptions
 // TODO [SNOW-1348103 - this PR]: test setting the paths for all types (like imports, target paths)
 // TODO [SNOW-1348103 - this PR]: test weird names for arg name - lower/upper if used with double quotes, to upper without quotes, dots, spaces, and both quotes not permitted
