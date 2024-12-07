@@ -259,10 +259,10 @@ func ReturnNullValuesPointer(v ReturnNullValues) *ReturnNullValues {
 	return &v
 }
 
-// TODO [this PR]: Name -> Identifier?
 type SecretReference struct {
-	VariableName string `ddl:"keyword,single_quotes"`
-	Name         string `ddl:"parameter,no_quotes"`
+	VariableName string                 `ddl:"keyword,single_quotes"`
+	equals       bool                   `ddl:"static" sql:"="`
+	Name         SchemaObjectIdentifier `ddl:"identifier"`
 }
 
 type ValuesBehavior string

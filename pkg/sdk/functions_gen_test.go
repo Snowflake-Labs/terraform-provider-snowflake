@@ -11,6 +11,8 @@ func wrapFunctionDefinition(def string) string {
 
 func TestFunctions_CreateForJava(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
+	secretId := randomSchemaObjectIdentifier()
+	secretId2 := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForJavaFunctionOptions {
 		return &CreateForJavaFunctionOptions{
@@ -200,16 +202,16 @@ func TestFunctions_CreateForJava(t *testing.T) {
 		opts.Secrets = []SecretReference{
 			{
 				VariableName: "variable1",
-				Name:         "name1",
+				Name:         secretId,
 			},
 			{
 				VariableName: "variable2",
-				Name:         "name2",
+				Name:         secretId2,
 			},
 		}
 		opts.TargetPath = String("@~/testfunc.jar")
 		opts.FunctionDefinition = String(wrapFunctionDefinition("return id + name;"))
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s ("id" NUMBER, "name" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS TABLE ("country_code" VARCHAR, "country_name" VARCHAR) NOT NULL LANGUAGE JAVA CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '2.0' COMMENT = 'comment' IMPORTS = ('@~/my_decrement_udf_package_dir/my_decrement_udf_jar.jar') PACKAGES = ('com.snowflake:snowpark:1.2.0') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) TARGET_PATH = '@~/testfunc.jar' AS $$return id + name;$$`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s ("id" NUMBER, "name" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS TABLE ("country_code" VARCHAR, "country_name" VARCHAR) NOT NULL LANGUAGE JAVA CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '2.0' COMMENT = 'comment' IMPORTS = ('@~/my_decrement_udf_package_dir/my_decrement_udf_jar.jar') PACKAGES = ('com.snowflake:snowpark:1.2.0') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' AS $$return id + name;$$`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -265,16 +267,16 @@ func TestFunctions_CreateForJava(t *testing.T) {
 		opts.Secrets = []SecretReference{
 			{
 				VariableName: "variable1",
-				Name:         "name1",
+				Name:         secretId,
 			},
 			{
 				VariableName: "variable2",
-				Name:         "name2",
+				Name:         secretId2,
 			},
 		}
 		opts.TargetPath = String("@~/testfunc.jar")
 		opts.FunctionDefinition = String(wrapFunctionDefinition("return id + name;"))
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s ("id" NUMBER(36, 2), "name" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS TABLE ("country_code" VARCHAR(100), "country_name" VARCHAR(100)) NOT NULL LANGUAGE JAVA CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '2.0' COMMENT = 'comment' IMPORTS = ('@~/my_decrement_udf_package_dir/my_decrement_udf_jar.jar') PACKAGES = ('com.snowflake:snowpark:1.2.0') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) TARGET_PATH = '@~/testfunc.jar' AS $$return id + name;$$`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s ("id" NUMBER(36, 2), "name" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS TABLE ("country_code" VARCHAR(100), "country_name" VARCHAR(100)) NOT NULL LANGUAGE JAVA CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '2.0' COMMENT = 'comment' IMPORTS = ('@~/my_decrement_udf_package_dir/my_decrement_udf_jar.jar') PACKAGES = ('com.snowflake:snowpark:1.2.0') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' AS $$return id + name;$$`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 }
 
@@ -460,6 +462,8 @@ func TestFunctions_CreateForJavascript(t *testing.T) {
 
 func TestFunctions_CreateForPython(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
+	secretId := randomSchemaObjectIdentifier()
+	secretId2 := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForPythonFunctionOptions {
 		return &CreateForPythonFunctionOptions{
@@ -658,15 +662,15 @@ func TestFunctions_CreateForPython(t *testing.T) {
 		opts.Secrets = []SecretReference{
 			{
 				VariableName: "variable1",
-				Name:         "name1",
+				Name:         secretId,
 			},
 			{
 				VariableName: "variable2",
-				Name:         "name2",
+				Name:         secretId2,
 			},
 		}
 		opts.FunctionDefinition = String(wrapFunctionDefinition("import numpy as np"))
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s ("i" NUMBER DEFAULT 1) COPY GRANTS RETURNS VARIANT NOT NULL LANGUAGE PYTHON CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '3.8' COMMENT = 'comment' IMPORTS = ('numpy', 'pandas') PACKAGES = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) AS $$import numpy as np$$`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s ("i" NUMBER DEFAULT 1) COPY GRANTS RETURNS VARIANT NOT NULL LANGUAGE PYTHON CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '3.8' COMMENT = 'comment' IMPORTS = ('numpy', 'pandas') PACKAGES = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) AS $$import numpy as np$$`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -715,15 +719,15 @@ func TestFunctions_CreateForPython(t *testing.T) {
 		opts.Secrets = []SecretReference{
 			{
 				VariableName: "variable1",
-				Name:         "name1",
+				Name:         secretId,
 			},
 			{
 				VariableName: "variable2",
-				Name:         "name2",
+				Name:         secretId2,
 			},
 		}
 		opts.FunctionDefinition = String(wrapFunctionDefinition("import numpy as np"))
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s ("i" NUMBER(36, 2) DEFAULT 1) COPY GRANTS RETURNS VARIANT NOT NULL LANGUAGE PYTHON CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '3.8' COMMENT = 'comment' IMPORTS = ('numpy', 'pandas') PACKAGES = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) AS $$import numpy as np$$`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE TEMPORARY SECURE FUNCTION %s ("i" NUMBER(36, 2) DEFAULT 1) COPY GRANTS RETURNS VARIANT NOT NULL LANGUAGE PYTHON CALLED ON NULL INPUT IMMUTABLE RUNTIME_VERSION = '3.8' COMMENT = 'comment' IMPORTS = ('numpy', 'pandas') PACKAGES = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) AS $$import numpy as np$$`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 }
 
@@ -1063,6 +1067,7 @@ func TestFunctions_CreateForSQL(t *testing.T) {
 
 func TestFunctions_Alter(t *testing.T) {
 	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
+	secretId := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *AlterFunctionOptions {
 		return &AlterFunctionOptions{
@@ -1142,11 +1147,11 @@ func TestFunctions_Alter(t *testing.T) {
 		opts.Set = &FunctionSet{
 			SecretsList: &SecretsList{
 				[]SecretReference{
-					{VariableName: "abc", Name: "secret_name"},
+					{VariableName: "abc", Name: secretId},
 				},
 			},
 		}
-		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET SECRETS = ('abc' = secret_name)`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `ALTER FUNCTION IF EXISTS %s SET SECRETS = ('abc' = %s)`, id.FullyQualifiedName(), secretId.FullyQualifiedName())
 	})
 
 	t.Run("alter: unset", func(t *testing.T) {
