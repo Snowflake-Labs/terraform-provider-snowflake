@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -36,7 +38,8 @@ func TestInt_Procedures(t *testing.T) {
 
 	externalAccessIntegration, externalAccessIntegrationCleanup := testClientHelper().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
-	_ = externalAccessIntegration
+
+	tmpJavaFunction := testClientHelper().CreateSampleJavaFunctionAndJar(t)
 
 	t.Run("create procedure for Java - inline minimal", func(t *testing.T) {
 		className := "TestFunc"
@@ -107,39 +110,90 @@ func TestInt_Procedures(t *testing.T) {
 		)
 	})
 
-	t.Run("create procedure for Java: returns result data type", func(t *testing.T) {
-		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#reading-a-dynamically-specified-file-with-inputstream
-		name := "file_reader_java_proc_snowflakefile"
-		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR)
+	t.Run("create procedure for Java - inline full", func(t *testing.T) {
+		className := "TestFunc"
+		funcName := "echoVarchar"
+		argName := "x"
+		dataType := testdatatypes.DataTypeVarchar_100
 
-		definition := `
-			import java.io.InputStream;
-			import java.io.IOException;
-			import java.nio.charset.StandardCharsets;
-			import com.snowflake.snowpark_java.types.SnowflakeFile;
-			import com.snowflake.snowpark_java.Session;
-			class FileReader {
-				public String execute(Session session, String fileName) throws IOException {
-					InputStream input = SnowflakeFile.newInstance(fileName).getInputStream();
-					return new String(input.readAllBytes(), StandardCharsets.UTF_8);
-				}
-			}`
-
-		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType).
+			WithNotNull(true)
 		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewProcedureArgumentRequest("input", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:latest")}
-		request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, "FileReader.execute").
+		handler := fmt.Sprintf("%s.%s", className, funcName)
+		definition := testClientHelper().Procedure.SampleJavaDefinition(t, className, funcName, argName)
+		jarName := fmt.Sprintf("tf-%d-%s.jar", time.Now().Unix(), random.AlphaN(5))
+		targetPath := fmt.Sprintf("@~/%s", jarName)
+		packages := []sdk.ProcedurePackageRequest{
+			*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0"),
+			*sdk.NewProcedurePackageRequest("com.snowflake:telemetry:0.1.0"),
+		}
+
+		request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, handler).
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithCopyGrants(true).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
+			WithComment("comment").
+			WithImports([]sdk.ProcedureImportRequest{*sdk.NewProcedureImportRequest(tmpJavaFunction.JarLocation())}).
+			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
+			WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}}).
+			WithTargetPath(targetPath).
 			WithProcedureDefinitionWrapped(definition)
+
 		err := client.Procedures.CreateForJava(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+		t.Cleanup(testClientHelper().Stage.RemoveFromUserStageFunc(t, jarName))
 
-		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
+		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
-		require.GreaterOrEqual(t, len(procedures), 1)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription("comment").
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			// TODO [this PR]: apparently external access integrations and secrets are not filled out correctly for procedures
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasLanguage("JAVA").
+			HasBody(definition).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
+			HasHandler(handler).
+			HasRuntimeVersion("11").
+			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasTargetPath(targetPath).
+			HasInstalledPackagesNil().
+			HasExecuteAs("OWNER"),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
 	})
 
 	t.Run("create procedure for Java: returns table", func(t *testing.T) {
