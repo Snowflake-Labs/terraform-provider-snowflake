@@ -655,9 +655,148 @@ func TestInt_CreateFunctions(t *testing.T) {
 		)
 	})
 
-	//t.Run("create function for Python - staged minimal", func(t *testing.T) {})
-	//t.Run("create function for Python - staged full", func(t *testing.T) {})
-	//
+	t.Run("create function for Python - staged minimal", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeVarchar_100
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		argName := "i"
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+		request := sdk.NewCreateForPythonFunctionRequest(id.SchemaObjectId(), *returns, "3.8", tmpPythonFunction.PythonHandler()).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpPythonFunction.PythonModuleLocation())})
+
+		err := client.Functions.CreateForPython(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription(sdk.DefaultFunctionComment).
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("PYTHON").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). //TODO [this PR]: do we care about this whitespace?
+			HasLanguage("PYTHON").
+			HasBodyNil().
+			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
+			HasHandler(tmpPythonFunction.PythonHandler()).
+			HasRuntimeVersion("3.8").
+			HasPackages(`[]`).
+			HasTargetPathNil().
+			HasInstalledPackagesNotEmpty().
+			HasIsAggregate(false),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("create function for Python - staged full", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeVarchar_100
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		argName := "i"
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+		request := sdk.NewCreateForPythonFunctionRequest(id.SchemaObjectId(), *returns, "3.8", tmpPythonFunction.PythonHandler()).
+			WithOrReplace(true).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithCopyGrants(true).
+			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
+			WithComment("comment").
+			WithPackages([]sdk.FunctionPackageRequest{
+				*sdk.NewFunctionPackageRequest().WithPackage("absl-py==0.10.0"),
+				*sdk.NewFunctionPackageRequest().WithPackage("about-time==4.2.1"),
+			}).
+			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
+			WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}}).
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpPythonFunction.PythonModuleLocation())})
+
+		err := client.Functions.CreateForPython(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription("comment").
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("PYTHON").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL"). //TODO [this PR]: do we care about this whitespace?
+			HasLanguage("PYTHON").
+			HasBodyNil().
+			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
+			HasHandler(tmpPythonFunction.PythonHandler()).
+			HasRuntimeVersion("3.8").
+			HasPackages(`['absl-py==0.10.0','about-time==4.2.1']`).
+			HasTargetPathNil().
+			HasInstalledPackagesNotEmpty().
+			HasIsAggregate(false),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
 	//t.Run("create function for Scala - inline minimal", func(t *testing.T) {})
 	//t.Run("create function for Scala - inline full", func(t *testing.T) {})
 	//t.Run("create function for Scala - staged minimal", func(t *testing.T) {})
