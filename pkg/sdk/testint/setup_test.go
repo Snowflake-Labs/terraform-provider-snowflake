@@ -162,7 +162,7 @@ func (itc *integrationTestContext) initialize() error {
 
 	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 
-	// TODO [next PR]: improve setup; this is a quick workaround for faster local testing
+	// TODO [SNOW-1763603]: improve setup; this is a quick workaround for faster local testing
 	if os.Getenv(string(testenvs.SimplifiedIntegrationTestsSetup)) == "" {
 		config, err := sdk.ProfileConfig(testprofiles.Secondary)
 		if err != nil {

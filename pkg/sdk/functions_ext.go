@@ -147,26 +147,3 @@ func NewCreateForJavascriptFunctionRequestDefinitionWrapped(
 	s.FunctionDefinition = fmt.Sprintf(`$$%s$$`, FunctionDefinition)
 	return &s
 }
-
-// CreateForJavaFunctionOptions
-// TODO [SNOW-1348103 - this PR]: test setting the paths for all types (like imports, target paths)
-// TODO [SNOW-1348103 - this PR]: test weird names for arg name - lower/upper if used with double quotes, to upper without quotes, dots, spaces, and both quotes not permitted
-// TODO [SNOW-1348103 - next PRs]: check data type mappings https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages (signature + returns)
-// TODO [SNOW-1348103 - this PR]: setting RUNTIME_VERSION (only 11.x, 17.x supported, 11.x being the default)
-// TODO [SNOW-1348103 - this PR]: packages: package_name:version_number; do we validate? - check SELECT * FROM INFORMATION_SCHEMA.PACKAGES WHERE LANGUAGE = 'java';
-// TODO [SNOW-1348103 - next PRs]: add to the resource docs https://docs.snowflake.com/en/sql-reference/sql/create-function#access-control-requirements
-// TODO [SNOW-1348103 - this PR]: what delimiter do we use for <function_definition>: ' versus $$? - we use $$ as tasks
-// TODO [SNOW-1348103 - this PR]: escaping single quotes test - don't have to do this with $$
-// TODO [SNOW-1348103 - this PR]: validation of JAR (check https://docs.snowflake.com/en/sql-reference/sql/create-function#id6)
-// TODO [SNOW-1348103 - next PRs]: active warehouse vs validations
-// TODO [SNOW-1348103 - this PR]: check creation of all functions (using examples and more)
-
-// CreateForPythonFunctionOptions
-// TODO [SNOW-1348103 - this PR]: test aggregate func creation
-// TODO [SNOW-1348103 - this PR]: what about [==<version>] - SDK level or resource level? check also: SELECT * FROM INFORMATION_SCHEMA.PACKAGES WHERE LANGUAGE = 'python';
-// TODO [SNOW-1348103 - this PR]: what about preview feature >= ?
-// TODO [SNOW-1348103 - this PR]: what about '<module_file_name>.<function_name>' for non-inline functions?
-// TODO [SNOW-1348103 - this PR]: setting RUNTIME_VERSION (only 3.8, 3.9, 3.10, 3.11 supported, which one is a default?)
-
-// CreateForScalaFunctionOptions
-// TODO [SNOW-1348103 - this PR]: setting RUNTIME_VERSION (only 2.12 supported, which is the default)

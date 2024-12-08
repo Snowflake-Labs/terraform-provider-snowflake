@@ -44,7 +44,7 @@ func (c *FunctionClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectI
 	)
 }
 
-// TODO [next PR]: improve this helper (all  other types creation)
+// TODO [SNOW-1850370]: improve this helper (all  other types creation)
 func (c *FunctionClient) CreateSecure(t *testing.T, arguments ...sdk.DataType) *sdk.Function {
 	t.Helper()
 	id := c.ids.RandomSchemaObjectIdentifierWithArguments(arguments...)

@@ -20,17 +20,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [next PR]: schemaName and catalog name are quoted (because we use lowercase)
-// TODO [next PR]: HasArgumentsRawFrom(functionId, arguments, return)
-// TODO [next PR]: extract show assertions with commons fields
-// TODO [next PR]: test confirming that runtime version is required for Scala function
-// TODO [next PR]: test create or replace with name change, args change
-// TODO [next PR]: test rename more (arg stays, can't change arg, rename to different schema)
-// TODO [next PR]: add test documenting that UNSET SECRETS does not work
-// TODO [next PR]: add test documenting [JAVA]: 391516 (42601): SQL compilation error: Cannot specify TARGET_PATH without a function BODY.
-// TODO [next PR]: test secure
-// TODO [next PR]: python aggregate func (100357 (P0000): Could not find accumulate method in function CVVEMHIT_06547800_08D6_DBCA_1AC7_5E422AFF8B39 with handler dump)
-// TODO [next PR]: add a test documenting that we can't set parameters in create (and revert adding these parameters directly in object...)
+// TODO [SNOW-1348103]: schemaName and catalog name are quoted (because we use lowercase)
+// TODO [SNOW-1850370]: HasArgumentsRawFrom(functionId, arguments, return)
+// TODO [SNOW-1850370]: extract show assertions with commons fields
+// TODO [SNOW-1850370]: test confirming that runtime version is required for Scala function
+// TODO [SNOW-1348103 or SNOW-1850370]: test create or replace with name change, args change
+// TODO [SNOW-1348103]: test rename more (arg stays, can't change arg, rename to different schema)
+// TODO [SNOW-1348103]: test weird names for arg name - lower/upper if used with double quotes, to upper without quotes, dots, spaces, and both quotes not permitted
+// TODO [SNOW-1850370]: add test documenting that UNSET SECRETS does not work
+// TODO [SNOW-1850370]: add test documenting [JAVA]: 391516 (42601): SQL compilation error: Cannot specify TARGET_PATH without a function BODY.
+// TODO [SNOW-1348103 or SNOW-1850370]: test secure
+// TODO [SNOW-1348103]: python aggregate func (100357 (P0000): Could not find accumulate method in function CVVEMHIT_06547800_08D6_DBCA_1AC7_5E422AFF8B39 with handler dump)
+// TODO [SNOW-1348103]: add a test documenting that we can't set parameters in create (and revert adding these parameters directly in object...)
+// TODO [SNOW-1850370]: active warehouse vs validations
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -207,8 +209,8 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			// TODO [next PR]: parse to identifier list
-			// TODO [next PR]: check multiple secrets (to know how to parse)
+			// TODO [SNOW-1348103]: parse to identifier list
+			// TODO [SNOW-1348103]: check multiple secrets (to know how to parse)
 			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasHandler(handler).
@@ -565,7 +567,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). //TODO [next PR]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). //TODO [SNOW-1348103]: do we care about this whitespace?
 			HasLanguage("PYTHON").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -647,7 +649,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL"). //TODO [next PR]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL"). // TODO [SNOW-1348103]: do we care about this whitespace?
 			HasLanguage("PYTHON").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
@@ -714,7 +716,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). //TODO [next PR]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")).
 			HasLanguage("PYTHON").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -793,7 +795,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL"). //TODO [next PR]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL").
 			HasLanguage("PYTHON").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
@@ -1245,7 +1247,7 @@ func TestInt_Functions(t *testing.T) {
 			HasLanguage("SQL").
 			HasBody(definition).
 			HasNullHandlingNil().
-			// TODO [next PR]: volatility is not returned and is present in create syntax
+			// TODO [SNOW-1348103]: volatility is not returned and is present in create syntax
 			//HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasVolatilityNil().
 			HasExternalAccessIntegrationsNil().
@@ -1445,7 +1447,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
 			HasExternalAccessIntegrationsNil().
-			// TODO [next PR]: apparently UNSET external access integrations cleans out secrets in the describe but leaves it in SHOW
+			// TODO [SNOW-1850370]: apparently UNSET external access integrations cleans out secrets in the describe but leaves it in SHOW
 			HasSecretsNil(),
 		)
 
