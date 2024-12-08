@@ -109,41 +109,41 @@ func (d *FunctionDetail) setOptionalBoolValueOrError(property string, field **bo
 	return nil
 }
 
-func (s *CreateForJavaFunctionRequest) WithFunctionDefinitionWrapped(FunctionDefinition string) *CreateForJavaFunctionRequest {
-	s.FunctionDefinition = String(fmt.Sprintf(`$$%s$$`, FunctionDefinition))
+func (s *CreateForJavaFunctionRequest) WithFunctionDefinitionWrapped(functionDefinition string) *CreateForJavaFunctionRequest {
+	s.FunctionDefinition = String(fmt.Sprintf(`$$%s$$`, functionDefinition))
 	return s
 }
 
-func (s *CreateForPythonFunctionRequest) WithFunctionDefinitionWrapped(FunctionDefinition string) *CreateForPythonFunctionRequest {
-	s.FunctionDefinition = String(fmt.Sprintf(`$$%s$$`, FunctionDefinition))
+func (s *CreateForPythonFunctionRequest) WithFunctionDefinitionWrapped(functionDefinition string) *CreateForPythonFunctionRequest {
+	s.FunctionDefinition = String(fmt.Sprintf(`$$%s$$`, functionDefinition))
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithFunctionDefinitionWrapped(FunctionDefinition string) *CreateForScalaFunctionRequest {
-	s.FunctionDefinition = String(fmt.Sprintf(`$$%s$$`, FunctionDefinition))
+func (s *CreateForScalaFunctionRequest) WithFunctionDefinitionWrapped(functionDefinition string) *CreateForScalaFunctionRequest {
+	s.FunctionDefinition = String(fmt.Sprintf(`$$%s$$`, functionDefinition))
 	return s
 }
 
 func NewCreateForSQLFunctionRequestDefinitionWrapped(
 	name SchemaObjectIdentifier,
-	Returns FunctionReturnsRequest,
-	FunctionDefinition string,
+	returns FunctionReturnsRequest,
+	functionDefinition string,
 ) *CreateForSQLFunctionRequest {
 	s := CreateForSQLFunctionRequest{}
 	s.name = name
-	s.Returns = Returns
-	s.FunctionDefinition = fmt.Sprintf(`$$%s$$`, FunctionDefinition)
+	s.Returns = returns
+	s.FunctionDefinition = fmt.Sprintf(`$$%s$$`, functionDefinition)
 	return &s
 }
 
 func NewCreateForJavascriptFunctionRequestDefinitionWrapped(
 	name SchemaObjectIdentifier,
-	Returns FunctionReturnsRequest,
-	FunctionDefinition string,
+	returns FunctionReturnsRequest,
+	functionDefinition string,
 ) *CreateForJavascriptFunctionRequest {
 	s := CreateForJavascriptFunctionRequest{}
 	s.name = name
-	s.Returns = Returns
-	s.FunctionDefinition = fmt.Sprintf(`$$%s$$`, FunctionDefinition)
+	s.Returns = returns
+	s.FunctionDefinition = fmt.Sprintf(`$$%s$$`, functionDefinition)
 	return &s
 }

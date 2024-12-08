@@ -59,6 +59,7 @@ func (c *FunctionClient) CreateSecure(t *testing.T, arguments ...sdk.DataType) *
 }
 
 func (c *FunctionClient) CreateSql(t *testing.T) (*sdk.Function, func()) {
+	t.Helper()
 	dataType := testdatatypes.DataTypeFloat
 	id := c.ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
 	return c.CreateSqlWithIdentifierAndArgument(t, id.SchemaObjectId(), dataType)

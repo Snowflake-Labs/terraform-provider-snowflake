@@ -51,6 +51,7 @@ func TestInt_Functions(t *testing.T) {
 	tmpPythonFunction := testClientHelper().CreateSamplePythonFunctionAndModule(t)
 
 	assertParametersSet := func(t *testing.T, functionParametersAssert *objectparametersassert.FunctionParametersAssert) {
+		t.Helper()
 		assertions.AssertThatObject(t, functionParametersAssert.
 			HasEnableConsoleOutput(true).
 			HasLogLevel(sdk.LogLevelWarn).
@@ -567,7 +568,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). //TODO [SNOW-1348103]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). // TODO [SNOW-1348103]: do we care about this whitespace?
 			HasLanguage("PYTHON").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -1248,7 +1249,7 @@ func TestInt_Functions(t *testing.T) {
 			HasBody(definition).
 			HasNullHandlingNil().
 			// TODO [SNOW-1348103]: volatility is not returned and is present in create syntax
-			//HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
+			// HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasVolatilityNil().
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().

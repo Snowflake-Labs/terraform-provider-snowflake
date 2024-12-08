@@ -830,7 +830,7 @@ func TestFunctions_CreateForScala(t *testing.T) {
 		opts.ReturnNullValues = ReturnNullValuesPointer(ReturnNullValuesNotNull)
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorCalledOnNullInput)
 		opts.ReturnResultsBehavior = ReturnResultsBehaviorPointer(ReturnResultsBehaviorImmutable)
-		opts.RuntimeVersion = String("2.0")
+		opts.RuntimeVersion = "2.0"
 		opts.Comment = String("comment")
 		opts.Imports = []FunctionImport{
 			{
@@ -859,7 +859,7 @@ func TestFunctions_CreateForScala(t *testing.T) {
 		opts.ReturnNullValues = ReturnNullValuesPointer(ReturnNullValuesNotNull)
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorCalledOnNullInput)
 		opts.ReturnResultsBehavior = ReturnResultsBehaviorPointer(ReturnResultsBehaviorImmutable)
-		opts.RuntimeVersion = String("2.0")
+		opts.RuntimeVersion = "2.0"
 		opts.Comment = String("comment")
 		opts.Imports = []FunctionImport{
 			{
