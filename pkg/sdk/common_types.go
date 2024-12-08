@@ -380,6 +380,37 @@ var AllMetricLevels = []MetricLevel{
 	MetricLevelNone,
 }
 
+type AutoEventLogging string
+
+const (
+	AutoEventLoggingLogging AutoEventLogging = "LOGGING"
+	AutoEventLoggingTracing AutoEventLogging = "TRACING"
+	AutoEventLoggingAll     AutoEventLogging = "ALL"
+	AutoEventLoggingOff     AutoEventLogging = "OFF"
+)
+
+func ToAutoEventLogging(value string) (AutoEventLogging, error) {
+	switch strings.ToUpper(value) {
+	case string(AutoEventLoggingLogging):
+		return AutoEventLoggingLogging, nil
+	case string(AutoEventLoggingTracing):
+		return AutoEventLoggingTracing, nil
+	case string(AutoEventLoggingAll):
+		return AutoEventLoggingAll, nil
+	case string(AutoEventLoggingOff):
+		return AutoEventLoggingOff, nil
+	default:
+		return "", fmt.Errorf("unknown auto event logging: %s", value)
+	}
+}
+
+var AllAutoEventLoggings = []AutoEventLogging{
+	AutoEventLoggingLogging,
+	AutoEventLoggingTracing,
+	AutoEventLoggingAll,
+	AutoEventLoggingOff,
+}
+
 // StringAllowEmpty is a wrapper on string to allow using empty strings in SQL.
 type StringAllowEmpty struct {
 	Value string `ddl:"keyword,single_quotes"`
