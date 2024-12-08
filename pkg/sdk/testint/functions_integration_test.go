@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -53,10 +54,11 @@ func TestInt_CreateFunctions(t *testing.T) {
 		className := "TestFunc"
 		funcName := "echoVarchar"
 		argName := "x"
+		dataType := testdatatypes.DataTypeVarchar_100
 
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
-		argument := sdk.NewFunctionArgumentRequest(argName, testdatatypes.DataTypeVarchar_100)
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(testdatatypes.DataTypeVarchar_100)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		handler := fmt.Sprintf("%s.%s", className, funcName)
 		definition := testClientHelper().Function.SampleJavaDefinition(t, className, funcName, argName)
@@ -81,8 +83,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasIsAnsi(false).
 			HasMinNumArguments(1).
 			HasMaxNumArguments(1).
-			HasArgumentsOld([]sdk.DataType{sdk.DataTypeVARCHAR}).
-			HasArgumentsRaw(fmt.Sprintf(`%s(VARCHAR) RETURN VARCHAR`, function.ID().Name())).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription(sdk.DefaultFunctionComment).
 			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
 			HasIsTableFunction(false).
@@ -95,8 +97,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 		)
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
-			HasSignature(fmt.Sprintf(`(%s %s)`, argName, testdatatypes.DataTypeVarchar_100.ToLegacyDataTypeSql())).
-			HasReturns(testdatatypes.DataTypeVarchar_100.ToSql()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(dataType.ToSql()).
 			HasLanguage("JAVA").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -505,7 +507,73 @@ func TestInt_CreateFunctions(t *testing.T) {
 		)
 	})
 
-	//t.Run("create function for Python - inline minimal", func(t *testing.T) {})
+	t.Run("create function for Python - inline minimal", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeNumber_36_2
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		argName := "i"
+		funcName := "dump"
+		definition := testClientHelper().Function.SamplePythonDefinition(t, funcName, argName)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+		request := sdk.NewCreateForPythonFunctionRequest(id.SchemaObjectId(), *returns, "3.8", funcName).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithFunctionDefinitionWrapped(definition)
+
+		err := client.Functions.CreateForPython(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription(sdk.DefaultFunctionComment).
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("PYTHON").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). //TODO [this PR]: do we care about this whitespace?
+			HasLanguage("PYTHON").
+			HasBody(definition).
+			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImports(`[]`).
+			HasHandler(funcName).
+			HasRuntimeVersion("3.8").
+			HasPackages(`[]`).
+			HasTargetPathNil().
+			HasInstalledPackagesNotEmpty().
+			HasIsAggregate(false),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
 	//t.Run("create function for Python - inline full", func(t *testing.T) {})
 	//t.Run("create function for Python - staged minimal", func(t *testing.T) {})
 	//t.Run("create function for Python - staged full", func(t *testing.T) {})

@@ -227,7 +227,7 @@ func (f *FunctionDetailsAssert) HasBodyNil() *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.Body != nil {
-			return fmt.Errorf("expected body to be nil, was %v", o.Body)
+			return fmt.Errorf("expected body to be nil, was %v", *o.Body)
 		}
 		return nil
 	})
@@ -238,7 +238,7 @@ func (f *FunctionDetailsAssert) HasNullHandlingNil() *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.NullHandling != nil {
-			return fmt.Errorf("expected null handling to be nil, was %v", o.NullHandling)
+			return fmt.Errorf("expected null handling to be nil, was %v", *o.NullHandling)
 		}
 		return nil
 	})
@@ -249,7 +249,7 @@ func (f *FunctionDetailsAssert) HasVolatilityNil() *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.Volatility != nil {
-			return fmt.Errorf("expected volatility to be nil, was %v", o.Volatility)
+			return fmt.Errorf("expected volatility to be nil, was %v", *o.Volatility)
 		}
 		return nil
 	})
@@ -260,7 +260,7 @@ func (f *FunctionDetailsAssert) HasExternalAccessIntegrationsNil() *FunctionDeta
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.ExternalAccessIntegrations != nil {
-			return fmt.Errorf("expected external access integrations to be nil, was %v", o.ExternalAccessIntegrations)
+			return fmt.Errorf("expected external access integrations to be nil, was %v", *o.ExternalAccessIntegrations)
 		}
 		return nil
 	})
@@ -271,7 +271,7 @@ func (f *FunctionDetailsAssert) HasSecretsNil() *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.Secrets != nil {
-			return fmt.Errorf("expected secrets to be nil, was %v", o.Secrets)
+			return fmt.Errorf("expected secrets to be nil, was %v", *o.Secrets)
 		}
 		return nil
 	})
@@ -282,7 +282,7 @@ func (f *FunctionDetailsAssert) HasImportsNil() *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.Imports != nil {
-			return fmt.Errorf("expected imports to be nil, was %v", o.Imports)
+			return fmt.Errorf("expected imports to be nil, was %v", *o.Imports)
 		}
 		return nil
 	})
@@ -293,7 +293,7 @@ func (f *FunctionDetailsAssert) HasHandlerNil() *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.Handler != nil {
-			return fmt.Errorf("expected handler to be nil, was %v", o.Handler)
+			return fmt.Errorf("expected handler to be nil, was %v", *o.Handler)
 		}
 		return nil
 	})
@@ -304,7 +304,7 @@ func (f *FunctionDetailsAssert) HasRuntimeVersionNil() *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.RuntimeVersion != nil {
-			return fmt.Errorf("expected runtime version to be nil, was %v", o.RuntimeVersion)
+			return fmt.Errorf("expected runtime version to be nil, was %v", *o.RuntimeVersion)
 		}
 		return nil
 	})
@@ -315,7 +315,7 @@ func (f *FunctionDetailsAssert) HasPackagesNil() *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.Packages != nil {
-			return fmt.Errorf("expected packages to be nil, was %v", o.Packages)
+			return fmt.Errorf("expected packages to be nil, was %v", *o.Packages)
 		}
 		return nil
 	})
@@ -326,7 +326,7 @@ func (f *FunctionDetailsAssert) HasTargetPathNil() *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.TargetPath != nil {
-			return fmt.Errorf("expected target path to be nil, was %v", o.TargetPath)
+			return fmt.Errorf("expected target path to be nil, was %v", *o.TargetPath)
 		}
 		return nil
 	})
@@ -337,7 +337,7 @@ func (f *FunctionDetailsAssert) HasInstalledPackagesNil() *FunctionDetailsAssert
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.InstalledPackages != nil {
-			return fmt.Errorf("expected installed packages to be nil, was %v", o.InstalledPackages)
+			return fmt.Errorf("expected installed packages to be nil, was %v", *o.InstalledPackages)
 		}
 		return nil
 	})
@@ -348,7 +348,21 @@ func (f *FunctionDetailsAssert) HasIsAggregateNil() *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.IsAggregate != nil {
-			return fmt.Errorf("expected is aggregate to be nil, was %v", o.IsAggregate)
+			return fmt.Errorf("expected is aggregate to be nil, was %v", *o.IsAggregate)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionDetailsAssert) HasInstalledPackagesNotEmpty() *FunctionDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+		t.Helper()
+		if o.InstalledPackages == nil {
+			return fmt.Errorf("expected installed packages to not be nil")
+		}
+		if *o.InstalledPackages == "" {
+			return fmt.Errorf("expected installed packages to not be empty")
 		}
 		return nil
 	})

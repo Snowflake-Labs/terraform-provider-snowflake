@@ -126,13 +126,13 @@ func (c *FunctionClient) SampleJavascriptDefinition(t *testing.T, argName string
 `, argName)
 }
 
-func (c *FunctionClient) SamplePythonDefinition(t *testing.T) string {
+func (c *FunctionClient) SamplePythonDefinition(t *testing.T, funcName string, argName string) string {
 	t.Helper()
 
-	return `
-def dump(i):
+	return fmt.Sprintf(`
+def %[1]s(%[2]s):
 	print("Hello World!")
-`
+`, funcName, argName)
 }
 
 func (c *FunctionClient) SampleScalaDefinition(t *testing.T) string {
