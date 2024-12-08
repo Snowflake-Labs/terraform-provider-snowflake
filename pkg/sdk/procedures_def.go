@@ -352,7 +352,7 @@ var ProceduresDef = g.NewInterface(
 		Show().
 		SQL("PROCEDURES").
 		OptionalLike().
-		OptionalIn(),
+		OptionalExtendedIn(),
 ).ShowByIdOperation().DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-procedure",

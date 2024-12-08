@@ -68,6 +68,11 @@ func (s *CreateForJavaProcedureRequest) WithNullInputBehavior(NullInputBehavior 
 	return s
 }
 
+func (s *CreateForJavaProcedureRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForJavaProcedureRequest {
+	s.ReturnResultsBehavior = &ReturnResultsBehavior
+	return s
+}
+
 func (s *CreateForJavaProcedureRequest) WithComment(Comment string) *CreateForJavaProcedureRequest {
 	s.Comment = &Comment
 	return s
@@ -227,6 +232,11 @@ func (s *CreateForJavaScriptProcedureRequest) WithNullInputBehavior(NullInputBeh
 	return s
 }
 
+func (s *CreateForJavaScriptProcedureRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForJavaScriptProcedureRequest {
+	s.ReturnResultsBehavior = &ReturnResultsBehavior
+	return s
+}
+
 func (s *CreateForJavaScriptProcedureRequest) WithComment(Comment string) *CreateForJavaScriptProcedureRequest {
 	s.Comment = &Comment
 	return s
@@ -290,6 +300,11 @@ func (s *CreateForPythonProcedureRequest) WithSecrets(Secrets []SecretReference)
 
 func (s *CreateForPythonProcedureRequest) WithNullInputBehavior(NullInputBehavior NullInputBehavior) *CreateForPythonProcedureRequest {
 	s.NullInputBehavior = &NullInputBehavior
+	return s
+}
+
+func (s *CreateForPythonProcedureRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForPythonProcedureRequest {
+	s.ReturnResultsBehavior = &ReturnResultsBehavior
 	return s
 }
 
@@ -359,6 +374,11 @@ func (s *CreateForScalaProcedureRequest) WithNullInputBehavior(NullInputBehavior
 	return s
 }
 
+func (s *CreateForScalaProcedureRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForScalaProcedureRequest {
+	s.ReturnResultsBehavior = &ReturnResultsBehavior
+	return s
+}
+
 func (s *CreateForScalaProcedureRequest) WithComment(Comment string) *CreateForScalaProcedureRequest {
 	s.Comment = &Comment
 	return s
@@ -411,6 +431,11 @@ func (s *CreateForSQLProcedureRequest) WithNullInputBehavior(NullInputBehavior N
 	return s
 }
 
+func (s *CreateForSQLProcedureRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForSQLProcedureRequest {
+	s.ReturnResultsBehavior = &ReturnResultsBehavior
+	return s
+}
+
 func (s *CreateForSQLProcedureRequest) WithComment(Comment string) *CreateForSQLProcedureRequest {
 	s.Comment = &Comment
 	return s
@@ -458,23 +483,13 @@ func (s *AlterProcedureRequest) WithRenameTo(RenameTo SchemaObjectIdentifier) *A
 	return s
 }
 
-func (s *AlterProcedureRequest) WithSetComment(SetComment string) *AlterProcedureRequest {
-	s.SetComment = &SetComment
+func (s *AlterProcedureRequest) WithSet(Set ProcedureSetRequest) *AlterProcedureRequest {
+	s.Set = &Set
 	return s
 }
 
-func (s *AlterProcedureRequest) WithSetLogLevel(SetLogLevel string) *AlterProcedureRequest {
-	s.SetLogLevel = &SetLogLevel
-	return s
-}
-
-func (s *AlterProcedureRequest) WithSetTraceLevel(SetTraceLevel string) *AlterProcedureRequest {
-	s.SetTraceLevel = &SetTraceLevel
-	return s
-}
-
-func (s *AlterProcedureRequest) WithUnsetComment(UnsetComment bool) *AlterProcedureRequest {
-	s.UnsetComment = &UnsetComment
+func (s *AlterProcedureRequest) WithUnset(Unset ProcedureUnsetRequest) *AlterProcedureRequest {
+	s.Unset = &Unset
 	return s
 }
 
@@ -490,6 +505,91 @@ func (s *AlterProcedureRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *Alt
 
 func (s *AlterProcedureRequest) WithExecuteAs(ExecuteAs ExecuteAs) *AlterProcedureRequest {
 	s.ExecuteAs = &ExecuteAs
+	return s
+}
+
+func NewProcedureSetRequest() *ProcedureSetRequest {
+	return &ProcedureSetRequest{}
+}
+
+func (s *ProcedureSetRequest) WithComment(Comment string) *ProcedureSetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func (s *ProcedureSetRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *ProcedureSetRequest {
+	s.ExternalAccessIntegrations = ExternalAccessIntegrations
+	return s
+}
+
+func (s *ProcedureSetRequest) WithSecretsList(SecretsList SecretsListRequest) *ProcedureSetRequest {
+	s.SecretsList = &SecretsList
+	return s
+}
+
+func (s *ProcedureSetRequest) WithAutoEventLogging(AutoEventLogging AutoEventLogging) *ProcedureSetRequest {
+	s.AutoEventLogging = &AutoEventLogging
+	return s
+}
+
+func (s *ProcedureSetRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *ProcedureSetRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *ProcedureSetRequest) WithLogLevel(LogLevel LogLevel) *ProcedureSetRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *ProcedureSetRequest) WithMetricLevel(MetricLevel MetricLevel) *ProcedureSetRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *ProcedureSetRequest) WithTraceLevel(TraceLevel TraceLevel) *ProcedureSetRequest {
+	s.TraceLevel = &TraceLevel
+	return s
+}
+
+// NewSecretsListRequest removed manually - redeclared in functions
+
+func NewProcedureUnsetRequest() *ProcedureUnsetRequest {
+	return &ProcedureUnsetRequest{}
+}
+
+func (s *ProcedureUnsetRequest) WithComment(Comment bool) *ProcedureUnsetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func (s *ProcedureUnsetRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations bool) *ProcedureUnsetRequest {
+	s.ExternalAccessIntegrations = &ExternalAccessIntegrations
+	return s
+}
+
+func (s *ProcedureUnsetRequest) WithAutoEventLogging(AutoEventLogging bool) *ProcedureUnsetRequest {
+	s.AutoEventLogging = &AutoEventLogging
+	return s
+}
+
+func (s *ProcedureUnsetRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *ProcedureUnsetRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *ProcedureUnsetRequest) WithLogLevel(LogLevel bool) *ProcedureUnsetRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *ProcedureUnsetRequest) WithMetricLevel(MetricLevel bool) *ProcedureUnsetRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *ProcedureUnsetRequest) WithTraceLevel(TraceLevel bool) *ProcedureUnsetRequest {
+	s.TraceLevel = &TraceLevel
 	return s
 }
 
@@ -515,7 +615,7 @@ func (s *ShowProcedureRequest) WithLike(Like Like) *ShowProcedureRequest {
 	return s
 }
 
-func (s *ShowProcedureRequest) WithIn(In In) *ShowProcedureRequest {
+func (s *ShowProcedureRequest) WithIn(In ExtendedIn) *ShowProcedureRequest {
 	s.In = &In
 	return s
 }
