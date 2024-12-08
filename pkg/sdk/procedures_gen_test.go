@@ -27,12 +27,6 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
-	t.Run("validation: incorrect identifier", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.name = emptySchemaObjectIdentifier
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
 	t.Run("validation: [opts.RuntimeVersion] should be set", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.RuntimeVersion = ""
@@ -49,6 +43,12 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		opts := defaultOpts()
 		opts.Handler = ""
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaProcedureOptions", "Handler"))
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = emptySchemaObjectIdentifier
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present", func(t *testing.T) {
@@ -82,6 +82,12 @@ func TestProcedures_CreateForJava(t *testing.T) {
 			ResultDataType: &ProcedureReturnsResultDataType{},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForSQLProcedureOptions.Returns.ResultDataType", "ResultDataTypeOld", "ResultDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
 	})
 
 	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present - two present", func(t *testing.T) {
@@ -132,13 +138,7 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForSQLProcedureOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
 	})
 
-	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Returns = ProcedureReturns{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
-	})
-
-	t.Run("validation: function definition", func(t *testing.T) {
+	t.Run("validation: procedure definition", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.TargetPath = String("@~/testfunc.jar")
 		opts.Packages = []ProcedurePackage{
@@ -206,7 +206,7 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("return id + name;")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (id NUMBER, name VARCHAR DEFAULT 'test') COPY GRANTS RETURNS TABLE (country_code VARCHAR) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return id + name;'`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("id" NUMBER, "name" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS TABLE ("country_code" VARCHAR) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS return id + name;`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -265,7 +265,7 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("return id + name;")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (id NUMBER(36, 2), name VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS TABLE (country_code VARCHAR(100)) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return id + name;'`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("id" NUMBER(36, 2), "name" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS TABLE ("country_code" VARCHAR(100)) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS return id + name;`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 }
 
@@ -288,6 +288,12 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		opts := defaultOpts()
 		opts.ProcedureDefinition = ""
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForJavaScriptProcedureOptions", "ProcedureDefinition"))
+	})
+
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.name = emptySchemaObjectIdentifier
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("validation: exactly one field from [opts.ResultDataTypeOld opts.ResultDataType] should be present", func(t *testing.T) {
@@ -327,12 +333,6 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForJavaScriptProcedureOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
 	})
 
-	t.Run("validation: incorrect identifier", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.name = emptySchemaObjectIdentifier
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
 	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
@@ -352,7 +352,7 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = "return 1;"
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (d DOUBLE DEFAULT 1.0) COPY GRANTS RETURNS DOUBLE NOT NULL LANGUAGE JAVASCRIPT STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return 1;'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("d" DOUBLE DEFAULT 1.0) COPY GRANTS RETURNS DOUBLE NOT NULL LANGUAGE JAVASCRIPT STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS return 1;`, id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -373,7 +373,7 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = "return 1;"
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (d FLOAT DEFAULT 1.0) COPY GRANTS RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return 1;'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("d" FLOAT DEFAULT 1.0) COPY GRANTS RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS return 1;`, id.FullyQualifiedName())
 	})
 }
 
@@ -418,7 +418,7 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForPythonProcedureOptions", "Handler"))
 	})
 
-	t.Run("validation: incorrect identifier", func(t *testing.T) {
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
@@ -447,6 +447,21 @@ func TestProcedures_CreateForPython(t *testing.T) {
 			{ArgName: "arg"},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonProcedureOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonProcedureOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{},
+			Table:          &ProcedureReturnsTable{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonProcedureOptions.Returns", "ResultDataType", "Table"))
 	})
 
 	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present", func(t *testing.T) {
@@ -503,12 +518,6 @@ func TestProcedures_CreateForPython(t *testing.T) {
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForSQLProcedureOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
-	})
-
-	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Returns = ProcedureReturns{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForPythonProcedureOptions.Returns", "ResultDataType", "Table"))
 	})
 
 	// TODO [SNOW-1348106]: remove with old procedure removal for V1
@@ -565,7 +574,7 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("import numpy as np")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (i int DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'import numpy as np'`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("i" int DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS import numpy as np`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -621,7 +630,7 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("import numpy as np")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (i NUMBER(36, 2) DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'import numpy as np'`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("i" NUMBER(36, 2) DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS import numpy as np`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 }
 
@@ -664,7 +673,7 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForScalaProcedureOptions", "Handler"))
 	})
 
-	t.Run("validation: incorrect identifier", func(t *testing.T) {
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
@@ -693,6 +702,21 @@ func TestProcedures_CreateForScala(t *testing.T) {
 			{ArgName: "arg"},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaProcedureOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaProcedureOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{},
+			Table:          &ProcedureReturnsTable{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaProcedureOptions.Returns", "ResultDataType", "Table"))
 	})
 
 	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present", func(t *testing.T) {
@@ -751,13 +775,7 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForSQLProcedureOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
 	})
 
-	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Returns = ProcedureReturns{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForScalaProcedureOptions.Returns", "ResultDataType", "Table"))
-	})
-
-	t.Run("validation: function definition", func(t *testing.T) {
+	t.Run("validation: procedure definition", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.TargetPath = String("@~/testfunc.jar")
 		opts.Packages = []ProcedurePackage{
@@ -804,7 +822,7 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("return x")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (x VARCHAR DEFAULT 'test') COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SCALA RUNTIME_VERSION = '2.0' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return x'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("x" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SCALA RUNTIME_VERSION = '2.0' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS return x`, id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -842,7 +860,7 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("return x")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (x VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS VARCHAR(100) NOT NULL LANGUAGE SCALA RUNTIME_VERSION = '2.0' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return x'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("x" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS VARCHAR(100) NOT NULL LANGUAGE SCALA RUNTIME_VERSION = '2.0' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS return x`, id.FullyQualifiedName())
 	})
 }
 
@@ -872,21 +890,10 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateForSQLProcedureOptions", "ProcedureDefinition"))
 	})
 
-	t.Run("validation: incorrect identifier", func(t *testing.T) {
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("create with no arguments", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Returns = ProcedureSQLReturns{
-			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: dataTypeFloat,
-			},
-		}
-		opts.ProcedureDefinition = "3.141592654::FLOAT"
-		assertOptsValidAndSQLEquals(t, opts, `CREATE PROCEDURE %s () RETURNS FLOAT LANGUAGE SQL AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
 	})
 
 	t.Run("validation: exactly one field from [opts.Arguments.ArgDataTypeOld opts.Arguments.ArgDataType] should be present", func(t *testing.T) {
@@ -912,6 +919,21 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 			{ArgName: "arg"},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLProcedureOptions.Arguments", "ArgDataTypeOld", "ArgDataType"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureSQLReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLProcedureOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureSQLReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{},
+			Table:          &ProcedureReturnsTable{},
+		}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLProcedureOptions.Returns", "ResultDataType", "Table"))
 	})
 
 	t.Run("validation: exactly one field from [opts.Returns.ResultDataType.ResultDataTypeOld opts.Returns.ResultDataType.ResultDataType] should be present", func(t *testing.T) {
@@ -970,12 +992,6 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLProcedureOptions.Returns.Table.Columns", "ColumnDataTypeOld", "ColumnDataType"))
 	})
 
-	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Returns = ProcedureSQLReturns{}
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateForSQLProcedureOptions.Returns", "ResultDataType", "Table"))
-	})
-
 	// TODO [SNOW-1348106]: remove with old procedure removal for V1
 	t.Run("all options - old data types", func(t *testing.T) {
 		opts := defaultOpts()
@@ -999,7 +1015,7 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = "3.141592654::FLOAT"
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (message VARCHAR DEFAULT 'test') COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SQL STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("message" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SQL STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 3.141592654::FLOAT`, id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -1024,7 +1040,18 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = "3.141592654::FLOAT"
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (message VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS VARCHAR(100) NOT NULL LANGUAGE SQL STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS '3.141592654::FLOAT'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("message" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS VARCHAR(100) NOT NULL LANGUAGE SQL STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 3.141592654::FLOAT`, id.FullyQualifiedName())
+	})
+
+	t.Run("create with no arguments", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureSQLReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{
+				ResultDataType: dataTypeFloat,
+			},
+		}
+		opts.ProcedureDefinition = "3.141592654::FLOAT"
+		assertOptsValidAndSQLEquals(t, opts, `CREATE PROCEDURE %s () RETURNS FLOAT LANGUAGE SQL AS 3.141592654::FLOAT`, id.FullyQualifiedName())
 	})
 }
 
@@ -1042,7 +1069,7 @@ func TestProcedures_Drop(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
-	t.Run("validation: incorrect identifier", func(t *testing.T) {
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifierWithArguments
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
@@ -1062,8 +1089,8 @@ func TestProcedures_Drop(t *testing.T) {
 }
 
 func TestProcedures_Alter(t *testing.T) {
-	noArgsId := randomSchemaObjectIdentifierWithArguments()
 	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
+	secretId := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *AlterProcedureOptions {
 		return &AlterProcedureOptions{
@@ -1077,17 +1104,40 @@ func TestProcedures_Alter(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
-	t.Run("validation: incorrect identifier", func(t *testing.T) {
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifierWithArguments
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: exactly one field should be present", func(t *testing.T) {
+	t.Run("validation: valid identifier for [opts.RenameTo] if set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SetLogLevel = String("DEBUG")
-		opts.UnsetComment = Bool(true)
-		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterProcedureOptions", "RenameTo", "SetComment", "SetLogLevel", "SetTraceLevel", "UnsetComment", "SetTags", "UnsetTags", "ExecuteAs"))
+		opts.RenameTo = Pointer(emptySchemaObjectIdentifier)
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.Unset opts.SetTags opts.UnsetTags opts.ExecuteAs] should be present", func(t *testing.T) {
+		opts := defaultOpts()
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterProcedureOptions", "RenameTo", "Set", "Unset", "SetTags", "UnsetTags", "ExecuteAs"))
+	})
+
+	t.Run("validation: exactly one field from [opts.RenameTo opts.Set opts.Unset opts.SetTags opts.UnsetTags opts.ExecuteAs] should be present - two present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ProcedureSet{}
+		opts.Unset = &ProcedureUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("AlterProcedureOptions", "RenameTo", "Set", "Unset", "SetTags", "UnsetTags", "ExecuteAs"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Set.Comment opts.Set.ExternalAccessIntegrations opts.Set.SecretsList opts.Set.AutoEventLogging opts.Set.EnableConsoleOutput opts.Set.LogLevel opts.Set.MetricLevel opts.Set.TraceLevel] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Set = &ProcedureSet{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterProcedureOptions.Set", "Comment", "ExternalAccessIntegrations", "SecretsList", "AutoEventLogging", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"))
+	})
+
+	t.Run("validation: at least one of the fields [opts.Unset.Comment opts.Unset.ExternalAccessIntegrations opts.Unset.AutoEventLogging opts.Unset.EnableConsoleOutput opts.Unset.LogLevel opts.Unset.MetricLevel opts.Unset.TraceLevel] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Unset = &ProcedureUnset{}
+		assertOptsInvalidJoinedErrors(t, opts, errAtLeastOneOf("AlterProcedureOptions.Unset", "Comment", "ExternalAccessIntegrations", "AutoEventLogging", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"))
 	})
 
 	t.Run("alter: rename to", func(t *testing.T) {
@@ -1104,35 +1154,42 @@ func TestProcedures_Alter(t *testing.T) {
 		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s EXECUTE AS CALLER`, id.FullyQualifiedName())
 	})
 
-	t.Run("alter: set log level", func(t *testing.T) {
+	t.Run("alter: set", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SetLogLevel = String("DEBUG")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET LOG_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
+		opts.Set = &ProcedureSet{
+			Comment:    String("comment"),
+			TraceLevel: Pointer(TraceLevelOff),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET COMMENT = 'comment', TRACE_LEVEL = 'OFF'`, id.FullyQualifiedName())
 	})
 
-	t.Run("alter: set log level with no arguments", func(t *testing.T) {
+	t.Run("alter: set empty secrets", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.name = noArgsId
-		opts.SetLogLevel = String("DEBUG")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET LOG_LEVEL = 'DEBUG'`, noArgsId.FullyQualifiedName())
+		opts.Set = &ProcedureSet{
+			SecretsList: &SecretsList{},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET SECRETS = ()`, id.FullyQualifiedName())
 	})
 
-	t.Run("alter: set trace level", func(t *testing.T) {
+	t.Run("alter: set non-empty secrets", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SetTraceLevel = String("DEBUG")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET TRACE_LEVEL = 'DEBUG'`, id.FullyQualifiedName())
+		opts.Set = &ProcedureSet{
+			SecretsList: &SecretsList{
+				[]SecretReference{
+					{VariableName: "abc", Name: secretId},
+				},
+			},
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET SECRETS = ('abc' = %s)`, id.FullyQualifiedName(), secretId.FullyQualifiedName())
 	})
 
-	t.Run("alter: set comment", func(t *testing.T) {
+	t.Run("alter: unset", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.SetComment = String("comment")
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s SET COMMENT = 'comment'`, id.FullyQualifiedName())
-	})
-
-	t.Run("alter: unset comment", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.UnsetComment = Bool(true)
-		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s UNSET COMMENT`, id.FullyQualifiedName())
+		opts.Unset = &ProcedureUnset{
+			Comment:    Bool(true),
+			TraceLevel: Bool(true),
+		}
+		assertOptsValidAndSQLEquals(t, opts, `ALTER PROCEDURE IF EXISTS %s UNSET COMMENT, TRACE_LEVEL`, id.FullyQualifiedName())
 	})
 
 	t.Run("alter: set tags", func(t *testing.T) {
@@ -1181,15 +1238,16 @@ func TestProcedures_Show(t *testing.T) {
 
 	t.Run("show with in", func(t *testing.T) {
 		opts := defaultOpts()
-		opts.In = &In{
-			Account: Bool(true),
+		opts.In = &ExtendedIn{
+			In: In{
+				Account: Bool(true),
+			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW PROCEDURES IN ACCOUNT`)
 	})
 }
 
 func TestProcedures_Describe(t *testing.T) {
-	noArgsId := randomSchemaObjectIdentifierWithArguments()
 	id := randomSchemaObjectIdentifierWithArguments(DataTypeVARCHAR, DataTypeNumber)
 
 	defaultOpts := func() *DescribeProcedureOptions {
@@ -1203,16 +1261,10 @@ func TestProcedures_Describe(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
-	t.Run("validation: incorrect identifier", func(t *testing.T) {
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifierWithArguments
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
-	})
-
-	t.Run("no arguments", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.name = noArgsId
-		assertOptsValidAndSQLEquals(t, opts, `DESCRIBE PROCEDURE %s`, noArgsId.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -1235,7 +1287,7 @@ func TestProcedures_Call(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
-	t.Run("validation: incorrect identifier", func(t *testing.T) {
+	t.Run("validation: valid identifier for [opts.name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.name = emptySchemaObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
@@ -1265,7 +1317,14 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 
 	defaultOpts := func() *CreateAndCallForJavaProcedureOptions {
 		return &CreateAndCallForJavaProcedureOptions{
-			Name: id,
+			Name:    id,
+			Handler: "TestFunc.echoVarchar",
+			Packages: []ProcedurePackage{
+				{
+					Package: "com.snowflake:snowpark:1.2.0",
+				},
+			},
+			RuntimeVersion: "1.8",
 		}
 	}
 
@@ -1274,15 +1333,48 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)
 	})
 
-	t.Run("validation: incorrect identifier", func(t *testing.T) {
+	t.Run("validation: [opts.RuntimeVersion] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.RuntimeVersion = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForJavaProcedureOptions", "RuntimeVersion"))
+	})
+
+	t.Run("validation: [opts.Packages] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Packages = nil
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForJavaProcedureOptions", "Packages"))
+	})
+
+	t.Run("validation: [opts.Handler] should be set", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Handler = ""
+		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForJavaProcedureOptions", "Handler"))
+	})
+
+	t.Run("validation: valid identifier for [opts.ProcedureName]", func(t *testing.T) {
+		opts := defaultOpts()
+		// TODO: fill me
+		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
+	})
+
+	t.Run("validation: valid identifier for [opts.Name]", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Name = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
-	t.Run("validation: returns", func(t *testing.T) {
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.Returns = ProcedureReturns{}
+		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
+	})
+
+	t.Run("validation: exactly one field from [opts.Returns.ResultDataType opts.Returns.Table] should be present - both present", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.Returns = ProcedureReturns{
+			ResultDataType: &ProcedureReturnsResultDataType{},
+			Table:          &ProcedureReturnsTable{},
+		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
 	})
 
@@ -1302,18 +1394,6 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errExactlyOneOf("CreateAndCallForJavaProcedureOptions.Returns", "ResultDataType", "Table"))
-	})
-
-	t.Run("validation: options are missing", func(t *testing.T) {
-		opts := defaultOpts()
-		opts.Returns = ProcedureReturns{
-			ResultDataType: &ProcedureReturnsResultDataType{
-				ResultDataType: dataTypeVarchar,
-			},
-		}
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForJavaProcedureOptions", "Handler"))
-		assertOptsInvalidJoinedErrors(t, opts, errNotSet("CreateAndCallForJavaProcedureOptions", "RuntimeVersion"))
-		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 
 	t.Run("no arguments", func(t *testing.T) {
@@ -1378,7 +1458,7 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 		opts.ProcedureName = id
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1", "rnd"}
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (id NUMBER, name VARCHAR) RETURNS TABLE (country_code VARCHAR) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE ("id" NUMBER, "name" VARCHAR) RETURNS TABLE ("country_code" VARCHAR) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -1426,7 +1506,7 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 		opts.ProcedureName = id
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1", "rnd"}
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (id NUMBER(36, 2), name VARCHAR(100)) RETURNS TABLE (country_code VARCHAR(100)) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE ("id" NUMBER(36, 2), "name" VARCHAR(100)) RETURNS TABLE ("country_code" VARCHAR(100)) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 }
 
@@ -1550,7 +1630,7 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 		opts.ProcedureName = id
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1", "rnd"}
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (id NUMBER, name VARCHAR) RETURNS TABLE (country_code VARCHAR) LANGUAGE SCALA RUNTIME_VERSION = '2.12' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE ("id" NUMBER, "name" VARCHAR) RETURNS TABLE ("country_code" VARCHAR) LANGUAGE SCALA RUNTIME_VERSION = '2.12' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -1600,7 +1680,7 @@ func TestProcedures_CreateAndCallForScala(t *testing.T) {
 		opts.ProcedureName = id
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1", "rnd"}
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (id NUMBER(36, 2), name VARCHAR(100)) RETURNS TABLE (country_code VARCHAR(100)) LANGUAGE SCALA RUNTIME_VERSION = '2.12' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE ("id" NUMBER(36, 2), "name" VARCHAR(100)) RETURNS TABLE ("country_code" VARCHAR(100)) LANGUAGE SCALA RUNTIME_VERSION = '2.12' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' STRICT AS 'return id + name;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1, rnd) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 }
 
@@ -1723,7 +1803,7 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 		opts.ProcedureName = id
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1"}
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (i int DEFAULT 1) RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' STRICT AS 'import numpy as np' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE ("i" int DEFAULT 1) RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' STRICT AS 'import numpy as np' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -1772,7 +1852,7 @@ func TestProcedures_CreateAndCallForPython(t *testing.T) {
 		opts.ProcedureName = id
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1"}
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (i NUMBER(36, 2) DEFAULT 1) RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' STRICT AS 'import numpy as np' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE ("i" NUMBER(36, 2) DEFAULT 1) RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' STRICT AS 'import numpy as np' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 }
 
@@ -1835,7 +1915,7 @@ func TestProcedures_CreateAndCallForJavaScript(t *testing.T) {
 		opts.ProcedureName = id
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1"}
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (d DOUBLE DEFAULT 1.0) RETURNS DOUBLE NOT NULL LANGUAGE JAVASCRIPT STRICT AS 'return 1;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE ("d" DOUBLE DEFAULT 1.0) RETURNS DOUBLE NOT NULL LANGUAGE JAVASCRIPT STRICT AS 'return 1;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -1862,7 +1942,7 @@ func TestProcedures_CreateAndCallForJavaScript(t *testing.T) {
 		opts.ProcedureName = id
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1"}
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (d FLOAT DEFAULT 1.0) RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT STRICT AS 'return 1;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE ("d" FLOAT DEFAULT 1.0) RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT STRICT AS 'return 1;' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 }
 
@@ -1954,7 +2034,7 @@ func TestProcedures_CreateAndCallForSQL(t *testing.T) {
 		opts.ProcedureName = id
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1"}
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (message VARCHAR DEFAULT 'test') RETURNS FLOAT LANGUAGE SQL STRICT AS '3.141592654::FLOAT' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE ("message" VARCHAR DEFAULT 'test') RETURNS FLOAT LANGUAGE SQL STRICT AS '3.141592654::FLOAT' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -1984,6 +2064,6 @@ func TestProcedures_CreateAndCallForSQL(t *testing.T) {
 		opts.ProcedureName = id
 		opts.ScriptingVariable = String(":ret")
 		opts.CallArguments = []string{"1"}
-		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE (message VARCHAR(100) DEFAULT 'test') RETURNS FLOAT LANGUAGE SQL STRICT AS '3.141592654::FLOAT' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `WITH %s AS PROCEDURE ("message" VARCHAR(100) DEFAULT 'test') RETURNS FLOAT LANGUAGE SQL STRICT AS '3.141592654::FLOAT' , %s (x, y) AS (select m.album_ID, m.album_name, b.band_name from music_albums) CALL %s (1) INTO :ret`, id.FullyQualifiedName(), cte.FullyQualifiedName(), id.FullyQualifiedName())
 	})
 }
