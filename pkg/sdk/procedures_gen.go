@@ -25,6 +25,10 @@ type Procedures interface {
 	CreateAndCallForJavaScript(ctx context.Context, request *CreateAndCallForJavaScriptProcedureRequest) error
 	CreateAndCallForPython(ctx context.Context, request *CreateAndCallForPythonProcedureRequest) error
 	CreateAndCallForSQL(ctx context.Context, request *CreateAndCallForSQLProcedureRequest) error
+
+	// DescribeDetails is added manually; it returns aggregated describe results for the given procedure.
+	DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*ProcedureDetails, error)
+	ShowParameters(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]*Parameter, error)
 }
 
 // CreateForJavaProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-procedure#java-handler.
@@ -257,7 +261,7 @@ type procedureDetailRow struct {
 
 type ProcedureDetail struct {
 	Property string
-	Value    string
+	Value    *string
 }
 
 // CallProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/call.

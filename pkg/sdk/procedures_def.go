@@ -361,7 +361,7 @@ var ProceduresDef = g.NewInterface(
 		Field("value", "sql.NullString"),
 	g.PlainStruct("ProcedureDetail").
 		Field("Property", "string").
-		Field("Value", "string"),
+		OptionalText("Value"),
 	g.NewQueryStruct("DescribeProcedure").
 		Describe().
 		SQL("PROCEDURE").
