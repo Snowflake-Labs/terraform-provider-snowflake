@@ -42,6 +42,8 @@ type CreateForJavaProcedureOptions struct {
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Returns                    ProcedureReturns          `ddl:"keyword" sql:"RETURNS"`
 	languageJava               bool                      `ddl:"static" sql:"LANGUAGE JAVA"`
+	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
+	ReturnResultsBehavior      *ReturnResultsBehavior    `ddl:"keyword"`
 	RuntimeVersion             string                    `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
 	Packages                   []ProcedurePackage        `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports                    []ProcedureImport         `ddl:"parameter,parentheses" sql:"IMPORTS"`
@@ -49,8 +51,6 @@ type CreateForJavaProcedureOptions struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
-	ReturnResultsBehavior      *ReturnResultsBehavior    `ddl:"keyword"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	ExecuteAs                  *ExecuteAs                `ddl:"keyword"`
 	ProcedureDefinition        *string                   `ddl:"parameter,no_equals" sql:"AS"`
@@ -125,14 +125,14 @@ type CreateForPythonProcedureOptions struct {
 	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
 	Returns                    ProcedureReturns          `ddl:"keyword" sql:"RETURNS"`
 	languagePython             bool                      `ddl:"static" sql:"LANGUAGE PYTHON"`
+	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
+	ReturnResultsBehavior      *ReturnResultsBehavior    `ddl:"keyword"`
 	RuntimeVersion             string                    `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
 	Packages                   []ProcedurePackage        `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports                    []ProcedureImport         `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
-	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
-	ReturnResultsBehavior      *ReturnResultsBehavior    `ddl:"keyword"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	ExecuteAs                  *ExecuteAs                `ddl:"keyword"`
 	ProcedureDefinition        *string                   `ddl:"parameter,no_equals" sql:"AS"`
@@ -149,13 +149,13 @@ type CreateForScalaProcedureOptions struct {
 	CopyGrants            *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
 	Returns               ProcedureReturns       `ddl:"keyword" sql:"RETURNS"`
 	languageScala         bool                   `ddl:"static" sql:"LANGUAGE SCALA"`
+	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
+	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
 	RuntimeVersion        string                 `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
 	Packages              []ProcedurePackage     `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports               []ProcedureImport      `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler               string                 `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	TargetPath            *string                `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
-	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
 	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	ExecuteAs             *ExecuteAs             `ddl:"keyword"`
 	ProcedureDefinition   *string                `ddl:"parameter,no_equals" sql:"AS"`
@@ -310,11 +310,11 @@ type CreateAndCallForJavaProcedureOptions struct {
 	Arguments           []ProcedureArgument     `ddl:"list,must_parentheses"`
 	Returns             ProcedureReturns        `ddl:"keyword" sql:"RETURNS"`
 	languageJava        bool                    `ddl:"static" sql:"LANGUAGE JAVA"`
+	NullInputBehavior   *NullInputBehavior      `ddl:"keyword"`
 	RuntimeVersion      string                  `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
 	Packages            []ProcedurePackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports             []ProcedureImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler             string                  `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	NullInputBehavior   *NullInputBehavior      `ddl:"keyword"`
 	ProcedureDefinition *string                 `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 	WithClause          *ProcedureWithClause    `ddl:"keyword"`
 	call                bool                    `ddl:"static" sql:"CALL"`
@@ -338,11 +338,11 @@ type CreateAndCallForScalaProcedureOptions struct {
 	Arguments           []ProcedureArgument     `ddl:"list,must_parentheses"`
 	Returns             ProcedureReturns        `ddl:"keyword" sql:"RETURNS"`
 	languageScala       bool                    `ddl:"static" sql:"LANGUAGE SCALA"`
+	NullInputBehavior   *NullInputBehavior      `ddl:"keyword"`
 	RuntimeVersion      string                  `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
 	Packages            []ProcedurePackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports             []ProcedureImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler             string                  `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	NullInputBehavior   *NullInputBehavior      `ddl:"keyword"`
 	ProcedureDefinition *string                 `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 	WithClauses         []ProcedureWithClause   `ddl:"keyword"`
 	call                bool                    `ddl:"static" sql:"CALL"`
@@ -379,11 +379,11 @@ type CreateAndCallForPythonProcedureOptions struct {
 	Arguments           []ProcedureArgument     `ddl:"list,must_parentheses"`
 	Returns             ProcedureReturns        `ddl:"keyword" sql:"RETURNS"`
 	languagePython      bool                    `ddl:"static" sql:"LANGUAGE PYTHON"`
+	NullInputBehavior   *NullInputBehavior      `ddl:"keyword"`
 	RuntimeVersion      string                  `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
 	Packages            []ProcedurePackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Imports             []ProcedureImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Handler             string                  `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	NullInputBehavior   *NullInputBehavior      `ddl:"keyword"`
 	ProcedureDefinition *string                 `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
 	WithClauses         []ProcedureWithClause   `ddl:"keyword"`
 	call                bool                    `ddl:"static" sql:"CALL"`

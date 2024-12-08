@@ -96,6 +96,8 @@ var ProceduresDef = g.NewInterface(
 			g.KeywordOptions().SQL("RETURNS").Required(),
 		).
 		SQL("LANGUAGE JAVA").
+		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		TextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes().Required()).
 		ListQueryStructField(
 			"Packages",
@@ -111,8 +113,6 @@ var ProceduresDef = g.NewInterface(
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
 		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
-		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
@@ -169,6 +169,8 @@ var ProceduresDef = g.NewInterface(
 			g.KeywordOptions().SQL("RETURNS").Required(),
 		).
 		SQL("LANGUAGE PYTHON").
+		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		TextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes().Required()).
 		ListQueryStructField(
 			"Packages",
@@ -183,8 +185,6 @@ var ProceduresDef = g.NewInterface(
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
 		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
-		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
-		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
@@ -213,6 +213,8 @@ var ProceduresDef = g.NewInterface(
 			g.KeywordOptions().SQL("RETURNS").Required(),
 		).
 		SQL("LANGUAGE SCALA").
+		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		TextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes().Required()).
 		ListQueryStructField(
 			"Packages",
@@ -226,8 +228,6 @@ var ProceduresDef = g.NewInterface(
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
-		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
@@ -394,6 +394,8 @@ var ProceduresDef = g.NewInterface(
 			g.KeywordOptions().SQL("RETURNS").Required(),
 		).
 		SQL("LANGUAGE JAVA").
+		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		TextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes().Required()).
 		ListQueryStructField(
 			"Packages",
@@ -406,8 +408,6 @@ var ProceduresDef = g.NewInterface(
 			g.ParameterOptions().Parentheses().SQL("IMPORTS"),
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
-		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
-		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		OptionalQueryStructField(
 			"WithClause",
 			procedureWithClause,
@@ -440,6 +440,8 @@ var ProceduresDef = g.NewInterface(
 			g.KeywordOptions().SQL("RETURNS").Required(),
 		).
 		SQL("LANGUAGE SCALA").
+		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		TextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes().Required()).
 		ListQueryStructField(
 			"Packages",
@@ -452,8 +454,6 @@ var ProceduresDef = g.NewInterface(
 			g.ParameterOptions().Parentheses().SQL("IMPORTS"),
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
-		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
-		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		ListQueryStructField(
 			"WithClauses",
 			procedureWithClause,
@@ -518,6 +518,8 @@ var ProceduresDef = g.NewInterface(
 			g.KeywordOptions().SQL("RETURNS").Required(),
 		).
 		SQL("LANGUAGE PYTHON").
+		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		TextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes().Required()).
 		ListQueryStructField(
 			"Packages",
@@ -530,8 +532,6 @@ var ProceduresDef = g.NewInterface(
 			g.ParameterOptions().Parentheses().SQL("IMPORTS"),
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
-		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
-		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		ListQueryStructField(
 			"WithClauses",
 			procedureWithClause,
