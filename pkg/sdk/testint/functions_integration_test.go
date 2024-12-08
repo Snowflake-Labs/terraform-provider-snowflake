@@ -173,7 +173,7 @@ func TestInt_Functions(t *testing.T) {
 		err := client.Functions.CreateForJava(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
-		t.Cleanup(testClientHelper().Stage.RemoveFromUserStageFunc(t, targetPath))
+		t.Cleanup(testClientHelper().Stage.RemoveFromUserStageFunc(t, jarName))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -926,7 +926,7 @@ func TestInt_Functions(t *testing.T) {
 		err := client.Functions.CreateForScala(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
-		t.Cleanup(testClientHelper().Stage.RemoveFromUserStageFunc(t, targetPath))
+		t.Cleanup(testClientHelper().Stage.RemoveFromUserStageFunc(t, jarName))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
