@@ -30,7 +30,6 @@ import (
 // TODO [next PR]: add test documenting [JAVA]: 391516 (42601): SQL compilation error: Cannot specify TARGET_PATH without a function BODY.
 // TODO [next PR]: test secure
 // TODO [next PR]: python aggregate func (100357 (P0000): Could not find accumulate method in function CVVEMHIT_06547800_08D6_DBCA_1AC7_5E422AFF8B39 with handler dump)
-// TODO [this PR]: clean stage in tests with targetPath
 // TODO [next PR]: add a test documenting that we can't set parameters in create (and revert adding these parameters directly in object...)
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
@@ -171,6 +170,7 @@ func TestInt_Functions(t *testing.T) {
 		err := client.Functions.CreateForJava(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+		t.Cleanup(testClientHelper().Stage.RemoveFromUserStageFunc(t, targetPath))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
@@ -923,6 +923,7 @@ func TestInt_Functions(t *testing.T) {
 		err := client.Functions.CreateForScala(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+		t.Cleanup(testClientHelper().Stage.RemoveFromUserStageFunc(t, targetPath))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
