@@ -23,7 +23,6 @@ import (
 
 // TODO [next PR]: schemaName and catalog name are quoted (because we use lowercase)
 // TODO [next PR]: HasArgumentsRawFrom(functionId, arguments, return)
-// TODO [next PR]: WithImports - creation and cleanup on stage needed
 // TODO [next PR]: extract show assertions with commons fields
 // TODO [this PR]: python aggregate func
 func TestInt_CreateFunctions(t *testing.T) {
@@ -40,7 +39,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 	externalAccessIntegration, externalAccessIntegrationCleanup := testClientHelper().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
 
-	tmpFunction := testClientHelper().CreateSampleJavaFunctionAndJar(t)
+	tmpJavaFunction := testClientHelper().CreateSampleJavaFunctionAndJar(t)
+	tmpPythonFunction := testClientHelper().CreateSamplePythonFunctionAndModule(t)
 
 	//assertParametersSet := func(t *testing.T, functionParametersAssert *objectparametersassert.FunctionParametersAssert) {
 	//	assertions.AssertThatObject(t, functionParametersAssert.
@@ -145,7 +145,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
 			WithRuntimeVersion("11").
 			WithComment("comment").
-			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpFunction.JarLocation())}).
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpJavaFunction.JarLocation())}).
 			WithPackages([]sdk.FunctionPackageRequest{
 				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:1.14.0"),
 				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:telemetry:0.1.0"),
@@ -199,7 +199,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			// TODO [this PR]: parse to identifier list
 			// TODO [this PR]: check multiple secrets (to know how to parse)
 			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
-			HasImports(fmt.Sprintf(`[%s]`, tmpFunction.JarLocation())).
+			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
@@ -224,15 +224,15 @@ func TestInt_CreateFunctions(t *testing.T) {
 	})
 
 	t.Run("create function for Java - staged minimal", func(t *testing.T) {
-		dataType := tmpFunction.ArgType
+		dataType := tmpJavaFunction.ArgType
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
 
 		argName := "x"
 		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		handler := tmpFunction.Handler()
-		importPath := tmpFunction.JarLocation()
+		handler := tmpJavaFunction.JavaHandler()
+		importPath := tmpJavaFunction.JarLocation()
 
 		requestStaged := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
@@ -292,14 +292,14 @@ func TestInt_CreateFunctions(t *testing.T) {
 	})
 
 	t.Run("create function for Java - staged full", func(t *testing.T) {
-		dataType := tmpFunction.ArgType
+		dataType := tmpJavaFunction.ArgType
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
 
 		argName := "x"
 		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		handler := tmpFunction.Handler()
+		handler := tmpJavaFunction.JavaHandler()
 
 		requestStaged := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
 			WithOrReplace(true).
@@ -310,7 +310,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
 			WithRuntimeVersion("11").
 			WithComment("comment").
-			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpFunction.JarLocation())}).
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpJavaFunction.JarLocation())}).
 			WithPackages([]sdk.FunctionPackageRequest{
 				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:1.14.0"),
 				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:telemetry:0.1.0"),
@@ -356,7 +356,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
 			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
-			HasImports(fmt.Sprintf(`[%s]`, tmpFunction.JarLocation())).
+			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
@@ -593,7 +593,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithComment("comment").
-			//WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpFunction.JarLocation())}). // TODO [this PR]
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpPythonFunction.PythonModuleLocation())}).
 			WithPackages([]sdk.FunctionPackageRequest{
 				*sdk.NewFunctionPackageRequest().WithPackage("absl-py==0.10.0"),
 				*sdk.NewFunctionPackageRequest().WithPackage("about-time==4.2.1"),
@@ -640,7 +640,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
 			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
-			HasImports(`[]`).
+			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasHandler(funcName).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['absl-py==0.10.0','about-time==4.2.1']`).

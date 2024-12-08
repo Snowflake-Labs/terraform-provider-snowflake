@@ -131,7 +131,10 @@ func (c *FunctionClient) SamplePythonDefinition(t *testing.T, funcName string, a
 
 	return fmt.Sprintf(`
 def %[1]s(%[2]s):
-	print("Hello World!")
+	result = ""
+	for a in range(5):
+		result += %[2]s
+	return result
 `, funcName, argName)
 }
 

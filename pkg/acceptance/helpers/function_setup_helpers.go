@@ -3,6 +3,8 @@ package helpers
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,8 +26,8 @@ func (c *TestClient) CreateSampleJavaFunctionAndJar(t *testing.T) *TmpFunction {
 	dataType := testdatatypes.DataTypeVarchar_100
 
 	id := c.Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
-	argument := sdk.NewFunctionArgumentRequest(argName, testdatatypes.DataTypeVarchar_100)
-	dt := sdk.NewFunctionReturnsResultDataTypeRequest(testdatatypes.DataTypeVarchar_100)
+	argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+	dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
 	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 	handler := fmt.Sprintf("%s.%s", className, funcName)
 	definition := c.Function.SampleJavaDefinition(t, className, funcName, argName)
@@ -52,9 +54,46 @@ func (c *TestClient) CreateSampleJavaFunctionAndJar(t *testing.T) *TmpFunction {
 	}
 }
 
+func (c *TestClient) CreateSamplePythonFunctionAndModule(t *testing.T) *TmpFunction {
+	t.Helper()
+	ctx := context.Background()
+
+	funcName := fmt.Sprintf("echo%s", random.AlphaLowerN(3))
+	argName := fmt.Sprintf("arg%s", random.AlphaLowerN(3))
+	dataType := testdatatypes.DataTypeVarchar_100
+
+	id := c.Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+	argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+	dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+	definition := c.Function.SamplePythonDefinition(t, funcName, argName)
+
+	request := sdk.NewCreateForPythonFunctionRequest(id.SchemaObjectId(), *returns, "3.8", funcName).
+		WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+		WithFunctionDefinitionWrapped(definition)
+
+	err := c.context.client.Functions.CreateForPython(ctx, request)
+	require.NoError(t, err)
+	t.Cleanup(c.Function.DropFunctionFunc(t, id))
+
+	// using os.CreateTemp underneath - last * in pattern is replaced with random string
+	modulePattern := fmt.Sprintf("example*%s.py", random.AlphaLowerN(3))
+	modulePath := c.Stage.PutOnUserStageWithContent(t, modulePattern, definition)
+	moduleFileName := filepath.Base(modulePath)
+
+	return &TmpFunction{
+		FunctionId: id,
+		ModuleName: strings.ReplaceAll(moduleFileName, ".py", ""),
+		FuncName:   funcName,
+		ArgName:    argName,
+		ArgType:    dataType,
+	}
+}
+
 type TmpFunction struct {
 	FunctionId sdk.SchemaObjectIdentifierWithArguments
 	ClassName  string
+	ModuleName string
 	FuncName   string
 	ArgName    string
 	ArgType    datatypes.DataType
@@ -65,6 +104,18 @@ func (f *TmpFunction) JarLocation() string {
 	return fmt.Sprintf("@~/%s", f.JarName)
 }
 
-func (f *TmpFunction) Handler() string {
+func (f *TmpFunction) PythonModuleLocation() string {
+	return fmt.Sprintf("@~/%s", f.PythonFileName())
+}
+
+func (f *TmpFunction) PythonFileName() string {
+	return fmt.Sprintf("%s.py", f.ModuleName)
+}
+
+func (f *TmpFunction) JavaHandler() string {
 	return fmt.Sprintf("%s.%s", f.ClassName, f.FuncName)
+}
+
+func (f *TmpFunction) PythonHandler() string {
+	return fmt.Sprintf("%s.%s", f.ModuleName, f.FuncName)
 }
