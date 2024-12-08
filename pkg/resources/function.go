@@ -240,7 +240,7 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 	// create request with required
 	request := sdk.NewCreateForJavaFunctionRequest(id, *returns, handler)
 	functionDefinition := d.Get("statement").(string)
-	request.WithFunctionDefinition(functionDefinition)
+	request.WithFunctionDefinitionWrapped(functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
@@ -317,7 +317,7 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// create request with required
 	request := sdk.NewCreateForScalaFunctionRequest(id, nil, handler, runtimeVersion).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType))
-	request.WithFunctionDefinition(functionDefinition)
+	request.WithFunctionDefinitionWrapped(functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
@@ -383,7 +383,7 @@ func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	functionDefinition := d.Get("statement").(string)
 	// create request with required
-	request := sdk.NewCreateForSQLFunctionRequest(id, *returns, functionDefinition)
+	request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id, *returns, functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
@@ -432,7 +432,7 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 	handler := d.Get("handler").(string)
 	// create request with required
 	request := sdk.NewCreateForPythonFunctionRequest(id, *returns, version, handler)
-	request.WithFunctionDefinition(functionDefinition)
+	request.WithFunctionDefinitionWrapped(functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
@@ -496,7 +496,7 @@ func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	functionDefinition := d.Get("statement").(string)
 	// create request with required
-	request := sdk.NewCreateForJavascriptFunctionRequest(id, *returns, functionDefinition)
+	request := sdk.NewCreateForJavascriptFunctionRequestDefinitionWrapped(id, *returns, functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
