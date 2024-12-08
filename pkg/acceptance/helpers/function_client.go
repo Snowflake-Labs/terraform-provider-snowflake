@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -54,6 +55,59 @@ func (c *FunctionClient) CreateSecure(t *testing.T, arguments ...sdk.DataType) *
 			"SELECT 1",
 		).WithSecure(true),
 	)
+}
+
+func (c *FunctionClient) CreateSql(t *testing.T) (*sdk.Function, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	argName := "x"
+	dataType := testdatatypes.DataTypeFloat
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+	definition := c.SampleSqlDefinition(t)
+	dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+	argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+	request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
+		WithArguments([]sdk.FunctionArgumentRequest{*argument})
+
+	err := c.client().CreateForSQL(ctx, request)
+	require.NoError(t, err)
+
+	function, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return function, c.DropFunctionFunc(t, id)
+}
+
+func (c *FunctionClient) CreateJava(t *testing.T) (*sdk.Function, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	className := "TestFunc"
+	funcName := "echoVarchar"
+	argName := "x"
+	dataType := testdatatypes.DataTypeVarchar_100
+
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+	argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+	dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+	handler := fmt.Sprintf("%s.%s", className, funcName)
+	definition := c.SampleJavaDefinition(t, className, funcName, argName)
+
+	request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
+		WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+		WithFunctionDefinitionWrapped(definition)
+
+	err := c.client().CreateForJava(ctx, request)
+	require.NoError(t, err)
+
+	function, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return function, c.DropFunctionFunc(t, id)
 }
 
 func (c *FunctionClient) CreateWithRequest(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, req *sdk.CreateForSQLFunctionRequest) *sdk.Function {

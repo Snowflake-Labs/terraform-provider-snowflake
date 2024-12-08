@@ -291,6 +291,7 @@ type Function struct {
 	IsTableFunction    bool
 	ValidForClustering bool
 	IsSecure           bool
+	// TODO [this PR]: eai + secrets
 	IsExternalFunction bool
 	Language           string
 	IsMemoizable       bool

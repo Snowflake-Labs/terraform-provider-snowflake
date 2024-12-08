@@ -43,14 +43,14 @@ func TestInt_Functions(t *testing.T) {
 	tmpJavaFunction := testClientHelper().CreateSampleJavaFunctionAndJar(t)
 	tmpPythonFunction := testClientHelper().CreateSamplePythonFunctionAndModule(t)
 
-	//assertParametersSet := func(t *testing.T, functionParametersAssert *objectparametersassert.FunctionParametersAssert) {
-	//	assertions.AssertThatObject(t, functionParametersAssert.
-	//		HasEnableConsoleOutput(true).
-	//		HasLogLevel(sdk.LogLevelWarn).
-	//		HasMetricLevel(sdk.MetricLevelAll).
-	//		HasTraceLevel(sdk.TraceLevelAlways),
-	//	)
-	//}
+	assertParametersSet := func(t *testing.T, functionParametersAssert *objectparametersassert.FunctionParametersAssert) {
+		assertions.AssertThatObject(t, functionParametersAssert.
+			HasEnableConsoleOutput(true).
+			HasLogLevel(sdk.LogLevelWarn).
+			HasMetricLevel(sdk.MetricLevelAll).
+			HasTraceLevel(sdk.TraceLevelAlways),
+		)
+	}
 
 	t.Run("create function for Java - inline minimal", func(t *testing.T) {
 		className := "TestFunc"
@@ -213,15 +213,6 @@ func TestInt_Functions(t *testing.T) {
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
-
-		// TODO [this PR]: will check after alter
-		// TODO [this PR]: add a test documenting that we can't set parameters in create (and revert adding these parametrs directly in object...)
-		//assertParametersSet(t, objectparametersassert.FunctionParameters(t, id))
-		//
-		//// check that ShowParameters works too
-		//parameters, err := client.Functions.ShowParameters(ctx, id)
-		//require.NoError(t, err)
-		//assertParametersSet(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters))
 	})
 
 	t.Run("create function for Java - staged minimal", func(t *testing.T) {
@@ -1300,11 +1291,6 @@ func TestInt_Functions(t *testing.T) {
 			HasAllDefaultsExplicit(),
 		)
 	})
-}
-
-func TestInt_OtherFunctions(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
 
 	assertFunction := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, secure bool, withArguments bool) {
 		t.Helper()
@@ -1336,56 +1322,21 @@ func TestInt_OtherFunctions(t *testing.T) {
 		assert.Equal(t, false, function.IsMemoizable)
 	}
 
-	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
-		return func() {
-			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
-			require.NoError(t, err)
-		}
-	}
-
 	createFunctionForSQLHandle := func(t *testing.T, cleanup bool, withArguments bool) *sdk.Function {
-		t.Helper()
-		var id sdk.SchemaObjectIdentifierWithArguments
-		if withArguments {
-			id = testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
-		} else {
-			id = testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
-		}
-
-		definition := testClientHelper().Function.SampleSqlDefinition(t)
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
-			WithOrReplace(true)
-		if withArguments {
-			argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
-			request = request.WithArguments([]sdk.FunctionArgumentRequest{*argument})
-		}
-		err := client.Functions.CreateForSQL(ctx, request)
-		require.NoError(t, err)
-		if cleanup {
-			t.Cleanup(cleanupFunctionHandle(id))
-		}
-		function, err := client.Functions.ShowByID(ctx, id)
-		require.NoError(t, err)
-		return function
+		f, fCleanup := testClientHelper().Function.CreateSql(t)
+		t.Cleanup(fCleanup)
+		return f
 	}
 
 	t.Run("alter function: rename", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, false, true)
+		f, fCleanup := testClientHelper().Function.CreateSql(t)
+		t.Cleanup(fCleanup)
 
 		id := f.ID()
-		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
+		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(id.ArgumentDataTypes()...)
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithRenameTo(nid.SchemaObjectId()))
-		if err != nil {
-			t.Cleanup(cleanupFunctionHandle(id))
-		} else {
-			t.Cleanup(cleanupFunctionHandle(nid))
-		}
 		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, nid))
 
 		_, err = client.Functions.ShowByID(ctx, id)
 		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
@@ -1395,58 +1346,149 @@ func TestInt_OtherFunctions(t *testing.T) {
 		require.Equal(t, nid.Name(), e.Name)
 	})
 
-	t.Run("alter function: set log level", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
+	t.Run("alter function: set and unset all for Java", func(t *testing.T) {
+		f, fCleanup := testClientHelper().Function.CreateJava(t)
+		t.Cleanup(fCleanup)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().WithLogLevel(sdk.LogLevelDebug)))
+
+		assertions.AssertThatObject(t, objectassert.Function(t, id).
+			HasName(id.Name()).
+			HasDescription(sdk.DefaultFunctionComment),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		request := sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().
+			WithEnableConsoleOutput(true).
+			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
+			WithSecretsList(*sdk.NewSecretsListRequest([]sdk.SecretReference{{VariableName: "abc", Name: secretId}})).
+			WithLogLevel(sdk.LogLevelWarn).
+			WithMetricLevel(sdk.MetricLevelAll).
+			WithTraceLevel(sdk.TraceLevelAlways).
+			WithComment("new comment"),
+		)
+
+		err := client.Functions.Alter(ctx, request)
 		require.NoError(t, err)
-		assertFunction(t, id, false, true)
+
+		assertions.AssertThatObject(t, objectassert.Function(t, id).
+			HasName(id.Name()).
+			HasDescription("new comment"),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())),
+		)
+
+		assertParametersSet(t, objectparametersassert.FunctionParameters(t, id))
+
+		unsetRequest := sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().
+			WithEnableConsoleOutput(true).
+			WithExternalAccessIntegrations(true).
+			WithEnableConsoleOutput(true).
+			WithLogLevel(true).
+			WithMetricLevel(true).
+			WithTraceLevel(true).
+			WithComment(true),
+		)
+
+		err = client.Functions.Alter(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.Function(t, id).
+			HasName(id.Name()).
+			HasDescription(sdk.DefaultFunctionComment),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+			HasExternalAccessIntegrationsNil().
+			// TODO [next PR]: apparently UNSET external access integrations cleans out secrets in the describe but leaves it in SHOW
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		unsetSecretsRequest := sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().
+			WithSecretsList(*sdk.NewSecretsListRequest([]sdk.SecretReference{})),
+		)
+
+		err = client.Functions.Alter(ctx, unsetSecretsRequest)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+			HasSecretsNil(),
+		)
 	})
 
-	t.Run("alter function: unset log level", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
+	t.Run("alter function: set and unset all for SQL", func(t *testing.T) {
+		f, fCleanup := testClientHelper().Function.CreateSql(t)
+		t.Cleanup(fCleanup)
 
 		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().WithLogLevel(true)))
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		request := sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().
+			WithEnableConsoleOutput(true).
+			WithLogLevel(sdk.LogLevelWarn).
+			WithMetricLevel(sdk.MetricLevelAll).
+			WithTraceLevel(sdk.TraceLevelAlways).
+			WithComment("new comment"),
+		)
+
+		err := client.Functions.Alter(ctx, request)
 		require.NoError(t, err)
-		assertFunction(t, id, false, true)
-	})
 
-	t.Run("alter function: set trace level", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
+		assertions.AssertThatObject(t, objectassert.Function(t, id).
+			HasName(id.Name()).
+			HasDescription("new comment"),
+		)
 
-		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().WithTraceLevel(sdk.TraceLevelAlways)))
+		// TODO [this PR]: add a test documenting that we can't set parameters in create (and revert adding these parameters directly in object...)
+		assertParametersSet(t, objectparametersassert.FunctionParameters(t, id))
+
+		// check that ShowParameters works too
+		parameters, err := client.Functions.ShowParameters(ctx, id)
 		require.NoError(t, err)
-		assertFunction(t, id, false, true)
-	})
+		assertParametersSet(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters))
 
-	t.Run("alter function: unset trace level", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
+		unsetRequest := sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().
+			WithEnableConsoleOutput(true).
+			WithLogLevel(true).
+			WithMetricLevel(true).
+			WithTraceLevel(true).
+			WithComment(true),
+		)
 
-		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().WithTraceLevel(true)))
+		err = client.Functions.Alter(ctx, unsetRequest)
 		require.NoError(t, err)
-		assertFunction(t, id, false, true)
-	})
 
-	t.Run("alter function: set comment", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
+		assertions.AssertThatObject(t, objectassert.Function(t, id).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasDescription(sdk.DefaultFunctionComment),
+		)
 
-		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().WithComment("test comment")))
-		require.NoError(t, err)
-		assertFunction(t, id, false, true)
-	})
-
-	t.Run("alter function: unset comment", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
-
-		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().WithComment(true)))
-		require.NoError(t, err)
-		assertFunction(t, id, false, true)
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
 	})
 
 	t.Run("alter function: set secure", func(t *testing.T) {
