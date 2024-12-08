@@ -955,34 +955,153 @@ func TestInt_CreateFunctions(t *testing.T) {
 		)
 	})
 
-	//t.Run("create function for Scala - staged minimal", func(t *testing.T) {})
-	//t.Run("create function for Scala - staged full", func(t *testing.T) {})
-	//
+	t.Run("create function for Scala - staged minimal", func(t *testing.T) {
+		dataType := tmpJavaFunction.ArgType
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		argName := "x"
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+		handler := tmpJavaFunction.JavaHandler()
+		importPath := tmpJavaFunction.JarLocation()
+
+		requestStaged := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithRuntimeVersion("2.12").
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(importPath)})
+
+		err := client.Functions.CreateForScala(ctx, requestStaged)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription(sdk.DefaultFunctionComment).
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("SCALA").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(dataType.ToSql()).
+			HasLanguage("SCALA").
+			HasBodyNil().
+			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImports(fmt.Sprintf(`[%s]`, importPath)).
+			HasHandler(handler).
+			HasRuntimeVersion("2.12").
+			HasPackages(`[]`).
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasIsAggregateNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("create function for Scala - staged full", func(t *testing.T) {
+		dataType := tmpJavaFunction.ArgType
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		argName := "x"
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+		handler := tmpJavaFunction.JavaHandler()
+
+		requestStaged := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler).
+			WithOrReplace(true).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithCopyGrants(true).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
+			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
+			WithRuntimeVersion("2.12").
+			WithComment("comment").
+			WithPackages([]sdk.FunctionPackageRequest{
+				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:1.14.0"),
+				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:telemetry:0.1.0"),
+			}).
+			//WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
+			//WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}})
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpJavaFunction.JarLocation())})
+
+		err := client.Functions.CreateForScala(ctx, requestStaged)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription("comment").
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("SCALA").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasLanguage("SCALA").
+			HasBodyNil().
+			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
+			//HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			//HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
+			HasHandler(handler).
+			HasRuntimeVersion("2.12").
+			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasIsAggregateNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
 	//t.Run("create function for SQL - inline minimal", func(t *testing.T) {})
 	//t.Run("create function for SQL - inline full", func(t *testing.T) {})
-	//
-	//t.Run("create function for Scala", func(t *testing.T) {
-	//	id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
-	//
-	//	target := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
-	//	definition := testClientHelper().Function.SampleScalaDefinition(t)
-	//	argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-	//	request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), nil, "Echo.echoVarchar").
-	//		WithResultDataTypeOld(sdk.DataTypeVARCHAR).
-	//		WithOrReplace(true).
-	//		WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-	//		WithTargetPath(target).
-	//		WithRuntimeVersion("2.12").
-	//		WithFunctionDefinition(definition)
-	//	err := client.Functions.CreateForScala(ctx, request)
-	//	require.NoError(t, err)
-	//	t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
-	//
-	//	function, err := client.Functions.ShowByID(ctx, id)
-	//	require.NoError(t, err)
-	//	require.Equal(t, id.Name(), function.Name)
-	//	require.Equal(t, "SCALA", function.Language)
-	//})
 	//
 	//t.Run("create function for SQL", func(t *testing.T) {
 	//	id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)

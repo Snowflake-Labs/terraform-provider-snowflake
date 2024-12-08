@@ -809,7 +809,6 @@ func TestFunctions_CreateForScala(t *testing.T) {
 			},
 		}
 		assertOptsInvalidJoinedErrors(t, opts, NewError("TARGET_PATH must be nil when AS is nil"))
-		assertOptsInvalidJoinedErrors(t, opts, NewError("PACKAGES must be empty when AS is nil"))
 		assertOptsInvalidJoinedErrors(t, opts, NewError("IMPORTS must not be empty when AS is nil"))
 	})
 
