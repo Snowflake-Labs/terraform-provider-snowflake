@@ -23,6 +23,7 @@ import (
 // TODO [next PR]: schemaName and catalog name are quoted (because we use lowercase)
 // TODO [next PR]: HasArgumentsRawFrom(functionId, arguments, return)
 // TODO [next PR]: extract show assertions with commons fields
+// TODO [next PR]: test confirming that runtime version is required for Scala function
 // TODO [this PR]: python aggregate func
 // TODO [this PR]: clean stage in tests with targetPath
 func TestInt_Functions(t *testing.T) {
@@ -799,9 +800,8 @@ func TestInt_Functions(t *testing.T) {
 		definition := testClientHelper().Function.SampleScalaDefinition(t, className, funcName, argName)
 		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
 		handler := fmt.Sprintf("%s.%s", className, funcName)
-		request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler).
+		request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler, "2.12").
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithRuntimeVersion("2.12").
 			WithFunctionDefinitionWrapped(definition)
 
 		err := client.Functions.CreateForScala(ctx, request)
@@ -870,14 +870,13 @@ func TestInt_Functions(t *testing.T) {
 		handler := fmt.Sprintf("%s.%s", className, funcName)
 		jarName := fmt.Sprintf("tf-%d-%s.jar", time.Now().Unix(), random.AlphaN(5))
 		targetPath := fmt.Sprintf("@~/%s", jarName)
-		request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler).
+		request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler, "2.12").
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithCopyGrants(true).
 			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
-			WithRuntimeVersion("2.12").
 			WithComment("comment").
 			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpJavaFunction.JarLocation())}).
 			WithPackages([]sdk.FunctionPackageRequest{
@@ -955,9 +954,8 @@ func TestInt_Functions(t *testing.T) {
 		handler := tmpJavaFunction.JavaHandler()
 		importPath := tmpJavaFunction.JarLocation()
 
-		requestStaged := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler).
+		requestStaged := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler, "2.12").
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithRuntimeVersion("2.12").
 			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(importPath)})
 
 		err := client.Functions.CreateForScala(ctx, requestStaged)
@@ -1021,14 +1019,13 @@ func TestInt_Functions(t *testing.T) {
 		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
 		handler := tmpJavaFunction.JavaHandler()
 
-		requestStaged := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler).
+		requestStaged := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler, "2.12").
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithCopyGrants(true).
 			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
-			WithRuntimeVersion("2.12").
 			WithComment("comment").
 			WithPackages([]sdk.FunctionPackageRequest{
 				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:1.14.0"),

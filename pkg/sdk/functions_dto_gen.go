@@ -137,7 +137,7 @@ type CreateForScalaFunctionRequest struct {
 	ReturnNullValues           *ReturnNullValues
 	NullInputBehavior          *NullInputBehavior
 	ReturnResultsBehavior      *ReturnResultsBehavior
-	RuntimeVersion             *string
+	RuntimeVersion             string // required
 	Comment                    *string
 	Imports                    []FunctionImportRequest
 	Packages                   []FunctionPackageRequest

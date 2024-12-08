@@ -163,7 +163,7 @@ type CreateForScalaFunctionOptions struct {
 	languageScala              bool                      `ddl:"static" sql:"LANGUAGE SCALA"`
 	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
 	ReturnResultsBehavior      *ReturnResultsBehavior    `ddl:"keyword"`
-	RuntimeVersion             *string                   `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
+	RuntimeVersion             string                    `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Imports                    []FunctionImport          `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Packages                   []FunctionPackage         `ddl:"parameter,parentheses" sql:"PACKAGES"`
@@ -255,47 +255,50 @@ type ShowFunctionOptions struct {
 }
 
 type functionRow struct {
-	CreatedOn          string         `db:"created_on"`
-	Name               string         `db:"name"`
-	SchemaName         string         `db:"schema_name"`
-	IsBuiltin          string         `db:"is_builtin"`
-	IsAggregate        string         `db:"is_aggregate"`
-	IsAnsi             string         `db:"is_ansi"`
-	MinNumArguments    int            `db:"min_num_arguments"`
-	MaxNumArguments    int            `db:"max_num_arguments"`
-	Arguments          string         `db:"arguments"`
-	Description        string         `db:"description"`
-	CatalogName        string         `db:"catalog_name"`
-	IsTableFunction    string         `db:"is_table_function"`
-	ValidForClustering string         `db:"valid_for_clustering"`
-	IsSecure           sql.NullString `db:"is_secure"`
-	IsExternalFunction string         `db:"is_external_function"`
-	Language           string         `db:"language"`
-	IsMemoizable       sql.NullString `db:"is_memoizable"`
-	IsDataMetric       sql.NullString `db:"is_data_metric"`
+	CreatedOn                  string         `db:"created_on"`
+	Name                       string         `db:"name"`
+	SchemaName                 string         `db:"schema_name"`
+	IsBuiltin                  string         `db:"is_builtin"`
+	IsAggregate                string         `db:"is_aggregate"`
+	IsAnsi                     string         `db:"is_ansi"`
+	MinNumArguments            int            `db:"min_num_arguments"`
+	MaxNumArguments            int            `db:"max_num_arguments"`
+	Arguments                  string         `db:"arguments"`
+	Description                string         `db:"description"`
+	CatalogName                string         `db:"catalog_name"`
+	IsTableFunction            string         `db:"is_table_function"`
+	ValidForClustering         string         `db:"valid_for_clustering"`
+	IsSecure                   sql.NullString `db:"is_secure"`
+	Secrets                    sql.NullString `db:"secrets"`
+	ExternalAccessIntegrations sql.NullString `db:"external_access_integrations"`
+	IsExternalFunction         string         `db:"is_external_function"`
+	Language                   string         `db:"language"`
+	IsMemoizable               sql.NullString `db:"is_memoizable"`
+	IsDataMetric               sql.NullString `db:"is_data_metric"`
 }
 
 type Function struct {
-	CreatedOn          string
-	Name               string
-	SchemaName         string
-	IsBuiltin          bool
-	IsAggregate        bool
-	IsAnsi             bool
-	MinNumArguments    int
-	MaxNumArguments    int
-	ArgumentsOld       []DataType
-	ArgumentsRaw       string
-	Description        string
-	CatalogName        string
-	IsTableFunction    bool
-	ValidForClustering bool
-	IsSecure           bool
-	// TODO [this PR]: eai + secrets
-	IsExternalFunction bool
-	Language           string
-	IsMemoizable       bool
-	IsDataMetric       bool
+	CreatedOn                  string
+	Name                       string
+	SchemaName                 string
+	IsBuiltin                  bool
+	IsAggregate                bool
+	IsAnsi                     bool
+	MinNumArguments            int
+	MaxNumArguments            int
+	ArgumentsOld               []DataType
+	ArgumentsRaw               string
+	Description                string
+	CatalogName                string
+	IsTableFunction            bool
+	ValidForClustering         bool
+	IsSecure                   bool
+	Secrets                    *string
+	ExternalAccessIntegrations *string
+	IsExternalFunction         bool
+	Language                   string
+	IsMemoizable               bool
+	IsDataMetric               bool
 }
 
 // DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.

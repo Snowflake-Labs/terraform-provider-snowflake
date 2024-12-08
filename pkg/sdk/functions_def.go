@@ -180,7 +180,6 @@ var FunctionsDef = g.NewInterface(
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 ).CustomOperation(
-	// TODO [this PR]: runtime version required
 	"CreateForScala",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-function#scala-handler",
 	g.NewQueryStruct("CreateForScala").
@@ -203,7 +202,7 @@ var FunctionsDef = g.NewInterface(
 		SQL("LANGUAGE SCALA").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
 		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
-		OptionalTextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes()).
+		TextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes().Required()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		ListQueryStructField(
 			"Imports",
@@ -324,6 +323,8 @@ var FunctionsDef = g.NewInterface(
 		Field("is_table_function", "string").
 		Field("valid_for_clustering", "string").
 		Field("is_secure", "sql.NullString").
+		OptionalText("secrets").
+		OptionalText("external_access_integrations").
 		Field("is_external_function", "string").
 		Field("language", "string").
 		Field("is_memoizable", "sql.NullString").
@@ -343,6 +344,8 @@ var FunctionsDef = g.NewInterface(
 		Field("IsTableFunction", "bool").
 		Field("ValidForClustering", "bool").
 		Field("IsSecure", "bool").
+		OptionalText("Secrets").
+		OptionalText("ExternalAccessIntegrations").
 		Field("IsExternalFunction", "bool").
 		Field("Language", "string").
 		Field("IsMemoizable", "bool").

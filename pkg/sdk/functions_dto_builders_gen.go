@@ -408,11 +408,13 @@ func NewCreateForScalaFunctionRequest(
 	name SchemaObjectIdentifier,
 	ResultDataType datatypes.DataType,
 	Handler string,
+	RuntimeVersion string,
 ) *CreateForScalaFunctionRequest {
 	s := CreateForScalaFunctionRequest{}
 	s.name = name
 	s.ResultDataType = ResultDataType
 	s.Handler = Handler
+	s.RuntimeVersion = RuntimeVersion
 	return &s
 }
 
@@ -463,11 +465,6 @@ func (s *CreateForScalaFunctionRequest) WithNullInputBehavior(NullInputBehavior 
 
 func (s *CreateForScalaFunctionRequest) WithReturnResultsBehavior(ReturnResultsBehavior ReturnResultsBehavior) *CreateForScalaFunctionRequest {
 	s.ReturnResultsBehavior = &ReturnResultsBehavior
-	return s
-}
-
-func (s *CreateForScalaFunctionRequest) WithRuntimeVersion(RuntimeVersion string) *CreateForScalaFunctionRequest {
-	s.RuntimeVersion = &RuntimeVersion
 	return s
 }
 

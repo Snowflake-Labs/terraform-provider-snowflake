@@ -493,6 +493,12 @@ func (r functionRow) convert() *Function {
 	if r.IsSecure.Valid {
 		e.IsSecure = r.IsSecure.String == "Y"
 	}
+	if r.Secrets.Valid {
+		e.Secrets = String(r.Secrets.String)
+	}
+	if r.ExternalAccessIntegrations.Valid {
+		e.ExternalAccessIntegrations = String(r.ExternalAccessIntegrations.String)
+	}
 	if r.IsMemoizable.Valid {
 		e.IsMemoizable = r.IsMemoizable.String == "Y"
 	}

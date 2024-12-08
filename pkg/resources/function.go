@@ -310,8 +310,13 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	functionDefinition := d.Get("statement").(string)
 	handler := d.Get("handler").(string)
+	var runtimeVersion string
+	if v, ok := d.GetOk("runtime_version"); ok {
+		runtimeVersion = v.(string)
+	}
+
 	// create request with required
-	request := sdk.NewCreateForScalaFunctionRequest(id, nil, handler).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType))
+	request := sdk.NewCreateForScalaFunctionRequest(id, nil, handler, runtimeVersion).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType))
 	request.WithFunctionDefinition(functionDefinition)
 
 	// Set optionals
@@ -330,9 +335,6 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if v, ok := d.GetOk("return_behavior"); ok {
 		request.WithReturnResultsBehavior(sdk.ReturnResultsBehavior(v.(string)))
-	}
-	if v, ok := d.GetOk("runtime_version"); ok {
-		request.WithRuntimeVersion(v.(string))
 	}
 	if v, ok := d.GetOk("comment"); ok {
 		request.WithComment(v.(string))
