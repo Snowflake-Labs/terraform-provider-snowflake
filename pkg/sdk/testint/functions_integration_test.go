@@ -25,6 +25,7 @@ import (
 // TODO [next PR]: HasArgumentsRawFrom(functionId, arguments, return)
 // TODO [next PR]: extract show assertions with commons fields
 // TODO [this PR]: python aggregate func
+// TODO [this PR]: clean stage in tests with targetPath
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
