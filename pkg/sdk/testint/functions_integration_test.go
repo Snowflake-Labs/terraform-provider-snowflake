@@ -1165,29 +1165,78 @@ func TestInt_CreateFunctions(t *testing.T) {
 		)
 	})
 
-	// TODO [this PR]: volatility is not returned and is present in create syntax
-	//t.Run("create function for SQL - inline full", func(t *testing.T) {})
-	//
-	//t.Run("create function for SQL", func(t *testing.T) {
-	//	id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
-	//
-	//	definition := testClientHelper().Function.SampleSqlDefinition(t)
-	//	dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
-	//	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-	//	argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
-	//	request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
-	//		WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-	//		WithOrReplace(true).
-	//		WithComment("comment")
-	//	err := client.Functions.CreateForSQL(ctx, request)
-	//	require.NoError(t, err)
-	//	t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
-	//
-	//	function, err := client.Functions.ShowByID(ctx, id)
-	//	require.NoError(t, err)
-	//	require.Equal(t, id.Name(), function.Name)
-	//	require.Equal(t, "SQL", function.Language)
-	//})
+	t.Run("create function for SQL - inline full", func(t *testing.T) {
+		argName := "x"
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		definition := testClientHelper().Function.SampleSqlDefinition(t)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+		request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
+			WithOrReplace(true).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithCopyGrants(true).
+			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
+			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
+			WithMemoizable(true).
+			WithComment("comment")
+
+		err := client.Functions.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription("comment").
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("SQL").
+			HasIsMemoizable(true).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasLanguage("SQL").
+			HasBody(definition).
+			HasNullHandlingNil().
+			// TODO [next PR]: volatility is not returned and is present in create syntax
+			//HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
+			HasVolatilityNil().
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImportsNil().
+			HasHandlerNil().
+			HasRuntimeVersionNil().
+			HasPackagesNil().
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasIsAggregateNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
 
 	//t.Run("create function for SQL with no arguments", func(t *testing.T) {
 	//	id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
