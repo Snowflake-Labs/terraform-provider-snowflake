@@ -25,7 +25,7 @@ import (
 // TODO [next PR]: HasArgumentsRawFrom(functionId, arguments, return)
 // TODO [next PR]: extract show assertions with commons fields
 // TODO [this PR]: python aggregate func
-func TestInt_CreateFunctions(t *testing.T) {
+func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
 	secretId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
@@ -1238,24 +1238,67 @@ func TestInt_CreateFunctions(t *testing.T) {
 		)
 	})
 
-	//t.Run("create function for SQL with no arguments", func(t *testing.T) {
-	//	id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
-	//
-	//	definition := testClientHelper().Function.SampleSqlDefinition(t)
-	//	dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
-	//	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-	//	request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
-	//		WithOrReplace(true).
-	//		WithComment("comment")
-	//	err := client.Functions.CreateForSQL(ctx, request)
-	//	require.NoError(t, err)
-	//	t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
-	//
-	//	function, err := client.Functions.ShowByID(ctx, id)
-	//	require.NoError(t, err)
-	//	require.Equal(t, id.Name(), function.Name)
-	//	require.Equal(t, "SQL", function.Language)
-	//})
+	t.Run("create function for SQL - no arguments", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
+
+		definition := testClientHelper().Function.SampleSqlDefinition(t)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition)
+
+		err := client.Functions.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(0).
+			HasMaxNumArguments(0).
+			HasArgumentsOld([]sdk.DataType{}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s() RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription(sdk.DefaultFunctionComment).
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("SQL").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature("()").
+			HasReturns(dataType.ToSql()).
+			HasLanguage("SQL").
+			HasBody(definition).
+			HasNullHandlingNil().
+			HasVolatilityNil().
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImportsNil().
+			HasHandlerNil().
+			HasRuntimeVersionNil().
+			HasPackagesNil().
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasIsAggregateNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
 }
 
 func TestInt_OtherFunctions(t *testing.T) {
