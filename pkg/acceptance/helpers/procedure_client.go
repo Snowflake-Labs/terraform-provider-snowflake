@@ -60,3 +60,10 @@ func (c *ProcedureClient) Show(t *testing.T, id sdk.SchemaObjectIdentifierWithAr
 
 	return c.client().ShowByID(ctx, id)
 }
+
+func (c *ProcedureClient) DescribeDetails(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) (*sdk.ProcedureDetails, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().DescribeDetails(ctx, id)
+}
