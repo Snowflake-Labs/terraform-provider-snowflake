@@ -160,64 +160,68 @@ func (itc *integrationTestContext) initialize() error {
 	}
 	itc.warehouse = wh
 
-	config, err := sdk.ProfileConfig(testprofiles.Secondary)
-	if err != nil {
-		return err
-	}
-
-	if config.Account == defaultConfig.Account {
-		log.Println("[WARN] default and secondary configs are set to the same account; it may cause problems in tests requiring multiple accounts")
-	}
-
-	secondaryClient, err := sdk.NewClient(config)
-	if err != nil {
-		return err
-	}
-	itc.secondaryClient = secondaryClient
-	itc.secondaryCtx = context.Background()
-
-	secondaryDb, secondaryDbCleanup, err := createDb(itc.secondaryClient, itc.secondaryCtx, true)
-	itc.secondaryDatabaseCleanup = secondaryDbCleanup
-	if err != nil {
-		return err
-	}
-	itc.secondaryDatabase = secondaryDb
-
-	secondarySchema, secondarySchemaCleanup, err := createSc(itc.secondaryClient, itc.secondaryCtx, itc.database, true)
-	itc.secondarySchemaCleanup = secondarySchemaCleanup
-	if err != nil {
-		return err
-	}
-	itc.secondarySchema = secondarySchema
-
-	secondaryWarehouse, secondaryWarehouseCleanup, err := createWh(itc.secondaryClient, itc.secondaryCtx, true)
-	itc.secondaryWarehouseCleanup = secondaryWarehouseCleanup
-	if err != nil {
-		return err
-	}
-	itc.secondaryWarehouse = secondaryWarehouse
-
 	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
-	itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
 
-	err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.client, itc.ctx)
-	if err != nil {
-		return err
-	}
-	err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.secondaryClient, itc.secondaryCtx)
-	if err != nil {
-		return err
-	}
-
-	// TODO(SNOW-1842271): Adjust test setup to work properly with Accountadmin role for object tests and Orgadmin for account tests
-	if os.Getenv(string(testenvs.TestAccountCreate)) == "" {
-		err = helpers.EnsureScimProvisionerRolesExist(itc.client, itc.ctx)
+	// TODO [next PR]: improve setup; this is a quick workaround for faster local testing
+	if os.Getenv(string(testenvs.SimplifiedIntegrationTestsSetup)) == "" {
+		config, err := sdk.ProfileConfig(testprofiles.Secondary)
 		if err != nil {
 			return err
 		}
-		err = helpers.EnsureScimProvisionerRolesExist(itc.secondaryClient, itc.secondaryCtx)
+
+		if config.Account == defaultConfig.Account {
+			log.Println("[WARN] default and secondary configs are set to the same account; it may cause problems in tests requiring multiple accounts")
+		}
+
+		secondaryClient, err := sdk.NewClient(config)
 		if err != nil {
 			return err
+		}
+		itc.secondaryClient = secondaryClient
+		itc.secondaryCtx = context.Background()
+
+		secondaryDb, secondaryDbCleanup, err := createDb(itc.secondaryClient, itc.secondaryCtx, true)
+		itc.secondaryDatabaseCleanup = secondaryDbCleanup
+		if err != nil {
+			return err
+		}
+		itc.secondaryDatabase = secondaryDb
+
+		secondarySchema, secondarySchemaCleanup, err := createSc(itc.secondaryClient, itc.secondaryCtx, itc.database, true)
+		itc.secondarySchemaCleanup = secondarySchemaCleanup
+		if err != nil {
+			return err
+		}
+		itc.secondarySchema = secondarySchema
+
+		secondaryWarehouse, secondaryWarehouseCleanup, err := createWh(itc.secondaryClient, itc.secondaryCtx, true)
+		itc.secondaryWarehouseCleanup = secondaryWarehouseCleanup
+		if err != nil {
+			return err
+		}
+		itc.secondaryWarehouse = secondaryWarehouse
+
+		itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
+
+		err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.client, itc.ctx)
+		if err != nil {
+			return err
+		}
+		err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.secondaryClient, itc.secondaryCtx)
+		if err != nil {
+			return err
+		}
+
+		// TODO(SNOW-1842271): Adjust test setup to work properly with Accountadmin role for object tests and Orgadmin for account tests
+		if os.Getenv(string(testenvs.TestAccountCreate)) == "" {
+			err = helpers.EnsureScimProvisionerRolesExist(itc.client, itc.ctx)
+			if err != nil {
+				return err
+			}
+			err = helpers.EnsureScimProvisionerRolesExist(itc.secondaryClient, itc.secondaryCtx)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
