@@ -5,6 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
@@ -21,15 +26,86 @@ func TestInt_Procedures(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	cleanupProcedureHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
-		return func() {
-			err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
-			require.NoError(t, err)
-		}
-	}
+	secretId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+
+	networkRule, networkRuleCleanup := testClientHelper().NetworkRule.Create(t)
+	t.Cleanup(networkRuleCleanup)
+
+	secret, secretCleanup := testClientHelper().Secret.CreateWithGenericString(t, secretId, "test_secret_string")
+	t.Cleanup(secretCleanup)
+
+	externalAccessIntegration, externalAccessIntegrationCleanup := testClientHelper().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret.ID())
+	t.Cleanup(externalAccessIntegrationCleanup)
+	_ = externalAccessIntegration
+
+	t.Run("create procedure for Java - inline minimal", func(t *testing.T) {
+		className := "TestFunc"
+		funcName := "echoVarchar"
+		argName := "x"
+		dataType := testdatatypes.DataTypeVarchar_100
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
+		handler := fmt.Sprintf("%s.%s", className, funcName)
+		definition := testClientHelper().Procedure.SampleJavaDefinition(t, className, funcName, argName)
+		packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0")}
+
+		request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, handler).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithProcedureDefinitionWrapped(definition)
+
+		err := client.Procedures.CreateForJava(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		procedure, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, procedure).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, procedure.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription(sdk.DefaultProcedureComment).
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, procedure.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(dataType.ToSql()).
+			HasLanguage("JAVA").
+			HasBody(definition).
+			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImports(`[]`).
+			HasHandler(handler).
+			HasRuntimeVersion("11").
+			HasPackages(`[com.snowflake:snowpark:1.14.0]`).
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasExecuteAs("OWNER"),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
 
 	t.Run("create procedure for Java: returns result data type", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#reading-a-dynamically-specified-file-with-inputstream
@@ -59,7 +135,7 @@ func TestInt_Procedures(t *testing.T) {
 			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForJava(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -94,7 +170,7 @@ func TestInt_Procedures(t *testing.T) {
 			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForJava(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -125,7 +201,7 @@ func TestInt_Procedures(t *testing.T) {
 			WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
 		err := client.Procedures.CreateForJavaScript(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -141,7 +217,7 @@ func TestInt_Procedures(t *testing.T) {
 		request := sdk.NewCreateForJavaScriptProcedureRequestDefinitionWrapped(id.SchemaObjectId(), nil, definition).WithResultDataTypeOld(sdk.DataTypeFloat).WithNotNull(true).WithOrReplace(true)
 		err := client.Procedures.CreateForJavaScript(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -174,7 +250,7 @@ func TestInt_Procedures(t *testing.T) {
 			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForScala(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -210,7 +286,7 @@ func TestInt_Procedures(t *testing.T) {
 			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForScala(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -242,7 +318,7 @@ def joblib_multiprocessing(session, i):
 			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForPython(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -273,7 +349,7 @@ def filter_by_role(session, table_name, role):
 			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForPython(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -305,7 +381,7 @@ def filter_by_role(session, table_name, role):
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
 		err := client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -334,7 +410,7 @@ def filter_by_role(session, table_name, role):
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
 		err := client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
 		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
 		require.NoError(t, err)
@@ -431,7 +507,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := f.ID()
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSetLogLevel("DEBUG"))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().WithLogLevel("DEBUG")))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})
@@ -440,7 +516,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := f.ID()
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSetTraceLevel("ALWAYS"))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().WithTraceLevel("ALWAYS")))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})
@@ -449,7 +525,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := f.ID()
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSetComment("comment"))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().WithComment("comment")))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})
@@ -458,7 +534,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
 
 		id := f.ID()
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnsetComment(true))
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnset(*sdk.NewProcedureUnsetRequest().WithComment(true)))
 		require.NoError(t, err)
 		assertProcedure(t, id, true)
 	})

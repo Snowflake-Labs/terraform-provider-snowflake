@@ -28,3 +28,14 @@ func (a *ProcedureAssert) HasExternalAccessIntegrationsNil() *ProcedureAssert {
 	})
 	return a
 }
+
+func (a *ProcedureAssert) HasSecretsNil() *ProcedureAssert {
+	a.AddAssertion(func(t *testing.T, o *sdk.Procedure) error {
+		t.Helper()
+		if o.Secrets != nil {
+			return fmt.Errorf("expected secrets to be nil but was: %v", *o.Secrets)
+		}
+		return nil
+	})
+	return a
+}

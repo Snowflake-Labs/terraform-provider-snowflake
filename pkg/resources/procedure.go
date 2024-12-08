@@ -689,11 +689,11 @@ func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		if comment != "" {
-			if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSetComment(comment.(string))); err != nil {
+			if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().WithComment(comment.(string)))); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
-			if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnsetComment(true)); err != nil {
+			if err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnset(*sdk.NewProcedureUnsetRequest().WithComment(true))); err != nil {
 				return diag.FromErr(err)
 			}
 		}

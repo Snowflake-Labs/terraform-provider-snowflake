@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -54,6 +55,16 @@ func (c *ProcedureClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObject
 	return procedure
 }
 
+func (c *ProcedureClient) DropProcedureFunc(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	return func() {
+		err := c.client().Drop(ctx, sdk.NewDropProcedureRequest(id).WithIfExists(true))
+		require.NoError(t, err)
+	}
+}
+
 func (c *ProcedureClient) Show(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) (*sdk.Procedure, error) {
 	t.Helper()
 	ctx := context.Background()
@@ -66,4 +77,19 @@ func (c *ProcedureClient) DescribeDetails(t *testing.T, id sdk.SchemaObjectIdent
 	ctx := context.Background()
 
 	return c.client().DescribeDetails(ctx, id)
+}
+
+// Session argument is needed: https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#data-access-example
+// More references: https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java
+func (c *ProcedureClient) SampleJavaDefinition(t *testing.T, className string, funcName string, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+	import com.snowflake.snowpark_java.*;
+	class %[1]s {
+		public static String %[2]s(Session session, String %[3]s) {
+			return %[3]s;
+		}
+	}
+`, className, funcName, argName)
 }
