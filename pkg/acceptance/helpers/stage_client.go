@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/stretchr/testify/require"
 )
 
@@ -94,6 +95,35 @@ func (c *StageClient) PutOnStage(t *testing.T, id sdk.SchemaObjectIdentifier, fi
 
 	_, err = c.context.client.ExecForTests(ctx, fmt.Sprintf(`PUT '%s' @%s AUTO_COMPRESS = FALSE`, absPath, id.FullyQualifiedName()))
 	require.NoError(t, err)
+}
+
+func (c *StageClient) PutOnUserStageWithContent(t *testing.T, filename string, content string) string {
+	t.Helper()
+	ctx := context.Background()
+
+	path := testhelpers.TestFile(t, filename, []byte(content))
+
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @~/ AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, path))
+	require.NoError(t, err)
+
+	t.Cleanup(c.RemoveFromUserStageFunc(t, path))
+
+	return path
+}
+
+func (c *StageClient) RemoveFromUserStage(t *testing.T, pathOnStage string) {
+	t.Helper()
+	ctx := context.Background()
+
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @~/%s`, pathOnStage))
+	require.NoError(t, err)
+}
+
+func (c *StageClient) RemoveFromUserStageFunc(t *testing.T, pathOnStage string) func() {
+	t.Helper()
+	return func() {
+		c.RemoveFromUserStage(t, pathOnStage)
+	}
 }
 
 func (c *StageClient) PutOnStageWithContent(t *testing.T, id sdk.SchemaObjectIdentifier, filename string, content string) {
