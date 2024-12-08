@@ -5,14 +5,14 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 //go:generate go run ./poc/main.go
 
 var procedureArgument = g.NewQueryStruct("ProcedureArgument").
-	Text("ArgName", g.KeywordOptions().NoQuotes().Required()).
+	Text("ArgName", g.KeywordOptions().DoubleQuotes().Required()).
 	PredefinedQueryStructField("ArgDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
 	PredefinedQueryStructField("ArgDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT")).
 	WithValidation(g.ExactlyOneValueSet, "ArgDataTypeOld", "ArgDataType")
 
 var procedureColumn = g.NewQueryStruct("ProcedureColumn").
-	Text("ColumnName", g.KeywordOptions().NoQuotes().Required()).
+	Text("ColumnName", g.KeywordOptions().DoubleQuotes().Required()).
 	PredefinedQueryStructField("ColumnDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
 	PredefinedQueryStructField("ColumnDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 	WithValidation(g.ExactlyOneValueSet, "ColumnDataTypeOld", "ColumnDataType")
@@ -112,9 +112,10 @@ var ProceduresDef = g.NewInterface(
 		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
-		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
 		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidateValueSet, "Handler").
@@ -140,9 +141,10 @@ var ProceduresDef = g.NewInterface(
 		OptionalSQL("NOT NULL").
 		SQL("LANGUAGE JAVASCRIPT").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
-		PredefinedQueryStructField("ProcedureDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		PredefinedQueryStructField("ProcedureDefinition", "string", g.ParameterOptions().NoEquals().SQL("AS").Required()).
 		WithValidation(g.ValidateValueSet, "ProcedureDefinition").
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ExactlyOneValueSet, "ResultDataTypeOld", "ResultDataType"),
@@ -182,9 +184,10 @@ var ProceduresDef = g.NewInterface(
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
 		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
-		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
 		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidateValueSet, "Handler").
@@ -224,9 +227,10 @@ var ProceduresDef = g.NewInterface(
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
-		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		PredefinedQueryStructField("ProcedureDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
 		WithValidation(g.ValidateValueSet, "Packages").
 		WithValidation(g.ValidateValueSet, "Handler").
@@ -253,9 +257,10 @@ var ProceduresDef = g.NewInterface(
 		).
 		SQL("LANGUAGE SQL").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
+		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
-		PredefinedQueryStructField("ProcedureDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		PredefinedQueryStructField("ProcedureDefinition", "string", g.ParameterOptions().NoEquals().SQL("AS").Required()).
 		WithValidation(g.ValidateValueSet, "ProcedureDefinition").
 		WithValidation(g.ValidIdentifier, "name"),
 ).AlterOperation(
@@ -266,16 +271,39 @@ var ProceduresDef = g.NewInterface(
 		IfExists().
 		Name().
 		OptionalIdentifier("RenameTo", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
-		OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
-		OptionalTextAssignment("SET LOG_LEVEL", g.ParameterOptions().SingleQuotes()).
-		OptionalTextAssignment("SET TRACE_LEVEL", g.ParameterOptions().SingleQuotes()).
-		OptionalSQL("UNSET COMMENT").
+		OptionalQueryStructField(
+			"Set",
+			g.NewQueryStruct("ProcedureSet").
+				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
+				ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
+				OptionalQueryStructField("SecretsList", functionSecretsListWrapper, g.ParameterOptions().SQL("SECRETS").Parentheses()).
+				OptionalAssignment("AUTO_EVENT_LOGGING", g.KindOfTPointer[AutoEventLogging](), g.ParameterOptions().SingleQuotes()).
+				OptionalBooleanAssignment("ENABLE_CONSOLE_OUTPUT", nil).
+				OptionalAssignment("LOG_LEVEL", g.KindOfTPointer[LogLevel](), g.ParameterOptions().SingleQuotes()).
+				OptionalAssignment("METRIC_LEVEL", g.KindOfTPointer[MetricLevel](), g.ParameterOptions().SingleQuotes()).
+				OptionalAssignment("TRACE_LEVEL", g.KindOfTPointer[TraceLevel](), g.ParameterOptions().SingleQuotes()).
+				WithValidation(g.AtLeastOneValueSet, "Comment", "ExternalAccessIntegrations", "SecretsList", "AutoEventLogging", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"),
+			g.ListOptions().SQL("SET"),
+		).
+		OptionalQueryStructField(
+			"Unset",
+			g.NewQueryStruct("ProcedureUnset").
+				OptionalSQL("COMMENT").
+				OptionalSQL("EXTERNAL_ACCESS_INTEGRATIONS").
+				OptionalSQL("AUTO_EVENT_LOGGING").
+				OptionalSQL("ENABLE_CONSOLE_OUTPUT").
+				OptionalSQL("LOG_LEVEL").
+				OptionalSQL("METRIC_LEVEL").
+				OptionalSQL("TRACE_LEVEL").
+				WithValidation(g.AtLeastOneValueSet, "Comment", "ExternalAccessIntegrations", "AutoEventLogging", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"),
+			g.ListOptions().SQL("UNSET"),
+		).
 		OptionalSetTags().
 		OptionalUnsetTags().
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidIdentifierIfSet, "RenameTo").
-		WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "SetLogLevel", "SetTraceLevel", "UnsetComment", "SetTags", "UnsetTags", "ExecuteAs"),
+		WithValidation(g.ExactlyOneValueSet, "RenameTo", "Set", "Unset", "SetTags", "UnsetTags", "ExecuteAs"),
 ).DropOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/drop-procedure",
 	g.NewQueryStruct("DropProcedure").
@@ -300,7 +328,9 @@ var ProceduresDef = g.NewInterface(
 		Field("catalog_name", "string").
 		Field("is_table_function", "string").
 		Field("valid_for_clustering", "string").
-		Field("is_secure", "sql.NullString"),
+		Field("is_secure", "sql.NullString").
+		OptionalText("secrets").
+		OptionalText("external_access_integrations"),
 	g.PlainStruct("Procedure").
 		Field("CreatedOn", "string").
 		Field("Name", "string").
@@ -315,12 +345,14 @@ var ProceduresDef = g.NewInterface(
 		Field("CatalogName", "string").
 		Field("IsTableFunction", "bool").
 		Field("ValidForClustering", "bool").
-		Field("IsSecure", "bool"),
+		Field("IsSecure", "bool").
+		OptionalText("Secrets").
+		OptionalText("ExternalAccessIntegrations"),
 	g.NewQueryStruct("ShowProcedures").
 		Show().
 		SQL("PROCEDURES").
 		OptionalLike().
-		OptionalIn(), // TODO: 'In' struct for procedures not support keyword "CLASS" now
+		OptionalIn(),
 ).ShowByIdOperation().DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-procedure",

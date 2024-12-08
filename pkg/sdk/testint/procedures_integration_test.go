@@ -15,6 +15,8 @@ import (
 // todo: add tests for:
 //  - creating procedure with different languages from stages
 
+// TODO [SNOW-1850370]: 'ExtendedIn' struct for procedures not support keyword "CLASS" now
+// TODO [SNOW-1850370]: Call/CreateAndCall methods were not updated before V1 because we are not using them
 func TestInt_Procedures(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
