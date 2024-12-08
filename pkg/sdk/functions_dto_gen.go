@@ -125,29 +125,31 @@ type CreateForPythonFunctionRequest struct {
 }
 
 type CreateForScalaFunctionRequest struct {
-	OrReplace             *bool
-	Temporary             *bool
-	Secure                *bool
-	IfNotExists           *bool
-	name                  SchemaObjectIdentifier // required
-	Arguments             []FunctionArgumentRequest
-	CopyGrants            *bool
-	ResultDataTypeOld     DataType
-	ResultDataType        datatypes.DataType // required
-	ReturnNullValues      *ReturnNullValues
-	NullInputBehavior     *NullInputBehavior
-	ReturnResultsBehavior *ReturnResultsBehavior
-	RuntimeVersion        *string
-	Comment               *string
-	Imports               []FunctionImportRequest
-	Packages              []FunctionPackageRequest
-	Handler               string // required
-	TargetPath            *string
-	EnableConsoleOutput   *bool
-	LogLevel              *LogLevel
-	MetricLevel           *MetricLevel
-	TraceLevel            *TraceLevel
-	FunctionDefinition    *string
+	OrReplace                  *bool
+	Temporary                  *bool
+	Secure                     *bool
+	IfNotExists                *bool
+	name                       SchemaObjectIdentifier // required
+	Arguments                  []FunctionArgumentRequest
+	CopyGrants                 *bool
+	ResultDataTypeOld          DataType
+	ResultDataType             datatypes.DataType // required
+	ReturnNullValues           *ReturnNullValues
+	NullInputBehavior          *NullInputBehavior
+	ReturnResultsBehavior      *ReturnResultsBehavior
+	RuntimeVersion             *string
+	Comment                    *string
+	Imports                    []FunctionImportRequest
+	Packages                   []FunctionPackageRequest
+	Handler                    string // required
+	ExternalAccessIntegrations []AccountObjectIdentifier
+	Secrets                    []SecretReference
+	TargetPath                 *string
+	EnableConsoleOutput        *bool
+	LogLevel                   *LogLevel
+	MetricLevel                *MetricLevel
+	TraceLevel                 *TraceLevel
+	FunctionDefinition         *string
 }
 
 type CreateForSQLFunctionRequest struct {

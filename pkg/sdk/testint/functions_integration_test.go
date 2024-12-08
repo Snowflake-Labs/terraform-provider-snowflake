@@ -894,8 +894,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:telemetry:0.1.0"),
 			}).
 			WithTargetPath(targetPath).
-			//WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}). // TODO [this PR]: add
-			//WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}}). // TODO [this PR]: add
+			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
+			WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}}).
 			WithEnableConsoleOutput(true).
 			WithLogLevel(sdk.LogLevelWarn).
 			WithMetricLevel(sdk.MetricLevelAll).
@@ -938,8 +938,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			//HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			//HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
@@ -1043,8 +1043,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:1.14.0"),
 				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:telemetry:0.1.0"),
 			}).
-			//WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
-			//WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}})
+			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
+			WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}}).
 			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpJavaFunction.JarLocation())})
 
 		err := client.Functions.CreateForScala(ctx, requestStaged)
@@ -1083,8 +1083,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			//HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			//HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").

@@ -216,6 +216,8 @@ var FunctionsDef = g.NewInterface(
 			g.ParameterOptions().Parentheses().SQL("PACKAGES"),
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
+		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
+		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
 		OptionalBooleanAssignment("ENABLE_CONSOLE_OUTPUT", nil).
 		OptionalAssignment("LOG_LEVEL", g.KindOfTPointer[LogLevel](), g.ParameterOptions().SingleQuotes()).

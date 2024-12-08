@@ -147,33 +147,35 @@ type CreateForPythonFunctionOptions struct {
 
 // CreateForScalaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#scala-handler.
 type CreateForScalaFunctionOptions struct {
-	create                bool                   `ddl:"static" sql:"CREATE"`
-	OrReplace             *bool                  `ddl:"keyword" sql:"OR REPLACE"`
-	Temporary             *bool                  `ddl:"keyword" sql:"TEMPORARY"`
-	Secure                *bool                  `ddl:"keyword" sql:"SECURE"`
-	function              bool                   `ddl:"static" sql:"FUNCTION"`
-	IfNotExists           *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                  SchemaObjectIdentifier `ddl:"identifier"`
-	Arguments             []FunctionArgument     `ddl:"list,must_parentheses"`
-	CopyGrants            *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
-	returns               bool                   `ddl:"static" sql:"RETURNS"`
-	ResultDataTypeOld     DataType               `ddl:"parameter,no_equals"`
-	ResultDataType        datatypes.DataType     `ddl:"parameter,no_quotes,no_equals"`
-	ReturnNullValues      *ReturnNullValues      `ddl:"keyword"`
-	languageScala         bool                   `ddl:"static" sql:"LANGUAGE SCALA"`
-	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
-	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
-	RuntimeVersion        *string                `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Imports               []FunctionImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
-	Packages              []FunctionPackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
-	Handler               string                 `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	TargetPath            *string                `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	EnableConsoleOutput   *bool                  `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
-	LogLevel              *LogLevel              `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
-	MetricLevel           *MetricLevel           `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
-	TraceLevel            *TraceLevel            `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
-	FunctionDefinition    *string                `ddl:"parameter,no_equals" sql:"AS"`
+	create                     bool                      `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
+	Temporary                  *bool                     `ddl:"keyword" sql:"TEMPORARY"`
+	Secure                     *bool                     `ddl:"keyword" sql:"SECURE"`
+	function                   bool                      `ddl:"static" sql:"FUNCTION"`
+	IfNotExists                *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       SchemaObjectIdentifier    `ddl:"identifier"`
+	Arguments                  []FunctionArgument        `ddl:"list,must_parentheses"`
+	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	returns                    bool                      `ddl:"static" sql:"RETURNS"`
+	ResultDataTypeOld          DataType                  `ddl:"parameter,no_equals"`
+	ResultDataType             datatypes.DataType        `ddl:"parameter,no_quotes,no_equals"`
+	ReturnNullValues           *ReturnNullValues         `ddl:"keyword"`
+	languageScala              bool                      `ddl:"static" sql:"LANGUAGE SCALA"`
+	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
+	ReturnResultsBehavior      *ReturnResultsBehavior    `ddl:"keyword"`
+	RuntimeVersion             *string                   `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Imports                    []FunctionImport          `ddl:"parameter,parentheses" sql:"IMPORTS"`
+	Packages                   []FunctionPackage         `ddl:"parameter,parentheses" sql:"PACKAGES"`
+	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
+	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
+	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
+	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
+	EnableConsoleOutput        *bool                     `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel                   *LogLevel                 `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel                *MetricLevel              `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel                 *TraceLevel               `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	FunctionDefinition         *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // CreateForSQLFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#sql-handler.

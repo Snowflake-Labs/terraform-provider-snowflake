@@ -486,6 +486,16 @@ func (s *CreateForScalaFunctionRequest) WithPackages(Packages []FunctionPackageR
 	return s
 }
 
+func (s *CreateForScalaFunctionRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *CreateForScalaFunctionRequest {
+	s.ExternalAccessIntegrations = ExternalAccessIntegrations
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithSecrets(Secrets []SecretReference) *CreateForScalaFunctionRequest {
+	s.Secrets = Secrets
+	return s
+}
+
 func (s *CreateForScalaFunctionRequest) WithTargetPath(TargetPath string) *CreateForScalaFunctionRequest {
 	s.TargetPath = &TargetPath
 	return s

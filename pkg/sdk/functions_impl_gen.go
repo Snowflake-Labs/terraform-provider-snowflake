@@ -310,13 +310,15 @@ func (r *CreateForScalaFunctionRequest) toOpts() *CreateForScalaFunctionOptions 
 		RuntimeVersion:        r.RuntimeVersion,
 		Comment:               r.Comment,
 
-		Handler:             r.Handler,
-		TargetPath:          r.TargetPath,
-		EnableConsoleOutput: r.EnableConsoleOutput,
-		LogLevel:            r.LogLevel,
-		MetricLevel:         r.MetricLevel,
-		TraceLevel:          r.TraceLevel,
-		FunctionDefinition:  r.FunctionDefinition,
+		Handler:                    r.Handler,
+		ExternalAccessIntegrations: r.ExternalAccessIntegrations,
+		Secrets:                    r.Secrets,
+		TargetPath:                 r.TargetPath,
+		EnableConsoleOutput:        r.EnableConsoleOutput,
+		LogLevel:                   r.LogLevel,
+		MetricLevel:                r.MetricLevel,
+		TraceLevel:                 r.TraceLevel,
+		FunctionDefinition:         r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
