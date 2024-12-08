@@ -7,6 +7,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,7 +36,7 @@ func (c *FunctionClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectI
 	t.Helper()
 
 	return c.CreateWithRequest(t, id,
-		sdk.NewCreateForSQLFunctionRequest(
+		sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(
 			id.SchemaObjectId(),
 			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeInt)),
 			"SELECT 1",
@@ -49,7 +50,7 @@ func (c *FunctionClient) CreateSecure(t *testing.T, arguments ...sdk.DataType) *
 	id := c.ids.RandomSchemaObjectIdentifierWithArguments(arguments...)
 
 	return c.CreateWithRequest(t, id,
-		sdk.NewCreateForSQLFunctionRequest(
+		sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(
 			id.SchemaObjectId(),
 			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeInt)),
 			"SELECT 1",
@@ -58,27 +59,31 @@ func (c *FunctionClient) CreateSecure(t *testing.T, arguments ...sdk.DataType) *
 }
 
 func (c *FunctionClient) CreateSql(t *testing.T) (*sdk.Function, func()) {
+	dataType := testdatatypes.DataTypeFloat
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+	return c.CreateSqlWithIdentifierAndArgument(t, id.SchemaObjectId(), dataType)
+}
+
+func (c *FunctionClient) CreateSqlWithIdentifierAndArgument(t *testing.T, id sdk.SchemaObjectIdentifier, dataType datatypes.DataType) (*sdk.Function, func()) {
 	t.Helper()
 	ctx := context.Background()
 
+	idWithArgs := sdk.NewSchemaObjectIdentifierWithArgumentsInSchema(id.SchemaId(), id.Name(), sdk.LegacyDataTypeFrom(dataType))
 	argName := "x"
-	dataType := testdatatypes.DataTypeFloat
-	id := c.ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
-
 	definition := c.SampleSqlDefinition(t)
 	dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
 	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 	argument := sdk.NewFunctionArgumentRequest(argName, dataType)
-	request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
+	request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id, *returns, definition).
 		WithArguments([]sdk.FunctionArgumentRequest{*argument})
 
 	err := c.client().CreateForSQL(ctx, request)
 	require.NoError(t, err)
 
-	function, err := c.client().ShowByID(ctx, id)
+	function, err := c.client().ShowByID(ctx, idWithArgs)
 	require.NoError(t, err)
 
-	return function, c.DropFunctionFunc(t, id)
+	return function, c.DropFunctionFunc(t, idWithArgs)
 }
 
 func (c *FunctionClient) CreateSqlNoArgs(t *testing.T) (*sdk.Function, func()) {

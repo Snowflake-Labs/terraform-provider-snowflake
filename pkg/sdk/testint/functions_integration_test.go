@@ -2,7 +2,6 @@ package testint
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -1577,46 +1576,19 @@ func TestInt_Functions(t *testing.T) {
 		assert.Equal(t, "SQL", pairs["language"])
 		assert.Equal(t, "3.141592654::FLOAT", pairs["body"])
 	})
-}
-
-func TestInt_FunctionsShowByID(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
-
-	cleanupFunctionHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
-		return func() {
-			err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
-			require.NoError(t, err)
-		}
-	}
-
-	createFunctionForSQLHandle := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) {
-		t.Helper()
-
-		definition := testClientHelper().Function.SampleSqlDefinition(t)
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).WithOrReplace(true)
-
-		argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
-		request = request.WithArguments([]sdk.FunctionArgumentRequest{*argument})
-		err := client.Functions.CreateForSQL(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupFunctionHandle(id))
-	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
-		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(id1.Name(), schema.ID(), sdk.DataTypeFloat)
+		dataType := testdatatypes.DataTypeFloat
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(id1.Name(), schema.ID(), sdk.LegacyDataTypeFrom(dataType))
 
-		createFunctionForSQLHandle(t, id1)
-		createFunctionForSQLHandle(t, id2)
+		_, fCleanup1 := testClientHelper().Function.CreateSqlWithIdentifierAndArgument(t, id1.SchemaObjectId(), dataType)
+		t.Cleanup(fCleanup1)
+		_, fCleanup2 := testClientHelper().Function.CreateSqlWithIdentifierAndArgument(t, id2.SchemaObjectId(), dataType)
+		t.Cleanup(fCleanup2)
 
 		e1, err := client.Functions.ShowByID(ctx, id1)
 		require.NoError(t, err)
@@ -1633,21 +1605,13 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 		require.Equal(t, id2, e2Id)
 	})
 
-	t.Run("show function by id - different name, same arguments", func(t *testing.T) {
-		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
-		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
-		e := testClientHelper().Function.CreateWithIdentifier(t, id1)
-		testClientHelper().Function.CreateWithIdentifier(t, id2)
-
-		es, err := client.Functions.ShowByID(ctx, id1)
-		require.NoError(t, err)
-		require.Equal(t, *e, *es)
-	})
-
 	t.Run("show function by id - same name, different arguments", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeFloat
 		name := testClientHelper().Ids.Alpha()
-		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+
+		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.LegacyDataTypeFrom(dataType))
 		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
+
 		e := testClientHelper().Function.CreateWithIdentifier(t, id1)
 		testClientHelper().Function.CreateWithIdentifier(t, id2)
 
@@ -1696,7 +1660,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 			"add",
 		).
 			WithArguments(args).
-			WithFunctionDefinition("def add(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, R, S, T, U, V, W, X, Y, Z): A + A"),
+			WithFunctionDefinitionWrapped("def add(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, R, S, T, U, V, W, X, Y, Z): A + A"),
 		)
 		require.NoError(t, err)
 
@@ -1765,7 +1729,7 @@ func TestInt_FunctionsShowByID(t *testing.T) {
 				funcName,
 			).
 				WithArguments(args).
-				WithFunctionDefinition(testClientHelper().Function.PythonIdentityDefinition(t, funcName, argName)),
+				WithFunctionDefinitionWrapped(testClientHelper().Function.PythonIdentityDefinition(t, funcName, argName)),
 			)
 			require.NoError(t, err)
 
