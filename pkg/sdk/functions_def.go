@@ -180,6 +180,7 @@ var FunctionsDef = g.NewInterface(
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
 ).CustomOperation(
+	// TODO [this PR]: runtime version required
 	"CreateForScala",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-function#scala-handler",
 	g.NewQueryStruct("CreateForScala").

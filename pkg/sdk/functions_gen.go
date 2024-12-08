@@ -168,12 +168,12 @@ type CreateForScalaFunctionOptions struct {
 	Imports               []FunctionImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
 	Packages              []FunctionPackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
 	Handler               string                 `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	TargetPath            *string
-	EnableConsoleOutput   *bool        `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
-	LogLevel              *LogLevel    `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
-	MetricLevel           *MetricLevel `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
-	TraceLevel            *TraceLevel  `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
-	FunctionDefinition    *string      `ddl:"parameter,no_equals" sql:"AS"`
+	TargetPath            *string                `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
+	EnableConsoleOutput   *bool                  `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel              *LogLevel              `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel           *MetricLevel           `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel            *TraceLevel            `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	FunctionDefinition    *string                `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // CreateForSQLFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#sql-handler.

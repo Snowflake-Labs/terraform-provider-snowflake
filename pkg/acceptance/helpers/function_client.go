@@ -138,16 +138,16 @@ def %[1]s(%[2]s):
 `, funcName, argName)
 }
 
-func (c *FunctionClient) SampleScalaDefinition(t *testing.T) string {
+func (c *FunctionClient) SampleScalaDefinition(t *testing.T, className string, funcName string, argName string) string {
 	t.Helper()
 
-	return `
-	class Echo {
-		def echoVarchar(x : String): String = {
-			return x
+	return fmt.Sprintf(`
+	class %[1]s {
+		def %[2]s(%[3]s : String): String = {
+			return %[3]s
 		}
 	}
-`
+`, className, funcName, argName)
 }
 
 func (c *FunctionClient) SampleSqlDefinition(t *testing.T) string {
