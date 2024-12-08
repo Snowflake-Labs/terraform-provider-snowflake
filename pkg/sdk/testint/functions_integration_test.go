@@ -24,8 +24,14 @@ import (
 // TODO [next PR]: HasArgumentsRawFrom(functionId, arguments, return)
 // TODO [next PR]: extract show assertions with commons fields
 // TODO [next PR]: test confirming that runtime version is required for Scala function
-// TODO [this PR]: python aggregate func
+// TODO [next PR]: test create or replace with name change, args change
+// TODO [next PR]: test rename more (arg stays, can't change arg, rename to different schema)
+// TODO [next PR]: add test documenting that UNSET SECRETS does not work
+// TODO [next PR]: add test documenting [JAVA]: 391516 (42601): SQL compilation error: Cannot specify TARGET_PATH without a function BODY.
+// TODO [next PR]: test secure
+// TODO [next PR]: python aggregate func (100357 (P0000): Could not find accumulate method in function CVVEMHIT_06547800_08D6_DBCA_1AC7_5E422AFF8B39 with handler dump)
 // TODO [this PR]: clean stage in tests with targetPath
+// TODO [next PR]: add a test documenting that we can't set parameters in create (and revert adding these parameters directly in object...)
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -92,6 +98,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("JAVA").
 			HasIsMemoizable(false).
@@ -183,6 +191,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
 			HasIsExternalFunction(false).
 			HasLanguage("JAVA").
 			HasIsMemoizable(false).
@@ -197,8 +207,8 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			// TODO [this PR]: parse to identifier list
-			// TODO [this PR]: check multiple secrets (to know how to parse)
+			// TODO [next PR]: parse to identifier list
+			// TODO [next PR]: check multiple secrets (to know how to parse)
 			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasHandler(handler).
@@ -253,6 +263,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("JAVA").
 			HasIsMemoizable(false).
@@ -333,6 +345,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
 			HasIsExternalFunction(false).
 			HasLanguage("JAVA").
 			HasIsMemoizable(false).
@@ -399,6 +413,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("JAVASCRIPT").
 			HasIsMemoizable(false).
@@ -470,6 +486,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("JAVASCRIPT").
 			HasIsMemoizable(false).
@@ -537,6 +555,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("PYTHON").
 			HasIsMemoizable(false).
@@ -545,7 +565,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). //TODO [this PR]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). //TODO [next PR]: do we care about this whitespace?
 			HasLanguage("PYTHON").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -617,6 +637,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
 			HasIsExternalFunction(false).
 			HasLanguage("PYTHON").
 			HasIsMemoizable(false).
@@ -625,7 +647,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL"). //TODO [this PR]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL"). //TODO [next PR]: do we care about this whitespace?
 			HasLanguage("PYTHON").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
@@ -682,6 +704,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("PYTHON").
 			HasIsMemoizable(false).
@@ -690,7 +714,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). //TODO [this PR]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). //TODO [next PR]: do we care about this whitespace?
 			HasLanguage("PYTHON").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -759,6 +783,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
 			HasIsExternalFunction(false).
 			HasLanguage("PYTHON").
 			HasIsMemoizable(false).
@@ -767,7 +793,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL"). //TODO [this PR]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL"). //TODO [next PR]: do we care about this whitespace?
 			HasLanguage("PYTHON").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
@@ -827,6 +853,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("SCALA").
 			HasIsMemoizable(false).
@@ -915,6 +943,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
 			HasIsExternalFunction(false).
 			HasLanguage("SCALA").
 			HasIsMemoizable(false).
@@ -981,6 +1011,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("SCALA").
 			HasIsMemoizable(false).
@@ -1059,6 +1091,8 @@ func TestInt_Functions(t *testing.T) {
 			HasValidForClustering(false).
 			HasIsSecure(false).
 			HasIsExternalFunction(false).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
 			HasLanguage("SCALA").
 			HasIsMemoizable(false).
 			HasIsDataMetric(false),
@@ -1123,6 +1157,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("SQL").
 			HasIsMemoizable(false).
@@ -1194,6 +1230,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("SQL").
 			HasIsMemoizable(true).
@@ -1258,6 +1296,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
+			HasExternalAccessIntegrations("").
+			HasSecrets("").
 			HasIsExternalFunction(false).
 			HasLanguage("SQL").
 			HasIsMemoizable(false).
@@ -1283,6 +1323,37 @@ func TestInt_Functions(t *testing.T) {
 		)
 
 		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("show parameters", func(t *testing.T) {
+		f, fCleanup := testClientHelper().Function.CreateSql(t)
+		t.Cleanup(fCleanup)
+		id := f.ID()
+
+		param, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeFunction, Name: id})
+		require.NoError(t, err)
+		assert.Equal(t, string(sdk.LogLevelOff), param.Value)
+
+		parameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+			In: &sdk.ParametersIn{
+				Function: id,
+			},
+		})
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		// check that ShowParameters on function level works too
+		parameters, err = client.Functions.ShowParameters(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1366,7 +1437,9 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.Function(t, id).
 			HasName(id.Name()).
-			HasDescription(sdk.DefaultFunctionComment),
+			HasDescription(sdk.DefaultFunctionComment).
+			HasExternalAccessIntegrations("[]").
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())),
 		)
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
@@ -1418,13 +1491,7 @@ func TestInt_Functions(t *testing.T) {
 			HasDescription("new comment"),
 		)
 
-		// TODO [this PR]: add a test documenting that we can't set parameters in create (and revert adding these parameters directly in object...)
 		assertParametersSet(t, objectparametersassert.FunctionParameters(t, id))
-
-		// check that ShowParameters works too
-		parameters, err := client.Functions.ShowParameters(ctx, id)
-		require.NoError(t, err)
-		assertParametersSet(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters))
 
 		unsetRequest := sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().
 			WithEnableConsoleOutput(true).

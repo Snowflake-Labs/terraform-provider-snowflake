@@ -17,3 +17,14 @@ func (a *FunctionAssert) HasCreatedOnNotEmpty() *FunctionAssert {
 	})
 	return a
 }
+
+func (a *FunctionAssert) HasExternalAccessIntegrationsNil() *FunctionAssert {
+	a.AddAssertion(func(t *testing.T, o *sdk.Function) error {
+		t.Helper()
+		if o.ExternalAccessIntegrations != nil {
+			return fmt.Errorf("expected external_access_integrations to be nil but was: %v", *o.ExternalAccessIntegrations)
+		}
+		return nil
+	})
+	return a
+}

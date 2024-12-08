@@ -1489,7 +1489,6 @@ func (v *parameters) ShowUserParameter(ctx context.Context, parameter UserParame
 	return parameters[0], nil
 }
 
-// TODO [this PR]: test for functions
 func (v *parameters) ShowObjectParameter(ctx context.Context, parameter ObjectParameter, object Object) (*Parameter, error) {
 	opts := &ShowParametersOptions{
 		Like: &Like{

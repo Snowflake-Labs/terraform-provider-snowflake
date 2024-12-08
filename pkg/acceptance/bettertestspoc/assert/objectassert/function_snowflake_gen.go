@@ -198,6 +198,34 @@ func (f *FunctionAssert) HasIsSecure(expected bool) *FunctionAssert {
 	return f
 }
 
+func (f *FunctionAssert) HasSecrets(expected string) *FunctionAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.Function) error {
+		t.Helper()
+		if o.Secrets == nil {
+			return fmt.Errorf("expected secrets to have value; got: nil")
+		}
+		if *o.Secrets != expected {
+			return fmt.Errorf("expected secrets: %v; got: %v", expected, *o.Secrets)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionAssert) HasExternalAccessIntegrations(expected string) *FunctionAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.Function) error {
+		t.Helper()
+		if o.ExternalAccessIntegrations == nil {
+			return fmt.Errorf("expected external access integrations to have value; got: nil")
+		}
+		if *o.ExternalAccessIntegrations != expected {
+			return fmt.Errorf("expected external access integrations: %v; got: %v", expected, *o.ExternalAccessIntegrations)
+		}
+		return nil
+	})
+	return f
+}
+
 func (f *FunctionAssert) HasIsExternalFunction(expected bool) *FunctionAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.Function) error {
 		t.Helper()
