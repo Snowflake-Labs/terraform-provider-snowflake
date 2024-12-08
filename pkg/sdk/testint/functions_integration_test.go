@@ -1292,47 +1292,11 @@ func TestInt_Functions(t *testing.T) {
 		)
 	})
 
-	assertFunction := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, secure bool, withArguments bool) {
-		t.Helper()
-
-		function, err := client.Functions.ShowByID(ctx, id)
-		require.NoError(t, err)
-
-		assert.NotEmpty(t, function.CreatedOn)
-		assert.Equal(t, id.Name(), function.Name)
-		assert.Equal(t, false, function.IsBuiltin)
-		assert.Equal(t, false, function.IsAggregate)
-		assert.Equal(t, false, function.IsAnsi)
-		if withArguments {
-			assert.Equal(t, 1, function.MinNumArguments)
-			assert.Equal(t, 1, function.MaxNumArguments)
-		} else {
-			assert.Equal(t, 0, function.MinNumArguments)
-			assert.Equal(t, 0, function.MaxNumArguments)
-		}
-		assert.NotEmpty(t, function.ArgumentsRaw)
-		assert.NotEmpty(t, function.ArgumentsOld)
-		assert.NotEmpty(t, function.Description)
-		assert.NotEmpty(t, function.CatalogName)
-		assert.Equal(t, false, function.IsTableFunction)
-		assert.Equal(t, false, function.ValidForClustering)
-		assert.Equal(t, secure, function.IsSecure)
-		assert.Equal(t, false, function.IsExternalFunction)
-		assert.Equal(t, "SQL", function.Language)
-		assert.Equal(t, false, function.IsMemoizable)
-	}
-
-	createFunctionForSQLHandle := func(t *testing.T, cleanup bool, withArguments bool) *sdk.Function {
-		f, fCleanup := testClientHelper().Function.CreateSql(t)
-		t.Cleanup(fCleanup)
-		return f
-	}
-
 	t.Run("alter function: rename", func(t *testing.T) {
 		f, fCleanup := testClientHelper().Function.CreateSql(t)
 		t.Cleanup(fCleanup)
-
 		id := f.ID()
+
 		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(id.ArgumentDataTypes()...)
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithRenameTo(nid.SchemaObjectId()))
 		require.NoError(t, err)
@@ -1349,7 +1313,6 @@ func TestInt_Functions(t *testing.T) {
 	t.Run("alter function: set and unset all for Java", func(t *testing.T) {
 		f, fCleanup := testClientHelper().Function.CreateJava(t)
 		t.Cleanup(fCleanup)
-
 		id := f.ID()
 
 		assertions.AssertThatObject(t, objectassert.Function(t, id).
@@ -1436,7 +1399,6 @@ func TestInt_Functions(t *testing.T) {
 	t.Run("alter function: set and unset all for SQL", func(t *testing.T) {
 		f, fCleanup := testClientHelper().Function.CreateSql(t)
 		t.Cleanup(fCleanup)
-
 		id := f.ID()
 
 		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
@@ -1491,35 +1453,36 @@ func TestInt_Functions(t *testing.T) {
 		)
 	})
 
-	t.Run("alter function: set secure", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
-
+	t.Run("alter function: set and unset secure", func(t *testing.T) {
+		f, fCleanup := testClientHelper().Function.CreateSql(t)
+		t.Cleanup(fCleanup)
 		id := f.ID()
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, f).
+			HasIsSecure(false),
+		)
+
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetSecure(true))
 		require.NoError(t, err)
-		assertFunction(t, id, true, true)
-	})
 
-	t.Run("alter function: set secure with no arguments", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
-		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetSecure(true))
+		assertions.AssertThatObject(t, objectassert.Function(t, id).
+			HasIsSecure(true),
+		)
+
+		err = client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetSecure(true))
 		require.NoError(t, err)
-		assertFunction(t, id, true, true)
+
+		assertions.AssertThatObject(t, objectassert.Function(t, id).
+			HasIsSecure(false),
+		)
 	})
 
-	t.Run("alter function: unset secure", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
+	t.Run("show function: without like", func(t *testing.T) {
+		f1, fCleanup := testClientHelper().Function.CreateSql(t)
+		t.Cleanup(fCleanup)
 
-		id := f.ID()
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetSecure(true))
-		require.NoError(t, err)
-		assertFunction(t, id, false, true)
-	})
-
-	t.Run("show function for SQL: without like", func(t *testing.T) {
-		f1 := createFunctionForSQLHandle(t, true, true)
-		f2 := createFunctionForSQLHandle(t, true, true)
+		f2, fCleanup2 := testClientHelper().Function.CreateSql(t)
+		t.Cleanup(fCleanup2)
 
 		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest())
 		require.NoError(t, err)
@@ -1528,9 +1491,12 @@ func TestInt_Functions(t *testing.T) {
 		require.Contains(t, functions, *f2)
 	})
 
-	t.Run("show function for SQL: with like", func(t *testing.T) {
-		f1 := createFunctionForSQLHandle(t, true, true)
-		f2 := createFunctionForSQLHandle(t, true, true)
+	t.Run("show function: with like", func(t *testing.T) {
+		f1, fCleanup := testClientHelper().Function.CreateSql(t)
+		t.Cleanup(fCleanup)
+
+		f2, fCleanup2 := testClientHelper().Function.CreateSql(t)
+		t.Cleanup(fCleanup2)
 
 		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest().WithLike(sdk.Like{Pattern: &f1.Name}))
 		require.NoError(t, err)
@@ -1540,40 +1506,76 @@ func TestInt_Functions(t *testing.T) {
 		require.NotContains(t, functions, *f2)
 	})
 
-	t.Run("show function for SQL: no matches", func(t *testing.T) {
-		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest().WithLike(sdk.Like{Pattern: sdk.String("non-existing-id-pattern")}))
+	t.Run("show function: no matches", func(t *testing.T) {
+		functions, err := client.Functions.Show(ctx, sdk.NewShowFunctionRequest().
+			WithIn(sdk.ExtendedIn{In: sdk.In{Schema: testClientHelper().Ids.SchemaId()}}).
+			WithLike(sdk.Like{Pattern: sdk.String(NonExistingSchemaObjectIdentifier.Name())}))
 		require.NoError(t, err)
 		require.Equal(t, 0, len(functions))
 	})
 
-	t.Run("describe function for SQL", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, true)
+	t.Run("describe function: for Java - minimal", func(t *testing.T) {
+		f, fCleanup := testClientHelper().Function.CreateJava(t)
+		t.Cleanup(fCleanup)
+		id := f.ID()
 
-		details, err := client.Functions.Describe(ctx, f.ID())
+		details, err := client.Functions.Describe(ctx, id)
 		require.NoError(t, err)
-		pairs := make(map[string]string)
+		assert.Len(t, details, 11)
+
+		pairs := make(map[string]*string)
 		for _, detail := range details {
-			pairs[detail.Property] = *detail.Value
+			pairs[detail.Property] = detail.Value
 		}
-		require.Equal(t, "SQL", pairs["language"])
-		require.Equal(t, "FLOAT", pairs["returns"])
-		require.Equal(t, "3.141592654::FLOAT", pairs["body"])
-		require.Equal(t, "(X FLOAT)", pairs["signature"])
+		assert.Equal(t, "(x VARCHAR)", *pairs["signature"])
+		assert.Equal(t, "VARCHAR(100)", *pairs["returns"])
+		assert.Equal(t, "JAVA", *pairs["language"])
+		assert.NotEmpty(t, *pairs["body"])
+		assert.Equal(t, string(sdk.NullInputBehaviorCalledOnNullInput), *pairs["null handling"])
+		assert.Equal(t, string(sdk.VolatileTableKind), *pairs["volatility"])
+		assert.Nil(t, pairs["external_access_integration"])
+		assert.Nil(t, pairs["secrets"])
+		assert.Equal(t, "[]", *pairs["imports"])
+		assert.Equal(t, "TestFunc.echoVarchar", *pairs["handler"])
+		assert.Nil(t, pairs["runtime_version"])
 	})
 
-	t.Run("describe function for SQL: no arguments", func(t *testing.T) {
-		f := createFunctionForSQLHandle(t, true, false)
+	t.Run("describe function: for SQL - with arguments", func(t *testing.T) {
+		f, fCleanup := testClientHelper().Function.CreateSql(t)
+		t.Cleanup(fCleanup)
+		id := f.ID()
 
-		details, err := client.Functions.Describe(ctx, f.ID())
+		details, err := client.Functions.Describe(ctx, id)
 		require.NoError(t, err)
+		assert.Len(t, details, 4)
+
 		pairs := make(map[string]string)
 		for _, detail := range details {
 			pairs[detail.Property] = *detail.Value
 		}
-		require.Equal(t, "SQL", pairs["language"])
-		require.Equal(t, "FLOAT", pairs["returns"])
-		require.Equal(t, "3.141592654::FLOAT", pairs["body"])
-		require.Equal(t, "()", pairs["signature"])
+		assert.Equal(t, "(x FLOAT)", pairs["signature"])
+		assert.Equal(t, "FLOAT", pairs["returns"])
+		assert.Equal(t, "SQL", pairs["language"])
+		assert.Equal(t, "3.141592654::FLOAT", pairs["body"])
+	})
+
+	t.Run("describe function: for SQL - no arguments", func(t *testing.T) {
+		f, fCleanup := testClientHelper().Function.CreateSqlNoArgs(t)
+		t.Cleanup(fCleanup)
+		id := f.ID()
+
+		details, err := client.Functions.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Len(t, details, 4)
+
+		pairs := make(map[string]string)
+		for _, detail := range details {
+			pairs[detail.Property] = *detail.Value
+		}
+		assert.Equal(t, "()", pairs["signature"])
+		assert.Equal(t, "FLOAT", pairs["returns"])
+		assert.Equal(t, "SQL", pairs["language"])
+		assert.Equal(t, "3.141592654::FLOAT", pairs["body"])
 	})
 }
 

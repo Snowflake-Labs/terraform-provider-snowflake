@@ -81,6 +81,28 @@ func (c *FunctionClient) CreateSql(t *testing.T) (*sdk.Function, func()) {
 	return function, c.DropFunctionFunc(t, id)
 }
 
+func (c *FunctionClient) CreateSqlNoArgs(t *testing.T) (*sdk.Function, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	dataType := testdatatypes.DataTypeFloat
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments()
+
+	definition := c.SampleSqlDefinition(t)
+	dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+	request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition)
+
+	err := c.client().CreateForSQL(ctx, request)
+	require.NoError(t, err)
+	t.Cleanup(c.DropFunctionFunc(t, id))
+
+	function, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return function, c.DropFunctionFunc(t, id)
+}
+
 func (c *FunctionClient) CreateJava(t *testing.T) (*sdk.Function, func()) {
 	t.Helper()
 	ctx := context.Background()
