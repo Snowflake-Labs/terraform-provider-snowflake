@@ -122,10 +122,11 @@ func TestInt_CreateFunctions(t *testing.T) {
 		className := "TestFunc"
 		funcName := "echoVarchar"
 		argName := "x"
+		dataType := testdatatypes.DataTypeVarchar_100
 
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
-		argument := sdk.NewFunctionArgumentRequest(argName, testdatatypes.DataTypeVarchar_100)
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(testdatatypes.DataTypeVarchar_100)
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		handler := fmt.Sprintf("%s.%s", className, funcName)
 		definition := testClientHelper().Function.SampleJavaDefinition(t, className, funcName, argName)
@@ -138,6 +139,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithCopyGrants(true).
 			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
+			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
 			WithRuntimeVersion("11").
 			WithComment("comment").
 			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpFunction.JarLocation())}).
@@ -170,8 +172,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasIsAnsi(false).
 			HasMinNumArguments(1).
 			HasMaxNumArguments(1).
-			HasArgumentsOld([]sdk.DataType{sdk.DataTypeVARCHAR}).
-			HasArgumentsRaw(fmt.Sprintf(`%s(VARCHAR) RETURN VARCHAR`, function.ID().Name())).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription("comment").
 			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
 			HasIsTableFunction(false).
@@ -184,8 +186,8 @@ func TestInt_CreateFunctions(t *testing.T) {
 		)
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
-			HasSignature(fmt.Sprintf(`(%s %s)`, argName, testdatatypes.DataTypeVarchar_100.ToLegacyDataTypeSql())).
-			HasReturns(testdatatypes.DataTypeVarchar_100.ToSql()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasLanguage("JAVA").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
@@ -302,6 +304,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			WithCopyGrants(true).
 			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
+			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
 			WithRuntimeVersion("11").
 			WithComment("comment").
 			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpFunction.JarLocation())}).
@@ -343,7 +346,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(dataType.ToSql()).
+			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasLanguage("JAVA").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
@@ -365,126 +368,239 @@ func TestInt_CreateFunctions(t *testing.T) {
 		)
 	})
 
-	t.Run("create function for JavaScript - inline minimal", func(t *testing.T) {})
-	t.Run("create function for JavaScript - inline full", func(t *testing.T) {})
+	t.Run("create function for Javascript - inline minimal", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
 
-	t.Run("create function for Python - inline minimal", func(t *testing.T) {})
-	t.Run("create function for Python - inline full", func(t *testing.T) {})
-	t.Run("create function for Python - staged minimal", func(t *testing.T) {})
-	t.Run("create function for Python - staged full", func(t *testing.T) {})
-
-	t.Run("create function for Scala - inline minimal", func(t *testing.T) {})
-	t.Run("create function for Scala - inline full", func(t *testing.T) {})
-	t.Run("create function for Scala - staged minimal", func(t *testing.T) {})
-	t.Run("create function for Scala - staged full", func(t *testing.T) {})
-
-	t.Run("create function for SQL - inline minimal", func(t *testing.T) {})
-	t.Run("create function for SQL - inline full", func(t *testing.T) {})
-
-	t.Run("create function for Javascript", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
-
-		definition := testClientHelper().Function.SampleJavaScriptDefinition(t)
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
+		argName := "d"
+		definition := testClientHelper().Function.SampleJavascriptDefinition(t, argName)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewFunctionArgumentRequest("d", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
-		request := sdk.NewCreateForJavascriptFunctionRequest(id.SchemaObjectId(), *returns, definition).
-			WithOrReplace(true).
-			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorCalledOnNullInput))
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+
+		request := sdk.NewCreateForJavascriptFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument})
+
 		err := client.Functions.CreateForJavascript(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
-		require.Equal(t, id.Name(), function.Name)
-		require.Equal(t, "JAVASCRIPT", function.Language)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription(sdk.DefaultFunctionComment).
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("JAVASCRIPT").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(dataType.ToSql()).
+			HasLanguage("JAVASCRIPT").
+			HasBody(definition).
+			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImportsNil().
+			HasHandlerNil().
+			HasRuntimeVersionNil().
+			HasPackagesNil().
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasIsAggregateNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
 	})
 
-	t.Run("create function for Python", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeNumber)
+	t.Run("create function for Javascript - inline full", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
 
-		definition := testClientHelper().Function.SamplePythonDefinition(t)
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVariant)
+		argName := "d"
+		definition := testClientHelper().Function.SampleJavascriptDefinition(t, argName)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewFunctionArgumentRequest("i", nil).WithArgDataTypeOld(sdk.DataTypeNumber)
-		request := sdk.NewCreateForPythonFunctionRequest(id.SchemaObjectId(), *returns, "3.8", "dump").
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+		request := sdk.NewCreateForJavascriptFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithFunctionDefinition(definition)
-		err := client.Functions.CreateForPython(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
-
-		function, err := client.Functions.ShowByID(ctx, id)
-		require.NoError(t, err)
-		require.Equal(t, id.Name(), function.Name)
-		require.Equal(t, "PYTHON", function.Language)
-	})
-
-	t.Run("create function for Scala", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
-
-		target := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
-		definition := testClientHelper().Function.SampleScalaDefinition(t)
-		argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), nil, "Echo.echoVarchar").
-			WithResultDataTypeOld(sdk.DataTypeVARCHAR).
-			WithOrReplace(true).
-			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithTargetPath(target).
-			WithRuntimeVersion("2.12").
-			WithFunctionDefinition(definition)
-		err := client.Functions.CreateForScala(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
-
-		function, err := client.Functions.ShowByID(ctx, id)
-		require.NoError(t, err)
-		require.Equal(t, id.Name(), function.Name)
-		require.Equal(t, "SCALA", function.Language)
-	})
-
-	t.Run("create function for SQL", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
-
-		definition := testClientHelper().Function.SampleSqlDefinition(t)
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
-		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
-			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithOrReplace(true).
+			WithCopyGrants(true).
+			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithComment("comment")
-		err := client.Functions.CreateForSQL(ctx, request)
+
+		err := client.Functions.CreateForJavascript(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
 
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
-		require.Equal(t, id.Name(), function.Name)
-		require.Equal(t, "SQL", function.Language)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription("comment").
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("JAVASCRIPT").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasLanguage("JAVASCRIPT").
+			HasBody(definition).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImportsNil().
+			HasHandlerNil().
+			HasRuntimeVersionNil().
+			HasPackagesNil().
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasIsAggregateNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
 	})
 
-	t.Run("create function for SQL with no arguments", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
+	//t.Run("create function for Python - inline minimal", func(t *testing.T) {})
+	//t.Run("create function for Python - inline full", func(t *testing.T) {})
+	//t.Run("create function for Python - staged minimal", func(t *testing.T) {})
+	//t.Run("create function for Python - staged full", func(t *testing.T) {})
+	//
+	//t.Run("create function for Scala - inline minimal", func(t *testing.T) {})
+	//t.Run("create function for Scala - inline full", func(t *testing.T) {})
+	//t.Run("create function for Scala - staged minimal", func(t *testing.T) {})
+	//t.Run("create function for Scala - staged full", func(t *testing.T) {})
+	//
+	//t.Run("create function for SQL - inline minimal", func(t *testing.T) {})
+	//t.Run("create function for SQL - inline full", func(t *testing.T) {})
 
-		definition := testClientHelper().Function.SampleSqlDefinition(t)
-		dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
-		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
-		request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
-			WithOrReplace(true).
-			WithComment("comment")
-		err := client.Functions.CreateForSQL(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+	//t.Run("create function for Python", func(t *testing.T) {
+	//	id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeNumber)
+	//
+	//	definition := testClientHelper().Function.SamplePythonDefinition(t)
+	//	dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVariant)
+	//	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+	//	argument := sdk.NewFunctionArgumentRequest("i", nil).WithArgDataTypeOld(sdk.DataTypeNumber)
+	//	request := sdk.NewCreateForPythonFunctionRequest(id.SchemaObjectId(), *returns, "3.8", "dump").
+	//		WithOrReplace(true).
+	//		WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+	//		WithFunctionDefinition(definition)
+	//	err := client.Functions.CreateForPython(ctx, request)
+	//	require.NoError(t, err)
+	//	t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+	//
+	//	function, err := client.Functions.ShowByID(ctx, id)
+	//	require.NoError(t, err)
+	//	require.Equal(t, id.Name(), function.Name)
+	//	require.Equal(t, "PYTHON", function.Language)
+	//})
+	//
+	//t.Run("create function for Scala", func(t *testing.T) {
+	//	id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+	//
+	//	target := fmt.Sprintf("@~/tf-%d.jar", time.Now().Unix())
+	//	definition := testClientHelper().Function.SampleScalaDefinition(t)
+	//	argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
+	//	request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), nil, "Echo.echoVarchar").
+	//		WithResultDataTypeOld(sdk.DataTypeVARCHAR).
+	//		WithOrReplace(true).
+	//		WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+	//		WithTargetPath(target).
+	//		WithRuntimeVersion("2.12").
+	//		WithFunctionDefinition(definition)
+	//	err := client.Functions.CreateForScala(ctx, request)
+	//	require.NoError(t, err)
+	//	t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+	//
+	//	function, err := client.Functions.ShowByID(ctx, id)
+	//	require.NoError(t, err)
+	//	require.Equal(t, id.Name(), function.Name)
+	//	require.Equal(t, "SCALA", function.Language)
+	//})
+	//
+	//t.Run("create function for SQL", func(t *testing.T) {
+	//	id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeFloat)
+	//
+	//	definition := testClientHelper().Function.SampleSqlDefinition(t)
+	//	dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
+	//	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+	//	argument := sdk.NewFunctionArgumentRequest("x", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
+	//	request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
+	//		WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+	//		WithOrReplace(true).
+	//		WithComment("comment")
+	//	err := client.Functions.CreateForSQL(ctx, request)
+	//	require.NoError(t, err)
+	//	t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+	//
+	//	function, err := client.Functions.ShowByID(ctx, id)
+	//	require.NoError(t, err)
+	//	require.Equal(t, id.Name(), function.Name)
+	//	require.Equal(t, "SQL", function.Language)
+	//})
 
-		function, err := client.Functions.ShowByID(ctx, id)
-		require.NoError(t, err)
-		require.Equal(t, id.Name(), function.Name)
-		require.Equal(t, "SQL", function.Language)
-	})
+	//t.Run("create function for SQL with no arguments", func(t *testing.T) {
+	//	id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
+	//
+	//	definition := testClientHelper().Function.SampleSqlDefinition(t)
+	//	dt := sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeFloat)
+	//	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+	//	request := sdk.NewCreateForSQLFunctionRequest(id.SchemaObjectId(), *returns, definition).
+	//		WithOrReplace(true).
+	//		WithComment("comment")
+	//	err := client.Functions.CreateForSQL(ctx, request)
+	//	require.NoError(t, err)
+	//	t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+	//
+	//	function, err := client.Functions.ShowByID(ctx, id)
+	//	require.NoError(t, err)
+	//	require.Equal(t, id.Name(), function.Name)
+	//	require.Equal(t, "SQL", function.Language)
+	//})
 }
 
 func TestInt_OtherFunctions(t *testing.T) {

@@ -110,20 +110,20 @@ func (c *FunctionClient) SampleJavaDefinition(t *testing.T, className string, fu
 `, className, funcName, argName)
 }
 
-func (c *FunctionClient) SampleJavaScriptDefinition(t *testing.T) string {
+func (c *FunctionClient) SampleJavascriptDefinition(t *testing.T, argName string) string {
 	t.Helper()
 
-	return `
-	if (D <= 0) {
+	return fmt.Sprintf(`
+	if (%[1]s <= 0) {
 		return 1;
 	} else {
 		var result = 1;
-		for (var i = 2; i <= D; i++) {
+		for (var i = 2; i <= %[1]s; i++) {
 			result = result * i;
 		}
 		return result;
 	}
-`
+`, argName)
 }
 
 func (c *FunctionClient) SamplePythonDefinition(t *testing.T) string {
