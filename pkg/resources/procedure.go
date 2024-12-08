@@ -267,7 +267,7 @@ func createJavaProcedure(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	handler := d.Get("handler").(string)
 	req := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, runtimeVersion, packages, handler)
-	req.WithProcedureDefinition(procedureDefinition)
+	req.WithProcedureDefinitionWrapped(procedureDefinition)
 	if len(args) > 0 {
 		req.WithArguments(args)
 	}
@@ -322,7 +322,7 @@ func createJavaScriptProcedure(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 	procedureDefinition := d.Get("statement").(string)
-	req := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), nil, procedureDefinition).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType))
+	req := sdk.NewCreateForJavaScriptProcedureRequestDefinitionWrapped(id.SchemaObjectId(), nil, procedureDefinition).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType))
 	if len(args) > 0 {
 		req.WithArguments(args)
 	}
@@ -379,7 +379,7 @@ func createScalaProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	handler := d.Get("handler").(string)
 	req := sdk.NewCreateForScalaProcedureRequest(id.SchemaObjectId(), *returns, runtimeVersion, packages, handler)
-	req.WithProcedureDefinition(procedureDefinition)
+	req.WithProcedureDefinitionWrapped(procedureDefinition)
 	if len(args) > 0 {
 		req.WithArguments(args)
 	}
@@ -433,7 +433,7 @@ func createSQLProcedure(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 	procedureDefinition := d.Get("statement").(string)
-	req := sdk.NewCreateForSQLProcedureRequest(id.SchemaObjectId(), *returns, procedureDefinition)
+	req := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, procedureDefinition)
 	if len(args) > 0 {
 		req.WithArguments(args)
 	}
@@ -490,7 +490,7 @@ func createPythonProcedure(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	handler := d.Get("handler").(string)
 	req := sdk.NewCreateForPythonProcedureRequest(id.SchemaObjectId(), *returns, runtimeVersion, packages, handler)
-	req.WithProcedureDefinition(procedureDefinition)
+	req.WithProcedureDefinitionWrapped(procedureDefinition)
 	if len(args) > 0 {
 		req.WithArguments(args)
 	}
@@ -573,7 +573,7 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 		switch desc.Property {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
-			args := strings.ReplaceAll(strings.ReplaceAll(desc.Value, "(", ""), ")", "")
+			args := strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "(", ""), ")", "")
 
 			if args != "" { // Do nothing for functions without arguments
 				argPairs := strings.Split(args, ", ")
@@ -617,19 +617,23 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 				return diag.FromErr(err)
 			}
 		case "packages":
-			packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", "")
-			if packagesString != "" { // Do nothing for Java / Python functions without packages
-				packages := strings.Split(packagesString, ",")
-				if err := d.Set("packages", packages); err != nil {
-					return diag.FromErr(err)
+			if desc.Value != nil {
+				packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", "")
+				if packagesString != "" { // Do nothing for Java / Python functions without packages
+					packages := strings.Split(packagesString, ",")
+					if err := d.Set("packages", packages); err != nil {
+						return diag.FromErr(err)
+					}
 				}
 			}
 		case "imports":
-			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", ""), " ", "")
-			if importsString != "" { // Do nothing for Java functions without imports
-				imports := strings.Split(importsString, ",")
-				if err := d.Set("imports", imports); err != nil {
-					return diag.FromErr(err)
+			if desc.Value != nil {
+				importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", ""), " ", "")
+				if importsString != "" { // Do nothing for Java functions without imports
+					imports := strings.Split(importsString, ",")
+					if err := d.Set("imports", imports); err != nil {
+						return diag.FromErr(err)
+					}
 				}
 			}
 		case "handler":

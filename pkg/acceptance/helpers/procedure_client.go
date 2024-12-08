@@ -37,7 +37,7 @@ func (c *ProcedureClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObject
 		argumentRequests[i] = *sdk.NewProcedureArgumentRequest(c.ids.Alpha(), nil).WithArgDataTypeOld(argumentDataType)
 	}
 	err := c.client().CreateForSQL(ctx,
-		sdk.NewCreateForSQLProcedureRequest(
+		sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(
 			id.SchemaObjectId(),
 			*sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeInt)),
 			`BEGIN RETURN 1; END`).WithArguments(argumentRequests),

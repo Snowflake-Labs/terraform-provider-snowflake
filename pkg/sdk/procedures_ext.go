@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 const DefaultProcedureComment = "user-defined procedure"
@@ -107,4 +109,43 @@ func (v *procedures) ShowParameters(ctx context.Context, id SchemaObjectIdentifi
 			Procedure: id,
 		},
 	})
+}
+
+func (s *CreateForJavaProcedureRequest) WithProcedureDefinitionWrapped(procedureDefinition string) *CreateForJavaProcedureRequest {
+	s.ProcedureDefinition = String(fmt.Sprintf(`$$%s$$`, procedureDefinition))
+	return s
+}
+
+func (s *CreateForPythonProcedureRequest) WithProcedureDefinitionWrapped(procedureDefinition string) *CreateForPythonProcedureRequest {
+	s.ProcedureDefinition = String(fmt.Sprintf(`$$%s$$`, procedureDefinition))
+	return s
+}
+
+func (s *CreateForScalaProcedureRequest) WithProcedureDefinitionWrapped(procedureDefinition string) *CreateForScalaProcedureRequest {
+	s.ProcedureDefinition = String(fmt.Sprintf(`$$%s$$`, procedureDefinition))
+	return s
+}
+
+func NewCreateForSQLProcedureRequestDefinitionWrapped(
+	name SchemaObjectIdentifier,
+	returns ProcedureSQLReturnsRequest,
+	procedureDefinition string,
+) *CreateForSQLProcedureRequest {
+	s := CreateForSQLProcedureRequest{}
+	s.name = name
+	s.Returns = returns
+	s.ProcedureDefinition = fmt.Sprintf(`$$%s$$`, procedureDefinition)
+	return &s
+}
+
+func NewCreateForJavaScriptProcedureRequestDefinitionWrapped(
+	name SchemaObjectIdentifier,
+	resultDataType datatypes.DataType,
+	procedureDefinition string,
+) *CreateForJavaScriptProcedureRequest {
+	s := CreateForJavaScriptProcedureRequest{}
+	s.name = name
+	s.ResultDataType = resultDataType
+	s.ProcedureDefinition = fmt.Sprintf(`$$%s$$`, procedureDefinition)
+	return &s
 }

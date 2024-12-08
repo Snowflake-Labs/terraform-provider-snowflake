@@ -56,7 +56,7 @@ func TestInt_Procedures(t *testing.T) {
 		request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, "FileReader.execute").
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
-			WithProcedureDefinition(definition)
+			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForJava(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -91,7 +91,7 @@ func TestInt_Procedures(t *testing.T) {
 		request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, "Filter.filterByRole").
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*arg1, *arg2}).
-			WithProcedureDefinition(definition)
+			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForJava(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -118,7 +118,7 @@ func TestInt_Procedures(t *testing.T) {
 					return "Failed: " + err; // Return a success/error indicator.
 				}`
 		argument := sdk.NewProcedureArgumentRequest("FLOAT_PARAM1", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
-		request := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), nil, definition).
+		request := sdk.NewCreateForJavaScriptProcedureRequestDefinitionWrapped(id.SchemaObjectId(), nil, definition).
 			WithResultDataTypeOld(sdk.DataTypeString).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
 			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorStrict)).
@@ -138,7 +138,7 @@ func TestInt_Procedures(t *testing.T) {
 		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name)
 
 		definition := `return 3.1415926;`
-		request := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), nil, definition).WithResultDataTypeOld(sdk.DataTypeFloat).WithNotNull(true).WithOrReplace(true)
+		request := sdk.NewCreateForJavaScriptProcedureRequestDefinitionWrapped(id.SchemaObjectId(), nil, definition).WithResultDataTypeOld(sdk.DataTypeFloat).WithNotNull(true).WithOrReplace(true)
 		err := client.Procedures.CreateForJavaScript(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -171,7 +171,7 @@ func TestInt_Procedures(t *testing.T) {
 		request := sdk.NewCreateForScalaProcedureRequest(id.SchemaObjectId(), *returns, "2.12", packages, "FileReader.execute").
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
-			WithProcedureDefinition(definition)
+			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForScala(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -207,7 +207,7 @@ func TestInt_Procedures(t *testing.T) {
 		request := sdk.NewCreateForScalaProcedureRequest(id.SchemaObjectId(), *returns, "2.12", packages, "Filter.filterByRole").
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*arg1, *arg2}).
-			WithProcedureDefinition(definition)
+			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForScala(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -239,7 +239,7 @@ def joblib_multiprocessing(session, i):
 		request := sdk.NewCreateForPythonProcedureRequest(id.SchemaObjectId(), *returns, "3.8", packages, "joblib_multiprocessing").
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
-			WithProcedureDefinition(definition)
+			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForPython(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -270,7 +270,7 @@ def filter_by_role(session, table_name, role):
 		request := sdk.NewCreateForPythonProcedureRequest(id.SchemaObjectId(), *returns, "3.8", packages, "filter_by_role").
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*arg1, *arg2}).
-			WithProcedureDefinition(definition)
+			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForPython(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -293,7 +293,7 @@ def filter_by_role(session, table_name, role):
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt).WithNotNull(true)
 		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForSQLProcedureRequest(id.SchemaObjectId(), *returns, definition).
+		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
 			WithOrReplace(true).
 			// Suddenly this is erroring out, when it used to not have an problem. Must be an error with the Snowflake API.
 			// Created issue in docs-discuss channel. https://snowflake.slack.com/archives/C6380540P/p1707511734666249
@@ -327,7 +327,7 @@ def filter_by_role(session, table_name, role):
 		returnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2})
 		returns := sdk.NewProcedureSQLReturnsRequest().WithTable(*returnsTable)
 		argument := sdk.NewProcedureArgumentRequest("id", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForSQLProcedureRequest(id.SchemaObjectId(), *returns, definition).
+		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
 			WithOrReplace(true).
 			// SNOW-1051627 todo: uncomment once null input behavior working again
 			// WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
@@ -389,7 +389,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt).WithNotNull(true)
 		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForSQLProcedureRequest(id.SchemaObjectId(), *returns, definition).
+		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
 			WithSecure(true).
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
@@ -510,7 +510,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		require.NoError(t, err)
 		pairs := make(map[string]string)
 		for _, detail := range details {
-			pairs[detail.Property] = detail.Value
+			pairs[detail.Property] = *detail.Value
 		}
 		require.Equal(t, "SQL", pairs["language"])
 		require.Equal(t, "CALLER", pairs["execute as"])
@@ -527,7 +527,7 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt).WithNotNull(true)
 		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForSQLProcedureRequest(id.SchemaObjectId(), *returns, definition).
+		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
 			WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
@@ -582,7 +582,7 @@ func TestInt_CallProcedure(t *testing.T) {
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt).WithNotNull(true)
 		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForSQLProcedureRequest(id.SchemaObjectId(), *returns, definition).
+		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
 			WithSecure(true).
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
@@ -634,7 +634,7 @@ func TestInt_CallProcedure(t *testing.T) {
 		request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, "Filter.filterByRole").
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*arg1, *arg2}).
-			WithProcedureDefinition(definition)
+			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForJava(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -668,7 +668,7 @@ func TestInt_CallProcedure(t *testing.T) {
 		request := sdk.NewCreateForScalaProcedureRequest(id.SchemaObjectId(), *returns, "2.12", packages, "Filter.filterByRole").
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*arg1, *arg2}).
-			WithProcedureDefinition(definition)
+			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForScala(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -695,7 +695,7 @@ func TestInt_CallProcedure(t *testing.T) {
 			return "Failed: " + err; // Return a success/error indicator.
 		}`
 		arg := sdk.NewProcedureArgumentRequest("FLOAT_PARAM1", nil).WithArgDataTypeOld(sdk.DataTypeFloat)
-		request := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), nil, definition).
+		request := sdk.NewCreateForJavaScriptProcedureRequestDefinitionWrapped(id.SchemaObjectId(), nil, definition).
 			WithResultDataTypeOld(sdk.DataTypeString).
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*arg}).
@@ -715,7 +715,7 @@ func TestInt_CallProcedure(t *testing.T) {
 		id := sdk.NewSchemaObjectIdentifierWithArguments(databaseId.Name(), schemaId.Name(), name)
 
 		definition := `return 3.1415926;`
-		request := sdk.NewCreateForJavaScriptProcedureRequest(id.SchemaObjectId(), nil, definition).WithResultDataTypeOld(sdk.DataTypeFloat).WithNotNull(true).WithOrReplace(true)
+		request := sdk.NewCreateForJavaScriptProcedureRequestDefinitionWrapped(id.SchemaObjectId(), nil, definition).WithResultDataTypeOld(sdk.DataTypeFloat).WithNotNull(true).WithOrReplace(true)
 		err := client.Procedures.CreateForJavaScript(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -741,7 +741,7 @@ def filter_by_role(session, name, role):
 		request := sdk.NewCreateForPythonProcedureRequest(id.SchemaObjectId(), *returns, "3.8", packages, "filter_by_role").
 			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*arg1, *arg2}).
-			WithProcedureDefinition(definition)
+			WithProcedureDefinitionWrapped(definition)
 		err := client.Procedures.CreateForPython(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupProcedureHandle(id))
@@ -976,7 +976,7 @@ func TestInt_ProceduresShowByID(t *testing.T) {
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt).WithNotNull(true)
 		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForSQLProcedureRequest(id.SchemaObjectId(), *returns, definition).
+		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
 			WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
 		err := client.Procedures.CreateForSQL(ctx, request)
@@ -1083,7 +1083,7 @@ func TestInt_ProceduresShowByID(t *testing.T) {
 				procName,
 			).
 				WithArguments(args).
-				WithProcedureDefinition(definition),
+				WithProcedureDefinitionWrapped(definition),
 			)
 			require.NoError(t, err)
 
@@ -1096,7 +1096,7 @@ func TestInt_ProceduresShowByID(t *testing.T) {
 			require.NoError(t, err)
 			pairs := make(map[string]string)
 			for _, detail := range details {
-				pairs[detail.Property] = detail.Value
+				pairs[detail.Property] = *detail.Value
 			}
 			assert.Equal(t, fmt.Sprintf("(%s %s)", argName, oldDataType), pairs["signature"])
 			assert.Equal(t, dataType.Canonical(), pairs["returns"])
