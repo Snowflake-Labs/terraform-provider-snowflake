@@ -59,9 +59,6 @@ func (opts *CreateForJavaFunctionOptions) validate() error {
 		if opts.TargetPath != nil {
 			errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
 		}
-		if len(opts.Packages) > 0 {
-			errs = append(errs, NewError("PACKAGES must be empty when AS is nil"))
-		}
 		if len(opts.Imports) == 0 {
 			errs = append(errs, NewError("IMPORTS must not be empty when AS is nil"))
 		}

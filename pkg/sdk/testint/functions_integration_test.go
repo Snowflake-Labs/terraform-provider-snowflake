@@ -227,11 +227,11 @@ func TestInt_CreateFunctions(t *testing.T) {
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		handler := tmpFunction.Handler()
-		targetPath := tmpFunction.JarLocation()
+		importPath := tmpFunction.JarLocation()
 
 		requestStaged := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
-			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(targetPath)})
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(importPath)})
 
 		err := client.Functions.CreateForJava(ctx, requestStaged)
 		require.NoError(t, err)
@@ -271,7 +271,7 @@ func TestInt_CreateFunctions(t *testing.T) {
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
-			HasImports(fmt.Sprintf(`[%s]`, targetPath)).
+			HasImports(fmt.Sprintf(`[%s]`, importPath)).
 			HasHandler(handler).
 			HasRuntimeVersionNil().
 			HasPackages(`[]`).
@@ -286,7 +286,84 @@ func TestInt_CreateFunctions(t *testing.T) {
 		)
 	})
 
-	t.Run("create function for Java - staged full", func(t *testing.T) {})
+	t.Run("create function for Java - staged full", func(t *testing.T) {
+		dataType := tmpFunction.ArgType
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		argName := "x"
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		handler := tmpFunction.Handler()
+
+		requestStaged := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
+			WithOrReplace(true).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithCopyGrants(true).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
+			WithRuntimeVersion("11").
+			WithComment("comment").
+			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpFunction.JarLocation())}).
+			WithPackages([]sdk.FunctionPackageRequest{
+				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:snowpark:1.14.0"),
+				*sdk.NewFunctionPackageRequest().WithPackage("com.snowflake:telemetry:0.1.0"),
+			}).
+			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
+			WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}})
+
+		err := client.Functions.CreateForJava(ctx, requestStaged)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription("comment").
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasIsExternalFunction(false).
+			HasLanguage("JAVA").
+			HasIsMemoizable(false).
+			HasIsDataMetric(false),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(dataType.ToSql()).
+			HasLanguage("JAVA").
+			HasBodyNil().
+			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasImports(fmt.Sprintf(`[%s]`, tmpFunction.JarLocation())).
+			HasHandler(handler).
+			HasRuntimeVersion("11").
+			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasIsAggregateNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
 
 	t.Run("create function for JavaScript - inline minimal", func(t *testing.T) {})
 	t.Run("create function for JavaScript - inline full", func(t *testing.T) {})
