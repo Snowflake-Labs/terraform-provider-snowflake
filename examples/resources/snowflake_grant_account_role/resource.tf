@@ -3,11 +3,11 @@
 ##################################
 
 resource "snowflake_account_role" "role" {
-  name = var.role_name
+  name = "ROLE"
 }
 
 resource "snowflake_account_role" "parent_role" {
-  name = var.parent_role_name
+  name = "PARENT_ROLE"
 }
 
 resource "snowflake_grant_account_role" "g" {
@@ -21,11 +21,11 @@ resource "snowflake_grant_account_role" "g" {
 ##################################
 
 resource "snowflake_account_role" "role" {
-  name = var.role_name
+  name = "ROLE"
 }
 
 resource "snowflake_user" "user" {
-  name = var.user_name
+  name = "USER"
 }
 
 resource "snowflake_grant_account_role" "g" {

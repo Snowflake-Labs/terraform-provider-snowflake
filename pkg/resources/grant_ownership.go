@@ -21,7 +21,7 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "The fully qualified name of the account role to which privileges will be granted.",
+		Description:      relatedResourceDescription("The fully qualified name of the account role to which privileges will be granted.", resources.AccountRole),
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{
@@ -33,7 +33,7 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "The fully qualified name of the database role to which privileges will be granted.",
+		Description:      relatedResourceDescription("The fully qualified name of the database role to which privileges will be granted.", resources.DatabaseRole),
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{
@@ -132,7 +132,7 @@ func grantOwnershipBulkOperationSchema(branchName string) map[string]*schema.Sch
 			Type:             schema.TypeString,
 			Optional:         true,
 			ForceNew:         true,
-			Description:      "The fully qualified name of the database.",
+			Description:      relatedResourceDescription("The fully qualified name of the database.", resources.Database),
 			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			DiffSuppressFunc: suppressIdentifierQuoting,
 			ExactlyOneOf: []string{
@@ -144,7 +144,7 @@ func grantOwnershipBulkOperationSchema(branchName string) map[string]*schema.Sch
 			Type:             schema.TypeString,
 			Optional:         true,
 			ForceNew:         true,
-			Description:      "The fully qualified name of the schema.",
+			Description:      relatedResourceDescription("The fully qualified name of the schema.", resources.Schema),
 			ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 			DiffSuppressFunc: suppressIdentifierQuoting,
 			ExactlyOneOf: []string{

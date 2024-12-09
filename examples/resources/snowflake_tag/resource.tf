@@ -12,5 +12,5 @@ resource "snowflake_tag" "tag" {
   schema           = "schema"
   comment          = "comment"
   allowed_values   = ["finance", "engineering", ""]
-  masking_policies = [snowfalke_masking_policy.masking_policy.fully_qualified_name]
+  masking_policies = [snowfalke_masking_policy.example.fully_qualified_name]
 }

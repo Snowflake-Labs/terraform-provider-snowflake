@@ -20,7 +20,7 @@ var grantDatabaseRoleSchema = map[string]*schema.Schema{
 	"database_role_name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "The fully qualified name of the database role which will be granted to share or parent role.",
+		Description:      relatedResourceDescription("The fully qualified name of the database role which will be granted to share or parent role.", resources.DatabaseRole),
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
@@ -28,7 +28,7 @@ var grantDatabaseRoleSchema = map[string]*schema.Schema{
 	"parent_role_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "The fully qualified name of the parent account role which will create a parent-child relationship between the roles.",
+		Description:      relatedResourceDescription("The fully qualified name of the parent account role which will create a parent-child relationship between the roles.", resources.AccountRole),
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
@@ -41,7 +41,7 @@ var grantDatabaseRoleSchema = map[string]*schema.Schema{
 	"parent_database_role_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "The fully qualified name of the parent database role which will create a parent-child relationship between the roles.",
+		Description:      relatedResourceDescription("The fully qualified name of the parent database role which will create a parent-child relationship between the roles.", resources.DatabaseRole),
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
@@ -54,7 +54,7 @@ var grantDatabaseRoleSchema = map[string]*schema.Schema{
 	"share_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "The fully qualified name of the share on which privileges will be granted.",
+		Description:      relatedResourceDescription("The fully qualified name of the share on which privileges will be granted.", resources.Share),
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,

@@ -275,7 +275,7 @@ func RecreateWhenStreamIsStale() schema.CustomizeDiffFunc {
 func RecreateWhenResourceBoolFieldChangedExternally(boolField string, wantValue bool) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get(boolField); n != nil {
-			logging.DebugLogger.Printf("[DEBUG] new external value for %v: %v\n", boolField, n.(bool))
+			logging.DebugLogger.Printf("[DEBUG] new external value for %v: %v, recreating the resource...\n", boolField, n.(bool))
 
 			if n.(bool) != wantValue {
 				return errors.Join(diff.SetNew(boolField, wantValue), diff.ForceNew(boolField))

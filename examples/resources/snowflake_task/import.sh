@@ -1,2 +1,1 @@
-# format is database name | schema name | task name
-terraform import snowflake_task.example 'dbName|schemaName|taskName'
+terraform import snowflake_task.example '"<database_name>"."<schema_name>"."<task_name>"'

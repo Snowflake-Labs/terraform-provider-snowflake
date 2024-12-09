@@ -23,5 +23,6 @@ variable "masking_name" {
 }
 
 variable "masking_using" {
-  type = list(string)
+  type    = list(string)
+  default = null
 }

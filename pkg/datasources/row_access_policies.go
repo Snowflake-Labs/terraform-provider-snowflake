@@ -117,7 +117,7 @@ func RowAccessPolicies() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: TrackingReadWrapper(datasources.RowAccessPolicies, ReadRowAccessPolicies),
 		Schema:      rowAccessPoliciesSchema,
-		Description: "Datasource used to get details of filtered row access policies. Filtering is aligned with the current possibilities for [SHOW ROW ACCESS POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-row-access-policies) query. The results of SHOW and DESCRIBE are encapsulated in one output collection `row_access_policies`.",
+		Description: "Data source used to get details of filtered row access policies. Filtering is aligned with the current possibilities for [SHOW ROW ACCESS POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-row-access-policies) query. The results of SHOW and DESCRIBE are encapsulated in one output collection `row_access_policies`.",
 	}
 }
 

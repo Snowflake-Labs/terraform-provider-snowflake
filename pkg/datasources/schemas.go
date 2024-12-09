@@ -131,7 +131,7 @@ func Schemas() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: TrackingReadWrapper(datasources.Schemas, ReadSchemas),
 		Schema:      schemasSchema,
-		Description: "Datasource used to get details of filtered schemas. Filtering is aligned with the current possibilities for [SHOW SCHEMAS](https://docs.snowflake.com/en/sql-reference/sql/show-schemas) query. The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.",
+		Description: "Data source used to get details of filtered schemas. Filtering is aligned with the current possibilities for [SHOW SCHEMAS](https://docs.snowflake.com/en/sql-reference/sql/show-schemas) query. The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.",
 	}
 }
 

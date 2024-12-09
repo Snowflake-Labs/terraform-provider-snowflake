@@ -10,10 +10,9 @@ resource "snowflake_database" "primary" {
   comment      = "my standard database"
 
   data_retention_time_in_days                   = 10
-  data_retention_time_in_days_save              = 10
   max_data_extension_time_in_days               = 20
-  external_volume                               = "<external_volume_name>"
-  catalog                                       = "<catalog_name>"
+  external_volume                               = snowflake_external_volume.example.fully_qualified_name
+  catalog                                       = snowflake_catalog.example.fully_qualified_name
   replace_invalid_characters                    = false
   default_ddl_collation                         = "en_US"
   storage_serialization_policy                  = "COMPATIBLE"
@@ -40,11 +39,11 @@ resource "snowflake_database" "primary" {
 locals {
   replication_configs = [
     {
-      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      account_identifier = "\"<secondary_account_organization_1_name>\".\"<secondary_account_1_name>\""
       with_failover      = true
     },
     {
-      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      account_identifier = "\"<secondary_account_organization_2_name>\".\"<secondary_account_2_name>\""
       with_failover      = true
     },
   ]
@@ -52,10 +51,13 @@ locals {
 
 resource "snowflake_database" "primary" {
   name     = "database_name"
-  for_each = local.replication_configs
+  for_each = { for rc in local.replication_configs : rc.account_identifier => rc }
 
   replication {
-    enable_to_account    = each.value
+    enable_to_account {
+      account_identifier = each.value.account_identifier
+      with_failover      = each.value.with_failover
+    }
     ignore_edition_check = true
   }
 }

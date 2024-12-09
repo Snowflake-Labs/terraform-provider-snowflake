@@ -2,14 +2,17 @@
 page_title: "snowflake_roles Data Source - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Datasource used to get details of filtered roles. Filtering is aligned with the current possibilities for SHOW ROLES https://docs.snowflake.com/en/sql-reference/sql/show-roles query (like and in_class are all supported). The results of SHOW are encapsulated in one output collection.
+  Data source used to get details of filtered roles. Filtering is aligned with the current possibilities for SHOW ROLES https://docs.snowflake.com/en/sql-reference/sql/show-roles query (like and in_class are all supported). The results of SHOW are encapsulated in one output collection.
 ---
 
 !> **V1 release candidate** This datasource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the data source if needed. Any errors reported will be resolved with a higher priority. We encourage checking this data source out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+<!-- TODO(SNOW-1844996): Remove this note.-->
+-> **Note** Fields `STARTS WITH` and `LIMIT` are currently missing. They will be added in the future.
+
 # snowflake_roles (Data Source)
 
-Datasource used to get details of filtered roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.
+Data source used to get details of filtered roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.
 
 ## Example Usage
 

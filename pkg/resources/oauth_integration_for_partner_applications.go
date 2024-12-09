@@ -83,7 +83,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		},
 		// TODO(SNOW-1517937): Check if can make optional
 		Required:         true,
-		Description:      "A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.",
+		Description:      relatedResourceDescription("A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.", resources.AccountRole),
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeListValueInDescribe("blocked_roles_list"),
 	},
 	"comment": {

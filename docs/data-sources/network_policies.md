@@ -2,14 +2,14 @@
 page_title: "snowflake_network_policies Data Source - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Datasource used to get details of filtered network policies. Filtering is aligned with the current possibilities for SHOW NETWORK POLICIES https://docs.snowflake.com/en/sql-reference/sql/show-network-policies query (like is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection.
+  Data source used to get details of filtered network policies. Filtering is aligned with the current possibilities for SHOW NETWORK POLICIES https://docs.snowflake.com/en/sql-reference/sql/show-network-policies query (like is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection.
 ---
 
 !> **V1 release candidate** This data source was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the data source if needed. Any errors reported will be resolved with a higher priority. We encourage checking this data source out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
 # snowflake_network_policies (Data Source)
 
-Datasource used to get details of filtered network policies. Filtering is aligned with the current possibilities for [SHOW NETWORK POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-network-policies) query (`like` is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection.
+Data source used to get details of filtered network policies. Filtering is aligned with the current possibilities for [SHOW NETWORK POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-network-policies) query (`like` is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection.
 
 ## Example Usage
 
@@ -43,7 +43,7 @@ output "only_show_output" {
 
 # Ensure the number of network policies is equal to at least one element (with the use of postcondition)
 data "snowflake_network_policies" "assert_with_postcondition" {
-  starts_with = "network-policy-name"
+  like = "network-policy-name"
   lifecycle {
     postcondition {
       condition     = length(self.network_policies) > 0

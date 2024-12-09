@@ -53,13 +53,13 @@ resource "snowflake_task" "test" {
   database      = "database"
   schema        = "schema"
   name          = "task"
-  warehouse     = "warehouse"
+  warehouse     = snowflake_warehouse.example.fully_qualified_name
   started       = true
   sql_statement = "select 1"
 
   config                      = "{\"key\":\"value\"}"
   allow_overlapping_execution = true
-  error_integration           = "<error_integration_name>"
+  error_integration           = snowflake_notification_integration.example.fully_qualified_name
   when                        = "SYSTEM$STREAM_HAS_DATA('<stream_name>')"
   comment                     = "complete task"
 

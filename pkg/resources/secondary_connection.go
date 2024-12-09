@@ -33,7 +33,7 @@ var secondaryConnectionSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "Specifies the identifier for a primary connection from which to create a replica (i.e. a secondary connection).",
+		Description:      relatedResourceDescription("Specifies the identifier for a primary connection from which to create a replica (i.e. a secondary connection).", resources.PrimaryConnection),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"comment": {

@@ -33,7 +33,7 @@ var apiAuthCommonSchema = map[string]*schema.Schema{
 	"oauth_client_secret": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Specifies the client secret for the OAuth application in the ServiceNow instance from the previous step. The connector uses this to request an access token from the ServiceNow instance.",
+		Description: externalChangesNotDetectedFieldDescription("Specifies the client secret for the OAuth application in the ServiceNow instance from the previous step. The connector uses this to request an access token from the ServiceNow instance."),
 	},
 	"oauth_token_endpoint": {
 		Type:        schema.TypeString,
