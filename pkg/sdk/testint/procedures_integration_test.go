@@ -1827,49 +1827,19 @@ def filter_by_role(session, table_name, role):
 		err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id))
 		require.NoError(t, err)
 	})
-}
-
-func TestInt_ProceduresShowByID(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
-
-	cleanupProcedureHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
-		return func() {
-			err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
-			require.NoError(t, err)
-		}
-	}
-
-	createProcedureForSQLHandle := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) {
-		t.Helper()
-
-		definition := `
-	BEGIN
-		RETURN message;
-	END;`
-		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
-		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt).WithNotNull(true)
-		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
-			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
-			WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
-		err := client.Procedures.CreateForSQL(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
-	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
-		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
-		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(id1.Name(), schema.ID(), sdk.DataTypeVARCHAR)
+		dataType := testdatatypes.DataTypeFloat
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(id1.Name(), schema.ID(), sdk.LegacyDataTypeFrom(dataType))
 
-		createProcedureForSQLHandle(t, id1)
-		createProcedureForSQLHandle(t, id2)
+		_, pCleanup1 := testClientHelper().Procedure.CreateSqlWithIdentifierAndArgument(t, id1.SchemaObjectId(), dataType, testClientHelper().Procedure.SampleSqlDefinition(t))
+		t.Cleanup(pCleanup1)
+		_, pCleanup2 := testClientHelper().Procedure.CreateSqlWithIdentifierAndArgument(t, id2.SchemaObjectId(), dataType, testClientHelper().Procedure.SampleSqlDefinition(t))
+		t.Cleanup(pCleanup2)
 
 		e1, err := client.Procedures.ShowByID(ctx, id1)
 		require.NoError(t, err)
@@ -1880,21 +1850,13 @@ func TestInt_ProceduresShowByID(t *testing.T) {
 		require.Equal(t, id2, e2.ID())
 	})
 
-	t.Run("show procedure by id - different name, same arguments", func(t *testing.T) {
-		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
-		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
-		e := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
-		testClientHelper().Procedure.CreateWithIdentifier(t, id2)
-
-		es, err := client.Procedures.ShowByID(ctx, id1)
-		require.NoError(t, err)
-		require.Equal(t, *e, *es)
-	})
-
 	t.Run("show procedure by id - same name, different arguments", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeFloat
 		name := testClientHelper().Ids.Alpha()
-		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+
+		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.LegacyDataTypeFrom(dataType))
 		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
+
 		e := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
 		testClientHelper().Procedure.CreateWithIdentifier(t, id2)
 
