@@ -13,7 +13,7 @@ There is an example file ready for generation [database_role_def.go](example/dat
 - [database_role_gen_test.go](example/database_role_gen_test.go) - unit tests placeholders with guidance comments (at least for now)
 
 Note:
-- integration tests files are not generated and they have to be created manually in the `pkg/sdk/testint` directory
+- for now integration tests files are not generated and they have to be created manually in the `pkg/sdk/testint` directory
 
 ### How it works
 ##### Creating object generation definition
@@ -51,10 +51,6 @@ also adding small changes is very challenging, e.g. for new validation rule you 
 one new function, revert to old tests (the one with filled tests), copy new test case (of course we could add that one by hand
 but if we add one case, or modify more cases this becomes more challenging)
 - add support for Enums
-- generate `ShowID` function with 3 implementation variations (the last one is the rarest one and can be postponed)
-  - use `Show` function with Like
-  - use Show without any options and filter with Go for + if
-  - in some cases we could need more filters -> see alerts.go (but we can implement it later)
 - handle arrays
 - handle more validation types
 - write new `valueSet` function (see validations.go) that will have better defaults or more parameters that will determine
