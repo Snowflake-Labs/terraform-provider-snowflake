@@ -311,9 +311,10 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	functionDefinition := d.Get("statement").(string)
 	handler := d.Get("handler").(string)
 	var runtimeVersion string
-	// TODO [after review]: return error otherwise here
 	if v, ok := d.GetOk("runtime_version"); ok {
 		runtimeVersion = v.(string)
+	} else {
+		return diag.Errorf("Runtime version is required for Scala function")
 	}
 
 	// create request with required
@@ -571,7 +572,9 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 	for _, desc := range functionDetails {
-		// TODO [after review]: handle nil correctly here, also handle sets correctly here
+		if desc.Value == nil {
+			continue
+		}
 		switch desc.Property {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
@@ -592,15 +595,15 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 				}
 			}
 		case "null handling":
-			if err := d.Set("null_input_behavior", desc.Value); err != nil {
+			if err := d.Set("null_input_behavior", *desc.Value); err != nil {
 				diag.FromErr(err)
 			}
 		case "volatility":
-			if err := d.Set("return_behavior", desc.Value); err != nil {
+			if err := d.Set("return_behavior", *desc.Value); err != nil {
 				diag.FromErr(err)
 			}
 		case "body":
-			if err := d.Set("statement", desc.Value); err != nil {
+			if err := d.Set("statement", *desc.Value); err != nil {
 				diag.FromErr(err)
 			}
 		case "returns":
@@ -616,11 +619,11 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		case "language":
 			if snowflake.Contains(languages, strings.ToLower(*desc.Value)) {
-				if err := d.Set("language", desc.Value); err != nil {
+				if err := d.Set("language", *desc.Value); err != nil {
 					diag.FromErr(err)
 				}
 			} else {
-				log.Printf("[INFO] Unexpected language for function %v returned from Snowflake", desc.Value)
+				log.Printf("[INFO] Unexpected language for function %v returned from Snowflake", *desc.Value)
 			}
 		case "packages":
 			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", "")
@@ -639,19 +642,19 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 				}
 			}
 		case "handler":
-			if err := d.Set("handler", desc.Value); err != nil {
+			if err := d.Set("handler", *desc.Value); err != nil {
 				diag.FromErr(err)
 			}
 		case "target_path":
-			if err := d.Set("target_path", desc.Value); err != nil {
+			if err := d.Set("target_path", *desc.Value); err != nil {
 				diag.FromErr(err)
 			}
 		case "runtime_version":
-			if err := d.Set("runtime_version", desc.Value); err != nil {
+			if err := d.Set("runtime_version", *desc.Value); err != nil {
 				diag.FromErr(err)
 			}
 		default:
-			log.Printf("[INFO] Unexpected function property %v returned from Snowflake with value %v", desc.Property, desc.Value)
+			log.Printf("[INFO] Unexpected function property %v returned from Snowflake with value %v", desc.Property, *desc.Value)
 		}
 	}
 

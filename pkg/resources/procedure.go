@@ -570,6 +570,9 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 	for _, desc := range procedureDetails {
+		if desc.Value == nil {
+			continue
+		}
 		switch desc.Property {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
@@ -593,59 +596,55 @@ func ReadContextProcedure(ctx context.Context, d *schema.ResourceData, meta inte
 				}
 			}
 		case "null handling":
-			if err := d.Set("null_input_behavior", desc.Value); err != nil {
+			if err := d.Set("null_input_behavior", *desc.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "body":
-			if err := d.Set("statement", desc.Value); err != nil {
+			if err := d.Set("statement", *desc.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "execute as":
-			if err := d.Set("execute_as", desc.Value); err != nil {
+			if err := d.Set("execute_as", *desc.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "returns":
-			if err := d.Set("return_type", desc.Value); err != nil {
+			if err := d.Set("return_type", *desc.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "language":
-			if err := d.Set("language", desc.Value); err != nil {
+			if err := d.Set("language", *desc.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "runtime_version":
-			if err := d.Set("runtime_version", desc.Value); err != nil {
+			if err := d.Set("runtime_version", *desc.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "packages":
-			if desc.Value != nil {
-				packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", "")
-				if packagesString != "" { // Do nothing for Java / Python functions without packages
-					packages := strings.Split(packagesString, ",")
-					if err := d.Set("packages", packages); err != nil {
-						return diag.FromErr(err)
-					}
+			packagesString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", "")
+			if packagesString != "" { // Do nothing for Java / Python functions without packages
+				packages := strings.Split(packagesString, ",")
+				if err := d.Set("packages", packages); err != nil {
+					return diag.FromErr(err)
 				}
 			}
 		case "imports":
-			if desc.Value != nil {
-				importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", ""), " ", "")
-				if importsString != "" { // Do nothing for Java functions without imports
-					imports := strings.Split(importsString, ",")
-					if err := d.Set("imports", imports); err != nil {
-						return diag.FromErr(err)
-					}
+			importsString := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", ""), " ", "")
+			if importsString != "" { // Do nothing for Java functions without imports
+				imports := strings.Split(importsString, ",")
+				if err := d.Set("imports", imports); err != nil {
+					return diag.FromErr(err)
 				}
 			}
 		case "handler":
-			if err := d.Set("handler", desc.Value); err != nil {
+			if err := d.Set("handler", *desc.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		case "volatility":
-			if err := d.Set("return_behavior", desc.Value); err != nil {
+			if err := d.Set("return_behavior", *desc.Value); err != nil {
 				return diag.FromErr(err)
 			}
 		default:
-			log.Printf("[INFO] Unexpected procedure property %v returned from Snowflake with value %v", desc.Property, desc.Value)
+			log.Printf("[INFO] Unexpected procedure property %v returned from Snowflake with value %v", desc.Property, *desc.Value)
 		}
 	}
 
