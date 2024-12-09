@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -15,9 +16,10 @@ import (
 
 var accountParameterSchema = map[string]*schema.Schema{
 	"key": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		// TODO(after Janek's PR): validate the parameter name
 		Description: "Name of account parameter. Valid values are those in [account parameters](https://docs.snowflake.com/en/sql-reference/parameters.html#account-parameters).",
 	},
 	"value": {
@@ -42,7 +44,7 @@ func AccountParameter() *schema.Resource {
 }
 
 // CreateAccountParameter implements schema.CreateFunc.
-func CreateAccountParameter(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func CreateAccountParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
@@ -56,31 +58,30 @@ func CreateAccountParameter(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 // ReadAccountParameter implements schema.ReadFunc.
-func ReadAccountParameter(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ReadAccountParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	parameterName := d.Id()
 	parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(parameterName))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading account parameter err = %w", err))
 	}
-	err = d.Set("value", parameter.Value)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error setting account parameter err = %w", err))
-	}
-	err = d.Set("key", parameter.Key)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error setting account parameter err = %w", err))
+	errs := errors.Join(
+		d.Set("value", parameter.Value),
+		d.Set("key", parameter.Key),
+	)
+	if errs != nil {
+		return diag.FromErr(errs)
 	}
 	return nil
 }
 
 // UpdateAccountParameter implements schema.UpdateFunc.
-func UpdateAccountParameter(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateAccountParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	return CreateAccountParameter(ctx, d, meta)
 }
 
 // DeleteAccountParameter implements schema.DeleteFunc.
-func DeleteAccountParameter(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DeleteAccountParameter(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	key := d.Get("key").(string)
 	parameter := sdk.AccountParameter(key)
@@ -89,6 +90,7 @@ func DeleteAccountParameter(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(err)
 	}
 	defaultValue := defaultParameter.Default
+	// TODO: use unset
 	err = client.Parameters.SetAccountParameter(ctx, parameter, defaultValue)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error resetting account parameter err = %w", err))
