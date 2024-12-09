@@ -39,7 +39,7 @@ func TestInt_Procedures(t *testing.T) {
 	externalAccessIntegration, externalAccessIntegrationCleanup := testClientHelper().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
 
-	tmpJavaFunction := testClientHelper().CreateSampleJavaFunctionAndJar(t)
+	tmpJavaProcedure := testClientHelper().CreateSampleJavaProcedureAndJar(t)
 
 	t.Run("create procedure for Java - inline minimal", func(t *testing.T) {
 		className := "TestFunc"
@@ -137,7 +137,7 @@ func TestInt_Procedures(t *testing.T) {
 			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithComment("comment").
-			WithImports([]sdk.ProcedureImportRequest{*sdk.NewProcedureImportRequest(tmpJavaFunction.JarLocation())}).
+			WithImports([]sdk.ProcedureImportRequest{*sdk.NewProcedureImportRequest(tmpJavaProcedure.JarLocation())}).
 			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
 			WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}}).
 			WithTargetPath(targetPath).
@@ -181,11 +181,158 @@ func TestInt_Procedures(t *testing.T) {
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
 			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
-			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
+			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPath(targetPath).
+			HasInstalledPackagesNil().
+			HasExecuteAs("OWNER"),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("create function for Java - staged minimal", func(t *testing.T) {
+		dataType := tmpJavaProcedure.ArgType
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		argName := "x"
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
+		handler := tmpJavaProcedure.JavaHandler()
+		importPath := tmpJavaProcedure.JarLocation()
+		packages := []sdk.ProcedurePackageRequest{
+			*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0"),
+			*sdk.NewProcedurePackageRequest("com.snowflake:telemetry:0.1.0"),
+		}
+
+		requestStaged := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, handler).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithImports([]sdk.ProcedureImportRequest{*sdk.NewProcedureImportRequest(importPath)})
+
+		err := client.Procedures.CreateForJava(ctx, requestStaged)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription(sdk.DefaultProcedureComment).
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(dataType.ToSql()).
+			HasLanguage("JAVA").
+			HasBodyNil().
+			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImports(fmt.Sprintf(`[%s]`, importPath)).
+			HasHandler(handler).
+			HasRuntimeVersion("11").
+			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasExecuteAs("OWNER"),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("create function for Java - staged full", func(t *testing.T) {
+		dataType := tmpJavaProcedure.ArgType
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		argName := "x"
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType).
+			WithNotNull(true)
+		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
+		handler := tmpJavaProcedure.JavaHandler()
+		packages := []sdk.ProcedurePackageRequest{
+			*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0"),
+			*sdk.NewProcedurePackageRequest("com.snowflake:telemetry:0.1.0"),
+		}
+
+		requestStaged := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, handler).
+			WithOrReplace(true).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithCopyGrants(true).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
+			WithComment("comment").
+			WithImports([]sdk.ProcedureImportRequest{*sdk.NewProcedureImportRequest(tmpJavaProcedure.JarLocation())}).
+			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
+			WithSecrets([]sdk.SecretReference{{VariableName: "abc", Name: secretId}})
+
+		err := client.Procedures.CreateForJava(ctx, requestStaged)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription("comment").
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasLanguage("JAVA").
+			HasBodyNil().
+			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
+			HasHandler(handler).
+			HasRuntimeVersion("11").
+			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("OWNER"),
 		)

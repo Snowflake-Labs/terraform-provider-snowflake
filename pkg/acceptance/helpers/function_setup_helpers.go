@@ -54,6 +54,45 @@ func (c *TestClient) CreateSampleJavaFunctionAndJar(t *testing.T) *TmpFunction {
 	}
 }
 
+func (c *TestClient) CreateSampleJavaProcedureAndJar(t *testing.T) *TmpFunction {
+	t.Helper()
+	ctx := context.Background()
+
+	className := fmt.Sprintf("TestClassAbc%s", random.AlphaLowerN(3))
+	funcName := fmt.Sprintf("echoVarchar%s", random.AlphaLowerN(3))
+	argName := fmt.Sprintf("arg%s", random.AlphaLowerN(3))
+	dataType := testdatatypes.DataTypeVarchar_100
+
+	id := c.Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+	argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+	dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
+	handler := fmt.Sprintf("%s.%s", className, funcName)
+	definition := c.Procedure.SampleJavaDefinition(t, className, funcName, argName)
+	jarName := fmt.Sprintf("tf-%d-%s.jar", time.Now().Unix(), random.AlphaN(5))
+	targetPath := fmt.Sprintf("@~/%s", jarName)
+	packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0")}
+
+	request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, handler).
+		WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+		WithTargetPath(targetPath).
+		WithProcedureDefinitionWrapped(definition)
+
+	err := c.context.client.Procedures.CreateForJava(ctx, request)
+	require.NoError(t, err)
+	t.Cleanup(c.Procedure.DropProcedureFunc(t, id))
+	t.Cleanup(c.Stage.RemoveFromUserStageFunc(t, jarName))
+
+	return &TmpFunction{
+		FunctionId: id,
+		ClassName:  className,
+		FuncName:   funcName,
+		ArgName:    argName,
+		ArgType:    dataType,
+		JarName:    jarName,
+	}
+}
+
 func (c *TestClient) CreateSamplePythonFunctionAndModule(t *testing.T) *TmpFunction {
 	t.Helper()
 	ctx := context.Background()
