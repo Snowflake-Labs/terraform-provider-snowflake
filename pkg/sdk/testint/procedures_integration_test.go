@@ -1204,7 +1204,10 @@ func TestInt_Procedures(t *testing.T) {
 		)
 	})
 
+	// TODO [SNOW-1348103]: adjust or remove
 	t.Run("create procedure for Java: returns table", func(t *testing.T) {
+		t.Skipf("Skipped for now; left as inspiration for resource rework as part of SNOW-1348103")
+
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#specifying-return-column-names-and-types
 		name := "filter_by_role"
 		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
@@ -1239,7 +1242,10 @@ func TestInt_Procedures(t *testing.T) {
 		require.GreaterOrEqual(t, len(procedures), 1)
 	})
 
+	// TODO [SNOW-1348103]: adjust or remove
 	t.Run("create procedure for Javascript", func(t *testing.T) {
+		t.Skipf("Skipped for now; left as inspiration for resource rework as part of SNOW-1348103")
+
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript#basic-examples
 		name := "stproc1"
 		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeFloat)
@@ -1270,7 +1276,10 @@ func TestInt_Procedures(t *testing.T) {
 		require.GreaterOrEqual(t, len(procedures), 1)
 	})
 
+	// TODO [SNOW-1348103]: adjust or remove
 	t.Run("create procedure for Javascript: no arguments", func(t *testing.T) {
+		t.Skipf("Skipped for now; left as inspiration for resource rework as part of SNOW-1348103")
+
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript#basic-examples
 		name := "sp_pi"
 		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name)
@@ -1286,7 +1295,10 @@ func TestInt_Procedures(t *testing.T) {
 		require.GreaterOrEqual(t, len(procedures), 1)
 	})
 
+	// TODO [SNOW-1348103]: adjust or remove
 	t.Run("create procedure for Scala: returns result data type", func(t *testing.T) {
+		t.Skipf("Skipped for now; left as inspiration for resource rework as part of SNOW-1348103")
+
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-scala#reading-a-dynamically-specified-file-with-snowflakefile
 		name := "file_reader_scala_proc_snowflakefile"
 		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR)
@@ -1319,7 +1331,10 @@ func TestInt_Procedures(t *testing.T) {
 		require.GreaterOrEqual(t, len(procedures), 1)
 	})
 
+	// TODO [SNOW-1348103]: adjust or remove
 	t.Run("create procedure for Scala: returns table", func(t *testing.T) {
+		t.Skipf("Skipped for now; left as inspiration for resource rework as part of SNOW-1348103")
+
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-scala#specifying-return-column-names-and-types
 		name := "filter_by_role"
 		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
@@ -1355,7 +1370,10 @@ func TestInt_Procedures(t *testing.T) {
 		require.GreaterOrEqual(t, len(procedures), 1)
 	})
 
+	// TODO [SNOW-1348103]: adjust or remove
 	t.Run("create procedure for Python: returns result data type", func(t *testing.T) {
+		t.Skipf("Skipped for now; left as inspiration for resource rework as part of SNOW-1348103")
+
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-python#running-concurrent-tasks-with-worker-processes
 		name := "joblib_multiprocessing_proc"
 		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeInt)
@@ -1387,7 +1405,10 @@ def joblib_multiprocessing(session, i):
 		require.GreaterOrEqual(t, len(procedures), 1)
 	})
 
+	// TODO [SNOW-1348103]: adjust or remove
 	t.Run("create procedure for Python: returns table", func(t *testing.T) {
+		t.Skipf("Skipped for now; left as inspiration for resource rework as part of SNOW-1348103")
+
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-python#specifying-return-column-names-and-types
 		name := "filterByRole"
 		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
@@ -1418,7 +1439,10 @@ def filter_by_role(session, table_name, role):
 		require.GreaterOrEqual(t, len(procedures), 1)
 	})
 
+	// TODO [SNOW-1348103]: adjust or remove
 	t.Run("create procedure for SQL: returns result data type", func(t *testing.T) {
+		t.Skipf("Skipped for now; left as inspiration for resource rework as part of SNOW-1348103")
+
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-snowflake-scripting
 		name := "output_message"
 		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR)
@@ -1450,7 +1474,10 @@ def filter_by_role(session, table_name, role):
 		require.GreaterOrEqual(t, len(procedures), 1)
 	})
 
+	// TODO [SNOW-1348103]: adjust or remove
 	t.Run("create procedure for SQL: returns table", func(t *testing.T) {
+		t.Skipf("Skipped for now; left as inspiration for resource rework as part of SNOW-1348103")
+
 		name := "find_invoice_by_id"
 		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR)
 
