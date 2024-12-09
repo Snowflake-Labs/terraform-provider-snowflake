@@ -14,8 +14,8 @@
                 if r{{ .Path }} != nil {
             {{- end -}}
 
-            {{- if not .IsSlice }}
-                opts{{ .Path }} = {{ template "toOptsMapping" . -}}{{/* Recursive call */}}
+            {{- if not .IsSlice -}}
+                opts{{ .Path }} = {{ if .IsPointer }}&{{end}}{{ template "toOptsMapping" . -}}{{/* Recursive call */}}
             {{- else -}}
                 s := make({{ .Kind }}, len(r{{ .Path }}))
                 for i, v := range r{{ .Path }} {
