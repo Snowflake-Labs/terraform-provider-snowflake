@@ -140,25 +140,27 @@ type CreateForPythonProcedureOptions struct {
 
 // CreateForScalaProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-procedure#scala-handler.
 type CreateForScalaProcedureOptions struct {
-	create                bool                   `ddl:"static" sql:"CREATE"`
-	OrReplace             *bool                  `ddl:"keyword" sql:"OR REPLACE"`
-	Secure                *bool                  `ddl:"keyword" sql:"SECURE"`
-	procedure             bool                   `ddl:"static" sql:"PROCEDURE"`
-	name                  SchemaObjectIdentifier `ddl:"identifier"`
-	Arguments             []ProcedureArgument    `ddl:"list,must_parentheses"`
-	CopyGrants            *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
-	Returns               ProcedureReturns       `ddl:"keyword" sql:"RETURNS"`
-	languageScala         bool                   `ddl:"static" sql:"LANGUAGE SCALA"`
-	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
-	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
-	RuntimeVersion        string                 `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Packages              []ProcedurePackage     `ddl:"parameter,parentheses" sql:"PACKAGES"`
-	Imports               []ProcedureImport      `ddl:"parameter,parentheses" sql:"IMPORTS"`
-	Handler               string                 `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	TargetPath            *string                `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	ExecuteAs             *ExecuteAs             `ddl:"keyword"`
-	ProcedureDefinition   *string                `ddl:"parameter,no_equals" sql:"AS"`
+	create                     bool                      `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
+	Secure                     *bool                     `ddl:"keyword" sql:"SECURE"`
+	procedure                  bool                      `ddl:"static" sql:"PROCEDURE"`
+	name                       SchemaObjectIdentifier    `ddl:"identifier"`
+	Arguments                  []ProcedureArgument       `ddl:"list,must_parentheses"`
+	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	Returns                    ProcedureReturns          `ddl:"keyword" sql:"RETURNS"`
+	languageScala              bool                      `ddl:"static" sql:"LANGUAGE SCALA"`
+	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
+	ReturnResultsBehavior      *ReturnResultsBehavior    `ddl:"keyword"`
+	RuntimeVersion             string                    `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
+	Packages                   []ProcedurePackage        `ddl:"parameter,parentheses" sql:"PACKAGES"`
+	Imports                    []ProcedureImport         `ddl:"parameter,parentheses" sql:"IMPORTS"`
+	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
+	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
+	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
+	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	ExecuteAs                  *ExecuteAs                `ddl:"keyword"`
+	ProcedureDefinition        *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // CreateForSQLProcedureOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-procedure#snowflake-scripting-handler.

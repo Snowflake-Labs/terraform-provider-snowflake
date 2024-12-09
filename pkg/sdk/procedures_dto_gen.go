@@ -118,22 +118,24 @@ type CreateForPythonProcedureRequest struct {
 }
 
 type CreateForScalaProcedureRequest struct {
-	OrReplace             *bool
-	Secure                *bool
-	name                  SchemaObjectIdentifier // required
-	Arguments             []ProcedureArgumentRequest
-	CopyGrants            *bool
-	Returns               ProcedureReturnsRequest   // required
-	RuntimeVersion        string                    // required
-	Packages              []ProcedurePackageRequest // required
-	Imports               []ProcedureImportRequest
-	Handler               string // required
-	TargetPath            *string
-	NullInputBehavior     *NullInputBehavior
-	ReturnResultsBehavior *ReturnResultsBehavior
-	Comment               *string
-	ExecuteAs             *ExecuteAs
-	ProcedureDefinition   *string
+	OrReplace                  *bool
+	Secure                     *bool
+	name                       SchemaObjectIdentifier // required
+	Arguments                  []ProcedureArgumentRequest
+	CopyGrants                 *bool
+	Returns                    ProcedureReturnsRequest   // required
+	RuntimeVersion             string                    // required
+	Packages                   []ProcedurePackageRequest // required
+	Imports                    []ProcedureImportRequest
+	Handler                    string // required
+	ExternalAccessIntegrations []AccountObjectIdentifier
+	Secrets                    []SecretReference
+	TargetPath                 *string
+	NullInputBehavior          *NullInputBehavior
+	ReturnResultsBehavior      *ReturnResultsBehavior
+	Comment                    *string
+	ExecuteAs                  *ExecuteAs
+	ProcedureDefinition        *string
 }
 
 type CreateForSQLProcedureRequest struct {

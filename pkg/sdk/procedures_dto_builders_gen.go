@@ -364,6 +364,16 @@ func (s *CreateForScalaProcedureRequest) WithImports(Imports []ProcedureImportRe
 	return s
 }
 
+func (s *CreateForScalaProcedureRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *CreateForScalaProcedureRequest {
+	s.ExternalAccessIntegrations = ExternalAccessIntegrations
+	return s
+}
+
+func (s *CreateForScalaProcedureRequest) WithSecrets(Secrets []SecretReference) *CreateForScalaProcedureRequest {
+	s.Secrets = Secrets
+	return s
+}
+
 func (s *CreateForScalaProcedureRequest) WithTargetPath(TargetPath string) *CreateForScalaProcedureRequest {
 	s.TargetPath = &TargetPath
 	return s

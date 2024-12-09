@@ -110,3 +110,40 @@ func (c *ProcedureClient) SampleJavascriptDefinition(t *testing.T, argName strin
 	}
 `, argName)
 }
+
+func (c *ProcedureClient) SamplePythonDefinition(t *testing.T, funcName string, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+def %[1]s(%[2]s):
+	result = ""
+	for a in range(5):
+		result += %[2]s
+	return result
+`, funcName, argName)
+}
+
+// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-scala
+func (c *ProcedureClient) SampleScalaDefinition(t *testing.T, className string, funcName string, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+	import com.snowflake.snowpark_java.Session
+
+	class %[1]s {
+		def %[2]s(session : Session, %[3]s : String): String = {
+			return %[3]s
+		}
+	}
+`, className, funcName, argName)
+}
+
+func (c *ProcedureClient) SampleSqlDefinition(t *testing.T) string {
+	t.Helper()
+
+	return `
+BEGIN
+	RETURN 3.141592654::FLOAT;
+END;
+`
+}

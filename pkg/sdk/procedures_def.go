@@ -227,6 +227,8 @@ var ProceduresDef = g.NewInterface(
 			g.ParameterOptions().Parentheses().SQL("IMPORTS"),
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
+		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
+		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		PredefinedQueryStructField("ExecuteAs", "*ExecuteAs", g.KeywordOptions()).

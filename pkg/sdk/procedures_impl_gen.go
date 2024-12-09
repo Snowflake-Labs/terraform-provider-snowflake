@@ -300,13 +300,15 @@ func (r *CreateForScalaProcedureRequest) toOpts() *CreateForScalaProcedureOption
 
 		RuntimeVersion: r.RuntimeVersion,
 
-		Handler:               r.Handler,
-		TargetPath:            r.TargetPath,
-		NullInputBehavior:     r.NullInputBehavior,
-		ReturnResultsBehavior: r.ReturnResultsBehavior,
-		Comment:               r.Comment,
-		ExecuteAs:             r.ExecuteAs,
-		ProcedureDefinition:   r.ProcedureDefinition,
+		Handler:                    r.Handler,
+		ExternalAccessIntegrations: r.ExternalAccessIntegrations,
+		Secrets:                    r.Secrets,
+		TargetPath:                 r.TargetPath,
+		NullInputBehavior:          r.NullInputBehavior,
+		ReturnResultsBehavior:      r.ReturnResultsBehavior,
+		Comment:                    r.Comment,
+		ExecuteAs:                  r.ExecuteAs,
+		ProcedureDefinition:        r.ProcedureDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
@@ -397,6 +399,8 @@ func (r *CreateForSQLProcedureRequest) toOpts() *CreateForSQLProcedureOptions {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
 			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
+			Null:              r.Returns.ResultDataType.Null,
+			NotNull:           r.Returns.ResultDataType.NotNull,
 		}
 	}
 	if r.Returns.Table != nil {
