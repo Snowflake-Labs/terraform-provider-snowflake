@@ -60,4 +60,6 @@ var ApplicationRolesDef = g.NewInterface(
 		Identifier("ApplicationName", g.KindOfT[AccountObjectIdentifier](), g.IdentifierOptions()).
 		OptionalLimitFrom().
 		WithValidation(g.ValidIdentifier, "ApplicationName"),
-).ShowByIdOperation()
+).ShowByIdOperationWithFiltering(
+	g.ShowByIDApplicationNameFiltering,
+)

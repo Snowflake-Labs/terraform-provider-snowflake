@@ -38,6 +38,8 @@ type Operation struct {
 	DescribeKind *DescriptionMappingKind
 	// DescribeMapping is a definition of mapping needed by Operation kind of OperationKindDescribe
 	DescribeMapping *Mapping
+	// ShowByIDFiltering defines a kind of filterings performed in ShowByID operation
+	ShowByIDFiltering []ShowByIDFiltering
 }
 
 type Mapping struct {
@@ -85,11 +87,10 @@ func addDescriptionMapping(op *Operation, from, to *Field) {
 	op.DescribeMapping = newMapping("convert", from, to)
 }
 
-func (i *Interface) newNoSqlOperation(kind string) *Interface {
+func newNoSqlOperation(kind string) *Operation {
 	operation := newOperation(kind, "placeholder").
 		withOptionsStruct(nil)
-	i.Operations = append(i.Operations, operation)
-	return i
+	return operation
 }
 
 func (i *Interface) newSimpleOperation(kind string, doc string, queryStruct *QueryStruct, helperStructs ...IntoField) *Interface {
@@ -161,7 +162,17 @@ func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resour
 }
 
 func (i *Interface) ShowByIdOperation() *Interface {
-	return i.newNoSqlOperation(string(OperationKindShowByID))
+	op := newNoSqlOperation(string(OperationKindShowByID))
+	i.Operations = append(i.Operations, op)
+	return i
+}
+
+func (i *Interface) ShowByIdOperationWithFiltering(filter ShowByIDFilteringKind, filtering ...ShowByIDFilteringKind) *Interface {
+	op := newNoSqlOperation(string(OperationKindShowByID))
+	op.ObjectInterface = i
+	op.withFiltering(append([]ShowByIDFilteringKind{filter}, filtering...)...)
+	i.Operations = append(i.Operations, op)
+	return i
 }
 
 func (i *Interface) DescribeOperation(describeKind DescriptionMappingKind, doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct) *Interface {
