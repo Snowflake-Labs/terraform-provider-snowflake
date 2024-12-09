@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -228,11 +228,11 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 		for _, arg := range v.([]interface{}) {
 			argName := arg.(map[string]interface{})["name"].(string)
 			argType := arg.(map[string]interface{})["type"].(string)
-			argDataType, err := sdk.ToDataType(argType)
+			argDataType, err := datatypes.ParseDataType(argType)
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			args = append(args, sdk.ExternalFunctionArgumentRequest{ArgName: argName, ArgDataType: argDataType})
+			args = append(args, sdk.ExternalFunctionArgumentRequest{ArgName: argName, ArgDataType: sdk.LegacyDataTypeFrom(argDataType)})
 		}
 	}
 	argTypes := make([]sdk.DataType, 0, len(args))
@@ -242,13 +242,13 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 	id := sdk.NewSchemaObjectIdentifierWithArguments(database, schemaName, name, argTypes...)
 
 	returnType := d.Get("return_type").(string)
-	resultDataType, err := sdk.ToDataType(returnType)
+	resultDataType, err := datatypes.ParseDataType(returnType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	apiIntegration := sdk.NewAccountObjectIdentifier(d.Get("api_integration").(string))
 	urlOfProxyAndResource := d.Get("url_of_proxy_and_resource").(string)
-	req := sdk.NewCreateExternalFunctionRequest(id.SchemaObjectId(), resultDataType, &apiIntegration, urlOfProxyAndResource)
+	req := sdk.NewCreateExternalFunctionRequest(id.SchemaObjectId(), sdk.LegacyDataTypeFrom(resultDataType), &apiIntegration, urlOfProxyAndResource)
 
 	// Set optionals
 	if len(args) > 0 {

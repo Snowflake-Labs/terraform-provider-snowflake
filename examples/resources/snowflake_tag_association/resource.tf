@@ -15,12 +15,10 @@ resource "snowflake_tag" "test" {
 }
 
 resource "snowflake_tag_association" "db_association" {
-  object_identifier {
-    name = snowflake_database.test.name
-  }
-  object_type = "DATABASE"
-  tag_id      = snowflake_tag.test.id
-  tag_value   = "finance"
+  object_identifiers = [snowflake_database.test.fully_qualified_name]
+  object_type        = "DATABASE"
+  tag_id             = snowflake_tag.test.fully_qualified_name
+  tag_value          = "finance"
 }
 
 resource "snowflake_table" "test" {
@@ -39,23 +37,22 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_tag_association" "table_association" {
-  object_identifier {
-    name     = snowflake_table.test.name
-    database = snowflake_database.test.name
-    schema   = snowflake_schema.test.name
-  }
-  object_type = "TABLE"
-  tag_id      = snowflake_tag.test.id
-  tag_value   = "engineering"
+  object_identifiers = [snowflake_table.test.fully_qualified_name]
+  object_type        = "TABLE"
+  tag_id             = snowflake_tag.test.fully_qualified_name
+  tag_value          = "engineering"
 }
 
 resource "snowflake_tag_association" "column_association" {
-  object_identifier {
-    name     = "${snowflake_table.test.name}.column_name"
-    database = snowflake_database.test.name
-    schema   = snowflake_schema.test.name
-  }
-  object_type = "COLUMN"
-  tag_id      = snowflake_tag.test.id
-  tag_value   = "engineering"
+  object_identifiers = [snowflake_database.test.fully_qualified_name]
+  object_type        = "COLUMN"
+  tag_id             = snowflake_tag.test.fully_qualified_name
+  tag_value          = "engineering"
+}
+
+resource "snowflake_tag_association" "account_association" {
+  object_identifiers = ["\"ORGANIZATION_NAME\".\"ACCOUNT_NAME\""]
+  object_type        = "ACCOUNT"
+  tag_id             = snowflake_tag.test.fully_qualified_name
+  tag_value          = "engineering"
 }

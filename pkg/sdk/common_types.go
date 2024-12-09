@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 var (
@@ -91,13 +93,13 @@ func ParseTableColumnSignature(signature string) ([]TableColumnSignature, error)
 		if len(parts) < 2 {
 			return []TableColumnSignature{}, fmt.Errorf("expected argument name and type, got %s", elem)
 		}
-		dataType, err := ToDataType(parts[len(parts)-1])
+		dataType, err := datatypes.ParseDataType(parts[len(parts)-1])
 		if err != nil {
 			return []TableColumnSignature{}, err
 		}
 		arguments[i] = TableColumnSignature{
 			Name: strings.Join(parts[:len(parts)-1], " "),
-			Type: dataType,
+			Type: LegacyDataTypeFrom(dataType),
 		}
 	}
 	return arguments, nil

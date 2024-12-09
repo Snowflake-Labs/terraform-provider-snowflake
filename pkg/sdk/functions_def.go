@@ -6,18 +6,24 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 
 var functionArgument = g.NewQueryStruct("FunctionArgument").
 	Text("ArgName", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("ArgDataType", "DataType", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT"))
+	PredefinedQueryStructField("ArgDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+	PredefinedQueryStructField("ArgDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
+	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT")).
+	WithValidation(g.ExactlyOneValueSet, "ArgDataTypeOld", "ArgDataType")
 
 var functionColumn = g.NewQueryStruct("FunctionColumn").
 	Text("ColumnName", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("ColumnDataType", "DataType", g.KeywordOptions().NoQuotes().Required())
+	PredefinedQueryStructField("ColumnDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+	PredefinedQueryStructField("ColumnDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
+	WithValidation(g.ExactlyOneValueSet, "ColumnDataTypeOld", "ColumnDataType")
 
 var functionReturns = g.NewQueryStruct("FunctionReturns").
 	OptionalQueryStructField(
 		"ResultDataType",
 		g.NewQueryStruct("FunctionReturnsResultDataType").
-			PredefinedQueryStructField("ResultDataType", "DataType", g.KeywordOptions().NoQuotes().Required()),
+			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+			PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
+			WithValidation(g.ExactlyOneValueSet, "ResultDataTypeOld", "ResultDataType"),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
@@ -174,7 +180,9 @@ var FunctionsDef = g.NewInterface(
 			functionArgument,
 			g.ListOptions().MustParentheses()).
 		OptionalSQL("COPY GRANTS").
-		PredefinedQueryStructField("ResultDataType", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
+		SQL("RETURNS").
+		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals()).
+		PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 		PredefinedQueryStructField("ReturnNullValues", "*ReturnNullValues", g.KeywordOptions()).
 		SQL("LANGUAGE SCALA").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
@@ -196,7 +204,8 @@ var FunctionsDef = g.NewInterface(
 		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidateValueSet, "Handler").
-		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
+		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists").
+		WithValidation(g.ExactlyOneValueSet, "ResultDataTypeOld", "ResultDataType"),
 ).CustomOperation(
 	"CreateForSQL",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-function#sql-handler",
@@ -282,7 +291,7 @@ var FunctionsDef = g.NewInterface(
 		Field("IsAnsi", "bool").
 		Field("MinNumArguments", "int").
 		Field("MaxNumArguments", "int").
-		Field("Arguments", "string").
+		Field("ArgumentsRaw", "string").
 		Field("Description", "string").
 		Field("CatalogName", "string").
 		Field("IsTableFunction", "bool").

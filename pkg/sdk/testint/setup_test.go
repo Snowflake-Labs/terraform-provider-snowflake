@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
@@ -128,6 +130,15 @@ func (itc *integrationTestContext) initialize() error {
 	itc.client = c
 	itc.ctx = context.Background()
 
+	// TODO(SNOW-1842271): Adjust test setup to work properly with Accountadmin role for object tests and Orgadmin for account tests
+	if os.Getenv(string(testenvs.TestAccountCreate)) != "" {
+		err = c.Sessions.UseRole(context.Background(), snowflakeroles.Accountadmin)
+		if err != nil {
+			return err
+		}
+		defer func() { _ = c.Sessions.UseRole(context.Background(), snowflakeroles.Orgadmin) }()
+	}
+
 	db, dbCleanup, err := createDb(itc.client, itc.ctx, false)
 	itc.databaseCleanup = dbCleanup
 	if err != nil {
@@ -198,13 +209,16 @@ func (itc *integrationTestContext) initialize() error {
 		return err
 	}
 
-	err = helpers.EnsureScimProvisionerRolesExist(itc.client, itc.ctx)
-	if err != nil {
-		return err
-	}
-	err = helpers.EnsureScimProvisionerRolesExist(itc.secondaryClient, itc.secondaryCtx)
-	if err != nil {
-		return err
+	// TODO(SNOW-1842271): Adjust test setup to work properly with Accountadmin role for object tests and Orgadmin for account tests
+	if os.Getenv(string(testenvs.TestAccountCreate)) == "" {
+		err = helpers.EnsureScimProvisionerRolesExist(itc.client, itc.ctx)
+		if err != nil {
+			return err
+		}
+		err = helpers.EnsureScimProvisionerRolesExist(itc.secondaryClient, itc.secondaryCtx)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

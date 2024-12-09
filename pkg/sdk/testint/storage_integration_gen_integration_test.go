@@ -18,7 +18,7 @@ func TestInt_StorageIntegrations(t *testing.T) {
 
 	awsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
 	awsRoleARN := testenvs.GetOrSkipTest(t, testenvs.AwsExternalRoleArn)
-	gcsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.GcsExternalBuckerUrl)
+	gcsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.GcsExternalBucketUrl)
 	azureBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AzureExternalBucketUrl)
 	azureTenantId := testenvs.GetOrSkipTest(t, testenvs.AzureExternalTenantId)
 

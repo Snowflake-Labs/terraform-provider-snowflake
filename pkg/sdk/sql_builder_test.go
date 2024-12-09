@@ -1,9 +1,11 @@
 package sdk
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -471,4 +473,127 @@ func TestBuilder_sql(t *testing.T) {
 		s := builder.sql(clauses...)
 		assert.Equal(t, "EXAMPLE_STATIC EXAMPLE_KEYWORD = example", s)
 	})
+}
+
+func TestBuilder_DataType(t *testing.T) {
+	type dataTypeTestHelper struct {
+		DataType datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
+	}
+
+	dataTypes := []struct {
+		dataType    string
+		expectedSql string
+	}{
+		{dataType: "ARRAY", expectedSql: "ARRAY"},
+		{dataType: "array", expectedSql: "ARRAY"},
+		{dataType: "BINARY", expectedSql: "BINARY(8388608)"},
+		{dataType: "binary(120)", expectedSql: "BINARY(120)"},
+		{dataType: "BOOLEAN", expectedSql: "BOOLEAN"},
+		{dataType: "boolean", expectedSql: "BOOLEAN"},
+		{dataType: "DATE", expectedSql: "DATE"},
+		{dataType: "date", expectedSql: "DATE"},
+		{dataType: "FLOAT", expectedSql: "FLOAT"},
+		{dataType: "float4", expectedSql: "FLOAT4"},
+		{dataType: "real", expectedSql: "REAL"},
+		{dataType: "GEOGRAPHY", expectedSql: "GEOGRAPHY"},
+		{dataType: "geography", expectedSql: "GEOGRAPHY"},
+		{dataType: "GEOMETRY", expectedSql: "GEOMETRY"},
+		{dataType: "geometry", expectedSql: "GEOMETRY"},
+		{dataType: "NUMBER", expectedSql: "NUMBER(38, 0)"},
+		{dataType: "NUMBER(36)", expectedSql: "NUMBER(36, 0)"},
+		{dataType: "NUMBER(36, 2)", expectedSql: "NUMBER(36, 2)"},
+		{dataType: "number(36, 2)", expectedSql: "NUMBER(36, 2)"},
+		{dataType: "INT", expectedSql: "INT"},
+		{dataType: "integer", expectedSql: "INTEGER"},
+		{dataType: "OBJECT", expectedSql: "OBJECT"},
+		{dataType: "object", expectedSql: "OBJECT"},
+		{dataType: "VARCHAR(20)", expectedSql: "VARCHAR(20)"},
+		{dataType: "VARCHAR", expectedSql: "VARCHAR(16777216)"},
+		{dataType: "varchar", expectedSql: "VARCHAR(16777216)"},
+		{dataType: "CHAR", expectedSql: "CHAR(1)"},
+		{dataType: "char(34)", expectedSql: "CHAR(34)"},
+		{dataType: "TIME", expectedSql: "TIME(9)"},
+		{dataType: "time", expectedSql: "TIME(9)"},
+		{dataType: "time(5)", expectedSql: "TIME(5)"},
+		{dataType: "TIMESTAMP_LTZ", expectedSql: "TIMESTAMP_LTZ(9)"},
+		{dataType: "timestamp_ltz", expectedSql: "TIMESTAMP_LTZ(9)"},
+		{dataType: "timestampltz", expectedSql: "TIMESTAMPLTZ(9)"},
+		{dataType: "timestampltz(5)", expectedSql: "TIMESTAMPLTZ(5)"},
+		{dataType: "TIMESTAMP_NTZ", expectedSql: "TIMESTAMP_NTZ(9)"},
+		{dataType: "timestamp_ntz", expectedSql: "TIMESTAMP_NTZ(9)"},
+		{dataType: "timestamp_ntz(5)", expectedSql: "TIMESTAMP_NTZ(5)"},
+		{dataType: "timestampntz", expectedSql: "TIMESTAMPNTZ(9)"},
+		{dataType: "timestampntz(5)", expectedSql: "TIMESTAMPNTZ(5)"},
+		{dataType: "TIMESTAMP_TZ", expectedSql: "TIMESTAMP_TZ(9)"},
+		{dataType: "timestamp_tz", expectedSql: "TIMESTAMP_TZ(9)"},
+		{dataType: "timestamp_tz(5)", expectedSql: "TIMESTAMP_TZ(5)"},
+		{dataType: "timestamptz", expectedSql: "TIMESTAMPTZ(9)"},
+		{dataType: "timestamptz(5)", expectedSql: "TIMESTAMPTZ(5)"},
+		{dataType: "VARIANT", expectedSql: "VARIANT"},
+		{dataType: "variant", expectedSql: "VARIANT"},
+		{dataType: "VECTOR(INT, 20)", expectedSql: "VECTOR(INT, 20)"},
+		{dataType: "VECTOR(FLOAT, 20)", expectedSql: "VECTOR(FLOAT, 20)"},
+		{dataType: "VECTOR(int, 20)", expectedSql: "VECTOR(INT, 20)"},
+		{dataType: "VECTOR(float, 20)", expectedSql: "VECTOR(FLOAT, 20)"},
+	}
+
+	nilTestCases := func() []datatypes.DataType {
+		var a *datatypes.ArrayDataType
+		var b *datatypes.BinaryDataType
+		var c *datatypes.BooleanDataType
+		var d *datatypes.DateDataType
+		var e *datatypes.FloatDataType
+		var f *datatypes.GeographyDataType
+		var g *datatypes.GeometryDataType
+		var h *datatypes.NumberDataType
+		var i *datatypes.ObjectDataType
+		var j *datatypes.TextDataType
+		var k *datatypes.TimeDataType
+		var l *datatypes.TimestampLtzDataType
+		var m *datatypes.TimestampNtzDataType
+		var n *datatypes.TimestampTzDataType
+		var o *datatypes.VariantDataType
+		var p *datatypes.VectorDataType
+
+		return []datatypes.DataType{a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p}
+	}()
+	t.Run("test data type empty", func(t *testing.T) {
+		opts := dataTypeTestHelper{}
+
+		s, err := structToSQL(opts)
+
+		require.NoError(t, err)
+		assert.Equal(t, "", s)
+	})
+
+	for _, tc := range nilTestCases {
+		tc := tc
+		t.Run(fmt.Sprintf(`test for nil data type "%s"`, reflect.TypeOf(tc)), func(t *testing.T) {
+			opts := dataTypeTestHelper{
+				DataType: tc,
+			}
+
+			s, err := structToSQL(opts)
+
+			require.NoError(t, err)
+			assert.Equal(t, "", s)
+		})
+	}
+
+	for _, tc := range dataTypes {
+		tc := tc
+		t.Run(fmt.Sprintf(`cheking building SQL for data type "%s, expecting "%s"`, tc.dataType, tc.expectedSql), func(t *testing.T) {
+			dataType, err := datatypes.ParseDataType(tc.dataType)
+			require.NoError(t, err)
+
+			opts := dataTypeTestHelper{
+				DataType: dataType,
+			}
+
+			s, err := structToSQL(opts)
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedSql, s)
+		})
+	}
 }

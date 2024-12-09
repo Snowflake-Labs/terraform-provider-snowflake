@@ -110,7 +110,15 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.Tag().Schema,
 	},
 	{
+		name:   "TagAssociation",
+		schema: resources.TagAssociation().Schema,
+	},
+	{
 		name:   "Task",
 		schema: resources.Task().Schema,
+	},
+	{
+		name:   "Account",
+		schema: resources.Account().Schema,
 	},
 }

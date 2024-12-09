@@ -5,18 +5,15 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var externalTableSchema = map[string]*schema.Schema{
@@ -60,11 +57,11 @@ var externalTableSchema = map[string]*schema.Schema{
 					ForceNew:    true,
 				},
 				"type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					Description:  "Column type, e.g. VARIANT",
-					ForceNew:     true,
-					ValidateFunc: IsDataType(),
+					Type:             schema.TypeString,
+					Required:         true,
+					Description:      "Column type, e.g. VARIANT",
+					ForceNew:         true,
+					ValidateDiagFunc: IsDataTypeValid,
 				},
 				"as": {
 					Type:        schema.TypeString,

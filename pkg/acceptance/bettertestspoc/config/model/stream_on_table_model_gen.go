@@ -20,6 +20,8 @@ type StreamOnTableModel struct {
 	Name               tfconfig.Variable `json:"name,omitempty"`
 	Schema             tfconfig.Variable `json:"schema,omitempty"`
 	ShowInitialRows    tfconfig.Variable `json:"show_initial_rows,omitempty"`
+	Stale              tfconfig.Variable `json:"stale,omitempty"`
+	StreamType         tfconfig.Variable `json:"stream_type,omitempty"`
 	Table              tfconfig.Variable `json:"table,omitempty"`
 
 	*config.ResourceModelMeta
@@ -106,6 +108,16 @@ func (s *StreamOnTableModel) WithShowInitialRows(showInitialRows string) *Stream
 	return s
 }
 
+func (s *StreamOnTableModel) WithStale(stale bool) *StreamOnTableModel {
+	s.Stale = tfconfig.BoolVariable(stale)
+	return s
+}
+
+func (s *StreamOnTableModel) WithStreamType(streamType string) *StreamOnTableModel {
+	s.StreamType = tfconfig.StringVariable(streamType)
+	return s
+}
+
 func (s *StreamOnTableModel) WithTable(table string) *StreamOnTableModel {
 	s.Table = tfconfig.StringVariable(table)
 	return s
@@ -162,6 +174,16 @@ func (s *StreamOnTableModel) WithSchemaValue(value tfconfig.Variable) *StreamOnT
 
 func (s *StreamOnTableModel) WithShowInitialRowsValue(value tfconfig.Variable) *StreamOnTableModel {
 	s.ShowInitialRows = value
+	return s
+}
+
+func (s *StreamOnTableModel) WithStaleValue(value tfconfig.Variable) *StreamOnTableModel {
+	s.Stale = value
+	return s
+}
+
+func (s *StreamOnTableModel) WithStreamTypeValue(value tfconfig.Variable) *StreamOnTableModel {
+	s.StreamType = value
 	return s
 }
 
