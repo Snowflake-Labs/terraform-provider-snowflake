@@ -11,7 +11,9 @@ There is an example file ready for generation [database_role_def.go](example/dat
 - [database_role_validations_gen.go](example/database_role_validations_gen.go) - options structs validations
 - [database_role_impl_gen.go](example/database_role_impl_gen.go) - SDK interface implementation
 - [database_role_gen_test.go](example/database_role_gen_test.go) - unit tests placeholders with guidance comments (at least for now)
-- [database_role_gen_integration_test.go](example/database_role_gen_integration_test.go) - integration test placeholder file
+
+Note:
+- integration tests files are not generated and they have to be created manually in the `pkg/sdk/testint` directory
 
 ### How it works
 ##### Creating object generation definition
@@ -123,15 +125,6 @@ B := QueryStruct("B")
 ```
 - cannot re-generate when client.go is using generated interface
 - spaces in templates (especially nested validations)
-- request mapping fails (`.toOpts()`) when nested object is not optional (pointer) e.g.
-```go
-type NestedReq struct {
-}
-
-type SomeReq struct {
-    NestedReq NestedReq // Not a pointer and in toOpts right now we're always do a check if req.NestedReq != nil which is not correct for non pointer type
-}
-```
 
 ##### Known limitations
 - automatic array conversion is not recursive, so we're only supporting one level mapping
