@@ -275,6 +275,9 @@ Also, we added diff suppress function that prevents Terraform from showing diffe
 
 No change is required, the state will be migrated automatically.
 
+#### *(breaking change)* Required warehouse
+For this resource, the provider now uses [tag references](https://docs.snowflake.com/en/sql-reference/functions/tag_references) to get information about masking policies attached to tags. This function requires a warehouse in the connection. Please, make sure you have either set a `DEFAULT_WAREHOUSE` for the user, or specified a warehouse in the provider configuration.
+
 ## v0.97.0 ➞ v0.98.0
 
 ### *(new feature)* snowflake_connections datasource
@@ -791,7 +794,7 @@ Removed fields:
 The value of these field will be removed from the state automatically.
 
 #### *(breaking change)* Required warehouse
-For this resource, the provider now uses [policy references](https://docs.snowflake.com/en/sql-reference/functions/policy_references) which requires a warehouse in the connection. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the provider configuration.
+For this resource, the provider now uses [policy references](https://docs.snowflake.com/en/sql-reference/functions/policy_references) which requires a warehouse in the connection. Please, make sure you have either set a `DEFAULT_WAREHOUSE` for the user, or specified a warehouse in the provider configuration.
 
 ### Identifier changes
 
