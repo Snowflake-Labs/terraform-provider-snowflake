@@ -1,18 +1,42 @@
-provider "snowflake" {
-  role  = "ORGADMIN"
-  alias = "orgadmin"
+## Minimal
+resource "snowflake_account" "minimal" {
+  name                 = "ACCOUNT_NAME"
+  admin_name           = "ADMIN_NAME"
+  admin_password       = "ADMIN_PASSWORD"
+  email                = "admin@email.com"
+  edition              = "STANDARD"
+  grace_period_in_days = 3
 }
 
-resource "snowflake_account" "ac1" {
-  provider             = snowflake.orgadmin
-  name                 = "SNOWFLAKE_TEST_ACCOUNT"
-  admin_name           = "John Doe"
-  admin_password       = "Abcd1234!"
-  email                = "john.doe@snowflake.com"
-  first_name           = "John"
-  last_name            = "Doe"
-  must_change_password = true
+## Complete (with SERVICE user type)
+resource "snowflake_account" "complete" {
+  name                 = "ACCOUNT_NAME"
+  admin_name           = "ADMIN_NAME"
+  admin_rsa_public_key = "<public_key>"
+  admin_user_type      = "SERVICE"
+  email                = "admin@email.com"
   edition              = "STANDARD"
-  comment              = "Snowflake Test Account"
+  region_group         = "PUBLIC"
   region               = "AWS_US_WEST_2"
+  comment              = "some comment"
+  is_org_admin         = "true"
+  grace_period_in_days = 3
+}
+
+## Complete (with PERSON user type)
+resource "snowflake_account" "complete" {
+  name                 = "ACCOUNT_NAME"
+  admin_name           = "ADMIN_NAME"
+  admin_password       = "ADMIN_PASSWORD"
+  admin_user_type      = "PERSON"
+  first_name           = "first_name"
+  last_name            = "last_name"
+  email                = "admin@email.com"
+  must_change_password = "false"
+  edition              = "STANDARD"
+  region_group         = "PUBLIC"
+  region               = "AWS_US_WEST_2"
+  comment              = "some comment"
+  is_org_admin         = "true"
+  grace_period_in_days = 3
 }
