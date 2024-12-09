@@ -398,4 +398,7 @@ var StagesDef = g.NewInterface(
 			OptionalLike().
 			OptionalIn(),
 	).
-	ShowByIdOperationNoFiltering()
+	ShowByIdOperationWithFiltering(
+		g.ShowByIDLikeFiltering,
+		g.ShowByIDInFiltering,
+	)
