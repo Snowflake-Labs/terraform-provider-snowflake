@@ -3,6 +3,7 @@ package testint
 import (
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"strings"
 	"testing"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,6 +42,18 @@ func TestInt_Procedures(t *testing.T) {
 
 	tmpJavaProcedure := testClientHelper().CreateSampleJavaProcedureAndJar(t)
 	tmpPythonFunction := testClientHelper().CreateSamplePythonFunctionAndModule(t)
+
+	assertParametersSet := func(t *testing.T, procedureParametersAssert *objectparametersassert.ProcedureParametersAssert) {
+		t.Helper()
+		assertions.AssertThatObject(t, procedureParametersAssert.
+			// TODO [SNOW-1850370]: every value end with invalid value [OFF] for parameter 'AUTO_EVENT_LOGGING'
+			// HasAutoEventLogging(sdk.AutoEventLoggingTracing).
+			HasEnableConsoleOutput(true).
+			HasLogLevel(sdk.LogLevelWarn).
+			HasMetricLevel(sdk.MetricLevelAll).
+			HasTraceLevel(sdk.TraceLevelAlways),
+		)
+	}
 
 	t.Run("create procedure for Java - inline minimal", func(t *testing.T) {
 		className := "TestFunc"
@@ -1505,33 +1517,321 @@ def filter_by_role(session, table_name, role):
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(procedures), 1)
 	})
-}
 
-func TestInt_OtherProcedureFunctions(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
+	t.Run("show parameters", func(t *testing.T) {
+		p, pCleanup := testClientHelper().Procedure.CreateSql(t)
+		t.Cleanup(pCleanup)
+		id := p.ID()
 
-	assertProcedure := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, secure bool) {
-		t.Helper()
+		param, err := client.Parameters.ShowObjectParameter(ctx, sdk.ObjectParameterLogLevel, sdk.Object{ObjectType: sdk.ObjectTypeProcedure, Name: id})
+		require.NoError(t, err)
+		assert.Equal(t, string(sdk.LogLevelOff), param.Value)
 
-		procedure, err := client.Procedures.ShowByID(ctx, id)
+		parameters, err := client.Parameters.ShowParameters(ctx, &sdk.ShowParametersOptions{
+			In: &sdk.ParametersIn{
+				Procedure: id,
+			},
+		})
 		require.NoError(t, err)
 
-		assert.NotEmpty(t, procedure.CreatedOn)
-		assert.Equal(t, id.Name(), procedure.Name)
-		assert.Equal(t, false, procedure.IsBuiltin)
-		assert.Equal(t, false, procedure.IsAggregate)
-		assert.Equal(t, false, procedure.IsAnsi)
-		assert.Equal(t, 1, procedure.MinNumArguments)
-		assert.Equal(t, 1, procedure.MaxNumArguments)
-		assert.NotEmpty(t, procedure.ArgumentsOld)
-		assert.NotEmpty(t, procedure.ArgumentsRaw)
-		assert.NotEmpty(t, procedure.Description)
-		assert.NotEmpty(t, procedure.CatalogName)
-		assert.Equal(t, false, procedure.IsTableFunction)
-		assert.Equal(t, false, procedure.ValidForClustering)
-		assert.Equal(t, secure, procedure.IsSecure)
-	}
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParametersPrefetched(t, id, parameters).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		// check that ShowParameters on procedure level works too
+		parameters, err = client.Procedures.ShowParameters(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParametersPrefetched(t, id, parameters).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("alter procedure: rename", func(t *testing.T) {
+		p, pCleanup := testClientHelper().Procedure.CreateSql(t)
+		t.Cleanup(pCleanup)
+		id := p.ID()
+
+		nid := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(id.ArgumentDataTypes()...)
+
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithRenameTo(nid.SchemaObjectId()))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, nid))
+
+		_, err = client.Procedures.ShowByID(ctx, id)
+		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
+
+		e, err := client.Procedures.ShowByID(ctx, nid)
+		require.NoError(t, err)
+		require.Equal(t, nid.Name(), e.Name)
+	})
+
+	t.Run("alter procedure: set and unset all for Java", func(t *testing.T) {
+		p, pCleanup := testClientHelper().Procedure.CreateJava(t)
+		t.Cleanup(pCleanup)
+		id := p.ID()
+
+		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+			HasName(id.Name()).
+			HasDescription(sdk.DefaultProcedureComment),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		request := sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().
+			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
+			WithSecretsList(*sdk.NewSecretsListRequest([]sdk.SecretReference{{VariableName: "abc", Name: secretId}})).
+			// TODO [SNOW-1850370]: every value end with invalid value [OFF] for parameter 'AUTO_EVENT_LOGGING'
+			//WithAutoEventLogging(sdk.AutoEventLoggingAll).
+			WithEnableConsoleOutput(true).
+			WithLogLevel(sdk.LogLevelWarn).
+			WithMetricLevel(sdk.MetricLevelAll).
+			WithTraceLevel(sdk.TraceLevelAlways).
+			WithComment("new comment"),
+		)
+
+		err := client.Procedures.Alter(ctx, request)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+			HasName(id.Name()).
+			HasDescription("new comment"),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())),
+		)
+
+		assertParametersSet(t, objectparametersassert.ProcedureParameters(t, id))
+
+		unsetRequest := sdk.NewAlterProcedureRequest(id).WithUnset(*sdk.NewProcedureUnsetRequest().
+			WithExternalAccessIntegrations(true).
+			// WithAutoEventLogging(true).
+			WithEnableConsoleOutput(true).
+			WithLogLevel(true).
+			WithMetricLevel(true).
+			WithTraceLevel(true).
+			WithComment(true),
+		)
+
+		err = client.Procedures.Alter(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+			HasName(id.Name()).
+			HasDescription(sdk.DefaultProcedureComment).
+			// both nil, because they are always nil in SHOW for procedures
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+			HasExternalAccessIntegrationsNil().
+			// TODO [SNOW-1850370]: apparently UNSET external access integrations cleans out secrets in the describe but leaves it in SHOW
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		unsetSecretsRequest := sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().
+			WithSecretsList(*sdk.NewSecretsListRequest([]sdk.SecretReference{})),
+		)
+
+		err = client.Procedures.Alter(ctx, unsetSecretsRequest)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+			HasSecretsNil(),
+		)
+	})
+
+	t.Run("alter procedure: set and unset all for SQL", func(t *testing.T) {
+		p, pCleanup := testClientHelper().Procedure.CreateSql(t)
+		t.Cleanup(pCleanup)
+		id := p.ID()
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+
+		request := sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().
+			//WithAutoEventLogging(sdk.AutoEventLoggingTracing).
+			WithEnableConsoleOutput(true).
+			WithLogLevel(sdk.LogLevelWarn).
+			WithMetricLevel(sdk.MetricLevelAll).
+			WithTraceLevel(sdk.TraceLevelAlways).
+			WithComment("new comment"),
+		)
+
+		err := client.Procedures.Alter(ctx, request)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+			HasName(id.Name()).
+			HasDescription("new comment"),
+		)
+
+		assertParametersSet(t, objectparametersassert.ProcedureParameters(t, id))
+
+		unsetRequest := sdk.NewAlterProcedureRequest(id).WithUnset(*sdk.NewProcedureUnsetRequest().
+			//WithAutoEventLogging(true).
+			WithEnableConsoleOutput(true).
+			WithLogLevel(true).
+			WithMetricLevel(true).
+			WithTraceLevel(true).
+			WithComment(true),
+		)
+
+		err = client.Procedures.Alter(ctx, unsetRequest)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasDescription(sdk.DefaultProcedureComment),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("alter procedure: set execute as", func(t *testing.T) {
+		p, pCleanup := testClientHelper().Procedure.CreateSql(t)
+		t.Cleanup(pCleanup)
+		id := p.ID()
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+			HasExecuteAs("OWNER"),
+		)
+
+		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsCaller)))
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+			HasExecuteAs("CALLER"),
+		)
+
+		err = client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsOwner)))
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+			HasExecuteAs("OWNER"),
+		)
+	})
+
+	t.Run("show procedure: without like", func(t *testing.T) {
+		p1, pCleanup := testClientHelper().Procedure.CreateSql(t)
+		t.Cleanup(pCleanup)
+		p2, pCleanup2 := testClientHelper().Procedure.CreateSql(t)
+		t.Cleanup(pCleanup2)
+
+		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
+		require.NoError(t, err)
+
+		require.GreaterOrEqual(t, len(procedures), 1)
+		require.Contains(t, procedures, *p1)
+		require.Contains(t, procedures, *p2)
+	})
+
+	t.Run("show procedure: with like", func(t *testing.T) {
+		p1, pCleanup := testClientHelper().Procedure.CreateSql(t)
+		t.Cleanup(pCleanup)
+		p2, pCleanup2 := testClientHelper().Procedure.CreateSql(t)
+		t.Cleanup(pCleanup2)
+
+		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest().WithLike(sdk.Like{Pattern: &p1.Name}))
+		require.NoError(t, err)
+
+		require.Equal(t, 1, len(procedures))
+		require.Contains(t, procedures, *p1)
+		require.NotContains(t, procedures, *p2)
+	})
+
+	t.Run("show procedure: no matches", func(t *testing.T) {
+		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest().
+			WithIn(sdk.ExtendedIn{In: sdk.In{Schema: testClientHelper().Ids.SchemaId()}}).
+			WithLike(sdk.Like{Pattern: sdk.String(NonExistingSchemaObjectIdentifier.Name())}))
+		require.NoError(t, err)
+		require.Equal(t, 0, len(procedures))
+	})
+
+	t.Run("describe procedure: for SQL", func(t *testing.T) {
+		p, pCleanup := testClientHelper().Procedure.CreateSql(t)
+		t.Cleanup(pCleanup)
+		id := p.ID()
+
+		details, err := client.Procedures.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Len(t, details, 5)
+
+		pairs := make(map[string]*string)
+		for _, detail := range details {
+			pairs[detail.Property] = detail.Value
+		}
+		assert.Equal(t, "(x FLOAT)", *pairs["signature"])
+		assert.Equal(t, "FLOAT", *pairs["returns"])
+		assert.Equal(t, "SQL", *pairs["language"])
+		assert.Equal(t, "\nBEGIN\n\tRETURN 3.141592654::FLOAT;\nEND;\n", *pairs["body"])
+		assert.Equal(t, "OWNER", *pairs["execute as"])
+	})
+
+	t.Run("describe procedure: for Java", func(t *testing.T) {
+		p, pCleanup := testClientHelper().Procedure.CreateJava(t)
+		t.Cleanup(pCleanup)
+		id := p.ID()
+
+		details, err := client.Procedures.Describe(ctx, id)
+		require.NoError(t, err)
+		assert.Len(t, details, 12)
+
+		pairs := make(map[string]*string)
+		for _, detail := range details {
+			pairs[detail.Property] = detail.Value
+		}
+		assert.Equal(t, "(x VARCHAR)", *pairs["signature"])
+		assert.Equal(t, "VARCHAR(100)", *pairs["returns"])
+		assert.Equal(t, "JAVA", *pairs["language"])
+		assert.NotEmpty(t, *pairs["body"])
+		assert.Equal(t, string(sdk.NullInputBehaviorCalledOnNullInput), *pairs["null handling"])
+		assert.Equal(t, string(sdk.VolatileTableKind), *pairs["volatility"])
+		assert.Nil(t, pairs["external_access_integration"])
+		assert.Nil(t, pairs["secrets"])
+		assert.Equal(t, "[]", *pairs["imports"])
+		assert.Equal(t, "TestFunc.echoVarchar", *pairs["handler"])
+		assert.Equal(t, "11", *pairs["runtime_version"])
+		assert.Equal(t, "OWNER", *pairs["execute as"])
+	})
+
+	t.Run("drop procedure for SQL", func(t *testing.T) {
+		p, pCleanup := testClientHelper().Procedure.CreateJava(t)
+		t.Cleanup(pCleanup)
+		id := p.ID()
+
+		err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id))
+		require.NoError(t, err)
+	})
+}
+
+func TestInt_ProceduresShowByID(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
 
 	cleanupProcedureHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
 		return func() {
@@ -1543,165 +1843,142 @@ func TestInt_OtherProcedureFunctions(t *testing.T) {
 		}
 	}
 
-	createProcedureForSQLHandle := func(t *testing.T, cleanup bool) *sdk.Procedure {
+	createProcedureForSQLHandle := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) {
 		t.Helper()
 
 		definition := `
 	BEGIN
 		RETURN message;
 	END;`
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt).WithNotNull(true)
 		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
-			WithSecure(true).
-			WithOrReplace(true).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
 			WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
 		err := client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
-		if cleanup {
-			t.Cleanup(cleanupProcedureHandle(id))
-		}
-		procedure, err := client.Procedures.ShowByID(ctx, id)
-		require.NoError(t, err)
-		return procedure
+		t.Cleanup(cleanupProcedureHandle(id))
 	}
 
-	t.Run("alter procedure: rename", func(t *testing.T) {
-		f := createProcedureForSQLHandle(t, false)
+	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
 
-		id := f.ID()
-		nid := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		nidWithArguments := sdk.NewSchemaObjectIdentifierWithArguments(nid.DatabaseName(), nid.SchemaName(), nid.Name(), id.ArgumentDataTypes()...)
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(id1.Name(), schema.ID(), sdk.DataTypeVARCHAR)
 
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithRenameTo(nid))
-		if err != nil {
-			t.Cleanup(cleanupProcedureHandle(id))
-		} else {
-			t.Cleanup(cleanupProcedureHandle(nidWithArguments))
-		}
+		createProcedureForSQLHandle(t, id1)
+		createProcedureForSQLHandle(t, id2)
+
+		e1, err := client.Procedures.ShowByID(ctx, id1)
 		require.NoError(t, err)
+		require.Equal(t, id1, e1.ID())
 
-		_, err = client.Procedures.ShowByID(ctx, id)
-		assert.ErrorIs(t, err, collections.ErrObjectNotFound)
-
-		e, err := client.Procedures.ShowByID(ctx, nidWithArguments)
+		e2, err := client.Procedures.ShowByID(ctx, id2)
 		require.NoError(t, err)
-		require.Equal(t, nid.Name(), e.Name)
+		require.Equal(t, id2, e2.ID())
 	})
 
-	t.Run("alter procedure: set log level", func(t *testing.T) {
-		f := createProcedureForSQLHandle(t, true)
+	t.Run("show procedure by id - different name, same arguments", func(t *testing.T) {
+		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		e := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
+		testClientHelper().Procedure.CreateWithIdentifier(t, id2)
 
-		id := f.ID()
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().WithLogLevel("DEBUG")))
+		es, err := client.Procedures.ShowByID(ctx, id1)
 		require.NoError(t, err)
-		assertProcedure(t, id, true)
+		require.Equal(t, *e, *es)
 	})
 
-	t.Run("alter procedure: set trace level", func(t *testing.T) {
-		f := createProcedureForSQLHandle(t, true)
+	t.Run("show procedure by id - same name, different arguments", func(t *testing.T) {
+		name := testClientHelper().Ids.Alpha()
+		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
+		e := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
+		testClientHelper().Procedure.CreateWithIdentifier(t, id2)
 
-		id := f.ID()
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().WithTraceLevel("ALWAYS")))
+		es, err := client.Procedures.ShowByID(ctx, id1)
 		require.NoError(t, err)
-		assertProcedure(t, id, true)
+		require.Equal(t, *e, *es)
 	})
 
-	t.Run("alter procedure: set comment", func(t *testing.T) {
-		f := createProcedureForSQLHandle(t, true)
+	// This test shows behavior of detailed types (e.g. VARCHAR(20) and NUMBER(10, 0)) on Snowflake side for procedures.
+	// For SHOW, data type is generalized both for argument and return type (to e.g. VARCHAR and NUMBER).
+	// FOR DESCRIBE, data type is generalized for argument and works weirdly for the return type: type is generalized to the canonical one, but we also get the attributes.
+	for _, tc := range []string{
+		"NUMBER(36, 5)",
+		"NUMBER(36)",
+		"NUMBER",
+		"DECIMAL",
+		"INTEGER",
+		"FLOAT",
+		"DOUBLE",
+		"VARCHAR",
+		"VARCHAR(20)",
+		"CHAR",
+		"CHAR(10)",
+		"TEXT",
+		"BINARY",
+		"BINARY(1000)",
+		"VARBINARY",
+		"BOOLEAN",
+		"DATE",
+		"DATETIME",
+		"TIME",
+		"TIMESTAMP_LTZ",
+		"TIMESTAMP_NTZ",
+		"TIMESTAMP_TZ",
+		"VARIANT",
+		"OBJECT",
+		"ARRAY",
+		"GEOGRAPHY",
+		"GEOMETRY",
+		"VECTOR(INT, 16)",
+		"VECTOR(FLOAT, 8)",
+	} {
+		tc := tc
+		t.Run(fmt.Sprintf("procedure returns non detailed data types of arguments for %s", tc), func(t *testing.T) {
+			procName := "add"
+			argName := "A"
+			dataType, err := datatypes.ParseDataType(tc)
+			require.NoError(t, err)
+			args := []sdk.ProcedureArgumentRequest{
+				*sdk.NewProcedureArgumentRequest(argName, dataType),
+			}
+			oldDataType := sdk.LegacyDataTypeFrom(dataType)
+			idWithArguments := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(oldDataType)
 
-		id := f.ID()
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().WithComment("comment")))
-		require.NoError(t, err)
-		assertProcedure(t, id, true)
-	})
+			packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("snowflake-snowpark-python")}
+			definition := fmt.Sprintf("def add(%[1]s): %[1]s", argName)
 
-	t.Run("alter procedure: unset comment", func(t *testing.T) {
-		f := createProcedureForSQLHandle(t, true)
+			err = client.Procedures.CreateForPython(ctx, sdk.NewCreateForPythonProcedureRequest(
+				idWithArguments.SchemaObjectId(),
+				*sdk.NewProcedureReturnsRequest().WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(dataType)),
+				"3.8",
+				packages,
+				procName,
+			).
+				WithArguments(args).
+				WithProcedureDefinitionWrapped(definition),
+			)
+			require.NoError(t, err)
 
-		id := f.ID()
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnset(*sdk.NewProcedureUnsetRequest().WithComment(true)))
-		require.NoError(t, err)
-		assertProcedure(t, id, true)
-	})
+			procedure, err := client.Procedures.ShowByID(ctx, idWithArguments)
+			require.NoError(t, err)
+			assert.Equal(t, []sdk.DataType{oldDataType}, procedure.ArgumentsOld)
+			assert.Equal(t, fmt.Sprintf("%[1]s(%[2]s) RETURN %[2]s", idWithArguments.Name(), oldDataType), procedure.ArgumentsRaw)
 
-	t.Run("alter procedure: set execute as", func(t *testing.T) {
-		f := createProcedureForSQLHandle(t, true)
-
-		id := f.ID()
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsOwner)))
-		require.NoError(t, err)
-		assertProcedure(t, id, true)
-	})
-
-	t.Run("show procedure for SQL: without like", func(t *testing.T) {
-		f1 := createProcedureForSQLHandle(t, true)
-		f2 := createProcedureForSQLHandle(t, true)
-
-		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
-		require.NoError(t, err)
-
-		require.GreaterOrEqual(t, len(procedures), 1)
-		require.Contains(t, procedures, *f1)
-		require.Contains(t, procedures, *f2)
-	})
-
-	t.Run("show procedure for SQL: with like", func(t *testing.T) {
-		f1 := createProcedureForSQLHandle(t, true)
-		f2 := createProcedureForSQLHandle(t, true)
-
-		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest().WithLike(sdk.Like{Pattern: &f1.Name}))
-		require.NoError(t, err)
-
-		require.Equal(t, 1, len(procedures))
-		require.Contains(t, procedures, *f1)
-		require.NotContains(t, procedures, *f2)
-	})
-
-	t.Run("show procedure for SQL: no matches", func(t *testing.T) {
-		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest().WithLike(sdk.Like{Pattern: sdk.String("non-existing-id-pattern")}))
-		require.NoError(t, err)
-		require.Equal(t, 0, len(procedures))
-	})
-
-	t.Run("describe procedure for SQL", func(t *testing.T) {
-		f := createProcedureForSQLHandle(t, true)
-		id := f.ID()
-
-		details, err := client.Procedures.Describe(ctx, id)
-		require.NoError(t, err)
-		pairs := make(map[string]string)
-		for _, detail := range details {
-			pairs[detail.Property] = *detail.Value
-		}
-		require.Equal(t, "SQL", pairs["language"])
-		require.Equal(t, "CALLER", pairs["execute as"])
-		require.Equal(t, "(MESSAGE VARCHAR)", pairs["signature"])
-		require.Equal(t, "\n\tBEGIN\n\t\tRETURN message;\n\tEND;", pairs["body"])
-	})
-
-	t.Run("drop procedure for SQL", func(t *testing.T) {
-		definition := `
-		BEGIN
-			RETURN message;
-		END;`
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
-		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
-		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt).WithNotNull(true)
-		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
-			WithOrReplace(true).
-			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
-			WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
-		err := client.Procedures.CreateForSQL(ctx, request)
-		require.NoError(t, err)
-
-		err = client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id))
-		require.NoError(t, err)
-	})
+			details, err := client.Procedures.Describe(ctx, idWithArguments)
+			require.NoError(t, err)
+			pairs := make(map[string]string)
+			for _, detail := range details {
+				pairs[detail.Property] = *detail.Value
+			}
+			assert.Equal(t, fmt.Sprintf("(%s %s)", argName, oldDataType), pairs["signature"])
+			assert.Equal(t, dataType.Canonical(), pairs["returns"])
+		})
+	}
 }
 
 func TestInt_CallProcedure(t *testing.T) {
@@ -2115,156 +2392,4 @@ def filter_by_role(session, name, role):
 		err := client.Procedures.CreateAndCallForJava(ctx, request)
 		require.NoError(t, err)
 	})
-}
-
-func TestInt_ProceduresShowByID(t *testing.T) {
-	client := testClient(t)
-	ctx := testContext(t)
-
-	cleanupProcedureHandle := func(id sdk.SchemaObjectIdentifierWithArguments) func() {
-		return func() {
-			err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id))
-			if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
-				return
-			}
-			require.NoError(t, err)
-		}
-	}
-
-	createProcedureForSQLHandle := func(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) {
-		t.Helper()
-
-		definition := `
-	BEGIN
-		RETURN message;
-	END;`
-		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
-		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt).WithNotNull(true)
-		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
-		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
-			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
-			WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsCaller))
-		err := client.Procedures.CreateForSQL(ctx, request)
-		require.NoError(t, err)
-		t.Cleanup(cleanupProcedureHandle(id))
-	}
-
-	t.Run("show by id - same name in different schemas", func(t *testing.T) {
-		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
-		t.Cleanup(schemaCleanup)
-
-		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
-		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(id1.Name(), schema.ID(), sdk.DataTypeVARCHAR)
-
-		createProcedureForSQLHandle(t, id1)
-		createProcedureForSQLHandle(t, id2)
-
-		e1, err := client.Procedures.ShowByID(ctx, id1)
-		require.NoError(t, err)
-		require.Equal(t, id1, e1.ID())
-
-		e2, err := client.Procedures.ShowByID(ctx, id2)
-		require.NoError(t, err)
-		require.Equal(t, id2, e2.ID())
-	})
-
-	t.Run("show procedure by id - different name, same arguments", func(t *testing.T) {
-		id1 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
-		id2 := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
-		e := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
-		testClientHelper().Procedure.CreateWithIdentifier(t, id2)
-
-		es, err := client.Procedures.ShowByID(ctx, id1)
-		require.NoError(t, err)
-		require.Equal(t, *e, *es)
-	})
-
-	t.Run("show procedure by id - same name, different arguments", func(t *testing.T) {
-		name := testClientHelper().Ids.Alpha()
-		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeFloat, sdk.DataTypeVARCHAR)
-		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
-		e := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
-		testClientHelper().Procedure.CreateWithIdentifier(t, id2)
-
-		es, err := client.Procedures.ShowByID(ctx, id1)
-		require.NoError(t, err)
-		require.Equal(t, *e, *es)
-	})
-
-	// This test shows behavior of detailed types (e.g. VARCHAR(20) and NUMBER(10, 0)) on Snowflake side for procedures.
-	// For SHOW, data type is generalized both for argument and return type (to e.g. VARCHAR and NUMBER).
-	// FOR DESCRIBE, data type is generalized for argument and works weirdly for the return type: type is generalized to the canonical one, but we also get the attributes.
-	for _, tc := range []string{
-		"NUMBER(36, 5)",
-		"NUMBER(36)",
-		"NUMBER",
-		"DECIMAL",
-		"INTEGER",
-		"FLOAT",
-		"DOUBLE",
-		"VARCHAR",
-		"VARCHAR(20)",
-		"CHAR",
-		"CHAR(10)",
-		"TEXT",
-		"BINARY",
-		"BINARY(1000)",
-		"VARBINARY",
-		"BOOLEAN",
-		"DATE",
-		"DATETIME",
-		"TIME",
-		"TIMESTAMP_LTZ",
-		"TIMESTAMP_NTZ",
-		"TIMESTAMP_TZ",
-		"VARIANT",
-		"OBJECT",
-		"ARRAY",
-		"GEOGRAPHY",
-		"GEOMETRY",
-		"VECTOR(INT, 16)",
-		"VECTOR(FLOAT, 8)",
-	} {
-		tc := tc
-		t.Run(fmt.Sprintf("procedure returns non detailed data types of arguments for %s", tc), func(t *testing.T) {
-			procName := "add"
-			argName := "A"
-			dataType, err := datatypes.ParseDataType(tc)
-			require.NoError(t, err)
-			args := []sdk.ProcedureArgumentRequest{
-				*sdk.NewProcedureArgumentRequest(argName, dataType),
-			}
-			oldDataType := sdk.LegacyDataTypeFrom(dataType)
-			idWithArguments := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(oldDataType)
-
-			packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("snowflake-snowpark-python")}
-			definition := fmt.Sprintf("def add(%[1]s): %[1]s", argName)
-
-			err = client.Procedures.CreateForPython(ctx, sdk.NewCreateForPythonProcedureRequest(
-				idWithArguments.SchemaObjectId(),
-				*sdk.NewProcedureReturnsRequest().WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(dataType)),
-				"3.8",
-				packages,
-				procName,
-			).
-				WithArguments(args).
-				WithProcedureDefinitionWrapped(definition),
-			)
-			require.NoError(t, err)
-
-			procedure, err := client.Procedures.ShowByID(ctx, idWithArguments)
-			require.NoError(t, err)
-			assert.Equal(t, []sdk.DataType{oldDataType}, procedure.ArgumentsOld)
-			assert.Equal(t, fmt.Sprintf("%[1]s(%[2]s) RETURN %[2]s", idWithArguments.Name(), oldDataType), procedure.ArgumentsRaw)
-
-			details, err := client.Procedures.Describe(ctx, idWithArguments)
-			require.NoError(t, err)
-			pairs := make(map[string]string)
-			for _, detail := range details {
-				pairs[detail.Property] = *detail.Value
-			}
-			assert.Equal(t, fmt.Sprintf("(%s %s)", argName, oldDataType), pairs["signature"])
-			assert.Equal(t, dataType.Canonical(), pairs["returns"])
-		})
-	}
 }

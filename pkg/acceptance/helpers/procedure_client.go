@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,6 +25,66 @@ func NewProcedureClient(context *TestClientContext, idsGenerator *IdsGenerator) 
 
 func (c *ProcedureClient) client() sdk.Procedures {
 	return c.context.client.Procedures
+}
+
+func (c *ProcedureClient) CreateSql(t *testing.T) (*sdk.Procedure, func()) {
+	t.Helper()
+	dataType := testdatatypes.DataTypeFloat
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+	definition := c.SampleSqlDefinition(t)
+	return c.CreateSqlWithIdentifierAndArgument(t, id.SchemaObjectId(), dataType, definition)
+}
+
+func (c *ProcedureClient) CreateSqlWithIdentifierAndArgument(t *testing.T, id sdk.SchemaObjectIdentifier, dataType datatypes.DataType, definition string) (*sdk.Procedure, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	idWithArgs := sdk.NewSchemaObjectIdentifierWithArgumentsInSchema(id.SchemaId(), id.Name(), sdk.LegacyDataTypeFrom(dataType))
+	argName := "x"
+	dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt)
+	argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+
+	request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id, *returns, definition).
+		WithArguments([]sdk.ProcedureArgumentRequest{*argument})
+
+	err := c.client().CreateForSQL(ctx, request)
+	require.NoError(t, err)
+
+	procedure, err := c.client().ShowByID(ctx, idWithArgs)
+	require.NoError(t, err)
+
+	return procedure, c.DropProcedureFunc(t, idWithArgs)
+}
+
+func (c *ProcedureClient) CreateJava(t *testing.T) (*sdk.Procedure, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	className := "TestFunc"
+	funcName := "echoVarchar"
+	argName := "x"
+	dataType := testdatatypes.DataTypeVarchar_100
+
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+	argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+	dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
+	handler := fmt.Sprintf("%s.%s", className, funcName)
+	definition := c.SampleJavaDefinition(t, className, funcName, argName)
+	packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0")}
+
+	request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, handler).
+		WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+		WithProcedureDefinitionWrapped(definition)
+
+	err := c.client().CreateForJava(ctx, request)
+	require.NoError(t, err)
+
+	function, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return function, c.DropProcedureFunc(t, id)
 }
 
 func (c *ProcedureClient) Create(t *testing.T, arguments ...sdk.DataType) *sdk.Procedure {
