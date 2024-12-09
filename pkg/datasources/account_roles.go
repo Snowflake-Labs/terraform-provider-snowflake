@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var rolesSchema = map[string]*schema.Schema{
+var accountRolesSchema = map[string]*schema.Schema{
 	"like": {
 		Type:        schema.TypeString,
 		Optional:    true,
@@ -47,16 +47,15 @@ var rolesSchema = map[string]*schema.Schema{
 	},
 }
 
-func Roles() *schema.Resource {
+func AccountRoles() *schema.Resource {
 	return &schema.Resource{
-		ReadContext:        TrackingReadWrapper(datasources.Roles, ReadRoles),
-		Schema:             rolesSchema,
-		Description:        "Datasource used to get details of filtered roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.",
-		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_account_roles instead.",
+		ReadContext: TrackingReadWrapper(datasources.Roles, ReadRoles),
+		Schema:      accountRolesSchema,
+		Description: "Datasource used to get details of filtered account roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.",
 	}
 }
 
-func ReadRoles(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func ReadAccountRoles(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 
 	req := sdk.NewShowRoleRequest()
@@ -76,23 +75,23 @@ func ReadRoles(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Failed to show roles",
+				Summary:  "Failed to show account roles",
 				Detail:   fmt.Sprintf("Error: %s", err),
 			},
 		}
 	}
 
-	d.SetId("roles_read")
+	d.SetId("account_roles_read")
 
-	flattenedRoles := make([]map[string]any, len(roles))
+	flattenedAccountRoles := make([]map[string]any, len(roles))
 	for i, role := range roles {
 		role := role
-		flattenedRoles[i] = map[string]any{
+		flattenedAccountRoles[i] = map[string]any{
 			resources.ShowOutputAttributeName: []map[string]any{schemas.RoleToSchema(&role)},
 		}
 	}
 
-	err = d.Set("roles", flattenedRoles)
+	err = d.Set("account_roles", flattenedAccountRoles)
 	if err != nil {
 		return diag.FromErr(err)
 	}
