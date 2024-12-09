@@ -3,7 +3,6 @@ package testint
 import (
 	"errors"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -1592,7 +1592,7 @@ def filter_by_role(session, table_name, role):
 			WithExternalAccessIntegrations([]sdk.AccountObjectIdentifier{externalAccessIntegration}).
 			WithSecretsList(*sdk.NewSecretsListRequest([]sdk.SecretReference{{VariableName: "abc", Name: secretId}})).
 			// TODO [SNOW-1850370]: every value end with invalid value [OFF] for parameter 'AUTO_EVENT_LOGGING'
-			//WithAutoEventLogging(sdk.AutoEventLoggingAll).
+			// WithAutoEventLogging(sdk.AutoEventLoggingAll).
 			WithEnableConsoleOutput(true).
 			WithLogLevel(sdk.LogLevelWarn).
 			WithMetricLevel(sdk.MetricLevelAll).
@@ -1670,7 +1670,7 @@ def filter_by_role(session, table_name, role):
 		)
 
 		request := sdk.NewAlterProcedureRequest(id).WithSet(*sdk.NewProcedureSetRequest().
-			//WithAutoEventLogging(sdk.AutoEventLoggingTracing).
+			// WithAutoEventLogging(sdk.AutoEventLoggingTracing).
 			WithEnableConsoleOutput(true).
 			WithLogLevel(sdk.LogLevelWarn).
 			WithMetricLevel(sdk.MetricLevelAll).
@@ -1689,7 +1689,7 @@ def filter_by_role(session, table_name, role):
 		assertParametersSet(t, objectparametersassert.ProcedureParameters(t, id))
 
 		unsetRequest := sdk.NewAlterProcedureRequest(id).WithUnset(*sdk.NewProcedureUnsetRequest().
-			//WithAutoEventLogging(true).
+			// WithAutoEventLogging(true).
 			WithEnableConsoleOutput(true).
 			WithLogLevel(true).
 			WithMetricLevel(true).
