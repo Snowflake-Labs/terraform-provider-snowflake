@@ -77,7 +77,7 @@ var CortexSearchServiceDef = g.NewInterface(
 		OptionalIn().
 		OptionalStartsWith().
 		OptionalLimitFrom(),
-).ShowByIdOperation().DescribeOperation(
+).ShowByIdOperationNoFiltering().DescribeOperation(
 	g.DescriptionMappingKindSingleValue,
 	"https://docs.snowflake.com/LIMITEDACCESS/cortex-search/sql/desc-cortex-search",
 	g.DbStruct("cortexSearchServiceDetailsRow").

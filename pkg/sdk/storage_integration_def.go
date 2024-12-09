@@ -151,7 +151,7 @@ var StorageIntegrationDef = g.NewInterface(
 			SQL("STORAGE INTEGRATIONS").
 			OptionalLike(),
 	).
-	ShowByIdOperation().
+	ShowByIdOperationNoFiltering().
 	DescribeOperation(
 		g.DescriptionMappingKindSlice,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-integration",

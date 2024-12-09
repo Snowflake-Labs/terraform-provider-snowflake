@@ -233,7 +233,7 @@ var (
 				OptionalStartsWith().
 				OptionalLimit(),
 		).
-		ShowByIdOperation().
+		ShowByIdOperationNoFiltering().
 		DescribeOperation(
 			g.DescriptionMappingKindSingleValue,
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-stream",

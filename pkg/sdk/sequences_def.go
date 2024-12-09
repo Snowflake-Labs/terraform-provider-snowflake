@@ -78,7 +78,7 @@ var SequencesDef = g.NewInterface(
 		SQL("SEQUENCES").
 		OptionalLike().
 		OptionalIn(),
-).ShowByIdOperation().DescribeOperation(
+).ShowByIdOperationNoFiltering().DescribeOperation(
 	g.DescriptionMappingKindSingleValue,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-sequence",
 	g.DbStruct("sequenceDetailRow").

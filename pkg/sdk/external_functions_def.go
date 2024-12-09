@@ -149,7 +149,7 @@ var ExternalFunctionsDef = g.NewInterface(
 		SQL("EXTERNAL FUNCTIONS").
 		OptionalLike().
 		OptionalIn(),
-).ShowByIdOperation().DescribeOperation(
+).ShowByIdOperationNoFiltering().DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-function",
 	g.DbStruct("externalFunctionPropertyRow").

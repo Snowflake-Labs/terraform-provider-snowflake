@@ -67,4 +67,4 @@ var ManagedAccountsDef = g.NewInterface(
 			SQL("MANAGED ACCOUNTS").
 			OptionalLike(),
 	).
-	ShowByIdOperation()
+	ShowByIdOperationNoFiltering()

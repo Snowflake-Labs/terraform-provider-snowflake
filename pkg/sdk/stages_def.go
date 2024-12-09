@@ -398,4 +398,4 @@ var StagesDef = g.NewInterface(
 			OptionalLike().
 			OptionalIn(),
 	).
-	ShowByIdOperation()
+	ShowByIdOperationNoFiltering()

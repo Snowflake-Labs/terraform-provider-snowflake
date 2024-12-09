@@ -57,6 +57,7 @@ func main() {
 
 	// runAllTemplatesToStdOut(definition)
 	runAllTemplatesAndSave(definition, file)
+	fmt.Println("Integration tests should be added manually to the pkg/sdk/testint/ directory")
 }
 
 func getDefinition(file string) *generator.Interface {
@@ -104,7 +105,6 @@ func runAllTemplatesAndSave(definition *generator.Interface, file string) {
 	runTemplateAndSave(definition, generator.GenerateImplementation, filenameFor(fileWithoutSuffix, "_impl"))
 	runTemplateAndSave(definition, generator.GenerateUnitTests, filename(fileWithoutSuffix, "_gen", "_test.go"))
 	runTemplateAndSave(definition, generator.GenerateValidations, filenameFor(fileWithoutSuffix, "_validations"))
-	runTemplateAndSave(definition, generator.GenerateIntegrationTests, filename(fileWithoutSuffix, "_gen_integration", "_test.go"))
 }
 
 func runTemplateAndSave(def *generator.Interface, genFunc func(io.Writer, *generator.Interface), fileName string) {

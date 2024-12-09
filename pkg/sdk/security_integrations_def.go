@@ -976,4 +976,4 @@ var SecurityIntegrationsDef = g.NewInterface(
 			SQL("SECURITY INTEGRATIONS").
 			OptionalLike(),
 	).
-	ShowByIdOperation()
+	ShowByIdOperationNoFiltering()

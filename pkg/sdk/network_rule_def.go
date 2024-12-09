@@ -108,7 +108,7 @@ var NetworkRuleDef = g.NewInterface(
 			OptionalStartsWith().
 			OptionalLimitFrom(),
 	).
-	ShowByIdOperation().
+	ShowByIdOperationNoFiltering().
 	DescribeOperation(
 		g.DescriptionMappingKindSingleValue,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-network-rule",
