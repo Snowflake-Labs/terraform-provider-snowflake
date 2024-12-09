@@ -343,6 +343,136 @@ func TestInt_Procedures(t *testing.T) {
 		)
 	})
 
+	t.Run("create function for Javascript - inline minimal", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		argName := "d"
+		definition := testClientHelper().Procedure.SampleJavascriptDefinition(t, argName)
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+
+		request := sdk.NewCreateForJavaScriptProcedureRequestDefinitionWrapped(id.SchemaObjectId(), dataType, definition).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
+
+		err := client.Procedures.CreateForJavaScript(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription(sdk.DefaultProcedureComment).
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(dataType.ToSql()).
+			HasLanguage("JAVASCRIPT").
+			HasBody(definition).
+			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImportsNil().
+			HasHandlerNil().
+			HasRuntimeVersionNil().
+			HasPackagesNil().
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasExecuteAs("OWNER"),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("create function for Javascript - inline full", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		argName := "d"
+		definition := testClientHelper().Procedure.SampleJavascriptDefinition(t, argName)
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+		request := sdk.NewCreateForJavaScriptProcedureRequestDefinitionWrapped(id.SchemaObjectId(), dataType, definition).
+			WithOrReplace(true).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithCopyGrants(true).
+			WithNotNull(true).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
+			WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsCaller)).
+			WithComment("comment")
+
+		err := client.Procedures.CreateForJavaScript(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(1).
+			HasMaxNumArguments(1).
+			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription("comment").
+			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
+			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasLanguage("JAVASCRIPT").
+			HasBody(definition).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImportsNil().
+			HasHandlerNil().
+			HasRuntimeVersionNil().
+			HasPackagesNil().
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasExecuteAs("CALLER"),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
 	t.Run("create procedure for Java: returns table", func(t *testing.T) {
 		// https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#specifying-return-column-names-and-types
 		name := "filter_by_role"

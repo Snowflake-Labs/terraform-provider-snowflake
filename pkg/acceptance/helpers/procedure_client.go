@@ -93,3 +93,20 @@ func (c *ProcedureClient) SampleJavaDefinition(t *testing.T, className string, f
 	}
 `, className, funcName, argName)
 }
+
+// For more references: https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript
+func (c *ProcedureClient) SampleJavascriptDefinition(t *testing.T, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+	if (%[1]s <= 0) {
+		return 1;
+	} else {
+		var result = 1;
+		for (var i = 2; i <= %[1]s; i++) {
+			result = result * i;
+		}
+		return result;
+	}
+`, argName)
+}
