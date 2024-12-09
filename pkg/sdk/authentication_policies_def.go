@@ -170,7 +170,10 @@ var AuthenticationPoliciesDef = g.NewInterface(
 			OptionalStartsWith().
 			OptionalLimit(),
 	).
-	ShowByIdOperationNoFiltering().
+	ShowByIdOperationWithFiltering(
+		g.ShowByIDLikeFiltering,
+		g.ShowByIDInFiltering,
+	).
 	DescribeOperation(
 		g.DescriptionMappingKindSlice,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-authentication-policy",

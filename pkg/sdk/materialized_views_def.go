@@ -175,7 +175,10 @@ var MaterializedViewsDef = g.NewInterface(
 			OptionalLike().
 			OptionalIn(),
 	).
-	ShowByIdOperationNoFiltering().
+	ShowByIdOperationWithFiltering(
+		g.ShowByIDInFiltering,
+		g.ShowByIDLikeFiltering,
+	).
 	DescribeOperation(
 		g.DescriptionMappingKindSlice,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-materialized-view",

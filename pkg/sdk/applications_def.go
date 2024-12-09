@@ -132,7 +132,9 @@ var ApplicationsDef = g.NewInterface(
 		OptionalLike().
 		OptionalStartsWith().
 		OptionalLimit(),
-).ShowByIdOperationNoFiltering().DescribeOperation(
+).ShowByIdOperationWithFiltering(
+	g.ShowByIDLikeFiltering,
+).DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-application",
 	g.DbStruct("applicationPropertyRow").

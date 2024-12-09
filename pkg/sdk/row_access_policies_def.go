@@ -90,7 +90,10 @@ var RowAccessPoliciesDef = g.NewInterface(
 			OptionalExtendedIn().
 			OptionalLimitFrom(),
 	).
-	ShowByIdOperationNoFiltering().
+	ShowByIdOperationWithFiltering(
+		g.ShowByIDExtendedInFiltering,
+		g.ShowByIDLikeFiltering,
+	).
 	DescribeOperation(
 		g.DescriptionMappingKindSingleValue,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-row-access-policy",

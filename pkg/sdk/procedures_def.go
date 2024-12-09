@@ -321,7 +321,10 @@ var ProceduresDef = g.NewInterface(
 		SQL("PROCEDURES").
 		OptionalLike().
 		OptionalIn(), // TODO: 'In' struct for procedures not support keyword "CLASS" now
-).ShowByIdOperationNoFiltering().DescribeOperation(
+).ShowByIdOperationWithFiltering(
+	g.ShowByIDInFiltering,
+	g.ShowByIDLikeFiltering,
+).DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-procedure",
 	g.DbStruct("procedureDetailRow").

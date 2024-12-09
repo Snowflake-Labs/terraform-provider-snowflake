@@ -226,4 +226,6 @@ var ExternalVolumesDef = g.NewInterface(
 			SQL("EXTERNAL VOLUMES").
 			OptionalLike(),
 	).
-	ShowByIdOperationNoFiltering()
+	ShowByIdOperationWithFiltering(
+		g.ShowByIDLikeFiltering,
+	)

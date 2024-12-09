@@ -102,7 +102,10 @@ var EventTablesDef = g.NewInterface(
 		OptionalIn().
 		OptionalStartsWith().
 		OptionalLimit(),
-).ShowByIdOperationNoFiltering().DescribeOperation(
+).ShowByIdOperationWithFiltering(
+	g.ShowByIDInFiltering,
+	g.ShowByIDLikeFiltering,
+).DescribeOperation(
 	g.DescriptionMappingKindSingleValue,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-event-table",
 	g.DbStruct("eventTableDetailsRow").

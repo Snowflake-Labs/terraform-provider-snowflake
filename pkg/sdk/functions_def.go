@@ -305,7 +305,10 @@ var FunctionsDef = g.NewInterface(
 		SQL("USER FUNCTIONS").
 		OptionalLike().
 		OptionalIn(),
-).ShowByIdOperationNoFiltering().DescribeOperation(
+).ShowByIdOperationWithFiltering(
+	g.ShowByIDInFiltering,
+	g.ShowByIDLikeFiltering,
+).DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-function",
 	g.DbStruct("functionDetailRow").
