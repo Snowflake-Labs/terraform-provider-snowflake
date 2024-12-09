@@ -9,6 +9,9 @@ across different versions.
 
 ## v0.99.0 ➞ v0.100.0
 
+### snowflake_roles data source deprecation
+`snowflake_roles` is now deprecated in favor of `snowflake_account_roles` with the same schema and behavior. It will be removed with the v1 release. Please adjust your configuration files.
+
 ### snowflake_tag_association resource changes
 #### *(behavior change)* new id format
 In order to provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type in one resource.

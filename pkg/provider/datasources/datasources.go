@@ -4,6 +4,7 @@ type datasource string
 
 const (
 	Accounts                       datasource = "snowflake_accounts"
+	AccountRoles                   datasource = "snowflake_account_roles"
 	Alerts                         datasource = "snowflake_alerts"
 	Connections                    datasource = "snowflake_connections"
 	CortexSearchServices           datasource = "snowflake_cortex_search_services"
