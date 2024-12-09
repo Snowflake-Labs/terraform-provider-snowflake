@@ -181,7 +181,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
-			// TODO [this PR]: apparently external access integrations and secrets are not filled out correctly for procedures
+			// TODO [SNOW-1850370]: apparently external access integrations and secrets are not filled out correctly for procedures
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil(),
 		)
