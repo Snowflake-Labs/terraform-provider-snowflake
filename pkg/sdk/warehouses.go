@@ -100,12 +100,12 @@ func ToWarehouseSize(s string) (WarehouseSize, error) {
 type ResourceConstraint string
 
 const (
-	ResourceConstraintSize1X   	ConstraintSize = "MEMORY_1X"
-	ResourceConstraintSize1XX86 	ConstraintSize = "MEMORY_1X_X86"
-	ResourceConstraintSize16X   	ConstraintSize = "MEMORY_16X"
-	ResourceConstraintSize16XX86	ConstraintSize = "MEMORY_16X_X86"
-	ResourceConstraintSize64X   	ConstraintSize = "MEMORY_64X"
-	ResourceConstraintSize64XX86   	ConstraintSize = "MEMORY_64X_X86"
+	ResourceConstraintSize1X        ConstraintSize = "MEMORY_1X"
+	ResourceConstraintSize1XX86     ConstraintSize = "MEMORY_1X_X86"
+	ResourceConstraintSize16X       ConstraintSize = "MEMORY_16X"
+	ResourceConstraintSize16XX86    ConstraintSize = "MEMORY_16X_X86"
+	ResourceConstraintSize64X       ConstraintSize = "MEMORY_64X"
+	ResourceConstraintSize64XX86    ConstraintSize = "MEMORY_64X_X86"
 )
 
 func ToResourceConstraint(s string) (ResourceConstraint, error) {
