@@ -116,8 +116,8 @@ var warehouseSchema = map[string]*schema.Schema{
 	"resource_constraint": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		ValidateDiagFunc: sdkValidation(sdk.ToResourceType),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToResourceType), IgnoreChangeToCurrentSnowflakeValueInShow("resource_constraint")),
+		ValidateDiagFunc: sdkValidation(sdk.ToResourceConstraint),
+		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToResourceConstraint), IgnoreChangeToCurrentSnowflakeValueInShow("resource_constraint")),
 		Description:      fmt.Sprintf("Specifies memory and architecture type. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.ValidResourceConstraintString)),
 
 	},
