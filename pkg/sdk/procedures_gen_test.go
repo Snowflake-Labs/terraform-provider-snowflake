@@ -1353,7 +1353,7 @@ func TestProcedures_CreateAndCallForJava(t *testing.T) {
 
 	t.Run("validation: valid identifier for [opts.ProcedureName]", func(t *testing.T) {
 		opts := defaultOpts()
-		// TODO: fill me
+		opts.ProcedureName = emptyAccountObjectIdentifier
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
 	})
 

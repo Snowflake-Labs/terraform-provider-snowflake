@@ -122,7 +122,7 @@ func (c *TestClient) CreateSamplePythonFunctionAndModule(t *testing.T) *TmpFunct
 
 	return &TmpFunction{
 		FunctionId: id,
-		ModuleName: strings.ReplaceAll(moduleFileName, ".py", ""),
+		ModuleName: strings.TrimSuffix(moduleFileName, ".py"),
 		FuncName:   funcName,
 		ArgName:    argName,
 		ArgType:    dataType,

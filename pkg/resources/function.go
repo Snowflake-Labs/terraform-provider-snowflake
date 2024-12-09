@@ -311,6 +311,7 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	functionDefinition := d.Get("statement").(string)
 	handler := d.Get("handler").(string)
 	var runtimeVersion string
+	// TODO [after review]: return error otherwise here
 	if v, ok := d.GetOk("runtime_version"); ok {
 		runtimeVersion = v.(string)
 	}
@@ -570,6 +571,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 	for _, desc := range functionDetails {
+		// TODO [after review]: handle nil correctly here, also handle sets correctly here
 		switch desc.Property {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)

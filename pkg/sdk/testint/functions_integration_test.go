@@ -1420,6 +1420,7 @@ func TestInt_Functions(t *testing.T) {
 		)
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+			// TODO [after review]: Can we have an extension function for these types and pass slices/maps there?
 			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
 			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())),
 		)

@@ -20,6 +20,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO [after review]: unquote catalog and schema
+// TODO [after review]: Add NullInputBehavior and ReturnResultsBehavior to tests
+// TODO [after review]: dollar quiting to generator readme
+// TODO [after review]: NullInputBehaviorReturnNullInput to NullInputBehaviorReturnsNullInput
+
 // TODO [SNOW-1850370]: 'ExtendedIn' struct for procedures not support keyword "CLASS" now
 // TODO [SNOW-1850370]: Call/CreateAndCall methods were not updated before V1 because we are not using them
 func TestInt_Procedures(t *testing.T) {
