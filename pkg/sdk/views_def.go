@@ -336,7 +336,10 @@ var ViewsDef = g.NewInterface(
 			OptionalStartsWith().
 			OptionalLimit(),
 	).
-	ShowByIdOperation().
+	ShowByIdOperationWithFiltering(
+		g.ShowByIDExtendedInFiltering,
+		g.ShowByIDLikeFiltering,
+	).
 	DescribeOperation(
 		g.DescriptionMappingKindSlice,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-view",
