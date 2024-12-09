@@ -926,7 +926,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPath(targetPath).
 			HasInstalledPackagesNil().
-			HasExecuteAs("OWNER"),
+			HasExecuteAs("CALLER"),
 		)
 
 		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
