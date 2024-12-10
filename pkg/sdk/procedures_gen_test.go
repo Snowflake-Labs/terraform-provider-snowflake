@@ -6,6 +6,8 @@ import (
 
 func TestProcedures_CreateForJava(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
+	secretId := randomSchemaObjectIdentifier()
+	secretId2 := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForJavaProcedureOptions {
 		return &CreateForJavaProcedureOptions{
@@ -192,11 +194,11 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		opts.Secrets = []SecretReference{
 			{
 				VariableName: "variable1",
-				Name:         "name1",
+				Name:         secretId,
 			},
 			{
 				VariableName: "variable2",
-				Name:         "name2",
+				Name:         secretId2,
 			},
 		}
 		opts.TargetPath = String("@~/testfunc.jar")
@@ -204,7 +206,7 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("return id + name;")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (id NUMBER, name VARCHAR DEFAULT 'test') COPY GRANTS RETURNS TABLE (country_code VARCHAR) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return id + name;'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (id NUMBER, name VARCHAR DEFAULT 'test') COPY GRANTS RETURNS TABLE (country_code VARCHAR) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return id + name;'`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -251,11 +253,11 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		opts.Secrets = []SecretReference{
 			{
 				VariableName: "variable1",
-				Name:         "name1",
+				Name:         secretId,
 			},
 			{
 				VariableName: "variable2",
-				Name:         "name2",
+				Name:         secretId2,
 			},
 		}
 		opts.TargetPath = String("@~/testfunc.jar")
@@ -263,7 +265,7 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("return id + name;")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (id NUMBER(36, 2), name VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS TABLE (country_code VARCHAR(100)) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return id + name;'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (id NUMBER(36, 2), name VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS TABLE (country_code VARCHAR(100)) LANGUAGE JAVA RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'return id + name;'`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 }
 
@@ -377,6 +379,8 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 
 func TestProcedures_CreateForPython(t *testing.T) {
 	id := randomSchemaObjectIdentifier()
+	secretId := randomSchemaObjectIdentifier()
+	secretId2 := randomSchemaObjectIdentifier()
 
 	defaultOpts := func() *CreateForPythonProcedureOptions {
 		return &CreateForPythonProcedureOptions{
@@ -550,18 +554,18 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		opts.Secrets = []SecretReference{
 			{
 				VariableName: "variable1",
-				Name:         "name1",
+				Name:         secretId,
 			},
 			{
 				VariableName: "variable2",
-				Name:         "name2",
+				Name:         secretId2,
 			},
 		}
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("import numpy as np")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (i int DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'import numpy as np'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (i int DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'import numpy as np'`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -606,18 +610,18 @@ func TestProcedures_CreateForPython(t *testing.T) {
 		opts.Secrets = []SecretReference{
 			{
 				VariableName: "variable1",
-				Name:         "name1",
+				Name:         secretId,
 			},
 			{
 				VariableName: "variable2",
-				Name:         "name2",
+				Name:         secretId2,
 			},
 		}
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("import numpy as np")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (i NUMBER(36, 2) DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = name1, 'variable2' = name2) STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'import numpy as np'`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s (i NUMBER(36, 2) DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 'import numpy as np'`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 }
 

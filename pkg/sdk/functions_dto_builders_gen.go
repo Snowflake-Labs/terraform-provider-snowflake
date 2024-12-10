@@ -99,6 +99,26 @@ func (s *CreateForJavaFunctionRequest) WithTargetPath(TargetPath string) *Create
 	return s
 }
 
+func (s *CreateForJavaFunctionRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *CreateForJavaFunctionRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *CreateForJavaFunctionRequest) WithLogLevel(LogLevel LogLevel) *CreateForJavaFunctionRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *CreateForJavaFunctionRequest) WithMetricLevel(MetricLevel MetricLevel) *CreateForJavaFunctionRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *CreateForJavaFunctionRequest) WithTraceLevel(TraceLevel TraceLevel) *CreateForJavaFunctionRequest {
+	s.TraceLevel = &TraceLevel
+	return s
+}
+
 func (s *CreateForJavaFunctionRequest) WithFunctionDefinition(FunctionDefinition string) *CreateForJavaFunctionRequest {
 	s.FunctionDefinition = &FunctionDefinition
 	return s
@@ -250,6 +270,26 @@ func (s *CreateForJavascriptFunctionRequest) WithComment(Comment string) *Create
 	return s
 }
 
+func (s *CreateForJavascriptFunctionRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *CreateForJavascriptFunctionRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *CreateForJavascriptFunctionRequest) WithLogLevel(LogLevel LogLevel) *CreateForJavascriptFunctionRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *CreateForJavascriptFunctionRequest) WithMetricLevel(MetricLevel MetricLevel) *CreateForJavascriptFunctionRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *CreateForJavascriptFunctionRequest) WithTraceLevel(TraceLevel TraceLevel) *CreateForJavascriptFunctionRequest {
+	s.TraceLevel = &TraceLevel
+	return s
+}
+
 func NewCreateForPythonFunctionRequest(
 	name SchemaObjectIdentifier,
 	Returns FunctionReturnsRequest,
@@ -276,6 +316,11 @@ func (s *CreateForPythonFunctionRequest) WithTemporary(Temporary bool) *CreateFo
 
 func (s *CreateForPythonFunctionRequest) WithSecure(Secure bool) *CreateForPythonFunctionRequest {
 	s.Secure = &Secure
+	return s
+}
+
+func (s *CreateForPythonFunctionRequest) WithAggregate(Aggregate bool) *CreateForPythonFunctionRequest {
+	s.Aggregate = &Aggregate
 	return s
 }
 
@@ -334,6 +379,26 @@ func (s *CreateForPythonFunctionRequest) WithSecrets(Secrets []SecretReference) 
 	return s
 }
 
+func (s *CreateForPythonFunctionRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *CreateForPythonFunctionRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *CreateForPythonFunctionRequest) WithLogLevel(LogLevel LogLevel) *CreateForPythonFunctionRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *CreateForPythonFunctionRequest) WithMetricLevel(MetricLevel MetricLevel) *CreateForPythonFunctionRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *CreateForPythonFunctionRequest) WithTraceLevel(TraceLevel TraceLevel) *CreateForPythonFunctionRequest {
+	s.TraceLevel = &TraceLevel
+	return s
+}
+
 func (s *CreateForPythonFunctionRequest) WithFunctionDefinition(FunctionDefinition string) *CreateForPythonFunctionRequest {
 	s.FunctionDefinition = &FunctionDefinition
 	return s
@@ -343,11 +408,13 @@ func NewCreateForScalaFunctionRequest(
 	name SchemaObjectIdentifier,
 	ResultDataType datatypes.DataType,
 	Handler string,
+	RuntimeVersion string,
 ) *CreateForScalaFunctionRequest {
 	s := CreateForScalaFunctionRequest{}
 	s.name = name
 	s.ResultDataType = ResultDataType
 	s.Handler = Handler
+	s.RuntimeVersion = RuntimeVersion
 	return &s
 }
 
@@ -401,11 +468,6 @@ func (s *CreateForScalaFunctionRequest) WithReturnResultsBehavior(ReturnResultsB
 	return s
 }
 
-func (s *CreateForScalaFunctionRequest) WithRuntimeVersion(RuntimeVersion string) *CreateForScalaFunctionRequest {
-	s.RuntimeVersion = &RuntimeVersion
-	return s
-}
-
 func (s *CreateForScalaFunctionRequest) WithComment(Comment string) *CreateForScalaFunctionRequest {
 	s.Comment = &Comment
 	return s
@@ -421,8 +483,38 @@ func (s *CreateForScalaFunctionRequest) WithPackages(Packages []FunctionPackageR
 	return s
 }
 
+func (s *CreateForScalaFunctionRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *CreateForScalaFunctionRequest {
+	s.ExternalAccessIntegrations = ExternalAccessIntegrations
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithSecrets(Secrets []SecretReference) *CreateForScalaFunctionRequest {
+	s.Secrets = Secrets
+	return s
+}
+
 func (s *CreateForScalaFunctionRequest) WithTargetPath(TargetPath string) *CreateForScalaFunctionRequest {
 	s.TargetPath = &TargetPath
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *CreateForScalaFunctionRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithLogLevel(LogLevel LogLevel) *CreateForScalaFunctionRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithMetricLevel(MetricLevel MetricLevel) *CreateForScalaFunctionRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *CreateForScalaFunctionRequest) WithTraceLevel(TraceLevel TraceLevel) *CreateForScalaFunctionRequest {
+	s.TraceLevel = &TraceLevel
 	return s
 }
 
@@ -488,6 +580,26 @@ func (s *CreateForSQLFunctionRequest) WithComment(Comment string) *CreateForSQLF
 	return s
 }
 
+func (s *CreateForSQLFunctionRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *CreateForSQLFunctionRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *CreateForSQLFunctionRequest) WithLogLevel(LogLevel LogLevel) *CreateForSQLFunctionRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *CreateForSQLFunctionRequest) WithMetricLevel(MetricLevel MetricLevel) *CreateForSQLFunctionRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *CreateForSQLFunctionRequest) WithTraceLevel(TraceLevel TraceLevel) *CreateForSQLFunctionRequest {
+	s.TraceLevel = &TraceLevel
+	return s
+}
+
 func NewAlterFunctionRequest(
 	name SchemaObjectIdentifierWithArguments,
 ) *AlterFunctionRequest {
@@ -506,18 +618,13 @@ func (s *AlterFunctionRequest) WithRenameTo(RenameTo SchemaObjectIdentifier) *Al
 	return s
 }
 
-func (s *AlterFunctionRequest) WithSetComment(SetComment string) *AlterFunctionRequest {
-	s.SetComment = &SetComment
+func (s *AlterFunctionRequest) WithSet(Set FunctionSetRequest) *AlterFunctionRequest {
+	s.Set = &Set
 	return s
 }
 
-func (s *AlterFunctionRequest) WithSetLogLevel(SetLogLevel string) *AlterFunctionRequest {
-	s.SetLogLevel = &SetLogLevel
-	return s
-}
-
-func (s *AlterFunctionRequest) WithSetTraceLevel(SetTraceLevel string) *AlterFunctionRequest {
-	s.SetTraceLevel = &SetTraceLevel
+func (s *AlterFunctionRequest) WithUnset(Unset FunctionUnsetRequest) *AlterFunctionRequest {
+	s.Unset = &Unset
 	return s
 }
 
@@ -531,21 +638,6 @@ func (s *AlterFunctionRequest) WithUnsetSecure(UnsetSecure bool) *AlterFunctionR
 	return s
 }
 
-func (s *AlterFunctionRequest) WithUnsetLogLevel(UnsetLogLevel bool) *AlterFunctionRequest {
-	s.UnsetLogLevel = &UnsetLogLevel
-	return s
-}
-
-func (s *AlterFunctionRequest) WithUnsetTraceLevel(UnsetTraceLevel bool) *AlterFunctionRequest {
-	s.UnsetTraceLevel = &UnsetTraceLevel
-	return s
-}
-
-func (s *AlterFunctionRequest) WithUnsetComment(UnsetComment bool) *AlterFunctionRequest {
-	s.UnsetComment = &UnsetComment
-	return s
-}
-
 func (s *AlterFunctionRequest) WithSetTags(SetTags []TagAssociation) *AlterFunctionRequest {
 	s.SetTags = SetTags
 	return s
@@ -553,6 +645,87 @@ func (s *AlterFunctionRequest) WithSetTags(SetTags []TagAssociation) *AlterFunct
 
 func (s *AlterFunctionRequest) WithUnsetTags(UnsetTags []ObjectIdentifier) *AlterFunctionRequest {
 	s.UnsetTags = UnsetTags
+	return s
+}
+
+func NewFunctionSetRequest() *FunctionSetRequest {
+	return &FunctionSetRequest{}
+}
+
+func (s *FunctionSetRequest) WithComment(Comment string) *FunctionSetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func (s *FunctionSetRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations []AccountObjectIdentifier) *FunctionSetRequest {
+	s.ExternalAccessIntegrations = ExternalAccessIntegrations
+	return s
+}
+
+func (s *FunctionSetRequest) WithSecretsList(SecretsList SecretsListRequest) *FunctionSetRequest {
+	s.SecretsList = &SecretsList
+	return s
+}
+
+func (s *FunctionSetRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *FunctionSetRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *FunctionSetRequest) WithLogLevel(LogLevel LogLevel) *FunctionSetRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *FunctionSetRequest) WithMetricLevel(MetricLevel MetricLevel) *FunctionSetRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *FunctionSetRequest) WithTraceLevel(TraceLevel TraceLevel) *FunctionSetRequest {
+	s.TraceLevel = &TraceLevel
+	return s
+}
+
+func NewSecretsListRequest(
+	SecretsList []SecretReference,
+) *SecretsListRequest {
+	s := SecretsListRequest{}
+	s.SecretsList = SecretsList
+	return &s
+}
+
+func NewFunctionUnsetRequest() *FunctionUnsetRequest {
+	return &FunctionUnsetRequest{}
+}
+
+func (s *FunctionUnsetRequest) WithComment(Comment bool) *FunctionUnsetRequest {
+	s.Comment = &Comment
+	return s
+}
+
+func (s *FunctionUnsetRequest) WithExternalAccessIntegrations(ExternalAccessIntegrations bool) *FunctionUnsetRequest {
+	s.ExternalAccessIntegrations = &ExternalAccessIntegrations
+	return s
+}
+
+func (s *FunctionUnsetRequest) WithEnableConsoleOutput(EnableConsoleOutput bool) *FunctionUnsetRequest {
+	s.EnableConsoleOutput = &EnableConsoleOutput
+	return s
+}
+
+func (s *FunctionUnsetRequest) WithLogLevel(LogLevel bool) *FunctionUnsetRequest {
+	s.LogLevel = &LogLevel
+	return s
+}
+
+func (s *FunctionUnsetRequest) WithMetricLevel(MetricLevel bool) *FunctionUnsetRequest {
+	s.MetricLevel = &MetricLevel
+	return s
+}
+
+func (s *FunctionUnsetRequest) WithTraceLevel(TraceLevel bool) *FunctionUnsetRequest {
+	s.TraceLevel = &TraceLevel
 	return s
 }
 
@@ -578,7 +751,7 @@ func (s *ShowFunctionRequest) WithLike(Like Like) *ShowFunctionRequest {
 	return s
 }
 
-func (s *ShowFunctionRequest) WithIn(In In) *ShowFunctionRequest {
+func (s *ShowFunctionRequest) WithIn(In ExtendedIn) *ShowFunctionRequest {
 	s.In = &In
 	return s
 }
