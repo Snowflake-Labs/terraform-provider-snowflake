@@ -227,9 +227,9 @@ func CreateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	sc := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, sc, name)
 
 	// Set required
 	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
@@ -240,7 +240,7 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 	// create request with required
 	request := sdk.NewCreateForJavaFunctionRequest(id, *returns, handler)
 	functionDefinition := d.Get("statement").(string)
-	request.WithFunctionDefinition(functionDefinition)
+	request.WithFunctionDefinitionWrapped(functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
@@ -266,14 +266,14 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 		request.WithComment(v.(string))
 	}
 	if _, ok := d.GetOk("imports"); ok {
-		imports := []sdk.FunctionImportRequest{}
+		var imports []sdk.FunctionImportRequest
 		for _, item := range d.Get("imports").([]interface{}) {
 			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(item.(string)))
 		}
 		request.WithImports(imports)
 	}
 	if _, ok := d.GetOk("packages"); ok {
-		packages := []sdk.FunctionPackageRequest{}
+		var packages []sdk.FunctionPackageRequest
 		for _, item := range d.Get("packages").([]interface{}) {
 			packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
 		}
@@ -288,9 +288,9 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	argumentTypes := make([]sdk.DataType, 0, len(arguments))
 	for _, item := range arguments {
-		argumentTypes = append(argumentTypes, item.ArgDataType)
+		argumentTypes = append(argumentTypes, item.ArgDataTypeOld)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, sc, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -298,9 +298,9 @@ func createJavaFunction(ctx context.Context, d *schema.ResourceData, meta interf
 func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	sc := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, sc, name)
 
 	// Set required
 	returnType := d.Get("return_type").(string)
@@ -310,9 +310,14 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	functionDefinition := d.Get("statement").(string)
 	handler := d.Get("handler").(string)
+	var runtimeVersion string
+	if v, ok := d.GetOk("runtime_version"); ok {
+		runtimeVersion = v.(string)
+	}
+
 	// create request with required
-	request := sdk.NewCreateForScalaFunctionRequest(id, sdk.LegacyDataTypeFrom(returnDataType), handler)
-	request.WithFunctionDefinition(functionDefinition)
+	request := sdk.NewCreateForScalaFunctionRequest(id, nil, handler, runtimeVersion).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType))
+	request.WithFunctionDefinitionWrapped(functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
@@ -331,21 +336,18 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("return_behavior"); ok {
 		request.WithReturnResultsBehavior(sdk.ReturnResultsBehavior(v.(string)))
 	}
-	if v, ok := d.GetOk("runtime_version"); ok {
-		request.WithRuntimeVersion(v.(string))
-	}
 	if v, ok := d.GetOk("comment"); ok {
 		request.WithComment(v.(string))
 	}
 	if _, ok := d.GetOk("imports"); ok {
-		imports := []sdk.FunctionImportRequest{}
+		var imports []sdk.FunctionImportRequest
 		for _, item := range d.Get("imports").([]interface{}) {
 			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(item.(string)))
 		}
 		request.WithImports(imports)
 	}
 	if _, ok := d.GetOk("packages"); ok {
-		packages := []sdk.FunctionPackageRequest{}
+		var packages []sdk.FunctionPackageRequest
 		for _, item := range d.Get("packages").([]interface{}) {
 			packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
 		}
@@ -360,9 +362,9 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	argumentTypes := make([]sdk.DataType, 0, len(arguments))
 	for _, item := range arguments {
-		argumentTypes = append(argumentTypes, item.ArgDataType)
+		argumentTypes = append(argumentTypes, item.ArgDataTypeOld)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, sc, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -370,9 +372,9 @@ func createScalaFunction(ctx context.Context, d *schema.ResourceData, meta inter
 func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	sc := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, sc, name)
 
 	// Set required
 	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
@@ -381,7 +383,7 @@ func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	functionDefinition := d.Get("statement").(string)
 	// create request with required
-	request := sdk.NewCreateForSQLFunctionRequest(id, *returns, functionDefinition)
+	request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id, *returns, functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
@@ -406,9 +408,9 @@ func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	argumentTypes := make([]sdk.DataType, 0, len(arguments))
 	for _, item := range arguments {
-		argumentTypes = append(argumentTypes, item.ArgDataType)
+		argumentTypes = append(argumentTypes, item.ArgDataTypeOld)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, sc, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -416,9 +418,9 @@ func createSQLFunction(ctx context.Context, d *schema.ResourceData, meta interfa
 func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	sc := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, sc, name)
 
 	// Set required
 	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
@@ -430,7 +432,7 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 	handler := d.Get("handler").(string)
 	// create request with required
 	request := sdk.NewCreateForPythonFunctionRequest(id, *returns, version, handler)
-	request.WithFunctionDefinition(functionDefinition)
+	request.WithFunctionDefinitionWrapped(functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
@@ -454,14 +456,14 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 		request.WithComment(v.(string))
 	}
 	if _, ok := d.GetOk("imports"); ok {
-		imports := []sdk.FunctionImportRequest{}
+		var imports []sdk.FunctionImportRequest
 		for _, item := range d.Get("imports").([]interface{}) {
 			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(item.(string)))
 		}
 		request.WithImports(imports)
 	}
 	if _, ok := d.GetOk("packages"); ok {
-		packages := []sdk.FunctionPackageRequest{}
+		var packages []sdk.FunctionPackageRequest
 		for _, item := range d.Get("packages").([]interface{}) {
 			packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
 		}
@@ -473,9 +475,9 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	argumentTypes := make([]sdk.DataType, 0, len(arguments))
 	for _, item := range arguments {
-		argumentTypes = append(argumentTypes, item.ArgDataType)
+		argumentTypes = append(argumentTypes, item.ArgDataTypeOld)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, sc, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -483,9 +485,9 @@ func createPythonFunction(ctx context.Context, d *schema.ResourceData, meta inte
 func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
 	name := d.Get("name").(string)
-	schema := d.Get("schema").(string)
+	sc := d.Get("schema").(string)
 	database := d.Get("database").(string)
-	id := sdk.NewSchemaObjectIdentifier(database, schema, name)
+	id := sdk.NewSchemaObjectIdentifier(database, sc, name)
 
 	// Set required
 	returns, diags := parseFunctionReturnsRequest(d.Get("return_type").(string))
@@ -494,7 +496,7 @@ func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	functionDefinition := d.Get("statement").(string)
 	// create request with required
-	request := sdk.NewCreateForJavascriptFunctionRequest(id, *returns, functionDefinition)
+	request := sdk.NewCreateForJavascriptFunctionRequestDefinitionWrapped(id, *returns, functionDefinition)
 
 	// Set optionals
 	if v, ok := d.GetOk("is_secure"); ok {
@@ -522,9 +524,9 @@ func createJavascriptFunction(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	argumentTypes := make([]sdk.DataType, 0, len(arguments))
 	for _, item := range arguments {
-		argumentTypes = append(argumentTypes, item.ArgDataType)
+		argumentTypes = append(argumentTypes, item.ArgDataTypeOld)
 	}
-	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, schema, name, argumentTypes...)
+	nid := sdk.NewSchemaObjectIdentifierWithArguments(database, sc, name, argumentTypes...)
 	d.SetId(nid.FullyQualifiedName())
 	return ReadContextFunction(ctx, d, meta)
 }
@@ -571,11 +573,11 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 		switch desc.Property {
 		case "signature":
 			// Format in Snowflake DB is: (argName argType, argName argType, ...)
-			value := strings.ReplaceAll(strings.ReplaceAll(desc.Value, "(", ""), ")", "")
+			value := strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "(", ""), ")", "")
 			if value != "" { // Do nothing for functions without arguments
 				pairs := strings.Split(value, ", ")
 
-				arguments := []interface{}{}
+				var arguments []interface{}
 				for _, pair := range pairs {
 					item := strings.Split(pair, " ")
 					argument := map[string]interface{}{}
@@ -602,8 +604,8 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 		case "returns":
 			// Format in Snowflake DB is returnType(<some number>)
 			re := regexp.MustCompile(`^(.*)\([0-9]*\)$`)
-			match := re.FindStringSubmatch(desc.Value)
-			rt := desc.Value
+			rt := *desc.Value
+			match := re.FindStringSubmatch(rt)
 			if match != nil {
 				rt = match[1]
 			}
@@ -611,7 +613,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 				diag.FromErr(err)
 			}
 		case "language":
-			if snowflake.Contains(languages, strings.ToLower(desc.Value)) {
+			if snowflake.Contains(languages, strings.ToLower(*desc.Value)) {
 				if err := d.Set("language", desc.Value); err != nil {
 					diag.FromErr(err)
 				}
@@ -619,7 +621,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 				log.Printf("[INFO] Unexpected language for function %v returned from Snowflake", desc.Value)
 			}
 		case "packages":
-			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", "")
+			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", "")
 			if value != "" { // Do nothing for Java / Python functions without packages
 				packages := strings.Split(value, ",")
 				if err := d.Set("packages", packages); err != nil {
@@ -627,7 +629,7 @@ func ReadContextFunction(ctx context.Context, d *schema.ResourceData, meta inter
 				}
 			}
 		case "imports":
-			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(desc.Value, "[", ""), "]", ""), "'", "")
+			value := strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(*desc.Value, "[", ""), "]", ""), "'", "")
 			if value != "" { // Do nothing for Java functions without imports
 				imports := strings.Split(value, ",")
 				if err := d.Set("imports", imports); err != nil {
@@ -702,11 +704,11 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("comment") {
 		comment := d.Get("comment")
 		if comment != "" {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetComment(comment.(string))); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*sdk.NewFunctionSetRequest().WithComment(comment.(string)))); err != nil {
 				return diag.FromErr(err)
 			}
 		} else {
-			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetComment(true)); err != nil {
+			if err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*sdk.NewFunctionUnsetRequest().WithComment(true))); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -739,7 +741,7 @@ func parseFunctionArguments(d *schema.ResourceData) ([]sdk.FunctionArgumentReque
 			if diags != nil {
 				return nil, diags
 			}
-			args = append(args, sdk.FunctionArgumentRequest{ArgName: argName, ArgDataType: sdk.LegacyDataTypeFrom(argDataType)})
+			args = append(args, sdk.FunctionArgumentRequest{ArgName: argName, ArgDataTypeOld: sdk.LegacyDataTypeFrom(argDataType)})
 		}
 	}
 	return args, nil
@@ -764,8 +766,8 @@ func convertFunctionColumns(s string) ([]sdk.FunctionColumn, diag.Diagnostics) {
 				return nil, diag.FromErr(err)
 			}
 			columns = append(columns, sdk.FunctionColumn{
-				ColumnName:     match[1],
-				ColumnDataType: sdk.LegacyDataTypeFrom(dataType),
+				ColumnName:        match[1],
+				ColumnDataTypeOld: sdk.LegacyDataTypeFrom(dataType),
 			})
 		}
 	}
@@ -781,7 +783,7 @@ func parseFunctionReturnsRequest(s string) (*sdk.FunctionReturnsRequest, diag.Di
 		}
 		var cr []sdk.FunctionColumnRequest
 		for _, item := range columns {
-			cr = append(cr, *sdk.NewFunctionColumnRequest(item.ColumnName, item.ColumnDataType))
+			cr = append(cr, *sdk.NewFunctionColumnRequest(item.ColumnName, nil).WithColumnDataTypeOld(item.ColumnDataTypeOld))
 		}
 		returns.WithTable(*sdk.NewFunctionReturnsTableRequest().WithColumns(cr))
 	} else {
@@ -789,7 +791,7 @@ func parseFunctionReturnsRequest(s string) (*sdk.FunctionReturnsRequest, diag.Di
 		if diags != nil {
 			return nil, diags
 		}
-		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(sdk.LegacyDataTypeFrom(returnDataType)))
+		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.LegacyDataTypeFrom(returnDataType)))
 	}
 	return returns, nil
 }

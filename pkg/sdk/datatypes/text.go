@@ -30,6 +30,10 @@ func (t *TextDataType) ToLegacyDataTypeSql() string {
 	return VarcharLegacyDataType
 }
 
+func (t *TextDataType) Canonical() string {
+	return fmt.Sprintf("%s(%d)", VarcharLegacyDataType, t.length)
+}
+
 var (
 	TextDataTypeSynonyms = []string{VarcharLegacyDataType, "STRING", "TEXT", "NVARCHAR2", "NVARCHAR", "CHAR VARYING", "NCHAR VARYING"}
 	TextDataTypeSubtypes = []string{"CHARACTER", "CHAR", "NCHAR"}

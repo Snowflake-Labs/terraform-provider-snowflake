@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 	"unsafe"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 type modifierType string
@@ -642,7 +644,15 @@ func (v sqlParameterClause) String() string {
 	if v.value == nil {
 		return s
 	}
+	value := v.value
+	if dataType, ok := value.(datatypes.DataType); ok {
+		// We check like this and not by `dataType == nil` because for e.g. `var *datatypes.ArrayDataType` return false in a normal nil check
+		if reflect.ValueOf(dataType).IsZero() {
+			return s
+		}
+		value = dataType.ToSql()
+	}
 	// key = "value"
-	s += v.qm.Modify(v.value)
+	s += v.qm.Modify(value)
 	return s
 }

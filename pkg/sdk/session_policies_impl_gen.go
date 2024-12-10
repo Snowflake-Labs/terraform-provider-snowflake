@@ -38,11 +38,11 @@ func (v *sessionPolicies) Show(ctx context.Context, request *ShowSessionPolicyRe
 }
 
 func (v *sessionPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error) {
-	sessionPolicies, err := v.Show(ctx, NewShowSessionPolicyRequest())
+	request := NewShowSessionPolicyRequest()
+	sessionPolicies, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-
 	return collections.FindFirst(sessionPolicies, func(r SessionPolicy) bool { return r.Name == id.Name() })
 }
 

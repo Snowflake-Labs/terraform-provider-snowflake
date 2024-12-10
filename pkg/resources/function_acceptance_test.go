@@ -142,7 +142,7 @@ func TestAcc_Function_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
 					resource.TestCheckResourceAttr(resourceName, "statement", statement),
 					resource.TestCheckResourceAttr(resourceName, "arguments.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "arguments.0.name", "D"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.0.name", "d"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.0.type", "FLOAT"),
 					resource.TestCheckResourceAttr(resourceName, "return_behavior", "VOLATILE"),
 					resource.TestCheckResourceAttr(resourceName, "return_type", "FLOAT"),

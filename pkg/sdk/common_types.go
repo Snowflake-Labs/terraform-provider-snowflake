@@ -233,7 +233,7 @@ func NullInputBehaviorPointer(v NullInputBehavior) *NullInputBehavior {
 
 const (
 	NullInputBehaviorCalledOnNullInput NullInputBehavior = "CALLED ON NULL INPUT"
-	NullInputBehaviorReturnNullInput   NullInputBehavior = "RETURN NULL ON NULL INPUT"
+	NullInputBehaviorReturnNullInput   NullInputBehavior = "RETURNS NULL ON NULL INPUT"
 	NullInputBehaviorStrict            NullInputBehavior = "STRICT"
 )
 
@@ -260,8 +260,9 @@ func ReturnNullValuesPointer(v ReturnNullValues) *ReturnNullValues {
 }
 
 type SecretReference struct {
-	VariableName string `ddl:"keyword,single_quotes"`
-	Name         string `ddl:"parameter,no_quotes"`
+	VariableName string                 `ddl:"keyword,single_quotes"`
+	equals       bool                   `ddl:"static" sql:"="`
+	Name         SchemaObjectIdentifier `ddl:"identifier"`
 }
 
 type ValuesBehavior string
@@ -354,6 +355,29 @@ var AllTraceLevels = []TraceLevel{
 	TraceLevelAlways,
 	TraceLevelOnEvent,
 	TraceLevelOff,
+}
+
+type MetricLevel string
+
+const (
+	MetricLevelAll  MetricLevel = "ALL"
+	MetricLevelNone MetricLevel = "NONE"
+)
+
+func ToMetricLevel(value string) (MetricLevel, error) {
+	switch strings.ToUpper(value) {
+	case string(MetricLevelAll):
+		return MetricLevelAll, nil
+	case string(MetricLevelNone):
+		return MetricLevelNone, nil
+	default:
+		return "", fmt.Errorf("unknown metric level: %s", value)
+	}
+}
+
+var AllMetricLevels = []MetricLevel{
+	MetricLevelAll,
+	MetricLevelNone,
 }
 
 // StringAllowEmpty is a wrapper on string to allow using empty strings in SQL.

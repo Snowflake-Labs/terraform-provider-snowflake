@@ -403,6 +403,7 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - consider merging ResourceModel with DatasourceModel (currently the implementation is really similar)
 - remove schema.TypeMap workaround or make it wiser (e.g. during generation we could programmatically gather all schema.TypeMap and use this workaround only for them)
 - support asserting resource id in `assert/resourceassert/*_gen.go`
+- add possibility for object parameter assert not take any identifier (currently there's a workaround in `account_parameters_snowflake_gen.go`, because `SHOW PARAMETERS FOR ACCOUNT` don't take any identifiers)
 
 ## Known limitations
 - generating provider config may misbehave when used only with one object/map paramter (like `params`), e.g.:

@@ -1,8 +1,11 @@
 package sdk
 
+// imports edited manually
 import (
 	"context"
 	"database/sql"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 type Functions interface {
@@ -16,6 +19,10 @@ type Functions interface {
 	Show(ctx context.Context, request *ShowFunctionRequest) ([]Function, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]FunctionDetail, error)
+
+	// DescribeDetails is added manually; it returns aggregated describe results for the given function.
+	DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*FunctionDetails, error)
+	ShowParameters(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]*Parameter, error)
 }
 
 // CreateForJavaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#java-handler.
@@ -42,13 +49,18 @@ type CreateForJavaFunctionOptions struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	FunctionDefinition         *string                   `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	EnableConsoleOutput        *bool                     `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel                   *LogLevel                 `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel                *MetricLevel              `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel                 *TraceLevel               `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	FunctionDefinition         *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 type FunctionArgument struct {
-	ArgName      string   `ddl:"keyword,no_quotes"`
-	ArgDataType  DataType `ddl:"keyword,no_quotes"`
-	DefaultValue *string  `ddl:"parameter,no_equals" sql:"DEFAULT"`
+	ArgName        string             `ddl:"keyword,double_quotes"`
+	ArgDataTypeOld DataType           `ddl:"keyword,no_quotes"`
+	ArgDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
+	DefaultValue   *string            `ddl:"parameter,no_equals" sql:"DEFAULT"`
 }
 
 type FunctionReturns struct {
@@ -57,7 +69,8 @@ type FunctionReturns struct {
 }
 
 type FunctionReturnsResultDataType struct {
-	ResultDataType DataType `ddl:"keyword,no_quotes"`
+	ResultDataTypeOld DataType           `ddl:"keyword,no_quotes"`
+	ResultDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
 }
 
 type FunctionReturnsTable struct {
@@ -65,8 +78,9 @@ type FunctionReturnsTable struct {
 }
 
 type FunctionColumn struct {
-	ColumnName     string   `ddl:"keyword,no_quotes"`
-	ColumnDataType DataType `ddl:"keyword,no_quotes"`
+	ColumnName        string             `ddl:"keyword,double_quotes"`
+	ColumnDataTypeOld DataType           `ddl:"keyword,no_quotes"`
+	ColumnDataType    datatypes.DataType `ddl:"parameter,no_quotes,no_equals"`
 }
 
 type FunctionImport struct {
@@ -93,7 +107,11 @@ type CreateForJavascriptFunctionOptions struct {
 	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
 	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
 	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	FunctionDefinition    string                 `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	EnableConsoleOutput   *bool                  `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel              *LogLevel              `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel           *MetricLevel           `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel            *TraceLevel            `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	FunctionDefinition    string                 `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // CreateForPythonFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#python-handler.
@@ -102,6 +120,7 @@ type CreateForPythonFunctionOptions struct {
 	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
 	Temporary                  *bool                     `ddl:"keyword" sql:"TEMPORARY"`
 	Secure                     *bool                     `ddl:"keyword" sql:"SECURE"`
+	Aggregate                  *bool                     `ddl:"keyword" sql:"AGGREGATE"`
 	function                   bool                      `ddl:"static" sql:"FUNCTION"`
 	IfNotExists                *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
 	name                       SchemaObjectIdentifier    `ddl:"identifier"`
@@ -119,32 +138,44 @@ type CreateForPythonFunctionOptions struct {
 	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
-	FunctionDefinition         *string                   `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	EnableConsoleOutput        *bool                     `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel                   *LogLevel                 `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel                *MetricLevel              `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel                 *TraceLevel               `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	FunctionDefinition         *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // CreateForScalaFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#scala-handler.
 type CreateForScalaFunctionOptions struct {
-	create                bool                   `ddl:"static" sql:"CREATE"`
-	OrReplace             *bool                  `ddl:"keyword" sql:"OR REPLACE"`
-	Temporary             *bool                  `ddl:"keyword" sql:"TEMPORARY"`
-	Secure                *bool                  `ddl:"keyword" sql:"SECURE"`
-	function              bool                   `ddl:"static" sql:"FUNCTION"`
-	IfNotExists           *bool                  `ddl:"keyword" sql:"IF NOT EXISTS"`
-	name                  SchemaObjectIdentifier `ddl:"identifier"`
-	Arguments             []FunctionArgument     `ddl:"list,must_parentheses"`
-	CopyGrants            *bool                  `ddl:"keyword" sql:"COPY GRANTS"`
-	ResultDataType        DataType               `ddl:"parameter,no_equals" sql:"RETURNS"`
-	ReturnNullValues      *ReturnNullValues      `ddl:"keyword"`
-	languageScala         bool                   `ddl:"static" sql:"LANGUAGE SCALA"`
-	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
-	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
-	RuntimeVersion        *string                `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
-	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	Imports               []FunctionImport       `ddl:"parameter,parentheses" sql:"IMPORTS"`
-	Packages              []FunctionPackage      `ddl:"parameter,parentheses" sql:"PACKAGES"`
-	Handler               string                 `ddl:"parameter,single_quotes" sql:"HANDLER"`
-	TargetPath            *string                `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
-	FunctionDefinition    *string                `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	create                     bool                      `ddl:"static" sql:"CREATE"`
+	OrReplace                  *bool                     `ddl:"keyword" sql:"OR REPLACE"`
+	Temporary                  *bool                     `ddl:"keyword" sql:"TEMPORARY"`
+	Secure                     *bool                     `ddl:"keyword" sql:"SECURE"`
+	function                   bool                      `ddl:"static" sql:"FUNCTION"`
+	IfNotExists                *bool                     `ddl:"keyword" sql:"IF NOT EXISTS"`
+	name                       SchemaObjectIdentifier    `ddl:"identifier"`
+	Arguments                  []FunctionArgument        `ddl:"list,must_parentheses"`
+	CopyGrants                 *bool                     `ddl:"keyword" sql:"COPY GRANTS"`
+	returns                    bool                      `ddl:"static" sql:"RETURNS"`
+	ResultDataTypeOld          DataType                  `ddl:"parameter,no_equals"`
+	ResultDataType             datatypes.DataType        `ddl:"parameter,no_quotes,no_equals"`
+	ReturnNullValues           *ReturnNullValues         `ddl:"keyword"`
+	languageScala              bool                      `ddl:"static" sql:"LANGUAGE SCALA"`
+	NullInputBehavior          *NullInputBehavior        `ddl:"keyword"`
+	ReturnResultsBehavior      *ReturnResultsBehavior    `ddl:"keyword"`
+	RuntimeVersion             string                    `ddl:"parameter,single_quotes" sql:"RUNTIME_VERSION"`
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	Imports                    []FunctionImport          `ddl:"parameter,parentheses" sql:"IMPORTS"`
+	Packages                   []FunctionPackage         `ddl:"parameter,parentheses" sql:"PACKAGES"`
+	Handler                    string                    `ddl:"parameter,single_quotes" sql:"HANDLER"`
+	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
+	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
+	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
+	EnableConsoleOutput        *bool                     `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel                   *LogLevel                 `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel                *MetricLevel              `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel                 *TraceLevel               `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	FunctionDefinition         *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // CreateForSQLFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-function#sql-handler.
@@ -162,26 +193,49 @@ type CreateForSQLFunctionOptions struct {
 	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
 	Memoizable            *bool                  `ddl:"keyword" sql:"MEMOIZABLE"`
 	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	FunctionDefinition    string                 `ddl:"parameter,single_quotes,no_equals" sql:"AS"`
+	EnableConsoleOutput   *bool                  `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel              *LogLevel              `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel           *MetricLevel           `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel            *TraceLevel            `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+	FunctionDefinition    string                 `ddl:"parameter,no_equals" sql:"AS"`
 }
 
 // AlterFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-function.
 type AlterFunctionOptions struct {
-	alter           bool                                `ddl:"static" sql:"ALTER"`
-	function        bool                                `ddl:"static" sql:"FUNCTION"`
-	IfExists        *bool                               `ddl:"keyword" sql:"IF EXISTS"`
-	name            SchemaObjectIdentifierWithArguments `ddl:"identifier"`
-	RenameTo        *SchemaObjectIdentifier             `ddl:"identifier" sql:"RENAME TO"`
-	SetComment      *string                             `ddl:"parameter,single_quotes" sql:"SET COMMENT"`
-	SetLogLevel     *string                             `ddl:"parameter,single_quotes" sql:"SET LOG_LEVEL"`
-	SetTraceLevel   *string                             `ddl:"parameter,single_quotes" sql:"SET TRACE_LEVEL"`
-	SetSecure       *bool                               `ddl:"keyword" sql:"SET SECURE"`
-	UnsetSecure     *bool                               `ddl:"keyword" sql:"UNSET SECURE"`
-	UnsetLogLevel   *bool                               `ddl:"keyword" sql:"UNSET LOG_LEVEL"`
-	UnsetTraceLevel *bool                               `ddl:"keyword" sql:"UNSET TRACE_LEVEL"`
-	UnsetComment    *bool                               `ddl:"keyword" sql:"UNSET COMMENT"`
-	SetTags         []TagAssociation                    `ddl:"keyword" sql:"SET TAG"`
-	UnsetTags       []ObjectIdentifier                  `ddl:"keyword" sql:"UNSET TAG"`
+	alter       bool                                `ddl:"static" sql:"ALTER"`
+	function    bool                                `ddl:"static" sql:"FUNCTION"`
+	IfExists    *bool                               `ddl:"keyword" sql:"IF EXISTS"`
+	name        SchemaObjectIdentifierWithArguments `ddl:"identifier"`
+	RenameTo    *SchemaObjectIdentifier             `ddl:"identifier" sql:"RENAME TO"`
+	Set         *FunctionSet                        `ddl:"list" sql:"SET"`
+	Unset       *FunctionUnset                      `ddl:"list" sql:"UNSET"`
+	SetSecure   *bool                               `ddl:"keyword" sql:"SET SECURE"`
+	UnsetSecure *bool                               `ddl:"keyword" sql:"UNSET SECURE"`
+	SetTags     []TagAssociation                    `ddl:"keyword" sql:"SET TAG"`
+	UnsetTags   []ObjectIdentifier                  `ddl:"keyword" sql:"UNSET TAG"`
+}
+
+type FunctionSet struct {
+	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
+	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
+	SecretsList                *SecretsList              `ddl:"parameter,parentheses" sql:"SECRETS"`
+	EnableConsoleOutput        *bool                     `ddl:"parameter" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel                   *LogLevel                 `ddl:"parameter,single_quotes" sql:"LOG_LEVEL"`
+	MetricLevel                *MetricLevel              `ddl:"parameter,single_quotes" sql:"METRIC_LEVEL"`
+	TraceLevel                 *TraceLevel               `ddl:"parameter,single_quotes" sql:"TRACE_LEVEL"`
+}
+
+type SecretsList struct {
+	SecretsList []SecretReference `ddl:"list,must_parentheses"`
+}
+
+type FunctionUnset struct {
+	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
+	ExternalAccessIntegrations *bool `ddl:"keyword" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
+	EnableConsoleOutput        *bool `ddl:"keyword" sql:"ENABLE_CONSOLE_OUTPUT"`
+	LogLevel                   *bool `ddl:"keyword" sql:"LOG_LEVEL"`
+	MetricLevel                *bool `ddl:"keyword" sql:"METRIC_LEVEL"`
+	TraceLevel                 *bool `ddl:"keyword" sql:"TRACE_LEVEL"`
 }
 
 // DropFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-function.
@@ -194,55 +248,57 @@ type DropFunctionOptions struct {
 
 // ShowFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-user-functions.
 type ShowFunctionOptions struct {
-	show          bool  `ddl:"static" sql:"SHOW"`
-	userFunctions bool  `ddl:"static" sql:"USER FUNCTIONS"`
-	Like          *Like `ddl:"keyword" sql:"LIKE"`
-	In            *In   `ddl:"keyword" sql:"IN"`
+	show          bool        `ddl:"static" sql:"SHOW"`
+	userFunctions bool        `ddl:"static" sql:"USER FUNCTIONS"`
+	Like          *Like       `ddl:"keyword" sql:"LIKE"`
+	In            *ExtendedIn `ddl:"keyword" sql:"IN"`
 }
 
 type functionRow struct {
-	CreatedOn          string         `db:"created_on"`
-	Name               string         `db:"name"`
-	SchemaName         string         `db:"schema_name"`
-	IsBuiltin          string         `db:"is_builtin"`
-	IsAggregate        string         `db:"is_aggregate"`
-	IsAnsi             string         `db:"is_ansi"`
-	MinNumArguments    int            `db:"min_num_arguments"`
-	MaxNumArguments    int            `db:"max_num_arguments"`
-	Arguments          string         `db:"arguments"`
-	Description        string         `db:"description"`
-	CatalogName        string         `db:"catalog_name"`
-	IsTableFunction    string         `db:"is_table_function"`
-	ValidForClustering string         `db:"valid_for_clustering"`
-	IsSecure           sql.NullString `db:"is_secure"`
-	IsExternalFunction string         `db:"is_external_function"`
-	Language           string         `db:"language"`
-	IsMemoizable       sql.NullString `db:"is_memoizable"`
+	CreatedOn                  string         `db:"created_on"`
+	Name                       string         `db:"name"`
+	SchemaName                 string         `db:"schema_name"`
+	IsBuiltin                  string         `db:"is_builtin"`
+	IsAggregate                string         `db:"is_aggregate"`
+	IsAnsi                     string         `db:"is_ansi"`
+	MinNumArguments            int            `db:"min_num_arguments"`
+	MaxNumArguments            int            `db:"max_num_arguments"`
+	Arguments                  string         `db:"arguments"`
+	Description                string         `db:"description"`
+	CatalogName                string         `db:"catalog_name"`
+	IsTableFunction            string         `db:"is_table_function"`
+	ValidForClustering         string         `db:"valid_for_clustering"`
+	IsSecure                   sql.NullString `db:"is_secure"`
+	Secrets                    sql.NullString `db:"secrets"`
+	ExternalAccessIntegrations sql.NullString `db:"external_access_integrations"`
+	IsExternalFunction         string         `db:"is_external_function"`
+	Language                   string         `db:"language"`
+	IsMemoizable               sql.NullString `db:"is_memoizable"`
+	IsDataMetric               sql.NullString `db:"is_data_metric"`
 }
 
 type Function struct {
-	CreatedOn          string
-	Name               string
-	SchemaName         string
-	IsBuiltin          bool
-	IsAggregate        bool
-	IsAnsi             bool
-	MinNumArguments    int
-	MaxNumArguments    int
-	Arguments          []DataType
-	ArgumentsRaw       string
-	Description        string
-	CatalogName        string
-	IsTableFunction    bool
-	ValidForClustering bool
-	IsSecure           bool
-	IsExternalFunction bool
-	Language           string
-	IsMemoizable       bool
-}
-
-func (v *Function) ID() SchemaObjectIdentifierWithArguments {
-	return NewSchemaObjectIdentifierWithArguments(v.CatalogName, v.SchemaName, v.Name, v.Arguments...)
+	CreatedOn                  string
+	Name                       string
+	SchemaName                 string
+	IsBuiltin                  bool
+	IsAggregate                bool
+	IsAnsi                     bool
+	MinNumArguments            int
+	MaxNumArguments            int
+	ArgumentsOld               []DataType
+	ArgumentsRaw               string
+	Description                string
+	CatalogName                string
+	IsTableFunction            bool
+	ValidForClustering         bool
+	IsSecure                   bool
+	Secrets                    *string
+	ExternalAccessIntegrations *string
+	IsExternalFunction         bool
+	Language                   string
+	IsMemoizable               bool
+	IsDataMetric               bool
 }
 
 // DescribeFunctionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-function.
@@ -259,5 +315,5 @@ type functionDetailRow struct {
 
 type FunctionDetail struct {
 	Property string
-	Value    string
+	Value    *string
 }

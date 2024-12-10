@@ -19,7 +19,7 @@ func TestInt_Stages(t *testing.T) {
 	awsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
 	awsKeyId := testenvs.GetOrSkipTest(t, testenvs.AwsExternalKeyId)
 	awsSecretKey := testenvs.GetOrSkipTest(t, testenvs.AwsExternalSecretKey)
-	gcsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.GcsExternalBuckerUrl)
+	gcsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.GcsExternalBucketUrl)
 	azureBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AzureExternalBucketUrl)
 	azureSasToken := testenvs.GetOrSkipTest(t, testenvs.AzureExternalSasToken)
 

@@ -2,19 +2,27 @@ package helpers
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/require"
 )
 
 type AccountClient struct {
 	context *TestClientContext
+	ids     *IdsGenerator
 }
 
-func NewAccountClient(context *TestClientContext) *AccountClient {
+func NewAccountClient(context *TestClientContext, idsGenerator *IdsGenerator) *AccountClient {
 	return &AccountClient{
 		context: context,
+		ids:     idsGenerator,
 	}
 }
 
@@ -41,4 +49,106 @@ func (c *AccountClient) GetAccountIdentifier(t *testing.T) sdk.AccountIdentifier
 	}
 	t.Fatal("could not find the account identifier for the locator")
 	return sdk.AccountIdentifier{}
+}
+
+func (c *AccountClient) Create(t *testing.T) (*sdk.Account, func()) {
+	t.Helper()
+	id := c.ids.RandomAccountObjectIdentifier()
+	name := c.ids.Alpha()
+	email := random.Email()
+	privateKey := random.GenerateRSAPrivateKey(t)
+	publicKey, _ := random.GenerateRSAPublicKeyFromPrivateKey(t, privateKey)
+
+	return c.CreateWithRequest(t, id, &sdk.CreateAccountOptions{
+		AdminName:         name,
+		AdminRSAPublicKey: sdk.String(publicKey),
+		Email:             email,
+		Edition:           sdk.EditionStandard,
+	})
+}
+
+func (c *AccountClient) CreateWithRequest(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateAccountOptions) (*sdk.Account, func()) {
+	t.Helper()
+	err := c.client().Create(context.Background(), id, opts)
+	require.NoError(t, err)
+
+	account, err := c.client().ShowByID(context.Background(), id)
+	require.NoError(t, err)
+
+	return account, c.DropFunc(t, id)
+}
+
+func (c *AccountClient) Alter(t *testing.T, opts *sdk.AlterAccountOptions) {
+	t.Helper()
+	err := c.client().Alter(context.Background(), opts)
+	require.NoError(t, err)
+}
+
+func (c *AccountClient) DropFunc(t *testing.T, id sdk.AccountObjectIdentifier) func() {
+	t.Helper()
+	return func() {
+		require.NoError(t, c.Drop(t, id))
+	}
+}
+
+func (c *AccountClient) Drop(t *testing.T, id sdk.AccountObjectIdentifier) error {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().Drop(ctx, id, 3, &sdk.DropAccountOptions{IfExists: sdk.Bool(true)})
+}
+
+type Region struct {
+	SnowflakeRegion string `db:"snowflake_region"`
+	Cloud           string `db:"cloud"`
+	Region          string `db:"region"`
+	DisplayName     string `db:"display_name"`
+}
+
+func (c *AccountClient) ShowRegions(t *testing.T) []Region {
+	t.Helper()
+
+	var regions []Region
+	err := c.context.client.QueryForTests(context.Background(), &regions, "SHOW REGIONS")
+	require.NoError(t, err)
+
+	return regions
+}
+
+func (c *AccountClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Account, error) {
+	t.Helper()
+	return c.client().ShowByID(context.Background(), id)
+}
+
+func (c *AccountClient) CreateAndLogIn(t *testing.T) (*sdk.Account, *sdk.Client, func()) {
+	t.Helper()
+	id := c.ids.RandomAccountObjectIdentifier()
+	name := c.ids.Alpha()
+	privateKey := random.GenerateRSAPrivateKey(t)
+	publicKey, _ := random.GenerateRSAPublicKeyFromPrivateKey(t, privateKey)
+	email := random.Email()
+
+	account, accountCleanup := c.CreateWithRequest(t, id, &sdk.CreateAccountOptions{
+		AdminName:         name,
+		AdminRSAPublicKey: sdk.String(publicKey),
+		AdminUserType:     sdk.Pointer(sdk.UserTypeService),
+		Email:             email,
+		Edition:           sdk.EditionStandard,
+	})
+
+	var client *sdk.Client
+	require.Eventually(t, func() bool {
+		newClient, err := sdk.NewClient(&gosnowflake.Config{
+			Account:       fmt.Sprintf("%s-%s", account.OrganizationName, account.AccountName),
+			User:          name,
+			Host:          strings.TrimPrefix(*account.AccountLocatorURL, `https://`),
+			Authenticator: gosnowflake.AuthTypeJwt,
+			PrivateKey:    privateKey,
+			Role:          snowflakeroles.Accountadmin.Name(),
+		})
+		client = newClient
+		return err == nil
+	}, 2*time.Minute, time.Second*15)
+
+	return account, client, accountCleanup
 }

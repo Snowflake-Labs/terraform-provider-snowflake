@@ -13,9 +13,8 @@ type env string
 const (
 	BusinessCriticalAccount env = "SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT"
 
-	TestAccountCreate          env = "TEST_SF_TF_TEST_ACCOUNT_CREATE"
-	TestFailoverGroups         env = "TEST_SF_TF_TEST_FAILOVER_GROUPS"
-	ResourceMonitorNotifyUsers env = "TEST_SF_TF_RESOURCE_MONITOR_NOTIFY_USERS"
+	TestAccountCreate  env = "TEST_SF_TF_TEST_ACCOUNT_CREATE"
+	TestFailoverGroups env = "TEST_SF_TF_TEST_FAILOVER_GROUPS"
 
 	AwsExternalBucketUrl   env = "TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL"
 	AwsExternalKeyId       env = "TEST_SF_TF_AWS_EXTERNAL_KEY_ID"
@@ -24,7 +23,7 @@ const (
 	AzureExternalBucketUrl env = "TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL"
 	AzureExternalTenantId  env = "TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID"
 	AzureExternalSasToken  env = "TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN" // #nosec G101
-	GcsExternalBuckerUrl   env = "TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL"
+	GcsExternalBucketUrl   env = "TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL"
 
 	EnableObjectRenamingTest env = "TEST_SF_TF_ENABLE_OBJECT_RENAMING"
 	SkipManagedAccountTest   env = "TEST_SF_TF_SKIP_MANAGED_ACCOUNT_TEST"
@@ -36,6 +35,8 @@ const (
 	ConfigureClientOnce      env = "SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE"
 	TestObjectsSuffix        env = "TEST_SF_TF_TEST_OBJECT_SUFFIX"
 	RequireTestObjectsSuffix env = "TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX"
+
+	SimplifiedIntegrationTestsSetup env = "TEST_SF_TF_SIMPLIFIED_INTEGRATION_TESTS_SETUP"
 )
 
 func GetOrSkipTest(t *testing.T, envName Env) string {

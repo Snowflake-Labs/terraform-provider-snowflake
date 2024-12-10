@@ -14,8 +14,12 @@ import (
 
 // DataType is the common interface that represents all Snowflake datatypes documented in https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.
 type DataType interface {
+	// ToSql formats data type explicitly specifying all arguments and using the given type (e.g. CHAR(29) for CHAR(29)).
 	ToSql() string
+	// ToLegacyDataTypeSql formats data type using its base type without any attributes (e.g. VARCHAR for CHAR(29)).
 	ToLegacyDataTypeSql() string
+	// Canonical formats the data type between ToSql and ToLegacyDataTypeSql: it uses base type but with arguments (e.g. VARCHAR(29) for CHAR(29)).
+	Canonical() string
 }
 
 type sanitizedDataTypeRaw struct {

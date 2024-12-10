@@ -14,6 +14,10 @@ func (t *GeographyDataType) ToLegacyDataTypeSql() string {
 	return GeographyLegacyDataType
 }
 
+func (t *GeographyDataType) Canonical() string {
+	return GeographyLegacyDataType
+}
+
 var GeographyDataTypeSynonyms = []string{GeographyLegacyDataType}
 
 func parseGeographyDataTypeRaw(raw sanitizedDataTypeRaw) (*GeographyDataType, error) {

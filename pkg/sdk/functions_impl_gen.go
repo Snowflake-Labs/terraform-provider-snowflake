@@ -60,7 +60,7 @@ func (v *functions) Show(ctx context.Context, request *ShowFunctionRequest) ([]F
 }
 
 func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error) {
-	functions, err := v.Show(ctx, NewShowFunctionRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())}))
+	functions, err := v.Show(ctx, NewShowFunctionRequest().WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).WithLike(Like{String(id.Name())}))
 	if err != nil {
 		return nil, err
 	}
@@ -98,19 +98,29 @@ func (r *CreateForJavaFunctionRequest) toOpts() *CreateForJavaFunctionOptions {
 		ExternalAccessIntegrations: r.ExternalAccessIntegrations,
 		Secrets:                    r.Secrets,
 		TargetPath:                 r.TargetPath,
+		EnableConsoleOutput:        r.EnableConsoleOutput,
+		LogLevel:                   r.LogLevel,
+		MetricLevel:                r.MetricLevel,
+		TraceLevel:                 r.TraceLevel,
 		FunctionDefinition:         r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = FunctionArgument(v)
+			s[i] = FunctionArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
 	opts.Returns = FunctionReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
-			ResultDataType: r.Returns.ResultDataType.ResultDataType,
+			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -118,7 +128,11 @@ func (r *CreateForJavaFunctionRequest) toOpts() *CreateForJavaFunctionOptions {
 		if r.Returns.Table.Columns != nil {
 			s := make([]FunctionColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = FunctionColumn(v)
+				s[i] = FunctionColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -126,14 +140,18 @@ func (r *CreateForJavaFunctionRequest) toOpts() *CreateForJavaFunctionOptions {
 	if r.Imports != nil {
 		s := make([]FunctionImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = FunctionImport(v)
+			s[i] = FunctionImport{
+				Import: v.Import,
+			}
 		}
 		opts.Imports = s
 	}
 	if r.Packages != nil {
 		s := make([]FunctionPackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = FunctionPackage(v)
+			s[i] = FunctionPackage{
+				Package: v.Package,
+			}
 		}
 		opts.Packages = s
 	}
@@ -153,19 +171,29 @@ func (r *CreateForJavascriptFunctionRequest) toOpts() *CreateForJavascriptFuncti
 		NullInputBehavior:     r.NullInputBehavior,
 		ReturnResultsBehavior: r.ReturnResultsBehavior,
 		Comment:               r.Comment,
+		EnableConsoleOutput:   r.EnableConsoleOutput,
+		LogLevel:              r.LogLevel,
+		MetricLevel:           r.MetricLevel,
+		TraceLevel:            r.TraceLevel,
 		FunctionDefinition:    r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = FunctionArgument(v)
+			s[i] = FunctionArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
 	opts.Returns = FunctionReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
-			ResultDataType: r.Returns.ResultDataType.ResultDataType,
+			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -173,7 +201,11 @@ func (r *CreateForJavascriptFunctionRequest) toOpts() *CreateForJavascriptFuncti
 		if r.Returns.Table.Columns != nil {
 			s := make([]FunctionColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = FunctionColumn(v)
+				s[i] = FunctionColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -186,6 +218,7 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 		OrReplace:   r.OrReplace,
 		Temporary:   r.Temporary,
 		Secure:      r.Secure,
+		Aggregate:   r.Aggregate,
 		IfNotExists: r.IfNotExists,
 		name:        r.name,
 
@@ -200,19 +233,29 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 		Handler:                    r.Handler,
 		ExternalAccessIntegrations: r.ExternalAccessIntegrations,
 		Secrets:                    r.Secrets,
+		EnableConsoleOutput:        r.EnableConsoleOutput,
+		LogLevel:                   r.LogLevel,
+		MetricLevel:                r.MetricLevel,
+		TraceLevel:                 r.TraceLevel,
 		FunctionDefinition:         r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = FunctionArgument(v)
+			s[i] = FunctionArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
 	opts.Returns = FunctionReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
-			ResultDataType: r.Returns.ResultDataType.ResultDataType,
+			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -220,7 +263,11 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 		if r.Returns.Table.Columns != nil {
 			s := make([]FunctionColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = FunctionColumn(v)
+				s[i] = FunctionColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -228,14 +275,18 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 	if r.Imports != nil {
 		s := make([]FunctionImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = FunctionImport(v)
+			s[i] = FunctionImport{
+				Import: v.Import,
+			}
 		}
 		opts.Imports = s
 	}
 	if r.Packages != nil {
 		s := make([]FunctionPackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = FunctionPackage(v)
+			s[i] = FunctionPackage{
+				Package: v.Package,
+			}
 		}
 		opts.Packages = s
 	}
@@ -251,6 +302,7 @@ func (r *CreateForScalaFunctionRequest) toOpts() *CreateForScalaFunctionOptions 
 		name:        r.name,
 
 		CopyGrants:            r.CopyGrants,
+		ResultDataTypeOld:     r.ResultDataTypeOld,
 		ResultDataType:        r.ResultDataType,
 		ReturnNullValues:      r.ReturnNullValues,
 		NullInputBehavior:     r.NullInputBehavior,
@@ -258,28 +310,43 @@ func (r *CreateForScalaFunctionRequest) toOpts() *CreateForScalaFunctionOptions 
 		RuntimeVersion:        r.RuntimeVersion,
 		Comment:               r.Comment,
 
-		Handler:            r.Handler,
-		TargetPath:         r.TargetPath,
-		FunctionDefinition: r.FunctionDefinition,
+		Handler:                    r.Handler,
+		ExternalAccessIntegrations: r.ExternalAccessIntegrations,
+		Secrets:                    r.Secrets,
+		TargetPath:                 r.TargetPath,
+		EnableConsoleOutput:        r.EnableConsoleOutput,
+		LogLevel:                   r.LogLevel,
+		MetricLevel:                r.MetricLevel,
+		TraceLevel:                 r.TraceLevel,
+		FunctionDefinition:         r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = FunctionArgument(v)
+			s[i] = FunctionArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
 	if r.Imports != nil {
 		s := make([]FunctionImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = FunctionImport(v)
+			s[i] = FunctionImport{
+				Import: v.Import,
+			}
 		}
 		opts.Imports = s
 	}
 	if r.Packages != nil {
 		s := make([]FunctionPackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = FunctionPackage(v)
+			s[i] = FunctionPackage{
+				Package: v.Package,
+			}
 		}
 		opts.Packages = s
 	}
@@ -299,19 +366,29 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 		ReturnResultsBehavior: r.ReturnResultsBehavior,
 		Memoizable:            r.Memoizable,
 		Comment:               r.Comment,
+		EnableConsoleOutput:   r.EnableConsoleOutput,
+		LogLevel:              r.LogLevel,
+		MetricLevel:           r.MetricLevel,
+		TraceLevel:            r.TraceLevel,
 		FunctionDefinition:    r.FunctionDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = FunctionArgument(v)
+			s[i] = FunctionArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
 	opts.Returns = FunctionReturns{}
 	if r.Returns.ResultDataType != nil {
 		opts.Returns.ResultDataType = &FunctionReturnsResultDataType{
-			ResultDataType: r.Returns.ResultDataType.ResultDataType,
+			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
+			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -319,7 +396,11 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 		if r.Returns.Table.Columns != nil {
 			s := make([]FunctionColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = FunctionColumn(v)
+				s[i] = FunctionColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -329,19 +410,39 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 
 func (r *AlterFunctionRequest) toOpts() *AlterFunctionOptions {
 	opts := &AlterFunctionOptions{
-		IfExists:        r.IfExists,
-		name:            r.name,
-		RenameTo:        r.RenameTo,
-		SetComment:      r.SetComment,
-		SetLogLevel:     r.SetLogLevel,
-		SetTraceLevel:   r.SetTraceLevel,
-		SetSecure:       r.SetSecure,
-		UnsetSecure:     r.UnsetSecure,
-		UnsetLogLevel:   r.UnsetLogLevel,
-		UnsetTraceLevel: r.UnsetTraceLevel,
-		UnsetComment:    r.UnsetComment,
-		SetTags:         r.SetTags,
-		UnsetTags:       r.UnsetTags,
+		IfExists:    r.IfExists,
+		name:        r.name,
+		RenameTo:    r.RenameTo,
+		SetSecure:   r.SetSecure,
+		UnsetSecure: r.UnsetSecure,
+		SetTags:     r.SetTags,
+		UnsetTags:   r.UnsetTags,
+	}
+	if r.Set != nil {
+		opts.Set = &FunctionSet{
+			Comment:                    r.Set.Comment,
+			ExternalAccessIntegrations: r.Set.ExternalAccessIntegrations,
+
+			EnableConsoleOutput: r.Set.EnableConsoleOutput,
+			LogLevel:            r.Set.LogLevel,
+			MetricLevel:         r.Set.MetricLevel,
+			TraceLevel:          r.Set.TraceLevel,
+		}
+		if r.Set.SecretsList != nil {
+			opts.Set.SecretsList = &SecretsList{
+				SecretsList: r.Set.SecretsList.SecretsList,
+			}
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &FunctionUnset{
+			Comment:                    r.Unset.Comment,
+			ExternalAccessIntegrations: r.Unset.ExternalAccessIntegrations,
+			EnableConsoleOutput:        r.Unset.EnableConsoleOutput,
+			LogLevel:                   r.Unset.LogLevel,
+			MetricLevel:                r.Unset.MetricLevel,
+			TraceLevel:                 r.Unset.TraceLevel,
+		}
 	}
 	return opts
 }
@@ -386,14 +487,23 @@ func (r functionRow) convert() *Function {
 	if err != nil {
 		log.Printf("[DEBUG] failed to parse function arguments, err = %s", err)
 	} else {
-		e.Arguments = dataTypes
+		e.ArgumentsOld = dataTypes
 	}
 
 	if r.IsSecure.Valid {
 		e.IsSecure = r.IsSecure.String == "Y"
 	}
+	if r.Secrets.Valid {
+		e.Secrets = String(r.Secrets.String)
+	}
+	if r.ExternalAccessIntegrations.Valid {
+		e.ExternalAccessIntegrations = String(r.ExternalAccessIntegrations.String)
+	}
 	if r.IsMemoizable.Valid {
 		e.IsMemoizable = r.IsMemoizable.String == "Y"
+	}
+	if r.IsDataMetric.Valid {
+		e.IsDataMetric = r.IsDataMetric.String == "Y"
 	}
 	return e
 }
@@ -409,8 +519,8 @@ func (r functionDetailRow) convert() *FunctionDetail {
 	e := &FunctionDetail{
 		Property: r.Property,
 	}
-	if r.Value.Valid {
-		e.Value = r.Value.String
+	if r.Value.Valid && r.Value.String != "null" {
+		e.Value = String(r.Value.String)
 	}
 	return e
 }

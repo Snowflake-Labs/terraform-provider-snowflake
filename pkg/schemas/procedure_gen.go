@@ -83,7 +83,7 @@ func ProcedureToSchema(procedure *sdk.Procedure) map[string]any {
 	procedureSchema["is_ansi"] = procedure.IsAnsi
 	procedureSchema["min_num_arguments"] = procedure.MinNumArguments
 	procedureSchema["max_num_arguments"] = procedure.MaxNumArguments
-	procedureSchema["arguments"] = procedure.Arguments
+	procedureSchema["arguments"] = procedure.ArgumentsOld
 	procedureSchema["arguments_raw"] = procedure.ArgumentsRaw
 	procedureSchema["description"] = procedure.Description
 	procedureSchema["catalog_name"] = procedure.CatalogName

@@ -196,4 +196,24 @@ var allObjectsParameters = []SnowflakeObjectParameters{
 		// for the quickfix above
 		AdditionalImports: []string{"strings"},
 	},
+	{
+		Name:   "Account",
+		IdType: "sdk.AccountObjectIdentifier",
+		Level:  sdk.ParameterTypeAccount,
+		Parameters: []SnowflakeParameter{
+			{ParameterName: string(sdk.UserParameterEnableUnredactedQuerySyntaxError), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			// TODO(SNOW-1348092 - next prs): Add parameters
+		},
+	},
+	{
+		Name:   "Function",
+		IdType: "sdk.SchemaObjectIdentifierWithArguments",
+		Level:  sdk.ParameterTypeFunction,
+		Parameters: []SnowflakeParameter{
+			{ParameterName: string(sdk.FunctionParameterEnableConsoleOutput), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.FunctionParameterLogLevel), ParameterType: "sdk.LogLevel", DefaultValue: "sdk.LogLevelOff", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.FunctionParameterMetricLevel), ParameterType: "sdk.MetricLevel", DefaultValue: "sdk.MetricLevelNone", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.FunctionParameterTraceLevel), ParameterType: "sdk.TraceLevel", DefaultValue: "sdk.TraceLevelOff", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+		},
+	},
 }

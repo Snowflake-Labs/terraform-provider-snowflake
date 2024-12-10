@@ -1,5 +1,7 @@
 package sdk
 
+import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+
 //go:generate go run ./dto-builder-generator/main.go
 
 var (
@@ -34,13 +36,18 @@ type CreateForJavaFunctionRequest struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier
 	Secrets                    []SecretReference
 	TargetPath                 *string
+	EnableConsoleOutput        *bool
+	LogLevel                   *LogLevel
+	MetricLevel                *MetricLevel
+	TraceLevel                 *TraceLevel
 	FunctionDefinition         *string
 }
 
 type FunctionArgumentRequest struct {
-	ArgName      string   // required
-	ArgDataType  DataType // required
-	DefaultValue *string
+	ArgName        string // required
+	ArgDataTypeOld DataType
+	ArgDataType    datatypes.DataType // required
+	DefaultValue   *string
 }
 
 type FunctionReturnsRequest struct {
@@ -49,7 +56,8 @@ type FunctionReturnsRequest struct {
 }
 
 type FunctionReturnsResultDataTypeRequest struct {
-	ResultDataType DataType // required
+	ResultDataTypeOld DataType
+	ResultDataType    datatypes.DataType // required
 }
 
 type FunctionReturnsTableRequest struct {
@@ -57,8 +65,9 @@ type FunctionReturnsTableRequest struct {
 }
 
 type FunctionColumnRequest struct {
-	ColumnName     string   // required
-	ColumnDataType DataType // required
+	ColumnName        string // required
+	ColumnDataTypeOld DataType
+	ColumnDataType    datatypes.DataType // required
 }
 
 type FunctionImportRequest struct {
@@ -81,6 +90,10 @@ type CreateForJavascriptFunctionRequest struct {
 	NullInputBehavior     *NullInputBehavior
 	ReturnResultsBehavior *ReturnResultsBehavior
 	Comment               *string
+	EnableConsoleOutput   *bool
+	LogLevel              *LogLevel
+	MetricLevel           *MetricLevel
+	TraceLevel            *TraceLevel
 	FunctionDefinition    string // required
 }
 
@@ -88,6 +101,7 @@ type CreateForPythonFunctionRequest struct {
 	OrReplace                  *bool
 	Temporary                  *bool
 	Secure                     *bool
+	Aggregate                  *bool
 	IfNotExists                *bool
 	name                       SchemaObjectIdentifier // required
 	Arguments                  []FunctionArgumentRequest
@@ -103,28 +117,39 @@ type CreateForPythonFunctionRequest struct {
 	Handler                    string // required
 	ExternalAccessIntegrations []AccountObjectIdentifier
 	Secrets                    []SecretReference
+	EnableConsoleOutput        *bool
+	LogLevel                   *LogLevel
+	MetricLevel                *MetricLevel
+	TraceLevel                 *TraceLevel
 	FunctionDefinition         *string
 }
 
 type CreateForScalaFunctionRequest struct {
-	OrReplace             *bool
-	Temporary             *bool
-	Secure                *bool
-	IfNotExists           *bool
-	name                  SchemaObjectIdentifier // required
-	Arguments             []FunctionArgumentRequest
-	CopyGrants            *bool
-	ResultDataType        DataType // required
-	ReturnNullValues      *ReturnNullValues
-	NullInputBehavior     *NullInputBehavior
-	ReturnResultsBehavior *ReturnResultsBehavior
-	RuntimeVersion        *string
-	Comment               *string
-	Imports               []FunctionImportRequest
-	Packages              []FunctionPackageRequest
-	Handler               string // required
-	TargetPath            *string
-	FunctionDefinition    *string
+	OrReplace                  *bool
+	Temporary                  *bool
+	Secure                     *bool
+	IfNotExists                *bool
+	name                       SchemaObjectIdentifier // required
+	Arguments                  []FunctionArgumentRequest
+	CopyGrants                 *bool
+	ResultDataTypeOld          DataType
+	ResultDataType             datatypes.DataType // required
+	ReturnNullValues           *ReturnNullValues
+	NullInputBehavior          *NullInputBehavior
+	ReturnResultsBehavior      *ReturnResultsBehavior
+	RuntimeVersion             string // required
+	Comment                    *string
+	Imports                    []FunctionImportRequest
+	Packages                   []FunctionPackageRequest
+	Handler                    string // required
+	ExternalAccessIntegrations []AccountObjectIdentifier
+	Secrets                    []SecretReference
+	TargetPath                 *string
+	EnableConsoleOutput        *bool
+	LogLevel                   *LogLevel
+	MetricLevel                *MetricLevel
+	TraceLevel                 *TraceLevel
+	FunctionDefinition         *string
 }
 
 type CreateForSQLFunctionRequest struct {
@@ -139,23 +164,46 @@ type CreateForSQLFunctionRequest struct {
 	ReturnResultsBehavior *ReturnResultsBehavior
 	Memoizable            *bool
 	Comment               *string
+	EnableConsoleOutput   *bool
+	LogLevel              *LogLevel
+	MetricLevel           *MetricLevel
+	TraceLevel            *TraceLevel
 	FunctionDefinition    string // required
 }
 
 type AlterFunctionRequest struct {
-	IfExists        *bool
-	name            SchemaObjectIdentifierWithArguments // required
-	RenameTo        *SchemaObjectIdentifier
-	SetComment      *string
-	SetLogLevel     *string
-	SetTraceLevel   *string
-	SetSecure       *bool
-	UnsetSecure     *bool
-	UnsetLogLevel   *bool
-	UnsetTraceLevel *bool
-	UnsetComment    *bool
-	SetTags         []TagAssociation
-	UnsetTags       []ObjectIdentifier
+	IfExists    *bool
+	name        SchemaObjectIdentifierWithArguments // required
+	RenameTo    *SchemaObjectIdentifier
+	Set         *FunctionSetRequest
+	Unset       *FunctionUnsetRequest
+	SetSecure   *bool
+	UnsetSecure *bool
+	SetTags     []TagAssociation
+	UnsetTags   []ObjectIdentifier
+}
+
+type FunctionSetRequest struct {
+	Comment                    *string
+	ExternalAccessIntegrations []AccountObjectIdentifier
+	SecretsList                *SecretsListRequest
+	EnableConsoleOutput        *bool
+	LogLevel                   *LogLevel
+	MetricLevel                *MetricLevel
+	TraceLevel                 *TraceLevel
+}
+
+type SecretsListRequest struct {
+	SecretsList []SecretReference // required
+}
+
+type FunctionUnsetRequest struct {
+	Comment                    *bool
+	ExternalAccessIntegrations *bool
+	EnableConsoleOutput        *bool
+	LogLevel                   *bool
+	MetricLevel                *bool
+	TraceLevel                 *bool
 }
 
 type DropFunctionRequest struct {
@@ -165,7 +213,7 @@ type DropFunctionRequest struct {
 
 type ShowFunctionRequest struct {
 	Like *Like
-	In   *In
+	In   *ExtendedIn
 }
 
 type DescribeFunctionRequest struct {

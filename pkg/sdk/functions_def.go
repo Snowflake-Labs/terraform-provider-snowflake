@@ -5,19 +5,25 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 //go:generate go run ./poc/main.go
 
 var functionArgument = g.NewQueryStruct("FunctionArgument").
-	Text("ArgName", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("ArgDataType", "DataType", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT"))
+	Text("ArgName", g.KeywordOptions().DoubleQuotes().Required()).
+	PredefinedQueryStructField("ArgDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+	PredefinedQueryStructField("ArgDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
+	PredefinedQueryStructField("DefaultValue", "*string", g.ParameterOptions().NoEquals().SQL("DEFAULT")).
+	WithValidation(g.ExactlyOneValueSet, "ArgDataTypeOld", "ArgDataType")
 
 var functionColumn = g.NewQueryStruct("FunctionColumn").
-	Text("ColumnName", g.KeywordOptions().NoQuotes().Required()).
-	PredefinedQueryStructField("ColumnDataType", "DataType", g.KeywordOptions().NoQuotes().Required())
+	Text("ColumnName", g.KeywordOptions().DoubleQuotes().Required()).
+	PredefinedQueryStructField("ColumnDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+	PredefinedQueryStructField("ColumnDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
+	WithValidation(g.ExactlyOneValueSet, "ColumnDataTypeOld", "ColumnDataType")
 
 var functionReturns = g.NewQueryStruct("FunctionReturns").
 	OptionalQueryStructField(
 		"ResultDataType",
 		g.NewQueryStruct("FunctionReturnsResultDataType").
-			PredefinedQueryStructField("ResultDataType", "DataType", g.KeywordOptions().NoQuotes().Required()),
+			PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.KeywordOptions().NoQuotes()).
+			PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
+			WithValidation(g.ExactlyOneValueSet, "ResultDataTypeOld", "ResultDataType"),
 		g.KeywordOptions(),
 	).
 	OptionalQueryStructField(
@@ -32,8 +38,10 @@ var functionReturns = g.NewQueryStruct("FunctionReturns").
 	).WithValidation(g.ExactlyOneValueSet, "ResultDataType", "Table")
 
 var (
-	functionImports  = g.NewQueryStruct("FunctionImport").Text("Import", g.KeywordOptions().SingleQuotes())
-	functionPackages = g.NewQueryStruct("FunctionPackage").Text("Package", g.KeywordOptions().SingleQuotes())
+	functionImports            = g.NewQueryStruct("FunctionImport").Text("Import", g.KeywordOptions().SingleQuotes())
+	functionPackages           = g.NewQueryStruct("FunctionPackage").Text("Package", g.KeywordOptions().SingleQuotes())
+	functionSecretsListWrapper = g.NewQueryStruct("SecretsList").
+					List("SecretsList", "SecretReference", g.ListOptions().Required().MustParentheses())
 )
 
 var FunctionsDef = g.NewInterface(
@@ -81,7 +89,11 @@ var FunctionsDef = g.NewInterface(
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
 		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		OptionalBooleanAssignment("ENABLE_CONSOLE_OUTPUT", nil).
+		OptionalAssignment("LOG_LEVEL", g.KindOfTPointer[LogLevel](), g.ParameterOptions().SingleQuotes()).
+		OptionalAssignment("METRIC_LEVEL", g.KindOfTPointer[MetricLevel](), g.ParameterOptions().SingleQuotes()).
+		OptionalAssignment("TRACE_LEVEL", g.KindOfTPointer[TraceLevel](), g.ParameterOptions().SingleQuotes()).
+		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidateValueSet, "Handler").
 		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
@@ -110,7 +122,11 @@ var FunctionsDef = g.NewInterface(
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
 		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("FunctionDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		OptionalBooleanAssignment("ENABLE_CONSOLE_OUTPUT", nil).
+		OptionalAssignment("LOG_LEVEL", g.KindOfTPointer[LogLevel](), g.ParameterOptions().SingleQuotes()).
+		OptionalAssignment("METRIC_LEVEL", g.KindOfTPointer[MetricLevel](), g.ParameterOptions().SingleQuotes()).
+		OptionalAssignment("TRACE_LEVEL", g.KindOfTPointer[TraceLevel](), g.ParameterOptions().SingleQuotes()).
+		PredefinedQueryStructField("FunctionDefinition", "string", g.ParameterOptions().NoEquals().SQL("AS").Required()).
 		WithValidation(g.ValidateValueSet, "FunctionDefinition").
 		WithValidation(g.ValidIdentifier, "name"),
 ).CustomOperation(
@@ -121,6 +137,7 @@ var FunctionsDef = g.NewInterface(
 		OrReplace().
 		OptionalSQL("TEMPORARY").
 		OptionalSQL("SECURE").
+		OptionalSQL("AGGREGATE").
 		SQL("FUNCTION").
 		IfNotExists().
 		Identifier("name", g.KindOfT[SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
@@ -153,7 +170,11 @@ var FunctionsDef = g.NewInterface(
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
 		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
 		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
-		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		OptionalBooleanAssignment("ENABLE_CONSOLE_OUTPUT", nil).
+		OptionalAssignment("LOG_LEVEL", g.KindOfTPointer[LogLevel](), g.ParameterOptions().SingleQuotes()).
+		OptionalAssignment("METRIC_LEVEL", g.KindOfTPointer[MetricLevel](), g.ParameterOptions().SingleQuotes()).
+		OptionalAssignment("TRACE_LEVEL", g.KindOfTPointer[TraceLevel](), g.ParameterOptions().SingleQuotes()).
+		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidateValueSet, "RuntimeVersion").
 		WithValidation(g.ValidateValueSet, "Handler").
@@ -174,12 +195,14 @@ var FunctionsDef = g.NewInterface(
 			functionArgument,
 			g.ListOptions().MustParentheses()).
 		OptionalSQL("COPY GRANTS").
-		PredefinedQueryStructField("ResultDataType", "DataType", g.ParameterOptions().NoEquals().SQL("RETURNS").Required()).
+		SQL("RETURNS").
+		PredefinedQueryStructField("ResultDataTypeOld", "DataType", g.ParameterOptions().NoEquals()).
+		PredefinedQueryStructField("ResultDataType", "datatypes.DataType", g.ParameterOptions().NoQuotes().NoEquals().Required()).
 		PredefinedQueryStructField("ReturnNullValues", "*ReturnNullValues", g.KeywordOptions()).
 		SQL("LANGUAGE SCALA").
 		PredefinedQueryStructField("NullInputBehavior", "*NullInputBehavior", g.KeywordOptions()).
 		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
-		OptionalTextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes()).
+		TextAssignment("RUNTIME_VERSION", g.ParameterOptions().SingleQuotes().Required()).
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
 		ListQueryStructField(
 			"Imports",
@@ -192,11 +215,18 @@ var FunctionsDef = g.NewInterface(
 			g.ParameterOptions().Parentheses().SQL("PACKAGES"),
 		).
 		TextAssignment("HANDLER", g.ParameterOptions().SingleQuotes().Required()).
+		ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
+		ListAssignment("SECRETS", "SecretReference", g.ParameterOptions().Parentheses()).
 		OptionalTextAssignment("TARGET_PATH", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS")).
+		OptionalBooleanAssignment("ENABLE_CONSOLE_OUTPUT", nil).
+		OptionalAssignment("LOG_LEVEL", g.KindOfTPointer[LogLevel](), g.ParameterOptions().SingleQuotes()).
+		OptionalAssignment("METRIC_LEVEL", g.KindOfTPointer[MetricLevel](), g.ParameterOptions().SingleQuotes()).
+		OptionalAssignment("TRACE_LEVEL", g.KindOfTPointer[TraceLevel](), g.ParameterOptions().SingleQuotes()).
+		PredefinedQueryStructField("FunctionDefinition", "*string", g.ParameterOptions().NoEquals().SQL("AS")).
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidateValueSet, "Handler").
-		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists"),
+		WithValidation(g.ConflictingFields, "OrReplace", "IfNotExists").
+		WithValidation(g.ExactlyOneValueSet, "ResultDataTypeOld", "ResultDataType"),
 ).CustomOperation(
 	"CreateForSQL",
 	"https://docs.snowflake.com/en/sql-reference/sql/create-function#sql-handler",
@@ -221,7 +251,11 @@ var FunctionsDef = g.NewInterface(
 		PredefinedQueryStructField("ReturnResultsBehavior", "*ReturnResultsBehavior", g.KeywordOptions()).
 		OptionalSQL("MEMOIZABLE").
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
-		PredefinedQueryStructField("FunctionDefinition", "string", g.ParameterOptions().NoEquals().SingleQuotes().SQL("AS").Required()).
+		OptionalBooleanAssignment("ENABLE_CONSOLE_OUTPUT", nil).
+		OptionalAssignment("LOG_LEVEL", g.KindOfTPointer[LogLevel](), g.ParameterOptions().SingleQuotes()).
+		OptionalAssignment("METRIC_LEVEL", g.KindOfTPointer[MetricLevel](), g.ParameterOptions().SingleQuotes()).
+		OptionalAssignment("TRACE_LEVEL", g.KindOfTPointer[TraceLevel](), g.ParameterOptions().SingleQuotes()).
+		PredefinedQueryStructField("FunctionDefinition", "string", g.ParameterOptions().NoEquals().SQL("AS").Required()).
 		WithValidation(g.ValidateValueSet, "FunctionDefinition").
 		WithValidation(g.ValidIdentifier, "name"),
 ).AlterOperation(
@@ -232,19 +266,38 @@ var FunctionsDef = g.NewInterface(
 		IfExists().
 		Name().
 		Identifier("RenameTo", g.KindOfTPointer[SchemaObjectIdentifier](), g.IdentifierOptions().SQL("RENAME TO")).
-		OptionalTextAssignment("SET COMMENT", g.ParameterOptions().SingleQuotes()).
-		OptionalTextAssignment("SET LOG_LEVEL", g.ParameterOptions().SingleQuotes()).
-		OptionalTextAssignment("SET TRACE_LEVEL", g.ParameterOptions().SingleQuotes()).
+		OptionalQueryStructField(
+			"Set",
+			g.NewQueryStruct("FunctionSet").
+				OptionalTextAssignment("COMMENT", g.ParameterOptions().SingleQuotes()).
+				ListAssignment("EXTERNAL_ACCESS_INTEGRATIONS", "AccountObjectIdentifier", g.ParameterOptions().Parentheses()).
+				OptionalQueryStructField("SecretsList", functionSecretsListWrapper, g.ParameterOptions().SQL("SECRETS").Parentheses()).
+				OptionalBooleanAssignment("ENABLE_CONSOLE_OUTPUT", nil).
+				OptionalAssignment("LOG_LEVEL", g.KindOfTPointer[LogLevel](), g.ParameterOptions().SingleQuotes()).
+				OptionalAssignment("METRIC_LEVEL", g.KindOfTPointer[MetricLevel](), g.ParameterOptions().SingleQuotes()).
+				OptionalAssignment("TRACE_LEVEL", g.KindOfTPointer[TraceLevel](), g.ParameterOptions().SingleQuotes()).
+				WithValidation(g.AtLeastOneValueSet, "Comment", "ExternalAccessIntegrations", "SecretsList", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"),
+			g.ListOptions().SQL("SET"),
+		).
+		OptionalQueryStructField(
+			"Unset",
+			g.NewQueryStruct("FunctionUnset").
+				OptionalSQL("COMMENT").
+				OptionalSQL("EXTERNAL_ACCESS_INTEGRATIONS").
+				OptionalSQL("ENABLE_CONSOLE_OUTPUT").
+				OptionalSQL("LOG_LEVEL").
+				OptionalSQL("METRIC_LEVEL").
+				OptionalSQL("TRACE_LEVEL").
+				WithValidation(g.AtLeastOneValueSet, "Comment", "ExternalAccessIntegrations", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"),
+			g.ListOptions().SQL("UNSET"),
+		).
 		OptionalSQL("SET SECURE").
 		OptionalSQL("UNSET SECURE").
-		OptionalSQL("UNSET LOG_LEVEL").
-		OptionalSQL("UNSET TRACE_LEVEL").
-		OptionalSQL("UNSET COMMENT").
 		OptionalSetTags().
 		OptionalUnsetTags().
 		WithValidation(g.ValidIdentifier, "name").
 		WithValidation(g.ValidIdentifierIfSet, "RenameTo").
-		WithValidation(g.ExactlyOneValueSet, "RenameTo", "SetComment", "SetLogLevel", "SetTraceLevel", "SetSecure", "UnsetLogLevel", "UnsetTraceLevel", "UnsetSecure", "UnsetComment", "SetTags", "UnsetTags"),
+		WithValidation(g.ExactlyOneValueSet, "RenameTo", "Set", "Unset", "SetSecure", "UnsetSecure", "SetTags", "UnsetTags"),
 ).DropOperation(
 	"https://docs.snowflake.com/en/sql-reference/sql/drop-function",
 	g.NewQueryStruct("DropFunction").
@@ -270,9 +323,12 @@ var FunctionsDef = g.NewInterface(
 		Field("is_table_function", "string").
 		Field("valid_for_clustering", "string").
 		Field("is_secure", "sql.NullString").
+		OptionalText("secrets").
+		OptionalText("external_access_integrations").
 		Field("is_external_function", "string").
 		Field("language", "string").
-		Field("is_memoizable", "sql.NullString"),
+		Field("is_memoizable", "sql.NullString").
+		Field("is_data_metric", "sql.NullString"),
 	g.PlainStruct("Function").
 		Field("CreatedOn", "string").
 		Field("Name", "string").
@@ -282,20 +338,23 @@ var FunctionsDef = g.NewInterface(
 		Field("IsAnsi", "bool").
 		Field("MinNumArguments", "int").
 		Field("MaxNumArguments", "int").
-		Field("Arguments", "string").
+		Field("ArgumentsRaw", "string").
 		Field("Description", "string").
 		Field("CatalogName", "string").
 		Field("IsTableFunction", "bool").
 		Field("ValidForClustering", "bool").
 		Field("IsSecure", "bool").
+		OptionalText("Secrets").
+		OptionalText("ExternalAccessIntegrations").
 		Field("IsExternalFunction", "bool").
 		Field("Language", "string").
-		Field("IsMemoizable", "bool"),
+		Field("IsMemoizable", "bool").
+		Field("IsDataMetric", "bool"),
 	g.NewQueryStruct("ShowFunctions").
 		Show().
 		SQL("USER FUNCTIONS").
 		OptionalLike().
-		OptionalIn(),
+		OptionalExtendedIn(),
 ).ShowByIdOperation().DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-function",
@@ -303,8 +362,8 @@ var FunctionsDef = g.NewInterface(
 		Field("property", "string").
 		Field("value", "sql.NullString"),
 	g.PlainStruct("FunctionDetail").
-		Field("Property", "string").
-		Field("Value", "string"),
+		Text("Property").
+		OptionalText("Value"),
 	g.NewQueryStruct("DescribeFunction").
 		Describe().
 		SQL("FUNCTION").
