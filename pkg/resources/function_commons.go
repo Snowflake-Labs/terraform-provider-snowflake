@@ -2,6 +2,7 @@ package resources
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -9,13 +10,155 @@ import (
 )
 
 func init() {
-
+	javaFunctionSchema = setUpFunctionSchema(javaFunctionSchemaDefinition)
+	javascriptFunctionSchema = setUpFunctionSchema(javascriptFunctionSchemaDefinition)
+	pythonFunctionSchema = setUpFunctionSchema(pythonFunctionSchemaDefinition)
+	scalaFunctionSchema = setUpFunctionSchema(scalaFunctionSchemaDefinition)
+	sqlFunctionSchema = setUpFunctionSchema(sqlFunctionSchemaDefinition)
 }
 
-// TODO [next PR]: currently all database.schema.name are ForceNew but based on the docs it is possible to rename with moving to different db/schema
-// TODO [next PR]: copyGrants and orReplace logic omitted for now, will be added to the limitations docs
-// TODO [next PR]: temporary is not supported because it creates a per-session object; add to limitations/design decisions
-var functionBaseSchema = map[string]*schema.Schema{
+type functionSchemaDef struct {
+	additionalArguments           []string
+	functionDefinitionDescription string
+	runtimeVersionRequired        bool
+	runtimeVersionDescription     string
+	importsDescription            string
+	packagesDescription           string
+	handlerDescription            string
+	targetPathDescription         string
+}
+
+func setUpFunctionSchema(definition functionSchemaDef) map[string]*schema.Schema {
+	currentSchema := make(map[string]*schema.Schema)
+	for k, v := range functionBaseSchema {
+		v := v
+		if slices.Contains(definition.additionalArguments, k) && slices.Contains(commonFunctionArguments, k) {
+			currentSchema[k] = &v
+		}
+	}
+	if v, ok := currentSchema["function_definition"]; ok && v != nil {
+		v.Description = definition.functionDefinitionDescription
+	}
+	if v, ok := currentSchema["runtime_version"]; ok && v != nil {
+		if definition.runtimeVersionRequired {
+			v.Required = true
+		} else {
+			v.Optional = true
+		}
+		v.Description = definition.runtimeVersionDescription
+	}
+	if v, ok := currentSchema["imports"]; ok && v != nil {
+		v.Description = definition.importsDescription
+	}
+	if v, ok := currentSchema["packages"]; ok && v != nil {
+		v.Description = definition.packagesDescription
+	}
+	if v, ok := currentSchema["handler"]; ok && v != nil {
+		v.Description = definition.handlerDescription
+	}
+	if v, ok := currentSchema["target_path"]; ok && v != nil {
+		v.Description = definition.handlerDescription
+	}
+	return currentSchema
+}
+
+func functionDefinitionTemplate(language string, linkUrl string) string {
+	return fmt.Sprintf("Defines the handler code executed when the UDF is called. Wrapping `$$` signs are added by the provider automatically; do not include them. The `function_definition` value must be %[1]s source code. For more information, see [Introduction to %[1]s UDFs](%[2]s).", language, linkUrl)
+}
+
+var (
+	commonFunctionArguments = []string{
+		"database",
+		"schema",
+		"name",
+		"is_secure",
+		"arguments",
+		"return_type",
+		"null_input_behavior",
+		"return_behavior",
+		"comment",
+		"function_definition",
+		"function_language",
+		ShowOutputAttributeName,
+		ParametersAttributeName,
+		FullyQualifiedNameAttributeName,
+	}
+	javaFunctionSchemaDefinition = functionSchemaDef{
+		additionalArguments: []string{
+			"runtime_version",
+			"imports",
+			"packages",
+			"handler",
+			"external_access_integrations",
+			"secrets",
+			"target_path",
+		},
+		functionDefinitionDescription: functionDefinitionTemplate("Java", "https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-introduction"),
+		runtimeVersionRequired:        false,
+		runtimeVersionDescription:     "Specifies the Java JDK runtime version to use. The supported versions of Java are 11.x and 17.x. If RUNTIME_VERSION is not set, Java JDK 11 is used.",
+		importsDescription:            "The location (stage), path, and name of the file(s) to import. A file can be a JAR file or another type of file. If the file is a JAR file, it can contain one or more .class files and zero or more resource files. JNI (Java Native Interface) is not supported. Snowflake prohibits loading libraries that contain native code (as opposed to Java bytecode). Java UDFs can also read non-JAR files. For an example, see [Reading a file specified statically in IMPORTS](https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-cookbook.html#label-reading-file-from-java-udf-imports). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#java).",
+		packagesDescription:           "The name and version number of Snowflake system packages required as dependencies. The value should be of the form `package_name:version_number`, where `package_name` is `snowflake_domain:package`.",
+		handlerDescription:            "The name of the handler method or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a method name, as in the following form: `MyClass.myMethod`. If the handler is for a tabular UDF, the HANDLER value should be the name of a handler class.",
+		targetPathDescription:         "The TARGET_PATH clause specifies the location to which Snowflake should write the compiled code (JAR file) after compiling the source code specified in the `function_definition`. If this clause is included, the user should manually remove the JAR file when it is no longer needed (typically when the Java UDF is dropped). If this clause is omitted, Snowflake re-compiles the source code each time the code is needed. The JAR file is not stored permanently, and the user does not need to clean up the JAR file. Snowflake returns an error if the TARGET_PATH matches an existing file; you cannot use TARGET_PATH to overwrite an existing file.",
+	}
+	javascriptFunctionSchemaDefinition = functionSchemaDef{
+		additionalArguments:           []string{},
+		functionDefinitionDescription: functionDefinitionTemplate("JavaScript", "https://docs.snowflake.com/en/developer-guide/udf/javascript/udf-javascript-introduction"),
+	}
+	pythonFunctionSchemaDefinition = functionSchemaDef{
+		additionalArguments: []string{
+			"is_aggregate",
+			"runtime_version",
+			"imports",
+			"packages",
+			"handler",
+			"external_access_integrations",
+			"secrets",
+		},
+		functionDefinitionDescription: functionDefinitionTemplate("Python", "https://docs.snowflake.com/en/developer-guide/udf/python/udf-python-introduction"),
+		runtimeVersionRequired:        true,
+		runtimeVersionDescription:     "Specifies the Python version to use. The supported versions of Python are: 3.9, 3.10, and 3.11.",
+		importsDescription:            "The location (stage), path, and name of the file(s) to import. A file can be a `.py` file or another type of file. Python UDFs can also read non-Python files, such as text files. For an example, see [Reading a file](https://docs.snowflake.com/en/developer-guide/udf/python/udf-python-examples.html#label-udf-python-read-files). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#python).",
+		packagesDescription:           "The name and version number of packages required as dependencies. The value should be of the form `package_name==version_number`.",
+		handlerDescription:            "The name of the handler function or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a function name. If the handler code is in-line with the CREATE FUNCTION statement, you can use the function name alone. When the handler code is referenced at a stage, this value should be qualified with the module name, as in the following form: `my_module.my_function`. If the handler is for a tabular UDF, the HANDLER value should be the name of a handler class.",
+	}
+	scalaFunctionSchemaDefinition = functionSchemaDef{
+		additionalArguments: []string{
+			"runtime_version",
+			"imports",
+			"packages",
+			"handler",
+			"external_access_integrations",
+			"secrets",
+			"target_path",
+		},
+		functionDefinitionDescription: functionDefinitionTemplate("Scala", "https://docs.snowflake.com/en/developer-guide/udf/scala/udf-scala-introduction"),
+		runtimeVersionRequired:        true,
+		runtimeVersionDescription:     "Specifies the Scala runtime version to use. The supported versions of Scala are: 2.12.",
+		importsDescription:            "The location (stage), path, and name of the file(s) to import, such as a JAR or other kind of file. The JAR file might contain handler dependency libraries. It can contain one or more .class files and zero or more resource files. JNI (Java Native Interface) is not supported. Snowflake prohibits loading libraries that contain native code (as opposed to Java bytecode). A non-JAR file might a file read by handler code. For an example, see [Reading a file specified statically in IMPORTS](https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-cookbook.html#label-reading-file-from-java-udf-imports). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#scala).",
+		packagesDescription:           "The name and version number of Snowflake system packages required as dependencies. The value should be of the form `package_name:version_number`, where `package_name` is `snowflake_domain:package`.",
+		handlerDescription:            "The name of the handler method or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a method name, as in the following form: `MyClass.myMethod`.",
+		targetPathDescription:         "The TARGET_PATH clause specifies the location to which Snowflake should write the compiled code (JAR file) after compiling the source code specified in the `function_definition`. If this clause is included, you should manually remove the JAR file when it is no longer needed (typically when the UDF is dropped). If this clause is omitted, Snowflake re-compiles the source code each time the code is needed. The JAR file is not stored permanently, and you do not need to clean up the JAR file. Snowflake returns an error if the TARGET_PATH matches an existing file; you cannot use TARGET_PATH to overwrite an existing file.",
+	}
+	sqlFunctionSchemaDefinition = functionSchemaDef{
+		additionalArguments:           []string{},
+		functionDefinitionDescription: functionDefinitionTemplate("SQL", "https://docs.snowflake.com/en/developer-guide/udf/sql/udf-sql-introduction"),
+	}
+)
+
+var (
+	javaFunctionSchema       map[string]*schema.Schema
+	javascriptFunctionSchema map[string]*schema.Schema
+	pythonFunctionSchema     map[string]*schema.Schema
+	scalaFunctionSchema      map[string]*schema.Schema
+	sqlFunctionSchema        map[string]*schema.Schema
+)
+
+// TODO [SNOW-1348103]: add null/not null
+// TODO [SNOW-1348103]: currently all database.schema.name are ForceNew but based on the docs it is possible to rename with moving to different db/schema
+// TODO [SNOW-1348103]: copyGrants and orReplace logic omitted for now, will be added to the limitations docs
+// TODO [SNOW-1348103]: temporary is not supported because it creates a per-session object; add to limitations/design decisions
+var functionBaseSchema = map[string]schema.Schema{
 	"database": {
 		Type:             schema.TypeString,
 		Required:         true,
@@ -99,15 +242,11 @@ var functionBaseSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToReturnResultsBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("return_behavior")),
 		Description:      fmt.Sprintf("Specifies the behavior of the function when returning results. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedReturnResultsBehaviors)),
 	},
-	// TODO [this PR]: set optional/required correctly
 	"runtime_version": {
 		Type:     schema.TypeString,
 		Optional: true,
 		ForceNew: true,
-		// TODO [this PR]: may be optional for java without consequence because if it is not set, the describe is not returning any version.
-		//Description: "Specifies the Java JDK runtime version to use. The supported versions of Java are 11.x and 17.x. If RUNTIME_VERSION is not set, Java JDK 11 is used.",
-		//Description: "Specifies the Python version to use. The supported versions of Python are: 3.9, 3.10, and 3.11.",
-		//Description: "Specifies the Scala runtime version to use. The supported versions of Scala are: 2.12.",
+		// TODO [SNOW-1348103]: may be optional for java without consequence because if it is not set, the describe is not returning any version.
 	},
 	"comment": {
 		Type:     schema.TypeString,
@@ -122,27 +261,18 @@ var functionBaseSchema = map[string]*schema.Schema{
 		Elem:     &schema.Schema{Type: schema.TypeString},
 		Optional: true,
 		ForceNew: true,
-		//Description: "The location (stage), path, and name of the file(s) to import. A file can be a JAR file or another type of file. If the file is a JAR file, it can contain one or more .class files and zero or more resource files. JNI (Java Native Interface) is not supported. Snowflake prohibits loading libraries that contain native code (as opposed to Java bytecode). Java UDFs can also read non-JAR files. For an example, see [Reading a file specified statically in IMPORTS](https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-cookbook.html#label-reading-file-from-java-udf-imports). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#java).",
-		//Description: "The location (stage), path, and name of the file(s) to import. A file can be a `.py` file or another type of file. Python UDFs can also read non-Python files, such as text files. For an example, see [Reading a file](https://docs.snowflake.com/en/developer-guide/udf/python/udf-python-examples.html#label-udf-python-read-files). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#python).",
-		//Description: "The location (stage), path, and name of the file(s) to import, such as a JAR or other kind of file. The JAR file might contain handler dependency libraries. It can contain one or more .class files and zero or more resource files. JNI (Java Native Interface) is not supported. Snowflake prohibits loading libraries that contain native code (as opposed to Java bytecode). A non-JAR file might a file read by handler code. For an example, see [Reading a file specified statically in IMPORTS](https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-cookbook.html#label-reading-file-from-java-udf-imports). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#scala).",
 	},
+	// TODO [SNOW-1348103]: what do we do with the version "latest".
 	"packages": {
 		Type:     schema.TypeSet,
 		Elem:     &schema.Schema{Type: schema.TypeString},
 		Optional: true,
 		ForceNew: true,
-		// TODO [SNOW-1348103]: what do we do with the version "latest".
-		//Description: "The name and version number of Snowflake system packages required as dependencies. The value should be of the form `package_name:version_number`, where `package_name` is `snowflake_domain:package`.",
-		//Description: "The name and version number of packages required as dependencies. The value should be of the form `package_name==version_number`.",
-		//Description: "The name and version number of Snowflake system packages required as dependencies. The value should be of the form `package_name:version_number`, where `package_name` is `snowflake_domain:package`.",
 	},
 	"handler": {
 		Type:     schema.TypeString,
 		Required: true,
 		ForceNew: true,
-		// Description: "The name of the handler method or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a method name, as in the following form: `MyClass.myMethod`. If the handler is for a tabular UDF, the HANDLER value should be the name of a handler class.",
-		// Description: "The name of the handler function or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a function name. If the handler code is in-line with the CREATE FUNCTION statement, you can use the function name alone. When the handler code is referenced at a stage, this value should be qualified with the module name, as in the following form: `my_module.my_function`. If the handler is for a tabular UDF, the HANDLER value should be the name of a handler class.",
-		// Description: "The name of the handler method or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a method name, as in the following form: `MyClass.myMethod`.",
 	},
 	"external_access_integrations": {
 		Type: schema.TypeSet,
@@ -178,15 +308,12 @@ var functionBaseSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		ForceNew: true,
-		//Description: "The TARGET_PATH clause specifies the location to which Snowflake should write the compiled code (JAR file) after compiling the source code specified in the `function_definition`. If this clause is included, the user should manually remove the JAR file when it is no longer needed (typically when the Java UDF is dropped). If this clause is omitted, Snowflake re-compiles the source code each time the code is needed. The JAR file is not stored permanently, and the user does not need to clean up the JAR file. Snowflake returns an error if the TARGET_PATH matches an existing file; you cannot use TARGET_PATH to overwrite an existing file.",
-		//Description: "The TARGET_PATH clause specifies the location to which Snowflake should write the compiled code (JAR file) after compiling the source code specified in the `function_definition`. If this clause is included, you should manually remove the JAR file when it is no longer needed (typically when the UDF is dropped). If this clause is omitted, Snowflake re-compiles the source code each time the code is needed. The JAR file is not stored permanently, and you do not need to clean up the JAR file. Snowflake returns an error if the TARGET_PATH matches an existing file; you cannot use TARGET_PATH to overwrite an existing file.",
 	},
 	"function_definition": {
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
 		DiffSuppressFunc: DiffSuppressStatement,
-		// TODO [this PR]: generalize description for function_definition
 	},
 	"function_language": {
 		Type:        schema.TypeString,
@@ -209,5 +336,5 @@ var functionBaseSchema = map[string]*schema.Schema{
 			Schema: functionParametersSchema,
 		},
 	},
-	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
+	FullyQualifiedNameAttributeName: *schemas.FullyQualifiedNameSchema,
 }
