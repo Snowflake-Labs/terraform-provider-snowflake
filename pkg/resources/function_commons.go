@@ -2,7 +2,9 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -401,4 +403,51 @@ func parseFunctionReturnsCommon(d *schema.ResourceData) (*sdk.FunctionReturnsReq
 		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(dataType))
 	}
 	return returns, nil
+}
+
+func queryAllFunctionsDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allFunctionDetailsCommon, diag.Diagnostics) {
+	functionDetails, err := client.Functions.DescribeDetails(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			log.Printf("[DEBUG] function (%s) not found or we are not authorized. Err: %s", d.Id(), err)
+			d.SetId("")
+			return nil, diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query function. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Function: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return nil, diag.FromErr(err)
+	}
+	function, err := client.Functions.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return nil, diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query function. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Function: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return nil, diag.FromErr(err)
+	}
+	functionParameters, err := client.Functions.ShowParameters(ctx, id)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	return &allFunctionDetailsCommon{
+		function:           function,
+		functionDetails:    functionDetails,
+		functionParameters: functionParameters,
+	}, nil
+}
+
+type allFunctionDetailsCommon struct {
+	function           *sdk.Function
+	functionDetails    *sdk.FunctionDetails
+	functionParameters []*sdk.Parameter
 }

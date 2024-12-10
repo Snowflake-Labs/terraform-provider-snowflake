@@ -2,11 +2,13 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -107,6 +109,33 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	allFunctionDetails, diags := queryAllFunctionsDetailsCommon(ctx, d, client, id)
+	if diags != nil {
+		return diags
+	}
+
+	// TODO [this PR]: handle external changes marking
+	// TODO [this PR]: handle setting state to value from config
+
+	errs := errors.Join(
+		// TODO [this PR]: set all proper fields
+
+		d.Set("function_type", allFunctionDetails.functionDetails.Language),
+
+		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+		handleFunctionParameterRead(d, allFunctionDetails.functionParameters),
+		d.Set(ShowOutputAttributeName, []map[string]any{schemas.FunctionToSchema(allFunctionDetails.function)}),
+		d.Set(ParametersAttributeName, []map[string]any{schemas.UserParametersToSchema(allFunctionDetails.functionParameters)}),
+	)
+	if errs != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
