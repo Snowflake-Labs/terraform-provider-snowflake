@@ -3,8 +3,10 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -114,6 +116,7 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
 	allFunctionDetails, diags := queryAllFunctionsDetailsCommon(ctx, d, client, id)
 	if diags != nil {
 		return diags
@@ -140,5 +143,25 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	return nil
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if d.HasChange("name") {
+		newId := sdk.NewSchemaObjectIdentifierWithArgumentsInSchema(id.SchemaId(), d.Get("name").(string), id.ArgumentDataTypes()...)
+
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithRenameTo(newId.SchemaObjectId()))
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error renaming function %v err = %w", d.Id(), err))
+		}
+
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
+		id = newId
+	}
+
+	// TODO [this PR]: handle all updates
+
+	return ReadContextFunctionJava(ctx, d, meta)
 }
