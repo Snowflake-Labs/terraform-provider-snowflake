@@ -94,18 +94,16 @@ func TestInt_Account(t *testing.T) {
 
 	assertCreateResponse := func(t *testing.T, response *sdk.AccountCreateResponse, account sdk.Account) {
 		t.Helper()
-		assert.NotNil(t, response)
-		if response != nil {
-			assert.Equal(t, account.AccountLocator, response.AccountLocator)
-			assert.Equal(t, *account.AccountLocatorUrl, response.AccountLocatorUrl)
-			assert.Equal(t, account.AccountName, response.AccountName)
-			assert.Equal(t, *account.AccountURL, response.Url)
-			assert.Equal(t, account.OrganizationName, response.OrganizationName)
-			assert.Equal(t, *account.Edition, response.Edition)
-			assert.NotEmpty(t, response.RegionGroup)
-			assert.NotEmpty(t, response.Cloud)
-			assert.NotEmpty(t, response.Region)
-		}
+		require.NotNil(t, response)
+		assert.Equal(t, account.AccountLocator, response.AccountLocator)
+		assert.Equal(t, *account.AccountLocatorUrl, response.AccountLocatorUrl)
+		assert.Equal(t, account.AccountName, response.AccountName)
+		assert.Equal(t, *account.AccountURL, response.Url)
+		assert.Equal(t, account.OrganizationName, response.OrganizationName)
+		assert.Equal(t, *account.Edition, response.Edition)
+		assert.NotEmpty(t, response.RegionGroup)
+		assert.NotEmpty(t, response.Cloud)
+		assert.NotEmpty(t, response.Region)
 	}
 
 	t.Run("create: minimal", func(t *testing.T) {

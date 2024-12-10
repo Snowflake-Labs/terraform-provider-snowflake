@@ -391,7 +391,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().Account.Alter(t, &sdk.AlterAccountOptions{
 						SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
-							Name:     accountId.AccountId(),
+							Name:     accountId.AsAccountObjectIdentifier(),
 							OrgAdmin: true,
 						},
 					})

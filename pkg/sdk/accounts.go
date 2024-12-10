@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -143,7 +144,11 @@ func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts 
 
 	queryId := <-queryChanId
 	rows, err := c.client.QueryUnsafe(gosnowflake.WithFetchResultByID(ctx, queryId), "")
-	if err == nil && len(rows) == 1 && rows[0]["status"] != nil {
+	if err != nil {
+		log.Printf("[WARN] Unable to retrieve create account output, err = %v", err)
+	}
+
+	if len(rows) == 1 && rows[0]["status"] != nil {
 		if status, ok := (*rows[0]["status"]).(string); ok {
 			return ToAccountCreateResponse(status)
 		}

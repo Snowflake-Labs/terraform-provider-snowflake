@@ -10,6 +10,10 @@ import (
 )
 
 func v0_99_0_AccountStateUpgrader(ctx context.Context, state map[string]any, meta any) (map[string]any, error) {
+	if state == nil {
+		return state, nil
+	}
+
 	client := meta.(*provider.Context).Client
 	state["must_change_password"] = booleanStringFromBool(state["must_change_password"].(bool))
 	state["is_org_admin"] = booleanStringFromBool(state["is_org_admin"].(bool))

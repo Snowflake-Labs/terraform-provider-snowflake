@@ -124,7 +124,7 @@ func (i AccountIdentifier) AccountName() string {
 	return i.accountName
 }
 
-func (i AccountIdentifier) AccountId() AccountObjectIdentifier {
+func (i AccountIdentifier) AsAccountObjectIdentifier() AccountObjectIdentifier {
 	return NewAccountObjectIdentifier(i.accountName)
 }
 

@@ -26,7 +26,7 @@ var accountSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Specifies the identifier (i.e. name) for the account. It be unique within an organization, regardless of which Snowflake Region the account is in and must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.",
+		Description: "Specifies the identifier (i.e. name) for the account. It must be unique within an organization, regardless of which Snowflake Region the account is in and must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.",
 	},
 	"admin_name": {
 		Type:             schema.TypeString,
@@ -46,7 +46,6 @@ var accountSchema = map[string]*schema.Schema{
 	"admin_rsa_public_key": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Sensitive:        true,
 		Description:      externalChangesNotDetectedFieldDescription("Assigns a public key to the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 		AtLeastOneOf:     []string{"admin_password", "admin_rsa_public_key"},
@@ -190,7 +189,7 @@ func ImportAccount(ctx context.Context, d *schema.ResourceData, meta any) ([]*sc
 		return nil, err
 	}
 
-	account, err := client.Accounts.ShowByID(ctx, id.AccountId())
+	account, err := client.Accounts.ShowByID(ctx, id.AsAccountObjectIdentifier())
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +310,7 @@ func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		account, err := client.Accounts.ShowByID(ctx, id.AccountId())
+		account, err := client.Accounts.ShowByID(ctx, id.AsAccountObjectIdentifier())
 		if err != nil {
 			if errors.Is(err, sdk.ErrObjectNotFound) {
 				d.SetId("")
@@ -400,8 +399,8 @@ func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 
 		err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 			Rename: &sdk.AccountRename{
-				Name:    id.AccountId(),
-				NewName: newId.AccountId(),
+				Name:    id.AsAccountObjectIdentifier(),
+				NewName: newId.AsAccountObjectIdentifier(),
 			},
 		})
 		if err != nil {
@@ -430,7 +429,7 @@ func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 				}
 				if err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 					SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
-						Name:     id.AccountId(),
+						Name:     id.AsAccountObjectIdentifier(),
 						OrgAdmin: parsed,
 					},
 				}); err != nil {
@@ -440,7 +439,7 @@ func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 				// No unset available for this field (setting Snowflake default)
 				if err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
 					SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
-						Name:     id.AccountId(),
+						Name:     id.AsAccountObjectIdentifier(),
 						OrgAdmin: false,
 					},
 				}); err != nil {
@@ -469,7 +468,7 @@ func DeleteAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 		return diag.FromErr(err)
 	}
 
-	err = client.Accounts.Drop(ctx, id.AccountId(), d.Get("grace_period_in_days").(int), &sdk.DropAccountOptions{
+	err = client.Accounts.Drop(ctx, id.AsAccountObjectIdentifier(), d.Get("grace_period_in_days").(int), &sdk.DropAccountOptions{
 		IfExists: sdk.Bool(true),
 	})
 	if err != nil {
