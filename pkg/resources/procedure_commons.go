@@ -338,7 +338,7 @@ func procedureBaseSchema() map[string]schema.Schema {
 			Computed:    true,
 			Description: "Outputs the result of `SHOW PARAMETERS IN PROCEDURE` for the given procedure.",
 			Elem: &schema.Resource{
-				Schema: procedureParametersSchema,
+				Schema: schemas.ShowProcedureParametersSchema,
 			},
 		},
 		FullyQualifiedNameAttributeName: *schemas.FullyQualifiedNameSchema,
