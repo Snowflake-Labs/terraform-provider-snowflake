@@ -59,9 +59,6 @@ func (opts *CreateForJavaFunctionOptions) validate() error {
 		if opts.TargetPath != nil {
 			errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
 		}
-		if len(opts.Packages) > 0 {
-			errs = append(errs, NewError("PACKAGES must be empty when AS is nil"))
-		}
 		if len(opts.Imports) == 0 {
 			errs = append(errs, NewError("IMPORTS must not be empty when AS is nil"))
 		}
@@ -195,9 +192,6 @@ func (opts *CreateForScalaFunctionOptions) validate() error {
 		if opts.TargetPath != nil {
 			errs = append(errs, NewError("TARGET_PATH must be nil when AS is nil"))
 		}
-		if len(opts.Packages) > 0 {
-			errs = append(errs, NewError("PACKAGES must be empty when AS is nil"))
-		}
 		if len(opts.Imports) == 0 {
 			errs = append(errs, NewError("IMPORTS must not be empty when AS is nil"))
 		}
@@ -258,8 +252,18 @@ func (opts *AlterFunctionOptions) validate() error {
 	if opts.RenameTo != nil && !ValidObjectIdentifier(opts.RenameTo) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.RenameTo, opts.SetComment, opts.SetLogLevel, opts.SetTraceLevel, opts.SetSecure, opts.UnsetLogLevel, opts.UnsetTraceLevel, opts.UnsetSecure, opts.UnsetComment, opts.SetTags, opts.UnsetTags) {
-		errs = append(errs, errExactlyOneOf("AlterFunctionOptions", "RenameTo", "SetComment", "SetLogLevel", "SetTraceLevel", "SetSecure", "UnsetLogLevel", "UnsetTraceLevel", "UnsetSecure", "UnsetComment", "SetTags", "UnsetTags"))
+	if !exactlyOneValueSet(opts.RenameTo, opts.Set, opts.Unset, opts.SetSecure, opts.UnsetSecure, opts.SetTags, opts.UnsetTags) {
+		errs = append(errs, errExactlyOneOf("AlterFunctionOptions", "RenameTo", "Set", "Unset", "SetSecure", "UnsetSecure", "SetTags", "UnsetTags"))
+	}
+	if valueSet(opts.Set) {
+		if !anyValueSet(opts.Set.Comment, opts.Set.ExternalAccessIntegrations, opts.Set.SecretsList, opts.Set.EnableConsoleOutput, opts.Set.LogLevel, opts.Set.MetricLevel, opts.Set.TraceLevel) {
+			errs = append(errs, errAtLeastOneOf("AlterFunctionOptions.Set", "Comment", "ExternalAccessIntegrations", "SecretsList", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"))
+		}
+	}
+	if valueSet(opts.Unset) {
+		if !anyValueSet(opts.Unset.Comment, opts.Unset.ExternalAccessIntegrations, opts.Unset.EnableConsoleOutput, opts.Unset.LogLevel, opts.Unset.MetricLevel, opts.Unset.TraceLevel) {
+			errs = append(errs, errAtLeastOneOf("AlterFunctionOptions.Unset", "Comment", "ExternalAccessIntegrations", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"))
+		}
 	}
 	return JoinErrors(errs...)
 }
