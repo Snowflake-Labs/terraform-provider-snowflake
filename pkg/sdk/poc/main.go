@@ -95,7 +95,6 @@ func runAllTemplatesToStdOut(definition *generator.Interface) {
 	generator.GenerateImplementation(writer, definition)
 	generator.GenerateUnitTests(writer, definition)
 	generator.GenerateValidations(writer, definition)
-	generator.GenerateIntegrationTests(writer, definition)
 }
 
 func runAllTemplatesAndSave(definition *generator.Interface, file string) {

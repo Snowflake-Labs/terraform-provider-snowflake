@@ -161,8 +161,8 @@ func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resour
 	return i
 }
 
-// ShowByIdOperationNoFiltering adds a ShowByID operation to the interface without any filtering. Should be used for objects that do not implement any filtering options.
-func (i *Interface) ShowByIdOperationNoFiltering() *Interface {
+// ShowByIdOperationWithNoFiltering adds a ShowByID operation to the interface without any filtering. Should be used for objects that do not implement any filtering options.
+func (i *Interface) ShowByIdOperationWithNoFiltering() *Interface {
 	op := newNoSqlOperation(string(OperationKindShowByID))
 	i.Operations = append(i.Operations, op)
 	return i

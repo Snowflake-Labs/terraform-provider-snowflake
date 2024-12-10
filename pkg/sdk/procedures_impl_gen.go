@@ -60,7 +60,10 @@ func (v *procedures) Show(ctx context.Context, request *ShowProcedureRequest) ([
 }
 
 func (v *procedures) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error) {
-	procedures, err := v.Show(ctx, NewShowProcedureRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())}))
+	request := NewShowProcedureRequest().
+		WithIn(In{Schema: id.SchemaId()}).
+		WithLike(Like{Pattern: String(id.Name())})
+	procedures, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}

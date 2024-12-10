@@ -2,8 +2,6 @@
 
 package sdk
 
-import ()
-
 func NewCreateNotificationIntegrationRequest(
 	name AccountObjectIdentifier,
 	Enabled bool,
@@ -275,8 +273,8 @@ func NewShowNotificationIntegrationRequest() *ShowNotificationIntegrationRequest
 	return &ShowNotificationIntegrationRequest{}
 }
 
-func (s *ShowNotificationIntegrationRequest) WithLike(Like *Like) *ShowNotificationIntegrationRequest {
-	s.Like = Like
+func (s *ShowNotificationIntegrationRequest) WithLike(Like Like) *ShowNotificationIntegrationRequest {
+	s.Like = &Like
 	return s
 }
 

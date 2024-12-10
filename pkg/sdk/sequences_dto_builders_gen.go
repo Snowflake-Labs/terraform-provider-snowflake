@@ -2,8 +2,6 @@
 
 package sdk
 
-import ()
-
 func NewCreateSequenceRequest(
 	name SchemaObjectIdentifier,
 ) *CreateSequenceRequest {
@@ -93,13 +91,13 @@ func NewShowSequenceRequest() *ShowSequenceRequest {
 	return &ShowSequenceRequest{}
 }
 
-func (s *ShowSequenceRequest) WithLike(Like *Like) *ShowSequenceRequest {
-	s.Like = Like
+func (s *ShowSequenceRequest) WithLike(Like Like) *ShowSequenceRequest {
+	s.Like = &Like
 	return s
 }
 
-func (s *ShowSequenceRequest) WithIn(In *In) *ShowSequenceRequest {
-	s.In = In
+func (s *ShowSequenceRequest) WithIn(In In) *ShowSequenceRequest {
+	s.In = &In
 	return s
 }
 

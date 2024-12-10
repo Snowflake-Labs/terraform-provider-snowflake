@@ -826,12 +826,12 @@ func NewShowStageRequest() *ShowStageRequest {
 	return &ShowStageRequest{}
 }
 
-func (s *ShowStageRequest) WithLike(Like *Like) *ShowStageRequest {
-	s.Like = Like
+func (s *ShowStageRequest) WithLike(Like Like) *ShowStageRequest {
+	s.Like = &Like
 	return s
 }
 
-func (s *ShowStageRequest) WithIn(In *In) *ShowStageRequest {
-	s.In = In
+func (s *ShowStageRequest) WithIn(In In) *ShowStageRequest {
+	s.In = &In
 	return s
 }
