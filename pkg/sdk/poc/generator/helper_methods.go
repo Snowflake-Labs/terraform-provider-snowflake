@@ -1,6 +1,9 @@
 package generator
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 type objectIdentifier string
 
@@ -64,8 +67,47 @@ func newObjectTypeHelperMethod(structName string) *HelperMethod {
 	return newHelperMethod("ObjectType", structName, returnValue, "ObjectType")
 }
 
+func containsFieldNames(fields []*Field, names ...string) bool {
+	var fieldNames []string
+	for _, field := range fields {
+		fieldNames = append(fieldNames, field.Name)
+	}
+	for _, name := range names {
+		if !slices.Contains(fieldNames, name) {
+			return false
+		}
+	}
+	return true
+}
+
+func checkRequiredFieldsForIDHelperMethod(operations []*Operation, name string, id objectIdentifier) bool {
+	for _, op := range operations {
+		if op.Name != string(OperationKindShow) {
+			continue
+		}
+		for _, field := range op.HelperStructs {
+			if field.Name != name {
+				continue
+			}
+			requiredFields := []string{"Name"}
+			switch id {
+			case DatabaseObjectIdentifier:
+				requiredFields = append(requiredFields, "DatabaseName")
+			case SchemaObjectIdentifier:
+				requiredFields = append(requiredFields, "DatabaseName", "SchemaName")
+			}
+			return containsFieldNames(field.Fields, requiredFields...)
+		}
+	}
+	return false
+}
+
 // HelperMethodID adds a helper method "ID()" to the interface file that returns the ObjectIdentifier of the object
 func (i *Interface) HelperMethodID() *Interface {
+	if !checkRequiredFieldsForIDHelperMethod(i.Operations, i.NameSingular, identifierStringToObjectIdentifier(i.IdentifierKind)) {
+		fmt.Println("WARNING: Does not contain needed fields for ID helper method. Create the method manually in _ext file or add missing fields.")
+		return i
+	}
 	idKind := identifierStringToObjectIdentifier(i.IdentifierKind)
 	i.HelperMethods = append(i.HelperMethods, newIDHelperMethod(i.NameSingular, idKind))
 	return i
