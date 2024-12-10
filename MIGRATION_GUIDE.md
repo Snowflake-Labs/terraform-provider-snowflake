@@ -9,6 +9,30 @@ across different versions.
 
 ## v0.99.0 ➞ v0.100.0
 
+### snowflake_accounts data source changes
+New filtering options:
+- `with_history`
+
+New output fields
+- `show_output`
+
+Breaking changes:
+- `pattern` renamed to `like`
+- `accounts` field now organizes output of show under `show_output` field and the output of show parameters under `parameters` field.
+
+Before:
+```terraform
+output "simple_output" {
+  value = data.snowflake_accounts.test.accounts[0].account_name
+}
+```
+After:
+```terraform
+output "simple_output" {
+  value = data.snowflake_accounts.test.accounts[0].show_output[0].account_name
+}
+```
+
 ### snowflake_tag_association resource changes
 #### *(behavior change)* new id format
 In order to provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type in one resource.
