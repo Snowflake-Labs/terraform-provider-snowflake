@@ -28,6 +28,7 @@ type CreateStreamlitOptions struct {
 	Title                      *string                     `ddl:"parameter,single_quotes" sql:"TITLE"`
 	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
+
 type ExternalAccessIntegrations struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"list,must_parentheses"`
 }
@@ -42,6 +43,7 @@ type AlterStreamlitOptions struct {
 	Unset     *StreamlitUnset         `ddl:"list,no_parentheses" sql:"UNSET"`
 	RenameTo  *SchemaObjectIdentifier `ddl:"identifier" sql:"RENAME TO"`
 }
+
 type StreamlitSet struct {
 	RootLocation               *string                     `ddl:"parameter,single_quotes" sql:"ROOT_LOCATION"`
 	MainFile                   *string                     `ddl:"parameter,single_quotes" sql:"MAIN_FILE"`
@@ -50,6 +52,7 @@ type StreamlitSet struct {
 	Comment                    *string                     `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	Title                      *string                     `ddl:"parameter,single_quotes" sql:"TITLE"`
 }
+
 type StreamlitUnset struct {
 	QueryWarehouse *bool `ddl:"keyword" sql:"QUERY_WAREHOUSE"`
 	Comment        *bool `ddl:"keyword" sql:"COMMENT"`
@@ -73,6 +76,7 @@ type ShowStreamlitOptions struct {
 	In         *In        `ddl:"keyword" sql:"IN"`
 	Limit      *LimitFrom `ddl:"keyword" sql:"LIMIT"`
 }
+
 type streamlitsRow struct {
 	CreatedOn      string         `db:"created_on"`
 	Name           string         `db:"name"`
@@ -85,6 +89,7 @@ type streamlitsRow struct {
 	UrlId          string         `db:"url_id"`
 	OwnerRoleType  string         `db:"owner_role_type"`
 }
+
 type Streamlit struct {
 	CreatedOn      string
 	Name           string
@@ -104,6 +109,7 @@ type DescribeStreamlitOptions struct {
 	streamlit bool                   `ddl:"static" sql:"STREAMLIT"`
 	name      SchemaObjectIdentifier `ddl:"identifier"`
 }
+
 type streamlitsDetailRow struct {
 	Name                       string         `db:"name"`
 	Title                      sql.NullString `db:"title"`
@@ -117,6 +123,7 @@ type streamlitsDetailRow struct {
 	ExternalAccessIntegrations string         `db:"external_access_integrations"`
 	ExternalAccessSecrets      string         `db:"external_access_secrets"`
 }
+
 type StreamlitDetail struct {
 	Name                       string
 	Title                      string
@@ -131,6 +138,6 @@ type StreamlitDetail struct {
 	ExternalAccessSecrets      string
 }
 
-func (s *Streamlit) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(s.DatabaseName, s.SchemaName, s.Name)
+func (v *Streamlit) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
