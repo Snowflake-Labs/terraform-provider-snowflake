@@ -232,6 +232,7 @@ func (c *FunctionClient) SampleScalaDefinition(t *testing.T, className string, f
 `, className, funcName, argName)
 }
 
+// TODO [SNOW-1850370]: use input argument like in other samples
 func (c *FunctionClient) SampleSqlDefinition(t *testing.T) string {
 	t.Helper()
 

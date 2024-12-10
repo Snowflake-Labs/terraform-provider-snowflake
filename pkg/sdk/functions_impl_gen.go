@@ -467,7 +467,7 @@ func (r functionRow) convert() *Function {
 	e := &Function{
 		CreatedOn:          r.CreatedOn,
 		Name:               r.Name,
-		SchemaName:         r.SchemaName,
+		SchemaName:         strings.Trim(r.SchemaName, `"`),
 		IsBuiltin:          r.IsBuiltin == "Y",
 		IsAggregate:        r.IsAggregate == "Y",
 		IsAnsi:             r.IsAnsi == "Y",
@@ -475,7 +475,7 @@ func (r functionRow) convert() *Function {
 		MaxNumArguments:    r.MaxNumArguments,
 		ArgumentsRaw:       r.Arguments,
 		Description:        r.Description,
-		CatalogName:        r.CatalogName,
+		CatalogName:        strings.Trim(r.CatalogName, `"`),
 		IsTableFunction:    r.IsTableFunction == "Y",
 		ValidForClustering: r.ValidForClustering == "Y",
 		IsExternalFunction: r.IsExternalFunction == "Y",

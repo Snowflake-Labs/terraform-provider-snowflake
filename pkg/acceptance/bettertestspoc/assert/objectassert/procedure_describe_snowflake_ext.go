@@ -13,19 +13,19 @@ import (
 )
 
 // TODO [SNOW-1501905]: this file should be fully regenerated when adding and option to assert the results of describe
-type FunctionDetailsAssert struct {
-	*assert.SnowflakeObjectAssert[sdk.FunctionDetails, sdk.SchemaObjectIdentifierWithArguments]
+type ProcedureDetailsAssert struct {
+	*assert.SnowflakeObjectAssert[sdk.ProcedureDetails, sdk.SchemaObjectIdentifierWithArguments]
 }
 
-func FunctionDetails(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) *FunctionDetailsAssert {
+func ProcedureDetails(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) *ProcedureDetailsAssert {
 	t.Helper()
-	return &FunctionDetailsAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectType("FUNCTION_DETAILS"), id, acc.TestClient().Function.DescribeDetails),
+	return &ProcedureDetailsAssert{
+		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectType("PROCEDURE_DETAILS"), id, acc.TestClient().Procedure.DescribeDetails),
 	}
 }
 
-func (f *FunctionDetailsAssert) HasSignature(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasSignature(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Signature != expected {
 			return fmt.Errorf("expected signature: %v; got: %v", expected, o.Signature)
@@ -35,8 +35,8 @@ func (f *FunctionDetailsAssert) HasSignature(expected string) *FunctionDetailsAs
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasReturns(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasReturns(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Returns != expected {
 			return fmt.Errorf("expected returns: %v; got: %v", expected, o.Returns)
@@ -46,8 +46,8 @@ func (f *FunctionDetailsAssert) HasReturns(expected string) *FunctionDetailsAsse
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasLanguage(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasLanguage(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Language != expected {
 			return fmt.Errorf("expected language: %v; got: %v", expected, o.Language)
@@ -57,8 +57,8 @@ func (f *FunctionDetailsAssert) HasLanguage(expected string) *FunctionDetailsAss
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasBody(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasBody(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Body == nil {
 			return fmt.Errorf("expected body to have value; got: nil")
@@ -71,8 +71,8 @@ func (f *FunctionDetailsAssert) HasBody(expected string) *FunctionDetailsAssert 
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasNullHandling(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasNullHandling(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.NullHandling == nil {
 			return fmt.Errorf("expected null handling to have value; got: nil")
@@ -85,8 +85,8 @@ func (f *FunctionDetailsAssert) HasNullHandling(expected string) *FunctionDetail
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasVolatility(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasVolatility(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Volatility == nil {
 			return fmt.Errorf("expected volatility to have value; got: nil")
@@ -99,8 +99,8 @@ func (f *FunctionDetailsAssert) HasVolatility(expected string) *FunctionDetailsA
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasExternalAccessIntegrations(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasExternalAccessIntegrations(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.ExternalAccessIntegrations == nil {
 			return fmt.Errorf("expected external access integrations to have value; got: nil")
@@ -113,8 +113,8 @@ func (f *FunctionDetailsAssert) HasExternalAccessIntegrations(expected string) *
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasSecrets(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasSecrets(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Secrets == nil {
 			return fmt.Errorf("expected secrets to have value; got: nil")
@@ -127,8 +127,8 @@ func (f *FunctionDetailsAssert) HasSecrets(expected string) *FunctionDetailsAsse
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasImports(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasImports(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Imports == nil {
 			return fmt.Errorf("expected imports to have value; got: nil")
@@ -141,8 +141,8 @@ func (f *FunctionDetailsAssert) HasImports(expected string) *FunctionDetailsAsse
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasHandler(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasHandler(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Handler == nil {
 			return fmt.Errorf("expected handler to have value; got: nil")
@@ -155,8 +155,8 @@ func (f *FunctionDetailsAssert) HasHandler(expected string) *FunctionDetailsAsse
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasRuntimeVersion(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasRuntimeVersion(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.RuntimeVersion == nil {
 			return fmt.Errorf("expected runtime version to have value; got: nil")
@@ -169,8 +169,8 @@ func (f *FunctionDetailsAssert) HasRuntimeVersion(expected string) *FunctionDeta
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasPackages(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasPackages(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Packages == nil {
 			return fmt.Errorf("expected packages to have value; got: nil")
@@ -183,8 +183,8 @@ func (f *FunctionDetailsAssert) HasPackages(expected string) *FunctionDetailsAss
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasTargetPath(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasTargetPath(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.TargetPath == nil {
 			return fmt.Errorf("expected target path to have value; got: nil")
@@ -197,8 +197,8 @@ func (f *FunctionDetailsAssert) HasTargetPath(expected string) *FunctionDetailsA
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasInstalledPackages(expected string) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasInstalledPackages(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.InstalledPackages == nil {
 			return fmt.Errorf("expected installed packages to have value; got: nil")
@@ -211,22 +211,19 @@ func (f *FunctionDetailsAssert) HasInstalledPackages(expected string) *FunctionD
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasIsAggregate(expected bool) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasExecuteAs(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
-		if o.IsAggregate == nil {
-			return fmt.Errorf("expected is aggregate to have value; got: nil")
-		}
-		if *o.IsAggregate != expected {
-			return fmt.Errorf("expected is aggregate: %v; got: %v", expected, *o.IsAggregate)
+		if o.ExecuteAs != expected {
+			return fmt.Errorf("expected execute as: %v; got: %v", expected, o.ExecuteAs)
 		}
 		return nil
 	})
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasBodyNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasBodyNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Body != nil {
 			return fmt.Errorf("expected body to be nil, was %v", *o.Body)
@@ -236,8 +233,8 @@ func (f *FunctionDetailsAssert) HasBodyNil() *FunctionDetailsAssert {
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasNullHandlingNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasNullHandlingNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.NullHandling != nil {
 			return fmt.Errorf("expected null handling to be nil, was %v", *o.NullHandling)
@@ -247,8 +244,8 @@ func (f *FunctionDetailsAssert) HasNullHandlingNil() *FunctionDetailsAssert {
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasVolatilityNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasVolatilityNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Volatility != nil {
 			return fmt.Errorf("expected volatility to be nil, was %v", *o.Volatility)
@@ -258,8 +255,8 @@ func (f *FunctionDetailsAssert) HasVolatilityNil() *FunctionDetailsAssert {
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasExternalAccessIntegrationsNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasExternalAccessIntegrationsNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.ExternalAccessIntegrations != nil {
 			return fmt.Errorf("expected external access integrations to be nil, was %v", *o.ExternalAccessIntegrations)
@@ -269,8 +266,8 @@ func (f *FunctionDetailsAssert) HasExternalAccessIntegrationsNil() *FunctionDeta
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasSecretsNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasSecretsNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Secrets != nil {
 			return fmt.Errorf("expected secrets to be nil, was %v", *o.Secrets)
@@ -280,8 +277,8 @@ func (f *FunctionDetailsAssert) HasSecretsNil() *FunctionDetailsAssert {
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasImportsNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasImportsNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Imports != nil {
 			return fmt.Errorf("expected imports to be nil, was %v", *o.Imports)
@@ -291,8 +288,8 @@ func (f *FunctionDetailsAssert) HasImportsNil() *FunctionDetailsAssert {
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasHandlerNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasHandlerNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Handler != nil {
 			return fmt.Errorf("expected handler to be nil, was %v", *o.Handler)
@@ -302,8 +299,8 @@ func (f *FunctionDetailsAssert) HasHandlerNil() *FunctionDetailsAssert {
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasRuntimeVersionNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasRuntimeVersionNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.RuntimeVersion != nil {
 			return fmt.Errorf("expected runtime version to be nil, was %v", *o.RuntimeVersion)
@@ -313,8 +310,8 @@ func (f *FunctionDetailsAssert) HasRuntimeVersionNil() *FunctionDetailsAssert {
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasPackagesNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasPackagesNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Packages != nil {
 			return fmt.Errorf("expected packages to be nil, was %v", *o.Packages)
@@ -324,8 +321,8 @@ func (f *FunctionDetailsAssert) HasPackagesNil() *FunctionDetailsAssert {
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasTargetPathNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasTargetPathNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.TargetPath != nil {
 			return fmt.Errorf("expected target path to be nil, was %v", *o.TargetPath)
@@ -335,8 +332,8 @@ func (f *FunctionDetailsAssert) HasTargetPathNil() *FunctionDetailsAssert {
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasInstalledPackagesNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasInstalledPackagesNil() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.InstalledPackages != nil {
 			return fmt.Errorf("expected installed packages to be nil, was %v", *o.InstalledPackages)
@@ -346,19 +343,8 @@ func (f *FunctionDetailsAssert) HasInstalledPackagesNil() *FunctionDetailsAssert
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasIsAggregateNil() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
-		t.Helper()
-		if o.IsAggregate != nil {
-			return fmt.Errorf("expected is aggregate to be nil, was %v", *o.IsAggregate)
-		}
-		return nil
-	})
-	return f
-}
-
-func (f *FunctionDetailsAssert) HasInstalledPackagesNotEmpty() *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasInstalledPackagesNotEmpty() *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.InstalledPackages == nil {
 			return fmt.Errorf("expected installed packages to not be nil")
@@ -371,8 +357,8 @@ func (f *FunctionDetailsAssert) HasInstalledPackagesNotEmpty() *FunctionDetailsA
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasExactlyExternalAccessIntegrations(integrations ...sdk.AccountObjectIdentifier) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasExactlyExternalAccessIntegrations(integrations ...sdk.AccountObjectIdentifier) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.ExternalAccessIntegrations == nil {
 			return fmt.Errorf("expected external access integrations to have value; got: nil")
@@ -387,8 +373,8 @@ func (f *FunctionDetailsAssert) HasExactlyExternalAccessIntegrations(integration
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasExactlySecrets(expectedSecrets map[string]sdk.SchemaObjectIdentifier) *FunctionDetailsAssert {
-	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+func (f *ProcedureDetailsAssert) HasExactlySecrets(expectedSecrets map[string]sdk.SchemaObjectIdentifier) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
 		t.Helper()
 		if o.Secrets == nil {
 			return fmt.Errorf("expected secrets to have value; got: nil")

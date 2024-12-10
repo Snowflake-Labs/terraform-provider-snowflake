@@ -327,3 +327,38 @@ func Test_ToMetricLevel(t *testing.T) {
 		})
 	}
 }
+
+func Test_ToAutoEventLogging(t *testing.T) {
+	testCases := []struct {
+		Name          string
+		Input         string
+		Expected      AutoEventLogging
+		ExpectedError string
+	}{
+		{Input: string(AutoEventLoggingLogging), Expected: AutoEventLoggingLogging},
+		{Input: string(AutoEventLoggingTracing), Expected: AutoEventLoggingTracing},
+		{Input: string(AutoEventLoggingAll), Expected: AutoEventLoggingAll},
+		{Input: string(AutoEventLoggingOff), Expected: AutoEventLoggingOff},
+		{Name: "validation: incorrect auto event logging", Input: "incorrect", ExpectedError: "unknown auto event logging: incorrect"},
+		{Name: "validation: empty input", Input: "", ExpectedError: "unknown auto event logging: "},
+		{Name: "validation: lower case input", Input: "all", Expected: AutoEventLoggingAll},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		name := tc.Name
+		if name == "" {
+			name = fmt.Sprintf("%v auto event logging", tc.Input)
+		}
+		t.Run(name, func(t *testing.T) {
+			value, err := ToAutoEventLogging(tc.Input)
+			if tc.ExpectedError != "" {
+				assert.Empty(t, value)
+				assert.ErrorContains(t, err, tc.ExpectedError)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.Expected, value)
+			}
+		})
+	}
+}

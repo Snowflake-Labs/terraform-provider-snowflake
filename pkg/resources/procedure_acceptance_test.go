@@ -157,9 +157,9 @@ func TestAcc_Procedure_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "statement", statement),
 					resource.TestCheckResourceAttr(resourceName, "execute_as", "CALLER"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "arguments.0.name", "ARG1"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.0.name", "arg1"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.0.type", "VARCHAR"),
-					resource.TestCheckResourceAttr(resourceName, "arguments.1.name", "ARG2"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.1.name", "arg2"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.1.type", "DATE"),
 					resource.TestCheckResourceAttr(resourceName, "null_input_behavior", "RETURNS NULL ON NULL INPUT"),
 

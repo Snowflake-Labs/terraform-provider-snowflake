@@ -102,6 +102,17 @@ func (c *ParameterClient) ShowFunctionParameters(t *testing.T, id sdk.SchemaObje
 	return params
 }
 
+func (c *ParameterClient) ShowProcedureParameters(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) []*sdk.Parameter {
+	t.Helper()
+	params, err := c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			Procedure: id,
+		},
+	})
+	require.NoError(t, err)
+	return params
+}
+
 func (c *ParameterClient) UpdateAccountParameterTemporarily(t *testing.T, parameter sdk.AccountParameter, newValue string) func() {
 	t.Helper()
 	ctx := context.Background()
