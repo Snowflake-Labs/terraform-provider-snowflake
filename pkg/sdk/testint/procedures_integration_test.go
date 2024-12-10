@@ -1977,12 +1977,12 @@ func TestInt_CallProcedure(t *testing.T) {
 
 		definition := `
 		BEGIN
-			RETURN message;
+			RETURN MESSAGE;
 		END;`
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt).WithNotNull(true)
-		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
+		argument := sdk.NewProcedureArgumentRequest("MESSAGE", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
 			WithSecure(true).
 			WithOrReplace(true).
@@ -2006,7 +2006,7 @@ func TestInt_CallProcedure(t *testing.T) {
 
 	t.Run("call procedure for SQL: argument names", func(t *testing.T) {
 		f := createProcedureForSQLHandle(t, true)
-		err := client.Procedures.Call(ctx, sdk.NewCallProcedureRequest(f.ID().SchemaObjectId()).WithCallArguments([]string{"message => 'hi'"}))
+		err := client.Procedures.Call(ctx, sdk.NewCallProcedureRequest(f.ID().SchemaObjectId()).WithCallArguments([]string{"MESSAGE => 'hi'"}))
 		require.NoError(t, err)
 	})
 
@@ -2279,13 +2279,13 @@ func TestInt_CreateAndCallProcedures(t *testing.T) {
 	t.Run("create and call procedure for SQL: argument positions", func(t *testing.T) {
 		definition := `
 		BEGIN
-			RETURN message;
+			RETURN MESSAGE;
 		END;`
 
 		name := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		dt := sdk.NewProcedureReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeVARCHAR)
 		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
-		argument := sdk.NewProcedureArgumentRequest("message", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
+		argument := sdk.NewProcedureArgumentRequest("MESSAGE", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateAndCallForSQLProcedureRequest(name, *returns, definition, name).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
 			WithCallArguments([]string{"message => 'hi'"})
