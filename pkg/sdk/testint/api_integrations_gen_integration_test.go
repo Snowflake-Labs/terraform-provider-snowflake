@@ -387,7 +387,7 @@ func TestInt_ApiIntegrations(t *testing.T) {
 		integrationAzure := createAzureApiIntegration(t)
 
 		showRequest := sdk.NewShowApiIntegrationRequest().
-			WithLike(&sdk.Like{Pattern: &integrationAws.Name})
+			WithLike(sdk.Like{Pattern: &integrationAws.Name})
 		returnedIntegrations, err := client.ApiIntegrations.Show(ctx, showRequest)
 		require.NoError(t, err)
 
