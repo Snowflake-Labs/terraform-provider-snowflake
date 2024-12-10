@@ -64,13 +64,15 @@ func newObjectTypeHelperMethod(structName string) *HelperMethod {
 	return newHelperMethod("ObjectType", structName, returnValue, "ObjectType")
 }
 
-func (i *Interface) ID() *Interface {
+// HelperMethodID adds a helper method "ID()" to the interface file that returns the ObjectIdentifier of the object
+func (i *Interface) HelperMethodID() *Interface {
 	idKind := identifierStringToObjectIdentifier(i.IdentifierKind)
 	i.HelperMethods = append(i.HelperMethods, newIDHelperMethod(i.NameSingular, idKind))
 	return i
 }
 
-func (i *Interface) ObjectType() *Interface {
+// HelperMethodObjectType adds a helper method "ObjectType()" to the interface file that returns the ObjectType for the struct
+func (i *Interface) HelperMethodObjectType() *Interface {
 	i.HelperMethods = append(i.HelperMethods, newObjectTypeHelperMethod(i.NameSingular))
 	return i
 }
