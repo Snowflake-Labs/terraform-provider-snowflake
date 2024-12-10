@@ -8,6 +8,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -363,4 +364,41 @@ func DeleteFunction(ctx context.Context, d *schema.ResourceData, meta any) diag.
 
 	d.SetId("")
 	return nil
+}
+
+// TODO [SNOW-1348103]: handle defaults
+func parseFunctionArgumentsCommon(d *schema.ResourceData) ([]sdk.FunctionArgumentRequest, diag.Diagnostics) {
+	args := make([]sdk.FunctionArgumentRequest, 0)
+	if v, ok := d.GetOk("arguments"); ok {
+		for _, arg := range v.([]any) {
+			argName := arg.(map[string]interface{})["arg_name"].(string)
+			argDataType := arg.(map[string]interface{})["arg_data_type"].(string)
+			dataType, err := datatypes.ParseDataType(argDataType)
+			if err != nil {
+				return nil, diag.FromErr(err)
+			}
+			args = append(args, *sdk.NewFunctionArgumentRequest(argName, dataType))
+		}
+	}
+	return args, nil
+}
+
+func parseFunctionReturnsCommon(d *schema.ResourceData) (*sdk.FunctionReturnsRequest, diag.Diagnostics) {
+	returnTypeRaw := d.Get("return_type").(string)
+	dataType, err := datatypes.ParseDataType(returnTypeRaw)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	returns := sdk.NewFunctionReturnsRequest()
+	switch v := dataType.(type) {
+	case *datatypes.TableDataType:
+		var cr []sdk.FunctionColumnRequest
+		for _, c := range v.Columns() {
+			cr = append(cr, *sdk.NewFunctionColumnRequest(c.ColumnName(), c.ColumnType()))
+		}
+		returns.WithTable(*sdk.NewFunctionReturnsTableRequest().WithColumns(cr))
+	default:
+		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(dataType))
+	}
+	return returns, nil
 }

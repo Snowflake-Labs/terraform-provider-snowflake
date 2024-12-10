@@ -4,7 +4,9 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 type IdsGenerator struct {
@@ -97,12 +99,22 @@ func (c *IdsGenerator) NewSchemaObjectIdentifierWithArguments(name string, argum
 	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), name, arguments...)
 }
 
+func (c *IdsGenerator) NewSchemaObjectIdentifierWithArgumentsNewDataTypes(name string, arguments ...datatypes.DataType) sdk.SchemaObjectIdentifierWithArguments {
+	legacyDataTypes := collections.Map(arguments, func(dt datatypes.DataType) sdk.DataType { return sdk.LegacyDataTypeFrom(dt) })
+	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), name, legacyDataTypes...)
+}
+
 func (c *IdsGenerator) NewSchemaObjectIdentifierWithArgumentsInSchema(name string, schemaId sdk.DatabaseObjectIdentifier, argumentDataTypes ...sdk.DataType) sdk.SchemaObjectIdentifierWithArguments {
 	return sdk.NewSchemaObjectIdentifierWithArgumentsInSchema(schemaId, name, argumentDataTypes...)
 }
 
 func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArguments(arguments ...sdk.DataType) sdk.SchemaObjectIdentifierWithArguments {
 	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), arguments...)
+}
+
+func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(arguments ...datatypes.DataType) sdk.SchemaObjectIdentifierWithArguments {
+	legacyDataTypes := collections.Map(arguments, func(dt datatypes.DataType) sdk.DataType { return sdk.LegacyDataTypeFrom(dt) })
+	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), legacyDataTypes...)
 }
 
 func (c *IdsGenerator) Alpha() string {
