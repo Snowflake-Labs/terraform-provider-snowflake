@@ -33,7 +33,7 @@ type HelperMethod struct {
 	ReturnType  string
 }
 
-func newHelperMethod(name, structName, returnValue, returnType string) *HelperMethod {
+func newHelperMethod(name, structName, returnValue string, returnType string) *HelperMethod {
 	return &HelperMethod{
 		Name:        name,
 		StructName:  structName,
@@ -42,28 +42,31 @@ func newHelperMethod(name, structName, returnValue, returnType string) *HelperMe
 	}
 }
 
-func newIDHelperMethod(structName, objectIdentifier string) *HelperMethod {
+func newIDHelperMethod(structName string, objectIdentifier objectIdentifier) *HelperMethod {
 	var args string
 	switch objectIdentifier {
-	case "AccountObjectIdentifier":
+	case AccountObjectIdentifier:
 		args = "v.Name"
-	case "DatabaseObjectIdentifier":
+	case DatabaseObjectIdentifier:
 		args = "v.DatabaseName, v.Name"
-	case "SchemaObjectIdentifier":
+	case SchemaObjectIdentifier:
 		args = "v.DatabaseName, v.SchemaName, v.Name"
 	default:
 		return nil
 	}
+
 	returnValue := fmt.Sprintf("New%v(%v)", objectIdentifier, args)
-	return newHelperMethod("ID", structName, returnValue, objectIdentifier)
+	return newHelperMethod("ID", structName, returnValue, string(objectIdentifier))
 }
 
 func newObjectTypeHelperMethod(structName string) *HelperMethod {
-	return newHelperMethod("ObjectType", structName, fmt.Sprintf("ObjectType%v", structName), "ObjectType")
+	returnValue := fmt.Sprintf("ObjectType%v", structName)
+	return newHelperMethod("ObjectType", structName, returnValue, "ObjectType")
 }
 
 func (i *Interface) ID() *Interface {
-	i.HelperMethods = append(i.HelperMethods, newIDHelperMethod(i.NameSingular, i.IdentifierKind))
+	idKind := identifierStringToObjectIdentifier(i.IdentifierKind)
+	i.HelperMethods = append(i.HelperMethods, newIDHelperMethod(i.NameSingular, idKind))
 	return i
 }
 
