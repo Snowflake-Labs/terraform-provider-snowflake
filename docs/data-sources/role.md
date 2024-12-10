@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_role (Data Source)
 
-~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use [snowflake_roles](./roles) instead. <deprecation>
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use [snowflake_account_roles](./account_roles) instead. <deprecation>
 
 ## Example Usage
 

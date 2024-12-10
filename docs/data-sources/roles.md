@@ -12,6 +12,8 @@ description: |-
 
 # snowflake_roles (Data Source)
 
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use [snowflake_account_roles](./account_roles) instead. <deprecation>
+
 Data source used to get details of filtered roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.
 
 ## Example Usage

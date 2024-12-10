@@ -393,6 +393,7 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - generate assertions checking that time is not empty - we often do not compare time fields by value, but check if they are set
 - utilize `ContainsExactlyInAnyOrder` function in `pkg/acceptance/bettertestspoc/assert/commons.go` to create asserts on collections that are order independent
 - Additional asserts for sets and lists that wouldn't rely on the order of items saved to the state (SNOW-1706544)
+  - this should also support nested sets and lists (see `accountRolesDataSourceContainsRole` for example)
 - support generating provider config and use generated configs in `pkg/provider/provider_acceptance_test.go`
 - add config builders for other block types (Variable, Output, Locals, Module, Terraform)
 - add provider to resource/datasource models (use in the grant_ownership_acceptance_test)
