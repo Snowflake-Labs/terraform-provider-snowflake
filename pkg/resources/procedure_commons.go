@@ -160,7 +160,7 @@ var (
 )
 
 // TODO [SNOW-1348103]: add null/not null
-// TODO [SNOW-1348103]: currently all database.schema.name are ForceNew but based on the docs it is possible to rename with moving to different db/schema
+// TODO [SNOW-1348103]: currently database and schema are ForceNew but based on the docs it is possible to rename with moving to different db/schema
 // TODO [SNOW-1348103]: copyGrants and orReplace logic omitted for now, will be added to the limitations docs
 var procedureBaseSchema = map[string]schema.Schema{
 	"database": {
@@ -180,7 +180,6 @@ var procedureBaseSchema = map[string]schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ForceNew:         true,
 		Description:      blocklistedCharactersFieldDescription("The name of the procedure; the identifier does not need to be unique for the schema in which the procedure is created because stored procedures are [identified and resolved by the combination of the name and argument types](https://docs.snowflake.com/en/developer-guide/udf-stored-procedure-naming-conventions.html#label-procedure-function-name-overloading)."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
@@ -217,10 +216,11 @@ var procedureBaseSchema = map[string]schema.Schema{
 	},
 	// TODO [SNOW-1348103]: for now, the proposal is to leave return type as string, add TABLE to data types, and here always parse (easier handling and diff suppression)
 	"return_type": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-		// TODO [SNOW-1348103]: adjust DiffSuppressFunc
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		ValidateDiagFunc: IsDataTypeValid,
+		DiffSuppressFunc: DiffSuppressDataTypes,
 	},
 	"null_input_behavior": {
 		Type:             schema.TypeString,
