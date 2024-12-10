@@ -2,8 +2,10 @@ package objectassert
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -38,4 +40,20 @@ func (a *ProcedureAssert) HasSecretsNil() *ProcedureAssert {
 		return nil
 	})
 	return a
+}
+
+func (f *ProcedureAssert) HasExactlyExternalAccessIntegrations(integrations ...sdk.AccountObjectIdentifier) *ProcedureAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.Procedure) error {
+		t.Helper()
+		if o.ExternalAccessIntegrations == nil {
+			return fmt.Errorf("expected external access integrations to have value; got: nil")
+		}
+		joined := strings.Join(collections.Map(integrations, func(ex sdk.AccountObjectIdentifier) string { return ex.FullyQualifiedName() }), ",")
+		expected := fmt.Sprintf(`[%s]`, joined)
+		if *o.ExternalAccessIntegrations != expected {
+			return fmt.Errorf("expected external access integrations: %v; got: %v", expected, *o.ExternalAccessIntegrations)
+		}
+		return nil
+	})
+	return f
 }

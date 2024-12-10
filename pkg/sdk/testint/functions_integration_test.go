@@ -194,8 +194,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasIsExternalFunction(false).
 			HasLanguage("JAVA").
 			HasIsMemoizable(false).
@@ -209,10 +209,10 @@ func TestInt_Functions(t *testing.T) {
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			// TODO [SNOW-1348103]: parse to identifier list
 			// TODO [SNOW-1348103]: check multiple secrets (to know how to parse)
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
@@ -348,8 +348,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasIsExternalFunction(false).
 			HasLanguage("JAVA").
 			HasIsMemoizable(false).
@@ -363,8 +363,8 @@ func TestInt_Functions(t *testing.T) {
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
@@ -640,8 +640,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasIsExternalFunction(false).
 			HasLanguage("PYTHON").
 			HasIsMemoizable(false).
@@ -655,8 +655,8 @@ func TestInt_Functions(t *testing.T) {
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasHandler(funcName).
 			HasRuntimeVersion("3.8").
@@ -786,8 +786,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasIsExternalFunction(false).
 			HasLanguage("PYTHON").
 			HasIsMemoizable(false).
@@ -801,8 +801,8 @@ func TestInt_Functions(t *testing.T) {
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasHandler(tmpPythonFunction.PythonHandler()).
 			HasRuntimeVersion("3.8").
@@ -947,8 +947,8 @@ func TestInt_Functions(t *testing.T) {
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasIsExternalFunction(false).
 			HasLanguage("SCALA").
 			HasIsMemoizable(false).
@@ -962,8 +962,8 @@ func TestInt_Functions(t *testing.T) {
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
@@ -1095,8 +1095,8 @@ func TestInt_Functions(t *testing.T) {
 			HasValidForClustering(false).
 			HasIsSecure(false).
 			HasIsExternalFunction(false).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasLanguage("SCALA").
 			HasIsMemoizable(false).
 			HasIsDataMetric(false),
@@ -1109,8 +1109,8 @@ func TestInt_Functions(t *testing.T) {
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
@@ -1420,9 +1420,8 @@ func TestInt_Functions(t *testing.T) {
 		)
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
-			// TODO [after review]: Can we have an extension function for these types and pass slices/maps there?
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())),
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}),
 		)
 
 		assertParametersSet(t, objectparametersassert.FunctionParameters(t, id))
@@ -1443,8 +1442,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.Function(t, id).
 			HasName(id.Name()).
 			HasDescription(sdk.DefaultFunctionComment).
-			HasExternalAccessIntegrations("[]").
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())),
+			HasExactlyExternalAccessIntegrations().
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}),
 		)
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).

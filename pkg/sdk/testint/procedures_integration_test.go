@@ -195,8 +195,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
@@ -342,8 +342,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
@@ -620,8 +620,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasHandler(funcName).
 			HasRuntimeVersion("3.8").
@@ -763,8 +763,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasHandler(tmpPythonFunction.PythonHandler()).
 			HasRuntimeVersion("3.8").
@@ -920,8 +920,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
@@ -1066,8 +1066,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())).
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
@@ -1611,8 +1611,8 @@ def filter_by_role(session, table_name, role):
 		)
 
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
-			HasExternalAccessIntegrations(fmt.Sprintf(`[%s]`, externalAccessIntegration.FullyQualifiedName())).
-			HasSecrets(fmt.Sprintf(`{"abc":"\"%s\".\"%s\".%s"}`, secretId.DatabaseName(), secretId.SchemaName(), secretId.Name())),
+			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}),
 		)
 
 		assertParametersSet(t, objectparametersassert.ProcedureParameters(t, id))

@@ -2,11 +2,13 @@ package objectassert
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -349,6 +351,41 @@ func (f *ProcedureDetailsAssert) HasInstalledPackagesNotEmpty() *ProcedureDetail
 		}
 		if *o.InstalledPackages == "" {
 			return fmt.Errorf("expected installed packages to not be empty")
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *ProcedureDetailsAssert) HasExactlyExternalAccessIntegrations(integrations ...sdk.AccountObjectIdentifier) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
+		t.Helper()
+		if o.ExternalAccessIntegrations == nil {
+			return fmt.Errorf("expected external access integrations to have value; got: nil")
+		}
+		joined := strings.Join(collections.Map(integrations, func(ex sdk.AccountObjectIdentifier) string { return ex.FullyQualifiedName() }), ",")
+		expected := fmt.Sprintf(`[%s]`, joined)
+		if *o.ExternalAccessIntegrations != expected {
+			return fmt.Errorf("expected external access integrations: %v; got: %v", expected, *o.ExternalAccessIntegrations)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *ProcedureDetailsAssert) HasExactlySecrets(expectedSecrets map[string]sdk.SchemaObjectIdentifier) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
+		t.Helper()
+		if o.Secrets == nil {
+			return fmt.Errorf("expected secrets to have value; got: nil")
+		}
+		var parts []string
+		for k, v := range expectedSecrets {
+			parts = append(parts, fmt.Sprintf(`"%s":"\"%s\".\"%s\".%s"`, k, v.DatabaseName(), v.SchemaName(), v.Name()))
+		}
+		expected := fmt.Sprintf(`{%s}`, strings.Join(parts, ","))
+		if *o.Secrets != expected {
+			return fmt.Errorf("expected secrets: %v; got: %v", expected, *o.Secrets)
 		}
 		return nil
 	})
