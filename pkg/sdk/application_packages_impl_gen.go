@@ -39,7 +39,7 @@ func (v *applicationPackages) Show(ctx context.Context, request *ShowApplication
 
 func (v *applicationPackages) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ApplicationPackage, error) {
 	request := NewShowApplicationPackageRequest().
-        WithLike(Like{Pattern: String(id.Name())})
+		WithLike(Like{Pattern: String(id.Name())})
 	applicationPackages, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

@@ -33,8 +33,8 @@ func (v *managedAccounts) Show(ctx context.Context, request *ShowManagedAccountR
 }
 
 func (v *managedAccounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ManagedAccount, error) {
-    request := NewShowManagedAccountRequest().
-        WithLike(Like{Pattern: String(id.Name())})
+	request := NewShowManagedAccountRequest().
+		WithLike(Like{Pattern: String(id.Name())})
 	managedAccounts, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
