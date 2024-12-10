@@ -41,7 +41,6 @@ func setUpFunctionSchema(definition functionSchemaDef) map[string]*schema.Schema
 	}
 	if v, ok := currentSchema["runtime_version"]; ok && v != nil {
 		if definition.runtimeVersionRequired {
-			v.Optional = false
 			v.Required = true
 		} else {
 			v.Optional = true
@@ -156,7 +155,7 @@ var (
 )
 
 // TODO [SNOW-1348103]: add null/not null
-// TODO [SNOW-1348103]: currently all database.schema.name are ForceNew but based on the docs it is possible to rename with moving to different db/schema
+// TODO [SNOW-1348103]: currently database and schema are ForceNew but based on the docs it is possible to rename with moving to different db/schema
 // TODO [SNOW-1348103]: copyGrants and orReplace logic omitted for now, will be added to the limitations docs
 // TODO [SNOW-1348103]: temporary is not supported because it creates a per-session object; add to limitations/design decisions
 var functionBaseSchema = map[string]schema.Schema{
@@ -177,7 +176,6 @@ var functionBaseSchema = map[string]schema.Schema{
 	"name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		ForceNew:         true,
 		Description:      blocklistedCharactersFieldDescription("The name of the function; the identifier does not need to be unique for the schema in which the function is created because UDFs are identified and resolved by the combination of the name and argument types. Check the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages)."),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
@@ -207,11 +205,13 @@ var functionBaseSchema = map[string]schema.Schema{
 					// TODO [SNOW-1348103]: adjust diff suppression accordingly.
 					Description: "The argument name.",
 				},
+				// TODO [SNOW-1348103]: after testing weird names add limitations to the docs and add validation here
 				"arg_data_type": {
-					Type:     schema.TypeString,
-					Required: true,
-					// TODO [SNOW-1348103]: adjust diff suppression accordingly.
-					Description: "The argument type.",
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: IsDataTypeValid,
+					DiffSuppressFunc: DiffSuppressDataTypes,
+					Description:      "The argument type.",
 				},
 			},
 		},
@@ -221,10 +221,12 @@ var functionBaseSchema = map[string]schema.Schema{
 	},
 	// TODO [SNOW-1348103]: for now, the proposal is to leave return type as string, add TABLE to data types, and here always parse (easier handling and diff suppression)
 	"return_type": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Specifies the results returned by the UDF, which determines the UDF type. Use `<result_data_type>` to create a scalar UDF that returns a single value with the specified data type. Use `TABLE (col_name col_data_type, ...)` to creates a table UDF that returns tabular results with the specified table column(s) and column type(s). For the details, consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages).",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		ValidateDiagFunc: IsDataTypeValid,
+		DiffSuppressFunc: DiffSuppressDataTypes,
+		Description:      "Specifies the results returned by the UDF, which determines the UDF type. Use `<result_data_type>` to create a scalar UDF that returns a single value with the specified data type. Use `TABLE (col_name col_data_type, ...)` to creates a table UDF that returns tabular results with the specified table column(s) and column type(s). For the details, consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages).",
 		// TODO [SNOW-1348103]: adjust DiffSuppressFunc
 	},
 	"null_input_behavior": {
@@ -245,7 +247,6 @@ var functionBaseSchema = map[string]schema.Schema{
 	},
 	"runtime_version": {
 		Type:     schema.TypeString,
-		Optional: true,
 		ForceNew: true,
 		// TODO [SNOW-1348103]: may be optional for java without consequence because if it is not set, the describe is not returning any version.
 	},
@@ -275,6 +276,7 @@ var functionBaseSchema = map[string]schema.Schema{
 		Required: true,
 		ForceNew: true,
 	},
+	// TODO [SNOW-1348103]: use suppress from network policies when adding logic
 	"external_access_integrations": {
 		Type: schema.TypeSet,
 		Elem: &schema.Schema{
@@ -305,6 +307,7 @@ var functionBaseSchema = map[string]schema.Schema{
 		},
 		Description: "Assigns the names of secrets to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter.",
 	},
+	// TODO [SNOW-1348103]: because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6, maybe it will be better to split into stage + path
 	"target_path": {
 		Type:     schema.TypeString,
 		Optional: true,
