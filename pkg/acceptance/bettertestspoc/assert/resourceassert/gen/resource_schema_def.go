@@ -121,4 +121,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "Account",
 		schema: resources.Account().Schema,
 	},
+	{
+		name:   "AccountParameter",
+		schema: resources.AccountParameter().Schema,
+	},
 }
