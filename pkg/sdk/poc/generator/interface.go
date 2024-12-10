@@ -10,8 +10,8 @@ type Interface struct {
 	Operations []*Operation
 	// IdentifierKind keeps identifier of the underlying object (e.g. DatabaseObjectIdentifier)
 	IdentifierKind string
-
-    HelperMethods []*HelperMethod
+	// HelperMethods contains helper methods for the Interface file (i.e. ID(), ObjectType())
+	HelperMethods []*HelperMethod
 }
 
 func NewInterface(name string, nameSingular string, identifierKind string, operations ...*Operation) *Interface {
