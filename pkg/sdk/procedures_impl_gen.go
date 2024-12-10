@@ -60,7 +60,7 @@ func (v *procedures) Show(ctx context.Context, request *ShowProcedureRequest) ([
 }
 
 func (v *procedures) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error) {
-	procedures, err := v.Show(ctx, NewShowProcedureRequest().WithIn(In{Schema: id.SchemaId()}).WithLike(Like{String(id.Name())}))
+	procedures, err := v.Show(ctx, NewShowProcedureRequest().WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).WithLike(Like{String(id.Name())}))
 	if err != nil {
 		return nil, err
 	}
@@ -123,6 +123,7 @@ func (r *CreateForJavaProcedureRequest) toOpts() *CreateForJavaProcedureOptions 
 		Secrets:                    r.Secrets,
 		TargetPath:                 r.TargetPath,
 		NullInputBehavior:          r.NullInputBehavior,
+		ReturnResultsBehavior:      r.ReturnResultsBehavior,
 		Comment:                    r.Comment,
 		ExecuteAs:                  r.ExecuteAs,
 		ProcedureDefinition:        r.ProcedureDefinition,
@@ -130,7 +131,12 @@ func (r *CreateForJavaProcedureRequest) toOpts() *CreateForJavaProcedureOptions 
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = ProcedureArgument(v)
+			s[i] = ProcedureArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
@@ -148,7 +154,11 @@ func (r *CreateForJavaProcedureRequest) toOpts() *CreateForJavaProcedureOptions 
 		if r.Returns.Table.Columns != nil {
 			s := make([]ProcedureColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = ProcedureColumn(v)
+				s[i] = ProcedureColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -156,14 +166,18 @@ func (r *CreateForJavaProcedureRequest) toOpts() *CreateForJavaProcedureOptions 
 	if r.Packages != nil {
 		s := make([]ProcedurePackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = ProcedurePackage(v)
+			s[i] = ProcedurePackage{
+				Package: v.Package,
+			}
 		}
 		opts.Packages = s
 	}
 	if r.Imports != nil {
 		s := make([]ProcedureImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = ProcedureImport(v)
+			s[i] = ProcedureImport{
+				Import: v.Import,
+			}
 		}
 		opts.Imports = s
 	}
@@ -176,19 +190,25 @@ func (r *CreateForJavaScriptProcedureRequest) toOpts() *CreateForJavaScriptProce
 		Secure:    r.Secure,
 		name:      r.name,
 
-		CopyGrants:          r.CopyGrants,
-		ResultDataTypeOld:   r.ResultDataTypeOld,
-		ResultDataType:      r.ResultDataType,
-		NotNull:             r.NotNull,
-		NullInputBehavior:   r.NullInputBehavior,
-		Comment:             r.Comment,
-		ExecuteAs:           r.ExecuteAs,
-		ProcedureDefinition: r.ProcedureDefinition,
+		CopyGrants:            r.CopyGrants,
+		ResultDataTypeOld:     r.ResultDataTypeOld,
+		ResultDataType:        r.ResultDataType,
+		NotNull:               r.NotNull,
+		NullInputBehavior:     r.NullInputBehavior,
+		ReturnResultsBehavior: r.ReturnResultsBehavior,
+		Comment:               r.Comment,
+		ExecuteAs:             r.ExecuteAs,
+		ProcedureDefinition:   r.ProcedureDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = ProcedureArgument(v)
+			s[i] = ProcedureArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
@@ -209,6 +229,7 @@ func (r *CreateForPythonProcedureRequest) toOpts() *CreateForPythonProcedureOpti
 		ExternalAccessIntegrations: r.ExternalAccessIntegrations,
 		Secrets:                    r.Secrets,
 		NullInputBehavior:          r.NullInputBehavior,
+		ReturnResultsBehavior:      r.ReturnResultsBehavior,
 		Comment:                    r.Comment,
 		ExecuteAs:                  r.ExecuteAs,
 		ProcedureDefinition:        r.ProcedureDefinition,
@@ -216,7 +237,12 @@ func (r *CreateForPythonProcedureRequest) toOpts() *CreateForPythonProcedureOpti
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = ProcedureArgument(v)
+			s[i] = ProcedureArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
@@ -234,7 +260,11 @@ func (r *CreateForPythonProcedureRequest) toOpts() *CreateForPythonProcedureOpti
 		if r.Returns.Table.Columns != nil {
 			s := make([]ProcedureColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = ProcedureColumn(v)
+				s[i] = ProcedureColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -242,14 +272,18 @@ func (r *CreateForPythonProcedureRequest) toOpts() *CreateForPythonProcedureOpti
 	if r.Packages != nil {
 		s := make([]ProcedurePackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = ProcedurePackage(v)
+			s[i] = ProcedurePackage{
+				Package: v.Package,
+			}
 		}
 		opts.Packages = s
 	}
 	if r.Imports != nil {
 		s := make([]ProcedureImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = ProcedureImport(v)
+			s[i] = ProcedureImport{
+				Import: v.Import,
+			}
 		}
 		opts.Imports = s
 	}
@@ -266,17 +300,25 @@ func (r *CreateForScalaProcedureRequest) toOpts() *CreateForScalaProcedureOption
 
 		RuntimeVersion: r.RuntimeVersion,
 
-		Handler:             r.Handler,
-		TargetPath:          r.TargetPath,
-		NullInputBehavior:   r.NullInputBehavior,
-		Comment:             r.Comment,
-		ExecuteAs:           r.ExecuteAs,
-		ProcedureDefinition: r.ProcedureDefinition,
+		Handler:                    r.Handler,
+		ExternalAccessIntegrations: r.ExternalAccessIntegrations,
+		Secrets:                    r.Secrets,
+		TargetPath:                 r.TargetPath,
+		NullInputBehavior:          r.NullInputBehavior,
+		ReturnResultsBehavior:      r.ReturnResultsBehavior,
+		Comment:                    r.Comment,
+		ExecuteAs:                  r.ExecuteAs,
+		ProcedureDefinition:        r.ProcedureDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = ProcedureArgument(v)
+			s[i] = ProcedureArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
@@ -294,7 +336,11 @@ func (r *CreateForScalaProcedureRequest) toOpts() *CreateForScalaProcedureOption
 		if r.Returns.Table.Columns != nil {
 			s := make([]ProcedureColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = ProcedureColumn(v)
+				s[i] = ProcedureColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -302,14 +348,18 @@ func (r *CreateForScalaProcedureRequest) toOpts() *CreateForScalaProcedureOption
 	if r.Packages != nil {
 		s := make([]ProcedurePackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = ProcedurePackage(v)
+			s[i] = ProcedurePackage{
+				Package: v.Package,
+			}
 		}
 		opts.Packages = s
 	}
 	if r.Imports != nil {
 		s := make([]ProcedureImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = ProcedureImport(v)
+			s[i] = ProcedureImport{
+				Import: v.Import,
+			}
 		}
 		opts.Imports = s
 	}
@@ -324,15 +374,21 @@ func (r *CreateForSQLProcedureRequest) toOpts() *CreateForSQLProcedureOptions {
 
 		CopyGrants: r.CopyGrants,
 
-		NullInputBehavior:   r.NullInputBehavior,
-		Comment:             r.Comment,
-		ExecuteAs:           r.ExecuteAs,
-		ProcedureDefinition: r.ProcedureDefinition,
+		NullInputBehavior:     r.NullInputBehavior,
+		ReturnResultsBehavior: r.ReturnResultsBehavior,
+		Comment:               r.Comment,
+		ExecuteAs:             r.ExecuteAs,
+		ProcedureDefinition:   r.ProcedureDefinition,
 	}
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = ProcedureArgument(v)
+			s[i] = ProcedureArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
@@ -343,6 +399,8 @@ func (r *CreateForSQLProcedureRequest) toOpts() *CreateForSQLProcedureOptions {
 		opts.Returns.ResultDataType = &ProcedureReturnsResultDataType{
 			ResultDataTypeOld: r.Returns.ResultDataType.ResultDataTypeOld,
 			ResultDataType:    r.Returns.ResultDataType.ResultDataType,
+			Null:              r.Returns.ResultDataType.Null,
+			NotNull:           r.Returns.ResultDataType.NotNull,
 		}
 	}
 	if r.Returns.Table != nil {
@@ -350,7 +408,11 @@ func (r *CreateForSQLProcedureRequest) toOpts() *CreateForSQLProcedureOptions {
 		if r.Returns.Table.Columns != nil {
 			s := make([]ProcedureColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = ProcedureColumn(v)
+				s[i] = ProcedureColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -360,16 +422,41 @@ func (r *CreateForSQLProcedureRequest) toOpts() *CreateForSQLProcedureOptions {
 
 func (r *AlterProcedureRequest) toOpts() *AlterProcedureOptions {
 	opts := &AlterProcedureOptions{
-		IfExists:      r.IfExists,
-		name:          r.name,
-		RenameTo:      r.RenameTo,
-		SetComment:    r.SetComment,
-		SetLogLevel:   r.SetLogLevel,
-		SetTraceLevel: r.SetTraceLevel,
-		UnsetComment:  r.UnsetComment,
-		SetTags:       r.SetTags,
-		UnsetTags:     r.UnsetTags,
-		ExecuteAs:     r.ExecuteAs,
+		IfExists: r.IfExists,
+		name:     r.name,
+		RenameTo: r.RenameTo,
+
+		SetTags:   r.SetTags,
+		UnsetTags: r.UnsetTags,
+		ExecuteAs: r.ExecuteAs,
+	}
+	if r.Set != nil {
+		opts.Set = &ProcedureSet{
+			Comment:                    r.Set.Comment,
+			ExternalAccessIntegrations: r.Set.ExternalAccessIntegrations,
+
+			AutoEventLogging:    r.Set.AutoEventLogging,
+			EnableConsoleOutput: r.Set.EnableConsoleOutput,
+			LogLevel:            r.Set.LogLevel,
+			MetricLevel:         r.Set.MetricLevel,
+			TraceLevel:          r.Set.TraceLevel,
+		}
+		if r.Set.SecretsList != nil {
+			opts.Set.SecretsList = &SecretsList{
+				SecretsList: r.Set.SecretsList.SecretsList,
+			}
+		}
+	}
+	if r.Unset != nil {
+		opts.Unset = &ProcedureUnset{
+			Comment:                    r.Unset.Comment,
+			ExternalAccessIntegrations: r.Unset.ExternalAccessIntegrations,
+			AutoEventLogging:           r.Unset.AutoEventLogging,
+			EnableConsoleOutput:        r.Unset.EnableConsoleOutput,
+			LogLevel:                   r.Unset.LogLevel,
+			MetricLevel:                r.Unset.MetricLevel,
+			TraceLevel:                 r.Unset.TraceLevel,
+		}
 	}
 	return opts
 }
@@ -394,7 +481,7 @@ func (r procedureRow) convert() *Procedure {
 	e := &Procedure{
 		CreatedOn:          r.CreatedOn,
 		Name:               r.Name,
-		SchemaName:         r.SchemaName,
+		SchemaName:         strings.Trim(r.SchemaName, `"`),
 		IsBuiltin:          r.IsBuiltin == "Y",
 		IsAggregate:        r.IsAggregate == "Y",
 		IsAnsi:             r.IsAnsi == "Y",
@@ -402,7 +489,7 @@ func (r procedureRow) convert() *Procedure {
 		MaxNumArguments:    r.MaxNumArguments,
 		ArgumentsRaw:       r.Arguments,
 		Description:        r.Description,
-		CatalogName:        r.CatalogName,
+		CatalogName:        strings.Trim(r.CatalogName, `"`),
 		IsTableFunction:    r.IsTableFunction == "Y",
 		ValidForClustering: r.ValidForClustering == "Y",
 	}
@@ -431,8 +518,8 @@ func (r procedureDetailRow) convert() *ProcedureDetail {
 	e := &ProcedureDetail{
 		Property: r.Property,
 	}
-	if r.Value.Valid {
-		e.Value = r.Value.String
+	if r.Value.Valid && r.Value.String != "null" {
+		e.Value = String(r.Value.String)
 	}
 	return e
 }
@@ -464,7 +551,12 @@ func (r *CreateAndCallForJavaProcedureRequest) toOpts() *CreateAndCallForJavaPro
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = ProcedureArgument(v)
+			s[i] = ProcedureArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
@@ -482,7 +574,11 @@ func (r *CreateAndCallForJavaProcedureRequest) toOpts() *CreateAndCallForJavaPro
 		if r.Returns.Table.Columns != nil {
 			s := make([]ProcedureColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = ProcedureColumn(v)
+				s[i] = ProcedureColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -490,14 +586,18 @@ func (r *CreateAndCallForJavaProcedureRequest) toOpts() *CreateAndCallForJavaPro
 	if r.Packages != nil {
 		s := make([]ProcedurePackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = ProcedurePackage(v)
+			s[i] = ProcedurePackage{
+				Package: v.Package,
+			}
 		}
 		opts.Packages = s
 	}
 	if r.Imports != nil {
 		s := make([]ProcedureImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = ProcedureImport(v)
+			s[i] = ProcedureImport{
+				Import: v.Import,
+			}
 		}
 		opts.Imports = s
 	}
@@ -528,7 +628,12 @@ func (r *CreateAndCallForScalaProcedureRequest) toOpts() *CreateAndCallForScalaP
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = ProcedureArgument(v)
+			s[i] = ProcedureArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
@@ -546,7 +651,11 @@ func (r *CreateAndCallForScalaProcedureRequest) toOpts() *CreateAndCallForScalaP
 		if r.Returns.Table.Columns != nil {
 			s := make([]ProcedureColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = ProcedureColumn(v)
+				s[i] = ProcedureColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -554,14 +663,18 @@ func (r *CreateAndCallForScalaProcedureRequest) toOpts() *CreateAndCallForScalaP
 	if r.Packages != nil {
 		s := make([]ProcedurePackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = ProcedurePackage(v)
+			s[i] = ProcedurePackage{
+				Package: v.Package,
+			}
 		}
 		opts.Packages = s
 	}
 	if r.Imports != nil {
 		s := make([]ProcedureImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = ProcedureImport(v)
+			s[i] = ProcedureImport{
+				Import: v.Import,
+			}
 		}
 		opts.Imports = s
 	}
@@ -596,7 +709,12 @@ func (r *CreateAndCallForJavaScriptProcedureRequest) toOpts() *CreateAndCallForJ
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = ProcedureArgument(v)
+			s[i] = ProcedureArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
@@ -631,7 +749,12 @@ func (r *CreateAndCallForPythonProcedureRequest) toOpts() *CreateAndCallForPytho
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = ProcedureArgument(v)
+			s[i] = ProcedureArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
@@ -649,7 +772,11 @@ func (r *CreateAndCallForPythonProcedureRequest) toOpts() *CreateAndCallForPytho
 		if r.Returns.Table.Columns != nil {
 			s := make([]ProcedureColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = ProcedureColumn(v)
+				s[i] = ProcedureColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -657,14 +784,18 @@ func (r *CreateAndCallForPythonProcedureRequest) toOpts() *CreateAndCallForPytho
 	if r.Packages != nil {
 		s := make([]ProcedurePackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = ProcedurePackage(v)
+			s[i] = ProcedurePackage{
+				Package: v.Package,
+			}
 		}
 		opts.Packages = s
 	}
 	if r.Imports != nil {
 		s := make([]ProcedureImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = ProcedureImport(v)
+			s[i] = ProcedureImport{
+				Import: v.Import,
+			}
 		}
 		opts.Imports = s
 	}
@@ -696,7 +827,12 @@ func (r *CreateAndCallForSQLProcedureRequest) toOpts() *CreateAndCallForSQLProce
 	if r.Arguments != nil {
 		s := make([]ProcedureArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = ProcedureArgument(v)
+			s[i] = ProcedureArgument{
+				ArgName:        v.ArgName,
+				ArgDataTypeOld: v.ArgDataTypeOld,
+				ArgDataType:    v.ArgDataType,
+				DefaultValue:   v.DefaultValue,
+			}
 		}
 		opts.Arguments = s
 	}
@@ -714,7 +850,11 @@ func (r *CreateAndCallForSQLProcedureRequest) toOpts() *CreateAndCallForSQLProce
 		if r.Returns.Table.Columns != nil {
 			s := make([]ProcedureColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = ProcedureColumn(v)
+				s[i] = ProcedureColumn{
+					ColumnName:        v.ColumnName,
+					ColumnDataTypeOld: v.ColumnDataTypeOld,
+					ColumnDataType:    v.ColumnDataType,
+				}
 			}
 			opts.Returns.Table.Columns = s
 		}

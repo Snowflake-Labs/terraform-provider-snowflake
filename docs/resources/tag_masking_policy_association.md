@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_tag_masking_policy_association (Resource)
 
-~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use one of the new resources instead: `snowflake_tag` <deprecation>
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use one of the new resources instead: `snowflake_tag`. <deprecation>
 
 Attach a masking policy to a tag. Requires a current warehouse to be set. Either with SNOWFLAKE_WAREHOUSE env variable or in current session. If no warehouse is provided, a temporary warehouse will be created.
 

@@ -90,7 +90,7 @@ var warehouseSchema = map[string]*schema.Schema{
 		Optional:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("resource_monitor")),
-		Description:      "Specifies the name of a resource monitor that is explicitly assigned to the warehouse.",
+		Description:      relatedResourceDescription("Specifies the name of a resource monitor that is explicitly assigned to the warehouse.", resources.ResourceMonitor),
 	},
 	"comment": {
 		Type:        schema.TypeString,

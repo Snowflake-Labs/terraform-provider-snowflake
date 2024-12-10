@@ -51,8 +51,8 @@ func Roles() *schema.Resource {
 	return &schema.Resource{
 		ReadContext:        TrackingReadWrapper(datasources.Roles, ReadRoles),
 		Schema:             rolesSchema,
-		Description:        "Datasource used to get details of filtered roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.",
 		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_account_roles instead.",
+		Description:        "Data source used to get details of filtered roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.",
 	}
 }
 

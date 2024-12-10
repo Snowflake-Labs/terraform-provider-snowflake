@@ -2,14 +2,14 @@
 page_title: "snowflake_database_roles Data Source - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Datasource used to get details of filtered database roles. Filtering is aligned with the current possibilities for SHOW DATABASE ROLES https://docs.snowflake.com/en/sql-reference/sql/show-database-roles query (like and limit are supported). The results of SHOW is encapsulated in show_output collection.
+  Data source used to get details of filtered database roles. Filtering is aligned with the current possibilities for SHOW DATABASE ROLES https://docs.snowflake.com/en/sql-reference/sql/show-database-roles query (like and limit are supported). The results of SHOW is encapsulated in show_output collection.
 ---
 
 !> **V1 release candidate** This data source was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the data source if needed. Any errors reported will be resolved with a higher priority. We encourage checking this data source out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
 # snowflake_database_roles (Data Source)
 
-Datasource used to get details of filtered database roles. Filtering is aligned with the current possibilities for [SHOW DATABASE ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-database-roles) query (`like` and `limit` are supported). The results of SHOW is encapsulated in show_output collection.
+Data source used to get details of filtered database roles. Filtering is aligned with the current possibilities for [SHOW DATABASE ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-database-roles) query (`like` and `limit` are supported). The results of SHOW is encapsulated in show_output collection.
 
 ## Example Usage
 
@@ -60,7 +60,7 @@ data "snowflake_database_roles" "assert_with_postcondition" {
 
 # Ensure the number of database roles is equal to at exactly one element (with the use of check block)
 check "database_role_check" {
-  data "snowflake_resource_monitors" "assert_with_check_block" {
+  data "snowflake_database_roles" "assert_with_check_block" {
     in_database = "database-name"
     like        = "database_role-name"
   }

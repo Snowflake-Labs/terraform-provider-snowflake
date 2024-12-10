@@ -7,9 +7,9 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v094x--v0950) to use it.
 
-!> **Note about copy_grants** Fields like `is_recursive`, `is_temporary`, `copy_grants` and `statement` can not be ALTERed on Snowflake side (check [docs](https://docs.snowflake.com/en/sql-reference/sql/alter-view)), and a change means recreation of the resource. ForceNew can not be used because it does not preserve grants from `copy_grants`. Beware that even though a change is marked as update, the resource is recreated.
-
 !> Due to Snowflake limitations, to properly compute diff on `statement` field, the provider parses a `text` field which contains the whole CREATE query used to create the resource. We recommend not using special characters, especially `(`, `,`, `)` in any of the fields, if possible.
+
+~> **Note about copy_grants** Fields like `is_recursive`, `is_temporary`, `copy_grants` and `statement` can not be ALTERed on Snowflake side (check [docs](https://docs.snowflake.com/en/sql-reference/sql/alter-view)), and a change on these fields means recreation of the resource. ForceNew can not be used because it does not preserve grants from `copy_grants`. Beware that even though a change is marked as update, the resource is recreated.
 
 ~> **Required warehouse** For this resource, the provider uses [policy references](https://docs.snowflake.com/en/sql-reference/functions/policy_references) which requires a warehouse in the connection. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the provider configuration.
 
@@ -59,12 +59,12 @@ resource "snowflake_view" "test" {
       policy_name = "projection_policy"
     }
     masking_policy {
-      policy_name = "masking_policy"
+      policy_name = snowflake_masking_policy.example.fully_qualified_name
       using       = ["address"]
     }
   }
   row_access_policy {
-    policy_name = "row_access_policy"
+    policy_name = snowflake_row_access_policy.example.fully_qualified_name
     on          = ["id"]
   }
   aggregation_policy {
@@ -72,8 +72,9 @@ resource "snowflake_view" "test" {
     entity_key  = ["id"]
   }
   data_metric_function {
-    function_name = "data_metric_function"
-    on            = ["id"]
+    function_name   = "data_metric_function"
+    on              = ["id"]
+    schedule_status = "STARTED"
   }
   data_metric_schedule {
     using_cron = "15 * * * * UTC"
@@ -91,10 +92,10 @@ SQL
 
 ### Required
 
-- `database` (String) The database in which to create the view. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `name` (String) Specifies the identifier for the view; must be unique for the schema in which the view is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `schema` (String) The schema in which to create the view. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `statement` (String) Specifies the query used to create the view.
+- `database` (String) The database in which to create the view. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `name` (String) Specifies the identifier for the view; must be unique for the schema in which the view is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `schema` (String) The schema in which to create the view. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `statement` (String) Specifies the query used to create the view. To mitigate permadiff on this field, the provider replaces blank characters with a space. This can lead to false positives in cases where a change in case or run of whitespace is semantically significant.
 
 ### Optional
 
@@ -102,7 +103,7 @@ SQL
 - `change_tracking` (String) Specifies to enable or disable change tracking on the table. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `column` (Block List) If you want to change the name of a column or add a comment to a column in the new view, include a column list that specifies the column names and (if needed) comments about the columns. You do not need to specify the data types of the columns. If this field is not specified, columns are inferred from the `statement` field by Snowflake. (see [below for nested schema](#nestedblock--column))
 - `comment` (String) Specifies a comment for the view.
-- `copy_grants` (Boolean) Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.
+- `copy_grants` (Boolean) Retains the access permissions from the original view when a view is recreated using the OR REPLACE clause. This is used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect during creating a new object with Terraform.
 - `data_metric_function` (Block Set) Data metric functions used for the view. (see [below for nested schema](#nestedblock--data_metric_function))
 - `data_metric_schedule` (Block List, Max: 1) Specifies the schedule to run the data metric functions periodically. (see [below for nested schema](#nestedblock--data_metric_schedule))
 - `is_recursive` (String) Specifies that the view can refer to itself using recursive syntax without necessarily using a CTE (common table expression). Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
@@ -147,7 +148,7 @@ Optional:
 
 Required:
 
-- `policy_name` (String) Specifies the masking policy to set on a column.
+- `policy_name` (String) Specifies the masking policy to set on a column. For more information about this resource, see [docs](./masking_policy).
 
 Optional:
 
@@ -188,7 +189,7 @@ Optional:
 Required:
 
 - `on` (Set of String) Defines which columns are affected by the policy.
-- `policy_name` (String) Row access policy name.
+- `policy_name` (String) Row access policy name. For more information about this resource, see [docs](./row_access_policy).
 
 
 <a id="nestedatt--describe_output"></a>

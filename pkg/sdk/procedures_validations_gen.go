@@ -248,8 +248,18 @@ func (opts *AlterProcedureOptions) validate() error {
 	if opts.RenameTo != nil && !ValidObjectIdentifier(opts.RenameTo) {
 		errs = append(errs, ErrInvalidObjectIdentifier)
 	}
-	if !exactlyOneValueSet(opts.RenameTo, opts.SetComment, opts.SetLogLevel, opts.SetTraceLevel, opts.UnsetComment, opts.SetTags, opts.UnsetTags, opts.ExecuteAs) {
-		errs = append(errs, errExactlyOneOf("AlterProcedureOptions", "RenameTo", "SetComment", "SetLogLevel", "SetTraceLevel", "UnsetComment", "SetTags", "UnsetTags", "ExecuteAs"))
+	if !exactlyOneValueSet(opts.RenameTo, opts.Set, opts.Unset, opts.SetTags, opts.UnsetTags, opts.ExecuteAs) {
+		errs = append(errs, errExactlyOneOf("AlterProcedureOptions", "RenameTo", "Set", "Unset", "SetTags", "UnsetTags", "ExecuteAs"))
+	}
+	if valueSet(opts.Set) {
+		if !anyValueSet(opts.Set.Comment, opts.Set.ExternalAccessIntegrations, opts.Set.SecretsList, opts.Set.AutoEventLogging, opts.Set.EnableConsoleOutput, opts.Set.LogLevel, opts.Set.MetricLevel, opts.Set.TraceLevel) {
+			errs = append(errs, errAtLeastOneOf("AlterProcedureOptions.Set", "Comment", "ExternalAccessIntegrations", "SecretsList", "AutoEventLogging", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"))
+		}
+	}
+	if valueSet(opts.Unset) {
+		if !anyValueSet(opts.Unset.Comment, opts.Unset.ExternalAccessIntegrations, opts.Unset.AutoEventLogging, opts.Unset.EnableConsoleOutput, opts.Unset.LogLevel, opts.Unset.MetricLevel, opts.Unset.TraceLevel) {
+			errs = append(errs, errAtLeastOneOf("AlterProcedureOptions.Unset", "Comment", "ExternalAccessIntegrations", "AutoEventLogging", "EnableConsoleOutput", "LogLevel", "MetricLevel", "TraceLevel"))
+		}
 	}
 	return JoinErrors(errs...)
 }

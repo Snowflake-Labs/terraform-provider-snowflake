@@ -55,7 +55,7 @@ resource "snowflake_grant_application_role" "g" {
 ### Optional
 
 - `application_name` (String) The fully qualified name of the application on which application role will be granted.
-- `parent_account_role_name` (String) The fully qualified name of the account role on which application role will be granted.
+- `parent_account_role_name` (String) The fully qualified name of the account role on which application role will be granted. For more information about this resource, see [docs](./account_role).
 
 ### Read-Only
 
