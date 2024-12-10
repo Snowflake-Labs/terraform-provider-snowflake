@@ -18,6 +18,7 @@ func FunctionJava() *schema.Resource {
 		ReadContext:   TrackingReadWrapper(resources.FunctionJava, ReadContextFunctionJava),
 		UpdateContext: TrackingUpdateWrapper(resources.FunctionJava, UpdateContextFunctionJava),
 		DeleteContext: TrackingDeleteWrapper(resources.FunctionJava, DeleteContextFunctionJava),
+		Description:   "Resource used to manage java function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionJava, customdiff.All(
 			// TODO[SNOW-1348103]: ComputedIfAnyAttributeChanged(javaFunctionSchema, ShowOutputAttributeName, ...),

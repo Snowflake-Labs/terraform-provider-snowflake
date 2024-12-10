@@ -18,6 +18,7 @@ func FunctionJavascript() *schema.Resource {
 		ReadContext:   TrackingReadWrapper(resources.FunctionJavascript, ReadContextFunctionJavascript),
 		UpdateContext: TrackingUpdateWrapper(resources.FunctionJavascript, UpdateContextFunctionJavascript),
 		DeleteContext: TrackingDeleteWrapper(resources.FunctionJavascript, DeleteContextFunctionJavascript),
+		Description:   "Resource used to manage javascript function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionJavascript, customdiff.All(
 			// TODO[SNOW-1348103]: ComputedIfAnyAttributeChanged(javascriptFunctionSchema, ShowOutputAttributeName, ...),

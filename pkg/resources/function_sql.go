@@ -18,6 +18,7 @@ func FunctionSql() *schema.Resource {
 		ReadContext:   TrackingReadWrapper(resources.FunctionSql, ReadContextFunctionSql),
 		UpdateContext: TrackingUpdateWrapper(resources.FunctionSql, UpdateContextFunctionSql),
 		DeleteContext: TrackingDeleteWrapper(resources.FunctionSql, DeleteContextFunctionSql),
+		Description:   "Resource used to manage sql function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionSql, customdiff.All(
 			// TODO[SNOW-1348103]: ComputedIfAnyAttributeChanged(sqlFunctionSchema, ShowOutputAttributeName, ...),

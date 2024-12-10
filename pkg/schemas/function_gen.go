@@ -42,10 +42,10 @@ var ShowFunctionSchema = map[string]*schema.Schema{
 		Type:     schema.TypeInt,
 		Computed: true,
 	},
-	"arguments": {
-		Type:     schema.TypeInvalid,
-		Computed: true,
-	},
+	//"arguments": {
+	//	Type:     schema.TypeInvalid,
+	//	Computed: true,
+	//},
 	"arguments_raw": {
 		Type:     schema.TypeString,
 		Computed: true,
