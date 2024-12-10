@@ -17,7 +17,7 @@ func FunctionScala() *schema.Resource {
 		CreateContext: TrackingCreateWrapper(resources.FunctionScala, CreateContextFunctionScala),
 		ReadContext:   TrackingReadWrapper(resources.FunctionScala, ReadContextFunctionScala),
 		UpdateContext: TrackingUpdateWrapper(resources.FunctionScala, UpdateContextFunctionScala),
-		DeleteContext: TrackingDeleteWrapper(resources.FunctionScala, DeleteContextFunctionScala),
+		DeleteContext: TrackingDeleteWrapper(resources.FunctionScala, DeleteFunction),
 		Description:   "Resource used to manage scala function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionScala, customdiff.All(

@@ -17,7 +17,7 @@ func FunctionJava() *schema.Resource {
 		CreateContext: TrackingCreateWrapper(resources.FunctionJava, CreateContextFunctionJava),
 		ReadContext:   TrackingReadWrapper(resources.FunctionJava, ReadContextFunctionJava),
 		UpdateContext: TrackingUpdateWrapper(resources.FunctionJava, UpdateContextFunctionJava),
-		DeleteContext: TrackingDeleteWrapper(resources.FunctionJava, DeleteContextFunctionJava),
+		DeleteContext: TrackingDeleteWrapper(resources.FunctionJava, DeleteFunction),
 		Description:   "Resource used to manage java function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionJava, customdiff.All(
@@ -44,9 +44,5 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	return nil
-}
-
-func DeleteContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	return nil
 }
