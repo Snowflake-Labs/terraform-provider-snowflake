@@ -35,8 +35,8 @@ func (v *cortexSearchServices) Show(ctx context.Context, request *ShowCortexSear
 
 func (v *cortexSearchServices) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchService, error) {
 	request := NewShowCortexSearchServiceRequest().
-		WithIn(In{Schema: id.SchemaId()}).
-		WithLike(Like{Pattern: String(id.Name())})
+		WithLike(Like{Pattern: String(id.Name())}).
+		WithIn(In{Schema: id.SchemaId()})
 	cortexSearchServices, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

@@ -125,7 +125,7 @@ func TestInt_ManagedAccounts(t *testing.T) {
 		managedAccount2 := createManagedAccount(t)
 
 		showRequest := sdk.NewShowManagedAccountRequest().
-			WithLike(&sdk.Like{Pattern: &managedAccount1.Name})
+			WithLike(sdk.Like{Pattern: &managedAccount1.Name})
 		returnedManagedAccounts, err := client.ManagedAccounts.Show(ctx, showRequest)
 
 		require.NoError(t, err)

@@ -39,11 +39,10 @@ func (v *networkRules) Show(ctx context.Context, request *ShowNetworkRuleRequest
 }
 
 func (v *networkRules) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRule, error) {
-	networkRules, err := v.Show(ctx, NewShowNetworkRuleRequest().WithIn(&In{
-		Schema: id.SchemaId(),
-	}).WithLike(&Like{
-		Pattern: String(id.Name()),
-	}))
+	request := NewShowNetworkRuleRequest().
+		WithIn(In{Schema: id.SchemaId()}).
+		WithLike(Like{Pattern: String(id.Name())})
+	networkRules, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}

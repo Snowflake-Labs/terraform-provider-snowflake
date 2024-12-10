@@ -38,7 +38,8 @@ func (v *applications) Show(ctx context.Context, request *ShowApplicationRequest
 }
 
 func (v *applications) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Application, error) {
-	request := NewShowApplicationRequest().WithLike(&Like{String(id.Name())})
+	request := NewShowApplicationRequest().
+		WithLike(Like{Pattern: String(id.Name())})
 	applications, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

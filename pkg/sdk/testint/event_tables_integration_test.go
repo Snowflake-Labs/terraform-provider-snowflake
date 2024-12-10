@@ -84,7 +84,7 @@ func TestInt_EventTables(t *testing.T) {
 		et1 := createEventTableHandle(t)
 		et2 := createEventTableHandle(t)
 
-		tables, err := client.EventTables.Show(ctx, sdk.NewShowEventTableRequest().WithLike(&sdk.Like{Pattern: &et1.Name}))
+		tables, err := client.EventTables.Show(ctx, sdk.NewShowEventTableRequest().WithLike(sdk.Like{Pattern: &et1.Name}))
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(tables))
 		assert.Contains(t, tables, *et1)
@@ -98,7 +98,7 @@ func TestInt_EventTables(t *testing.T) {
 	})
 
 	t.Run("show event table: no matches", func(t *testing.T) {
-		tables, err := client.EventTables.Show(ctx, sdk.NewShowEventTableRequest().WithLike(&sdk.Like{Pattern: sdk.String("non-existent")}))
+		tables, err := client.EventTables.Show(ctx, sdk.NewShowEventTableRequest().WithLike(sdk.Like{Pattern: sdk.String("non-existent")}))
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(tables))
 	})

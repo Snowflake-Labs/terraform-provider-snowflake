@@ -292,7 +292,10 @@ var TasksDef = g.NewInterface(
 			OptionalSQL("ROOT ONLY").
 			OptionalLimit(),
 	).
-	ShowByIdOperation().
+	ShowByIdOperationWithFiltering(
+		g.ShowByIDExtendedInFiltering,
+		g.ShowByIDLikeFiltering,
+	).
 	DescribeOperation(
 		g.DescriptionMappingKindSingleValue,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-task",

@@ -39,7 +39,9 @@ func (v *materializedViews) Show(ctx context.Context, request *ShowMaterializedV
 }
 
 func (v *materializedViews) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaterializedView, error) {
-	request := NewShowMaterializedViewRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
+	request := NewShowMaterializedViewRequest().
+		WithIn(In{Schema: id.SchemaId()}).
+		WithLike(Like{Pattern: String(id.Name())})
 	materializedViews, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

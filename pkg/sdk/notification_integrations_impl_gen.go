@@ -38,9 +38,9 @@ func (v *notificationIntegrations) Show(ctx context.Context, request *ShowNotifi
 }
 
 func (v *notificationIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*NotificationIntegration, error) {
-	notificationIntegrations, err := v.Show(ctx, NewShowNotificationIntegrationRequest().WithLike(&Like{
-		Pattern: String(id.Name()),
-	}))
+	request := NewShowNotificationIntegrationRequest().
+		WithLike(Like{Pattern: String(id.Name())})
+	notificationIntegrations, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}

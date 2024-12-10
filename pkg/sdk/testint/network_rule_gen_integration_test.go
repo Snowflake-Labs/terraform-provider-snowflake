@@ -92,9 +92,9 @@ func TestInt_NetworkRules(t *testing.T) {
 			require.NoError(t, err)
 		})
 
-		networkRules, err := client.NetworkRules.Show(ctx, sdk.NewShowNetworkRuleRequest().WithIn(&sdk.In{
+		networkRules, err := client.NetworkRules.Show(ctx, sdk.NewShowNetworkRuleRequest().WithIn(sdk.In{
 			Schema: id.SchemaId(),
-		}).WithLike(&sdk.Like{
+		}).WithLike(sdk.Like{
 			Pattern: sdk.String(id.Name()),
 		}))
 		require.NoError(t, err)

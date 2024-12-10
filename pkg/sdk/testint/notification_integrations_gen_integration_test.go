@@ -401,7 +401,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		notificationAutoAzure := createNotificationIntegrationAutoAzure(t)
 
 		showRequest := sdk.NewShowNotificationIntegrationRequest().
-			WithLike(&sdk.Like{Pattern: &notificationAutoGoogle.Name})
+			WithLike(sdk.Like{Pattern: &notificationAutoGoogle.Name})
 		returnedIntegrations, err := client.NotificationIntegrations.Show(ctx, showRequest)
 		require.NoError(t, err)
 

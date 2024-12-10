@@ -184,8 +184,8 @@ func NewShowApplicationRequest() *ShowApplicationRequest {
 	return &ShowApplicationRequest{}
 }
 
-func (s *ShowApplicationRequest) WithLike(Like *Like) *ShowApplicationRequest {
-	s.Like = Like
+func (s *ShowApplicationRequest) WithLike(Like Like) *ShowApplicationRequest {
+	s.Like = &Like
 	return s
 }
 

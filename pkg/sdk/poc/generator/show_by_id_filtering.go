@@ -12,7 +12,6 @@ const (
 	ShowByIDInFiltering
 	ShowByIDExtendedInFiltering
 	ShowByIDApplicationNameFiltering
-	ShowByIDNoFiltering
 )
 
 type idPrefix string
@@ -58,10 +57,6 @@ func newShowByIDFiltering(name, kind, args string) ShowByIDFiltering {
 	}
 }
 
-func newShowByIDNoFiltering() ShowByIDFiltering {
-	return newShowByIDFiltering("NoFiltering", "", "")
-}
-
 func newShowByIDLikeFiltering() ShowByIDFiltering {
 	return newShowByIDFiltering("Like", "Like", "Pattern: String(id.Name())")
 }
@@ -103,8 +98,6 @@ func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, newShowByIDLikeFiltering())
 		case ShowByIDApplicationNameFiltering:
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, newShowByIDApplicationFiltering())
-		case ShowByIDNoFiltering:
-			s.ShowByIDFiltering = []ShowByIDFiltering{newShowByIDNoFiltering()}
 		default:
 			log.Println("No showByID filtering found for kind:", filteringKind)
 		}

@@ -95,13 +95,13 @@ func NewShowNetworkRuleRequest() *ShowNetworkRuleRequest {
 	return &ShowNetworkRuleRequest{}
 }
 
-func (s *ShowNetworkRuleRequest) WithLike(Like *Like) *ShowNetworkRuleRequest {
-	s.Like = Like
+func (s *ShowNetworkRuleRequest) WithLike(Like Like) *ShowNetworkRuleRequest {
+	s.Like = &Like
 	return s
 }
 
-func (s *ShowNetworkRuleRequest) WithIn(In *In) *ShowNetworkRuleRequest {
-	s.In = In
+func (s *ShowNetworkRuleRequest) WithIn(In In) *ShowNetworkRuleRequest {
+	s.In = &In
 	return s
 }
 

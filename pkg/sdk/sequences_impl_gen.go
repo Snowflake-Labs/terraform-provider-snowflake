@@ -33,7 +33,9 @@ func (v *sequences) Show(ctx context.Context, request *ShowSequenceRequest) ([]S
 }
 
 func (v *sequences) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Sequence, error) {
-	request := NewShowSequenceRequest().WithIn(&In{Schema: id.SchemaId()}).WithLike(&Like{String(id.Name())})
+	request := NewShowSequenceRequest().
+		WithIn(In{Schema: id.SchemaId()}).
+		WithLike(Like{Pattern: String(id.Name())})
 	sequences, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

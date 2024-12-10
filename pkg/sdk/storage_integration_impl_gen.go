@@ -38,9 +38,9 @@ func (v *storageIntegrations) Show(ctx context.Context, request *ShowStorageInte
 }
 
 func (v *storageIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*StorageIntegration, error) {
-	storageIntegrations, err := v.Show(ctx, NewShowStorageIntegrationRequest().WithLike(Like{
-		Pattern: String(id.Name()),
-	}))
+	request := NewShowStorageIntegrationRequest().
+		WithLike(Like{Pattern: String(id.Name())})
+	storageIntegrations, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}

@@ -92,7 +92,7 @@ func TestInt_Sequences(t *testing.T) {
 		e1 := createSequenceHandle(t)
 		e2 := createSequenceHandle(t)
 
-		sequences, err := client.Sequences.Show(ctx, sdk.NewShowSequenceRequest().WithLike(&sdk.Like{Pattern: &e1.Name}))
+		sequences, err := client.Sequences.Show(ctx, sdk.NewShowSequenceRequest().WithLike(sdk.Like{Pattern: &e1.Name}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(sequences))
 		require.Contains(t, sequences, *e1)
@@ -100,7 +100,7 @@ func TestInt_Sequences(t *testing.T) {
 	})
 
 	t.Run("show sequence: no matches", func(t *testing.T) {
-		sequences, err := client.Sequences.Show(ctx, sdk.NewShowSequenceRequest().WithLike(&sdk.Like{Pattern: sdk.String("non-existent")}))
+		sequences, err := client.Sequences.Show(ctx, sdk.NewShowSequenceRequest().WithLike(sdk.Like{Pattern: sdk.String("non-existent")}))
 		require.NoError(t, err)
 		require.Equal(t, 0, len(sequences))
 	})
