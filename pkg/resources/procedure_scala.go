@@ -17,7 +17,7 @@ func ProcedureScala() *schema.Resource {
 		CreateContext: TrackingCreateWrapper(resources.ProcedureScala, CreateContextProcedureScala),
 		ReadContext:   TrackingReadWrapper(resources.ProcedureScala, ReadContextProcedureScala),
 		UpdateContext: TrackingUpdateWrapper(resources.ProcedureScala, UpdateContextProcedureScala),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedureScala, DeleteContextProcedureScala),
+		DeleteContext: TrackingDeleteWrapper(resources.ProcedureScala, DeleteProcedure),
 		Description:   "Resource used to manage scala procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedureScala, customdiff.All(
@@ -44,9 +44,5 @@ func ReadContextProcedureScala(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func UpdateContextProcedureScala(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	return nil
-}
-
-func DeleteContextProcedureScala(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	return nil
 }

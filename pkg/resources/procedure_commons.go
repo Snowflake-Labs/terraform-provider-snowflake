@@ -1,11 +1,14 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -340,4 +343,20 @@ func procedureBaseSchema() map[string]schema.Schema {
 		},
 		FullyQualifiedNameAttributeName: *schemas.FullyQualifiedNameSchema,
 	}
+}
+
+func DeleteProcedure(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id).WithIfExists(true)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+	return nil
 }

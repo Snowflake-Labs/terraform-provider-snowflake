@@ -17,7 +17,7 @@ func ProcedureJava() *schema.Resource {
 		CreateContext: TrackingCreateWrapper(resources.ProcedureJava, CreateContextProcedureJava),
 		ReadContext:   TrackingReadWrapper(resources.ProcedureJava, ReadContextProcedureJava),
 		UpdateContext: TrackingUpdateWrapper(resources.ProcedureJava, UpdateContextProcedureJava),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedureJava, DeleteContextProcedureJava),
+		DeleteContext: TrackingDeleteWrapper(resources.ProcedureJava, DeleteProcedure),
 		Description:   "Resource used to manage java procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedureJava, customdiff.All(
@@ -44,9 +44,5 @@ func ReadContextProcedureJava(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func UpdateContextProcedureJava(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	return nil
-}
-
-func DeleteContextProcedureJava(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	return nil
 }
