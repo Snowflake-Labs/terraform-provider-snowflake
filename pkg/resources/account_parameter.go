@@ -72,7 +72,7 @@ func ReadAccountParameter(ctx context.Context, d *schema.ResourceData, meta any)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	parameter, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameter(parameterName))
+	parameter, err := client.Parameters.ShowAccountParameter(ctx, parameterName)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("reading account parameter: %w", err))
 	}

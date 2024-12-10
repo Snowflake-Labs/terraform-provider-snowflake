@@ -5,12 +5,18 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_AccountParameter(t *testing.T) {
+	model := model.AccountParameter("test", "ALLOW_ID_TOKEN", "true")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -20,10 +26,10 @@ func TestAcc_AccountParameter(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: accountParameterBasic("ALLOW_ID_TOKEN", "true"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "key", "ALLOW_ID_TOKEN"),
-					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "value", "true"),
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.AccountParameterResource(t, model.ResourceReference()).
+					HasKeyString(string(sdk.AccountParameterAllowIDToken)).
+					HasValueString("true"),
 				),
 			},
 		},
@@ -41,6 +47,7 @@ resource "snowflake_account_parameter" "p" {
 }
 
 func TestAcc_AccountParameter_PREVENT_LOAD_FROM_INLINE_URL(t *testing.T) {
+	model := model.AccountParameter("test", string(sdk.AccountParameterPreventLoadFromInlineURL), "true")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -50,10 +57,10 @@ func TestAcc_AccountParameter_PREVENT_LOAD_FROM_INLINE_URL(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: accountParameterBasic("PREVENT_LOAD_FROM_INLINE_URL", "true"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "key", "PREVENT_LOAD_FROM_INLINE_URL"),
-					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "value", "true"),
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.AccountParameterResource(t, model.ResourceReference()).
+					HasKeyString(string(sdk.AccountParameterPreventLoadFromInlineURL)).
+					HasValueString("true"),
 				),
 			},
 		},
@@ -61,6 +68,7 @@ func TestAcc_AccountParameter_PREVENT_LOAD_FROM_INLINE_URL(t *testing.T) {
 }
 
 func TestAcc_AccountParameter_REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION(t *testing.T) {
+	model := model.AccountParameter("test", string(sdk.AccountParameterRequireStorageIntegrationForStageCreation), "true")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -70,10 +78,10 @@ func TestAcc_AccountParameter_REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION(t *
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: accountParameterBasic("REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION", "true"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "key", "REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"),
-					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "value", "true"),
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.AccountParameterResource(t, model.ResourceReference()).
+					HasKeyString(string(sdk.AccountParameterRequireStorageIntegrationForStageCreation)).
+					HasValueString("true"),
 				),
 			},
 		},
@@ -81,6 +89,7 @@ func TestAcc_AccountParameter_REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION(t *
 }
 
 func TestAcc_AccountParameter_Issue2573(t *testing.T) {
+	model := model.AccountParameter("test", string(sdk.AccountParameterTimezone), "Etc/UTC")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -90,14 +99,14 @@ func TestAcc_AccountParameter_Issue2573(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: accountParameterBasic("TIMEZONE", "Etc/UTC"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "key", "TIMEZONE"),
-					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "value", "Etc/UTC"),
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.AccountParameterResource(t, model.ResourceReference()).
+					HasKeyString(string(sdk.AccountParameterTimezone)).
+					HasValueString("Etc/UTC"),
 				),
 			},
 			{
-				ResourceName:            "snowflake_account_parameter.p",
+				ResourceName:            "snowflake_account_parameter.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{},
@@ -107,6 +116,7 @@ func TestAcc_AccountParameter_Issue2573(t *testing.T) {
 }
 
 func TestAcc_AccountParameter_Issue3025(t *testing.T) {
+	model := model.AccountParameter("test", string(sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList), "true")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -116,14 +126,14 @@ func TestAcc_AccountParameter_Issue3025(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: accountParameterBasic("OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST", "true"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "key", "OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"),
-					resource.TestCheckResourceAttr("snowflake_account_parameter.p", "value", "true"),
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.AccountParameterResource(t, model.ResourceReference()).
+					HasKeyString(string(sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList)).
+					HasValueString("true"),
 				),
 			},
 			{
-				ResourceName:            "snowflake_account_parameter.p",
+				ResourceName:            "snowflake_account_parameter.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{},
@@ -131,3 +141,6 @@ func TestAcc_AccountParameter_Issue3025(t *testing.T) {
 		},
 	})
 }
+
+// TODO(next pr): add more acc tests
+// TODO(next pr): check unsetting in CheckDestroy
