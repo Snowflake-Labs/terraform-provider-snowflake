@@ -48,7 +48,7 @@ func TestAcc_AccountRoles_Complete(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: likeVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_account_roles.test", "roles.#", "2"),
+					resource.TestCheckResourceAttr("data.snowflake_account_roles.test", "account_roles.#", "2"),
 					accountRolesDataSourceContainsRole(accountRoleName1, comment),
 					accountRolesDataSourceContainsRole(accountRoleName2, comment),
 					accountRolesDataSourceDoesNotContainRole(accountRoleName3, comment),
@@ -59,7 +59,7 @@ func TestAcc_AccountRoles_Complete(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith("data.snowflake_account_roles.test", "roles.#", func(value string) error {
+					resource.TestCheckResourceAttrWith("data.snowflake_account_roles.test", "account_roles.#", func(value string) error {
 						numberOfRoles, err := strconv.ParseInt(value, 10, 8)
 						if err != nil {
 							return err

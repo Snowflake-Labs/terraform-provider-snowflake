@@ -17,21 +17,17 @@ import (
 )
 
 var accountRolesSchema = map[string]*schema.Schema{
-	"like": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Description: "Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).",
-	},
+	"like": likeSchema,
 	"in_class": {
 		Type:             schema.TypeString,
 		Optional:         true,
 		ValidateDiagFunc: resources.IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		Description:      "Filters the SHOW GRANTS output by class name.",
 	},
-	"roles": {
+	"account_roles": {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Holds the aggregated output of all role details queries.",
+		Description: "Holds the aggregated output of all account role details queries.",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				resources.ShowOutputAttributeName: {
@@ -49,9 +45,9 @@ var accountRolesSchema = map[string]*schema.Schema{
 
 func AccountRoles() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.Roles, ReadRoles),
+		ReadContext: TrackingReadWrapper(datasources.AccountRoles, ReadAccountRoles),
 		Schema:      accountRolesSchema,
-		Description: "Datasource used to get details of filtered account roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.",
+		Description: "Data source used to get details of filtered account roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.",
 	}
 }
 
@@ -60,9 +56,7 @@ func ReadAccountRoles(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	req := sdk.NewShowRoleRequest()
 
-	if likePattern, ok := d.GetOk("like"); ok {
-		req.WithLike(sdk.NewLikeRequest(likePattern.(string)))
-	}
+	handleLike(d, &req.Like)
 
 	if className, ok := d.GetOk("in_class"); ok {
 		req.WithInClass(sdk.RolesInClass{
