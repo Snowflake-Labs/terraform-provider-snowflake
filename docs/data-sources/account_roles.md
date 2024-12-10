@@ -2,12 +2,12 @@
 page_title: "snowflake_account_roles Data Source - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Datasource used to get details of filtered account roles. Filtering is aligned with the current possibilities for SHOW ROLES https://docs.snowflake.com/en/sql-reference/sql/show-roles query (like and in_class are all supported). The results of SHOW are encapsulated in one output collection.
+  Data source used to get details of filtered account roles. Filtering is aligned with the current possibilities for SHOW ROLES https://docs.snowflake.com/en/sql-reference/sql/show-roles query (like and in_class are all supported). The results of SHOW are encapsulated in one output collection.
 ---
 
 # snowflake_account_roles (Data Source)
 
-Datasource used to get details of filtered account roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.
+Data source used to get details of filtered account roles. Filtering is aligned with the current possibilities for [SHOW ROLES](https://docs.snowflake.com/en/sql-reference/sql/show-roles) query (`like` and `in_class` are all supported). The results of SHOW are encapsulated in one output collection.
 
 ## Example Usage
 
@@ -72,18 +72,18 @@ check "role_check" {
 
 ### Read-Only
 
+- `account_roles` (List of Object) Holds the aggregated output of all account role details queries. (see [below for nested schema](#nestedatt--account_roles))
 - `id` (String) The ID of this resource.
-- `roles` (List of Object) Holds the aggregated output of all role details queries. (see [below for nested schema](#nestedatt--roles))
 
-<a id="nestedatt--roles"></a>
-### Nested Schema for `roles`
+<a id="nestedatt--account_roles"></a>
+### Nested Schema for `account_roles`
 
 Read-Only:
 
-- `show_output` (List of Object) (see [below for nested schema](#nestedobjatt--roles--show_output))
+- `show_output` (List of Object) (see [below for nested schema](#nestedobjatt--account_roles--show_output))
 
-<a id="nestedobjatt--roles--show_output"></a>
-### Nested Schema for `roles.show_output`
+<a id="nestedobjatt--account_roles--show_output"></a>
+### Nested Schema for `account_roles.show_output`
 
 Read-Only:
 
