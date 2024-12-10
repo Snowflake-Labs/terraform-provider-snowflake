@@ -220,10 +220,27 @@ func ExecuteAsPointer(v ExecuteAs) *ExecuteAs {
 	return &v
 }
 
+// TODO [SNOW-1348103]: fix SDK - constants should have only CALLER and OWNER (not the EXECUTE AS part)
 const (
 	ExecuteAsCaller ExecuteAs = "EXECUTE AS CALLER"
 	ExecuteAsOwner  ExecuteAs = "EXECUTE AS OWNER"
 )
+
+func ToExecuteAs(value string) (ExecuteAs, error) {
+	switch strings.ToUpper(value) {
+	case string(ExecuteAsCaller):
+		return ExecuteAsCaller, nil
+	case string(ExecuteAsOwner):
+		return ExecuteAsOwner, nil
+	default:
+		return "", fmt.Errorf("unknown execute as: %s", value)
+	}
+}
+
+var AllAllowedExecuteAs = []ExecuteAs{
+	ExecuteAsCaller,
+	ExecuteAsOwner,
+}
 
 type NullInputBehavior string
 
