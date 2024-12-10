@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// TODO [this PR]: update?
 // ShowFunctionSchema represents output of SHOW query for the single Function.
 var ShowFunctionSchema = map[string]*schema.Schema{
 	"created_on": {
