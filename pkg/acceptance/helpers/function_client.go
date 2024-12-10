@@ -2,9 +2,12 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,7 +36,7 @@ func (c *FunctionClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectI
 	t.Helper()
 
 	return c.CreateWithRequest(t, id,
-		sdk.NewCreateForSQLFunctionRequest(
+		sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(
 			id.SchemaObjectId(),
 			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeInt)),
 			"SELECT 1",
@@ -41,17 +44,98 @@ func (c *FunctionClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectI
 	)
 }
 
+// TODO [SNOW-1850370]: improve this helper (all  other types creation)
 func (c *FunctionClient) CreateSecure(t *testing.T, arguments ...sdk.DataType) *sdk.Function {
 	t.Helper()
 	id := c.ids.RandomSchemaObjectIdentifierWithArguments(arguments...)
 
 	return c.CreateWithRequest(t, id,
-		sdk.NewCreateForSQLFunctionRequest(
+		sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(
 			id.SchemaObjectId(),
 			*sdk.NewFunctionReturnsRequest().WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(nil).WithResultDataTypeOld(sdk.DataTypeInt)),
 			"SELECT 1",
 		).WithSecure(true),
 	)
+}
+
+func (c *FunctionClient) CreateSql(t *testing.T) (*sdk.Function, func()) {
+	t.Helper()
+	dataType := testdatatypes.DataTypeFloat
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+	return c.CreateSqlWithIdentifierAndArgument(t, id.SchemaObjectId(), dataType)
+}
+
+func (c *FunctionClient) CreateSqlWithIdentifierAndArgument(t *testing.T, id sdk.SchemaObjectIdentifier, dataType datatypes.DataType) (*sdk.Function, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	idWithArgs := sdk.NewSchemaObjectIdentifierWithArgumentsInSchema(id.SchemaId(), id.Name(), sdk.LegacyDataTypeFrom(dataType))
+	argName := "x"
+	definition := c.SampleSqlDefinition(t)
+	dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+	argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+	request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id, *returns, definition).
+		WithArguments([]sdk.FunctionArgumentRequest{*argument})
+
+	err := c.client().CreateForSQL(ctx, request)
+	require.NoError(t, err)
+
+	function, err := c.client().ShowByID(ctx, idWithArgs)
+	require.NoError(t, err)
+
+	return function, c.DropFunctionFunc(t, idWithArgs)
+}
+
+func (c *FunctionClient) CreateSqlNoArgs(t *testing.T) (*sdk.Function, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	dataType := testdatatypes.DataTypeFloat
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments()
+
+	definition := c.SampleSqlDefinition(t)
+	dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+	request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition)
+
+	err := c.client().CreateForSQL(ctx, request)
+	require.NoError(t, err)
+	t.Cleanup(c.DropFunctionFunc(t, id))
+
+	function, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return function, c.DropFunctionFunc(t, id)
+}
+
+func (c *FunctionClient) CreateJava(t *testing.T) (*sdk.Function, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	className := "TestFunc"
+	funcName := "echoVarchar"
+	argName := "x"
+	dataType := testdatatypes.DataTypeVarchar_100
+
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+	argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+	dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+	handler := fmt.Sprintf("%s.%s", className, funcName)
+	definition := c.SampleJavaDefinition(t, className, funcName, argName)
+
+	request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
+		WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+		WithFunctionDefinitionWrapped(definition)
+
+	err := c.client().CreateForJava(ctx, request)
+	require.NoError(t, err)
+
+	function, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return function, c.DropFunctionFunc(t, id)
 }
 
 func (c *FunctionClient) CreateWithRequest(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, req *sdk.CreateForSQLFunctionRequest) *sdk.Function {
@@ -80,4 +164,82 @@ func (c *FunctionClient) DropFunctionFunc(t *testing.T, id sdk.SchemaObjectIdent
 		err := c.client().Drop(ctx, sdk.NewDropFunctionRequest(id).WithIfExists(true))
 		require.NoError(t, err)
 	}
+}
+
+func (c *FunctionClient) Show(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) (*sdk.Function, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
+}
+
+func (c *FunctionClient) DescribeDetails(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) (*sdk.FunctionDetails, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().DescribeDetails(ctx, id)
+}
+
+func (c *FunctionClient) SampleJavaDefinition(t *testing.T, className string, funcName string, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+	class %[1]s {
+		public static String %[2]s(String %[3]s) {
+			return %[3]s;
+		}
+	}
+`, className, funcName, argName)
+}
+
+func (c *FunctionClient) SampleJavascriptDefinition(t *testing.T, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+	if (%[1]s <= 0) {
+		return 1;
+	} else {
+		var result = 1;
+		for (var i = 2; i <= %[1]s; i++) {
+			result = result * i;
+		}
+		return result;
+	}
+`, argName)
+}
+
+func (c *FunctionClient) SamplePythonDefinition(t *testing.T, funcName string, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+def %[1]s(%[2]s):
+	result = ""
+	for a in range(5):
+		result += %[2]s
+	return result
+`, funcName, argName)
+}
+
+func (c *FunctionClient) SampleScalaDefinition(t *testing.T, className string, funcName string, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+	class %[1]s {
+		def %[2]s(%[3]s : String): String = {
+			return %[3]s
+		}
+	}
+`, className, funcName, argName)
+}
+
+func (c *FunctionClient) SampleSqlDefinition(t *testing.T) string {
+	t.Helper()
+
+	return "3.141592654::FLOAT"
+}
+
+func (c *FunctionClient) PythonIdentityDefinition(t *testing.T, funcName string, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf("def %[1]s(%[2]s): %[2]s", funcName, argName)
 }

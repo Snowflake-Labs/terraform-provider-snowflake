@@ -294,3 +294,36 @@ func TestToTraceLevel(t *testing.T) {
 		})
 	}
 }
+
+func Test_ToMetricLevel(t *testing.T) {
+	testCases := []struct {
+		Name          string
+		Input         string
+		Expected      MetricLevel
+		ExpectedError string
+	}{
+		{Input: string(MetricLevelAll), Expected: MetricLevelAll},
+		{Input: string(MetricLevelNone), Expected: MetricLevelNone},
+		{Name: "validation: incorrect metric level", Input: "incorrect", ExpectedError: "unknown metric level: incorrect"},
+		{Name: "validation: empty input", Input: "", ExpectedError: "unknown metric level: "},
+		{Name: "validation: lower case input", Input: "all", Expected: MetricLevelAll},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		name := tc.Name
+		if name == "" {
+			name = fmt.Sprintf("%v metric level", tc.Input)
+		}
+		t.Run(name, func(t *testing.T) {
+			value, err := ToMetricLevel(tc.Input)
+			if tc.ExpectedError != "" {
+				assert.Empty(t, value)
+				assert.ErrorContains(t, err, tc.ExpectedError)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.Expected, value)
+			}
+		})
+	}
+}
