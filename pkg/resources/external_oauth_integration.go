@@ -146,7 +146,7 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 	RelatedParametersAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Paramteres related to this security integration.",
+		Description: "Parameters related to this security integration.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowExternalOauthParametersSchema,
 		},

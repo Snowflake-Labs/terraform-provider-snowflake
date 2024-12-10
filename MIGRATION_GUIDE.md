@@ -9,6 +9,11 @@ across different versions.
 
 ## v0.99.0 ➞ v0.100.0
 
+### snowflake_oauth_integration_for_partner_applications resource changes
+#### *(behavior change)* `blocked_roles_list` field is no longer required
+
+TODO: fill
+
 ### snowflake_tag_association resource changes
 #### *(behavior change)* new id format
 In order to provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type in one resource.
