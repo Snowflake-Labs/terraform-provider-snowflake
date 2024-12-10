@@ -64,7 +64,7 @@ var streamlitSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		Optional:         true,
-		Description:      relatedResourceDescription("Specifies the warehouse where SQL queries issued by the Streamlit application are run.", resources.Warehouse),
+		Description:      relatedResourceDescription("Specifies the warehouse where SQL queries issued by the Streamlit application are run. Due to Snowflake limitations warehouse identifier can consist of only upper-cased letters.", resources.Warehouse),
 		DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("query_warehouse")),
 	},
 	"external_access_integrations": {

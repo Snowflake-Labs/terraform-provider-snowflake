@@ -478,6 +478,7 @@ func DeleteDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 		return diag.FromErr(err)
 	}
 
+	// TODO(SNOW-1818849): unassign network policies inside the database before dropping
 	err = client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
 		IfExists: sdk.Bool(true),
 	})

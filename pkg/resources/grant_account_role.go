@@ -21,7 +21,7 @@ var grantAccountRoleSchema = map[string]*schema.Schema{
 	"role_name": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      relatedResourceDescription("The fully qualified name of the role which will be granted to the user or parent role.", resources.Role),
+		Description:      relatedResourceDescription("The fully qualified name of the role which will be granted to the user or parent role.", resources.AccountRole),
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 	},
@@ -39,7 +39,7 @@ var grantAccountRoleSchema = map[string]*schema.Schema{
 	"parent_role_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      relatedResourceDescription("The fully qualified name of the parent role which will create a parent-child relationship between the roles.", resources.Role),
+		Description:      relatedResourceDescription("The fully qualified name of the parent role which will create a parent-child relationship between the roles.", resources.AccountRole),
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		ExactlyOneOf: []string{

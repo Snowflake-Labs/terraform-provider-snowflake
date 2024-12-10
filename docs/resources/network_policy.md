@@ -41,14 +41,14 @@ resource "snowflake_network_policy" "complete" {
 
 ### Required
 
-- `name` (String) Specifies the identifier for the network policy; must be unique for the account in which the network policy is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `name` (String) Specifies the identifier for the network policy; must be unique for the account in which the network policy is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 
 ### Optional
 
 - `allowed_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are allowed access to your Snowflake account.
-- `allowed_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/network_rule).
+- `allowed_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake. For more information about this resource, see [docs](./network_rule).
 - `blocked_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are denied access to your Snowflake account. **Do not** add `0.0.0.0/0` to `blocked_ip_list`, in order to block all IP addresses except a select list, you only need to add IP addresses to `allowed_ip_list`.
-- `blocked_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/network_rule).
+- `blocked_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake. For more information about this resource, see [docs](./network_rule).
 - `comment` (String) Specifies a comment for the network policy.
 
 ### Read-Only

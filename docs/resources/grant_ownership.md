@@ -252,8 +252,8 @@ To set the `AUTO_REFRESH` property back to `TRUE` (after you transfer ownership)
 
 ### Optional
 
-- `account_role_name` (String) The fully qualified name of the account role to which privileges will be granted. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/account_role).
-- `database_role_name` (String) The fully qualified name of the database role to which privileges will be granted. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/database_role).
+- `account_role_name` (String) The fully qualified name of the account role to which privileges will be granted. For more information about this resource, see [docs](./account_role).
+- `database_role_name` (String) The fully qualified name of the database role to which privileges will be granted. For more information about this resource, see [docs](./database_role).
 - `outbound_privileges` (String) Specifies whether to remove or transfer all existing outbound privileges on the object when ownership is transferred to a new role. Available options are: REVOKE for removing existing privileges and COPY to transfer them with ownership. For more information head over to [Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#optional-parameters).
 
 ### Read-Only
@@ -279,8 +279,8 @@ Required:
 
 Optional:
 
-- `in_database` (String) The fully qualified name of the database. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/database).
-- `in_schema` (String) The fully qualified name of the schema. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/schema).
+- `in_database` (String) The fully qualified name of the database. For more information about this resource, see [docs](./database).
+- `in_schema` (String) The fully qualified name of the schema. For more information about this resource, see [docs](./schema).
 
 
 <a id="nestedblock--on--future"></a>
@@ -292,8 +292,8 @@ Required:
 
 Optional:
 
-- `in_database` (String) The fully qualified name of the database. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/database).
-- `in_schema` (String) The fully qualified name of the schema. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/schema).
+- `in_database` (String) The fully qualified name of the database. For more information about this resource, see [docs](./database).
+- `in_schema` (String) The fully qualified name of the schema. For more information about this resource, see [docs](./schema).
 
 ## Import
 

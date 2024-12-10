@@ -14,6 +14,9 @@ description: |-
 <!-- TODO(SNOW-1844996): Remove this note.-->
 -> **Note** Field `CLASSIFICATION_ROLE` is currently missing. It will be added in the future.
 
+!> **Note** A schema cannot be dropped successfully if it contains network rule-network policy associations. The error looks like `098508 (2BP01): Cannot drop schema SCHEMA as it includes network rule - policy associations.
+`. Currently, the provider does not unassign such objects automatically. Before dropping the resource, first unassign the network rule from the relevant objects. See [guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies) for more details.
+
 # {{.Name}} ({{.Type}})
 
 {{ .Description | trimspace }}

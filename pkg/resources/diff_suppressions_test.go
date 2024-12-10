@@ -256,7 +256,6 @@ func Test_IgnoreMatchingColumnNameAndMaskingPolicyUsingFirstElem(t *testing.T) {
 		resourceData *schema.ResourceData
 		wantSuppress bool
 	}{
-		// TODO: add more cases?
 		{
 			name:         "suppress when USING is not specified in the config, but is in the state - check count",
 			key:          "column.0.masking_policy.0.using.#",

@@ -806,25 +806,13 @@ end;;
 	t.Cleanup(projectionPolicyCleanup)
 
 	// generators currently don't handle lists of objects, so use the old way
-	basicView := func(columns ...string) config.Variables {
-		return config.Variables{
+	viewWithPolicies := func() config.Variables {
+		conf := config.Variables{
 			"name":      config.StringVariable(id.Name()),
 			"database":  config.StringVariable(id.DatabaseName()),
 			"schema":    config.StringVariable(id.SchemaName()),
 			"statement": config.StringVariable(statement),
-			"column": config.SetVariable(
-				collections.Map(columns, func(columnName string) config.Variable {
-					return config.MapVariable(map[string]config.Variable{
-						"column_name": config.StringVariable(columnName),
-					})
-				})...,
-			),
 		}
-	}
-
-	basicViewWithPolicies := func() config.Variables {
-		conf := basicView("ID", "FOO")
-		delete(conf, "column")
 		conf["projection_name"] = config.StringVariable(projectionPolicy.FullyQualifiedName())
 		conf["masking_name"] = config.StringVariable(maskingPolicy.ID().FullyQualifiedName())
 		return conf
@@ -840,7 +828,7 @@ end;;
 			// With all policies on columns
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/columns"),
-				ConfigVariables: basicViewWithPolicies(),
+				ConfigVariables: viewWithPolicies(),
 				Check: assert.AssertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
@@ -856,7 +844,7 @@ end;;
 			// Remove policies on columns externally
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/columns"),
-				ConfigVariables: basicViewWithPolicies(),
+				ConfigVariables: viewWithPolicies(),
 				PreConfig: func() {
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetMaskingPolicyOnColumn(*sdk.NewViewUnsetColumnMaskingPolicyRequest("ID")))
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetProjectionPolicyOnColumn(*sdk.NewViewUnsetProjectionPolicyRequest("ID")))

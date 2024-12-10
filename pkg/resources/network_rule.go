@@ -223,6 +223,7 @@ func DeleteContextNetworkRule(ctx context.Context, d *schema.ResourceData, meta 
 	client := meta.(*provider.Context).Client
 	id := helpers.DecodeSnowflakeID(name).(sdk.SchemaObjectIdentifier)
 
+	// TODO(SNOW-1818849): unassign network rules before dropping
 	if err := client.NetworkRules.Drop(ctx, sdk.NewDropNetworkRuleRequest(id).WithIfExists(sdk.Bool(true))); err != nil {
 		diag.FromErr(err)
 	}

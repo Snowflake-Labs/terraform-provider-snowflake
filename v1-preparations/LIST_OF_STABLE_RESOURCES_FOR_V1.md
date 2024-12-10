@@ -1,6 +1,6 @@
 We estimate the given list to be accurate, but it may be subject to small changes:
 
-* Account (in progress)
+* Account
     * [snowflake_account](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/account)
     * [snowflake_accounts](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/accounts) (datasource)
 * Connection
@@ -85,7 +85,7 @@ We estimate the given list to be accurate, but it may be subject to small change
 * Streamlit
     * [snowflake_streamlit](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/streamlit)
     * [snowflake_streamlits](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/streamlits) (datasource)
-* Tag (in progress)
+* Tag
     * [snowflake_tag](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/tag)
     * [snowflake_tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/tag_association)
     * [snowflake_tags](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/tags) (datasource)

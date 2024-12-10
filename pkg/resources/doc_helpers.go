@@ -29,11 +29,11 @@ func externalChangesNotDetectedFieldDescription(description string) string {
 }
 
 func withPrivilegedRolesDescription(description, paramName string) string {
-	return fmt.Sprintf(`%s By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the %s account parameter to FALSE. `, description, paramName)
+	return fmt.Sprintf(`%s By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the %s account parameter to FALSE.`, description, paramName)
 }
 
 func blocklistedCharactersFieldDescription(description string) string {
-	return fmt.Sprintf(`%s Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: %s`, description, characterList([]rune{'|', '.', '"'}))
+	return fmt.Sprintf(`%s Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: %s.`, description, characterList([]rune{'|', '.', '"'}))
 }
 
 func diffSuppressStatementFieldDescription(description string) string {
@@ -45,7 +45,7 @@ func dataTypeFieldDescription(description string) string {
 }
 
 func deprecatedResourceDescription(alternatives ...string) string {
-	return fmt.Sprintf(`This resource is deprecated and will be removed in a future major version release. Please use one of the new resources instead: %s`, possibleValuesListed(alternatives))
+	return fmt.Sprintf(`This resource is deprecated and will be removed in a future major version release. Please use one of the new resources instead: %s.`, possibleValuesListed(alternatives))
 }
 
 func copyGrantsDescription(description string) string {
@@ -53,5 +53,5 @@ func copyGrantsDescription(description string) string {
 }
 
 func relatedResourceDescription(description string, resource providerresources.Resource) string {
-	return fmt.Sprintf(`%s For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/%s).`, description, strings.TrimPrefix(resource.String(), "snowflake_"))
+	return fmt.Sprintf(`%s For more information about this resource, see [docs](./%s).`, description, strings.TrimPrefix(resource.String(), "snowflake_"))
 }

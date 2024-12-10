@@ -264,7 +264,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 ### Required
 
-- `account_role_name` (String) The fully qualified name of the account role to which privileges will be granted. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/account_role).
+- `account_role_name` (String) The fully qualified name of the account role to which privileges will be granted. For more information about this resource, see [docs](./account_role).
 
 ### Optional
 

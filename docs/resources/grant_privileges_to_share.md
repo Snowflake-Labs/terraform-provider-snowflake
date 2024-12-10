@@ -106,17 +106,17 @@ resource "snowflake_grant_privileges_to_share" "example" {
 ### Required
 
 - `privileges` (Set of String) The privileges to grant on the share. See available list of privileges: https://docs.snowflake.com/en/sql-reference/sql/grant-privilege-share#syntax
-- `to_share` (String) The fully qualified name of the share on which privileges will be granted. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/share).
+- `to_share` (String) The fully qualified name of the share on which privileges will be granted. For more information about this resource, see [docs](./share).
 
 ### Optional
 
 - `on_all_tables_in_schema` (String) The fully qualified identifier for the schema for which the specified privilege will be granted for all tables.
-- `on_database` (String) The fully qualified name of the database on which privileges will be granted. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/database).
+- `on_database` (String) The fully qualified name of the database on which privileges will be granted. For more information about this resource, see [docs](./database).
 - `on_function` (String) The fully qualified name of the function on which privileges will be granted.
-- `on_schema` (String) The fully qualified name of the schema on which privileges will be granted. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/schema).
-- `on_table` (String) The fully qualified name of the table on which privileges will be granted. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/table).
-- `on_tag` (String) The fully qualified name of the tag on which privileges will be granted. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag).
-- `on_view` (String) The fully qualified name of the view on which privileges will be granted. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/view).
+- `on_schema` (String) The fully qualified name of the schema on which privileges will be granted. For more information about this resource, see [docs](./schema).
+- `on_table` (String) The fully qualified name of the table on which privileges will be granted. For more information about this resource, see [docs](./table).
+- `on_tag` (String) The fully qualified name of the tag on which privileges will be granted. For more information about this resource, see [docs](./tag).
+- `on_view` (String) The fully qualified name of the view on which privileges will be granted. For more information about this resource, see [docs](./view).
 
 ### Read-Only
 

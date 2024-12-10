@@ -23,7 +23,7 @@ var StreamOnViewSchema = func() map[string]*schema.Schema {
 		"view": {
 			Type:             schema.TypeString,
 			Required:         true,
-			Description:      relatedResourceDescription(blocklistedCharactersFieldDescription("Specifies an identifier for the view the stream will monitor."), resources.ExternalTable),
+			Description:      relatedResourceDescription(blocklistedCharactersFieldDescription("Specifies an identifier for the view the stream will monitor."), resources.View),
 			DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("table_name")),
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},

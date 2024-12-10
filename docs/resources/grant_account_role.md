@@ -7,8 +7,6 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. To migrate from older grant resources please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#migration-from-old-grant-resources-to-new-ones).
 
-!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. To migrate from older grant resources please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#migration-from-old-grant-resources-to-new-ones).
-
 # snowflake_grant_account_role (Resource)
 
 
@@ -60,12 +58,12 @@ resource "snowflake_grant_account_role" "g" {
 
 ### Required
 
-- `role_name` (String) The fully qualified name of the role which will be granted to the user or parent role. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role).
+- `role_name` (String) The fully qualified name of the role which will be granted to the user or parent role. For more information about this resource, see [docs](./account_role).
 
 ### Optional
 
-- `parent_role_name` (String) The fully qualified name of the parent role which will create a parent-child relationship between the roles. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role).
-- `user_name` (String) The fully qualified name of the user on which specified role will be granted. For more information about this resource, see [docs](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user).
+- `parent_role_name` (String) The fully qualified name of the parent role which will create a parent-child relationship between the roles. For more information about this resource, see [docs](./account_role).
+- `user_name` (String) The fully qualified name of the user on which specified role will be granted. For more information about this resource, see [docs](./user).
 
 ### Read-Only
 
