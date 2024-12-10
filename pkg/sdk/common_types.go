@@ -237,12 +237,45 @@ const (
 	NullInputBehaviorStrict            NullInputBehavior = "STRICT"
 )
 
+// ToNullInputBehavior maps STRICT to RETURNS NULL ON NULL INPUT, because Snowflake returns RETURNS NULL ON NULL INPUT for any of these two options
+func ToNullInputBehavior(value string) (NullInputBehavior, error) {
+	switch strings.ToUpper(value) {
+	case string(NullInputBehaviorCalledOnNullInput):
+		return NullInputBehaviorCalledOnNullInput, nil
+	case string(NullInputBehaviorReturnsNullInput), string(NullInputBehaviorStrict):
+		return NullInputBehaviorReturnsNullInput, nil
+	default:
+		return "", fmt.Errorf("unknown null input behavior: %s", value)
+	}
+}
+
+var AllAllowedNullInputBehaviors = []NullInputBehavior{
+	NullInputBehaviorCalledOnNullInput,
+	NullInputBehaviorReturnsNullInput,
+}
+
 type ReturnResultsBehavior string
 
-var (
+const (
 	ReturnResultsBehaviorVolatile  ReturnResultsBehavior = "VOLATILE"
 	ReturnResultsBehaviorImmutable ReturnResultsBehavior = "IMMUTABLE"
 )
+
+func ToReturnResultsBehavior(value string) (ReturnResultsBehavior, error) {
+	switch strings.ToUpper(value) {
+	case string(ReturnResultsBehaviorVolatile):
+		return ReturnResultsBehaviorVolatile, nil
+	case string(ReturnResultsBehaviorImmutable):
+		return ReturnResultsBehaviorImmutable, nil
+	default:
+		return "", fmt.Errorf("unknown return results behavior: %s", value)
+	}
+}
+
+var AllAllowedReturnResultsBehaviors = []ReturnResultsBehavior{
+	ReturnResultsBehaviorVolatile,
+	ReturnResultsBehaviorImmutable,
+}
 
 func ReturnResultsBehaviorPointer(v ReturnResultsBehavior) *ReturnResultsBehavior {
 	return &v

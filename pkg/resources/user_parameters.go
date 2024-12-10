@@ -174,8 +174,8 @@ func userParametersProviderFunc(c *sdk.Client) showParametersFunc[sdk.AccountObj
 }
 
 // TODO [SNOW-1645342]: make generic based on type definition
-func handleUserParameterRead(d *schema.ResourceData, warehouseParameters []*sdk.Parameter) error {
-	for _, p := range warehouseParameters {
+func handleUserParameterRead(d *schema.ResourceData, userParameters []*sdk.Parameter) error {
+	for _, p := range userParameters {
 		switch p.Key {
 		case
 			string(sdk.UserParameterClientMemoryLimit),

@@ -41,10 +41,10 @@ var ShowFunctionSchema = map[string]*schema.Schema{
 		Type:     schema.TypeInt,
 		Computed: true,
 	},
-	"arguments": {
-		Type:     schema.TypeInvalid,
-		Computed: true,
-	},
+	//"arguments_old": {
+	//	Type:     schema.TypeInvalid,
+	//	Computed: true,
+	//},
 	"arguments_raw": {
 		Type:     schema.TypeString,
 		Computed: true,
@@ -69,6 +69,14 @@ var ShowFunctionSchema = map[string]*schema.Schema{
 		Type:     schema.TypeBool,
 		Computed: true,
 	},
+	"secrets": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
+	"external_access_integrations": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
 	"is_external_function": {
 		Type:     schema.TypeBool,
 		Computed: true,
@@ -78,6 +86,10 @@ var ShowFunctionSchema = map[string]*schema.Schema{
 		Computed: true,
 	},
 	"is_memoizable": {
+		Type:     schema.TypeBool,
+		Computed: true,
+	},
+	"is_data_metric": {
 		Type:     schema.TypeBool,
 		Computed: true,
 	},
@@ -95,16 +107,23 @@ func FunctionToSchema(function *sdk.Function) map[string]any {
 	functionSchema["is_ansi"] = function.IsAnsi
 	functionSchema["min_num_arguments"] = function.MinNumArguments
 	functionSchema["max_num_arguments"] = function.MaxNumArguments
-	functionSchema["arguments"] = function.ArgumentsOld
+	// functionSchema["arguments_old"] = function.ArgumentsOld
 	functionSchema["arguments_raw"] = function.ArgumentsRaw
 	functionSchema["description"] = function.Description
 	functionSchema["catalog_name"] = function.CatalogName
 	functionSchema["is_table_function"] = function.IsTableFunction
 	functionSchema["valid_for_clustering"] = function.ValidForClustering
 	functionSchema["is_secure"] = function.IsSecure
+	if function.Secrets != nil {
+		functionSchema["secrets"] = function.Secrets
+	}
+	if function.ExternalAccessIntegrations != nil {
+		functionSchema["external_access_integrations"] = function.ExternalAccessIntegrations
+	}
 	functionSchema["is_external_function"] = function.IsExternalFunction
 	functionSchema["language"] = function.Language
 	functionSchema["is_memoizable"] = function.IsMemoizable
+	functionSchema["is_data_metric"] = function.IsDataMetric
 	return functionSchema
 }
 
