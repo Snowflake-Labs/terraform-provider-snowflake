@@ -9,7 +9,7 @@ resource "snowflake_resource_monitor" "minimal_working" {
   name            = "resource-monitor-name"
   credit_quota    = 100
   suspend_trigger = 100
-  notify_users    = ["USERONE", "USERTWO"]
+  notify_users    = [snowflake_user.one.fully_qualified_name, snowflake_user.two.fully_qualified_name]
 }
 
 resource "snowflake_resource_monitor" "complete" {
@@ -24,5 +24,5 @@ resource "snowflake_resource_monitor" "complete" {
   suspend_trigger           = 50
   suspend_immediate_trigger = 90
 
-  notify_users = ["USERONE", "USERTWO"]
+  notify_users = [snowflake_user.one.fully_qualified_name, snowflake_user.two.fully_qualified_name]
 }

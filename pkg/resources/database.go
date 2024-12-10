@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	providerresources "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
@@ -61,7 +62,7 @@ var databaseSchema = map[string]*schema.Schema{
 								Type:     schema.TypeString,
 								Required: true,
 								// TODO(SNOW-1438810): Add account identifier validator
-								Description: "Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `\"<organization_name>\".\"<account_name>\"`.",
+								Description: relatedResourceDescription("Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `\"<organization_name>\".\"<account_name>\"`.", providerresources.Account),
 							},
 							"with_failover": {
 								Type:        schema.TypeBool,
@@ -477,6 +478,7 @@ func DeleteDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.
 		return diag.FromErr(err)
 	}
 
+	// TODO(SNOW-1818849): unassign network policies inside the database before dropping
 	err = client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
 		IfExists: sdk.Bool(true),
 	})

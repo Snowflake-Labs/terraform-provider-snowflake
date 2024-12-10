@@ -1,1 +1,1 @@
-terraform import snowflake_primary_connection.example 'connection_name'
+terraform import snowflake_primary_connection.example '"<primary_connection_name>"'
