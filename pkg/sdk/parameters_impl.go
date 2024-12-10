@@ -187,14 +187,14 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.ClientMemoryLimit
 	case SessionParameterClientMetadataRequestUseConnectionCtx:
 		unsetField = &sessionParametersUnset.ClientMetadataRequestUseConnectionCtx
+	case SessionParameterClientMetadataUseSessionDatabase:
+		unsetField = &sessionParametersUnset.ClientMetadataUseSessionDatabase
+	case SessionParameterClientResultColumnCaseInsensitive:
+		unsetField = &sessionParametersUnset.ClientResultColumnCaseInsensitive
 	case SessionParameterClientPrefetchThreads:
 		unsetField = &sessionParametersUnset.ClientPrefetchThreads
 	case SessionParameterClientResultChunkSize:
 		unsetField = &sessionParametersUnset.ClientResultChunkSize
-	case SessionParameterClientResultColumnCaseInsensitive:
-		unsetField = &sessionParametersUnset.ClientResultColumnCaseInsensitive
-	case SessionParameterClientMetadataUseSessionDatabase:
-		unsetField = &sessionParametersUnset.ClientMetadataUseSessionDatabase
 	case SessionParameterClientSessionKeepAlive:
 		unsetField = &sessionParametersUnset.ClientSessionKeepAlive
 	case SessionParameterClientSessionKeepAliveHeartbeatFrequency:
