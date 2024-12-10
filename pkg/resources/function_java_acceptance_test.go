@@ -2,18 +2,20 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -44,7 +46,7 @@ func TestAcc_FunctionJava_BasicFlows(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.Function),
+		CheckDestroy: acc.CheckDestroy(t, resources.FunctionJava),
 		Steps: []resource.TestStep{
 			// CREATE BASIC
 			{
@@ -202,6 +204,96 @@ func TestAcc_FunctionJava_BasicFlows(t *testing.T) {
 			//			HasDisplayName(""),
 			//	),
 			//},
+		},
+	})
+}
+
+func TestAcc_FunctionJava_AllParameters(t *testing.T) {
+	className := "TestFunc"
+	funcName := "echoVarchar"
+	argName := "x"
+	dataType := testdatatypes.DataTypeVarchar_100
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
+
+	handler := fmt.Sprintf("%s.%s", className, funcName)
+	definition := acc.TestClient().Function.SampleJavaDefinition(t, className, funcName, argName)
+
+	functionModel := model.FunctionJavaWithId("w", id, dataType, handler, definition).
+		WithArgument(argName, dataType)
+	functionModelWithAllParametersSet := model.FunctionJavaWithId("w", id, dataType, handler, definition).
+		WithArgument(argName, dataType).
+		WithEnableConsoleOutput(true).
+		WithLogLevel(string(sdk.LogLevelWarn)).
+		WithMetricLevel(string(sdk.MetricLevelAll)).
+		WithTraceLevel(string(sdk.TraceLevelAlways))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.FunctionJava),
+		Steps: []resource.TestStep{
+			// create with default values for all the parameters
+			{
+				Config: config.ResourceFromModel(t, functionModel),
+				Check: assert.AssertThat(t,
+					objectparametersassert.FunctionParameters(t, id).
+						HasAllDefaults().
+						HasAllDefaultsExplicit(),
+					resourceparametersassert.FunctionResourceParameters(t, functionModel.ResourceReference()).
+						HasAllDefaults(),
+				),
+			},
+			// import when no parameter set
+			{
+				ResourceName: functionModel.ResourceReference(),
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceparametersassert.ImportedFunctionResourceParameters(t, id.Name()).
+						HasAllDefaults(),
+				),
+			},
+			// set all parameters
+			{
+				Config: config.FromModel(t, functionModelWithAllParametersSet),
+				Check: assert.AssertThat(t,
+					objectparametersassert.FunctionParameters(t, id).
+						HasEnableConsoleOutput(true).
+						HasLogLevel(sdk.LogLevelWarn).
+						HasMetricLevel(sdk.MetricLevelAll).
+						HasTraceLevel(sdk.TraceLevelAlways),
+					resourceparametersassert.FunctionResourceParameters(t, functionModelWithAllParametersSet.ResourceReference()).
+						HasEnableConsoleOutput(true).
+						HasLogLevel(sdk.LogLevelWarn).
+						HasMetricLevel(sdk.MetricLevelAll).
+						HasTraceLevel(sdk.TraceLevelAlways),
+				),
+			},
+			// import when all parameters set
+			{
+				ResourceName: functionModelWithAllParametersSet.ResourceReference(),
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceparametersassert.ImportedFunctionResourceParameters(t, id.Name()).
+						HasEnableConsoleOutput(true).
+						HasLogLevel(sdk.LogLevelWarn).
+						HasMetricLevel(sdk.MetricLevelAll).
+						HasTraceLevel(sdk.TraceLevelAlways),
+				),
+			},
+			// unset all the parameters
+			{
+				Config: config.FromModel(t, functionModel),
+				Check: assert.AssertThat(t,
+					objectparametersassert.FunctionParameters(t, id).
+						HasAllDefaults().
+						HasAllDefaultsExplicit(),
+					resourceparametersassert.UserResourceParameters(t, functionModel.ResourceReference()).
+						HasAllDefaults(),
+				),
+			},
 		},
 	})
 }

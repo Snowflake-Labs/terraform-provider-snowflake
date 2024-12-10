@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -161,7 +162,29 @@ func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 		id = newId
 	}
 
+	// Batch SET operations and UNSET operations
+	setRequest := sdk.NewFunctionSetRequest()
+	unsetRequest := sdk.NewFunctionUnsetRequest()
+
 	// TODO [this PR]: handle all updates
+
+	if updateParamDiags := handleFunctionParametersUpdate(d, setRequest, unsetRequest); len(updateParamDiags) > 0 {
+		return updateParamDiags
+	}
+
+	// Apply SET and UNSET changes
+	if !reflect.DeepEqual(*setRequest, sdk.NewFunctionSetRequest()) {
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*setRequest))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if !reflect.DeepEqual(*unsetRequest, sdk.NewFunctionUnsetRequest()) {
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*unsetRequest))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
 	return ReadContextFunctionJava(ctx, d, meta)
 }
