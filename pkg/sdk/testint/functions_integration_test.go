@@ -87,7 +87,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -96,7 +96,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription(sdk.DefaultFunctionComment).
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -151,7 +151,7 @@ func TestInt_Functions(t *testing.T) {
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithCopyGrants(true).
-			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnsNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
 			WithRuntimeVersion("11").
@@ -181,7 +181,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -190,7 +190,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription("comment").
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -207,7 +207,7 @@ func TestInt_Functions(t *testing.T) {
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasLanguage("JAVA").
 			HasBody(definition).
-			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			// TODO [SNOW-1348103]: parse to identifier list
@@ -253,7 +253,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -262,7 +262,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription(sdk.DefaultFunctionComment).
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -312,7 +312,7 @@ func TestInt_Functions(t *testing.T) {
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithCopyGrants(true).
-			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnsNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
 			WithRuntimeVersion("11").
@@ -335,7 +335,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -344,7 +344,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription("comment").
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -361,7 +361,7 @@ func TestInt_Functions(t *testing.T) {
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasLanguage("JAVA").
 			HasBodyNil().
-			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
@@ -403,7 +403,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -412,7 +412,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription(sdk.DefaultFunctionComment).
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -462,7 +462,7 @@ func TestInt_Functions(t *testing.T) {
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithCopyGrants(true).
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
-			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnsNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithComment("comment")
 
@@ -476,7 +476,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -485,7 +485,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription("comment").
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -502,7 +502,7 @@ func TestInt_Functions(t *testing.T) {
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasLanguage("JAVASCRIPT").
 			HasBody(definition).
-			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
@@ -545,7 +545,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -554,7 +554,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription(sdk.DefaultFunctionComment).
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -605,7 +605,7 @@ func TestInt_Functions(t *testing.T) {
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithCopyGrants(true).
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
-			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnsNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithComment("comment").
 			WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(tmpPythonFunction.PythonModuleLocation())}).
@@ -627,7 +627,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -636,7 +636,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription("comment").
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -653,7 +653,7 @@ func TestInt_Functions(t *testing.T) {
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL"). // TODO [SNOW-1348103]: do we care about this whitespace?
 			HasLanguage("PYTHON").
 			HasBody(definition).
-			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
@@ -694,7 +694,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -703,7 +703,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription(sdk.DefaultFunctionComment).
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -752,7 +752,7 @@ func TestInt_Functions(t *testing.T) {
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithCopyGrants(true).
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
-			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnsNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithComment("comment").
 			WithPackages([]sdk.FunctionPackageRequest{
@@ -773,7 +773,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -782,7 +782,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription("comment").
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -799,7 +799,7 @@ func TestInt_Functions(t *testing.T) {
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL").
 			HasLanguage("PYTHON").
 			HasBodyNil().
-			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
@@ -843,7 +843,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -852,7 +852,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription(sdk.DefaultFunctionComment).
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -905,7 +905,7 @@ func TestInt_Functions(t *testing.T) {
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithCopyGrants(true).
-			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnsNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
 			WithComment("comment").
@@ -934,7 +934,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -943,7 +943,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription("comment").
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -960,7 +960,7 @@ func TestInt_Functions(t *testing.T) {
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasLanguage("SCALA").
 			HasBody(definition).
-			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
@@ -1002,7 +1002,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -1011,7 +1011,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription(sdk.DefaultFunctionComment).
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -1059,7 +1059,7 @@ func TestInt_Functions(t *testing.T) {
 			WithOrReplace(true).
 			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
 			WithCopyGrants(true).
-			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnNullInput)).
+			WithNullInputBehavior(*sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnsNullInput)).
 			WithReturnResultsBehavior(sdk.ReturnResultsBehaviorImmutable).
 			WithReturnNullValues(sdk.ReturnNullValuesNotNull).
 			WithComment("comment").
@@ -1081,7 +1081,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -1090,7 +1090,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription("comment").
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -1107,7 +1107,7 @@ func TestInt_Functions(t *testing.T) {
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasLanguage("SCALA").
 			HasBodyNil().
-			HasNullHandling(string(sdk.NullInputBehaviorReturnNullInput)).
+			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
@@ -1148,7 +1148,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -1157,7 +1157,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription(sdk.DefaultFunctionComment).
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -1221,7 +1221,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -1230,7 +1230,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription("comment").
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).
@@ -1287,7 +1287,7 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
-			HasSchemaName(fmt.Sprintf(`"%s"`, id.SchemaName())).
+			HasSchemaName(id.SchemaName()).
 			HasIsBuiltin(false).
 			HasIsAggregate(false).
 			HasIsAnsi(false).
@@ -1296,7 +1296,7 @@ func TestInt_Functions(t *testing.T) {
 			HasArgumentsOld([]sdk.DataType{}).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s() RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
 			HasDescription(sdk.DefaultFunctionComment).
-			HasCatalogName(fmt.Sprintf(`"%s"`, id.DatabaseName())).
+			HasCatalogName(id.DatabaseName()).
 			HasIsTableFunction(false).
 			HasValidForClustering(false).
 			HasIsSecure(false).

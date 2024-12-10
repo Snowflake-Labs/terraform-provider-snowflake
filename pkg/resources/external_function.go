@@ -275,7 +275,7 @@ func CreateContextExternalFunction(ctx context.Context, d *schema.ResourceData, 
 		case v.(string) == "CALLED ON NULL INPUT":
 			req.WithNullInputBehavior(sdk.NullInputBehaviorCalledOnNullInput)
 		case v.(string) == "RETURNS NULL ON NULL INPUT":
-			req.WithNullInputBehavior(sdk.NullInputBehaviorReturnNullInput)
+			req.WithNullInputBehavior(sdk.NullInputBehaviorReturnsNullInput)
 		default:
 			req.WithNullInputBehavior(sdk.NullInputBehaviorStrict)
 		}

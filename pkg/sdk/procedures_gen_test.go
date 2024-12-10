@@ -203,10 +203,11 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		}
 		opts.TargetPath = String("@~/testfunc.jar")
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ReturnResultsBehavior = Pointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("return id + name;")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("id" NUMBER, "name" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS TABLE ("country_code" VARCHAR) LANGUAGE JAVA STRICT RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' COMMENT = 'test comment' EXECUTE AS CALLER AS return id + name;`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("id" NUMBER, "name" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS TABLE ("country_code" VARCHAR) LANGUAGE JAVA STRICT IMMUTABLE RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' COMMENT = 'test comment' EXECUTE AS CALLER AS return id + name;`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -262,10 +263,11 @@ func TestProcedures_CreateForJava(t *testing.T) {
 		}
 		opts.TargetPath = String("@~/testfunc.jar")
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ReturnResultsBehavior = Pointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("return id + name;")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("id" NUMBER(36, 2), "name" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS TABLE ("country_code" VARCHAR(100)) LANGUAGE JAVA STRICT RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' COMMENT = 'test comment' EXECUTE AS CALLER AS return id + name;`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("id" NUMBER(36, 2), "name" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS TABLE ("country_code" VARCHAR(100)) LANGUAGE JAVA STRICT IMMUTABLE RUNTIME_VERSION = '1.8' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('test_jar.jar') HANDLER = 'TestFunc.echoVarchar' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) TARGET_PATH = '@~/testfunc.jar' COMMENT = 'test comment' EXECUTE AS CALLER AS return id + name;`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 }
 
@@ -349,10 +351,11 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		opts.ResultDataTypeOld = "DOUBLE"
 		opts.NotNull = Bool(true)
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ReturnResultsBehavior = Pointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = "return 1;"
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("d" DOUBLE DEFAULT 1.0) COPY GRANTS RETURNS DOUBLE NOT NULL LANGUAGE JAVASCRIPT STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS return 1;`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("d" DOUBLE DEFAULT 1.0) COPY GRANTS RETURNS DOUBLE NOT NULL LANGUAGE JAVASCRIPT STRICT IMMUTABLE COMMENT = 'test comment' EXECUTE AS CALLER AS return 1;`, id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -370,10 +373,11 @@ func TestProcedures_CreateForJavaScript(t *testing.T) {
 		opts.ResultDataType = dataTypeFloat
 		opts.NotNull = Bool(true)
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ReturnResultsBehavior = Pointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = "return 1;"
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("d" FLOAT DEFAULT 1.0) COPY GRANTS RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS return 1;`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("d" FLOAT DEFAULT 1.0) COPY GRANTS RETURNS FLOAT NOT NULL LANGUAGE JAVASCRIPT STRICT IMMUTABLE COMMENT = 'test comment' EXECUTE AS CALLER AS return 1;`, id.FullyQualifiedName())
 	})
 }
 
@@ -571,10 +575,11 @@ func TestProcedures_CreateForPython(t *testing.T) {
 			},
 		}
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ReturnResultsBehavior = Pointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("import numpy as np")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("i" int DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON STRICT RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) COMMENT = 'test comment' EXECUTE AS CALLER AS import numpy as np`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("i" int DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON STRICT IMMUTABLE RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) COMMENT = 'test comment' EXECUTE AS CALLER AS import numpy as np`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -627,10 +632,11 @@ func TestProcedures_CreateForPython(t *testing.T) {
 			},
 		}
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ReturnResultsBehavior = Pointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("import numpy as np")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("i" NUMBER(36, 2) DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON STRICT RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) COMMENT = 'test comment' EXECUTE AS CALLER AS import numpy as np`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("i" NUMBER(36, 2) DEFAULT 1) COPY GRANTS RETURNS VARIANT NULL LANGUAGE PYTHON STRICT IMMUTABLE RUNTIME_VERSION = '3.8' PACKAGES = ('numpy', 'pandas') IMPORTS = ('numpy', 'pandas') HANDLER = 'udf' EXTERNAL_ACCESS_INTEGRATIONS = ("ext_integration") SECRETS = ('variable1' = %s, 'variable2' = %s) COMMENT = 'test comment' EXECUTE AS CALLER AS import numpy as np`, id.FullyQualifiedName(), secretId.FullyQualifiedName(), secretId2.FullyQualifiedName())
 	})
 }
 
@@ -819,10 +825,11 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		opts.Handler = "Echo.echoVarchar"
 		opts.TargetPath = String("@~/testfunc.jar")
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ReturnResultsBehavior = Pointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("return x")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("x" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SCALA STRICT RUNTIME_VERSION = '2.0' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' TARGET_PATH = '@~/testfunc.jar' COMMENT = 'test comment' EXECUTE AS CALLER AS return x`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("x" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SCALA STRICT IMMUTABLE RUNTIME_VERSION = '2.0' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' TARGET_PATH = '@~/testfunc.jar' COMMENT = 'test comment' EXECUTE AS CALLER AS return x`, id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -857,10 +864,11 @@ func TestProcedures_CreateForScala(t *testing.T) {
 		opts.Handler = "Echo.echoVarchar"
 		opts.TargetPath = String("@~/testfunc.jar")
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ReturnResultsBehavior = Pointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = String("return x")
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("x" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS VARCHAR(100) NOT NULL LANGUAGE SCALA STRICT RUNTIME_VERSION = '2.0' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' TARGET_PATH = '@~/testfunc.jar' COMMENT = 'test comment' EXECUTE AS CALLER AS return x`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("x" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS VARCHAR(100) NOT NULL LANGUAGE SCALA STRICT IMMUTABLE RUNTIME_VERSION = '2.0' PACKAGES = ('com.snowflake:snowpark:1.2.0') IMPORTS = ('@udf_libs/echohandler.jar') HANDLER = 'Echo.echoVarchar' TARGET_PATH = '@~/testfunc.jar' COMMENT = 'test comment' EXECUTE AS CALLER AS return x`, id.FullyQualifiedName())
 	})
 }
 
@@ -1012,10 +1020,11 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 			NotNull: Bool(true),
 		}
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ReturnResultsBehavior = Pointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = "3.141592654::FLOAT"
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("message" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SQL STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 3.141592654::FLOAT`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("message" VARCHAR DEFAULT 'test') COPY GRANTS RETURNS VARCHAR NOT NULL LANGUAGE SQL STRICT IMMUTABLE COMMENT = 'test comment' EXECUTE AS CALLER AS 3.141592654::FLOAT`, id.FullyQualifiedName())
 	})
 
 	t.Run("all options", func(t *testing.T) {
@@ -1037,10 +1046,11 @@ func TestProcedures_CreateForSQL(t *testing.T) {
 			NotNull: Bool(true),
 		}
 		opts.NullInputBehavior = NullInputBehaviorPointer(NullInputBehaviorStrict)
+		opts.ReturnResultsBehavior = Pointer(ReturnResultsBehaviorImmutable)
 		opts.Comment = String("test comment")
 		opts.ExecuteAs = ExecuteAsPointer(ExecuteAsCaller)
 		opts.ProcedureDefinition = "3.141592654::FLOAT"
-		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("message" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS VARCHAR(100) NOT NULL LANGUAGE SQL STRICT COMMENT = 'test comment' EXECUTE AS CALLER AS 3.141592654::FLOAT`, id.FullyQualifiedName())
+		assertOptsValidAndSQLEquals(t, opts, `CREATE OR REPLACE SECURE PROCEDURE %s ("message" VARCHAR(100) DEFAULT 'test') COPY GRANTS RETURNS VARCHAR(100) NOT NULL LANGUAGE SQL STRICT IMMUTABLE COMMENT = 'test comment' EXECUTE AS CALLER AS 3.141592654::FLOAT`, id.FullyQualifiedName())
 	})
 
 	t.Run("create with no arguments", func(t *testing.T) {

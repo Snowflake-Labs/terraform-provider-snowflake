@@ -481,7 +481,7 @@ func (r procedureRow) convert() *Procedure {
 	e := &Procedure{
 		CreatedOn:          r.CreatedOn,
 		Name:               r.Name,
-		SchemaName:         r.SchemaName,
+		SchemaName:         strings.Trim(r.SchemaName, `"`),
 		IsBuiltin:          r.IsBuiltin == "Y",
 		IsAggregate:        r.IsAggregate == "Y",
 		IsAnsi:             r.IsAnsi == "Y",
@@ -489,7 +489,7 @@ func (r procedureRow) convert() *Procedure {
 		MaxNumArguments:    r.MaxNumArguments,
 		ArgumentsRaw:       r.Arguments,
 		Description:        r.Description,
-		CatalogName:        r.CatalogName,
+		CatalogName:        strings.Trim(r.CatalogName, `"`),
 		IsTableFunction:    r.IsTableFunction == "Y",
 		ValidForClustering: r.ValidForClustering == "Y",
 	}
