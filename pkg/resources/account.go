@@ -2,18 +2,19 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"strings"
-	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -21,384 +22,460 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-// Note: no test case was created for account since we cannot actually delete them after creation, which is a critical part of the test suite. Instead, this resource
-// was manually tested
-
 var accountSchema = map[string]*schema.Schema{
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Specifies the identifier (i.e. name) for the account; must be unique within an organization, regardless of which Snowflake Region the account is in. In addition, the identifier must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.",
-		// Name is automatically uppercase by Snowflake
-		StateFunc: func(val interface{}) string {
-			return strings.ToUpper(val.(string))
-		},
-		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+		Description: "Specifies the identifier (i.e. name) for the account. It must be unique within an organization, regardless of which Snowflake Region the account is in and must start with an alphabetic character and cannot contain spaces or special characters except for underscores (_). Note that if the account name includes underscores, features that do not accept account names with underscores (e.g. Okta SSO or SCIM) can reference a version of the account name that substitutes hyphens (-) for the underscores.",
 	},
 	"admin_name": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "Login name of the initial administrative user of the account. A new user is created in the new account with this name and password and granted the ACCOUNTADMIN role in the account. A login name can be any string consisting of letters, numbers, and underscores. Login names are always case-insensitive.",
-		// We have no way of assuming a role into this account to change the admin user name so this has to be ForceNew even though it's not ideal
-		ForceNew:              true,
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// For new resources always show the diff
-			if d.Id() == "" {
-				return false
-			}
-			// This suppresses the diff if the old value is empty. This would happen in the event of importing existing accounts since we have no way of reading this value
-			return old == ""
-		},
+		Type:             schema.TypeString,
+		Required:         true,
+		Sensitive:        true,
+		Description:      externalChangesNotDetectedFieldDescription("Login name of the initial administrative user of the account. A new user is created in the new account with this name and password and granted the ACCOUNTADMIN role in the account. A login name can be any string consisting of letters, numbers, and underscores. Login names are always case-insensitive."),
+		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"admin_password": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		Sensitive:    true,
-		Description:  "Password for the initial administrative user of the account. Optional if the `ADMIN_RSA_PUBLIC_KEY` parameter is specified. For more information about passwords in Snowflake, see [Snowflake-provided Password Policy](https://docs.snowflake.com/en/sql-reference/sql/create-account.html#:~:text=Snowflake%2Dprovided%20Password%20Policy).",
-		AtLeastOneOf: []string{"admin_password", "admin_rsa_public_key"},
-		// We have no way of assuming a role into this account to change the password so this has to be ForceNew even though it's not ideal
-		ForceNew:              true,
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// For new resources always show the diff
-			if d.Id() == "" {
-				return false
-			}
-			// This suppresses the diff if the old value is empty. This would happen in the event of importing existing accounts since we have no way of reading this value
-			return old == ""
-		},
+		Type:             schema.TypeString,
+		Optional:         true,
+		Sensitive:        true,
+		Description:      externalChangesNotDetectedFieldDescription("Password for the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified. This field cannot be used whenever admin_user_type is set to SERVICE."),
+		DiffSuppressFunc: IgnoreAfterCreation,
+		AtLeastOneOf:     []string{"admin_password", "admin_rsa_public_key"},
 	},
 	"admin_rsa_public_key": {
-		Type:         schema.TypeString,
-		Optional:     true,
-		Sensitive:    true,
-		Description:  "Assigns a public key to the initial administrative user of the account in order to implement [key pair authentication](https://docs.snowflake.com/en/sql-reference/sql/create-account.html#:~:text=key%20pair%20authentication) for the user. Optional if the `ADMIN_PASSWORD` parameter is specified.",
-		AtLeastOneOf: []string{"admin_password", "admin_rsa_public_key"},
-		// We have no way of assuming a role into this account to change the admin rsa public key so this has to be ForceNew even though it's not ideal
-		ForceNew:              true,
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// For new resources always show the diff
-			if d.Id() == "" {
-				return false
-			}
-			// This suppresses the diff if the old value is empty. This would happen in the event of importing existing accounts since we have no way of reading this value
-			return old == ""
-		},
+		Type:             schema.TypeString,
+		Optional:         true,
+		Description:      externalChangesNotDetectedFieldDescription("Assigns a public key to the initial administrative user of the account. Either admin_password or admin_rsa_public_key has to be specified."),
+		DiffSuppressFunc: IgnoreAfterCreation,
+		AtLeastOneOf:     []string{"admin_password", "admin_rsa_public_key"},
 	},
-	"email": {
-		Type:        schema.TypeString,
-		Required:    true,
-		Sensitive:   true,
-		Description: "Email address of the initial administrative user of the account. This email address is used to send any notifications about the account.",
-		// We have no way of assuming a role into this account to change the admin email so this has to be ForceNew even though it's not ideal
-		ForceNew:              true,
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// For new resources always show the diff
-			if d.Id() == "" {
-				return false
-			}
-			// This suppresses the diff if the old value is empty. This would happen in the event of importing existing accounts since we have no way of reading this value
-			return old == ""
-		},
-	},
-	"edition": {
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		Description:  "[Snowflake Edition](https://docs.snowflake.com/en/user-guide/intro-editions.html) of the account. Valid values are: STANDARD | ENTERPRISE | BUSINESS_CRITICAL",
-		ValidateFunc: validation.StringInSlice([]string{string(sdk.EditionStandard), string(sdk.EditionEnterprise), string(sdk.EditionBusinessCritical)}, false),
+	"admin_user_type": {
+		Type:             schema.TypeString,
+		Optional:         true,
+		Description:      externalChangesNotDetectedFieldDescription(fmt.Sprintf("Used for setting the type of the first user that is assigned the ACCOUNTADMIN role during account creation. Valid options are: %s", docs.PossibleValuesListed(sdk.AllUserTypes))),
+		DiffSuppressFunc: SuppressIfAny(IgnoreAfterCreation, NormalizeAndCompare(sdk.ToUserType)),
+		ValidateDiagFunc: sdkValidation(sdk.ToUserType),
 	},
 	"first_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Sensitive:   true,
-		Description: "First name of the initial administrative user of the account",
-		// We have no way of assuming a role into this account to change the admin first name so this has to be ForceNew even though it's not ideal
-		ForceNew:              true,
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// For new resources always show the diff
-			if d.Id() == "" {
-				return false
-			}
-			// This suppresses the diff if the old value is empty. This would happen in the event of importing existing accounts since we have no way of reading this value
-			return old == ""
-		},
+		Type:             schema.TypeString,
+		Optional:         true,
+		Sensitive:        true,
+		Description:      externalChangesNotDetectedFieldDescription("First name of the initial administrative user of the account. This field cannot be used whenever admin_user_type is set to SERVICE."),
+		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"last_name": {
-		Type:        schema.TypeString,
-		Optional:    true,
-		Sensitive:   true,
-		Description: "Last name of the initial administrative user of the account",
-		// We have no way of assuming a role into this account to change the admin last name so this has to be ForceNew even though it's not ideal
-		ForceNew:              true,
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// For new resources always show the diff
-			if d.Id() == "" {
-				return false
-			}
-			// This suppresses the diff if the old value is empty. This would happen in the event of importing existing accounts since we have no way of reading this value
-			return old == ""
-		},
+		Type:             schema.TypeString,
+		Optional:         true,
+		Sensitive:        true,
+		Description:      externalChangesNotDetectedFieldDescription("Last name of the initial administrative user of the account. This field cannot be used whenever admin_user_type is set to SERVICE."),
+		DiffSuppressFunc: IgnoreAfterCreation,
+	},
+	"email": {
+		Type:             schema.TypeString,
+		Required:         true,
+		Sensitive:        true,
+		Description:      externalChangesNotDetectedFieldDescription("Email address of the initial administrative user of the account. This email address is used to send any notifications about the account."),
+		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"must_change_password": {
-		Type:        schema.TypeBool,
-		Optional:    true,
-		Default:     false,
-		Description: "Specifies whether the new user created to administer the account is forced to change their password upon first login into the account.",
-		// We have no way of assuming a role into this account to change the admin password policy so this has to be ForceNew even though it's not ideal
-		ForceNew:              true,
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// For new resources always show the diff
-			if d.Id() == "" {
-				return false
-			}
-			// This suppresses the diff if the old value is empty. This would happen in the event of importing existing accounts since we have no way of reading this value
-			return old == ""
-		},
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          BooleanDefault,
+		Description:      externalChangesNotDetectedFieldDescription("Specifies whether the new user created to administer the account is forced to change their password upon first login into the account. This field cannot be used whenever admin_user_type is set to SERVICE."),
+		DiffSuppressFunc: IgnoreAfterCreation,
+		ValidateDiagFunc: validateBooleanString,
+	},
+	"edition": {
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      fmt.Sprintf("Snowflake Edition of the account. See more about Snowflake Editions in the [official documentation](https://docs.snowflake.com/en/user-guide/intro-editions). Valid options are: %s", docs.PossibleValuesListed(sdk.AllAccountEditions)),
+		DiffSuppressFunc: NormalizeAndCompare(sdk.ToAccountEdition),
+		ValidateDiagFunc: sdkValidation(sdk.ToAccountEdition),
 	},
 	"region_group": {
-		Type:                  schema.TypeString,
-		Optional:              true,
-		Description:           "ID of the Snowflake Region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)",
-		ForceNew:              true,
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// For new resources always show the diff
-			if d.Id() == "" {
-				return false
-			}
-			// This suppresses the diff if the old value is empty. This would happen in the event of importing existing accounts since we have no way of reading this value
-			return new == ""
-		},
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "ID of the region group where the account is created. To retrieve the region group ID for existing accounts in your organization, execute the [SHOW REGIONS](https://docs.snowflake.com/en/sql-reference/sql/show-regions) command. For information about when you might need to specify region group, see [Region groups](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#label-region-groups).",
 	},
 	"region": {
-		Type:                  schema.TypeString,
-		Optional:              true,
-		Description:           "ID of the Snowflake Region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)",
-		ForceNew:              true,
-		DiffSuppressOnRefresh: true,
-		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-			// For new resources always show the diff
-			if d.Id() == "" {
-				return false
-			}
-			// This suppresses the diff if the old value is empty. This would happen in the event of importing existing accounts since we have no way of reading this value
-			return new == ""
-		},
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    true,
+		Description: "[Snowflake Region ID](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#label-snowflake-region-ids) of the region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)",
 	},
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Specifies a comment for the account.",
 		ForceNew:    true,
+		Description: "Specifies a comment for the account.",
+		DiffSuppressFunc: SuppressIfAny(
+			IgnoreChangeToCurrentSnowflakeValueInShow("comment"),
+			func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+				return oldValue == "SNOWFLAKE" && newValue == ""
+			},
+		),
 	},
 	"is_org_admin": {
-		Type:        schema.TypeBool,
-		Computed:    true,
-		Description: "Indicates whether the ORGADMIN role is enabled in an account. If TRUE, the role is enabled.",
+		Type:             schema.TypeString,
+		Optional:         true,
+		Default:          BooleanDefault,
+		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("is_org_admin"),
+		ValidateDiagFunc: validateBooleanString,
+		Description:      "Sets an account property that determines whether the ORGADMIN role is enabled in the account. Only an organization administrator (i.e. user with the ORGADMIN role) can set the property.",
 	},
 	"grace_period_in_days": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Default:     3,
-		Description: "Specifies the number of days to wait before dropping the account. The default is 3 days.",
+		Type:             schema.TypeInt,
+		Required:         true,
+		Description:      "Specifies the number of days during which the account can be restored (“undropped”). The minimum is 3 days and the maximum is 90 days.",
+		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(3)),
 	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
+	ShowOutputAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Outputs the result of `SHOW ACCOUNTS` for the given account.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowAccountSchema,
+		},
+	},
 }
 
 func Account() *schema.Resource {
 	return &schema.Resource{
 		Description:   "The account resource allows you to create and manage Snowflake accounts.",
 		CreateContext: TrackingCreateWrapper(resources.Account, CreateAccount),
-		ReadContext:   TrackingReadWrapper(resources.Account, ReadAccount),
+		ReadContext:   TrackingReadWrapper(resources.Account, ReadAccount(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.Account, UpdateAccount),
 		DeleteContext: TrackingDeleteWrapper(resources.Account, DeleteAccount),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Account, customdiff.All(
 			ComputedIfAnyAttributeChanged(accountSchema, FullyQualifiedNameAttributeName, "name"),
+			ComputedIfAnyAttributeChanged(accountSchema, ShowOutputAttributeName, "name", "is_org_admin"),
 		)),
 
 		Schema: accountSchema,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.Account, ImportAccount),
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				// setting type to cty.EmptyObject is a bit hacky here but following https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade#sdkv2-1 would require lots of repetitive code; this should work with cty.EmptyObject
+				Type:    cty.EmptyObject,
+				Upgrade: v0_99_0_AccountStateUpgrader,
+			},
 		},
 	}
 }
 
-// CreateAccount implements schema.CreateFunc.
-func CreateAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ImportAccount(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	client := meta.(*provider.Context).Client
 
-	name := d.Get("name").(string)
-	objectIdentifier := sdk.NewAccountObjectIdentifier(name)
+	isOrgAdmin, err := client.ContextFunctions.IsRoleInSession(ctx, snowflakeroles.Orgadmin)
+	if err != nil {
+		return nil, err
+	}
+	if !isOrgAdmin {
+		return nil, errors.New("current user doesn't have the orgadmin role in session")
+	}
 
-	createOptions := &sdk.CreateAccountOptions{
+	id, err := sdk.ParseAccountIdentifier(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	account, err := client.Accounts.ShowByID(ctx, id.AsAccountObjectIdentifier())
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := ImportName[sdk.AccountIdentifier](context.Background(), d, nil); err != nil {
+		return nil, err
+	}
+
+	if account.RegionGroup != nil {
+		if err = d.Set("region_group", *account.RegionGroup); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := errors.Join(
+		d.Set("edition", string(*account.Edition)),
+		d.Set("region", account.SnowflakeRegion),
+		d.Set("comment", *account.Comment),
+		d.Set("is_org_admin", booleanStringFromBool(*account.IsOrgAdmin)),
+	); err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func CreateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+
+	isOrgAdmin, err := client.ContextFunctions.IsRoleInSession(ctx, snowflakeroles.Orgadmin)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if !isOrgAdmin {
+		return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+	}
+
+	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
+
+	opts := &sdk.CreateAccountOptions{
 		AdminName: d.Get("admin_name").(string),
 		Email:     d.Get("email").(string),
 		Edition:   sdk.AccountEdition(d.Get("edition").(string)),
 	}
 
-	// get optional fields.
 	if v, ok := d.GetOk("admin_password"); ok {
-		createOptions.AdminPassword = sdk.String(v.(string))
+		opts.AdminPassword = sdk.String(v.(string))
 	}
 	if v, ok := d.GetOk("admin_rsa_public_key"); ok {
-		createOptions.AdminRSAPublicKey = sdk.String(v.(string))
+		opts.AdminRSAPublicKey = sdk.String(v.(string))
+	}
+	if v, ok := d.GetOk("admin_user_type"); ok {
+		userType, err := sdk.ToUserType(v.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		opts.AdminUserType = &userType
 	}
 	if v, ok := d.GetOk("first_name"); ok {
-		createOptions.FirstName = sdk.String(v.(string))
+		opts.FirstName = sdk.String(v.(string))
 	}
 	if v, ok := d.GetOk("last_name"); ok {
-		createOptions.LastName = sdk.String(v.(string))
+		opts.LastName = sdk.String(v.(string))
 	}
-
-	// Has default, don't fetch with GetOk because this can be falsey and valid
-	v := d.Get("must_change_password")
-	createOptions.MustChangePassword = sdk.Bool(v.(bool))
-
-	if v, ok := d.GetOk("region_group"); ok {
-		createOptions.RegionGroup = sdk.String(v.(string))
-	} else {
-		// For organizations that have accounts in multiple region groups, returns <region_group>.<region> so we need to split on "."
-		currentRegion, err := client.ContextFunctions.CurrentRegion(ctx)
+	if v := d.Get("must_change_password"); v != BooleanDefault {
+		parsedBool, err := booleanStringToBool(v.(string))
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		regionParts := strings.Split(currentRegion, ".")
-		if len(regionParts) == 2 {
-			createOptions.RegionGroup = sdk.String(regionParts[0])
-		}
+		opts.MustChangePassword = &parsedBool
+	}
+	if v, ok := d.GetOk("region_group"); ok {
+		opts.RegionGroup = sdk.String(v.(string))
 	}
 	if v, ok := d.GetOk("region"); ok {
-		createOptions.Region = sdk.String(v.(string))
-	} else {
-		// For organizations that have accounts in multiple region groups, returns <region_group>.<region> so we need to split on "."
-		currentRegion, err := client.ContextFunctions.CurrentRegion(ctx)
+		opts.Region = sdk.String(v.(string))
+	}
+	if v, ok := d.GetOk("comment"); ok {
+		opts.Comment = sdk.String(v.(string))
+	}
+
+	createResponse, err := client.Accounts.Create(ctx, id, opts)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(helpers.EncodeResourceIdentifier(sdk.NewAccountIdentifier(createResponse.OrganizationName, createResponse.AccountName)))
+
+	if v, ok := d.GetOk("is_org_admin"); ok && v == BooleanTrue {
+		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+			SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
+				Name:     id,
+				OrgAdmin: true,
+			},
+		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		regionParts := strings.Split(currentRegion, ".")
-		if len(regionParts) == 2 {
-			createOptions.Region = sdk.String(regionParts[1])
-		} else {
-			createOptions.Region = sdk.String(currentRegion)
-		}
-	}
-	if v, ok := d.GetOk("comment"); ok {
-		createOptions.Comment = sdk.String(v.(string))
 	}
 
-	err := client.Accounts.Create(ctx, objectIdentifier, createOptions)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	var account *sdk.Account
-	err = util.Retry(5, 3*time.Second, func() (error, bool) {
-		account, err = client.Accounts.ShowByID(ctx, objectIdentifier)
-		if err != nil {
-			log.Printf("[DEBUG] retryable operation resulted in error: %v\n", err)
-			return nil, false
-		}
-		return nil, true
-	})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId(helpers.EncodeSnowflakeID(account.AccountLocator))
-	return ReadAccount(ctx, d, meta)
+	return ReadAccount(false)(ctx, d, meta)
 }
 
-// ReadAccount implements schema.ReadFunc.
-func ReadAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
-
-	var acc *sdk.Account
-	var err error
-	err = util.Retry(5, 3*time.Second, func() (error, bool) {
-		acc, err = client.Accounts.ShowByID(ctx, id)
-		if err != nil {
-			log.Printf("[DEBUG] retryable operation resulted in error: %v\n", err)
-			return nil, false
-		}
-		return nil, true
-	})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err = d.Set("name", acc.AccountName); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting name: %w", err))
-	}
-
-	if err = d.Set("edition", acc.Edition); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting edition: %w", err))
-	}
-
-	if err = d.Set("region_group", acc.RegionGroup); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting region_group: %w", err))
-	}
-
-	if err = d.Set("region", acc.SnowflakeRegion); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting region: %w", err))
-	}
-
-	if err = d.Set("comment", acc.Comment); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting comment: %w", err))
-	}
-
-	if err = d.Set("is_org_admin", acc.IsOrgAdmin); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting is_org_admin: %w", err))
-	}
-
-	return nil
-}
-
-// UpdateAccount implements schema.UpdateFunc.
-func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	/*
-		todo: comments may eventually work again for accounts, so this can be uncommented when that happens
+func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		client := sdk.NewClientFromDB(db)
-		ctx := context.Background()
 
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier)
+		isOrgAdmin, err := client.ContextFunctions.IsRoleInSession(ctx, snowflakeroles.Orgadmin)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if !isOrgAdmin {
+			return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+		}
 
-		// Change comment
-		if d.HasChange("comment") {
-			// changing comment isn't supported for accounts
-			err := client.Comments.Set(ctx, &sdk.SetCommentOptions{
-				ObjectType: sdk.ObjectTypeAccount,
-				ObjectName: sdk.NewAccountObjectIdentifier(d.Get("name").(string)),
-				Value:      sdk.String(d.Get("comment").(string)),
-			})
-			if err != nil {
-				return err
+		id, err := sdk.ParseAccountIdentifier(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		account, err := client.Accounts.ShowByID(ctx, id.AsAccountObjectIdentifier())
+		if err != nil {
+			if errors.Is(err, sdk.ErrObjectNotFound) {
+				d.SetId("")
+				return diag.Diagnostics{
+					diag.Diagnostic{
+						Severity: diag.Warning,
+						Summary:  "Failed to query account. Marking the resource as removed.",
+						Detail:   fmt.Sprintf("Account: %s, Err: %s", id.FullyQualifiedName(), err),
+					},
+				}
+			}
+			return diag.FromErr(err)
+		}
+
+		if withExternalChangesMarking {
+			var regionGroup string
+			if account.RegionGroup != nil {
+				regionGroup = *account.RegionGroup
+
+				// For organizations that have accounts in multiple region groups, returns <region_group>.<region> so we need to split on "."
+				parts := strings.Split(regionGroup, ".")
+				if len(parts) == 2 {
+					regionGroup = parts[0]
+				}
+			}
+			if err = handleExternalChangesToObjectInShow(d,
+				outputMapping{"edition", "edition", *account.Edition, *account.Edition, nil},
+				outputMapping{"is_org_admin", "is_org_admin", *account.IsOrgAdmin, booleanStringFromBool(*account.IsOrgAdmin), nil},
+				outputMapping{"region_group", "region_group", regionGroup, regionGroup, nil},
+				outputMapping{"snowflake_region", "region", account.SnowflakeRegion, account.SnowflakeRegion, nil},
+				outputMapping{"comment", "comment", *account.Comment, *account.Comment, nil},
+			); err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			if err = setStateToValuesFromConfig(d, accountSchema, []string{
+				"name",
+				"admin_name",
+				"admin_password",
+				"admin_rsa_public_key",
+				"admin_user_type",
+				"first_name",
+				"last_name",
+				"email",
+				"must_change_password",
+				"edition",
+				"region_group",
+				"region",
+				"comment",
+				"is_org_admin",
+				"grace_period_in_days",
+			}); err != nil {
+				return diag.FromErr(err)
 			}
 		}
-	*/
-	return nil
+
+		if errs := errors.Join(
+			d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
+			d.Set(ShowOutputAttributeName, []map[string]any{schemas.AccountToSchema(account)}),
+		); errs != nil {
+			return diag.FromErr(errs)
+		}
+
+		return nil
+	}
 }
 
-// DeleteAccount implements schema.DeleteFunc.
-func DeleteAccount(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	gracePeriodInDays := d.Get("grace_period_in_days").(int)
-	err := client.Accounts.Drop(ctx, helpers.DecodeSnowflakeID(d.Id()).(sdk.AccountObjectIdentifier), gracePeriodInDays, &sdk.DropAccountOptions{
+
+	isOrgAdmin, err := client.ContextFunctions.IsRoleInSession(ctx, snowflakeroles.Orgadmin)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if !isOrgAdmin {
+		return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+	}
+
+	id, err := sdk.ParseAccountIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if d.HasChange("name") {
+		newId := sdk.NewAccountIdentifier(id.OrganizationName(), d.Get("name").(string))
+
+		err = client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+			Rename: &sdk.AccountRename{
+				Name:    id.AsAccountObjectIdentifier(),
+				NewName: newId.AsAccountObjectIdentifier(),
+			},
+		})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		d.SetId(helpers.EncodeResourceIdentifier(newId))
+		id = newId
+	}
+
+	if d.HasChange("is_org_admin") {
+		oldIsOrgAdmin, newIsOrgAdmin := d.GetChange("is_org_admin")
+
+		// Setting from default to false and vice versa is not allowed because Snowflake throws an error on already disabled IsOrgAdmin
+		canUpdate := true
+		if (oldIsOrgAdmin.(string) == BooleanFalse && newIsOrgAdmin.(string) == BooleanDefault) ||
+			(oldIsOrgAdmin.(string) == BooleanDefault && newIsOrgAdmin.(string) == BooleanFalse) {
+			canUpdate = false
+		}
+
+		if canUpdate {
+			if newIsOrgAdmin.(string) != BooleanDefault {
+				parsed, err := booleanStringToBool(newIsOrgAdmin.(string))
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				if err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+					SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
+						Name:     id.AsAccountObjectIdentifier(),
+						OrgAdmin: parsed,
+					},
+				}); err != nil {
+					return diag.FromErr(err)
+				}
+			} else {
+				// No unset available for this field (setting Snowflake default)
+				if err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
+					SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
+						Name:     id.AsAccountObjectIdentifier(),
+						OrgAdmin: false,
+					},
+				}); err != nil {
+					return diag.FromErr(err)
+				}
+			}
+		}
+	}
+
+	return ReadAccount(false)(ctx, d, meta)
+}
+
+func DeleteAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+
+	isOrgAdmin, err := client.ContextFunctions.IsRoleInSession(ctx, snowflakeroles.Orgadmin)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if !isOrgAdmin {
+		return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+	}
+
+	id, err := sdk.ParseAccountIdentifier(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = client.Accounts.Drop(ctx, id.AsAccountObjectIdentifier(), d.Get("grace_period_in_days").(int), &sdk.DropAccountOptions{
 		IfExists: sdk.Bool(true),
 	})
-	return diag.FromErr(err)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+
+	return nil
 }

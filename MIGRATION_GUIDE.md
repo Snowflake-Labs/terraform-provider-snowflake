@@ -9,9 +9,20 @@ across different versions.
 
 ## v0.99.0 ➞ v0.100.0
 
+### snowflake_account resource changes
+
+Changes:
+- `admin_user_type` is now supported. No action required during the migration.
+- `grace_period_in_days` is now required. The field should be explicitly set in the following versions.
+- Account renaming is now supported.
+- `is_org_admin` is a settable field (previously it was read-only field). Changing its value is also supported.
+- `must_change_password` and `is_org_admin` type was changed from `bool` to bool-string (more on that [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). No action required during the migration. 
+- The underlying resource identifier was changed from `<account_locator>` to `<organization_name>.<account_name>`. Migration will be done automatically. Notice this introduces changes in how `snowflake_account` resource is imported.
+- New `show_output` field was added (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
+
 ### snowflake_tag_association resource changes
 #### *(behavior change)* new id format
-In order to provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type in one resource.
+To provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type in one resource.
 ```
 resource "snowflake_tag_association" "gold_warehouses" {
   object_identifiers = [snowflake_warehouse.w1.fully_qualified_name, snowflake_warehouse.w2.fully_qualified_name]

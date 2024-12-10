@@ -3,8 +3,14 @@ package sdk
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
+	"strings"
 	"time"
+
+	"github.com/snowflakedb/gosnowflake"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
@@ -16,7 +22,7 @@ var (
 )
 
 type Accounts interface {
-	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) error
+	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) (*AccountCreateResponse, error)
 	Alter(ctx context.Context, opts *AlterAccountOptions) error
 	Show(ctx context.Context, opts *ShowAccountOptions) ([]Account, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
@@ -38,6 +44,21 @@ var (
 	EditionEnterprise       AccountEdition = "ENTERPRISE"
 	EditionBusinessCritical AccountEdition = "BUSINESS_CRITICAL"
 )
+
+var AllAccountEditions = []AccountEdition{
+	EditionStandard,
+	EditionEnterprise,
+	EditionBusinessCritical,
+}
+
+func ToAccountEdition(edition string) (AccountEdition, error) {
+	switch typedEdition := AccountEdition(strings.ToUpper(edition)); typedEdition {
+	case EditionStandard, EditionEnterprise, EditionBusinessCritical:
+		return typedEdition, nil
+	default:
+		return "", fmt.Errorf("unknown account edition: %s", edition)
+	}
+}
 
 // CreateAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-account.
 type CreateAccountOptions struct {
@@ -81,12 +102,59 @@ func (opts *CreateAccountOptions) validate() error {
 	return errors.Join(errs...)
 }
 
-func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) error {
+type AccountCreateResponse struct {
+	AccountLocator    string `json:"accountLocator,omitempty"`
+	AccountLocatorUrl string `json:"accountLocatorUrl,omitempty"`
+	OrganizationName  string
+	AccountName       string         `json:"accountName,omitempty"`
+	Url               string         `json:"url,omitempty"`
+	Edition           AccountEdition `json:"edition,omitempty"`
+	RegionGroup       string         `json:"regionGroup,omitempty"`
+	Cloud             string         `json:"cloud,omitempty"`
+	Region            string         `json:"region,omitempty"`
+}
+
+func ToAccountCreateResponse(v string) (*AccountCreateResponse, error) {
+	var res AccountCreateResponse
+	err := json.Unmarshal([]byte(v), &res)
+	if err != nil {
+		return nil, err
+	}
+	if len(res.Url) > 0 {
+		url := strings.TrimPrefix(res.Url, `https://`)
+		url = strings.TrimPrefix(url, `http://`)
+		parts := strings.SplitN(url, "-", 2)
+		if len(parts) == 2 {
+			res.OrganizationName = strings.ToUpper(parts[0])
+		}
+	}
+	return &res, nil
+}
+
+func (c *accounts) Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateAccountOptions) (*AccountCreateResponse, error) {
 	if opts == nil {
 		opts = &CreateAccountOptions{}
 	}
 	opts.name = id
-	return validateAndExec(c.client, ctx, opts)
+	queryChanId := make(chan string, 1)
+	err := validateAndExec(c.client, gosnowflake.WithQueryIDChan(ctx, queryChanId), opts)
+	if err != nil {
+		return nil, err
+	}
+
+	queryId := <-queryChanId
+	rows, err := c.client.QueryUnsafe(gosnowflake.WithFetchResultByID(ctx, queryId), "")
+	if err != nil {
+		log.Printf("[WARN] Unable to retrieve create account output, err = %v", err)
+	}
+
+	if len(rows) == 1 && rows[0]["status"] != nil {
+		if status, ok := (*rows[0]["status"]).(string); ok {
+			return ToAccountCreateResponse(status)
+		}
+	}
+
+	return nil, nil
 }
 
 // AlterAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-account.
@@ -299,7 +367,7 @@ type Account struct {
 	CreatedOn                            *time.Time
 	Comment                              *string
 	AccountLocator                       string
-	AccountLocatorURL                    *string
+	AccountLocatorUrl                    *string
 	ManagedAccounts                      *int
 	ConsumptionBillingEntityName         *string
 	MarketplaceConsumerBillingEntityName *string
@@ -387,7 +455,7 @@ func (row accountDBRow) convert() *Account {
 		acc.Comment = &row.Comment.String
 	}
 	if row.AccountLocatorURL.Valid {
-		acc.AccountLocatorURL = &row.AccountLocatorURL.String
+		acc.AccountLocatorUrl = &row.AccountLocatorURL.String
 	}
 	if row.ManagedAccounts.Valid {
 		acc.ManagedAccounts = Int(int(row.ManagedAccounts.Int32))

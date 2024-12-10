@@ -2,9 +2,24 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -12,81 +27,650 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_Account_complete(t *testing.T) {
+func TestAcc_Account_Minimal(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	password := acc.TestClient().Ids.AlphaContaining("123ABC")
+	organizationName := acc.TestClient().Context.CurrentAccountId(t).OrganizationName()
+	id := random.AdminName()
+	accountId := sdk.NewAccountIdentifier(organizationName, id)
+	email := random.Email()
+	name := random.AdminName()
+	key, _ := random.GenerateRSAPublicKey(t)
+	region := acc.TestClient().Context.CurrentRegion(t)
+
+	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: acc.CheckDestroy(t, resources.Account),
-		// this errors with: Error running post-test destroy, there may be dangling resources: exit status 1
-		// unless we change the resource to return nil on destroy then this is unavoidable
 		Steps: []resource.TestStep{
 			{
-				Config: accountConfig(id.Name(), password, "Terraform acceptance test", 3),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_account.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_account.test", "admin_name", "someadmin"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "first_name", "Ad"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "last_name", "Min"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "email", "admin@example.com"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "must_change_password", "false"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "edition", "BUSINESS_CRITICAL"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "comment", "Terraform acceptance test"),
-					resource.TestCheckResourceAttr("snowflake_account.test", "grace_period_in_days", "3"),
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModel.ResourceReference()).
+						HasNameString(id).
+						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminNameString(name).
+						HasAdminRsaPublicKeyString(key).
+						HasNoAdminUserType().
+						HasEmailString(email).
+						HasNoFirstName().
+						HasNoLastName().
+						HasMustChangePasswordString(r.BooleanDefault).
+						HasNoRegionGroup().
+						HasNoRegion().
+						HasNoComment().
+						HasIsOrgAdminString(r.BooleanDefault).
+						HasGracePeriodInDaysString("3"),
+					resourceshowoutputassert.AccountShowOutput(t, configModel.ResourceReference()).
+						HasOrganizationName(organizationName).
+						HasAccountName(id).
+						HasSnowflakeRegion(region).
+						HasRegionGroup("").
+						HasEdition(sdk.EditionStandard).
+						HasAccountUrlNotEmpty().
+						HasCreatedOnNotEmpty().
+						HasComment("SNOWFLAKE").
+						HasAccountLocatorNotEmpty().
+						HasAccountLocatorUrlNotEmpty().
+						HasManagedAccounts(0).
+						HasConsumptionBillingEntityNameNotEmpty().
+						HasMarketplaceConsumerBillingEntityName("").
+						HasMarketplaceProviderBillingEntityNameNotEmpty().
+						HasOldAccountURL("").
+						HasIsOrgAdmin(false).
+						HasAccountOldUrlSavedOnEmpty().
+						HasAccountOldUrlLastUsedEmpty().
+						HasOrganizationOldUrl("").
+						HasOrganizationOldUrlSavedOnEmpty().
+						HasOrganizationOldUrlLastUsedEmpty().
+						HasIsEventsAccount(false).
+						HasIsOrganizationAccount(false).
+						HasDroppedOnEmpty().
+						HasScheduledDeletionTimeEmpty().
+						HasRestoredOnEmpty().
+						HasMovedToOrganization("").
+						HasMovedOn("").
+						HasOrganizationUrlExpirationOnEmpty(),
 				),
-				Destroy: false,
 			},
-			// Change Grace Period In Days
 			{
-				Config: accountConfig(id.Name(), password, "Terraform acceptance test", 4),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_account.test", "grace_period_in_days", "4"),
+				ResourceName: configModel.ResourceReference(),
+				Config:       config.FromModel(t, configModel),
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedAccountResource(t, helpers.EncodeResourceIdentifier(accountId)).
+						HasNameString(id).
+						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasNoAdminName().
+						HasNoAdminRsaPublicKey().
+						HasNoAdminUserType().
+						HasNoEmail().
+						HasNoFirstName().
+						HasNoLastName().
+						HasNoMustChangePassword().
+						HasEditionString(string(sdk.EditionStandard)).
+						HasNoRegionGroup().
+						HasRegionString(region).
+						HasCommentString("SNOWFLAKE").
+						HasIsOrgAdminString(r.BooleanFalse).
+						HasNoGracePeriodInDays(),
 				),
-			},
-			// IMPORT
-			{
-				ResourceName:      "snowflake_account.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"admin_name",
-					"admin_password",
-					"admin_rsa_public_key",
-					"email",
-					"must_change_password",
-					"first_name",
-					"last_name",
-					"grace_period_in_days",
-				},
 			},
 		},
 	})
 }
 
-func accountConfig(name string, password string, comment string, gracePeriodInDays int) string {
-	return fmt.Sprintf(`
-data "snowflake_current_account" "current" {}
+func TestAcc_Account_Complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
-resource "snowflake_account" "test" {
-  name = "%s"
-  admin_name = "someadmin"
-  admin_password = "%s"
-  first_name = "Ad"
-  last_name = "Min"
-  email = "admin@example.com"
-  must_change_password = false
-  edition = "BUSINESS_CRITICAL"
-  comment = "%s"
-  region = data.snowflake_current_account.current.region
-  grace_period_in_days = %d
+	organizationName := acc.TestClient().Context.CurrentAccountId(t).OrganizationName()
+	id := random.AdminName()
+	accountId := sdk.NewAccountIdentifier(organizationName, id)
+	firstName := acc.TestClient().Ids.Alpha()
+	lastName := acc.TestClient().Ids.Alpha()
+	email := random.Email()
+	name := random.AdminName()
+	key, _ := random.GenerateRSAPublicKey(t)
+	region := acc.TestClient().Context.CurrentRegion(t)
+	comment := random.Comment()
+
+	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypePerson).
+		WithAdminRsaPublicKey(key).
+		WithFirstName(firstName).
+		WithLastName(lastName).
+		WithMustChangePassword(r.BooleanTrue).
+		WithRegionGroup("PUBLIC").
+		WithRegion(region).
+		WithComment(comment).
+		WithIsOrgAdmin(r.BooleanFalse)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Account),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModel.ResourceReference()).
+						HasNameString(id).
+						HasFullyQualifiedNameString(sdk.NewAccountIdentifier(organizationName, id).FullyQualifiedName()).
+						HasAdminNameString(name).
+						HasAdminRsaPublicKeyString(key).
+						HasAdminUserType(sdk.UserTypePerson).
+						HasEmailString(email).
+						HasFirstNameString(firstName).
+						HasLastNameString(lastName).
+						HasMustChangePasswordString(r.BooleanTrue).
+						HasRegionGroupString("PUBLIC").
+						HasRegionString(region).
+						HasCommentString(comment).
+						HasIsOrgAdminString(r.BooleanFalse).
+						HasGracePeriodInDaysString("3"),
+					resourceshowoutputassert.AccountShowOutput(t, configModel.ResourceReference()).
+						HasOrganizationName(organizationName).
+						HasAccountName(id).
+						HasSnowflakeRegion(region).
+						HasRegionGroup("").
+						HasEdition(sdk.EditionStandard).
+						HasAccountUrlNotEmpty().
+						HasCreatedOnNotEmpty().
+						HasComment(comment).
+						HasAccountLocatorNotEmpty().
+						HasAccountLocatorUrlNotEmpty().
+						HasManagedAccounts(0).
+						HasConsumptionBillingEntityNameNotEmpty().
+						HasMarketplaceConsumerBillingEntityName("").
+						HasMarketplaceProviderBillingEntityNameNotEmpty().
+						HasOldAccountURL("").
+						HasIsOrgAdmin(false).
+						HasAccountOldUrlSavedOnEmpty().
+						HasAccountOldUrlLastUsedEmpty().
+						HasOrganizationOldUrl("").
+						HasOrganizationOldUrlSavedOnEmpty().
+						HasOrganizationOldUrlLastUsedEmpty().
+						HasIsEventsAccount(false).
+						HasIsOrganizationAccount(false).
+						HasDroppedOnEmpty().
+						HasScheduledDeletionTimeEmpty().
+						HasRestoredOnEmpty().
+						HasMovedToOrganization("").
+						HasMovedOn("").
+						HasOrganizationUrlExpirationOnEmpty(),
+				),
+			},
+			{
+				ResourceName: configModel.ResourceReference(),
+				Config:       config.FromModel(t, configModel),
+				ImportState:  true,
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedAccountResource(t, helpers.EncodeResourceIdentifier(accountId)).
+						HasNameString(id).
+						HasFullyQualifiedNameString(sdk.NewAccountIdentifier(organizationName, id).FullyQualifiedName()).
+						HasNoAdminName().
+						HasNoAdminRsaPublicKey().
+						HasNoEmail().
+						HasNoFirstName().
+						HasNoLastName().
+						HasNoAdminUserType().
+						HasNoMustChangePassword().
+						HasEditionString(string(sdk.EditionStandard)).
+						HasNoRegionGroup().
+						HasRegionString(region).
+						HasCommentString(comment).
+						HasIsOrgAdminString(r.BooleanFalse).
+						HasNoGracePeriodInDays(),
+				),
+			},
+		},
+	})
 }
-`, name, password, comment, gracePeriodInDays)
+
+func TestAcc_Account_Rename(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
+
+	organizationName := acc.TestClient().Context.CurrentAccountId(t).OrganizationName()
+	id := random.AdminName()
+	accountId := sdk.NewAccountIdentifier(organizationName, id)
+
+	newId := random.AdminName()
+	newAccountId := sdk.NewAccountIdentifier(organizationName, newId)
+
+	email := random.Email()
+	name := random.AdminName()
+	key, _ := random.GenerateRSAPublicKey(t)
+
+	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
+		WithAdminRsaPublicKey(key)
+	newConfigModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, newId).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
+		WithAdminRsaPublicKey(key)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Account),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModel.ResourceReference()).
+						HasNameString(id).
+						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService),
+					resourceshowoutputassert.AccountShowOutput(t, configModel.ResourceReference()).
+						HasOrganizationName(organizationName).
+						HasAccountName(id),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(newConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModel(t, newConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, newConfigModel.ResourceReference()).
+						HasNameString(newId).
+						HasFullyQualifiedNameString(newAccountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService),
+					resourceshowoutputassert.AccountShowOutput(t, newConfigModel.ResourceReference()).
+						HasOrganizationName(organizationName).
+						HasAccountName(newId),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Account_IsOrgAdmin(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
+
+	organizationName := acc.TestClient().Context.CurrentAccountId(t).OrganizationName()
+	id := random.AdminName()
+	accountId := sdk.NewAccountIdentifier(organizationName, id)
+
+	email := random.Email()
+	name := random.AdminName()
+	key, _ := random.GenerateRSAPublicKey(t)
+
+	configModelWithOrgAdminTrue := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
+		WithAdminRsaPublicKey(key).
+		WithIsOrgAdmin(r.BooleanTrue)
+
+	configModelWithOrgAdminFalse := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
+		WithAdminRsaPublicKey(key).
+		WithIsOrgAdmin(r.BooleanFalse)
+
+	configModelWithoutOrgAdmin := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
+		WithAdminRsaPublicKey(key)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Account),
+		Steps: []resource.TestStep{
+			// Create with ORGADMIN enabled
+			{
+				Config: config.FromModel(t, configModelWithOrgAdminTrue),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModelWithOrgAdminTrue.ResourceReference()).
+						HasNameString(id).
+						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService).
+						HasIsOrgAdminString(r.BooleanTrue),
+					resourceshowoutputassert.AccountShowOutput(t, configModelWithOrgAdminTrue.ResourceReference()).
+						HasOrganizationName(organizationName).
+						HasAccountName(id).
+						HasIsOrgAdmin(true),
+				),
+			},
+			// Disable ORGADMIN
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(configModelWithOrgAdminFalse.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModel(t, configModelWithOrgAdminFalse),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModelWithOrgAdminFalse.ResourceReference()).
+						HasNameString(id).
+						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService).
+						HasIsOrgAdminString(r.BooleanFalse),
+					resourceshowoutputassert.AccountShowOutput(t, configModelWithOrgAdminFalse.ResourceReference()).
+						HasOrganizationName(organizationName).
+						HasAccountName(id).
+						HasIsOrgAdmin(false),
+				),
+			},
+			// Remove is_org_admin from the config and go back to default (disabled)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(configModelWithoutOrgAdmin.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModel(t, configModelWithoutOrgAdmin),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModelWithoutOrgAdmin.ResourceReference()).
+						HasNameString(id).
+						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService).
+						HasIsOrgAdminString(r.BooleanDefault),
+					resourceshowoutputassert.AccountShowOutput(t, configModelWithoutOrgAdmin.ResourceReference()).
+						HasOrganizationName(organizationName).
+						HasAccountName(id).
+						HasIsOrgAdmin(false),
+				),
+			},
+			// External change (enable ORGADMIN)
+			{
+				PreConfig: func() {
+					acc.TestClient().Account.Alter(t, &sdk.AlterAccountOptions{
+						SetIsOrgAdmin: &sdk.AccountSetIsOrgAdmin{
+							Name:     accountId.AsAccountObjectIdentifier(),
+							OrgAdmin: true,
+						},
+					})
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(configModelWithoutOrgAdmin.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModel(t, configModelWithoutOrgAdmin),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModelWithoutOrgAdmin.ResourceReference()).
+						HasNameString(id).
+						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminUserType(sdk.UserTypeService).
+						HasIsOrgAdminString(r.BooleanDefault),
+					resourceshowoutputassert.AccountShowOutput(t, configModelWithoutOrgAdmin.ResourceReference()).
+						HasOrganizationName(organizationName).
+						HasAccountName(id).
+						HasIsOrgAdmin(false),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Account_IgnoreUpdateAfterCreationOnCertainFields(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
+
+	organizationName := acc.TestClient().Context.CurrentAccountId(t).OrganizationName()
+	id := random.AdminName()
+	accountId := sdk.NewAccountIdentifier(organizationName, id)
+
+	firstName := random.AdminName()
+	lastName := random.AdminName()
+	email := random.Email()
+	name := random.AdminName()
+	pass := random.Password()
+
+	newFirstName := random.AdminName()
+	newLastName := random.AdminName()
+	newEmail := random.Email()
+	newName := random.AdminName()
+	newPass := random.Password()
+
+	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypePerson).
+		WithFirstName(firstName).
+		WithLastName(lastName).
+		WithMustChangePassword(r.BooleanTrue).
+		WithAdminPassword(pass)
+
+	newConfigModel := model.Account("test", newName, string(sdk.EditionStandard), newEmail, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
+		WithAdminPassword(newPass).
+		WithFirstName(newFirstName).
+		WithLastName(newLastName)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Account),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModel.ResourceReference()).
+						HasNameString(id).
+						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminNameString(name).
+						HasAdminPasswordString(pass).
+						HasAdminUserType(sdk.UserTypePerson).
+						HasEmailString(email).
+						HasFirstNameString(firstName).
+						HasLastNameString(lastName).
+						HasMustChangePasswordString(r.BooleanTrue),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(newConfigModel.ResourceReference(), plancheck.ResourceActionNoop),
+					},
+				},
+				Config: config.FromModel(t, newConfigModel),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, newConfigModel.ResourceReference()).
+						HasNameString(id).
+						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
+						HasAdminNameString(name).
+						HasAdminPasswordString(pass).
+						HasAdminUserType(sdk.UserTypePerson).
+						HasEmailString(email).
+						HasFirstNameString(firstName).
+						HasLastNameString(lastName).
+						HasMustChangePasswordString(r.BooleanTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Account_TryToCreateWithoutOrgadmin(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
+
+	id := random.AdminName()
+	email := random.Email()
+	name := random.AdminName()
+	key, _ := random.GenerateRSAPublicKey(t)
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	t.Setenv(snowflakeenvs.Role, snowflakeroles.Accountadmin.Name())
+
+	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
+		WithAdminRsaPublicKey(key)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Account),
+		Steps: []resource.TestStep{
+			{
+				Config:      config.FromModel(t, configModel),
+				ExpectError: regexp.MustCompile("Error: current user doesn't have the orgadmin role in session"),
+			},
+		},
+	})
+}
+
+func TestAcc_Account_InvalidValues(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
+
+	id := random.AdminName()
+	email := random.Email()
+	name := random.AdminName()
+	key, _ := random.GenerateRSAPublicKey(t)
+
+	configModelInvalidUserType := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
+		WithAdminUserType("invalid_user_type").
+		WithAdminRsaPublicKey(key)
+
+	configModelInvalidAccountEdition := model.Account("test", name, "invalid_account_edition", email, 3, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
+		WithAdminRsaPublicKey(key)
+
+	configModelInvalidGracePeriodInDays := model.Account("test", name, string(sdk.EditionStandard), email, 2, id).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
+		WithAdminRsaPublicKey(key)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Account),
+		Steps: []resource.TestStep{
+			{
+				Config:      config.FromModel(t, configModelInvalidUserType),
+				ExpectError: regexp.MustCompile("invalid user type: invalid_user_type"),
+			},
+			{
+				Config:      config.FromModel(t, configModelInvalidAccountEdition),
+				ExpectError: regexp.MustCompile("unknown account edition: invalid_account_edition"),
+			},
+			{
+				Config:      config.FromModel(t, configModelInvalidGracePeriodInDays),
+				ExpectError: regexp.MustCompile(`Error: expected grace_period_in_days to be at least \(3\), got 2`),
+			},
+		},
+	})
+}
+
+func TestAcc_Account_UpgradeFrom_v0_99_0(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
+
+	email := random.Email()
+	name := random.AdminName()
+	adminName := random.AdminName()
+	adminPassword := random.Password()
+	firstName := random.AdminName()
+	lastName := random.AdminName()
+	region := acc.TestClient().Context.CurrentRegion(t)
+	comment := random.Comment()
+
+	configModel := model.Account("test", adminName, string(sdk.EditionStandard), email, 3, name).
+		WithAdminUserTypeEnum(sdk.UserTypeService).
+		WithAdminPassword(adminPassword).
+		WithFirstName(firstName).
+		WithLastName(lastName).
+		WithMustChangePasswordValue(tfconfig.BoolVariable(true)).
+		WithRegion(region).
+		WithIsOrgAdmin(r.BooleanFalse).
+		WithComment(comment)
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Account),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.99.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: accountConfig_v0_99_0(name, adminName, adminPassword, email, sdk.EditionStandard, firstName, lastName, true, region, 3, comment),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModel(t, configModel),
+				Check: assert.AssertThat(t,
+					resourceassert.AccountResource(t, configModel.ResourceReference()).
+						HasNameString(name).
+						HasAdminNameString(adminName).
+						HasAdminPasswordString(adminPassword).
+						HasEmailString(email).
+						HasFirstNameString(firstName).
+						HasLastNameString(lastName).
+						HasMustChangePasswordString(r.BooleanTrue).
+						HasRegionGroupString("").
+						HasRegionString(region).
+						HasCommentString(comment).
+						HasIsOrgAdminString(r.BooleanFalse).
+						HasGracePeriodInDaysString("3"),
+				),
+			},
+		},
+	})
+}
+
+func accountConfig_v0_99_0(
+	name string,
+	adminName string,
+	adminPassword string,
+	email string,
+	edition sdk.AccountEdition,
+	firstName string,
+	lastName string,
+	mustChangePassword bool,
+	region string,
+	gracePeriodInDays int,
+	comment string,
+) string {
+	return fmt.Sprintf(`
+resource "snowflake_account" "test" {
+	name = "%[1]s"
+	admin_name = "%[2]s"
+	admin_password = "%[3]s"
+	email = "%[4]s"
+	edition = "%[5]s"
+	first_name = "%[6]s"
+	last_name = "%[7]s"
+	must_change_password = %[8]t
+	region = "%[9]s"
+	grace_period_in_days = %[10]d 
+	comment = "%[11]s"
+}
+`,
+		name,
+		adminName,
+		adminPassword,
+		email,
+		edition,
+		firstName,
+		lastName,
+		mustChangePassword,
+		region,
+		gracePeriodInDays,
+		comment,
+	)
 }
