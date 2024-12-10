@@ -5,6 +5,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 )
 
 func (f *FunctionJavaModel) MarshalJSON() ([]byte, error) {
@@ -26,4 +27,15 @@ func FunctionJavaWithId(
 	functionDefinition string,
 ) *FunctionJavaModel {
 	return FunctionJava(resourceName, id.DatabaseName(), functionDefinition, handler, id.Name(), returnType.ToSql(), id.SchemaName())
+}
+
+func (f *FunctionJavaModel) WithArgument(argName string, argDataType datatypes.DataType) *FunctionJavaModel {
+	return f.WithArgumentsValue(
+		config.ObjectVariable(
+			map[string]config.Variable{
+				"arg_name":      config.StringVariable(argName),
+				"arg_data_type": config.StringVariable(argDataType.ToSql()),
+			},
+		),
+	)
 }

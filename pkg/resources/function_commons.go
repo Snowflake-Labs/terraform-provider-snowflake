@@ -344,7 +344,7 @@ func functionBaseSchema() map[string]schema.Schema {
 			Computed:    true,
 			Description: "Outputs the result of `SHOW PARAMETERS IN FUNCTION` for the given function.",
 			Elem: &schema.Resource{
-				Schema: functionParametersSchema,
+				Schema: schemas.ShowFunctionParametersSchema,
 			},
 		},
 		FullyQualifiedNameAttributeName: *schemas.FullyQualifiedNameSchema,

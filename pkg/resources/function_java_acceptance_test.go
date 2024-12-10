@@ -2,9 +2,11 @@ package resources_test
 
 import (
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
@@ -12,7 +14,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -32,8 +33,10 @@ func TestAcc_FunctionJava_BasicFlows(t *testing.T) {
 	handler := fmt.Sprintf("%s.%s", className, funcName)
 	definition := acc.TestClient().Function.SampleJavaDefinition(t, className, funcName, argName)
 
-	functionModelNoAttributes := model.FunctionJavaWithId("w", id, dataType, handler, definition)
-	functionModelNoAttributesRenamed := model.FunctionJavaWithId("w", idWithChangedNameButTheSameDataType, dataType, handler, definition)
+	functionModelNoAttributes := model.FunctionJavaWithId("w", id, dataType, handler, definition).
+		WithArgument(argName, dataType)
+	functionModelNoAttributesRenamed := model.FunctionJavaWithId("w", idWithChangedNameButTheSameDataType, dataType, handler, definition).
+		WithArgument(argName, dataType)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -41,7 +44,7 @@ func TestAcc_FunctionJava_BasicFlows(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		CheckDestroy: acc.CheckDestroy(t, resources.Function),
 		Steps: []resource.TestStep{
 			// CREATE BASIC
 			{
@@ -50,6 +53,8 @@ func TestAcc_FunctionJava_BasicFlows(t *testing.T) {
 					resourceassert.FunctionJavaResource(t, functionModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
 						HasCommentString(sdk.DefaultFunctionComment).
+						HasFunctionLanguageString("JAVA").
+						HasIsSecureString(r.BooleanDefault).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					resourceshowoutputassert.FunctionShowOutput(t, functionModelNoAttributes.ResourceReference()).
 						HasIsSecure(false),

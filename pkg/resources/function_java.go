@@ -62,7 +62,7 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 	request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
 		WithArguments(argumentRequests)
 
-	if v, ok := d.GetOk("statement"); ok {
+	if v, ok := d.GetOk("function_definition"); ok {
 		request.WithFunctionDefinitionWrapped(v.(string))
 	}
 
@@ -128,12 +128,12 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 	errs := errors.Join(
 		// TODO [this PR]: set all proper fields
 
-		d.Set("function_type", allFunctionDetails.functionDetails.Language),
+		d.Set("function_language", allFunctionDetails.functionDetails.Language),
 
 		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 		handleFunctionParameterRead(d, allFunctionDetails.functionParameters),
 		d.Set(ShowOutputAttributeName, []map[string]any{schemas.FunctionToSchema(allFunctionDetails.function)}),
-		d.Set(ParametersAttributeName, []map[string]any{schemas.UserParametersToSchema(allFunctionDetails.functionParameters)}),
+		d.Set(ParametersAttributeName, []map[string]any{schemas.FunctionParametersToSchema(allFunctionDetails.functionParameters)}),
 	)
 	if errs != nil {
 		return diag.FromErr(err)
