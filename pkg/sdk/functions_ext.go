@@ -109,14 +109,14 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 		}
 	}
 
-	if dt, returnNotNull, err := parseFunctionAndProcedureReturns(v.Returns); err != nil {
+	if dt, returnNotNull, err := parseFunctionOrProcedureReturns(v.Returns); err != nil {
 		errs = append(errs, err)
 	} else {
 		v.ReturnDataType = dt
 		_ = returnNotNull // TODO [next PR]: used when adding return nullability to the resource
 	}
 
-	if args, err := parseFunctionAndProcedureSignature(v.Signature); err != nil {
+	if args, err := parseFunctionOrProcedureSignature(v.Signature); err != nil {
 		errs = append(errs, err)
 	} else {
 		v.NormalizedArguments = args
@@ -166,7 +166,7 @@ func parseStageLocationPath(location string) (*NormalizedPath, error) {
 	return &NormalizedPath{stageRaw, pathRaw}, nil
 }
 
-func parseFunctionAndProcedureReturns(returns string) (datatypes.DataType, bool, error) {
+func parseFunctionOrProcedureReturns(returns string) (datatypes.DataType, bool, error) {
 	var returnNotNull bool
 	trimmed := strings.TrimSpace(returns)
 	if strings.HasSuffix(trimmed, " NOT NULL") {
@@ -178,7 +178,7 @@ func parseFunctionAndProcedureReturns(returns string) (datatypes.DataType, bool,
 }
 
 // Format in Snowflake DB is: (argName argType, argName argType, ...).
-func parseFunctionAndProcedureSignature(signature string) ([]NormalizedArgument, error) {
+func parseFunctionOrProcedureSignature(signature string) ([]NormalizedArgument, error) {
 	normalizedArguments := make([]NormalizedArgument, 0)
 	trimmed := strings.TrimSpace(signature)
 	if trimmed == "" {

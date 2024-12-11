@@ -71,7 +71,7 @@ func Test_parseFunctionDetailsImport(t *testing.T) {
 	})
 }
 
-func Test_parseFunctionAndProcedureReturns(t *testing.T) {
+func Test_parseFunctionOrProcedureReturns(t *testing.T) {
 	inputs := []struct {
 		rawInput              string
 		expectedRawDataType   string
@@ -98,7 +98,7 @@ func Test_parseFunctionAndProcedureReturns(t *testing.T) {
 	for _, tc := range inputs {
 		tc := tc
 		t.Run(fmt.Sprintf("return data type raw: %s", tc.rawInput), func(t *testing.T) {
-			dt, returnNotNull, err := parseFunctionAndProcedureReturns(tc.rawInput)
+			dt, returnNotNull, err := parseFunctionOrProcedureReturns(tc.rawInput)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedRawDataType, dt.ToSql())
 			require.Equal(t, tc.expectedReturnNotNull, returnNotNull)
@@ -108,8 +108,64 @@ func Test_parseFunctionAndProcedureReturns(t *testing.T) {
 	for _, tc := range badInputs {
 		tc := tc
 		t.Run(fmt.Sprintf("incorrect return data type raw: %s, expecting error with: %s", tc.rawInput, tc.expectedErrorPart), func(t *testing.T) {
-			_, _, err := parseFunctionAndProcedureReturns(tc.rawInput)
+			_, _, err := parseFunctionOrProcedureReturns(tc.rawInput)
 			require.Error(t, err)
+			require.ErrorContains(t, err, tc.expectedErrorPart)
+		})
+	}
+}
+
+func Test_parseFunctionOrProcedureSignature(t *testing.T) {
+	inputs := []struct {
+		rawInput     string
+		expectedArgs []NormalizedArgument
+	}{
+		{"()", []NormalizedArgument{}},
+		{"(abc CHAR)", []NormalizedArgument{{"abc", dataTypeChar}}},
+		{"(abc CHAR(1))", []NormalizedArgument{{"abc", dataTypeChar}}},
+		{"(abc CHAR(100))", []NormalizedArgument{{"abc", dataTypeChar_100}}},
+		{"  (   abc CHAR(100  )  )", []NormalizedArgument{{"abc", dataTypeChar_100}}},
+		{"(  abc   CHAR  )", []NormalizedArgument{{"abc", dataTypeChar}}},
+		{"(abc DOUBLE PRECISION)", []NormalizedArgument{{"abc", dataTypeDoublePrecision}}},
+		{"(abc double precision)", []NormalizedArgument{{"abc", dataTypeDoublePrecision}}},
+		{"(abc TIMESTAMP WITHOUT TIME ZONE(5))", []NormalizedArgument{{"abc", dataTypeTimestampWithoutTimeZone_5}}},
+	}
+
+	badInputs := []struct {
+		rawInput          string
+		expectedErrorPart string
+	}{
+		{"", "can't be empty"},
+		{"(abc CHAR", "wrapping parentheses not found"},
+		{"abc CHAR)", "wrapping parentheses not found"},
+		{"(abc)", "cannot be split into arg name, data type, and default"},
+		{"(CHAR)", "cannot be split into arg name, data type, and default"},
+		{"(abc CHA)", "invalid data type"},
+		{"(abc CHA(123))", "invalid data type"},
+		{"(abc CHAR(1) DEFAULT)", "could not be parsed"},
+		{"(abc CHAR(1) DEFAULT 'a')", "could not be parsed"},
+	}
+
+	for _, tc := range inputs {
+		tc := tc
+		t.Run(fmt.Sprintf("return data type raw: %s", tc.rawInput), func(t *testing.T) {
+			args, err := parseFunctionOrProcedureSignature(tc.rawInput)
+
+			require.NoError(t, err)
+			require.Len(t, args, len(tc.expectedArgs))
+			for i, arg := range args {
+				require.Equal(t, tc.expectedArgs[i].Name, arg.Name)
+				require.Equal(t, tc.expectedArgs[i].DataType.ToSql(), arg.DataType.ToSql())
+			}
+		})
+	}
+
+	for _, tc := range badInputs {
+		tc := tc
+		t.Run(fmt.Sprintf("incorrect signature raw: %s, expecting error with: %s", tc.rawInput, tc.expectedErrorPart), func(t *testing.T) {
+			_, err := parseFunctionOrProcedureSignature(tc.rawInput)
+			require.Error(t, err)
+			require.ErrorContains(t, err, "could not parse signature from Snowflake")
 			require.ErrorContains(t, err, tc.expectedErrorPart)
 		})
 	}
