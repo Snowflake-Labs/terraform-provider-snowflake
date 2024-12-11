@@ -93,14 +93,13 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 		ConflictsWith:    []string{"external_oauth_allowed_roles_list"},
 	},
 	"external_oauth_allowed_roles_list": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
-		Description: relatedResourceDescription("Specifies the list of roles that the client can set as the primary role.", resources.AccountRole),
+		Type:             schema.TypeSet,
+		Elem:             &schema.Schema{Type: schema.TypeString},
+		Optional:         true,
+		Description:      relatedResourceDescription("Specifies the list of roles that the client can set as the primary role.", resources.AccountRole),
 		DiffSuppressFunc: SuppressIfAny(
-			NormalizeAndCompareIdentifiersInSet("external_oauth_allowed_roles_list"),
-			// TODO(SNOW-1517937): uncomment
-			// NormalizeAndCompareIdentifiersInSet("external_oauth_allowed_roles_list"),
+		// TODO(SNOW-1517937): uncomment
+		// NormalizeAndCompareIdentifiersInSet("external_oauth_allowed_roles_list"),
 		),
 		ConflictsWith: []string{"external_oauth_blocked_roles_list"},
 	},
