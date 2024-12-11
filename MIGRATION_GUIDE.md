@@ -20,6 +20,30 @@ Changes:
 - The underlying resource identifier was changed from `<account_locator>` to `<organization_name>.<account_name>`. Migration will be done automatically. Notice this introduces changes in how `snowflake_account` resource is imported.
 - New `show_output` field was added (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
 
+### snowflake_accounts data source changes
+New filtering options:
+- `with_history`
+
+New output fields
+- `show_output`
+
+Breaking changes:
+- `pattern` renamed to `like`
+- `accounts` field now organizes output of show under `show_output` field and the output of show parameters under `parameters` field.
+
+Before:
+```terraform
+output "simple_output" {
+  value = data.snowflake_accounts.test.accounts[0].account_name
+}
+```
+After:
+```terraform
+output "simple_output" {
+  value = data.snowflake_accounts.test.accounts[0].show_output[0].account_name
+}
+```
+
 ### snowflake_tag_association resource changes
 #### *(behavior change)* new id format
 To provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type in one resource.
