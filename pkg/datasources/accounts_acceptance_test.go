@@ -74,19 +74,19 @@ func TestAcc_Accounts_Complete(t *testing.T) {
 						HasMarketplaceProviderBillingEntityNameNotEmpty().
 						HasOldAccountURL("").
 						HasIsOrgAdmin(false).
-						HasNoAccountOldUrlSavedOn().
-						HasNoAccountOldUrlLastUsed().
-						HasNoOrganizationOldUrl().
-						HasNoOrganizationOldUrlSavedOn().
-						HasNoOrganizationOldUrlLastUsed().
-						HasNoIsEventsAccount().
-						HasNoIsOrganizationAccount().
-						HasNoDroppedOn().
-						HasNoScheduledDeletionTime().
-						HasNoRestoredOn().
-						HasNoMovedToOrganization().
+						HasAccountOldUrlSavedOnEmpty().
+						HasAccountOldUrlLastUsedEmpty().
+						HasOrganizationOldUrlEmpty().
+						HasOrganizationOldUrlSavedOnEmpty().
+						HasOrganizationOldUrlLastUsedEmpty().
+						HasIsEventsAccount(false).
+						HasIsOrganizationAccount(false).
+						HasDroppedOnEmpty().
+						HasScheduledDeletionTimeEmpty().
+						HasRestoredOnEmpty().
+						HasMovedToOrganizationEmpty().
 						HasMovedOnEmpty().
-						HasNoOrganizationUrlExpirationOn(),
+						HasOrganizationUrlExpirationOnEmpty(),
 				),
 			},
 		},
