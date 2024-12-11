@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -447,4 +448,92 @@ type allProcedureDetailsCommon struct {
 	procedure           *sdk.Procedure
 	procedureDetails    *sdk.ProcedureDetails
 	procedureParameters []*sdk.Parameter
+}
+
+// TODO [SNOW-1850370]: Make the rest of the functions in this file generic (for reuse with functions)
+// These were copy-pasted for now.
+func parseProcedureArgumentsCommon(d *schema.ResourceData) ([]sdk.ProcedureArgumentRequest, error) {
+	args := make([]sdk.ProcedureArgumentRequest, 0)
+	if v, ok := d.GetOk("arguments"); ok {
+		for _, arg := range v.([]any) {
+			argName := arg.(map[string]any)["arg_name"].(string)
+			argDataType := arg.(map[string]any)["arg_data_type"].(string)
+			dataType, err := datatypes.ParseDataType(argDataType)
+			if err != nil {
+				return nil, err
+			}
+			request := sdk.NewProcedureArgumentRequest(argName, dataType)
+
+			if argDefaultValue, defaultValuePresent := arg.(map[string]any)["arg_default_value"]; defaultValuePresent && argDefaultValue.(string) != "" {
+				request.WithDefaultValue(argDefaultValue.(string))
+			}
+
+			args = append(args, *request)
+		}
+	}
+	return args, nil
+}
+
+func parseProcedureImportsCommon(d *schema.ResourceData) ([]sdk.ProcedureImportRequest, error) {
+	imports := make([]sdk.ProcedureImportRequest, 0)
+	if v, ok := d.GetOk("imports"); ok {
+		for _, imp := range v.(*schema.Set).List() {
+			stageLocation := imp.(map[string]any)["stage_location"].(string)
+			pathOnStage := imp.(map[string]any)["path_on_stage"].(string)
+			imports = append(imports, *sdk.NewProcedureImportRequest(fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)))
+		}
+	}
+	return imports, nil
+}
+
+func parseProcedureTargetPathCommon(d *schema.ResourceData) (string, error) {
+	var tp string
+	if v, ok := d.GetOk("target_path"); ok {
+		for _, p := range v.(*schema.Set).List() {
+			stageLocation := p.(map[string]any)["stage_location"].(string)
+			pathOnStage := p.(map[string]any)["path_on_stage"].(string)
+			tp = fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)
+		}
+	}
+	return tp, nil
+}
+
+func parseProcedureReturnsCommon(d *schema.ResourceData) (*sdk.ProcedureReturnsRequest, error) {
+	returnTypeRaw := d.Get("return_type").(string)
+	dataType, err := datatypes.ParseDataType(returnTypeRaw)
+	if err != nil {
+		return nil, err
+	}
+	returns := sdk.NewProcedureReturnsRequest()
+	switch v := dataType.(type) {
+	case *datatypes.TableDataType:
+		var cr []sdk.ProcedureColumnRequest
+		for _, c := range v.Columns() {
+			cr = append(cr, *sdk.NewProcedureColumnRequest(c.ColumnName(), c.ColumnType()))
+		}
+		returns.WithTable(*sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
+	default:
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(dataType))
+	}
+	return returns, nil
+}
+
+func setProcedureImportsInBuilder[T any](d *schema.ResourceData, setImports func([]sdk.ProcedureImportRequest) T) error {
+	imports, err := parseProcedureImportsCommon(d)
+	if err != nil {
+		return err
+	}
+	setImports(imports)
+	return nil
+}
+
+func setProcedureTargetPathInBuilder[T any](d *schema.ResourceData, setTargetPath func(string) T) error {
+	tp, err := parseProcedureTargetPathCommon(d)
+	if err != nil {
+		return err
+	}
+	if tp != "" {
+		setTargetPath(tp)
+	}
+	return nil
 }
