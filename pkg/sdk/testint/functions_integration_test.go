@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-1348103]: schemaName and catalog name are quoted (because we use lowercase)
 // TODO [SNOW-1850370]: HasArgumentsRawFrom(functionId, arguments, return)
 // TODO [SNOW-1850370]: extract show assertions with commons fields
 // TODO [SNOW-1850370]: test confirming that runtime version is required for Scala function
@@ -34,6 +33,7 @@ import (
 // TODO [SNOW-1348103]: add a test documenting that we can't set parameters in create (and revert adding these parameters directly in object...)
 // TODO [SNOW-1850370]: active warehouse vs validations
 // TODO [SNOW-1348103]: add a test documenting STRICT behavior
+// TODO [next PR]: add test with multiple imports
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -441,6 +441,9 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[@"%s"."%s".%s/%s]`, stage.ID().DatabaseName(), stage.ID().SchemaName(), stage.ID().Name(), tmpJavaFunctionDifferentStage.JarName)).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+				StageLocation: stage.ID().FullyQualifiedName(), PathOnStage: tmpJavaFunctionDifferentStage.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersionNil().
 			HasPackages(`[]`).

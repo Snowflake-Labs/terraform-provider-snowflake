@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	assert2 "github.com/stretchr/testify/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -400,6 +401,20 @@ func (f *FunctionDetailsAssert) HasExactlySecrets(expectedSecrets map[string]sdk
 		expected := fmt.Sprintf(`{%s}`, strings.Join(parts, ","))
 		if *o.Secrets != expected {
 			return fmt.Errorf("expected secrets: %v; got: %v", expected, *o.Secrets)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionDetailsAssert) HasExactlyImportsNormalizedInAnyOrder(imports ...sdk.FunctionDetailsImport) *FunctionDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+		t.Helper()
+		if o.NormalizedImports == nil {
+			return fmt.Errorf("expected imports to have value; got: nil")
+		}
+		if !assert2.ElementsMatch(t, imports, o.NormalizedImports) {
+			return fmt.Errorf("expected %v imports in task relations, got %v", imports, o.NormalizedImports)
 		}
 		return nil
 	})
