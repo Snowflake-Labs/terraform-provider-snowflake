@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_FunctionJava_BasicFlows(t *testing.T) {
+func TestAcc_FunctionJava_InlineBasic(t *testing.T) {
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"
@@ -208,6 +208,47 @@ func TestAcc_FunctionJava_BasicFlows(t *testing.T) {
 			//			HasDisplayName(""),
 			//	),
 			//},
+		},
+	})
+}
+
+func TestAcc_FunctionJava_StagedBasic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tmpJavaFunction := acc.TestClient().CreateSampleJavaFunctionAndJarOnUserStage(t)
+
+	dataType := tmpJavaFunction.ArgType
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
+
+	argName := "x"
+	handler := tmpJavaFunction.JavaHandler()
+
+	functionModel := model.FunctionJavaBasicStaged("w", id, dataType, handler, "~", tmpJavaFunction.JarName).
+		WithArgument(argName, dataType)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.FunctionJava),
+		Steps: []resource.TestStep{
+			// CREATE BASIC
+			{
+				Config: config.FromModels(t, functionModel),
+				Check: assert.AssertThat(t,
+					resourceassert.FunctionJavaResource(t, functionModel.ResourceReference()).
+						HasNameString(id.Name()).
+						HasCommentString(sdk.DefaultFunctionComment).
+						HasFunctionLanguageString("JAVA").
+						HasIsSecureString(r.BooleanDefault).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					resourceshowoutputassert.FunctionShowOutput(t, functionModel.ResourceReference()).
+						HasIsSecure(false),
+				),
+			},
 		},
 	})
 }
