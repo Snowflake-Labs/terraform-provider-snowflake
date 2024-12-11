@@ -328,7 +328,7 @@ func TestAcc_FunctionJava_handleExternalLanguageChange(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	tmpJavaFunction := acc.TestClient().CreateSampleJavaFunctionAndJar(t)
+	tmpJavaFunction := acc.TestClient().CreateSampleJavaFunctionAndJarOnUserStage(t)
 
 	dataType := tmpJavaFunction.ArgType
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
