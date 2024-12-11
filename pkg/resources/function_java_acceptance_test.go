@@ -16,6 +16,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -38,9 +39,9 @@ func TestAcc_FunctionJava_BasicFlows(t *testing.T) {
 	handler := fmt.Sprintf("%s.%s", className, funcName)
 	definition := acc.TestClient().Function.SampleJavaDefinition(t, className, funcName, argName)
 
-	functionModelNoAttributes := model.FunctionJavaWithId("w", id, dataType, handler, definition).
+	functionModelNoAttributes := model.FunctionJavaBasicInline("w", id, dataType, handler, definition).
 		WithArgument(argName, dataType)
-	functionModelNoAttributesRenamed := model.FunctionJavaWithId("w", idWithChangedNameButTheSameDataType, dataType, handler, definition).
+	functionModelNoAttributesRenamed := model.FunctionJavaBasicInline("w", idWithChangedNameButTheSameDataType, dataType, handler, definition).
 		WithArgument(argName, dataType)
 
 	resource.Test(t, resource.TestCase{
@@ -221,9 +222,9 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 	handler := fmt.Sprintf("%s.%s", className, funcName)
 	definition := acc.TestClient().Function.SampleJavaDefinition(t, className, funcName, argName)
 
-	functionModel := model.FunctionJavaWithId("w", id, dataType, handler, definition).
+	functionModel := model.FunctionJavaBasicInline("w", id, dataType, handler, definition).
 		WithArgument(argName, dataType)
-	functionModelWithAllParametersSet := model.FunctionJavaWithId("w", id, dataType, handler, definition).
+	functionModelWithAllParametersSet := model.FunctionJavaBasicInline("w", id, dataType, handler, definition).
 		WithArgument(argName, dataType).
 		WithEnableConsoleOutput(true).
 		WithLogLevel(string(sdk.LogLevelWarn)).
@@ -324,16 +325,19 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 
 // TODO [this PR]: Test with Java versus Scala staged (probably the only way to set up functions to have exactly the same config in both languages)
 func TestAcc_FunctionJava_handleExternalLanguageChange(t *testing.T) {
-	className := "TestFunc"
-	funcName := "echoVarchar"
-	argName := "x"
-	dataType := testdatatypes.DataTypeVarchar_100
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tmpJavaFunction := acc.TestClient().CreateSampleJavaFunctionAndJar(t)
+
+	dataType := tmpJavaFunction.ArgType
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
 
-	handler := fmt.Sprintf("%s.%s", className, funcName)
-	definition := acc.TestClient().Function.SampleJavaDefinition(t, className, funcName, argName)
+	argName := "x"
+	handler := tmpJavaFunction.JavaHandler()
+	importPath := tmpJavaFunction.JarLocation()
 
-	functionModel := model.FunctionJavaWithId("w", id, dataType, handler, definition).
+	functionModel := model.FunctionJavaBasicStaged("w", id, dataType, handler, importPath).
 		WithArgument(argName, dataType)
 
 	resource.Test(t, resource.TestCase{
@@ -356,8 +360,9 @@ func TestAcc_FunctionJava_handleExternalLanguageChange(t *testing.T) {
 			{
 				PreConfig: func() {
 					acc.TestClient().Function.DropFunctionFunc(t, id)()
+					// TODO [this PR]: create scala staged (id, args, return, import, handler)
 					acc.TestClient().Function.CreateSqlWithIdentifierAndArgument(t, id.SchemaObjectId(), dataType)
-					objectassert.Function(t, id).HasLanguage("SQL")
+					objectassert.Function(t, id).HasLanguage("SCALA")
 				},
 				Config: config.FromModel(t, functionModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -320,6 +320,7 @@ func functionBaseSchema() map[string]schema.Schema {
 			Optional: true,
 			ForceNew: true,
 		},
+		// TODO [this PR]: required only for javascript and sql
 		"function_definition": {
 			Type:             schema.TypeString,
 			Required:         true,
