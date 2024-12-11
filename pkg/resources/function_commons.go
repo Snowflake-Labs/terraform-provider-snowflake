@@ -478,7 +478,9 @@ func setFunctionTargetPathInBuilder[T any](d *schema.ResourceData, setTargetPath
 	if err != nil {
 		return err
 	}
-	setTargetPath(tp)
+	if tp != "" {
+		setTargetPath(tp)
+	}
 	return nil
 }
 

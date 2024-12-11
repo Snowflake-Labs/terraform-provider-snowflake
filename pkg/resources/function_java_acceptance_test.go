@@ -63,6 +63,8 @@ func TestAcc_FunctionJava_InlineBasic(t *testing.T) {
 						HasIsSecureString(r.BooleanDefault).
 						HasCommentString(sdk.DefaultFunctionComment).
 						HasImportsLength(0).
+						HasTargetPathEmpty().
+						HasNoRuntimeVersion().
 						HasFunctionDefinitionString(definition).
 						HasFunctionLanguageString("JAVA").
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
@@ -237,7 +239,8 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 
 	functionModel := model.FunctionJavaBasicInline("w", id, dataType, handler, definition).
 		WithArgument(argName, dataType).
-		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName)
+		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName).
+		WithRuntimeVersion("11")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -256,6 +259,7 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 						HasIsSecureString(r.BooleanDefault).
 						HasCommentString(sdk.DefaultFunctionComment).
 						HasImportsLength(0).
+						HasRuntimeVersionString("11").
 						HasFunctionDefinitionString(definition).
 						HasFunctionLanguageString("JAVA").
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),

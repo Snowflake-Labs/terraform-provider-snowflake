@@ -29,7 +29,7 @@ type FunctionDetails struct {
 	Handler                    *string // present for python, java, and scala (hidden when SECURE)
 	RuntimeVersion             *string // present for python, java, and scala (hidden when SECURE)
 	Packages                   *string // list // present for python, java, and scala
-	TargetPath                 *string // list present for scala and java (hidden when SECURE)
+	TargetPath                 *string // present for scala and java (hidden when SECURE)
 	InstalledPackages          *string // list present for python (hidden when SECURE)
 	IsAggregate                *bool   // present for python
 
@@ -91,10 +91,12 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 		v.NormalizedImports = functionDetailsImports
 	}
 
-	if p, err := parseStageLocationPath(*v.TargetPath); err != nil {
-		errs = append(errs, err)
-	} else {
-		v.NormalizedTargetPath = p
+	if v.TargetPath != nil {
+		if p, err := parseStageLocationPath(*v.TargetPath); err != nil {
+			errs = append(errs, err)
+		} else {
+			v.NormalizedTargetPath = p
+		}
 	}
 
 	return v, errors.Join(errs...)
