@@ -106,12 +106,13 @@ var (
 			"target_path",
 		},
 		functionDefinitionDescription: functionDefinitionTemplate("Java", "https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-introduction"),
-		runtimeVersionRequired:        false,
-		runtimeVersionDescription:     "Specifies the Java JDK runtime version to use. The supported versions of Java are 11.x and 17.x. If RUNTIME_VERSION is not set, Java JDK 11 is used.",
-		importsDescription:            "The location (stage), path, and name of the file(s) to import. A file can be a JAR file or another type of file. If the file is a JAR file, it can contain one or more .class files and zero or more resource files. JNI (Java Native Interface) is not supported. Snowflake prohibits loading libraries that contain native code (as opposed to Java bytecode). Java UDFs can also read non-JAR files. For an example, see [Reading a file specified statically in IMPORTS](https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-cookbook.html#label-reading-file-from-java-udf-imports). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#java).",
-		packagesDescription:           "The name and version number of Snowflake system packages required as dependencies. The value should be of the form `package_name:version_number`, where `package_name` is `snowflake_domain:package`.",
-		handlerDescription:            "The name of the handler method or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a method name, as in the following form: `MyClass.myMethod`. If the handler is for a tabular UDF, the HANDLER value should be the name of a handler class.",
-		targetPathDescription:         "The TARGET_PATH clause specifies the location to which Snowflake should write the compiled code (JAR file) after compiling the source code specified in the `function_definition`. If this clause is included, the user should manually remove the JAR file when it is no longer needed (typically when the Java UDF is dropped). If this clause is omitted, Snowflake re-compiles the source code each time the code is needed. The JAR file is not stored permanently, and the user does not need to clean up the JAR file. Snowflake returns an error if the TARGET_PATH matches an existing file; you cannot use TARGET_PATH to overwrite an existing file.",
+		// May be optional for java because if it is not set, describe return empty version.
+		runtimeVersionRequired:    false,
+		runtimeVersionDescription: "Specifies the Java JDK runtime version to use. The supported versions of Java are 11.x and 17.x. If RUNTIME_VERSION is not set, Java JDK 11 is used.",
+		importsDescription:        "The location (stage), path, and name of the file(s) to import. A file can be a JAR file or another type of file. If the file is a JAR file, it can contain one or more .class files and zero or more resource files. JNI (Java Native Interface) is not supported. Snowflake prohibits loading libraries that contain native code (as opposed to Java bytecode). Java UDFs can also read non-JAR files. For an example, see [Reading a file specified statically in IMPORTS](https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-cookbook.html#label-reading-file-from-java-udf-imports). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#java).",
+		packagesDescription:       "The name and version number of Snowflake system packages required as dependencies. The value should be of the form `package_name:version_number`, where `package_name` is `snowflake_domain:package`.",
+		handlerDescription:        "The name of the handler method or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a method name, as in the following form: `MyClass.myMethod`. If the handler is for a tabular UDF, the HANDLER value should be the name of a handler class.",
+		targetPathDescription:     "The TARGET_PATH clause specifies the location to which Snowflake should write the compiled code (JAR file) after compiling the source code specified in the `function_definition`. If this clause is included, the user should manually remove the JAR file when it is no longer needed (typically when the Java UDF is dropped). If this clause is omitted, Snowflake re-compiles the source code each time the code is needed. The JAR file is not stored permanently, and the user does not need to clean up the JAR file. Snowflake returns an error if the TARGET_PATH matches an existing file; you cannot use TARGET_PATH to overwrite an existing file.",
 	}
 	javascriptFunctionSchemaDefinition = functionSchemaDef{
 		additionalArguments:           []string{},
@@ -242,7 +243,6 @@ func functionBaseSchema() map[string]schema.Schema {
 			ValidateDiagFunc: IsDataTypeValid,
 			DiffSuppressFunc: DiffSuppressDataTypes,
 			Description:      "Specifies the results returned by the UDF, which determines the UDF type. Use `<result_data_type>` to create a scalar UDF that returns a single value with the specified data type. Use `TABLE (col_name col_data_type, ...)` to creates a table UDF that returns tabular results with the specified table column(s) and column type(s). For the details, consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages).",
-			// TODO [SNOW-1348103]: adjust DiffSuppressFunc
 		},
 		"null_input_behavior": {
 			Type:             schema.TypeString,
@@ -263,7 +263,6 @@ func functionBaseSchema() map[string]schema.Schema {
 		"runtime_version": {
 			Type:     schema.TypeString,
 			ForceNew: true,
-			// TODO [SNOW-1348103]: may be optional for java without consequence because if it is not set, the describe is not returning any version.
 		},
 		"comment": {
 			Type:     schema.TypeString,

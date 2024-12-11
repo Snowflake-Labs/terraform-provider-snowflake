@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [next PR]: test nil, test parsing single
+// TODO [next PR]: test parsing single
 func Test_parseFunctionDetailsImport(t *testing.T) {
 	inputs := []struct {
 		rawInput string
@@ -58,6 +58,58 @@ func Test_parseFunctionDetailsImport(t *testing.T) {
 			_, err := parseFunctionDetailsImport(details)
 			require.Error(t, err)
 			require.ErrorContains(t, err, "could not parse imports from Snowflake")
+			require.ErrorContains(t, err, tc.expectedErrorPart)
+		})
+	}
+
+	t.Run("Snowflake raw imports nil", func(t *testing.T) {
+		details := FunctionDetails{Imports: nil}
+
+		results, err := parseFunctionDetailsImport(details)
+		require.NoError(t, err)
+		require.Equal(t, []NormalizedPath{}, results)
+	})
+}
+
+func Test_parseFunctionAndProcedureReturns(t *testing.T) {
+	inputs := []struct {
+		rawInput              string
+		expectedRawDataType   string
+		expectedReturnNotNull bool
+	}{
+		{"CHAR", "CHAR(1)", false},
+		{"CHAR(1)", "CHAR(1)", false},
+		{"CHAR NOT NULL", "CHAR(1)", true},
+		{"  CHAR   NOT NULL  ", "CHAR(1)", true},
+		{"OBJECT", "OBJECT", false},
+		{"OBJECT NOT NULL", "OBJECT", true},
+	}
+
+	badInputs := []struct {
+		rawInput          string
+		expectedErrorPart string
+	}{
+		{"", "invalid data type"},
+		{"NOT NULL", "invalid data type"},
+		{"CHA NOT NULL", "invalid data type"},
+		{"CHA NOT NULLS", "invalid data type"},
+	}
+
+	for _, tc := range inputs {
+		tc := tc
+		t.Run(fmt.Sprintf("return data type raw: %s", tc.rawInput), func(t *testing.T) {
+			dt, returnNotNull, err := parseFunctionAndProcedureReturns(tc.rawInput)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedRawDataType, dt.ToSql())
+			require.Equal(t, tc.expectedReturnNotNull, returnNotNull)
+		})
+	}
+
+	for _, tc := range badInputs {
+		tc := tc
+		t.Run(fmt.Sprintf("incorrect return data type raw: %s, expecting error with: %s", tc.rawInput, tc.expectedErrorPart), func(t *testing.T) {
+			_, _, err := parseFunctionAndProcedureReturns(tc.rawInput)
+			require.Error(t, err)
 			require.ErrorContains(t, err, tc.expectedErrorPart)
 		})
 	}

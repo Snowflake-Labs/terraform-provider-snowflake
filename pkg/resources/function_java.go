@@ -107,22 +107,12 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 	//if v, ok := d.GetOk("comment"); ok {
 	//	request.WithComment(v.(string))
 	//}
-	//if _, ok := d.GetOk("imports"); ok {
-	//	var imports []sdk.FunctionImportRequest
-	//	for _, item := range d.Get("imports").([]interface{}) {
-	//		imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(item.(string)))
-	//	}
-	//	request.WithImports(imports)
-	//}
 	//if _, ok := d.GetOk("packages"); ok {
 	//	var packages []sdk.FunctionPackageRequest
 	//	for _, item := range d.Get("packages").([]interface{}) {
 	//		packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
 	//	}
 	//	request.WithPackages(packages)
-	//}
-	//if v, ok := d.GetOk("target_path"); ok {
-	//	request.WithTargetPath(v.(string))
 	//}
 }
 
@@ -138,14 +128,14 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 		return diags
 	}
 
-	// TODO [this PR]: handle external changes marking
-	// TODO [this PR]: handle setting state to value from config
+	// TODO [next PR]: handle external changes marking
+	// TODO [next PR]: handle setting state to value from config
 
 	errs := errors.Join(
 		// TODO [this PR]: set all proper fields
 		// not reading is_secure on purpose (handled as external change to show output)
 		// arguments
-		// return_type -> parse Returns from allFunctionDetails.functionDetails (NOT NULL can be added)
+		d.Set("return_type", allFunctionDetails.functionDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
 		// not reading return_results_behavior on purpose (handled as external change to show output)
 		setOptionalFromStringPtr(d, "runtime_version", allFunctionDetails.functionDetails.RuntimeVersion),

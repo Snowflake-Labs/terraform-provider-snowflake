@@ -7,6 +7,8 @@ import (
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 const DefaultFunctionComment = "user-defined function"
@@ -35,6 +37,7 @@ type FunctionDetails struct {
 
 	NormalizedImports    []NormalizedPath
 	NormalizedTargetPath *NormalizedPath
+	ReturnDataType       datatypes.DataType
 }
 
 type NormalizedPath struct {
@@ -99,6 +102,13 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 		}
 	}
 
+	if dt, returnNotNull, err := parseFunctionAndProcedureReturns(v.Returns); err != nil {
+		errs = append(errs, err)
+	} else {
+		v.ReturnDataType = dt
+		_ = returnNotNull // TODO [next PR]: used when adding return nullability to the resource
+	}
+
 	return v, errors.Join(errs...)
 }
 
@@ -141,6 +151,17 @@ func parseStageLocationPath(location string) (*NormalizedPath, error) {
 		return nil, fmt.Errorf("part %s contains empty path", location)
 	}
 	return &NormalizedPath{stageRaw, pathRaw}, nil
+}
+
+func parseFunctionAndProcedureReturns(returns string) (datatypes.DataType, bool, error) {
+	var returnNotNull bool
+	trimmed := strings.TrimSpace(returns)
+	if strings.HasSuffix(trimmed, " NOT NULL") {
+		returnNotNull = true
+		trimmed = strings.TrimSuffix(trimmed, " NOT NULL")
+	}
+	dt, err := datatypes.ParseDataType(trimmed)
+	return dt, returnNotNull, err
 }
 
 func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*FunctionDetails, error) {
