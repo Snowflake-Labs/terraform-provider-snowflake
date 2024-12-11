@@ -50,6 +50,10 @@ Required:
 - `arg_data_type` (String) The argument type.
 - `arg_name` (String) The argument name.
 
+Optional:
+
+- `arg_default_value` (String) Optional default value for the argument. For text values use single quotes. Numeric values can be unquoted. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+
 
 <a id="nestedatt--parameters"></a>
 ### Nested Schema for `parameters`

@@ -103,17 +103,6 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return ReadContextFunctionJava(ctx, d, meta)
-
-	//if v, ok := d.GetOk("comment"); ok {
-	//	request.WithComment(v.(string))
-	//}
-	//if _, ok := d.GetOk("packages"); ok {
-	//	var packages []sdk.FunctionPackageRequest
-	//	for _, item := range d.Get("packages").([]interface{}) {
-	//		packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(item.(string)))
-	//	}
-	//	request.WithPackages(packages)
-	//}
 }
 
 func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

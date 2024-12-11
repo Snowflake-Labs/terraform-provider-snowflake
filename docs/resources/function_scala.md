@@ -38,7 +38,7 @@ Resource used to manage scala function objects. For more information, check [fun
 - `packages` (Set of String) The name and version number of Snowflake system packages required as dependencies. The value should be of the form `package_name:version_number`, where `package_name` is `snowflake_domain:package`.
 - `return_results_behavior` (String) Specifies the behavior of the function when returning results. Valid values are (case-insensitive): `VOLATILE` | `IMMUTABLE`.
 - `secrets` (Block Set) Assigns the names of [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter. (see [below for nested schema](#nestedblock--secrets))
-- `target_path` (String) The name of the handler method or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a method name, as in the following form: `MyClass.myMethod`.
+- `target_path` (Block Set, Max: 1) The name of the handler method or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a method name, as in the following form: `MyClass.myMethod`. (see [below for nested schema](#nestedblock--target_path))
 - `trace_level` (String) Trace level value to use when generating/filtering trace events For more information, check [TRACE_LEVEL docs](https://docs.snowflake.com/en/sql-reference/parameters#trace-level).
 
 ### Read-Only
@@ -57,6 +57,10 @@ Required:
 - `arg_data_type` (String) The argument type.
 - `arg_name` (String) The argument name.
 
+Optional:
+
+- `arg_default_value` (String) Optional default value for the argument. For text values use single quotes. Numeric values can be unquoted. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+
 
 <a id="nestedblock--imports"></a>
 ### Nested Schema for `imports`
@@ -74,6 +78,15 @@ Required:
 
 - `secret_id` (String) Fully qualified name of the allowed [secret](https://docs.snowflake.com/en/sql-reference/sql/create-secret). You will receive an error if you specify a SECRETS value whose secret isn’t also included in an integration specified by the EXTERNAL_ACCESS_INTEGRATIONS parameter.
 - `secret_variable_name` (String) The variable that will be used in handler code when retrieving information from the secret.
+
+
+<a id="nestedblock--target_path"></a>
+### Nested Schema for `target_path`
+
+Required:
+
+- `path_on_stage` (String) Path for import on stage, without the leading `/`.
+- `stage_location` (String) Stage location without leading `@`. To use your user's stage set this to `~`, otherwise pass fully qualified name of the stage (with every part contained in double quotes or use `snowflake_stage.<your stage's resource name>.fully_qualified_name` if you manage this stage through terraform).
 
 
 <a id="nestedatt--parameters"></a>
