@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [next PR]: test parsing single
+// TODO [SNOW-1850370]: test parsing single
 func Test_parseFunctionDetailsImport(t *testing.T) {
 	inputs := []struct {
 		rawInput string

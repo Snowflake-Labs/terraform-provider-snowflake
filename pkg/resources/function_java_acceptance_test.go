@@ -237,7 +237,7 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 
 	handler := fmt.Sprintf("%s.%s", className, funcName)
 	definition := acc.TestClient().Function.SampleJavaDefinition(t, className, funcName, argName)
-	// TODO [next PR]: extract to helper
+	// TODO [SNOW-1850370]: extract to helper
 	jarName := fmt.Sprintf("tf-%d-%s.jar", time.Now().Unix(), random.AlphaN(5))
 
 	functionModel := model.FunctionJavaBasicInline("w", id, dataType, handler, definition).

@@ -272,7 +272,7 @@ func functionBaseSchema() map[string]schema.Schema {
 			Description: "Specifies a comment for the function.",
 		},
 		// split into two because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6
-		// TODO [next PR]: add validations preventing setting improper stage and path
+		// TODO [SNOW-1348103]: add validations preventing setting improper stage and path
 		"imports": {
 			Type:     schema.TypeSet,
 			Optional: true,
@@ -532,7 +532,7 @@ type allFunctionDetailsCommon struct {
 
 func readFunctionArgumentsCommon(d *schema.ResourceData, args []sdk.NormalizedArgument) error {
 	if len(args) == 0 {
-		// TODO [next PR]: handle empty list
+		// TODO [SNOW-1348103]: handle empty list
 		return nil
 	}
 	if currentArgs, ok := d.Get("arguments").([]map[string]any); !ok {

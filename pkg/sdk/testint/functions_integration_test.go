@@ -33,7 +33,7 @@ import (
 // TODO [SNOW-1348103]: test weird names for arg name - lower/upper if used with double quotes, to upper without quotes, dots, spaces, and both quotes not permitted
 // TODO [SNOW-1348103]: test secure
 // TODO [SNOW-1348103]: python aggregate func (100357 (P0000): Could not find accumulate method in function CVVEMHIT_06547800_08D6_DBCA_1AC7_5E422AFF8B39 with handler dump)
-// TODO [next PR]: add test with multiple imports
+// TODO [SNOW-1348103]: add test with multiple imports
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()

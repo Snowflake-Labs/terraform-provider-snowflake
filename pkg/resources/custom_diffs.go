@@ -286,7 +286,7 @@ func RecreateWhenResourceBoolFieldChangedExternally(boolField string, wantValue 
 }
 
 // RecreateWhenResourceStringFieldChangedExternally recreates a resource when wantValue is different from value in field.
-// TODO [next PR]: merge with above? test.
+// TODO [SNOW-1850370]: merge with above? test.
 func RecreateWhenResourceStringFieldChangedExternally(field string, wantValue string) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 		if o, n := diff.GetChange(field); n != nil && o != nil && o != "" && n.(string) != wantValue {

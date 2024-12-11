@@ -128,8 +128,8 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 		return diags
 	}
 
-	// TODO [next PR]: handle external changes marking
-	// TODO [next PR]: handle setting state to value from config
+	// TODO [SNOW-1348103]: handle external changes marking
+	// TODO [SNOW-1348103]: handle setting state to value from config
 
 	errs := errors.Join(
 		// TODO [this PR]: set all proper fields

@@ -199,7 +199,6 @@ func User() *schema.Resource {
 		},
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.User, customdiff.All(
-			// TODO [SNOW-1629468 - next pr]: test "default_role", "default_secondary_roles"
 			ComputedIfAnyAttributeChanged(userSchema, ShowOutputAttributeName, userExternalChangesAttributes...),
 			ComputedIfAnyAttributeChanged(userParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllUserParameters), strings.ToLower)...),
 			ComputedIfAnyAttributeChanged(userSchema, FullyQualifiedNameAttributeName, "name"),

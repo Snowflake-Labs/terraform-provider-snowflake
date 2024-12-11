@@ -204,7 +204,7 @@ func parseFunctionOrProcedureSignature(signature string) ([]NormalizedArgument, 
 	return normalizedArguments, nil
 }
 
-// TODO [next PR]: test with strange arg names (first integration test)
+// TODO [SNOW-1850370]: test with strange arg names (first integration test)
 func parseFunctionOrProcedureArgument(arg string) (*NormalizedArgument, error) {
 	log.Printf("[DEBUG] parsing argument: %s", arg)
 	trimmed := strings.TrimSpace(arg)

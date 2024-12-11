@@ -212,7 +212,7 @@ type SchemaObjectIdentifier struct {
 	databaseName string
 	schemaName   string
 	name         string
-	// TODO(next prs): left right now for backward compatibility for procedures and externalFunctions
+	// TODO [SNOW-1850370]: left right now for backward compatibility for procedures and externalFunctions
 	arguments []DataType
 }
 
