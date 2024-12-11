@@ -20,6 +20,7 @@ type OauthIntegrationForPartnerApplicationsModel struct {
 	OauthRedirectUri          tfconfig.Variable `json:"oauth_redirect_uri,omitempty"`
 	OauthRefreshTokenValidity tfconfig.Variable `json:"oauth_refresh_token_validity,omitempty"`
 	OauthUseSecondaryRoles    tfconfig.Variable `json:"oauth_use_secondary_roles,omitempty"`
+	RelatedParameters         tfconfig.Variable `json:"related_parameters,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -100,6 +101,8 @@ func (o *OauthIntegrationForPartnerApplicationsModel) WithOauthUseSecondaryRoles
 	return o
 }
 
+// related_parameters attribute type is not yet supported, so WithRelatedParameters can't be generated
+
 //////////////////////////////////////////
 // below it's possible to set any value //
 //////////////////////////////////////////
@@ -151,5 +154,10 @@ func (o *OauthIntegrationForPartnerApplicationsModel) WithOauthRefreshTokenValid
 
 func (o *OauthIntegrationForPartnerApplicationsModel) WithOauthUseSecondaryRolesValue(value tfconfig.Variable) *OauthIntegrationForPartnerApplicationsModel {
 	o.OauthUseSecondaryRoles = value
+	return o
+}
+
+func (o *OauthIntegrationForPartnerApplicationsModel) WithRelatedParametersValue(value tfconfig.Variable) *OauthIntegrationForPartnerApplicationsModel {
+	o.RelatedParameters = value
 	return o
 }

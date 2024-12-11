@@ -82,6 +82,11 @@ func (o *OauthIntegrationForPartnerApplicationsResourceAssert) HasOauthUseSecond
 	return o
 }
 
+func (o *OauthIntegrationForPartnerApplicationsResourceAssert) HasRelatedParametersString(expected string) *OauthIntegrationForPartnerApplicationsResourceAssert {
+	o.AddAssertion(assert.ValueSet("related_parameters", expected))
+	return o
+}
+
 ////////////////////////////
 // Attribute empty checks //
 ////////////////////////////
@@ -133,5 +138,10 @@ func (o *OauthIntegrationForPartnerApplicationsResourceAssert) HasNoOauthRefresh
 
 func (o *OauthIntegrationForPartnerApplicationsResourceAssert) HasNoOauthUseSecondaryRoles() *OauthIntegrationForPartnerApplicationsResourceAssert {
 	o.AddAssertion(assert.ValueNotSet("oauth_use_secondary_roles"))
+	return o
+}
+
+func (o *OauthIntegrationForPartnerApplicationsResourceAssert) HasNoRelatedParameters() *OauthIntegrationForPartnerApplicationsResourceAssert {
+	o.AddAssertion(assert.ValueNotSet("related_parameters"))
 	return o
 }

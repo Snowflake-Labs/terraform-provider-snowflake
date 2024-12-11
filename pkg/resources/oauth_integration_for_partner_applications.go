@@ -85,7 +85,8 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 		DiffSuppressFunc: SuppressIfAny(
 			IgnoreChangeToCurrentSnowflakeListValueInDescribe("blocked_roles_list"),
 			IgnoreValuesFromSetIfParamSet("blocked_roles_list", string(sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList), privilegedRoles),
-			NormalizeAndCompareIdentifiersInSet("blocked_roles_list"),
+			// TODO(SNOW-1517937): uncomment
+			// NormalizeAndCompareIdentifiersInSet("blocked_roles_list"),
 		),
 	},
 	"comment": {

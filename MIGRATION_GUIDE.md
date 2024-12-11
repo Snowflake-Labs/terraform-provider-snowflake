@@ -9,10 +9,18 @@ across different versions.
 
 ## v0.99.0 ➞ v0.100.0
 
-### snowflake_oauth_integration_for_partner_applications resource changes
+### snowflake_oauth_integration_for_partner_applications and snowflake_oauth_integration_for_custom_clients resource changes
 #### *(behavior change)* `blocked_roles_list` field is no longer required
 
-TODO: fill
+Previously, `blocked_roles_list` field was required to handle default account roles like `ACCOUNTADMIN`, `ORGADMIN`, and `SECURITYADMIN`.
+
+Now, it is optional, because of using the value of `OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST` parameter (read more below).
+
+No changes in the configuration are necessary.
+
+#### *(behavior change)* new field `related_parameters`
+
+To handle `blocked_roles_list` field properly in both of the resources, we introduce `related_parameters` field. This field is a list of parameters related to OAuth integrations. It is a computed-only field containing value of `OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST` account parameter (see [docs](https://docs.snowflake.com/en/sql-reference/parameters#oauth-add-privileged-roles-to-blocked-list)).
 
 ### snowflake_tag_association resource changes
 #### *(behavior change)* new id format

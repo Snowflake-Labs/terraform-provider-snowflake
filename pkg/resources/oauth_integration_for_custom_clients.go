@@ -89,9 +89,14 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		},
-		// TODO(SNOW-1517937): Check if can make optional
-		Required:    true,
-		Description: relatedResourceDescription("A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.", resources.AccountRole),
+		Optional:    true,
+		Description: relatedResourceDescription(withPrivilegedRolesDescription("A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.", string(sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList)), resources.AccountRole),
+		DiffSuppressFunc: SuppressIfAny(
+			IgnoreChangeToCurrentSnowflakeListValueInDescribe("blocked_roles_list"),
+			IgnoreValuesFromSetIfParamSet("blocked_roles_list", string(sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList), privilegedRoles),
+			// TODO(SNOW-1517937): uncomment
+			// NormalizeAndCompareIdentifiersInSet("blocked_roles_list"),
+		),
 	},
 	"oauth_issue_refresh_tokens": {
 		Type:             schema.TypeString,
@@ -146,6 +151,14 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 		Description: "Outputs the result of `DESCRIBE SECURITY INTEGRATION` for the given integration.",
 		Elem: &schema.Resource{
 			Schema: schemas.DescribeOauthIntegrationForCustomClients,
+		},
+	},
+	RelatedParametersAttributeName: {
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: "Parameters related to this security integration.",
+		Elem: &schema.Resource{
+			Schema: schemas.ShowOauthForCustomClientsParametersSchema,
 		},
 	},
 	FullyQualifiedNameAttributeName: schemas.FullyQualifiedNameSchema,
@@ -432,20 +445,6 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			return diag.FromErr(err)
 		}
 
-		blockedRolesList, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
-			return property.Name == "BLOCKED_ROLES_LIST"
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("failed to find pre authorized roles list, err = %w", err))
-		}
-		var blockedRoles []string
-		if len(blockedRolesList.Value) > 0 {
-			blockedRoles = strings.Split(blockedRolesList.Value, ",")
-		}
-		if err := d.Set("blocked_roles_list", blockedRoles); err != nil {
-			return diag.FromErr(err)
-		}
-
 		networkPolicy, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 			return property.Name == "NETWORK_POLICY"
 		})
@@ -498,12 +497,20 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 				return diag.FromErr(err)
 			}
 
+			blockedRolesList, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+				return property.Name == "BLOCKED_ROLES_LIST"
+			})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
 			if err = handleExternalChangesToObjectInDescribe(d,
 				describeMapping{"oauth_allow_non_tls_redirect_uri", "oauth_allow_non_tls_redirect_uri", oauthAllowNonTlsRedirectUri.Value, oauthAllowNonTlsRedirectUri.Value, nil},
 				describeMapping{"oauth_enforce_pkce", "oauth_enforce_pkce", oauthEnforcePkce.Value, oauthEnforcePkce.Value, nil},
 				describeMapping{"oauth_use_secondary_roles", "oauth_use_secondary_roles", oauthUseSecondaryRoles.Value, oauthUseSecondaryRoles.Value, nil},
 				describeMapping{"oauth_issue_refresh_tokens", "oauth_issue_refresh_tokens", oauthIssueRefreshTokens.Value, oauthIssueRefreshTokens.Value, nil},
 				describeMapping{"oauth_refresh_token_validity", "oauth_refresh_token_validity", oauthRefreshTokenValidity.Value, oauthRefreshTokenValidity.Value, nil},
+				describeMapping{"blocked_roles_list", "blocked_roles_list", blockedRolesList.Value, sdk.ParseCommaSeparatedStringArray(blockedRolesList.Value, false), nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
@@ -516,6 +523,7 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 			"oauth_use_secondary_roles",
 			"oauth_issue_refresh_tokens",
 			"oauth_refresh_token_validity",
+			"blocked_roles_list",
 		}); err != nil {
 			return diag.FromErr(err)
 		}
@@ -525,6 +533,13 @@ func ReadContextOauthIntegrationForCustomClients(withExternalChangesMarking bool
 		}
 
 		if err = d.Set(DescribeOutputAttributeName, []map[string]any{schemas.DescribeOauthIntegrationForCustomClientsToSchema(integrationProperties)}); err != nil {
+			return diag.FromErr(err)
+		}
+		param, err := client.Parameters.ShowAccountParameter(ctx, sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set(RelatedParametersAttributeName, []map[string]any{schemas.OauthForCustomClientsParametersToSchema([]*sdk.Parameter{param})}); err != nil {
 			return diag.FromErr(err)
 		}
 

@@ -801,7 +801,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_WithPrivilegedRolesBlockedLi
 				Config: accconfig.FromModel(t, modelWithBlockedRole),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(modelWithBlockedRole.ResourceReference(), "blocked_roles_list.#", "1"),
-					resource.TestCheckResourceAttr(modelWithBlockedRole.ResourceReference(), "blocked_roles_list.0", role.ID().Name()),
+					resource.TestCheckTypeSetElemAttr(modelWithBlockedRole.ResourceReference(), "blocked_roles_list.*", role.ID().Name()),
 					resource.TestCheckResourceAttr(modelWithBlockedRole.ResourceReference(), "name", id.Name()),
 
 					resource.TestCheckResourceAttr(modelWithBlockedRole.ResourceReference(), "describe_output.0.blocked_roles_list.0.value", strings.Join(allRoles, ",")),
@@ -818,13 +818,13 @@ func TestAcc_OauthIntegrationForPartnerApplications_WithPrivilegedRolesBlockedLi
 			},
 			{
 				PreConfig: func() {
-					// Do not revert, because it gets reverted on
+					// Do not revert, because the revert is setup above.
 					acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList, "false")
 				},
 				Config: accconfig.FromModel(t, modelWithBlockedRole),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(modelWithBlockedRole.ResourceReference(), "blocked_roles_list.#", "1"),
-					resource.TestCheckResourceAttr(modelWithBlockedRole.ResourceReference(), "blocked_roles_list.0", role.ID().Name()),
+					resource.TestCheckTypeSetElemAttr(modelWithBlockedRole.ResourceReference(), "blocked_roles_list.*", role.ID().Name()),
 					resource.TestCheckResourceAttr(modelWithBlockedRole.ResourceReference(), "name", id.Name()),
 
 					resource.TestCheckResourceAttr(modelWithBlockedRole.ResourceReference(), "describe_output.0.blocked_roles_list.0.value", strings.Join(customRoles, ",")),

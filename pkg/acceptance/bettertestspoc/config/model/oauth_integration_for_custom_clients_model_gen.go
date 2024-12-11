@@ -36,13 +36,11 @@ type OauthIntegrationForCustomClientsModel struct {
 
 func OauthIntegrationForCustomClients(
 	resourceName string,
-	blockedRolesList,
 	name string,
 	oauthClientType string,
 	oauthRedirectUri string,
 ) *OauthIntegrationForCustomClientsModel {
 	o := &OauthIntegrationForCustomClientsModel{ResourceModelMeta: config.Meta(resourceName, resources.OauthIntegrationForCustomClients)}
-	o.WithBlockedRolesList(blockedRolesList)
 	o.WithName(name)
 	o.WithOauthClientType(oauthClientType)
 	o.WithOauthRedirectUri(oauthRedirectUri)
@@ -50,13 +48,11 @@ func OauthIntegrationForCustomClients(
 }
 
 func OauthIntegrationForCustomClientsWithDefaultMeta(
-	blockedRolesList,
 	name string,
 	oauthClientType string,
 	oauthRedirectUri string,
 ) *OauthIntegrationForCustomClientsModel {
 	o := &OauthIntegrationForCustomClientsModel{ResourceModelMeta: config.DefaultMeta(resources.OauthIntegrationForCustomClients)}
-	o.WithBlockedRolesList(blockedRolesList)
 	o.WithName(name)
 	o.WithOauthClientType(oauthClientType)
 	o.WithOauthRedirectUri(oauthRedirectUri)
