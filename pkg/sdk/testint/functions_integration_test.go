@@ -33,6 +33,7 @@ import (
 // TODO [SNOW-1348103]: python aggregate func (100357 (P0000): Could not find accumulate method in function CVVEMHIT_06547800_08D6_DBCA_1AC7_5E422AFF8B39 with handler dump)
 // TODO [SNOW-1348103]: add a test documenting that we can't set parameters in create (and revert adding these parameters directly in object...)
 // TODO [SNOW-1850370]: active warehouse vs validations
+// TODO [SNOW-1348103]: add a test documenting STRICT behavior
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()

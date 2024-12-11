@@ -842,6 +842,13 @@ const (
 	FunctionParameterTraceLevel          FunctionParameter = "TRACE_LEVEL"
 )
 
+var AllFunctionParameters = []FunctionParameter{
+	FunctionParameterEnableConsoleOutput,
+	FunctionParameterLogLevel,
+	FunctionParameterMetricLevel,
+	FunctionParameterTraceLevel,
+}
+
 type ProcedureParameter string
 
 const (
@@ -851,6 +858,13 @@ const (
 	ProcedureParameterMetricLevel         ProcedureParameter = "METRIC_LEVEL"
 	ProcedureParameterTraceLevel          ProcedureParameter = "TRACE_LEVEL"
 )
+
+var AllProcedureParameters = []ProcedureParameter{
+	ProcedureParameterEnableConsoleOutput,
+	ProcedureParameterLogLevel,
+	ProcedureParameterMetricLevel,
+	ProcedureParameterTraceLevel,
+}
 
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {
