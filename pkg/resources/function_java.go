@@ -134,7 +134,7 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 	errs := errors.Join(
 		// TODO [this PR]: set all proper fields
 		// not reading is_secure on purpose (handled as external change to show output)
-		// arguments
+		readFunctionArgumentsCommon(d, allFunctionDetails.functionDetails.NormalizedArguments),
 		d.Set("return_type", allFunctionDetails.functionDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
 		// not reading return_results_behavior on purpose (handled as external change to show output)

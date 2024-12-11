@@ -48,10 +48,10 @@ type NormalizedPath struct {
 	PathOnStage string
 }
 
+// NormalizedArgument does not contain default value because it is not returned in the Signature (or any other field).
 type NormalizedArgument struct {
-	name         string
-	dataType     datatypes.DataType
-	defaultValue string // TODO [next PR]: handle when adding default values
+	Name     string
+	DataType datatypes.DataType
 }
 
 func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
@@ -177,7 +177,7 @@ func parseFunctionAndProcedureReturns(returns string) (datatypes.DataType, bool,
 	return dt, returnNotNull, err
 }
 
-// Format in Snowflake DB is: (argName argType [DEFAULT defaultValue], argName argType [DEFAULT defaultValue], ...).
+// Format in Snowflake DB is: (argName argType, argName argType, ...).
 func parseFunctionAndProcedureSignature(signature string) ([]NormalizedArgument, error) {
 	normalizedArguments := make([]NormalizedArgument, 0)
 	trimmed := strings.TrimSpace(signature)
@@ -203,7 +203,7 @@ func parseFunctionAndProcedureSignature(signature string) ([]NormalizedArgument,
 	return normalizedArguments, nil
 }
 
-// TODO [next PR]: adjust after tests for strange arg names and defaults
+// TODO [next PR]: test with strange arg names (first integration test)
 func parseFunctionOrProcedureArgument(arg string) (*NormalizedArgument, error) {
 	log.Printf("[DEBUG] parsing argument: %s", arg)
 	trimmed := strings.TrimSpace(arg)
@@ -213,26 +213,11 @@ func parseFunctionOrProcedureArgument(arg string) (*NormalizedArgument, error) {
 	}
 	argName := trimmed[:idx]
 	rest := strings.TrimSpace(trimmed[idx:])
-	split := strings.Split(rest, " DEFAULT ")
-	var dt datatypes.DataType
-	var defaultValue string
-	var err error
-	switch len(split) {
-	case 1:
-		dt, err = datatypes.ParseDataType(split[0])
-		if err != nil {
-			return nil, fmt.Errorf("arg type %s cannot be parsed, err: %w", split[0], err)
-		}
-	case 2:
-		dt, err = datatypes.ParseDataType(split[0])
-		if err != nil {
-			return nil, fmt.Errorf("arg type %s cannot be parsed, err: %w", split[0], err)
-		}
-		defaultValue = strings.TrimSpace(split[1])
-	default:
-		return nil, fmt.Errorf("cannot parse arg %s, part: %s", arg, rest)
+	dt, err := datatypes.ParseDataType(rest)
+	if err != nil {
+		return nil, fmt.Errorf("arg type %s cannot be parsed, err: %w", rest, err)
 	}
-	return &NormalizedArgument{argName, dt, defaultValue}, nil
+	return &NormalizedArgument{argName, dt}, nil
 }
 
 func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*FunctionDetails, error) {

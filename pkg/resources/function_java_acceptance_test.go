@@ -27,6 +27,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+// TODO [this PR]: test empty args
+// TODO [this PR]: test default args no change
+
 func TestAcc_FunctionJava_InlineBasic(t *testing.T) {
 	className := "TestFunc"
 	funcName := "echoVarchar"

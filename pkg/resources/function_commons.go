@@ -530,6 +530,22 @@ type allFunctionDetailsCommon struct {
 	functionParameters []*sdk.Parameter
 }
 
+func readFunctionArgumentsCommon(d *schema.ResourceData, args []sdk.NormalizedArgument) error {
+	if len(args) == 0 {
+		// TODO [next PR]: handle empty list
+		return nil
+	}
+	if currentArgs, ok := d.Get("arguments").([]map[string]any); !ok {
+		return fmt.Errorf("arguments must be a list")
+	} else {
+		for i, arg := range args {
+			currentArgs[i]["arg_name"] = arg.Name
+			currentArgs[i]["arg_data_type"] = arg.DataType.ToSql()
+		}
+		return d.Set("arguments", currentArgs)
+	}
+}
+
 func readFunctionImportsCommon(d *schema.ResourceData, imports []sdk.NormalizedPath) error {
 	if len(imports) == 0 {
 		// don't do anything if imports not present
