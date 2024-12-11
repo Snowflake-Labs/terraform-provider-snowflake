@@ -81,8 +81,12 @@ All of the deprecated objects are removed from v1 release. This includes:
   - `snowflake_session_parameter`
   - `snowflake_stream`
   - `snowflake_tag_masking_policy_association`
+  - `snowflake_function`
+  - `snowflake_procedure`
+  - `snowflake_unsafe_execute`
 - Data sources
   - `snowflake_role`
+  - `snowflake_roles`
 - Fields in the provider configuration:
   - `account`
   - `oauth_access_token`
@@ -95,10 +99,10 @@ All of the deprecated objects are removed from v1 release. This includes:
   - `region`
   - `session_params`
   - `username`
+- Fields in `tag` resource:
+  - `object_name`
 
 Additionally, `JWT` value is no longer available for `authenticator` field in the provider configuration.
-
-
 
 ## v0.99.0 ➞ v0.100.0
 

@@ -10,7 +10,7 @@ import (
 
 const (
 	CurrentSchemaVersion string = "1"
-	ProviderVersion      string = "v1.0.0-rc1" // TODO(SNOW-1814934): Currently hardcoded, make it computed
+	ProviderVersion      string = "v1.0.0" // TODO(SNOW-1814934): Currently hardcoded, make it computed
 	MetadataPrefix       string = "terraform_provider_usage_tracking"
 )
 
