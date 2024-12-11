@@ -7,6 +7,12 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+<!-- TODO(SNOW-1844996): Remove this note.-->
+-> **Note** Field `RESOURCE_CONSTRAINT` is currently missing. It will be added in the future.
+
+<!-- TODO(SNOW-1642723): Remove or adjust this note.-->
+-> **Note** Assigning resource monitors to warehouses requires ACCOUNTADMIN role. To do this, either manage the warehouse resource with ACCOUNTADMIN role, or use [unsafe_execute](./unsafe_execute) instead. See [this issue](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3019) for more details.
+
 # snowflake_warehouse (Resource)
 
 Resource used to manage warehouse objects. For more information, check [warehouse documentation](https://docs.snowflake.com/en/sql-reference/commands-warehouse).
@@ -14,10 +20,30 @@ Resource used to manage warehouse objects. For more information, check [warehous
 ## Example Usage
 
 ```terraform
+# Resource with required fields
 resource "snowflake_warehouse" "warehouse" {
-  name           = "test"
-  comment        = "foo"
-  warehouse_size = "small"
+  name = "WAREHOUSE"
+}
+
+# Resource with all fields
+resource "snowflake_warehouse" "warehouse" {
+  name                                = "WAREHOUSE"
+  warehouse_type                      = "SNOWPARK-OPTIMIZED"
+  warehouse_size                      = "MEDIUM"
+  max_cluster_count                   = 4
+  min_cluster_count                   = 2
+  scaling_policy                      = "ECONOMY"
+  auto_suspend                        = 1200
+  auto_resume                         = false
+  initially_suspended                 = false
+  resource_monitor                    = snowflake_resource_monitor.monitor.fully_qualified_name
+  comment                             = "An example warehouse."
+  enable_query_acceleration           = true
+  query_acceleration_max_scale_factor = 4
+
+  max_concurrency_level               = 4
+  statement_queued_timeout_in_seconds = 5
+  statement_timeout_in_seconds        = 86400
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -28,7 +54,7 @@ resource "snowflake_warehouse" "warehouse" {
 
 ### Required
 
-- `name` (String) Identifier for the virtual warehouse; must be unique for your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `name` (String) Identifier for the virtual warehouse; must be unique for your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 
 ### Optional
 
@@ -41,7 +67,7 @@ resource "snowflake_warehouse" "warehouse" {
 - `max_concurrency_level` (Number) Object parameter that specifies the concurrency level for SQL statements (i.e. queries and DML) executed by a warehouse.
 - `min_cluster_count` (Number) Specifies the minimum number of server clusters for the warehouse (only applies to multi-cluster warehouses).
 - `query_acceleration_max_scale_factor` (Number) Specifies the maximum scale factor for leasing compute resources for query acceleration. The scale factor is used as a multiplier based on warehouse size.
-- `resource_monitor` (String) Specifies the name of a resource monitor that is explicitly assigned to the warehouse.
+- `resource_monitor` (String) Specifies the name of a resource monitor that is explicitly assigned to the warehouse. For more information about this resource, see [docs](./resource_monitor).
 - `scaling_policy` (String) Specifies the policy for automatically starting and shutting down clusters in a multi-cluster warehouse running in Auto-scale mode. Valid values are (case-insensitive): `STANDARD` | `ECONOMY`.
 - `statement_queued_timeout_in_seconds` (Number) Object parameter that specifies the time, in seconds, a SQL statement (query, DDL, DML, etc.) can be queued on a warehouse before it is canceled by the system.
 - `statement_timeout_in_seconds` (Number) Specifies the time, in seconds, after which a running SQL statement (query, DDL, DML, etc.) is canceled by the system
@@ -139,5 +165,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_warehouse.example warehouseName
+terraform import snowflake_warehouse.example '"<warehouse_name>"'
 ```

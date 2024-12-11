@@ -37,12 +37,12 @@ resource "snowflake_view" "test" {
       policy_name = "projection_policy"
     }
     masking_policy {
-      policy_name = "masking_policy"
+      policy_name = snowflake_masking_policy.example.fully_qualified_name
       using       = ["address"]
     }
   }
   row_access_policy {
-    policy_name = "row_access_policy"
+    policy_name = snowflake_row_access_policy.example.fully_qualified_name
     on          = ["id"]
   }
   aggregation_policy {
@@ -50,8 +50,9 @@ resource "snowflake_view" "test" {
     entity_key  = ["id"]
   }
   data_metric_function {
-    function_name = "data_metric_function"
-    on            = ["id"]
+    function_name   = "data_metric_function"
+    on              = ["id"]
+    schedule_status = "STARTED"
   }
   data_metric_schedule {
     using_cron = "15 * * * * UTC"

@@ -46,6 +46,8 @@
 * [snowflake_system_get_aws_sns_iam_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/system_get_aws_sns_iam_policy) (datasource)
 * [snowflake_system_get_privatelink_config](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/system_get_privatelink_config) (datasource)
 * [snowflake_system_get_snowflake_platform_info](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/system_get_snowflake_platform_info) (datasource)
+* [snowflake_table](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/resources/table)
+* [snowflake_tables](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.98.0/docs/data-sources/tables) (datasource)
 * [snowflake_table_column_masking_policy_application](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/table_column_masking_policy_application)
 * [snowflake_table_constraint](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/table_constraint) (undecided - may be deleted instead)
 * [snowflake_user_public_keys](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/user_public_keys)

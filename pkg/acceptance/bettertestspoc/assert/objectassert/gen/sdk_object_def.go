@@ -92,6 +92,16 @@ var allStructs = []SdkObjectDef{
 		ObjectType:   sdk.ObjectTypeAccount,
 		ObjectStruct: sdk.Account{},
 	},
+	{
+		IdType:       "sdk.SchemaObjectIdentifierWithArguments",
+		ObjectType:   sdk.ObjectTypeFunction,
+		ObjectStruct: sdk.Function{},
+	},
+	{
+		IdType:       "sdk.SchemaObjectIdentifierWithArguments",
+		ObjectType:   sdk.ObjectTypeProcedure,
+		ObjectStruct: sdk.Procedure{},
+	},
 }
 
 func GetSdkObjectDetails() []genhelpers.SdkObjectDetails {

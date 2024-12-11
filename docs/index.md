@@ -9,7 +9,7 @@ description: Manage SnowflakeDB with Terraform.
 
 ~> **Note** Please check the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) when changing the version of the provider.
 
--> **Note** the current roadmap is available in our GitHub repository: [ROADMAP.md](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md).
+-> **Note** The current roadmap is available in our GitHub repository: [ROADMAP.md](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md).
 
 This is a terraform provider plugin for managing [Snowflake](https://www.snowflake.com/) accounts.
 Coverage is focused on part of Snowflake related to access control.
@@ -150,7 +150,7 @@ To export the variables into your provider:
 
 ```shell
 export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
+export SNOWFLAKE_PRIVATE_KEY="~/.ssh/snowflake_key"
 ```
 
 ### Keypair Authentication Passphrase
@@ -172,7 +172,7 @@ To export the variables into your provider:
 
 ```shell
 export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key.p8"
+export SNOWFLAKE_PRIVATE_KEY="~/.ssh/snowflake_key.p8"
 export SNOWFLAKE_PRIVATE_KEY_PASSPHRASE="..."
 ```
 
@@ -182,7 +182,7 @@ If you have an OAuth access token, export these credentials as environment varia
 
 ```shell
 export SNOWFLAKE_USER='...'
-export SNOWFLAKE_OAUTH_ACCESS_TOKEN='...'
+export SNOWFLAKE_TOKEN='...'
 ```
 
 Note that once this access token expires, you'll need to request a new one through an external application.
@@ -192,11 +192,11 @@ Note that once this access token expires, you'll need to request a new one throu
 If you have an OAuth Refresh token, export these credentials as environment variables:
 
 ```shell
-export SNOWFLAKE_OAUTH_REFRESH_TOKEN='...'
-export SNOWFLAKE_OAUTH_CLIENT_ID='...'
-export SNOWFLAKE_OAUTH_CLIENT_SECRET='...'
-export SNOWFLAKE_OAUTH_ENDPOINT='...'
-export SNOWFLAKE_OAUTH_REDIRECT_URL='https://localhost.com'
+export SNOWFLAKE_TOKEN_ACCESSOR_REFRESH_TOKEN='...'
+export SNOWFLAKE_TOKEN_ACCESSOR_CLIENT_ID='...'
+export SNOWFLAKE_TOKEN_ACCESSOR_CLIENT_SECRET='...'
+export SNOWFLAKE_TOKEN_ACCESSOR_TOKEN_ENDPOINT='...'
+export SNOWFLAKE_TOKEN_ACCESSOR_REDIRECT_URI='https://localhost.com'
 ```
 
 Note because access token have a short life; typically 10 minutes, by passing refresh token new access token will be generated.
@@ -231,7 +231,7 @@ provider "snowflake" {
 
 ```bash
 export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY_PATH="~/.ssh/snowflake_key"
+export SNOWFLAKE_PRIVATE_KEY="~/.ssh/snowflake_key"
 ```
 
 3. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field. When this is not specified, `default` profile is loaded.

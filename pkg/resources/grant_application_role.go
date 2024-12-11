@@ -28,7 +28,7 @@ var grantApplicationRoleSchema = map[string]*schema.Schema{
 	"parent_account_role_name": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "The fully qualified name of the account role on which application role will be granted.",
+		Description:      relatedResourceDescription("The fully qualified name of the account role on which application role will be granted.", resources.AccountRole),
 		ForceNew:         true,
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,

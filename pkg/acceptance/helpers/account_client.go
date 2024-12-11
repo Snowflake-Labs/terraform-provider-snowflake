@@ -69,7 +69,7 @@ func (c *AccountClient) Create(t *testing.T) (*sdk.Account, func()) {
 
 func (c *AccountClient) CreateWithRequest(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateAccountOptions) (*sdk.Account, func()) {
 	t.Helper()
-	err := c.client().Create(context.Background(), id, opts)
+	_, err := c.client().Create(context.Background(), id, opts)
 	require.NoError(t, err)
 
 	account, err := c.client().ShowByID(context.Background(), id)
@@ -141,7 +141,7 @@ func (c *AccountClient) CreateAndLogIn(t *testing.T) (*sdk.Account, *sdk.Client,
 		newClient, err := sdk.NewClient(&gosnowflake.Config{
 			Account:       fmt.Sprintf("%s-%s", account.OrganizationName, account.AccountName),
 			User:          name,
-			Host:          strings.TrimPrefix(*account.AccountLocatorURL, `https://`),
+			Host:          strings.TrimPrefix(*account.AccountLocatorUrl, `https://`),
 			Authenticator: gosnowflake.AuthTypeJwt,
 			PrivateKey:    privateKey,
 			Role:          snowflakeroles.Accountadmin.Name(),

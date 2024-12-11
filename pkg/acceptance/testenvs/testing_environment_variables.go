@@ -36,6 +36,8 @@ const (
 	EnableAllPreviewFeatures env = "SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES"
 	TestObjectsSuffix        env = "TEST_SF_TF_TEST_OBJECT_SUFFIX"
 	RequireTestObjectsSuffix env = "TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX"
+
+	SimplifiedIntegrationTestsSetup env = "TEST_SF_TF_SIMPLIFIED_INTEGRATION_TESTS_SETUP"
 )
 
 func GetOrSkipTest(t *testing.T, envName Env) string {

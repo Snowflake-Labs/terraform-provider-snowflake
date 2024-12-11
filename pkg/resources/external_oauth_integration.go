@@ -88,7 +88,7 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeSet,
 		Elem:             &schema.Schema{Type: schema.TypeString},
 		Optional:         true,
-		Description:      withPrivilegedRolesDescription("Specifies the list of roles that a client cannot set as the primary role.", string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList)),
+		Description:      relatedResourceDescription(withPrivilegedRolesDescription("Specifies the list of roles that a client cannot set as the primary role.", string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList)), resources.AccountRole),
 		DiffSuppressFunc: IgnoreValuesFromSetIfParamSet("external_oauth_blocked_roles_list", string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList), privilegedRoles),
 		ConflictsWith:    []string{"external_oauth_allowed_roles_list"},
 	},
@@ -96,7 +96,7 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 		Type:          schema.TypeSet,
 		Elem:          &schema.Schema{Type: schema.TypeString},
 		Optional:      true,
-		Description:   "Specifies the list of roles that the client can set as the primary role.",
+		Description:   relatedResourceDescription("Specifies the list of roles that the client can set as the primary role.", resources.AccountRole),
 		ConflictsWith: []string{"external_oauth_blocked_roles_list"},
 	},
 	"external_oauth_audience_list": {
