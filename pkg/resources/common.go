@@ -60,7 +60,7 @@ func ctyValToSliceString(valueElems []cty.Value) []string {
 	return elems
 }
 
-func ImportName[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier](ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+func ImportName[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | sdk.SchemaObjectIdentifier | sdk.AccountIdentifier](ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	switch any(new(T)).(type) {
 	case *sdk.AccountObjectIdentifier:
 		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
@@ -99,6 +99,15 @@ func ImportName[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentifier | s
 		}
 
 		if err := d.Set("schema", id.SchemaName()); err != nil {
+			return nil, err
+		}
+	case *sdk.AccountIdentifier:
+		id, err := sdk.ParseAccountIdentifier(d.Id())
+		if err != nil {
+			return nil, err
+		}
+
+		if err := d.Set("name", id.AccountName()); err != nil {
 			return nil, err
 		}
 	}

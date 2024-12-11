@@ -69,13 +69,13 @@ resource "snowflake_grant_database_role" "g" {
 
 ### Required
 
-- `database_role_name` (String) The fully qualified name of the database role which will be granted to share or parent role.
+- `database_role_name` (String) The fully qualified name of the database role which will be granted to share or parent role. For more information about this resource, see [docs](./database_role).
 
 ### Optional
 
-- `parent_database_role_name` (String) The fully qualified name of the parent database role which will create a parent-child relationship between the roles.
-- `parent_role_name` (String) The fully qualified name of the parent account role which will create a parent-child relationship between the roles.
-- `share_name` (String) The fully qualified name of the share on which privileges will be granted.
+- `parent_database_role_name` (String) The fully qualified name of the parent database role which will create a parent-child relationship between the roles. For more information about this resource, see [docs](./database_role).
+- `parent_role_name` (String) The fully qualified name of the parent account role which will create a parent-child relationship between the roles. For more information about this resource, see [docs](./account_role).
+- `share_name` (String) The fully qualified name of the share on which privileges will be granted. For more information about this resource, see [docs](./share).
 
 ### Read-Only
 

@@ -7,8 +7,9 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
-> [!WARNING]
-> According to Snowflake [docs](https://docs.snowflake.com/en/sql-reference/sql/drop-network-policy#usage-notes), a network policy cannot be dropped successfully if it is currently assigned to another object. Currently, the provider does not unassign such objects automatically. Before dropping the resource, list the assigned objects with `SELECT * from table(information_schema.policy_references(policy_name=>'<string>'));` and unassign them manually with `ALTER ...` or with updated Terraform configuration, if possible.
+!> **Note** According to Snowflake [docs](https://docs.snowflake.com/en/sql-reference/sql/drop-network-policy#usage-notes), a network policy cannot be dropped successfully if it is currently assigned to another object. Currently, the provider does not unassign such objects automatically. Before dropping the resource, first unassign the policy from the relevant objects. See [guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies) for more details.
+
+!> **Note** Due to technical limitations in Terraform SDK, changes in `allowed_network_rule_list` and `blocked_network_rule_list` do not cause diff for `show_output` and `describe_output`.
 
 # snowflake_network_policy (Resource)
 
@@ -25,8 +26,8 @@ resource "snowflake_network_policy" "basic" {
 ## Complete (with every optional set)
 resource "snowflake_network_policy" "complete" {
   name                      = "network_policy_name"
-  allowed_network_rule_list = ["<fully qualified network rule id>"]
-  blocked_network_rule_list = ["<fully qualified network rule id>"]
+  allowed_network_rule_list = [snowflake_network_rule.one.fully_qualified_name]
+  blocked_network_rule_list = [snowflake_network_rule.two.fully_qualified_name]
   allowed_ip_list           = ["192.168.1.0/24"]
   blocked_ip_list           = ["192.168.1.99"]
   comment                   = "my network policy"
@@ -40,14 +41,14 @@ resource "snowflake_network_policy" "complete" {
 
 ### Required
 
-- `name` (String) Specifies the identifier for the network policy; must be unique for the account in which the network policy is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `name` (String) Specifies the identifier for the network policy; must be unique for the account in which the network policy is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 
 ### Optional
 
 - `allowed_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are allowed access to your Snowflake account.
-- `allowed_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake.
+- `allowed_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are allowed access to Snowflake. For more information about this resource, see [docs](./network_rule).
 - `blocked_ip_list` (Set of String) Specifies one or more IPv4 addresses (CIDR notation) that are denied access to your Snowflake account. **Do not** add `0.0.0.0/0` to `blocked_ip_list`, in order to block all IP addresses except a select list, you only need to add IP addresses to `allowed_ip_list`.
-- `blocked_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake.
+- `blocked_network_rule_list` (Set of String) Specifies a list of fully qualified network rules that contain the network identifiers that are denied access to Snowflake. For more information about this resource, see [docs](./network_rule).
 - `comment` (String) Specifies a comment for the network policy.
 
 ### Read-Only
@@ -86,5 +87,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_network_policy.example "name"
+terraform import snowflake_network_policy.example '"<network_policy_name>"'
 ```

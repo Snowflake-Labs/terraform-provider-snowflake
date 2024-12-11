@@ -41,10 +41,10 @@ var ShowProcedureSchema = map[string]*schema.Schema{
 		Type:     schema.TypeInt,
 		Computed: true,
 	},
-	"arguments": {
-		Type:     schema.TypeInvalid,
-		Computed: true,
-	},
+	//"arguments_old": {
+	//	Type:     schema.TypeInvalid,
+	//	Computed: true,
+	//},
 	"arguments_raw": {
 		Type:     schema.TypeString,
 		Computed: true,
@@ -69,6 +69,14 @@ var ShowProcedureSchema = map[string]*schema.Schema{
 		Type:     schema.TypeBool,
 		Computed: true,
 	},
+	"secrets": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
+	"external_access_integrations": {
+		Type:     schema.TypeString,
+		Computed: true,
+	},
 }
 
 var _ = ShowProcedureSchema
@@ -83,13 +91,19 @@ func ProcedureToSchema(procedure *sdk.Procedure) map[string]any {
 	procedureSchema["is_ansi"] = procedure.IsAnsi
 	procedureSchema["min_num_arguments"] = procedure.MinNumArguments
 	procedureSchema["max_num_arguments"] = procedure.MaxNumArguments
-	procedureSchema["arguments"] = procedure.ArgumentsOld
+	// procedureSchema["arguments_old"] = procedure.ArgumentsOld
 	procedureSchema["arguments_raw"] = procedure.ArgumentsRaw
 	procedureSchema["description"] = procedure.Description
 	procedureSchema["catalog_name"] = procedure.CatalogName
 	procedureSchema["is_table_function"] = procedure.IsTableFunction
 	procedureSchema["valid_for_clustering"] = procedure.ValidForClustering
 	procedureSchema["is_secure"] = procedure.IsSecure
+	if procedure.Secrets != nil {
+		procedureSchema["secrets"] = procedure.Secrets
+	}
+	if procedure.ExternalAccessIntegrations != nil {
+		procedureSchema["external_access_integrations"] = procedure.ExternalAccessIntegrations
+	}
 	return procedureSchema
 }
 
