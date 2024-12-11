@@ -97,7 +97,7 @@ func (c *ProcedureClient) CreateScalaStaged(t *testing.T, id sdk.SchemaObjectIde
 	returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
 	packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0")}
 
-	request := sdk.NewCreateForScalaProcedureRequest(id.SchemaObjectId(), *returns, handler, packages, "2.12").
+	request := sdk.NewCreateForScalaProcedureRequest(id.SchemaObjectId(), *returns, "2.12", packages, handler).
 		WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
 		WithImports([]sdk.ProcedureImportRequest{*sdk.NewProcedureImportRequest(importPath)})
 
