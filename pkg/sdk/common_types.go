@@ -220,10 +220,27 @@ func ExecuteAsPointer(v ExecuteAs) *ExecuteAs {
 	return &v
 }
 
+// TODO [SNOW-1348103]: fix SDK - constants should have only CALLER and OWNER (not the EXECUTE AS part)
 const (
 	ExecuteAsCaller ExecuteAs = "EXECUTE AS CALLER"
 	ExecuteAsOwner  ExecuteAs = "EXECUTE AS OWNER"
 )
+
+func ToExecuteAs(value string) (ExecuteAs, error) {
+	switch strings.ToUpper(value) {
+	case string(ExecuteAsCaller):
+		return ExecuteAsCaller, nil
+	case string(ExecuteAsOwner):
+		return ExecuteAsOwner, nil
+	default:
+		return "", fmt.Errorf("unknown execute as: %s", value)
+	}
+}
+
+var AllAllowedExecuteAs = []ExecuteAs{
+	ExecuteAsCaller,
+	ExecuteAsOwner,
+}
 
 type NullInputBehavior string
 
@@ -237,12 +254,45 @@ const (
 	NullInputBehaviorStrict            NullInputBehavior = "STRICT"
 )
 
+// ToNullInputBehavior maps STRICT to RETURNS NULL ON NULL INPUT, because Snowflake returns RETURNS NULL ON NULL INPUT for any of these two options
+func ToNullInputBehavior(value string) (NullInputBehavior, error) {
+	switch strings.ToUpper(value) {
+	case string(NullInputBehaviorCalledOnNullInput):
+		return NullInputBehaviorCalledOnNullInput, nil
+	case string(NullInputBehaviorReturnsNullInput), string(NullInputBehaviorStrict):
+		return NullInputBehaviorReturnsNullInput, nil
+	default:
+		return "", fmt.Errorf("unknown null input behavior: %s", value)
+	}
+}
+
+var AllAllowedNullInputBehaviors = []NullInputBehavior{
+	NullInputBehaviorCalledOnNullInput,
+	NullInputBehaviorReturnsNullInput,
+}
+
 type ReturnResultsBehavior string
 
-var (
+const (
 	ReturnResultsBehaviorVolatile  ReturnResultsBehavior = "VOLATILE"
 	ReturnResultsBehaviorImmutable ReturnResultsBehavior = "IMMUTABLE"
 )
+
+func ToReturnResultsBehavior(value string) (ReturnResultsBehavior, error) {
+	switch strings.ToUpper(value) {
+	case string(ReturnResultsBehaviorVolatile):
+		return ReturnResultsBehaviorVolatile, nil
+	case string(ReturnResultsBehaviorImmutable):
+		return ReturnResultsBehaviorImmutable, nil
+	default:
+		return "", fmt.Errorf("unknown return results behavior: %s", value)
+	}
+}
+
+var AllAllowedReturnResultsBehaviors = []ReturnResultsBehavior{
+	ReturnResultsBehaviorVolatile,
+	ReturnResultsBehaviorImmutable,
+}
 
 func ReturnResultsBehaviorPointer(v ReturnResultsBehavior) *ReturnResultsBehavior {
 	return &v

@@ -121,4 +121,44 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "Account",
 		schema: resources.Account().Schema,
 	},
+	{
+		name:   "FunctionJava",
+		schema: resources.FunctionJava().Schema,
+	},
+	{
+		name:   "FunctionJavascript",
+		schema: resources.FunctionJavascript().Schema,
+	},
+	{
+		name:   "FunctionPython",
+		schema: resources.FunctionPython().Schema,
+	},
+	{
+		name:   "FunctionScala",
+		schema: resources.FunctionScala().Schema,
+	},
+	{
+		name:   "FunctionSql",
+		schema: resources.FunctionSql().Schema,
+	},
+	{
+		name:   "ProcedureJava",
+		schema: resources.ProcedureJava().Schema,
+	},
+	{
+		name:   "ProcedureJavascript",
+		schema: resources.ProcedureJavascript().Schema,
+	},
+	{
+		name:   "ProcedurePython",
+		schema: resources.ProcedurePython().Schema,
+	},
+	{
+		name:   "ProcedureScala",
+		schema: resources.ProcedureScala().Schema,
+	},
+	{
+		name:   "ProcedureSql",
+		schema: resources.ProcedureSql().Schema,
+	},
 }

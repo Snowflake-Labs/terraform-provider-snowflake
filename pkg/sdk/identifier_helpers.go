@@ -124,6 +124,10 @@ func (i AccountIdentifier) AccountName() string {
 	return i.accountName
 }
 
+func (i AccountIdentifier) AsAccountObjectIdentifier() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(i.accountName)
+}
+
 func (i AccountIdentifier) Name() string {
 	if i.organizationName != "" && i.accountName != "" {
 		return fmt.Sprintf("%s.%s", i.organizationName, i.accountName)
