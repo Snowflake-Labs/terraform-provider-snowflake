@@ -8,7 +8,6 @@ import (
 )
 
 func Test_parseFunctionDetailsImport(t *testing.T) {
-
 	inputs := []struct {
 		rawInput string
 		expected []FunctionDetailsImport

@@ -26,6 +26,7 @@ func init() {
 type functionSchemaDef struct {
 	additionalArguments           []string
 	functionDefinitionDescription string
+	functionDefinitionRequired    bool
 	runtimeVersionRequired        bool
 	runtimeVersionDescription     string
 	importsDescription            string
@@ -44,6 +45,11 @@ func setUpFunctionSchema(definition functionSchemaDef) map[string]*schema.Schema
 	}
 	if v, ok := currentSchema["function_definition"]; ok && v != nil {
 		v.Description = diffSuppressStatementFieldDescription(definition.functionDefinitionDescription)
+		if definition.functionDefinitionRequired {
+			v.Required = true
+		} else {
+			v.Optional = true
+		}
 	}
 	if v, ok := currentSchema["runtime_version"]; ok && v != nil {
 		if definition.runtimeVersionRequired {
@@ -110,6 +116,7 @@ var (
 	javascriptFunctionSchemaDefinition = functionSchemaDef{
 		additionalArguments:           []string{},
 		functionDefinitionDescription: functionDefinitionTemplate("JavaScript", "https://docs.snowflake.com/en/developer-guide/udf/javascript/udf-javascript-introduction"),
+		functionDefinitionRequired:    true,
 	}
 	pythonFunctionSchemaDefinition = functionSchemaDef{
 		additionalArguments: []string{
@@ -149,6 +156,7 @@ var (
 	sqlFunctionSchemaDefinition = functionSchemaDef{
 		additionalArguments:           []string{},
 		functionDefinitionDescription: functionDefinitionTemplate("SQL", "https://docs.snowflake.com/en/developer-guide/udf/sql/udf-sql-introduction"),
+		functionDefinitionRequired:    true,
 	}
 )
 
@@ -334,10 +342,8 @@ func functionBaseSchema() map[string]schema.Schema {
 			Optional: true,
 			ForceNew: true,
 		},
-		// TODO [this PR]: required only for javascript and sql
 		"function_definition": {
 			Type:             schema.TypeString,
-			Required:         true,
 			ForceNew:         true,
 			DiffSuppressFunc: DiffSuppressStatement,
 		},

@@ -31,7 +31,7 @@ Resource used to manage sql function objects. For more information, check [funct
 - `log_level` (String) LOG_LEVEL to use when filtering events For more information, check [LOG_LEVEL docs](https://docs.snowflake.com/en/sql-reference/parameters#log-level).
 - `metric_level` (String) METRIC_LEVEL value to control whether to emit metrics to Event Table For more information, check [METRIC_LEVEL docs](https://docs.snowflake.com/en/sql-reference/parameters#metric-level).
 - `null_input_behavior` (String) Specifies the behavior of the function when called with null inputs. Valid values are (case-insensitive): `CALLED ON NULL INPUT` | `RETURNS NULL ON NULL INPUT`.
-- `return_behavior` (String) Specifies the behavior of the function when returning results. Valid values are (case-insensitive): `VOLATILE` | `IMMUTABLE`.
+- `return_results_behavior` (String) Specifies the behavior of the function when returning results. Valid values are (case-insensitive): `VOLATILE` | `IMMUTABLE`.
 - `trace_level` (String) Trace level value to use when generating/filtering trace events For more information, check [TRACE_LEVEL docs](https://docs.snowflake.com/en/sql-reference/parameters#trace-level).
 
 ### Read-Only
@@ -56,10 +56,58 @@ Required:
 
 Read-Only:
 
-- `enable_console_output` (Boolean)
-- `log_level` (String)
-- `metric_level` (String)
-- `trace_level` (String)
+- `enable_console_output` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--enable_console_output))
+- `log_level` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--log_level))
+- `metric_level` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--metric_level))
+- `trace_level` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--trace_level))
+
+<a id="nestedobjatt--parameters--enable_console_output"></a>
+### Nested Schema for `parameters.enable_console_output`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--log_level"></a>
+### Nested Schema for `parameters.log_level`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--metric_level"></a>
+### Nested Schema for `parameters.metric_level`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--trace_level"></a>
+### Nested Schema for `parameters.trace_level`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
 
 
 <a id="nestedatt--show_output"></a>

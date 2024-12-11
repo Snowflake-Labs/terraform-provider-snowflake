@@ -361,7 +361,7 @@ func TestAcc_FunctionJava_handleExternalLanguageChange(t *testing.T) {
 					acc.TestClient().Function.CreateScalaStaged(t, id, dataType, tmpJavaFunction.JarLocation(), handler)
 					objectassert.Function(t, id).HasLanguage("SCALA")
 				},
-				Config: config.FromModel(t, functionModel),
+				Config: config.FromModels(t, functionModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(functionModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
