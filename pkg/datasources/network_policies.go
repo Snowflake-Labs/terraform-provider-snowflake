@@ -56,7 +56,7 @@ func NetworkPolicies() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: TrackingReadWrapper(datasources.NetworkPolicies, ReadNetworkPolicies),
 		Schema:      networkPoliciesSchema,
-		Description: "Datasource used to get details of filtered network policies. Filtering is aligned with the current possibilities for [SHOW NETWORK POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-network-policies) query (`like` is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection.",
+		Description: "Data source used to get details of filtered network policies. Filtering is aligned with the current possibilities for [SHOW NETWORK POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-network-policies) query (`like` is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection.",
 	}
 }
 

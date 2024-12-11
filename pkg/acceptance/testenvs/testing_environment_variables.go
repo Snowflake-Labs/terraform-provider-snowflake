@@ -35,6 +35,8 @@ const (
 	ConfigureClientOnce      env = "SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE"
 	TestObjectsSuffix        env = "TEST_SF_TF_TEST_OBJECT_SUFFIX"
 	RequireTestObjectsSuffix env = "TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX"
+
+	SimplifiedIntegrationTestsSetup env = "TEST_SF_TF_SIMPLIFIED_INTEGRATION_TESTS_SETUP"
 )
 
 func GetOrSkipTest(t *testing.T, envName Env) string {

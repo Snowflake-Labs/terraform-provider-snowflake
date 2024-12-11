@@ -7,6 +7,8 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+!> **Note** The provider does not detect external changes on security integration type. In this case, remove the integration of wrong type manually with `terraform destroy` and recreate the resource. It will be addressed in the future.
+
 # snowflake_scim_integration (Resource)
 
 Resource used to manage scim security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim).
@@ -20,14 +22,16 @@ resource "snowflake_scim_integration" "test" {
   enabled       = true
   scim_client   = "GENERIC"
   sync_password = true
+  run_as_role   = "GENERIC_SCIM_PROVISIONER"
 }
+
 # resource with all fields set
 resource "snowflake_scim_integration" "test" {
   name           = "test"
   enabled        = true
   scim_client    = "GENERIC"
   sync_password  = true
-  network_policy = "network_policy_test"
+  network_policy = snowflake_network_policy.example.fully_qualified_name
   run_as_role    = "GENERIC_SCIM_PROVISIONER"
   comment        = "foo"
 }
@@ -41,14 +45,14 @@ resource "snowflake_scim_integration" "test" {
 ### Required
 
 - `enabled` (Boolean) Specify whether the security integration is enabled.
-- `name` (String) String that specifies the identifier (i.e. name) for the integration; must be unique in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `name` (String) String that specifies the identifier (i.e. name) for the integration; must be unique in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 - `run_as_role` (String) Specify the SCIM role in Snowflake that owns any users and roles that are imported from the identity provider into Snowflake using SCIM. Provider assumes that the specified role is already provided. Valid options are: `OKTA_PROVISIONER` | `AAD_PROVISIONER` | `GENERIC_SCIM_PROVISIONER`.
 - `scim_client` (String) Specifies the client type for the scim integration. Valid options are: `OKTA` | `AZURE` | `GENERIC`.
 
 ### Optional
 
 - `comment` (String) Specifies a comment for the integration.
-- `network_policy` (String) Specifies an existing network policy that controls SCIM network traffic.
+- `network_policy` (String) Specifies an existing network policy that controls SCIM network traffic. For more information about this resource, see [docs](./network_policy).
 - `sync_password` (String) Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake. This property is not supported for Azure SCIM. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 
 ### Read-Only
@@ -142,5 +146,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_scim_integration.example "name"
+terraform import snowflake_scim_integration.example '"<integration_name>"'
 ```

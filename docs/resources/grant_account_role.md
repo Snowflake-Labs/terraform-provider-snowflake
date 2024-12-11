@@ -19,11 +19,11 @@ description: |-
 ##################################
 
 resource "snowflake_account_role" "role" {
-  name = var.role_name
+  name = "ROLE"
 }
 
 resource "snowflake_account_role" "parent_role" {
-  name = var.parent_role_name
+  name = "PARENT_ROLE"
 }
 
 resource "snowflake_grant_account_role" "g" {
@@ -37,11 +37,11 @@ resource "snowflake_grant_account_role" "g" {
 ##################################
 
 resource "snowflake_account_role" "role" {
-  name = var.role_name
+  name = "ROLE"
 }
 
 resource "snowflake_user" "user" {
-  name = var.user_name
+  name = "USER"
 }
 
 resource "snowflake_grant_account_role" "g" {
@@ -58,12 +58,12 @@ resource "snowflake_grant_account_role" "g" {
 
 ### Required
 
-- `role_name` (String) The fully qualified name of the role which will be granted to the user or parent role.
+- `role_name` (String) The fully qualified name of the role which will be granted to the user or parent role. For more information about this resource, see [docs](./account_role).
 
 ### Optional
 
-- `parent_role_name` (String) The fully qualified name of the parent role which will create a parent-child relationship between the roles.
-- `user_name` (String) The fully qualified name of the user on which specified role will be granted.
+- `parent_role_name` (String) The fully qualified name of the parent role which will create a parent-child relationship between the roles. For more information about this resource, see [docs](./account_role).
+- `user_name` (String) The fully qualified name of the user on which specified role will be granted. For more information about this resource, see [docs](./user).
 
 ### Read-Only
 

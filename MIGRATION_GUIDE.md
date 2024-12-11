@@ -9,6 +9,17 @@ across different versions.
 
 ## v0.99.0 ➞ v0.100.0
 
+### snowflake_account resource changes
+
+Changes:
+- `admin_user_type` is now supported. No action required during the migration.
+- `grace_period_in_days` is now required. The field should be explicitly set in the following versions.
+- Account renaming is now supported.
+- `is_org_admin` is a settable field (previously it was read-only field). Changing its value is also supported.
+- `must_change_password` and `is_org_admin` type was changed from `bool` to bool-string (more on that [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). No action required during the migration. 
+- The underlying resource identifier was changed from `<account_locator>` to `<organization_name>.<account_name>`. Migration will be done automatically. Notice this introduces changes in how `snowflake_account` resource is imported.
+- New `show_output` field was added (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
+
 ### snowflake_accounts data source changes
 New filtering options:
 - `with_history`
@@ -35,7 +46,7 @@ output "simple_output" {
 
 ### snowflake_tag_association resource changes
 #### *(behavior change)* new id format
-In order to provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type in one resource.
+To provide more functionality for tagging objects, we have changed the resource id from `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"` to `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This allows to group tags associations per tag ID, tag value and object type in one resource.
 ```
 resource "snowflake_tag_association" "gold_warehouses" {
   object_identifiers = [snowflake_warehouse.w1.fully_qualified_name, snowflake_warehouse.w2.fully_qualified_name]
@@ -299,6 +310,9 @@ Also, we added diff suppress function that prevents Terraform from showing diffe
 
 No change is required, the state will be migrated automatically.
 
+#### *(breaking change)* Required warehouse
+For this resource, the provider now uses [tag references](https://docs.snowflake.com/en/sql-reference/functions/tag_references) to get information about masking policies attached to tags. This function requires a warehouse in the connection. Please, make sure you have either set a `DEFAULT_WAREHOUSE` for the user, or specified a warehouse in the provider configuration.
+
 ## v0.97.0 ➞ v0.98.0
 
 ### *(new feature)* snowflake_connections datasource
@@ -357,7 +371,7 @@ On our road to v1, we have decided to rework configuration to address the most c
 We have added new fields to match the ones in [the driver](https://pkg.go.dev/github.com/snowflakedb/gosnowflake#Config) and to simplify setting account name. Specifically:
 - `include_retry_reason`, `max_retry_count`, `driver_tracing`, `tmp_directory_path` and `disable_console_login` are the new fields that are supported in the driver
 - `disable_saml_url_check` will be added to the provider after upgrading the driver
-- `account_name` and `organization_name` were added to improve handling account names. Read more in [docs](https://docs.snowflake.com/en/user-guide/admin-account-identifier#using-an-account-name-as-an-identifier).
+- `account_name` and `organization_name` were added to improve handling account names. Execute `SELECT CURRENT_ORGANIZATION_NAME(), CURRENT_ACCOUNT_NAME();` to get the required values. Read more in [docs](https://docs.snowflake.com/en/user-guide/admin-account-identifier#using-an-account-name-as-an-identifier).
 
 #### *(behavior change)* changed configuration of driver log level
 To be more consistent with other configuration options, we have decided to add `driver_tracing` to the configuration schema. This value can also be configured by `SNOWFLAKE_DRIVER_TRACING` environmental variable and by `drivertracing` field in the TOML file. The previous `SF_TF_GOSNOWFLAKE_LOG_LEVEL` environmental variable is not supported now, and was removed from the provider.
@@ -377,6 +391,12 @@ provider "snowflake" {
 	account_name    = "ACCOUNT"
 }
 ```
+
+This change may cause the connection host URL to change. If you get errors like
+```
+Error: open snowflake connection: Post "https://ORGANIZATION-ACCOUNT.snowflakecomputing.com:443/session/v1/login-request?requestId=[guid]&request_guid=[guid]&roleName=myrole": EOF
+```
+make sure that the host `ORGANIZATION-ACCOUNT.snowflakecomputing.com` is allowed to be reached from your network (i.e. not blocked by a firewall).
 
 #### *(behavior change)* changed behavior of some fields
 For the fields that are not deprecated, we focused on improving validations and documentation. Also, we adjusted some fields to match our [driver's](https://github.com/snowflakedb/gosnowflake) defaults. Specifically:
@@ -809,7 +829,7 @@ Removed fields:
 The value of these field will be removed from the state automatically.
 
 #### *(breaking change)* Required warehouse
-For this resource, the provider now uses [policy references](https://docs.snowflake.com/en/sql-reference/functions/policy_references) which requires a warehouse in the connection. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the provider configuration.
+For this resource, the provider now uses [policy references](https://docs.snowflake.com/en/sql-reference/functions/policy_references) which requires a warehouse in the connection. Please, make sure you have either set a `DEFAULT_WAREHOUSE` for the user, or specified a warehouse in the provider configuration.
 
 ### Identifier changes
 

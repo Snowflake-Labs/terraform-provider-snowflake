@@ -5,6 +5,8 @@ description: |-
   
 ---
 
+!> **Note** A network rule cannot be dropped successfully if it is currently assigned to a network policy. Currently, the provider does not unassign such objects automatically. Before dropping the resource, first unassign the network rule from the relevant objects. See [guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies) for more details.
+
 # snowflake_network_rule (Resource)
 
 
@@ -22,7 +24,6 @@ resource "snowflake_network_rule" "rule" {
   value_list = ["192.168.0.100/24", "29.254.123.20"]
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 

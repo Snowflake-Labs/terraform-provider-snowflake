@@ -16,9 +16,9 @@ resource "snowflake_user" "user" {
   display_name = "Snowflake User display name"
   email        = "user@snowflake.example"
 
-  default_warehouse              = "warehouse"
+  default_warehouse              = snowflake_warehouse.example.fully_qualified_name
   default_secondary_roles_option = "ALL"
-  default_role                   = "role1"
+  default_role                   = snowflake_role.example.fully_qualified_name
   default_namespace              = "some.namespace"
 
   mins_to_unlock     = 9

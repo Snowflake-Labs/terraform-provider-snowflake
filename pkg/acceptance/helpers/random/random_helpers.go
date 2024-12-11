@@ -1,6 +1,8 @@
 package random
 
 import (
+	"strings"
+
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/hashicorp/go-uuid"
 )
@@ -22,7 +24,7 @@ func Password() string {
 // 090088 (22000): ADMIN_NAME can only contain letters, numbers and underscores.
 // 090089 (22000): ADMIN_NAME must start with a letter.
 func AdminName() string {
-	return AlphaN(1) + AlphanumericN(11)
+	return strings.ToUpper(AlphaN(1) + AlphanumericN(11))
 }
 
 func Bool() bool {
@@ -43,6 +45,10 @@ func AlphanumericN(num int) string {
 
 func AlphaN(num int) string {
 	return gofakeit.Password(true, true, false, false, false, num)
+}
+
+func AlphaLowerN(num int) string {
+	return gofakeit.Password(true, false, false, false, false, num)
 }
 
 func Email() string {

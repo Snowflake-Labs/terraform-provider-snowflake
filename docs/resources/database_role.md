@@ -2,14 +2,14 @@
 page_title: "snowflake_database_role Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+  Resource used to manage database roles. For more information, check database roles documentation https://docs.snowflake.com/en/sql-reference/sql/create-database-role.
 ---
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release.
 
 # snowflake_database_role (Resource)
 
-
+Resource used to manage database roles. For more information, check [database roles documentation](https://docs.snowflake.com/en/sql-reference/sql/create-database-role).
 
 ## Example Usage
 
@@ -32,8 +32,8 @@ resource "snowflake_database_role" "test_database_role" {
 
 ### Required
 
-- `database` (String) The database in which to create the database role. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `name` (String) Specifies the identifier for the database role. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `database` (String) The database in which to create the database role. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `name` (String) Specifies the identifier for the database role. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 
 ### Optional
 

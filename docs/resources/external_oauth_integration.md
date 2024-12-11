@@ -7,6 +7,8 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+!> **Note** The provider does not detect external changes on security integration type. In this case, remove the integration of wrong type manually with `terraform destroy` and recreate the resource. It will be addressed in the future.
+
 # snowflake_external_oauth_integration (Resource)
 
 Resource used to manage external oauth security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external).
@@ -27,7 +29,7 @@ resource "snowflake_external_oauth_integration" "test" {
 resource "snowflake_external_oauth_integration" "test" {
   comment                                         = "comment"
   enabled                                         = true
-  external_oauth_allowed_roles_list               = ["user1"]
+  external_oauth_allowed_roles_list               = [snowflake_role.one.fully_qualified_name]
   external_oauth_any_role_mode                    = "ENABLE"
   external_oauth_audience_list                    = ["https://example.com"]
   external_oauth_issuer                           = "issuer"
@@ -45,7 +47,7 @@ resource "snowflake_external_oauth_integration" "test" {
   enabled                                         = true
   external_oauth_any_role_mode                    = "ENABLE"
   external_oauth_audience_list                    = ["https://example.com"]
-  external_oauth_blocked_roles_list               = ["user1"]
+  external_oauth_blocked_roles_list               = [snowflake_role.one.fully_qualified_name]
   external_oauth_issuer                           = "issuer"
   external_oauth_rsa_public_key                   = file("key.pem")
   external_oauth_rsa_public_key_2                 = file("key2.pem")
@@ -70,15 +72,15 @@ resource "snowflake_external_oauth_integration" "test" {
 - `external_oauth_snowflake_user_mapping_attribute` (String) Indicates which Snowflake user record attribute should be used to map the access token to a Snowflake user record. Valid values are (case-insensitive): `LOGIN_NAME` | `EMAIL_ADDRESS`.
 - `external_oauth_token_user_mapping_claim` (Set of String) Specifies the access token claim or claims that can be used to map the access token to a Snowflake user record. If removed from the config, the resource is recreated.
 - `external_oauth_type` (String) Specifies the OAuth 2.0 authorization server to be Okta, Microsoft Azure AD, Ping Identity PingFederate, or a Custom OAuth 2.0 authorization server. Valid values are (case-insensitive): `OKTA` | `AZURE` | `PING_FEDERATE` | `CUSTOM`.
-- `name` (String) Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `name` (String) Specifies the name of the External Oath integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 
 ### Optional
 
 - `comment` (String) Specifies a comment for the OAuth integration.
-- `external_oauth_allowed_roles_list` (Set of String) Specifies the list of roles that the client can set as the primary role.
+- `external_oauth_allowed_roles_list` (Set of String) Specifies the list of roles that the client can set as the primary role. For more information about this resource, see [docs](./account_role).
 - `external_oauth_any_role_mode` (String) Specifies whether the OAuth client or user can use a role that is not defined in the OAuth access token. Valid values are (case-insensitive): `DISABLE` | `ENABLE` | `ENABLE_FOR_PRIVILEGE`.
 - `external_oauth_audience_list` (Set of String) Specifies additional values that can be used for the access token's audience validation on top of using the Customer's Snowflake Account URL
-- `external_oauth_blocked_roles_list` (Set of String) Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE.
+- `external_oauth_blocked_roles_list` (Set of String) Specifies the list of roles that a client cannot set as the primary role. By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE. For more information about this resource, see [docs](./account_role).
 - `external_oauth_jws_keys_url` (Set of String) Specifies the endpoint or a list of endpoints from which to download public keys or certificates to validate an External OAuth access token. The maximum number of URLs that can be specified in the list is 3. If removed from the config, the resource is recreated.
 - `external_oauth_rsa_public_key` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. If removed from the config, the resource is recreated.
 - `external_oauth_rsa_public_key_2` (String) Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation. If removed from the config, the resource is recreated.
@@ -293,5 +295,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_external_oauth_integration.example "name"
+terraform import snowflake_external_oauth_integration.example '"<integration_name>"'
 ```
