@@ -1,8 +1,11 @@
 package resources
 
 import (
+	"context"
 	"fmt"
 	"slices"
+
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
@@ -291,4 +294,10 @@ func parseSchemaObjectIdentifierSet(v any) ([]sdk.SchemaObjectIdentifier, error)
 		ids[i] = id
 	}
 	return ids, nil
+}
+
+type PlanCheckFunc func(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse)
+
+func (fn PlanCheckFunc) CheckPlan(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+	fn(ctx, req, resp)
 }

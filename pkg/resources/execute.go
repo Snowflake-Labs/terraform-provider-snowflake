@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -19,7 +21,6 @@ var executeSchema = map[string]*schema.Schema{
 	"execute": {
 		Type:        schema.TypeString,
 		Required:    true,
-		ForceNew:    true,
 		Description: "SQL statement to execute. Forces recreation of resource on change.",
 	},
 	"revert": {
@@ -54,18 +55,26 @@ func Execute() *schema.Resource {
 		DeleteContext: TrackingDeleteWrapper(resources.Execute, DeleteExecute),
 
 		Schema: executeSchema,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Description: "Resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.",
 
-		CustomizeDiff: TrackingCustomDiffWrapper(resources.UnsafeExecute, func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
-			if diff.HasChange("query") {
-				err := diff.SetNewComputed("query_results")
-				if err != nil {
-					return err
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.UnsafeExecute, customdiff.All(
+			customdiff.ForceNewIfChange("execute", func(ctx context.Context, oldValue, newValue, meta any) bool {
+				return oldValue != ""
+			}),
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.HasChange("query") {
+					err := diff.SetNewComputed("query_results")
+					if err != nil {
+						return err
+					}
 				}
-			}
-			return nil
-		}),
+				return nil
+			}),
+		),
 	}
 }
 

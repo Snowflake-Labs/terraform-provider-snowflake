@@ -1,11 +1,14 @@
 package resources_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -787,4 +790,60 @@ func verifyGrantExists(t *testing.T, roleId sdk.AccountObjectIdentifier, privile
 		// it does not matter what we return, because we have assertions above
 		return nil
 	}
+}
+
+func TestAcc_Execute_ImportWithRandomId(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, id)
+					t.Cleanup(databaseCleanup)
+				},
+				Config:                  executeConfigCreateDatabase(id),
+				ResourceName:            "snowflake_execute.test",
+				ImportState:             true,
+				ImportStatePersist:      true,
+				ImportStateId:           "random_id",
+				ImportStateVerifyIgnore: []string{"query_results"},
+			},
+			// filling the empty state fields (execute changed from empty)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_execute.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: executeConfigCreateDatabase(id),
+			},
+			// change the id in every query to see if:
+			// 1. execute will trigger force new behavior
+			// 2. an old database is used in delete (it is)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_execute.test", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						resources.PlanCheckFunc(func(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+							_, err := acc.TestClient().Database.Show(t, id)
+							if err == nil {
+								resp.Error = fmt.Errorf("database %s still exist", id.FullyQualifiedName())
+								t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, id))
+							}
+						}),
+					},
+				},
+				Config: executeConfigCreateDatabase(newId),
+			},
+		},
+	})
 }

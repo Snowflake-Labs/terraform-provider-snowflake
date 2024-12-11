@@ -143,3 +143,9 @@ resource "snowflake_execute" "test" {
 
 - `id` (String) The ID of this resource.
 - `query_results` (List of Map of String) List of key-value maps (text to text) retrieved after executing read query. Will be empty if the query results in an error.
+
+## Import
+
+Import is supported using the following syntax:
+
+{{codefile "shell" "/Users/jcieslak/Documents/terraform-provider-snowflake/examples/resources/snowflake_execute/import.sh"}}

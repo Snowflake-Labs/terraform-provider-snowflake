@@ -12,7 +12,10 @@ across different versions.
 ### unsafe_execute resource changes / new execute resource
 
 The `snowflake_unsafe_execute` gets deprecated in favor of the new resource `snowflake_execute`.
-It will be removed before v1, so please migrate to the `snowflake_execute` resource. // TODO: HOW
+It will be removed before v1, so please migrate to the `snowflake_execute` resource. For no downtime migration,
+follow our [guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+Remember that imported resource id has to be unique (using UUIDs is recommended) and because of the nature of the resource.
+First apply after importing is necessary to "copy" values from the configuration to the state.
 
 ### snowflake_account resource changes
 
