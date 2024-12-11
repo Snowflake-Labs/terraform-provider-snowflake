@@ -2,7 +2,7 @@
 page_title: "snowflake_account_parameter Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Resource used to manage current account parameters. For more information, check parameters documentation https://docs.snowflake.com/en/sql-reference/parameters.
+  Resource used to manage current account parameters. For more information, check parameters documentation https://docs.snowflake.com/en/sql-reference/parameters. To manage the whole account resource, see account ./account resource.
 ---
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0990--v01000) to use it.
@@ -11,7 +11,7 @@ description: |-
 
 # snowflake_account_parameter (Resource)
 
-Resource used to manage current account parameters. For more information, check [parameters documentation](https://docs.snowflake.com/en/sql-reference/parameters).
+Resource used to manage current account parameters. For more information, check [parameters documentation](https://docs.snowflake.com/en/sql-reference/parameters). To manage the whole account resource, see [account](./account) resource.
 
 ## Example Usage
 
