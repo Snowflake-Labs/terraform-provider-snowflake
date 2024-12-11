@@ -8,6 +8,7 @@ import (
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
@@ -19,6 +20,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -51,7 +53,7 @@ func TestAcc_FunctionJava_BasicFlows(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE BASIC
 			{
-				Config: config.ResourceFromModel(t, functionModelNoAttributes),
+				Config: config.FromModels(t, functionModelNoAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.FunctionJavaResource(t, functionModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
@@ -65,7 +67,7 @@ func TestAcc_FunctionJava_BasicFlows(t *testing.T) {
 			},
 			// RENAME
 			{
-				Config: config.ResourceFromModel(t, functionModelNoAttributesRenamed),
+				Config: config.FromModels(t, functionModelNoAttributesRenamed),
 				Check: assert.AssertThat(t,
 					resourceassert.FunctionJavaResource(t, functionModelNoAttributesRenamed.ResourceReference()).
 						HasNameString(idWithChangedNameButTheSameDataType.Name()).
@@ -238,7 +240,7 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create with default values for all the parameters
 			{
-				Config: config.ResourceFromModel(t, functionModel),
+				Config: config.FromModels(t, functionModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.FunctionParameters(t, id).
 						HasAllDefaults().
@@ -258,7 +260,7 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 			},
 			// set all parameters
 			{
-				Config: config.ResourceFromModel(t, functionModelWithAllParametersSet),
+				Config: config.FromModels(t, functionModelWithAllParametersSet),
 				Check: assert.AssertThat(t,
 					objectparametersassert.FunctionParameters(t, id).
 						HasEnableConsoleOutput(true).
@@ -286,7 +288,7 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 			},
 			// unset all the parameters
 			{
-				Config: config.ResourceFromModel(t, functionModel),
+				Config: config.FromModels(t, functionModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.FunctionParameters(t, id).
 						HasAllDefaults().
@@ -297,12 +299,12 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 			},
 			// destroy
 			{
-				Config:  config.ResourceFromModel(t, functionModel),
+				Config:  config.FromModels(t, functionModel),
 				Destroy: true,
 			},
 			// create with all parameters set
 			{
-				Config: config.ResourceFromModel(t, functionModelWithAllParametersSet),
+				Config: config.FromModels(t, functionModelWithAllParametersSet),
 				Check: assert.AssertThat(t,
 					objectparametersassert.FunctionParameters(t, id).
 						HasEnableConsoleOutput(true).
@@ -314,6 +316,59 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 						HasLogLevel(sdk.LogLevelWarn).
 						HasMetricLevel(sdk.MetricLevelAll).
 						HasTraceLevel(sdk.TraceLevelAlways),
+				),
+			},
+		},
+	})
+}
+
+// TODO [this PR]: Test with Java versus Scala staged (probably the only way to set up functions to have exactly the same config in both languages)
+func TestAcc_FunctionJava_handleExternalLanguageChange(t *testing.T) {
+	className := "TestFunc"
+	funcName := "echoVarchar"
+	argName := "x"
+	dataType := testdatatypes.DataTypeVarchar_100
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
+
+	handler := fmt.Sprintf("%s.%s", className, funcName)
+	definition := acc.TestClient().Function.SampleJavaDefinition(t, className, funcName, argName)
+
+	functionModel := model.FunctionJavaWithId("w", id, dataType, handler, definition).
+		WithArgument(argName, dataType)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.FunctionJava),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModels(t, functionModel),
+				Check: assert.AssertThat(t,
+					objectassert.Function(t, id).HasLanguage("JAVA"),
+					resourceassert.FunctionJavaResource(t, functionModel.ResourceReference()).HasNameString(id.Name()).HasFunctionLanguageString("JAVA"),
+					resourceshowoutputassert.FunctionShowOutput(t, functionModel.ResourceReference()).HasLanguage("JAVA"),
+				),
+			},
+			// change type externally by creating a new function with the exact same id but using different language
+			{
+				PreConfig: func() {
+					acc.TestClient().Function.DropFunctionFunc(t, id)()
+					acc.TestClient().Function.CreateSqlWithIdentifierAndArgument(t, id.SchemaObjectId(), dataType)
+					objectassert.Function(t, id).HasLanguage("SQL")
+				},
+				Config: config.FromModel(t, functionModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(functionModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: assert.AssertThat(t,
+					objectassert.Function(t, id).HasLanguage("JAVA"),
+					resourceassert.FunctionJavaResource(t, functionModel.ResourceReference()).HasNameString(id.Name()).HasFunctionLanguageString("JAVA"),
+					resourceshowoutputassert.FunctionShowOutput(t, functionModel.ResourceReference()).HasLanguage("JAVA"),
 				),
 			},
 		},
