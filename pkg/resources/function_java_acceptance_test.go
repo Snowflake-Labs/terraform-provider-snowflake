@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -251,13 +252,13 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 				ResourceName: functionModel.ResourceReference(),
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					resourceparametersassert.ImportedFunctionResourceParameters(t, id.Name()).
+					resourceparametersassert.ImportedFunctionResourceParameters(t, helpers.EncodeResourceIdentifier(id)).
 						HasAllDefaults(),
 				),
 			},
 			// set all parameters
 			{
-				Config: config.FromModel(t, functionModelWithAllParametersSet),
+				Config: config.ResourceFromModel(t, functionModelWithAllParametersSet),
 				Check: assert.AssertThat(t,
 					objectparametersassert.FunctionParameters(t, id).
 						HasEnableConsoleOutput(true).
@@ -276,7 +277,7 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 				ResourceName: functionModelWithAllParametersSet.ResourceReference(),
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
-					resourceparametersassert.ImportedFunctionResourceParameters(t, id.Name()).
+					resourceparametersassert.ImportedFunctionResourceParameters(t, helpers.EncodeResourceIdentifier(id)).
 						HasEnableConsoleOutput(true).
 						HasLogLevel(sdk.LogLevelWarn).
 						HasMetricLevel(sdk.MetricLevelAll).
@@ -285,13 +286,34 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 			},
 			// unset all the parameters
 			{
-				Config: config.FromModel(t, functionModel),
+				Config: config.ResourceFromModel(t, functionModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.FunctionParameters(t, id).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
-					resourceparametersassert.UserResourceParameters(t, functionModel.ResourceReference()).
+					resourceparametersassert.FunctionResourceParameters(t, functionModel.ResourceReference()).
 						HasAllDefaults(),
+				),
+			},
+			// destroy
+			{
+				Config:  config.ResourceFromModel(t, functionModel),
+				Destroy: true,
+			},
+			// create with all parameters set
+			{
+				Config: config.ResourceFromModel(t, functionModelWithAllParametersSet),
+				Check: assert.AssertThat(t,
+					objectparametersassert.FunctionParameters(t, id).
+						HasEnableConsoleOutput(true).
+						HasLogLevel(sdk.LogLevelWarn).
+						HasMetricLevel(sdk.MetricLevelAll).
+						HasTraceLevel(sdk.TraceLevelAlways),
+					resourceparametersassert.FunctionResourceParameters(t, functionModelWithAllParametersSet.ResourceReference()).
+						HasEnableConsoleOutput(true).
+						HasLogLevel(sdk.LogLevelWarn).
+						HasMetricLevel(sdk.MetricLevelAll).
+						HasTraceLevel(sdk.TraceLevelAlways),
 				),
 			},
 		},

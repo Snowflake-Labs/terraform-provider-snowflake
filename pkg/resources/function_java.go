@@ -67,13 +67,25 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 		request.WithFunctionDefinitionWrapped(v.(string))
 	}
 
+	// TODO [this PR]: handle all attributes
+
 	if err := client.Functions.CreateForJava(ctx, request); err != nil {
 		return diag.FromErr(err)
 	}
+	d.SetId(helpers.EncodeResourceIdentifier(id))
 
-	// TODO [this PR]: handle parameters
+	// parameters do not work in create function (query does not fail but parameters stay unchanged)
+	setRequest := sdk.NewFunctionSetRequest()
+	if parametersCreateDiags := handleFunctionParametersCreate(d, setRequest); len(parametersCreateDiags) > 0 {
+		return parametersCreateDiags
+	}
+	if !reflect.DeepEqual(*setRequest, *sdk.NewFunctionSetRequest()) {
+		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*setRequest))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
-	d.SetId(id.FullyQualifiedName())
 	return ReadContextFunctionJava(ctx, d, meta)
 
 	// Set optionals
@@ -173,13 +185,13 @@ func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Apply SET and UNSET changes
-	if !reflect.DeepEqual(*setRequest, sdk.NewFunctionSetRequest()) {
+	if !reflect.DeepEqual(*setRequest, *sdk.NewFunctionSetRequest()) {
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*setRequest))
 		if err != nil {
 			return diag.FromErr(err)
 		}
 	}
-	if !reflect.DeepEqual(*unsetRequest, sdk.NewFunctionUnsetRequest()) {
+	if !reflect.DeepEqual(*unsetRequest, *sdk.NewFunctionUnsetRequest()) {
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*unsetRequest))
 		if err != nil {
 			return diag.FromErr(err)
