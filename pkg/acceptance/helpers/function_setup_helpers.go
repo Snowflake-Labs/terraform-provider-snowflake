@@ -67,8 +67,19 @@ func (c *TestClient) CreateSampleJavaFunctionAndJarInLocation(t *testing.T, stag
 	}
 }
 
-// TODO [SNOW-1348106]: adjust to switching location too
-func (c *TestClient) CreateSampleJavaProcedureAndJar(t *testing.T) *TmpFunction {
+func (c *TestClient) CreateSampleJavaProcedureAndJarOnUserStage(t *testing.T) *TmpFunction {
+	t.Helper()
+
+	return c.CreateSampleJavaProcedureAndJarInLocation(t, "@~")
+}
+
+func (c *TestClient) CreateSampleJavaProcedureAndJarOnStage(t *testing.T, stage *sdk.Stage) *TmpFunction {
+	t.Helper()
+
+	return c.CreateSampleJavaProcedureAndJarInLocation(t, stage.Location())
+}
+
+func (c *TestClient) CreateSampleJavaProcedureAndJarInLocation(t *testing.T, stageLocation string) *TmpFunction {
 	t.Helper()
 	ctx := context.Background()
 
@@ -84,7 +95,7 @@ func (c *TestClient) CreateSampleJavaProcedureAndJar(t *testing.T) *TmpFunction 
 	handler := fmt.Sprintf("%s.%s", className, funcName)
 	definition := c.Procedure.SampleJavaDefinition(t, className, funcName, argName)
 	jarName := fmt.Sprintf("tf-%d-%s.jar", time.Now().Unix(), random.AlphaN(5))
-	targetPath := fmt.Sprintf("@~/%s", jarName)
+	targetPath := fmt.Sprintf("%s/%s", stageLocation, jarName)
 	packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0")}
 
 	request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, handler).
@@ -95,15 +106,16 @@ func (c *TestClient) CreateSampleJavaProcedureAndJar(t *testing.T) *TmpFunction 
 	err := c.context.client.Procedures.CreateForJava(ctx, request)
 	require.NoError(t, err)
 	t.Cleanup(c.Procedure.DropProcedureFunc(t, id))
-	t.Cleanup(c.Stage.RemoveFromUserStageFunc(t, jarName))
+	t.Cleanup(c.Stage.RemoveFromStageFunc(t, stageLocation, jarName))
 
 	return &TmpFunction{
-		FunctionId: id,
-		ClassName:  className,
-		FuncName:   funcName,
-		ArgName:    argName,
-		ArgType:    dataType,
-		JarName:    jarName,
+		FunctionId:    id,
+		ClassName:     className,
+		FuncName:      funcName,
+		ArgName:       argName,
+		ArgType:       dataType,
+		JarName:       jarName,
+		StageLocation: stageLocation,
 	}
 }
 

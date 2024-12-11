@@ -48,11 +48,7 @@ func TestInt_Functions(t *testing.T) {
 	externalAccessIntegration, externalAccessIntegrationCleanup := testClientHelper().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
 
-	stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
-	t.Cleanup(stageCleanup)
-
 	tmpJavaFunction := testClientHelper().CreateSampleJavaFunctionAndJarOnUserStage(t)
-	tmpJavaFunctionDifferentStage := testClientHelper().CreateSampleJavaFunctionAndJarOnStage(t, stage)
 	tmpPythonFunction := testClientHelper().CreateSamplePythonFunctionAndModule(t)
 
 	assertParametersSet := func(t *testing.T, functionParametersAssert *objectparametersassert.FunctionParametersAssert) {
@@ -408,6 +404,11 @@ func TestInt_Functions(t *testing.T) {
 	})
 
 	t.Run("create function for Java - different stage", func(t *testing.T) {
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(stageCleanup)
+
+		tmpJavaFunctionDifferentStage := testClientHelper().CreateSampleJavaFunctionAndJarOnStage(t, stage)
+
 		dataType := tmpJavaFunctionDifferentStage.ArgType
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
 
@@ -429,57 +430,14 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
-			HasCreatedOnNotEmpty().
-			HasName(id.Name()).
-			HasSchemaName(id.SchemaName()).
-			HasIsBuiltin(false).
-			HasIsAggregate(false).
-			HasIsAnsi(false).
-			HasMinNumArguments(1).
-			HasMaxNumArguments(1).
-			HasArgumentsOld([]sdk.DataType{sdk.LegacyDataTypeFrom(dataType)}).
-			HasArgumentsRaw(fmt.Sprintf(`%[1]s(%[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
-			HasDescription(sdk.DefaultFunctionComment).
-			HasCatalogName(id.DatabaseName()).
-			HasIsTableFunction(false).
-			HasValidForClustering(false).
-			HasIsSecure(false).
-			HasExternalAccessIntegrations("").
-			HasSecrets("").
-			HasIsExternalFunction(false).
-			HasLanguage("JAVA").
-			HasIsMemoizable(false).
-			HasIsDataMetric(false),
-		)
-
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
-			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(dataType.ToSql()).
-			HasReturnDataType(dataType).
-			HasReturnNotNull(false).
-			HasLanguage("JAVA").
-			HasBodyNil().
-			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
-			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
-			HasExternalAccessIntegrationsNil().
-			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[@"%s"."%s".%s/%s]`, stage.ID().DatabaseName(), stage.ID().SchemaName(), stage.ID().Name(), tmpJavaFunctionDifferentStage.JarName)).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: stage.ID().FullyQualifiedName(), PathOnStage: tmpJavaFunctionDifferentStage.JarName,
 			}).
 			HasHandler(handler).
-			HasRuntimeVersionNil().
-			HasPackages(`[]`).
 			HasTargetPathNil().
-			HasNormalizedTargetPathNil().
-			HasInstalledPackagesNil().
-			HasIsAggregateNil(),
-		)
-
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
-			HasAllDefaults().
-			HasAllDefaultsExplicit(),
+			HasNormalizedTargetPathNil(),
 		)
 	})
 

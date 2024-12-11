@@ -37,7 +37,7 @@ func TestInt_Procedures(t *testing.T) {
 	externalAccessIntegration, externalAccessIntegrationCleanup := testClientHelper().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret.ID())
 	t.Cleanup(externalAccessIntegrationCleanup)
 
-	tmpJavaProcedure := testClientHelper().CreateSampleJavaProcedureAndJar(t)
+	tmpJavaProcedure := testClientHelper().CreateSampleJavaProcedureAndJarOnUserStage(t)
 	tmpPythonFunction := testClientHelper().CreateSamplePythonFunctionAndModule(t)
 
 	assertParametersSet := func(t *testing.T, procedureParametersAssert *objectparametersassert.ProcedureParametersAssert) {
@@ -351,6 +351,43 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("create procedure for Java - different stage", func(t *testing.T) {
+		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
+		t.Cleanup(stageCleanup)
+
+		tmpJavaProcedureDifferentStage := testClientHelper().CreateSampleJavaProcedureAndJarOnStage(t, stage)
+
+		dataType := tmpJavaProcedureDifferentStage.ArgType
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
+
+		argName := "x"
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
+		handler := tmpJavaProcedureDifferentStage.JavaHandler()
+		importPath := tmpJavaProcedureDifferentStage.JarLocation()
+		packages := []sdk.ProcedurePackageRequest{
+			*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0"),
+		}
+
+		requestStaged := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, handler).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithImports([]sdk.ProcedureImportRequest{*sdk.NewProcedureImportRequest(importPath)})
+
+		err := client.Procedures.CreateForJava(ctx, requestStaged)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasImports(fmt.Sprintf(`[@"%s"."%s".%s/%s]`, stage.ID().DatabaseName(), stage.ID().SchemaName(), stage.ID().Name(), tmpJavaProcedureDifferentStage.JarName)).
+			HasHandler(handler).
+			HasTargetPathNil(),
 		)
 	})
 
