@@ -30,14 +30,14 @@ type functionSchemaDef struct {
 
 func setUpFunctionSchema(definition functionSchemaDef) map[string]*schema.Schema {
 	currentSchema := make(map[string]*schema.Schema)
-	for k, v := range functionBaseSchema {
+	for k, v := range functionBaseSchema() {
 		v := v
 		if slices.Contains(definition.additionalArguments, k) || slices.Contains(commonFunctionArguments, k) {
 			currentSchema[k] = &v
 		}
 	}
 	if v, ok := currentSchema["function_definition"]; ok && v != nil {
-		v.Description = definition.functionDefinitionDescription
+		v.Description = diffSuppressStatementFieldDescription(definition.functionDefinitionDescription)
 	}
 	if v, ok := currentSchema["runtime_version"]; ok && v != nil {
 		if definition.runtimeVersionRequired {
@@ -158,187 +158,189 @@ var (
 // TODO [SNOW-1348103]: currently database and schema are ForceNew but based on the docs it is possible to rename with moving to different db/schema
 // TODO [SNOW-1348103]: copyGrants and orReplace logic omitted for now, will be added to the limitations docs
 // TODO [SNOW-1348103]: temporary is not supported because it creates a per-session object; add to limitations/design decisions
-var functionBaseSchema = map[string]schema.Schema{
-	"database": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		DiffSuppressFunc: suppressIdentifierQuoting,
-		Description:      blocklistedCharactersFieldDescription("The database in which to create the function."),
-	},
-	"schema": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		DiffSuppressFunc: suppressIdentifierQuoting,
-		Description:      blocklistedCharactersFieldDescription("The schema in which to create the function."),
-	},
-	"name": {
-		Type:             schema.TypeString,
-		Required:         true,
-		Description:      blocklistedCharactersFieldDescription("The name of the function; the identifier does not need to be unique for the schema in which the function is created because UDFs are identified and resolved by the combination of the name and argument types. Check the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages)."),
-		DiffSuppressFunc: suppressIdentifierQuoting,
-	},
-	"is_secure": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		Default:          BooleanDefault,
-		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("is_secure"),
-		Description:      booleanStringFieldDescription("Specifies that the function is secure. By design, the Snowflake's `SHOW FUNCTIONS` command does not provide information about secure views (consult [function docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#id1) and [Protecting Sensitive Information with Secure UDFs and Stored Procedures](https://docs.snowflake.com/en/developer-guide/secure-udf-procedure)) which is essential to manage/import function with Terraform. Use the role owning the function while managing secure functions."),
-	},
-	"is_aggregate": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		Default:          BooleanDefault,
-		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("is_aggregate"),
-		Description:      booleanStringFieldDescription("Specifies that the function is an aggregate function. For more information about user-defined aggregate functions, see [Python user-defined aggregate functions](https://docs.snowflake.com/en/developer-guide/udf/python/udf-python-aggregate-functions)."),
-	},
-	"arguments": {
-		Type: schema.TypeList,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"arg_name": {
-					Type:     schema.TypeString,
-					Required: true,
-					// TODO [SNOW-1348103]: adjust diff suppression accordingly.
-					Description: "The argument name.",
-				},
-				// TODO [SNOW-1348103]: after testing weird names add limitations to the docs and add validation here
-				"arg_data_type": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: IsDataTypeValid,
-					DiffSuppressFunc: DiffSuppressDataTypes,
-					Description:      "The argument type.",
-				},
-			},
-		},
-		Optional:    true,
-		ForceNew:    true,
-		Description: "List of the arguments for the function. Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages) for more details.",
-	},
-	// TODO [SNOW-1348103]: for now, the proposal is to leave return type as string, add TABLE to data types, and here always parse (easier handling and diff suppression)
-	"return_type": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: IsDataTypeValid,
-		DiffSuppressFunc: DiffSuppressDataTypes,
-		Description:      "Specifies the results returned by the UDF, which determines the UDF type. Use `<result_data_type>` to create a scalar UDF that returns a single value with the specified data type. Use `TABLE (col_name col_data_type, ...)` to creates a table UDF that returns tabular results with the specified table column(s) and column type(s). For the details, consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages).",
-		// TODO [SNOW-1348103]: adjust DiffSuppressFunc
-	},
-	"null_input_behavior": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: sdkValidation(sdk.ToNullInputBehavior),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior")),
-		Description:      fmt.Sprintf("Specifies the behavior of the function when called with null inputs. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedNullInputBehaviors)),
-	},
-	"return_behavior": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: sdkValidation(sdk.ToReturnResultsBehavior),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToReturnResultsBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("return_behavior")),
-		Description:      fmt.Sprintf("Specifies the behavior of the function when returning results. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedReturnResultsBehaviors)),
-	},
-	"runtime_version": {
-		Type:     schema.TypeString,
-		ForceNew: true,
-		// TODO [SNOW-1348103]: may be optional for java without consequence because if it is not set, the describe is not returning any version.
-	},
-	"comment": {
-		Type:     schema.TypeString,
-		Optional: true,
-		// TODO [SNOW-1348103]: handle dynamic comment - this is a workaround for now
-		Default:     "user-defined function",
-		Description: "Specifies a comment for the function.",
-	},
-	// TODO [SNOW-1348103]: because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6, maybe it will be better to split into stage_name + target_path
-	"imports": {
-		Type:     schema.TypeSet,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		Optional: true,
-		ForceNew: true,
-	},
-	// TODO [SNOW-1348103]: what do we do with the version "latest".
-	"packages": {
-		Type:     schema.TypeSet,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		Optional: true,
-		ForceNew: true,
-	},
-	"handler": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-	},
-	// TODO [SNOW-1348103]: use suppress from network policies when adding logic
-	"external_access_integrations": {
-		Type: schema.TypeSet,
-		Elem: &schema.Schema{
+func functionBaseSchema() map[string]schema.Schema {
+	return map[string]schema.Schema{
+		"database": {
 			Type:             schema.TypeString,
-			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			Required:         true,
+			ForceNew:         true,
+			DiffSuppressFunc: suppressIdentifierQuoting,
+			Description:      blocklistedCharactersFieldDescription("The database in which to create the function."),
 		},
-		Optional:    true,
-		ForceNew:    true,
-		Description: "The names of [external access integrations](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) needed in order for this function’s handler code to access external networks. An external access integration specifies [network rules](https://docs.snowflake.com/en/sql-reference/sql/create-network-rule) and [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) that specify external locations and credentials (if any) allowed for use by handler code when making requests of an external network, such as an external REST API.",
-	},
-	"secrets": {
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"secret_variable_name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The variable that will be used in handler code when retrieving information from the secret.",
-				},
-				"secret_id": {
-					Type:             schema.TypeString,
-					Required:         true,
-					Description:      "Fully qualified name of the allowed secret. You will receive an error if you specify a SECRETS value whose secret isn’t also included in an integration specified by the EXTERNAL_ACCESS_INTEGRATIONS parameter.",
-					DiffSuppressFunc: suppressIdentifierQuoting,
+		"schema": {
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			DiffSuppressFunc: suppressIdentifierQuoting,
+			Description:      blocklistedCharactersFieldDescription("The schema in which to create the function."),
+		},
+		"name": {
+			Type:             schema.TypeString,
+			Required:         true,
+			Description:      blocklistedCharactersFieldDescription("The name of the function; the identifier does not need to be unique for the schema in which the function is created because UDFs are identified and resolved by the combination of the name and argument types. Check the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages)."),
+			DiffSuppressFunc: suppressIdentifierQuoting,
+		},
+		"is_secure": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          BooleanDefault,
+			ValidateDiagFunc: validateBooleanString,
+			DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("is_secure"),
+			Description:      booleanStringFieldDescription("Specifies that the function is secure. By design, the Snowflake's `SHOW FUNCTIONS` command does not provide information about secure functions (consult [function docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#id1) and [Protecting Sensitive Information with Secure UDFs and Stored Procedures](https://docs.snowflake.com/en/developer-guide/secure-udf-procedure)) which is essential to manage/import function with Terraform. Use the role owning the function while managing secure functions."),
+		},
+		"is_aggregate": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          BooleanDefault,
+			ValidateDiagFunc: validateBooleanString,
+			DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("is_aggregate"),
+			Description:      booleanStringFieldDescription("Specifies that the function is an aggregate function. For more information about user-defined aggregate functions, see [Python user-defined aggregate functions](https://docs.snowflake.com/en/developer-guide/udf/python/udf-python-aggregate-functions)."),
+		},
+		"arguments": {
+			Type: schema.TypeList,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"arg_name": {
+						Type:     schema.TypeString,
+						Required: true,
+						// TODO [SNOW-1348103]: adjust diff suppression accordingly.
+						Description: "The argument name.",
+					},
+					// TODO [SNOW-1348103]: after testing weird names add limitations to the docs and add validation here
+					"arg_data_type": {
+						Type:             schema.TypeString,
+						Required:         true,
+						ValidateDiagFunc: IsDataTypeValid,
+						DiffSuppressFunc: DiffSuppressDataTypes,
+						Description:      "The argument type.",
+					},
 				},
 			},
+			Optional:    true,
+			ForceNew:    true,
+			Description: "List of the arguments for the function. Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages) for more details.",
 		},
-		Description: "Assigns the names of secrets to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter.",
-	},
-	// TODO [SNOW-1348103]: because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6, maybe it will be better to split into stage + path
-	"target_path": {
-		Type:     schema.TypeString,
-		Optional: true,
-		ForceNew: true,
-	},
-	"function_definition": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		DiffSuppressFunc: DiffSuppressStatement,
-	},
-	"function_language": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "Specifies language for the user. Used to detect external changes.",
-	},
-	ShowOutputAttributeName: {
-		Type:        schema.TypeList,
-		Computed:    true,
-		Description: "Outputs the result of `SHOW FUNCTION` for the given function.",
-		Elem: &schema.Resource{
-			Schema: schemas.ShowFunctionSchema,
+		// TODO [SNOW-1348103]: for now, the proposal is to leave return type as string, add TABLE to data types, and here always parse (easier handling and diff suppression)
+		"return_type": {
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: IsDataTypeValid,
+			DiffSuppressFunc: DiffSuppressDataTypes,
+			Description:      "Specifies the results returned by the UDF, which determines the UDF type. Use `<result_data_type>` to create a scalar UDF that returns a single value with the specified data type. Use `TABLE (col_name col_data_type, ...)` to creates a table UDF that returns tabular results with the specified table column(s) and column type(s). For the details, consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages).",
+			// TODO [SNOW-1348103]: adjust DiffSuppressFunc
 		},
-	},
-	ParametersAttributeName: {
-		Type:        schema.TypeList,
-		Computed:    true,
-		Description: "Outputs the result of `SHOW PARAMETERS IN FUNCTION` for the given function.",
-		Elem: &schema.Resource{
-			Schema: functionParametersSchema,
+		"null_input_behavior": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: sdkValidation(sdk.ToNullInputBehavior),
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior")),
+			Description:      fmt.Sprintf("Specifies the behavior of the function when called with null inputs. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedNullInputBehaviors)),
 		},
-	},
-	FullyQualifiedNameAttributeName: *schemas.FullyQualifiedNameSchema,
+		"return_behavior": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: sdkValidation(sdk.ToReturnResultsBehavior),
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToReturnResultsBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("return_behavior")),
+			Description:      fmt.Sprintf("Specifies the behavior of the function when returning results. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedReturnResultsBehaviors)),
+		},
+		"runtime_version": {
+			Type:     schema.TypeString,
+			ForceNew: true,
+			// TODO [SNOW-1348103]: may be optional for java without consequence because if it is not set, the describe is not returning any version.
+		},
+		"comment": {
+			Type:     schema.TypeString,
+			Optional: true,
+			// TODO [SNOW-1348103]: handle dynamic comment - this is a workaround for now
+			Default:     "user-defined function",
+			Description: "Specifies a comment for the function.",
+		},
+		// TODO [SNOW-1348103]: because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6, maybe it will be better to split into stage_name + target_path
+		"imports": {
+			Type:     schema.TypeSet,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+			Optional: true,
+			ForceNew: true,
+		},
+		// TODO [SNOW-1348103]: what do we do with the version "latest".
+		"packages": {
+			Type:     schema.TypeSet,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+			Optional: true,
+			ForceNew: true,
+		},
+		"handler": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		// TODO [SNOW-1348103]: use suppress from network policies when adding logic
+		"external_access_integrations": {
+			Type: schema.TypeSet,
+			Elem: &schema.Schema{
+				Type:             schema.TypeString,
+				ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			},
+			Optional:    true,
+			ForceNew:    true,
+			Description: "The names of [external access integrations](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) needed in order for this function’s handler code to access external networks. An external access integration specifies [network rules](https://docs.snowflake.com/en/sql-reference/sql/create-network-rule) and [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) that specify external locations and credentials (if any) allowed for use by handler code when making requests of an external network, such as an external REST API.",
+		},
+		"secrets": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"secret_variable_name": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "The variable that will be used in handler code when retrieving information from the secret.",
+					},
+					"secret_id": {
+						Type:             schema.TypeString,
+						Required:         true,
+						Description:      "Fully qualified name of the allowed [secret](https://docs.snowflake.com/en/sql-reference/sql/create-secret). You will receive an error if you specify a SECRETS value whose secret isn’t also included in an integration specified by the EXTERNAL_ACCESS_INTEGRATIONS parameter.",
+						DiffSuppressFunc: suppressIdentifierQuoting,
+					},
+				},
+			},
+			Description: "Assigns the names of [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter.",
+		},
+		// TODO [SNOW-1348103]: because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6, maybe it will be better to split into stage + path
+		"target_path": {
+			Type:     schema.TypeString,
+			Optional: true,
+			ForceNew: true,
+		},
+		"function_definition": {
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			DiffSuppressFunc: DiffSuppressStatement,
+		},
+		"function_language": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "Specifies language for the user. Used to detect external changes.",
+		},
+		ShowOutputAttributeName: {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Description: "Outputs the result of `SHOW FUNCTION` for the given function.",
+			Elem: &schema.Resource{
+				Schema: schemas.ShowFunctionSchema,
+			},
+		},
+		ParametersAttributeName: {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Description: "Outputs the result of `SHOW PARAMETERS IN FUNCTION` for the given function.",
+			Elem: &schema.Resource{
+				Schema: functionParametersSchema,
+			},
+		},
+		FullyQualifiedNameAttributeName: *schemas.FullyQualifiedNameSchema,
+	}
 }

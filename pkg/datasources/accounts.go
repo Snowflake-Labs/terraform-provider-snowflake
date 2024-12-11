@@ -153,7 +153,7 @@ func ReadAccounts(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 		m["created_on"] = account.CreatedOn.String()
 		m["comment"] = account.Comment
 		m["account_locator"] = account.AccountLocator
-		m["account_locator_url"] = account.AccountLocatorURL
+		m["account_locator_url"] = account.AccountLocatorUrl
 		m["managed_accounts"] = account.ManagedAccounts
 		m["consumption_billing_entity_name"] = account.ConsumptionBillingEntityName
 		m["marketplace_consumer_billing_entity_name"] = account.MarketplaceConsumerBillingEntityName
