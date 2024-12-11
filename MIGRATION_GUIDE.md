@@ -9,6 +9,10 @@ across different versions.
 
 ## v0.99.0 ➞ v0.100.0
 
+### unsafe_execute resource changes
+
+The `snowflake_unsafe_execute` gets deprecated in favor of the new resource `snowflake_execute` and will be removed before v1.
+
 ### snowflake_account resource changes
 
 Changes:

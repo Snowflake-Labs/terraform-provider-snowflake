@@ -108,6 +108,7 @@ body:
         - resource:database_role
         - resource:dynamic_table
         - resource:email_notification_integration
+        - resource:execute
         - resource:external_function
         - resource:external_oauth_integration
         - resource:external_table
@@ -151,7 +152,6 @@ body:
         - resource:tag_association
         - resource:tag_masking_policy_association
         - resource:task
-        - resource:unsafe_execute
         - resource:user
         - resource:user_password_policy_attachment
         - resource:user_public_keys
