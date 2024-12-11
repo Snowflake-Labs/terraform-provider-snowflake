@@ -67,7 +67,7 @@ func (c *TestClient) CreateSampleJavaFunctionAndJarInLocation(t *testing.T, stag
 	}
 }
 
-// TODO [this PR]: adjust to switching location too
+// TODO [SNOW-1348106]: adjust to switching location too
 func (c *TestClient) CreateSampleJavaProcedureAndJar(t *testing.T) *TmpFunction {
 	t.Helper()
 	ctx := context.Background()

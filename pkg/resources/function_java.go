@@ -72,7 +72,7 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 		attributeMappedValueCreateBuilder[string](d, "null_input_behavior", request.WithNullInputBehavior, sdk.ToNullInputBehavior),
 		attributeMappedValueCreateBuilder[string](d, "return_results_behavior", request.WithReturnResultsBehavior, sdk.ToReturnResultsBehavior),
 		stringAttributeCreateBuilder(d, "runtime_version", request.WithRuntimeVersion),
-		// TODO [this PR]: handle all attributes
+		// TODO [SNOW-1348103]: handle the rest of the attributes
 		// comment
 		setFunctionImportsInBuilder(d, request.WithImports),
 		// packages
@@ -132,7 +132,7 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 	// TODO [SNOW-1348103]: handle setting state to value from config
 
 	errs := errors.Join(
-		// TODO [this PR]: set all proper fields
+		// TODO [SNOW-1348103]: set the rest of the fields
 		// not reading is_secure on purpose (handled as external change to show output)
 		readFunctionArgumentsCommon(d, allFunctionDetails.functionDetails.NormalizedArguments),
 		d.Set("return_type", allFunctionDetails.functionDetails.ReturnDataType.ToSql()),
@@ -184,7 +184,7 @@ func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 	setRequest := sdk.NewFunctionSetRequest()
 	unsetRequest := sdk.NewFunctionUnsetRequest()
 
-	// TODO [this PR]: handle all updates
+	// TODO [SNOW-1348103]: handle all updates
 	// secure
 	// external access integration
 	// secrets

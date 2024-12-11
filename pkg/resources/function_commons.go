@@ -249,7 +249,7 @@ func functionBaseSchema() map[string]schema.Schema {
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: sdkValidation(sdk.ToNullInputBehavior),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior)), // TODO [this PR]: IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior") but not in show
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior)), // TODO [SNOW-1348103]: IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior") but not in show
 			Description:      fmt.Sprintf("Specifies the behavior of the function when called with null inputs. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedNullInputBehaviors)),
 		},
 		"return_results_behavior": {
@@ -257,7 +257,7 @@ func functionBaseSchema() map[string]schema.Schema {
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: sdkValidation(sdk.ToReturnResultsBehavior),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToReturnResultsBehavior)), // TODO [this PR]: IgnoreChangeToCurrentSnowflakeValueInShow("return_results_behavior") but not in show
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToReturnResultsBehavior)), // TODO [SNOW-1348103]: IgnoreChangeToCurrentSnowflakeValueInShow("return_results_behavior") but not in show
 			Description:      fmt.Sprintf("Specifies the behavior of the function when returning results. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedReturnResultsBehaviors)),
 		},
 		"runtime_version": {

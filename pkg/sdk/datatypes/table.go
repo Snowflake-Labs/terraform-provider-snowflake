@@ -1,9 +1,9 @@
 package datatypes
 
-// TableDataType is based on TODO [this PR]
+// TableDataType is based on TODO [SNOW-1348103]
 // It does not have synonyms.
 // It consists of a list of column name + column type; may be empty.
-// TODO [this PR]: test and improve
+// TODO [SNOW-1348103]: test and improve
 type TableDataType struct {
 	columns        []TableDataTypeColumn
 	underlyingType string

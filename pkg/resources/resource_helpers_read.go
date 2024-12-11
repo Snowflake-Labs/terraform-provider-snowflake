@@ -73,7 +73,7 @@ func setOptionalFromStringPtr(d *schema.ResourceData, key string, ptr *string) e
 	return nil
 }
 
-// TODO [this PR]: return error if nil
+// TODO [SNOW-1348103]: return error if nil
 func setRequiredFromStringPtr(d *schema.ResourceData, key string, ptr *string) error {
 	if ptr != nil {
 		if err := d.Set(key, *ptr); err != nil {
