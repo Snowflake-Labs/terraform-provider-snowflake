@@ -10,17 +10,17 @@ import (
 func Test_parseFunctionDetailsImport(t *testing.T) {
 	inputs := []struct {
 		rawInput string
-		expected []FunctionDetailsImport
+		expected []NormalizedPath
 	}{
-		{"", []FunctionDetailsImport{}},
-		{`[]`, []FunctionDetailsImport{}},
-		{`[@~/abc]`, []FunctionDetailsImport{{"~", "abc"}}},
-		{`[@~/abc/def]`, []FunctionDetailsImport{{"~", "abc/def"}}},
-		{`[@"db"."sc"."st"/abc/def]`, []FunctionDetailsImport{{`"db"."sc"."st"`, "abc/def"}}},
-		{`[@db.sc.st/abc/def]`, []FunctionDetailsImport{{`"db"."sc"."st"`, "abc/def"}}},
-		{`[db.sc.st/abc/def]`, []FunctionDetailsImport{{`"db"."sc"."st"`, "abc/def"}}},
-		{`[@"db"."sc".st/abc/def]`, []FunctionDetailsImport{{`"db"."sc"."st"`, "abc/def"}}},
-		{`[@"db"."sc".st/abc/def, db."sc".st/abc]`, []FunctionDetailsImport{{`"db"."sc"."st"`, "abc/def"}, {`"db"."sc"."st"`, "abc"}}},
+		{"", []NormalizedPath{}},
+		{`[]`, []NormalizedPath{}},
+		{`[@~/abc]`, []NormalizedPath{{"~", "abc"}}},
+		{`[@~/abc/def]`, []NormalizedPath{{"~", "abc/def"}}},
+		{`[@"db"."sc"."st"/abc/def]`, []NormalizedPath{{`"db"."sc"."st"`, "abc/def"}}},
+		{`[@db.sc.st/abc/def]`, []NormalizedPath{{`"db"."sc"."st"`, "abc/def"}}},
+		{`[db.sc.st/abc/def]`, []NormalizedPath{{`"db"."sc"."st"`, "abc/def"}}},
+		{`[@"db"."sc".st/abc/def]`, []NormalizedPath{{`"db"."sc"."st"`, "abc/def"}}},
+		{`[@"db"."sc".st/abc/def, db."sc".st/abc]`, []NormalizedPath{{`"db"."sc"."st"`, "abc/def"}, {`"db"."sc"."st"`, "abc"}}},
 	}
 
 	badInputs := []struct {

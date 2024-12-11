@@ -494,7 +494,7 @@ type allFunctionDetailsCommon struct {
 	functionParameters []*sdk.Parameter
 }
 
-func readFunctionImportsCommon(d *schema.ResourceData, imports []sdk.FunctionDetailsImport) error {
+func readFunctionImportsCommon(d *schema.ResourceData, imports []sdk.NormalizedPath) error {
 	if len(imports) == 0 {
 		// don't do anything if imports not present
 		return nil

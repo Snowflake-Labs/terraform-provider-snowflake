@@ -220,7 +220,7 @@ func TestInt_Functions(t *testing.T) {
 			// TODO [SNOW-1348103]: check multiple secrets (to know how to parse)
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
-			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
 			}).
 			HasHandler(handler).
@@ -293,7 +293,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, importPath)).
-			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
 			}).
 			HasHandler(handler).
@@ -378,7 +378,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
-			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
 			}).
 			HasHandler(handler).
@@ -451,7 +451,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[@"%s"."%s".%s/%s]`, stage.ID().DatabaseName(), stage.ID().SchemaName(), stage.ID().Name(), tmpJavaFunctionDifferentStage.JarName)).
-			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: stage.ID().FullyQualifiedName(), PathOnStage: tmpJavaFunctionDifferentStage.JarName,
 			}).
 			HasHandler(handler).
@@ -749,7 +749,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
-			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
 			}).
 			HasHandler(funcName).
@@ -819,7 +819,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
-			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
 			}).
 			HasHandler(tmpPythonFunction.PythonHandler()).
@@ -901,7 +901,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
-			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
 			}).
 			HasHandler(tmpPythonFunction.PythonHandler()).
@@ -1066,7 +1066,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
-			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
 			}).
 			HasHandler(handler).
@@ -1137,7 +1137,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, importPath)).
-			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
 			}).
 			HasHandler(handler).
@@ -1219,7 +1219,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
-			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
 			}).
 			HasHandler(handler).

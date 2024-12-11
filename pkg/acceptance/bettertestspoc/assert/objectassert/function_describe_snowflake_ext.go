@@ -407,7 +407,7 @@ func (f *FunctionDetailsAssert) HasExactlySecrets(expectedSecrets map[string]sdk
 	return f
 }
 
-func (f *FunctionDetailsAssert) HasExactlyImportsNormalizedInAnyOrder(imports ...sdk.FunctionDetailsImport) *FunctionDetailsAssert {
+func (f *FunctionDetailsAssert) HasExactlyImportsNormalizedInAnyOrder(imports ...sdk.NormalizedPath) *FunctionDetailsAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
 		t.Helper()
 		if o.NormalizedImports == nil {

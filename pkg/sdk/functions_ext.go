@@ -33,10 +33,11 @@ type FunctionDetails struct {
 	InstalledPackages          *string // list present for python (hidden when SECURE)
 	IsAggregate                *bool   // present for python
 
-	NormalizedImports []FunctionDetailsImport
+	NormalizedImports    []NormalizedPath
+	NormalizedTargetPath *NormalizedPath
 }
 
-type FunctionDetailsImport struct {
+type NormalizedPath struct {
 	// StageLocation is a normalized (fully-quoted id or `~`) stage location
 	StageLocation string
 	// PathOnStage is path to the file on stage without opening `/`
@@ -90,11 +91,17 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 		v.NormalizedImports = functionDetailsImports
 	}
 
+	if p, err := parseStageLocationPath(*v.TargetPath); err != nil {
+		errs = append(errs, err)
+	} else {
+		v.NormalizedTargetPath = p
+	}
+
 	return v, errors.Join(errs...)
 }
 
-func parseFunctionDetailsImport(details FunctionDetails) ([]FunctionDetailsImport, error) {
-	functionDetailsImports := make([]FunctionDetailsImport, 0)
+func parseFunctionDetailsImport(details FunctionDetails) ([]NormalizedPath, error) {
+	functionDetailsImports := make([]NormalizedPath, 0)
 	if details.Imports == nil || *details.Imports == "" || *details.Imports == "[]" {
 		return functionDetailsImports, nil
 	}
@@ -104,26 +111,34 @@ func parseFunctionDetailsImport(details FunctionDetails) ([]FunctionDetailsImpor
 	raw := (*details.Imports)[1 : len(*details.Imports)-1]
 	imports := strings.Split(raw, ",")
 	for _, imp := range imports {
-		log.Printf("[DEBUG] parsing imports part: %s", imp)
-		idx := strings.Index(imp, "/")
-		if idx < 0 {
-			return functionDetailsImports, fmt.Errorf("could not parse imports from Snowflake: %s, part %s cannot be split into stage and path", *details.Imports, imp)
+		p, err := parseStageLocationPath(imp)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse imports from Snowflake: %s, err: %w", *details.Imports, err)
 		}
-		stageRaw := strings.TrimPrefix(strings.TrimSpace(imp[:idx]), "@")
-		if stageRaw != "~" {
-			stageId, err := ParseSchemaObjectIdentifier(stageRaw)
-			if err != nil {
-				return functionDetailsImports, fmt.Errorf("could not parse imports from Snowflake: %s, part %s contains incorrect stage location: %w", *details.Imports, imp, err)
-			}
-			stageRaw = stageId.FullyQualifiedName()
-		}
-		pathRaw := strings.TrimPrefix(strings.TrimSpace(imp[idx:]), "/")
-		if pathRaw == "" {
-			return functionDetailsImports, fmt.Errorf("could not parse imports from Snowflake: %s, part %s contains empty path", *details.Imports, imp)
-		}
-		functionDetailsImports = append(functionDetailsImports, FunctionDetailsImport{stageRaw, pathRaw})
+		functionDetailsImports = append(functionDetailsImports, *p)
 	}
 	return functionDetailsImports, nil
+}
+
+func parseStageLocationPath(location string) (*NormalizedPath, error) {
+	log.Printf("[DEBUG] parsing stage location path part: %s", location)
+	idx := strings.Index(location, "/")
+	if idx < 0 {
+		return nil, fmt.Errorf("part %s cannot be split into stage and path", location)
+	}
+	stageRaw := strings.TrimPrefix(strings.TrimSpace(location[:idx]), "@")
+	if stageRaw != "~" {
+		stageId, err := ParseSchemaObjectIdentifier(stageRaw)
+		if err != nil {
+			return nil, fmt.Errorf("part %s contains incorrect stage location: %w", location, err)
+		}
+		stageRaw = stageId.FullyQualifiedName()
+	}
+	pathRaw := strings.TrimPrefix(strings.TrimSpace(location[idx:]), "/")
+	if pathRaw == "" {
+		return nil, fmt.Errorf("part %s contains empty path", location)
+	}
+	return &NormalizedPath{stageRaw, pathRaw}, nil
 }
 
 func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*FunctionDetails, error) {
