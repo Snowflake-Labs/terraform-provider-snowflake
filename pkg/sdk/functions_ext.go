@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -103,6 +104,7 @@ func parseFunctionDetailsImport(details FunctionDetails) ([]FunctionDetailsImpor
 	raw := (*details.Imports)[1 : len(*details.Imports)-1]
 	imports := strings.Split(raw, ",")
 	for _, imp := range imports {
+		log.Printf("[DEBUG] parsing imports part: %s", imp)
 		idx := strings.Index(imp, "/")
 		if idx < 0 {
 			return functionDetailsImports, fmt.Errorf("could not parse imports from Snowflake: %s, part %s cannot be split into stage and path", *details.Imports, imp)

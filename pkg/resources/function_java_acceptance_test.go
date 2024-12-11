@@ -58,9 +58,11 @@ func TestAcc_FunctionJava_InlineBasic(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.FunctionJavaResource(t, functionModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
-						HasCommentString(sdk.DefaultFunctionComment).
-						HasFunctionLanguageString("JAVA").
 						HasIsSecureString(r.BooleanDefault).
+						HasCommentString(sdk.DefaultFunctionComment).
+						HasImportsLength(0).
+						HasFunctionDefinitionString(definition).
+						HasFunctionLanguageString("JAVA").
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					resourceshowoutputassert.FunctionShowOutput(t, functionModelNoAttributes.ResourceReference()).
 						HasIsSecure(false),
@@ -216,7 +218,10 @@ func TestAcc_FunctionJava_StagedBasic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	tmpJavaFunction := acc.TestClient().CreateSampleJavaFunctionAndJarOnUserStage(t)
+	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
+	t.Cleanup(stageCleanup)
+
+	tmpJavaFunction := acc.TestClient().CreateSampleJavaFunctionAndJarOnStage(t, stage)
 
 	dataType := tmpJavaFunction.ArgType
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
@@ -224,7 +229,7 @@ func TestAcc_FunctionJava_StagedBasic(t *testing.T) {
 	argName := "x"
 	handler := tmpJavaFunction.JavaHandler()
 
-	functionModel := model.FunctionJavaBasicStaged("w", id, dataType, handler, "~", tmpJavaFunction.JarName).
+	functionModel := model.FunctionJavaBasicStaged("w", id, dataType, handler, stage.ID().FullyQualifiedName(), tmpJavaFunction.JarName).
 		WithArgument(argName, dataType)
 
 	resource.Test(t, resource.TestCase{
@@ -241,10 +246,14 @@ func TestAcc_FunctionJava_StagedBasic(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.FunctionJavaResource(t, functionModel.ResourceReference()).
 						HasNameString(id.Name()).
-						HasCommentString(sdk.DefaultFunctionComment).
-						HasFunctionLanguageString("JAVA").
 						HasIsSecureString(r.BooleanDefault).
+						HasCommentString(sdk.DefaultFunctionComment).
+						HasImportsLength(1).
+						HasNoFunctionDefinition().
+						HasFunctionLanguageString("JAVA").
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					assert.Check(resource.TestCheckResourceAttr(functionModel.ResourceReference(), "imports.0.stage_location", stage.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(functionModel.ResourceReference(), "imports.0.path_on_stage", tmpJavaFunction.JarName)),
 					resourceshowoutputassert.FunctionShowOutput(t, functionModel.ResourceReference()).
 						HasIsSecure(false),
 				),
