@@ -5,8 +5,6 @@ import (
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
@@ -29,7 +27,7 @@ func FunctionJavaBasicInline(
 	handler string,
 	functionDefinition string,
 ) *FunctionJavaModel {
-	return FunctionJavaf(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), id.SchemaName()).WithFunctionDefinition(functionDefinition)
+	return FunctionJava(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), id.SchemaName()).WithFunctionDefinition(functionDefinition)
 }
 
 func FunctionJavaBasicStaged(
@@ -40,25 +38,8 @@ func FunctionJavaBasicStaged(
 	stageLocation string,
 	pathOnStage string,
 ) *FunctionJavaModel {
-	return FunctionJavaf(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), id.SchemaName()).
+	return FunctionJava(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), id.SchemaName()).
 		WithImport(stageLocation, pathOnStage)
-}
-
-func FunctionJavaf(
-	resourceName string,
-	database string,
-	handler string,
-	name string,
-	returnType string,
-	schema string,
-) *FunctionJavaModel {
-	f := &FunctionJavaModel{ResourceModelMeta: config.Meta(resourceName, resources.FunctionJava)}
-	f.WithDatabase(database)
-	f.WithHandler(handler)
-	f.WithName(name)
-	f.WithReturnType(returnType)
-	f.WithSchema(schema)
-	return f
 }
 
 func (f *FunctionJavaModel) WithArgument(argName string, argDataType datatypes.DataType) *FunctionJavaModel {

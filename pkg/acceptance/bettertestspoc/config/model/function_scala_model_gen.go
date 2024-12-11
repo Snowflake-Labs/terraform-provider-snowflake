@@ -26,7 +26,7 @@ type FunctionScalaModel struct {
 	Name                       tfconfig.Variable `json:"name,omitempty"`
 	NullInputBehavior          tfconfig.Variable `json:"null_input_behavior,omitempty"`
 	Packages                   tfconfig.Variable `json:"packages,omitempty"`
-	ReturnBehavior             tfconfig.Variable `json:"return_behavior,omitempty"`
+	ReturnResultsBehavior      tfconfig.Variable `json:"return_results_behavior,omitempty"`
 	ReturnType                 tfconfig.Variable `json:"return_type,omitempty"`
 	RuntimeVersion             tfconfig.Variable `json:"runtime_version,omitempty"`
 	Schema                     tfconfig.Variable `json:"schema,omitempty"`
@@ -44,7 +44,6 @@ type FunctionScalaModel struct {
 func FunctionScala(
 	resourceName string,
 	database string,
-	functionDefinition string,
 	handler string,
 	name string,
 	returnType string,
@@ -53,7 +52,6 @@ func FunctionScala(
 ) *FunctionScalaModel {
 	f := &FunctionScalaModel{ResourceModelMeta: config.Meta(resourceName, resources.FunctionScala)}
 	f.WithDatabase(database)
-	f.WithFunctionDefinition(functionDefinition)
 	f.WithHandler(handler)
 	f.WithName(name)
 	f.WithReturnType(returnType)
@@ -64,7 +62,6 @@ func FunctionScala(
 
 func FunctionScalaWithDefaultMeta(
 	database string,
-	functionDefinition string,
 	handler string,
 	name string,
 	returnType string,
@@ -73,7 +70,6 @@ func FunctionScalaWithDefaultMeta(
 ) *FunctionScalaModel {
 	f := &FunctionScalaModel{ResourceModelMeta: config.DefaultMeta(resources.FunctionScala)}
 	f.WithDatabase(database)
-	f.WithFunctionDefinition(functionDefinition)
 	f.WithHandler(handler)
 	f.WithName(name)
 	f.WithReturnType(returnType)
@@ -154,8 +150,8 @@ func (f *FunctionScalaModel) WithNullInputBehavior(nullInputBehavior string) *Fu
 
 // packages attribute type is not yet supported, so WithPackages can't be generated
 
-func (f *FunctionScalaModel) WithReturnBehavior(returnBehavior string) *FunctionScalaModel {
-	f.ReturnBehavior = tfconfig.StringVariable(returnBehavior)
+func (f *FunctionScalaModel) WithReturnResultsBehavior(returnResultsBehavior string) *FunctionScalaModel {
+	f.ReturnResultsBehavior = tfconfig.StringVariable(returnResultsBehavior)
 	return f
 }
 
@@ -176,10 +172,7 @@ func (f *FunctionScalaModel) WithSchema(schema string) *FunctionScalaModel {
 
 // secrets attribute type is not yet supported, so WithSecrets can't be generated
 
-func (f *FunctionScalaModel) WithTargetPath(targetPath string) *FunctionScalaModel {
-	f.TargetPath = tfconfig.StringVariable(targetPath)
-	return f
-}
+// target_path attribute type is not yet supported, so WithTargetPath can't be generated
 
 func (f *FunctionScalaModel) WithTraceLevel(traceLevel string) *FunctionScalaModel {
 	f.TraceLevel = tfconfig.StringVariable(traceLevel)
@@ -270,8 +263,8 @@ func (f *FunctionScalaModel) WithPackagesValue(value tfconfig.Variable) *Functio
 	return f
 }
 
-func (f *FunctionScalaModel) WithReturnBehaviorValue(value tfconfig.Variable) *FunctionScalaModel {
-	f.ReturnBehavior = value
+func (f *FunctionScalaModel) WithReturnResultsBehaviorValue(value tfconfig.Variable) *FunctionScalaModel {
+	f.ReturnResultsBehavior = value
 	return f
 }
 
