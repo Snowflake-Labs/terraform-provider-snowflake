@@ -264,12 +264,26 @@ func functionBaseSchema() map[string]schema.Schema {
 			Default:     "user-defined function",
 			Description: "Specifies a comment for the function.",
 		},
-		// TODO [SNOW-1348103]: because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6, maybe it will be better to split into stage_name + target_path
+		// split into two because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6
+		// TODO [next PR]: add validations preventing setting improper stage and path
 		"imports": {
 			Type:     schema.TypeSet,
-			Elem:     &schema.Schema{Type: schema.TypeString},
 			Optional: true,
 			ForceNew: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"stage_location": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Stage location without leading `@`. To use your user's stage set this to `~`, otherwise pass fully qualified name of the stage (with every part contained in double quotes or use `snowflake_stage.<your stage's resource name>.fully_qualified_name` if you manage this stage through terraform).",
+					},
+					"path_on_stage": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Path for import on stage, without the leading `/`.",
+					},
+				},
+			},
 		},
 		// TODO [SNOW-1348103]: what do we do with the version "latest".
 		"packages": {
