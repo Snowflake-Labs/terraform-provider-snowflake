@@ -55,7 +55,7 @@ func Execute() *schema.Resource {
 
 		Schema: executeSchema,
 
-		Description: "Experimental resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.",
+		Description: "Resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.UnsafeExecute, func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 			if diff.HasChange("query") {
