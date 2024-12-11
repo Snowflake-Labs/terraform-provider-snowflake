@@ -212,6 +212,18 @@ func (c *FunctionClient) SampleJavaDefinition(t *testing.T, className string, fu
 `, className, funcName, argName)
 }
 
+func (c *FunctionClient) SampleJavaDefinitionNoArgs(t *testing.T, className string, funcName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+	class %[1]s {
+		public static String %[2]s() {
+			return "hello";
+		}
+	}
+`, className, funcName)
+}
+
 func (c *FunctionClient) SampleJavascriptDefinition(t *testing.T, argName string) string {
 	t.Helper()
 

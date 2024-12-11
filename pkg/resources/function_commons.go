@@ -229,6 +229,11 @@ func functionBaseSchema() map[string]schema.Schema {
 						DiffSuppressFunc: DiffSuppressDataTypes,
 						Description:      "The argument type.",
 					},
+					"arg_default_value": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: externalChangesNotDetectedFieldDescription("Optional default value for the argument. For text values use single quotes. Numeric values can be unquoted."),
+					},
 				},
 			},
 			Optional:    true,
@@ -402,7 +407,6 @@ func DeleteFunction(ctx context.Context, d *schema.ResourceData, meta any) diag.
 	return nil
 }
 
-// TODO [SNOW-1348103]: handle defaults
 func parseFunctionArgumentsCommon(d *schema.ResourceData) ([]sdk.FunctionArgumentRequest, error) {
 	args := make([]sdk.FunctionArgumentRequest, 0)
 	if v, ok := d.GetOk("arguments"); ok {
@@ -413,7 +417,13 @@ func parseFunctionArgumentsCommon(d *schema.ResourceData) ([]sdk.FunctionArgumen
 			if err != nil {
 				return nil, err
 			}
-			args = append(args, *sdk.NewFunctionArgumentRequest(argName, dataType))
+			request := sdk.NewFunctionArgumentRequest(argName, dataType)
+
+			if argDefaultValue, defaultValuePresent := arg.(map[string]any)["arg_default_value"]; defaultValuePresent && argDefaultValue.(string) != "" {
+				request.WithDefaultValue(argDefaultValue.(string))
+			}
+
+			args = append(args, *request)
 		}
 	}
 	return args, nil

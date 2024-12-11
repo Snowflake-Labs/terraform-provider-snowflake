@@ -72,6 +72,18 @@ func (f *FunctionJavaModel) WithArgument(argName string, argDataType datatypes.D
 	)
 }
 
+func (f *FunctionJavaModel) WithArgumentWithDefaultValue(argName string, argDataType datatypes.DataType, value string) *FunctionJavaModel {
+	return f.WithArgumentsValue(
+		tfconfig.ObjectVariable(
+			map[string]tfconfig.Variable{
+				"arg_name":          tfconfig.StringVariable(argName),
+				"arg_data_type":     tfconfig.StringVariable(argDataType.ToSql()),
+				"arg_default_value": tfconfig.StringVariable(value),
+			},
+		),
+	)
+}
+
 func (f *FunctionJavaModel) WithImport(stageLocation string, pathOnStage string) *FunctionJavaModel {
 	return f.WithImportsValue(
 		tfconfig.ObjectVariable(
