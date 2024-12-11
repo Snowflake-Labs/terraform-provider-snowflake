@@ -241,7 +241,6 @@ func functionBaseSchema() map[string]schema.Schema {
 			ForceNew:    true,
 			Description: "List of the arguments for the function. Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages) for more details.",
 		},
-		// TODO [SNOW-1348103]: for now, the proposal is to leave return type as string, add TABLE to data types, and here always parse (easier handling and diff suppression)
 		"return_type": {
 			Type:             schema.TypeString,
 			Required:         true,
