@@ -38,6 +38,7 @@ type FunctionDetails struct {
 	NormalizedImports    []NormalizedPath
 	NormalizedTargetPath *NormalizedPath
 	ReturnDataType       datatypes.DataType
+	NormalizedArguments  []NormalizedArgument
 }
 
 type NormalizedPath struct {
@@ -45,6 +46,12 @@ type NormalizedPath struct {
 	StageLocation string
 	// PathOnStage is path to the file on stage without opening `/`
 	PathOnStage string
+}
+
+type NormalizedArgument struct {
+	name         string
+	dataType     datatypes.DataType
+	defaultValue string // TODO [next PR]: handle when adding default values
 }
 
 func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
@@ -109,6 +116,12 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 		_ = returnNotNull // TODO [next PR]: used when adding return nullability to the resource
 	}
 
+	if args, err := parseFunctionAndProcedureSignature(v.Signature); err != nil {
+		errs = append(errs, err)
+	} else {
+		v.NormalizedArguments = args
+	}
+
 	return v, errors.Join(errs...)
 }
 
@@ -118,7 +131,7 @@ func parseFunctionDetailsImport(details FunctionDetails) ([]NormalizedPath, erro
 		return functionDetailsImports, nil
 	}
 	if !strings.HasPrefix(*details.Imports, "[") || !strings.HasSuffix(*details.Imports, "]") {
-		return functionDetailsImports, fmt.Errorf("could not parse imports from Snowflake: %s, brackets not find", *details.Imports)
+		return functionDetailsImports, fmt.Errorf("could not parse imports from Snowflake: %s, wrapping brackets not found", *details.Imports)
 	}
 	raw := (*details.Imports)[1 : len(*details.Imports)-1]
 	imports := strings.Split(raw, ",")
@@ -162,6 +175,64 @@ func parseFunctionAndProcedureReturns(returns string) (datatypes.DataType, bool,
 	}
 	dt, err := datatypes.ParseDataType(trimmed)
 	return dt, returnNotNull, err
+}
+
+// Format in Snowflake DB is: (argName argType [DEFAULT defaultValue], argName argType [DEFAULT defaultValue], ...).
+func parseFunctionAndProcedureSignature(signature string) ([]NormalizedArgument, error) {
+	normalizedArguments := make([]NormalizedArgument, 0)
+	trimmed := strings.TrimSpace(signature)
+	if trimmed == "" {
+		return normalizedArguments, fmt.Errorf("could not parse signature from Snowflake: %s, can't be empty", signature)
+	}
+	if trimmed == "()" {
+		return normalizedArguments, nil
+	}
+	if !strings.HasPrefix(trimmed, "(") || !strings.HasSuffix(trimmed, ")") {
+		return normalizedArguments, fmt.Errorf("could not parse signature from Snowflake: %s, wrapping parentheses not found", trimmed)
+	}
+	raw := (trimmed)[1 : len(trimmed)-1]
+	args := strings.Split(raw, ",")
+
+	for _, arg := range args {
+		a, err := parseFunctionOrProcedureArgument(arg)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse signature from Snowflake: %s, err: %w", trimmed, err)
+		}
+		normalizedArguments = append(normalizedArguments, *a)
+	}
+	return normalizedArguments, nil
+}
+
+// TODO [next PR]: adjust after tests for strange arg names and defaults
+func parseFunctionOrProcedureArgument(arg string) (*NormalizedArgument, error) {
+	log.Printf("[DEBUG] parsing argument: %s", arg)
+	trimmed := strings.TrimSpace(arg)
+	idx := strings.Index(trimmed, " ")
+	if idx < 0 {
+		return nil, fmt.Errorf("arg %s cannot be split into arg name, data type, and default", arg)
+	}
+	argName := trimmed[:idx]
+	rest := strings.TrimSpace(trimmed[idx:])
+	split := strings.Split(rest, " DEFAULT ")
+	var dt datatypes.DataType
+	var defaultValue string
+	var err error
+	switch len(split) {
+	case 1:
+		dt, err = datatypes.ParseDataType(split[0])
+		if err != nil {
+			return nil, fmt.Errorf("arg type %s cannot be parsed, err: %w", split[0], err)
+		}
+	case 2:
+		dt, err = datatypes.ParseDataType(split[0])
+		if err != nil {
+			return nil, fmt.Errorf("arg type %s cannot be parsed, err: %w", split[0], err)
+		}
+		defaultValue = strings.TrimSpace(split[1])
+	default:
+		return nil, fmt.Errorf("cannot parse arg %s, part: %s", arg, rest)
+	}
+	return &NormalizedArgument{argName, dt, defaultValue}, nil
 }
 
 func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*FunctionDetails, error) {
