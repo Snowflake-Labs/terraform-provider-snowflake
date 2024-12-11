@@ -30,14 +30,14 @@ type procedureSchemaDef struct {
 
 func setUpProcedureSchema(definition procedureSchemaDef) map[string]*schema.Schema {
 	currentSchema := make(map[string]*schema.Schema)
-	for k, v := range procedureBaseSchema {
+	for k, v := range procedureBaseSchema() {
 		v := v
 		if slices.Contains(definition.additionalArguments, k) || slices.Contains(commonProcedureArguments, k) {
 			currentSchema[k] = &v
 		}
 	}
 	if v, ok := currentSchema["procedure_definition"]; ok && v != nil {
-		v.Description = definition.procedureDefinitionDescription
+		v.Description = diffSuppressStatementFieldDescription(definition.procedureDefinitionDescription)
 	}
 	if v, ok := currentSchema["return_type"]; ok && v != nil {
 		v.Description = procedureReturnsTemplate(definition.returnTypeLinkName, definition.returnTypeLinkUrl)
@@ -162,180 +162,182 @@ var (
 // TODO [SNOW-1348103]: add null/not null
 // TODO [SNOW-1348103]: currently database and schema are ForceNew but based on the docs it is possible to rename with moving to different db/schema
 // TODO [SNOW-1348103]: copyGrants and orReplace logic omitted for now, will be added to the limitations docs
-var procedureBaseSchema = map[string]schema.Schema{
-	"database": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		DiffSuppressFunc: suppressIdentifierQuoting,
-		Description:      blocklistedCharactersFieldDescription("The database in which to create the procedure."),
-	},
-	"schema": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		DiffSuppressFunc: suppressIdentifierQuoting,
-		Description:      blocklistedCharactersFieldDescription("The schema in which to create the procedure."),
-	},
-	"name": {
-		Type:             schema.TypeString,
-		Required:         true,
-		Description:      blocklistedCharactersFieldDescription("The name of the procedure; the identifier does not need to be unique for the schema in which the procedure is created because stored procedures are [identified and resolved by the combination of the name and argument types](https://docs.snowflake.com/en/developer-guide/udf-stored-procedure-naming-conventions.html#label-procedure-function-name-overloading)."),
-		DiffSuppressFunc: suppressIdentifierQuoting,
-	},
-	"is_secure": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		Default:          BooleanDefault,
-		ValidateDiagFunc: validateBooleanString,
-		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("is_secure"),
-		Description:      booleanStringFieldDescription("Specifies that the procedure is secure. For more information about secure procedures, see [Protecting Sensitive Information with Secure UDFs and Stored Procedures](https://docs.snowflake.com/en/developer-guide/secure-udf-procedure)."),
-	},
-	"arguments": {
-		Type: schema.TypeList,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"arg_name": {
-					Type:     schema.TypeString,
-					Required: true,
-					// TODO [SNOW-1348103]: adjust diff suppression accordingly.
-					Description: "The argument name.",
-				},
-				"arg_data_type": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: IsDataTypeValid,
-					DiffSuppressFunc: DiffSuppressDataTypes,
-					Description:      "The argument type.",
-				},
-			},
-		},
-		Optional:    true,
-		ForceNew:    true,
-		Description: "List of the arguments for the procedure. Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-procedure#all-languages) for more details.",
-	},
-	// TODO [SNOW-1348103]: for now, the proposal is to leave return type as string, add TABLE to data types, and here always parse (easier handling and diff suppression)
-	"return_type": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: IsDataTypeValid,
-		DiffSuppressFunc: DiffSuppressDataTypes,
-	},
-	"null_input_behavior": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ForceNew:         true,
-		ValidateDiagFunc: sdkValidation(sdk.ToNullInputBehavior),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior")),
-		Description:      fmt.Sprintf("Specifies the behavior of the procedure when called with null inputs. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedNullInputBehaviors)),
-	},
-	// "return_behavior" removed because it is deprecated in the docs: https://docs.snowflake.com/en/sql-reference/sql/create-procedure#id1
-	"runtime_version": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-	},
-	"comment": {
-		Type:     schema.TypeString,
-		Optional: true,
-		// TODO [SNOW-1348103]: handle dynamic comment - this is a workaround for now
-		Default:     "user-defined procedure",
-		Description: "Specifies a comment for the procedure.",
-	},
-	"imports": {
-		Type:     schema.TypeSet,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		Optional: true,
-		ForceNew: true,
-	},
-	"snowpark_package": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "The Snowpark package is required for stored procedures, so it must always be present. For more information about Snowpark, see [Snowpark API](https://docs.snowflake.com/en/developer-guide/snowpark/index).",
-	},
-	// TODO [SNOW-1348103]: what do we do with the version "latest".
-	"packages": {
-		Type:        schema.TypeSet,
-		Elem:        &schema.Schema{Type: schema.TypeString},
-		Optional:    true,
-		ForceNew:    true,
-		Description: "List of the names of packages deployed in Snowflake that should be included in the handler code’s execution environment. The Snowpark package is required for stored procedures, but is specified in the `snowpark_package` attribute. For more information about Snowpark, see [Snowpark API](https://docs.snowflake.com/en/developer-guide/snowpark/index).",
-	},
-	"handler": {
-		Type:     schema.TypeString,
-		Required: true,
-		ForceNew: true,
-	},
-	"external_access_integrations": {
-		Type: schema.TypeSet,
-		Elem: &schema.Schema{
+func procedureBaseSchema() map[string]schema.Schema {
+	return map[string]schema.Schema{
+		"database": {
 			Type:             schema.TypeString,
-			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			Required:         true,
+			ForceNew:         true,
+			DiffSuppressFunc: suppressIdentifierQuoting,
+			Description:      blocklistedCharactersFieldDescription("The database in which to create the procedure."),
 		},
-		Optional:    true,
-		ForceNew:    true,
-		Description: "The names of [external access integrations](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) needed in order for this procedure’s handler code to access external networks. An external access integration specifies [network rules](https://docs.snowflake.com/en/sql-reference/sql/create-network-rule) and [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) that specify external locations and credentials (if any) allowed for use by handler code when making requests of an external network, such as an external REST API.",
-	},
-	"secrets": {
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"secret_variable_name": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "The variable that will be used in handler code when retrieving information from the secret.",
-				},
-				"secret_id": {
-					Type:             schema.TypeString,
-					Required:         true,
-					Description:      "Fully qualified name of the allowed secret. You will receive an error if you specify a SECRETS value whose secret isn’t also included in an integration specified by the EXTERNAL_ACCESS_INTEGRATIONS parameter.",
-					DiffSuppressFunc: suppressIdentifierQuoting,
+		"schema": {
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			DiffSuppressFunc: suppressIdentifierQuoting,
+			Description:      blocklistedCharactersFieldDescription("The schema in which to create the procedure."),
+		},
+		"name": {
+			Type:             schema.TypeString,
+			Required:         true,
+			Description:      blocklistedCharactersFieldDescription("The name of the procedure; the identifier does not need to be unique for the schema in which the procedure is created because stored procedures are [identified and resolved by the combination of the name and argument types](https://docs.snowflake.com/en/developer-guide/udf-stored-procedure-naming-conventions.html#label-procedure-function-name-overloading)."),
+			DiffSuppressFunc: suppressIdentifierQuoting,
+		},
+		"is_secure": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Default:          BooleanDefault,
+			ValidateDiagFunc: validateBooleanString,
+			DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("is_secure"),
+			Description:      booleanStringFieldDescription("Specifies that the procedure is secure. For more information about secure procedures, see [Protecting Sensitive Information with Secure UDFs and Stored Procedures](https://docs.snowflake.com/en/developer-guide/secure-udf-procedure)."),
+		},
+		"arguments": {
+			Type: schema.TypeList,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"arg_name": {
+						Type:     schema.TypeString,
+						Required: true,
+						// TODO [SNOW-1348103]: adjust diff suppression accordingly.
+						Description: "The argument name.",
+					},
+					"arg_data_type": {
+						Type:             schema.TypeString,
+						Required:         true,
+						ValidateDiagFunc: IsDataTypeValid,
+						DiffSuppressFunc: DiffSuppressDataTypes,
+						Description:      "The argument type.",
+					},
 				},
 			},
+			Optional:    true,
+			ForceNew:    true,
+			Description: "List of the arguments for the procedure. Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-procedure#all-languages) for more details.",
 		},
-		Description: "Assigns the names of secrets to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter.",
-	},
-	"target_path": {
-		Type:     schema.TypeString,
-		Optional: true,
-		ForceNew: true,
-	},
-	"execute_as": {
-		Type:             schema.TypeString,
-		Optional:         true,
-		ValidateDiagFunc: sdkValidation(sdk.ToExecuteAs),
-		DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToExecuteAs), IgnoreChangeToCurrentSnowflakeValueInShow("execute_as")),
-		Description:      fmt.Sprintf("Specifies whether the stored procedure executes with the privileges of the owner (an “owner’s rights” stored procedure) or with the privileges of the caller (a “caller’s rights” stored procedure). If you execute the statement CREATE PROCEDURE … EXECUTE AS CALLER, then in the future the procedure will execute as a caller’s rights procedure. If you execute CREATE PROCEDURE … EXECUTE AS OWNER, then the procedure will execute as an owner’s rights procedure. For more information, see [Understanding caller’s rights and owner’s rights stored procedures](https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-rights). Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedExecuteAs)),
-	},
-	"procedure_definition": {
-		Type:             schema.TypeString,
-		Required:         true,
-		ForceNew:         true,
-		DiffSuppressFunc: DiffSuppressStatement,
-	},
-	"procedure_language": {
-		Type:        schema.TypeString,
-		Computed:    true,
-		Description: "Specifies language for the procedure. Used to detect external changes.",
-	},
-	ShowOutputAttributeName: {
-		Type:        schema.TypeList,
-		Computed:    true,
-		Description: "Outputs the result of `SHOW PROCEDURE` for the given procedure.",
-		Elem: &schema.Resource{
-			Schema: schemas.ShowProcedureSchema,
+		// TODO [SNOW-1348103]: for now, the proposal is to leave return type as string, add TABLE to data types, and here always parse (easier handling and diff suppression)
+		"return_type": {
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: IsDataTypeValid,
+			DiffSuppressFunc: DiffSuppressDataTypes,
 		},
-	},
-	ParametersAttributeName: {
-		Type:        schema.TypeList,
-		Computed:    true,
-		Description: "Outputs the result of `SHOW PARAMETERS IN PROCEDURE` for the given procedure.",
-		Elem: &schema.Resource{
-			Schema: procedureParametersSchema,
+		"null_input_behavior": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: sdkValidation(sdk.ToNullInputBehavior),
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior")),
+			Description:      fmt.Sprintf("Specifies the behavior of the procedure when called with null inputs. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedNullInputBehaviors)),
 		},
-	},
-	FullyQualifiedNameAttributeName: *schemas.FullyQualifiedNameSchema,
+		// "return_behavior" removed because it is deprecated in the docs: https://docs.snowflake.com/en/sql-reference/sql/create-procedure#id1
+		"runtime_version": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"comment": {
+			Type:     schema.TypeString,
+			Optional: true,
+			// TODO [SNOW-1348103]: handle dynamic comment - this is a workaround for now
+			Default:     "user-defined procedure",
+			Description: "Specifies a comment for the procedure.",
+		},
+		"imports": {
+			Type:     schema.TypeSet,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+			Optional: true,
+			ForceNew: true,
+		},
+		"snowpark_package": {
+			Type:        schema.TypeString,
+			Required:    true,
+			ForceNew:    true,
+			Description: "The Snowpark package is required for stored procedures, so it must always be present. For more information about Snowpark, see [Snowpark API](https://docs.snowflake.com/en/developer-guide/snowpark/index).",
+		},
+		// TODO [SNOW-1348103]: what do we do with the version "latest".
+		"packages": {
+			Type:        schema.TypeSet,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Optional:    true,
+			ForceNew:    true,
+			Description: "List of the names of packages deployed in Snowflake that should be included in the handler code’s execution environment. The Snowpark package is required for stored procedures, but is specified in the `snowpark_package` attribute. For more information about Snowpark, see [Snowpark API](https://docs.snowflake.com/en/developer-guide/snowpark/index).",
+		},
+		"handler": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"external_access_integrations": {
+			Type: schema.TypeSet,
+			Elem: &schema.Schema{
+				Type:             schema.TypeString,
+				ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
+			},
+			Optional:    true,
+			ForceNew:    true,
+			Description: "The names of [external access integrations](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) needed in order for this procedure’s handler code to access external networks. An external access integration specifies [network rules](https://docs.snowflake.com/en/sql-reference/sql/create-network-rule) and [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) that specify external locations and credentials (if any) allowed for use by handler code when making requests of an external network, such as an external REST API.",
+		},
+		"secrets": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"secret_variable_name": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "The variable that will be used in handler code when retrieving information from the secret.",
+					},
+					"secret_id": {
+						Type:             schema.TypeString,
+						Required:         true,
+						Description:      "Fully qualified name of the allowed [secret](https://docs.snowflake.com/en/sql-reference/sql/create-secret). You will receive an error if you specify a SECRETS value whose secret isn’t also included in an integration specified by the EXTERNAL_ACCESS_INTEGRATIONS parameter.",
+						DiffSuppressFunc: suppressIdentifierQuoting,
+					},
+				},
+			},
+			Description: "Assigns the names of [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter.",
+		},
+		"target_path": {
+			Type:     schema.TypeString,
+			Optional: true,
+			ForceNew: true,
+		},
+		"execute_as": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateDiagFunc: sdkValidation(sdk.ToExecuteAs),
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToExecuteAs), IgnoreChangeToCurrentSnowflakeValueInShow("execute_as")),
+			Description:      fmt.Sprintf("Specifies whether the stored procedure executes with the privileges of the owner (an “owner’s rights” stored procedure) or with the privileges of the caller (a “caller’s rights” stored procedure). If you execute the statement CREATE PROCEDURE … EXECUTE AS CALLER, then in the future the procedure will execute as a caller’s rights procedure. If you execute CREATE PROCEDURE … EXECUTE AS OWNER, then the procedure will execute as an owner’s rights procedure. For more information, see [Understanding caller’s rights and owner’s rights stored procedures](https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-rights). Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedExecuteAs)),
+		},
+		"procedure_definition": {
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			DiffSuppressFunc: DiffSuppressStatement,
+		},
+		"procedure_language": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "Specifies language for the procedure. Used to detect external changes.",
+		},
+		ShowOutputAttributeName: {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Description: "Outputs the result of `SHOW PROCEDURE` for the given procedure.",
+			Elem: &schema.Resource{
+				Schema: schemas.ShowProcedureSchema,
+			},
+		},
+		ParametersAttributeName: {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Description: "Outputs the result of `SHOW PARAMETERS IN PROCEDURE` for the given procedure.",
+			Elem: &schema.Resource{
+				Schema: procedureParametersSchema,
+			},
+		},
+		FullyQualifiedNameAttributeName: *schemas.FullyQualifiedNameSchema,
+	}
 }
