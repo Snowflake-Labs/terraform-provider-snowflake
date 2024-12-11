@@ -82,3 +82,14 @@ func (f *FunctionJavaModel) WithImport(stageLocation string, pathOnStage string)
 		),
 	)
 }
+
+func (f *FunctionJavaModel) WithTargetPathParts(stageLocation string, pathOnStage string) *FunctionJavaModel {
+	return f.WithTargetPathValue(
+		tfconfig.ObjectVariable(
+			map[string]tfconfig.Variable{
+				"stage_location": tfconfig.StringVariable(stageLocation),
+				"path_on_stage":  tfconfig.StringVariable(pathOnStage),
+			},
+		),
+	)
+}

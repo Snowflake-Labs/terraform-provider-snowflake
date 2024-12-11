@@ -3,6 +3,7 @@ package resources_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -15,6 +16,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -210,6 +212,59 @@ func TestAcc_FunctionJava_InlineBasic(t *testing.T) {
 			//			HasDisplayName(""),
 			//	),
 			//},
+		},
+	})
+}
+
+func TestAcc_FunctionJava_InlineFull(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
+	t.Cleanup(stageCleanup)
+
+	className := "TestFunc"
+	funcName := "echoVarchar"
+	argName := "x"
+	dataType := testdatatypes.DataTypeVarchar_100
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
+
+	handler := fmt.Sprintf("%s.%s", className, funcName)
+	definition := acc.TestClient().Function.SampleJavaDefinition(t, className, funcName, argName)
+	// TODO [next PR]: extract to helper
+	jarName := fmt.Sprintf("tf-%d-%s.jar", time.Now().Unix(), random.AlphaN(5))
+
+	functionModel := model.FunctionJavaBasicInline("w", id, dataType, handler, definition).
+		WithArgument(argName, dataType).
+		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.FunctionJava),
+		Steps: []resource.TestStep{
+			// CREATE BASIC
+			{
+				Config: config.FromModels(t, functionModel),
+				Check: assert.AssertThat(t,
+					resourceassert.FunctionJavaResource(t, functionModel.ResourceReference()).
+						HasNameString(id.Name()).
+						HasIsSecureString(r.BooleanDefault).
+						HasCommentString(sdk.DefaultFunctionComment).
+						HasImportsLength(0).
+						HasFunctionDefinitionString(definition).
+						HasFunctionLanguageString("JAVA").
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					assert.Check(resource.TestCheckResourceAttr(functionModel.ResourceReference(), "target_path.0.stage_location", stage.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(functionModel.ResourceReference(), "target_path.0.path_on_stage", jarName)),
+					resourceshowoutputassert.FunctionShowOutput(t, functionModel.ResourceReference()).
+						HasIsSecure(false),
+				),
+			},
 		},
 	})
 }

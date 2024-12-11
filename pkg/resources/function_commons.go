@@ -435,9 +435,9 @@ func parseFunctionImportsCommon(d *schema.ResourceData) ([]sdk.FunctionImportReq
 func parseFunctionTargetPathCommon(d *schema.ResourceData) (string, error) {
 	var tp string
 	if v, ok := d.GetOk("target_path"); ok {
-		for _, tp := range v.(*schema.Set).List() {
-			stageLocation := tp.(map[string]any)["stage_location"].(string)
-			pathOnStage := tp.(map[string]any)["path_on_stage"].(string)
+		for _, p := range v.(*schema.Set).List() {
+			stageLocation := p.(map[string]any)["stage_location"].(string)
+			pathOnStage := p.(map[string]any)["path_on_stage"].(string)
 			tp = fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)
 		}
 	}
