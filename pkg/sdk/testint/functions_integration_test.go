@@ -34,6 +34,7 @@ import (
 // TODO [SNOW-1850370]: active warehouse vs validations
 // TODO [SNOW-1348103]: add a test documenting STRICT behavior
 // TODO [next PR]: add test with multiple imports
+// TODO [this PR]: add assertion to each test for the normalized target path, returned data type, and return not null
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()

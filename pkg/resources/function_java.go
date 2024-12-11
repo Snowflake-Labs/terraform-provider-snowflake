@@ -185,6 +185,10 @@ func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 	unsetRequest := sdk.NewFunctionUnsetRequest()
 
 	// TODO [this PR]: handle all updates
+	// secure
+	// external access integration
+	// secrets
+	// comment
 
 	if updateParamDiags := handleFunctionParametersUpdate(d, setRequest, unsetRequest); len(updateParamDiags) > 0 {
 		return updateParamDiags
