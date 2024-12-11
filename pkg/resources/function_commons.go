@@ -409,7 +409,7 @@ func parseFunctionArgumentsCommon(d *schema.ResourceData) ([]sdk.FunctionArgumen
 func parseFunctionImportsCommon(d *schema.ResourceData) ([]sdk.FunctionImportRequest, error) {
 	imports := make([]sdk.FunctionImportRequest, 0)
 	if v, ok := d.GetOk("imports"); ok {
-		for _, imp := range v.([]any) {
+		for _, imp := range v.(*schema.Set).List() {
 			stageLocation := imp.(map[string]any)["stage_location"].(string)
 			pathOnStage := imp.(map[string]any)["path_on_stage"].(string)
 			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)))

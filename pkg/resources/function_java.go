@@ -36,7 +36,7 @@ func FunctionJava() *schema.Resource {
 			// Currently, almost all attributes are marked as forceNew.
 			// When language changes, these attributes also change, causing the object to recreate either way.
 			// The only potential option is java staged -> scala staged (however scala need runtime_version which may interfere).
-			RecreateWhenResourceFieldChangedExternally("function_language", "JAVA"),
+			RecreateWhenResourceStringFieldChangedExternally("function_language", "JAVA"),
 		)),
 
 		Schema: collections.MergeMaps(javaFunctionSchema, functionParametersSchema),
