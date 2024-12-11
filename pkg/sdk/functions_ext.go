@@ -38,6 +38,7 @@ type FunctionDetails struct {
 	NormalizedImports    []NormalizedPath
 	NormalizedTargetPath *NormalizedPath
 	ReturnDataType       datatypes.DataType
+	ReturnNotNull        bool
 	NormalizedArguments  []NormalizedArgument
 }
 
@@ -113,7 +114,7 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 		errs = append(errs, err)
 	} else {
 		v.ReturnDataType = dt
-		_ = returnNotNull // TODO [next PR]: used when adding return nullability to the resource
+		v.ReturnNotNull = returnNotNull
 	}
 
 	if args, err := parseFunctionOrProcedureSignature(v.Signature); err != nil {

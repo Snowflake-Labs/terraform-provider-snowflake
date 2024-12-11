@@ -23,18 +23,17 @@ import (
 // TODO [SNOW-1850370]: HasArgumentsRawFrom(functionId, arguments, return)
 // TODO [SNOW-1850370]: extract show assertions with commons fields
 // TODO [SNOW-1850370]: test confirming that runtime version is required for Scala function
-// TODO [SNOW-1348103 or SNOW-1850370]: test create or replace with name change, args change
-// TODO [SNOW-1348103]: test rename more (arg stays, can't change arg, rename to different schema)
-// TODO [SNOW-1348103]: test weird names for arg name - lower/upper if used with double quotes, to upper without quotes, dots, spaces, and both quotes not permitted
+// TODO [SNOW-1850370]: test create or replace with name change, args change
+// TODO [SNOW-1850370]: test rename more (arg stays, can't change arg, rename to different schema)
 // TODO [SNOW-1850370]: add test documenting that UNSET SECRETS does not work
 // TODO [SNOW-1850370]: add test documenting [JAVA]: 391516 (42601): SQL compilation error: Cannot specify TARGET_PATH without a function BODY.
-// TODO [SNOW-1348103 or SNOW-1850370]: test secure
-// TODO [SNOW-1348103]: python aggregate func (100357 (P0000): Could not find accumulate method in function CVVEMHIT_06547800_08D6_DBCA_1AC7_5E422AFF8B39 with handler dump)
-// TODO [SNOW-1348103]: add a test documenting that we can't set parameters in create (and revert adding these parameters directly in object...)
+// TODO [SNOW-1850370]: add a test documenting that we can't set parameters in create (and revert adding these parameters directly in object...)
 // TODO [SNOW-1850370]: active warehouse vs validations
-// TODO [SNOW-1348103]: add a test documenting STRICT behavior
+// TODO [SNOW-1850370]: add a test documenting STRICT behavior
+// TODO [SNOW-1348103]: test weird names for arg name - lower/upper if used with double quotes, to upper without quotes, dots, spaces, and both quotes not permitted
+// TODO [SNOW-1348103]: test secure
+// TODO [SNOW-1348103]: python aggregate func (100357 (P0000): Could not find accumulate method in function CVVEMHIT_06547800_08D6_DBCA_1AC7_5E422AFF8B39 with handler dump)
 // TODO [next PR]: add test with multiple imports
-// TODO [this PR]: add assertion to each test for the normalized target path, returned data type, and return not null
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -117,6 +116,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("JAVA").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -129,6 +130,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersionNil().
 			HasPackages(`[]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -212,6 +214,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("JAVA").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -228,6 +232,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPath(targetPath).
+			HasNormalizedTargetPath("~", jarName).
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -287,6 +292,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("JAVA").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -301,6 +308,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersionNil().
 			HasPackages(`[]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -372,6 +380,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("JAVA").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -386,6 +396,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -445,6 +456,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("JAVA").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -459,6 +472,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersionNil().
 			HasPackages(`[]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -550,6 +564,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("JAVASCRIPT").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -562,6 +578,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersionNil().
 			HasPackagesNil().
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -624,6 +641,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("JAVASCRIPT").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -636,6 +655,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersionNil().
 			HasPackagesNil().
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -693,7 +713,9 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")). // TODO [SNOW-1348103]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("PYTHON").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -706,6 +728,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersion("3.8").
 			HasPackages(`[]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
 			HasIsAggregate(false),
 		)
@@ -776,7 +799,9 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
-			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL"). // TODO [SNOW-1348103]: do we care about this whitespace?
+			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL").
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("PYTHON").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -791,6 +816,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersion("3.8").
 			HasPackages(`['absl-py==0.10.0','about-time==4.2.1']`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
 			HasIsAggregate(false),
 		)
@@ -847,6 +873,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("PYTHON").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -861,6 +889,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersion("3.8").
 			HasPackages(`[]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
 			HasIsAggregate(false),
 		)
@@ -929,6 +958,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL").
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("PYTHON").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -943,6 +974,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersion("3.8").
 			HasPackages(`['absl-py==0.10.0','about-time==4.2.1']`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
 			HasIsAggregate(false),
 		)
@@ -1002,6 +1034,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("SCALA").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -1014,6 +1048,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersion("2.12").
 			HasPackages(`[]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -1094,6 +1129,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("SCALA").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -1108,6 +1145,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPath(targetPath).
+			HasNormalizedTargetPath("~", jarName).
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -1165,6 +1203,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("SCALA").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -1179,6 +1219,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersion("2.12").
 			HasPackages(`[]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -1247,6 +1288,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("SCALA").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -1261,6 +1304,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -1317,6 +1361,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("SQL").
 			HasBody(definition).
 			HasNullHandlingNil().
@@ -1329,6 +1375,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersionNil().
 			HasPackagesNil().
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -1420,6 +1467,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("SQL").
 			HasBody(definition).
 			HasNullHandlingNil().
@@ -1434,6 +1483,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersionNil().
 			HasPackagesNil().
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)
@@ -1487,6 +1537,8 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature("()").
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("SQL").
 			HasBody(definition).
 			HasNullHandlingNil().
@@ -1499,6 +1551,7 @@ func TestInt_Functions(t *testing.T) {
 			HasRuntimeVersionNil().
 			HasPackagesNil().
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasIsAggregateNil(),
 		)

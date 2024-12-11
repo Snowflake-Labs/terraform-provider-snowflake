@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,8 +29,8 @@ func Test_parseFunctionDetailsImport(t *testing.T) {
 		rawInput          string
 		expectedErrorPart string
 	}{
-		{"[", "brackets not find"},
-		{"]", "brackets not find"},
+		{"[", "wrapping brackets not found"},
+		{"]", "wrapping brackets not found"},
 		{`[@~/]`, "contains empty path"},
 		{`[@~]`, "cannot be split into stage and path"},
 		{`[@"db"."sc"/abc]`, "contains incorrect stage location"},
@@ -79,6 +80,9 @@ func Test_parseFunctionOrProcedureReturns(t *testing.T) {
 	}{
 		{"CHAR", "CHAR(1)", false},
 		{"CHAR(1)", "CHAR(1)", false},
+		{"NUMBER(30, 2)", "NUMBER(30, 2)", false},
+		{"NUMBER(30,2)", "NUMBER(30, 2)", false},
+		{"NUMBER(30,2) NOT NULL", "NUMBER(30, 2)", true},
 		{"CHAR NOT NULL", "CHAR(1)", true},
 		{"  CHAR   NOT NULL  ", "CHAR(1)", true},
 		{"OBJECT", "OBJECT", false},
@@ -142,8 +146,11 @@ func Test_parseFunctionOrProcedureSignature(t *testing.T) {
 		{"(CHAR)", "cannot be split into arg name, data type, and default"},
 		{"(abc CHA)", "invalid data type"},
 		{"(abc CHA(123))", "invalid data type"},
-		{"(abc CHAR(1) DEFAULT)", "could not be parsed"},
-		{"(abc CHAR(1) DEFAULT 'a')", "could not be parsed"},
+		{"(abc CHAR(1) DEFAULT)", "cannot be parsed"},
+		{"(abc CHAR(1) DEFAULT 'a')", "cannot be parsed"},
+		// TODO [SNOW-1850370]: Snowflake currently does not return concrete data types so we can fail on them currently but it should be improved in the future
+		{"(abc NUMBER(30,2))", "cannot be parsed"},
+		{"(abc NUMBER(30, 2))", "cannot be parsed"},
 	}
 
 	for _, tc := range inputs {
@@ -155,7 +162,7 @@ func Test_parseFunctionOrProcedureSignature(t *testing.T) {
 			require.Len(t, args, len(tc.expectedArgs))
 			for i, arg := range args {
 				require.Equal(t, tc.expectedArgs[i].Name, arg.Name)
-				require.Equal(t, tc.expectedArgs[i].DataType.ToSql(), arg.DataType.ToSql())
+				require.True(t, datatypes.AreTheSame(tc.expectedArgs[i].DataType, arg.DataType))
 			}
 		})
 	}
