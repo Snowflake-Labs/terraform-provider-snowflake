@@ -2,7 +2,9 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -398,4 +400,51 @@ func DeleteProcedure(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	d.SetId("")
 	return nil
+}
+
+func queryAllProcedureDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allProcedureDetailsCommon, diag.Diagnostics) {
+	procedureDetails, err := client.Procedures.DescribeDetails(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			log.Printf("[DEBUG] procedure (%s) not found or we are not authorized. Err: %s", d.Id(), err)
+			d.SetId("")
+			return nil, diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query procedure. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Procedure: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return nil, diag.FromErr(err)
+	}
+	procedure, err := client.Procedures.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return nil, diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query procedure. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Procedure: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return nil, diag.FromErr(err)
+	}
+	procedureParameters, err := client.Procedures.ShowParameters(ctx, id)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	return &allProcedureDetailsCommon{
+		procedure:           procedure,
+		procedureDetails:    procedureDetails,
+		procedureParameters: procedureParameters,
+	}, nil
+}
+
+type allProcedureDetailsCommon struct {
+	procedure           *sdk.Procedure
+	procedureDetails    *sdk.ProcedureDetails
+	procedureParameters []*sdk.Parameter
 }
