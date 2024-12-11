@@ -63,11 +63,23 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 	request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
 		WithArguments(argumentRequests)
 
-	if v, ok := d.GetOk("function_definition"); ok {
-		request.WithFunctionDefinitionWrapped(v.(string))
+	errs := errors.Join(
+		booleanStringAttributeCreateBuilder(d, "is_secure", request.WithSecure),
+		attributeMappedValueCreateBuilder[string](d, "null_input_behavior", request.WithNullInputBehavior, sdk.ToNullInputBehavior),
+		attributeMappedValueCreateBuilder[string](d, "return_results_behavior", request.WithReturnResultsBehavior, sdk.ToReturnResultsBehavior),
+		stringAttributeCreateBuilder(d, "runtime_version", request.WithRuntimeVersion),
+		// TODO [this PR]: handle all attributes
+		// comment
+		// imports
+		// packages
+		// external_access_integrations
+		// secrets
+		// target_path
+		stringAttributeCreateBuilder(d, "function_definition", request.WithFunctionDefinitionWrapped),
+	)
+	if errs != nil {
+		return diag.FromErr(errs)
 	}
-
-	// TODO [this PR]: handle all attributes
 
 	if err := client.Functions.CreateForJava(ctx, request); err != nil {
 		return diag.FromErr(err)
@@ -88,19 +100,6 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 
 	return ReadContextFunctionJava(ctx, d, meta)
 
-	// Set optionals
-	//if v, ok := d.GetOk("is_secure"); ok {
-	//	request.WithSecure(v.(bool))
-	//}
-	//if v, ok := d.GetOk("null_input_behavior"); ok {
-	//	request.WithNullInputBehavior(sdk.NullInputBehavior(v.(string)))
-	//}
-	//if v, ok := d.GetOk("return_behavior"); ok {
-	//	request.WithReturnResultsBehavior(sdk.ReturnResultsBehavior(v.(string)))
-	//}
-	//if v, ok := d.GetOk("runtime_version"); ok {
-	//	request.WithRuntimeVersion(v.(string))
-	//}
 	//if v, ok := d.GetOk("comment"); ok {
 	//	request.WithComment(v.(string))
 	//}
@@ -140,11 +139,24 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 
 	errs := errors.Join(
 		// TODO [this PR]: set all proper fields
-
+		// not reading is_secure on purpose (handled as external change to show output)
+		// arguments
+		// return_type
+		// not reading null_input_behavior on purpose (handled as external change to show output)
+		// not reading return_results_behavior on purpose (handled as external change to show output)
+		setOptionalFromStringPtr(d, "runtime_version", allFunctionDetails.functionDetails.RuntimeVersion),
+		// comment
+		// imports
+		// packages
+		// handler
+		// external_access_integrations
+		// secrets
+		// target_path
+		setOptionalFromStringPtr(d, "function_definition", allFunctionDetails.functionDetails.Body),
 		d.Set("function_language", allFunctionDetails.functionDetails.Language),
 
-		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 		handleFunctionParameterRead(d, allFunctionDetails.functionParameters),
+		d.Set(FullyQualifiedNameAttributeName, id.FullyQualifiedName()),
 		d.Set(ShowOutputAttributeName, []map[string]any{schemas.FunctionToSchema(allFunctionDetails.function)}),
 		d.Set(ParametersAttributeName, []map[string]any{schemas.FunctionParametersToSchema(allFunctionDetails.functionParameters)}),
 	)

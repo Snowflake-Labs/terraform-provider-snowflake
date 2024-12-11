@@ -12,6 +12,13 @@ func stringAttributeCreate(d *schema.ResourceData, key string, createField **str
 	return nil
 }
 
+func stringAttributeCreateBuilder[T any](d *schema.ResourceData, key string, setValue func(string) T) error {
+	if v, ok := d.GetOk(key); ok {
+		setValue(v.(string))
+	}
+	return nil
+}
+
 func intAttributeCreate(d *schema.ResourceData, key string, createField **int) error {
 	if v, ok := d.GetOk(key); ok {
 		*createField = sdk.Int(v.(int))
@@ -33,6 +40,17 @@ func booleanStringAttributeCreate(d *schema.ResourceData, key string, createFiel
 			return err
 		}
 		*createField = sdk.Bool(parsed)
+	}
+	return nil
+}
+
+func booleanStringAttributeCreateBuilder[T any](d *schema.ResourceData, key string, setValue func(bool) T) error {
+	if v := d.Get(key).(string); v != BooleanDefault {
+		parsed, err := booleanStringToBool(v)
+		if err != nil {
+			return err
+		}
+		setValue(parsed)
 	}
 	return nil
 }
@@ -69,6 +87,17 @@ func attributeMappedValueCreate[T any](d *schema.ResourceData, key string, creat
 			return err
 		}
 		*createField = value
+	}
+	return nil
+}
+
+func attributeMappedValueCreateBuilder[InputType any, MappedType any, RequestBuilder any](d *schema.ResourceData, key string, setValue func(MappedType) RequestBuilder, mapper func(value InputType) (MappedType, error)) error {
+	if v, ok := d.GetOk(key); ok {
+		value, err := mapper(v.(InputType))
+		if err != nil {
+			return err
+		}
+		setValue(value)
 	}
 	return nil
 }

@@ -81,7 +81,7 @@ var (
 		"arguments",
 		"return_type",
 		"null_input_behavior",
-		"return_behavior",
+		"return_results_behavior",
 		"comment",
 		"function_definition",
 		"function_language",
@@ -241,15 +241,15 @@ func functionBaseSchema() map[string]schema.Schema {
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: sdkValidation(sdk.ToNullInputBehavior),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior")),
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior)), // TODO [this PR]: IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior") but not in show
 			Description:      fmt.Sprintf("Specifies the behavior of the function when called with null inputs. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedNullInputBehaviors)),
 		},
-		"return_behavior": {
+		"return_results_behavior": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: sdkValidation(sdk.ToReturnResultsBehavior),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToReturnResultsBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("return_behavior")),
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToReturnResultsBehavior)), // TODO [this PR]: IgnoreChangeToCurrentSnowflakeValueInShow("return_results_behavior") but not in show
 			Description:      fmt.Sprintf("Specifies the behavior of the function when returning results. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedReturnResultsBehaviors)),
 		},
 		"runtime_version": {
