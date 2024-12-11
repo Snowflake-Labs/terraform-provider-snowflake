@@ -141,7 +141,7 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 		// TODO [this PR]: set all proper fields
 		// not reading is_secure on purpose (handled as external change to show output)
 		// arguments
-		// return_type
+		// return_type -> parse Returns from allFunctionDetails.functionDetails (NOT NULL can be added)
 		// not reading null_input_behavior on purpose (handled as external change to show output)
 		// not reading return_results_behavior on purpose (handled as external change to show output)
 		setOptionalFromStringPtr(d, "runtime_version", allFunctionDetails.functionDetails.RuntimeVersion),
