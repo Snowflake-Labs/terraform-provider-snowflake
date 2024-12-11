@@ -391,6 +391,41 @@ func TestInt_Procedures(t *testing.T) {
 		)
 	})
 
+	// proves that we don't get default argument values from SHOW and DESCRIBE
+	t.Run("create procedure for Java - default argument value", func(t *testing.T) {
+		className := "TestFunc"
+		funcName := "echoVarchar"
+		argName := "x"
+		dataType := testdatatypes.DataTypeVarchar_100
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType).WithDefaultValue(`'abc'`)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
+		handler := fmt.Sprintf("%s.%s", className, funcName)
+		definition := testClientHelper().Procedure.SampleJavaDefinition(t, className, funcName, argName)
+		packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0")}
+
+		request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, handler).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithProcedureDefinitionWrapped(definition)
+
+		err := client.Procedures.CreateForJava(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(DEFAULT %[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())),
+		)
+	})
+
 	t.Run("create procedure for Javascript - inline minimal", func(t *testing.T) {
 		dataType := testdatatypes.DataTypeFloat
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
@@ -1178,6 +1213,35 @@ func TestInt_Procedures(t *testing.T) {
 		)
 	})
 
+	// proves that we don't get default argument values from SHOW and DESCRIBE
+	t.Run("create procedure for SQL - default argument value", func(t *testing.T) {
+		argName := "x"
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		definition := testClientHelper().Procedure.SampleSqlDefinition(t)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt)
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType).WithDefaultValue("3.123")
+		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
+
+		err := client.Procedures.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(DEFAULT %[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())),
+		)
+	})
+
 	t.Run("create procedure for SQL - inline full", func(t *testing.T) {
 		argName := "x"
 		dataType := testdatatypes.DataTypeFloat
@@ -1242,6 +1306,66 @@ func TestInt_Procedures(t *testing.T) {
 			HasTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("CALLER"),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("create procedure for SQL - no arguments", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
+
+		definition := testClientHelper().Procedure.SampleSqlDefinition(t)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt)
+		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition)
+
+		err := client.Procedures.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(id.SchemaName()).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(0).
+			HasMaxNumArguments(0).
+			HasArgumentsOld([]sdk.DataType{}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s() RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription(sdk.DefaultProcedureComment).
+			HasCatalogName(id.DatabaseName()).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature("()").
+			HasReturns(dataType.ToSql()).
+			HasLanguage("SQL").
+			HasBody(definition).
+			HasNullHandlingNil().
+			HasVolatilityNil().
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImportsNil().
+			HasHandlerNil().
+			HasRuntimeVersionNil().
+			HasPackagesNil().
+			HasTargetPathNil().
+			HasInstalledPackagesNil().
+			HasExecuteAs("OWNER"),
 		)
 
 		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
