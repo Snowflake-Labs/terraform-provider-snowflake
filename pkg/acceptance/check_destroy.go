@@ -155,6 +155,21 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Function: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Functions.ShowByID)
 	},
+	resources.FunctionJava: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
+	},
+	resources.FunctionJavascript: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
+	},
+	resources.FunctionPython: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
+	},
+	resources.FunctionScala: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
+	},
+	resources.FunctionSql: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
+	},
 	resources.LegacyServiceUser: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Users.ShowByID)
 	},
@@ -189,6 +204,21 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 		return runShowById(ctx, id, client.Pipes.ShowByID)
 	},
 	resources.Procedure: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ProcedureJava: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ProcedureJavascript: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ProcedurePython: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ProcedureScala: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ProcedureSql: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Procedures.ShowByID)
 	},
 	resources.ResourceMonitor: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
