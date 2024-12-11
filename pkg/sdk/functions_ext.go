@@ -126,6 +126,7 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 	return v, errors.Join(errs...)
 }
 
+// TODO [SNOW-1850370]: use ParseCommaSeparatedStringArray + collections.MapErr combo here and in other methods?
 func parseFunctionDetailsImport(details FunctionDetails) ([]NormalizedPath, error) {
 	functionDetailsImports := make([]NormalizedPath, 0)
 	if details.Imports == nil || *details.Imports == "" || *details.Imports == "[]" {

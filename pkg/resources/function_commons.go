@@ -7,6 +7,7 @@ import (
 	"log"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -545,6 +546,8 @@ func readFunctionArgumentsCommon(d *schema.ResourceData, args []sdk.NormalizedAr
 		// TODO [SNOW-1348103]: handle empty list
 		return nil
 	}
+	// We do it the unusual way because the default values are not returned by SF.
+	// We update what we have - leaving the defaults unchanged.
 	if currentArgs, ok := d.Get("arguments").([]map[string]any); !ok {
 		return fmt.Errorf("arguments must be a list")
 	} else {
@@ -561,13 +564,12 @@ func readFunctionImportsCommon(d *schema.ResourceData, imports []sdk.NormalizedP
 		// don't do anything if imports not present
 		return nil
 	}
-	imps := make([]map[string]any, len(imports))
-	for i, imp := range imports {
-		imps[i] = map[string]any{
+	imps := collections.Map(imports, func(imp sdk.NormalizedPath) map[string]any {
+		return map[string]any{
 			"stage_location": imp.StageLocation,
 			"path_on_stage":  imp.PathOnStage,
 		}
-	}
+	})
 	return d.Set("imports", imps)
 }
 
