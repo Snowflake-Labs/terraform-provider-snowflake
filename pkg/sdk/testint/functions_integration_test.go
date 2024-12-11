@@ -469,6 +469,40 @@ func TestInt_Functions(t *testing.T) {
 		)
 	})
 
+	// proves that we don't get default argument values from SHOW and DESCRIBE
+	t.Run("create function for Java - default argument value", func(t *testing.T) {
+		className := "TestFunc"
+		funcName := "echoVarchar"
+		argName := "x"
+		dataType := testdatatypes.DataTypeVarchar_100
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType).WithDefaultValue(`'abc'`)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		handler := fmt.Sprintf("%s.%s", className, funcName)
+		definition := testClientHelper().Function.SampleJavaDefinition(t, className, funcName, argName)
+
+		request := sdk.NewCreateForJavaFunctionRequest(id.SchemaObjectId(), *returns, handler).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+			WithFunctionDefinitionWrapped(definition)
+
+		err := client.Functions.CreateForJava(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(DEFAULT %[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())),
+		)
+	})
+
 	t.Run("create function for Javascript - inline minimal", func(t *testing.T) {
 		dataType := testdatatypes.DataTypeFloat
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
@@ -1302,6 +1336,35 @@ func TestInt_Functions(t *testing.T) {
 		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
+		)
+	})
+
+	// proves that we don't get default argument values from SHOW and DESCRIBE
+	t.Run("create function for SQL - default argument value", func(t *testing.T) {
+		argName := "x"
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		definition := testClientHelper().Function.SampleSqlDefinition(t)
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		argument := sdk.NewFunctionArgumentRequest(argName, dataType).WithDefaultValue("3.123")
+		request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument})
+
+		err := client.Functions.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(DEFAULT %[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())),
 		)
 	})
 
