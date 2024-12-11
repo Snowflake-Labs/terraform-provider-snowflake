@@ -28,11 +28,11 @@ func FunctionJava() *schema.Resource {
 		Description:   "Resource used to manage java function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionJava, customdiff.All(
-			// TODO[SNOW-1348103]: ComputedIfAnyAttributeChanged(javaFunctionSchema, ShowOutputAttributeName, ...),
+			// TODO [SNOW-1348103]: ComputedIfAnyAttributeChanged(javaFunctionSchema, ShowOutputAttributeName, ...),
 			ComputedIfAnyAttributeChanged(javaFunctionSchema, FullyQualifiedNameAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(functionParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllFunctionParameters), strings.ToLower)...),
 			functionParametersCustomDiff,
-			// TODO[SNOW-1348103]: recreate when type changed externally
+			RecreateWhenResourceFieldChangedExternally("function_language", "JAVA"),
 		)),
 
 		Schema: collections.MergeMaps(javaFunctionSchema, functionParametersSchema),
@@ -148,7 +148,7 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 		// comment
 		// imports
 		// packages
-		// handler
+		setRequiredFromStringPtr(d, "handler", allFunctionDetails.functionDetails.Handler),
 		// external_access_integrations
 		// secrets
 		// target_path
