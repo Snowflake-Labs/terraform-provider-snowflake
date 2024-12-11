@@ -324,7 +324,12 @@ func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name strin
 		if err != nil {
 			log.Printf("[DEBUG] failed to normalize argument %d: %v, err = %v", i, argument, err)
 		}
-		normalizedArguments[i] = LegacyDataTypeFrom(normalizedArgument)
+		// TODO [SNOW-1348103]: temporary workaround to fix panic resulting from TestAcc_Grants_To_AccountRole test (because of unsupported TABLE data type)
+		if normalizedArgument != nil {
+			normalizedArguments[i] = LegacyDataTypeFrom(normalizedArgument)
+		} else {
+			normalizedArguments[i] = ""
+		}
 	}
 	return SchemaObjectIdentifierWithArguments{
 		databaseName:      strings.Trim(databaseName, `"`),

@@ -205,4 +205,27 @@ var allObjectsParameters = []SnowflakeObjectParameters{
 			// TODO(SNOW-1348092 - next prs): Add parameters
 		},
 	},
+	{
+		Name:   "Function",
+		IdType: "sdk.SchemaObjectIdentifierWithArguments",
+		Level:  sdk.ParameterTypeFunction,
+		Parameters: []SnowflakeParameter{
+			{ParameterName: string(sdk.FunctionParameterEnableConsoleOutput), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.FunctionParameterLogLevel), ParameterType: "sdk.LogLevel", DefaultValue: "sdk.LogLevelOff", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.FunctionParameterMetricLevel), ParameterType: "sdk.MetricLevel", DefaultValue: "sdk.MetricLevelNone", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.FunctionParameterTraceLevel), ParameterType: "sdk.TraceLevel", DefaultValue: "sdk.TraceLevelOff", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+		},
+	},
+	{
+		Name:   "Procedure",
+		IdType: "sdk.SchemaObjectIdentifierWithArguments",
+		Level:  sdk.ParameterTypeProcedure,
+		Parameters: []SnowflakeParameter{
+			{ParameterName: string(sdk.ProcedureParameterAutoEventLogging), ParameterType: "sdk.AutoEventLogging", DefaultValue: "sdk.AutoEventLoggingOff", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.ProcedureParameterEnableConsoleOutput), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.ProcedureParameterLogLevel), ParameterType: "sdk.LogLevel", DefaultValue: "sdk.LogLevelOff", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.ProcedureParameterMetricLevel), ParameterType: "sdk.MetricLevel", DefaultValue: "sdk.MetricLevelNone", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.ProcedureParameterTraceLevel), ParameterType: "sdk.TraceLevel", DefaultValue: "sdk.TraceLevelOff", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+		},
+	},
 }

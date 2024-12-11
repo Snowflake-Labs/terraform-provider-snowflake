@@ -833,6 +833,39 @@ const (
 	DatabaseParameterEnableConsoleOutput                     DatabaseParameter = "ENABLE_CONSOLE_OUTPUT"
 )
 
+type FunctionParameter string
+
+const (
+	FunctionParameterEnableConsoleOutput FunctionParameter = "ENABLE_CONSOLE_OUTPUT"
+	FunctionParameterLogLevel            FunctionParameter = "LOG_LEVEL"
+	FunctionParameterMetricLevel         FunctionParameter = "METRIC_LEVEL"
+	FunctionParameterTraceLevel          FunctionParameter = "TRACE_LEVEL"
+)
+
+var AllFunctionParameters = []FunctionParameter{
+	FunctionParameterEnableConsoleOutput,
+	FunctionParameterLogLevel,
+	FunctionParameterMetricLevel,
+	FunctionParameterTraceLevel,
+}
+
+type ProcedureParameter string
+
+const (
+	ProcedureParameterAutoEventLogging    ProcedureParameter = "AUTO_EVENT_LOGGING"
+	ProcedureParameterEnableConsoleOutput ProcedureParameter = "ENABLE_CONSOLE_OUTPUT"
+	ProcedureParameterLogLevel            ProcedureParameter = "LOG_LEVEL"
+	ProcedureParameterMetricLevel         ProcedureParameter = "METRIC_LEVEL"
+	ProcedureParameterTraceLevel          ProcedureParameter = "TRACE_LEVEL"
+)
+
+var AllProcedureParameters = []ProcedureParameter{
+	ProcedureParameterEnableConsoleOutput,
+	ProcedureParameterLogLevel,
+	ProcedureParameterMetricLevel,
+	ProcedureParameterTraceLevel,
+}
+
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {
 	// Account Parameters
@@ -1341,19 +1374,21 @@ func (opts *ShowParametersOptions) validate() error {
 }
 
 type ParametersIn struct {
-	Session   *bool                    `ddl:"keyword" sql:"SESSION"`
-	Account   *bool                    `ddl:"keyword" sql:"ACCOUNT"`
-	User      AccountObjectIdentifier  `ddl:"identifier" sql:"USER"`
-	Warehouse AccountObjectIdentifier  `ddl:"identifier" sql:"WAREHOUSE"`
-	Database  AccountObjectIdentifier  `ddl:"identifier" sql:"DATABASE"`
-	Schema    DatabaseObjectIdentifier `ddl:"identifier" sql:"SCHEMA"`
-	Task      SchemaObjectIdentifier   `ddl:"identifier" sql:"TASK"`
-	Table     SchemaObjectIdentifier   `ddl:"identifier" sql:"TABLE"`
+	Session   *bool                               `ddl:"keyword" sql:"SESSION"`
+	Account   *bool                               `ddl:"keyword" sql:"ACCOUNT"`
+	User      AccountObjectIdentifier             `ddl:"identifier" sql:"USER"`
+	Warehouse AccountObjectIdentifier             `ddl:"identifier" sql:"WAREHOUSE"`
+	Database  AccountObjectIdentifier             `ddl:"identifier" sql:"DATABASE"`
+	Schema    DatabaseObjectIdentifier            `ddl:"identifier" sql:"SCHEMA"`
+	Task      SchemaObjectIdentifier              `ddl:"identifier" sql:"TASK"`
+	Table     SchemaObjectIdentifier              `ddl:"identifier" sql:"TABLE"`
+	Function  SchemaObjectIdentifierWithArguments `ddl:"identifier" sql:"FUNCTION"`
+	Procedure SchemaObjectIdentifierWithArguments `ddl:"identifier" sql:"PROCEDURE"`
 }
 
 func (v *ParametersIn) validate() error {
-	if !anyValueSet(v.Session, v.Account, v.User, v.Warehouse, v.Database, v.Schema, v.Task, v.Table) {
-		return errors.Join(errAtLeastOneOf("Session", "Account", "User", "Warehouse", "Database", "Schema", "Task", "Table"))
+	if !anyValueSet(v.Session, v.Account, v.User, v.Warehouse, v.Database, v.Schema, v.Task, v.Table, v.Function, v.Procedure) {
+		return errors.Join(errAtLeastOneOf("Session", "Account", "User", "Warehouse", "Database", "Schema", "Task", "Table", "Function", "Procedure"))
 	}
 	return nil
 }
@@ -1370,6 +1405,8 @@ const (
 	ParameterTypeDatabase         ParameterType = "DATABASE"
 	ParameterTypeSchema           ParameterType = "SCHEMA"
 	ParameterTypeTask             ParameterType = "TASK"
+	ParameterTypeFunction         ParameterType = "FUNCTION"
+	ParameterTypeProcedure        ParameterType = "PROCEDURE"
 )
 
 type Parameter struct {
@@ -1498,6 +1535,10 @@ func (v *parameters) ShowObjectParameter(ctx context.Context, parameter ObjectPa
 		opts.In.Table = object.Name.(SchemaObjectIdentifier)
 	case ObjectTypeUser:
 		opts.In.User = object.Name.(AccountObjectIdentifier)
+	case ObjectTypeFunction:
+		opts.In.Function = object.Name.(SchemaObjectIdentifierWithArguments)
+	case ObjectTypeProcedure:
+		opts.In.Procedure = object.Name.(SchemaObjectIdentifierWithArguments)
 	default:
 		return nil, fmt.Errorf("unsupported object type %s", object.Name)
 	}

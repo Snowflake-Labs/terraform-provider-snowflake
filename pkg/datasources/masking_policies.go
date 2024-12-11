@@ -121,7 +121,7 @@ func MaskingPolicies() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: TrackingReadWrapper(datasources.MaskingPolicies, ReadMaskingPolicies),
 		Schema:      maskingPoliciesSchema,
-		Description: "Datasource used to get details of filtered masking policies. Filtering is aligned with the current possibilities for [SHOW MASKING POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-masking-policies) query. The results of SHOW and DESCRIBE are encapsulated in one output collection `masking_policies`.",
+		Description: "Data source used to get details of filtered masking policies. Filtering is aligned with the current possibilities for [SHOW MASKING POLICIES](https://docs.snowflake.com/en/sql-reference/sql/show-masking-policies) query. The results of SHOW and DESCRIBE are encapsulated in one output collection `masking_policies`.",
 	}
 }
 

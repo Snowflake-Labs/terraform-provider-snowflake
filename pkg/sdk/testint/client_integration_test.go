@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
@@ -54,7 +55,9 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.NotNil(t, config)
 
 		account := config.Account
-		t.Setenv(snowflakeenvs.Account, account)
+		parts := strings.Split(account, "-")
+		t.Setenv(snowflakeenvs.OrganizationName, parts[0])
+		t.Setenv(snowflakeenvs.AccountName, parts[1])
 
 		dir, err := os.UserHomeDir()
 		require.NoError(t, err)

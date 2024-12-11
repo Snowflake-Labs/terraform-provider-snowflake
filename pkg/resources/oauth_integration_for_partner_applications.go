@@ -81,7 +81,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 			ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		},
 		Optional:    true,
-		Description: withPrivilegedRolesDescription("A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.", string(sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList)),
+		Description: relatedResourceDescription(withPrivilegedRolesDescription("A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.", string(sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList)), resources.AccountRole),
 		DiffSuppressFunc: SuppressIfAny(
 			IgnoreChangeToCurrentSnowflakeListValueInDescribe("blocked_roles_list"),
 			IgnoreValuesFromSetIfParamSet("blocked_roles_list", string(sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList), privilegedRoles),

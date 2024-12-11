@@ -1,3 +1,4 @@
+# resource with all fields set
 resource "snowflake_row_access_policy" "example_row_access_policy" {
   name     = "EXAMPLE_ROW_ACCESS_POLICY"
   database = "EXAMPLE_DB"
