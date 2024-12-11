@@ -123,6 +123,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(`[]`).
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandler(handler).
 			HasRuntimeVersionNil().
 			HasPackages(`[]`).
@@ -219,6 +220,9 @@ func TestInt_Functions(t *testing.T) {
 			// TODO [SNOW-1348103]: check multiple secrets (to know how to parse)
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
@@ -289,6 +293,9 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, importPath)).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersionNil().
 			HasPackages(`[]`).
@@ -371,6 +378,9 @@ func TestInt_Functions(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
@@ -512,6 +522,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImportsNil().
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandlerNil().
 			HasRuntimeVersionNil().
 			HasPackagesNil().
@@ -585,6 +596,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImportsNil().
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandlerNil().
 			HasRuntimeVersionNil().
 			HasPackagesNil().
@@ -654,6 +666,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(`[]`).
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandler(funcName).
 			HasRuntimeVersion("3.8").
 			HasPackages(`[]`).
@@ -736,6 +749,9 @@ func TestInt_Functions(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
+			}).
 			HasHandler(funcName).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['absl-py==0.10.0','about-time==4.2.1']`).
@@ -803,6 +819,9 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
+			}).
 			HasHandler(tmpPythonFunction.PythonHandler()).
 			HasRuntimeVersion("3.8").
 			HasPackages(`[]`).
@@ -882,6 +901,9 @@ func TestInt_Functions(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
+			}).
 			HasHandler(tmpPythonFunction.PythonHandler()).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['absl-py==0.10.0','about-time==4.2.1']`).
@@ -952,6 +974,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(`[]`).
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[]`).
@@ -1043,6 +1066,9 @@ func TestInt_Functions(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
@@ -1111,6 +1137,9 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, importPath)).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[]`).
@@ -1190,6 +1219,9 @@ func TestInt_Functions(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.FunctionDetailsImport{
+				StageLocation: "~", PathOnStage: tmpJavaFunction.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
@@ -1257,6 +1289,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImportsNil().
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandlerNil().
 			HasRuntimeVersionNil().
 			HasPackagesNil().
@@ -1332,6 +1365,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImportsNil().
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandlerNil().
 			HasRuntimeVersionNil().
 			HasPackagesNil().
@@ -1396,6 +1430,7 @@ func TestInt_Functions(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImportsNil().
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandlerNil().
 			HasRuntimeVersionNil().
 			HasPackagesNil().
