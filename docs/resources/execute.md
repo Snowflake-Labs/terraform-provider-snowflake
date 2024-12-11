@@ -3,7 +3,7 @@
 page_title: "snowflake_execute Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Experimental resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.
+  Resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.
 ---
 
 # snowflake_execute (Resource)
@@ -14,7 +14,7 @@ description: |-
 
 ~> **Note** Use `query` parameter with caution. It will fetch **ALL** the results returned by the query provided. Try to limit the number of results by writing query with filters. Query failure does not stop resource creation; it simply results in `query_results` being empty.
 
-Experimental resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.
+Resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.
 
 ## Example Usage
 

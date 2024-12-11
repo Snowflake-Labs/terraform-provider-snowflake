@@ -152,6 +152,7 @@ body:
         - resource:tag_association
         - resource:tag_masking_policy_association
         - resource:task
+        - resource:unsafe_execute
         - resource:user
         - resource:user_password_policy_attachment
         - resource:user_public_keys
