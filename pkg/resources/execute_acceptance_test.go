@@ -718,6 +718,54 @@ output "unsafe" {
 `, queryNumber)
 }
 
+func TestAcc_Execute_QueryResultsRecomputedWithoutQueryChanges(t *testing.T) {
+	resourceName := "snowflake_execute.test"
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: executeConfigCreateDatabase(id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "query_results.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.comment", ""),
+				),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().Database.Alter(t, id, &sdk.AlterDatabaseOptions{
+						Set: &sdk.DatabaseSet{
+							Comment: sdk.String("some comment"),
+						},
+					})
+				},
+				Config: executeConfigCreateDatabase(id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "query_results.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.comment", "some comment"),
+				),
+			},
+		},
+	})
+}
+
+func executeConfigCreateDatabase(id sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_execute" "test" {
+  execute = "CREATE DATABASE \"%[1]s\""
+  revert  = "DROP DATABASE \"%[1]s\""
+  query   = "SHOW DATABASES LIKE '%[1]s'"
+}
+`, id.Name())
+}
+
 func verifyGrantExists(t *testing.T, roleId sdk.AccountObjectIdentifier, privilege sdk.AccountObjectPrivilege, shouldExist bool) func(state *terraform.State) error {
 	t.Helper()
 	return func(state *terraform.State) error {

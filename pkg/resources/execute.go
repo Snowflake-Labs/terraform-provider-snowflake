@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -13,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var unsafeExecuteSchema = map[string]*schema.Schema{
+var executeSchema = map[string]*schema.Schema{
 	"execute": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -44,18 +45,18 @@ var unsafeExecuteSchema = map[string]*schema.Schema{
 	},
 }
 
-func UnsafeExecute() *schema.Resource {
+func Execute() *schema.Resource {
 	return &schema.Resource{
-		Create: CreateUnsafeExecute,
-		Read:   ReadUnsafeExecute,
-		Delete: DeleteUnsafeExecute,
-		Update: UpdateUnsafeExecute,
+		CreateContext: TrackingCreateWrapper(resources.Execute, CreateExecute),
+		ReadContext:   TrackingReadWrapper(resources.Execute, ReadExecute),
+		UpdateContext: TrackingUpdateWrapper(resources.Execute, UpdateExecute),
+		DeleteContext: TrackingDeleteWrapper(resources.Execute, DeleteExecute),
 
-		Schema: unsafeExecuteSchema,
+		Schema: executeSchema,
 
 		Description: "Experimental resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.",
 
-		CustomizeDiff: TrackingCustomDiffWrapper(resources.UnsafeExecute, func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.UnsafeExecute, func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 			if diff.HasChange("query") {
 				err := diff.SetNewComputed("query_results")
 				if err != nil {
@@ -67,17 +68,43 @@ func UnsafeExecute() *schema.Resource {
 	}
 }
 
-func ReadUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
+func CreateExecute(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
+
+	id, err := uuid.GenerateUUID()
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	executeStatement := d.Get("execute").(string)
+	_, err = client.ExecUnsafe(ctx, executeStatement)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(id)
+	log.Printf(`[INFO] SQL "%s" applied successfully\n`, executeStatement)
+
+	return ReadExecute(ctx, d, meta)
+}
+
+func UpdateExecute(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	if d.HasChange("query") {
+		return ReadExecute(ctx, d, meta)
+	}
+	return nil
+}
+
+func ReadExecute(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
 
 	readStatement := d.Get("query").(string)
 
-	setNilResults := func() error {
+	setNilResults := func() diag.Diagnostics {
 		log.Printf(`[DEBUG] Clearing query_results`)
 		err := d.Set("query_results", nil)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		return nil
 	}
@@ -104,7 +131,7 @@ func ReadUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 					case string:
 						t[k] = *v
 					default:
-						return fmt.Errorf("currently only objects convertible to String are supported by query; got %v", *v)
+						return diag.FromErr(fmt.Errorf("currently only objects convertible to String are supported by query; got %v", *v))
 					}
 				}
 			}
@@ -112,53 +139,24 @@ func ReadUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = d.Set("query_results", rowsTransformed)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	return nil
 }
 
-func CreateUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
+func DeleteExecute(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
-	ctx := context.Background()
-
-	id, err := uuid.GenerateUUID()
-	if err != nil {
-		return err
-	}
-
-	executeStatement := d.Get("execute").(string)
-	_, err = client.ExecUnsafe(ctx, executeStatement)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(id)
-	log.Printf(`[INFO] SQL "%s" applied successfully\n`, executeStatement)
-
-	return ReadUnsafeExecute(d, meta)
-}
-
-func DeleteUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*provider.Context).Client
-	ctx := context.Background()
 
 	revertStatement := d.Get("revert").(string)
 	_, err := client.ExecUnsafe(ctx, revertStatement)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
 	log.Printf(`[INFO] SQL "%s" applied successfully\n`, revertStatement)
 
-	return nil
-}
-
-func UpdateUnsafeExecute(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChange("query") {
-		return ReadUnsafeExecute(d, meta)
-	}
 	return nil
 }
