@@ -35,7 +35,7 @@ func FunctionJava() *schema.Resource {
 			// The language check is more for the future.
 			// Currently, almost all attributes are marked as forceNew.
 			// When language changes, these attributes also change, causing the object to recreate either way.
-			// The only potential option is java staged -> scala staged (however scala need runtime_version which may interfere).
+			// The only potential option is java staged <-> scala staged (however scala need runtime_version which may interfere).
 			RecreateWhenResourceStringFieldChangedExternally("function_language", "JAVA"),
 		)),
 
@@ -112,7 +112,7 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 		return diag.FromErr(err)
 	}
 
-	allFunctionDetails, diags := queryAllFunctionsDetailsCommon(ctx, d, client, id)
+	allFunctionDetails, diags := queryAllFunctionDetailsCommon(ctx, d, client, id)
 	if diags != nil {
 		return diags
 	}

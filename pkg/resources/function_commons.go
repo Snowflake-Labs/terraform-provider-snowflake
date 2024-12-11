@@ -493,7 +493,7 @@ func setFunctionTargetPathInBuilder[T any](d *schema.ResourceData, setTargetPath
 	return nil
 }
 
-func queryAllFunctionsDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allFunctionDetailsCommon, diag.Diagnostics) {
+func queryAllFunctionDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allFunctionDetailsCommon, diag.Diagnostics) {
 	functionDetails, err := client.Functions.DescribeDetails(ctx, id)
 	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
