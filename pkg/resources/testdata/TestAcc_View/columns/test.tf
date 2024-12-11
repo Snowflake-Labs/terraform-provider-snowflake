@@ -13,7 +13,7 @@ resource "snowflake_view" "test" {
 
     masking_policy {
       policy_name = var.masking_name
-      using       = var.masking_using
+      using       = try(var.masking_using, null)
     }
   }
 

@@ -7,6 +7,11 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+!> **Note** The provider does not detect external changes on database type. In this case, remove the database of wrong type manually with `terraform destroy` and recreate the resource. It will be addressed in the future.
+
+!> **Note** A database cannot be dropped successfully if it contains network rule-network policy associations. The error looks like `098507 (2BP01): Cannot drop database DATABASE as it includes network rule - policy associations.
+`. Currently, the provider does not unassign such objects automatically. Before dropping the resource, first unassign the network rule from the relevant objects. See [guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies) for more details.
+
 # snowflake_database (Resource)
 
 Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.
@@ -26,10 +31,9 @@ resource "snowflake_database" "primary" {
   comment      = "my standard database"
 
   data_retention_time_in_days                   = 10
-  data_retention_time_in_days_save              = 10
   max_data_extension_time_in_days               = 20
-  external_volume                               = "<external_volume_name>"
-  catalog                                       = "<catalog_name>"
+  external_volume                               = snowflake_external_volume.example.fully_qualified_name
+  catalog                                       = snowflake_catalog.example.fully_qualified_name
   replace_invalid_characters                    = false
   default_ddl_collation                         = "en_US"
   storage_serialization_policy                  = "COMPATIBLE"
@@ -56,11 +60,11 @@ resource "snowflake_database" "primary" {
 locals {
   replication_configs = [
     {
-      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      account_identifier = "\"<secondary_account_organization_1_name>\".\"<secondary_account_1_name>\""
       with_failover      = true
     },
     {
-      account_identifier = "<secondary_account_organization_name>.<secondary_account_name>"
+      account_identifier = "\"<secondary_account_organization_2_name>\".\"<secondary_account_2_name>\""
       with_failover      = true
     },
   ]
@@ -68,10 +72,13 @@ locals {
 
 resource "snowflake_database" "primary" {
   name     = "database_name"
-  for_each = local.replication_configs
+  for_each = { for rc in local.replication_configs : rc.account_identifier => rc }
 
   replication {
-    enable_to_account    = each.value
+    enable_to_account {
+      account_identifier = each.value.account_identifier
+      with_failover      = each.value.with_failover
+    }
     ignore_edition_check = true
   }
 }
@@ -84,7 +91,7 @@ resource "snowflake_database" "primary" {
 
 ### Required
 
-- `name` (String) Specifies the identifier for the database; must be unique for your account. As a best practice for [Database Replication and Failover](https://docs.snowflake.com/en/user-guide/db-replication-intro), it is recommended to give each secondary database the same name as its primary database. This practice supports referencing fully-qualified objects (i.e. '<db>.<schema>.<object>') by other objects in the same database, such as querying a fully-qualified table name in a view. If a secondary database has a different name from the primary database, then these object references would break in the secondary database. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `name` (String) Specifies the identifier for the database; must be unique for your account. As a best practice for [Database Replication and Failover](https://docs.snowflake.com/en/user-guide/db-replication-intro), it is recommended to give each secondary database the same name as its primary database. This practice supports referencing fully-qualified objects (i.e. '<db>.<schema>.<object>') by other objects in the same database, such as querying a fully-qualified table name in a view. If a secondary database has a different name from the primary database, then these object references would break in the secondary database. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 
 ### Optional
 
@@ -130,7 +137,7 @@ Optional:
 
 Required:
 
-- `account_identifier` (String) Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `"<organization_name>"."<account_name>"`.
+- `account_identifier` (String) Specifies account identifier for which replication should be enabled. The account identifiers should be in the form of `"<organization_name>"."<account_name>"`. For more information about this resource, see [docs](./account).
 
 Optional:
 
@@ -141,5 +148,5 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_database.example 'database_name'
+terraform import snowflake_database.example '"<database_name>"'
 ```

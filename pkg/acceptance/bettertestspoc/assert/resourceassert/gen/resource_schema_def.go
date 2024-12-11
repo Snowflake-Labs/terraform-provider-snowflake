@@ -125,4 +125,24 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "AccountParameter",
 		schema: resources.AccountParameter().Schema,
 	},
+	{
+		name:   "FunctionJava",
+		schema: resources.FunctionJava().Schema,
+	},
+	{
+		name:   "FunctionJavascript",
+		schema: resources.FunctionJavascript().Schema,
+	},
+	{
+		name:   "FunctionPython",
+		schema: resources.FunctionPython().Schema,
+	},
+	{
+		name:   "FunctionScala",
+		schema: resources.FunctionScala().Schema,
+	},
+	{
+		name:   "FunctionSql",
+		schema: resources.FunctionSql().Schema,
+	},
 }

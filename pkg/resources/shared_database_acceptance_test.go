@@ -262,9 +262,10 @@ func TestAcc_CreateSharedDatabase_InvalidValues(t *testing.T) {
 			{
 				ConfigVariables: configVariables,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SharedDatabase/complete"),
-				ExpectError: regexp.MustCompile(`(expected \[{{} log_level}\] to be one of \[\"TRACE\" \"DEBUG\" \"INFO\" \"WARN\" \"ERROR\" \"FATAL\" \"OFF\"\], got invalid_value)|` +
-					`(expected \[{{} trace_level}\] to be one of \[\"ALWAYS\" \"ON_EVENT\" \"OFF\"\], got invalid_value)|` +
-					`(expected \[{{} storage_serialization_policy}\] to be one of \[\"COMPATIBLE\" \"OPTIMIZED\"\], got invalid_value)`),
+				ExpectError: regexp.MustCompile(`(unknown log level: invalid_value)|` +
+					`(unknown trace level: invalid_value)|` +
+					`(unknown storage serialization policy: invalid_value)|` +
+					`(invalid warehouse size:)`),
 			},
 		},
 	})

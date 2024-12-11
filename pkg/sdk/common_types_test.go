@@ -262,6 +262,71 @@ func TestToLogLevel(t *testing.T) {
 	}
 }
 
+func Test_ToNullInputBehavior(t *testing.T) {
+	testCases := []struct {
+		Name     string
+		Input    string
+		Expected NullInputBehavior
+		Error    string
+	}{
+		{Input: string(NullInputBehaviorCalledOnNullInput), Expected: NullInputBehaviorCalledOnNullInput},
+		{Input: string(NullInputBehaviorReturnsNullInput), Expected: NullInputBehaviorReturnsNullInput},
+		{Input: string(NullInputBehaviorStrict), Expected: NullInputBehaviorReturnsNullInput},
+		{Name: "validation: incorrect null input behavior", Input: "incorrect", Error: "unknown null input behavior: incorrect"},
+		{Name: "validation: empty input", Input: "", Error: "unknown null input behavior: "},
+		{Name: "validation: lower case input", Input: "called on null input", Expected: NullInputBehaviorCalledOnNullInput},
+	}
+
+	for _, testCase := range testCases {
+		name := testCase.Name
+		if name == "" {
+			name = fmt.Sprintf("%v null input behavior", testCase.Input)
+		}
+		t.Run(name, func(t *testing.T) {
+			value, err := ToNullInputBehavior(testCase.Input)
+			if testCase.Error != "" {
+				assert.Empty(t, value)
+				assert.ErrorContains(t, err, testCase.Error)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.Expected, value)
+			}
+		})
+	}
+}
+
+func Test_ToReturnResultsBehavior(t *testing.T) {
+	testCases := []struct {
+		Name     string
+		Input    string
+		Expected ReturnResultsBehavior
+		Error    string
+	}{
+		{Input: string(ReturnResultsBehaviorVolatile), Expected: ReturnResultsBehaviorVolatile},
+		{Input: string(ReturnResultsBehaviorImmutable), Expected: ReturnResultsBehaviorImmutable},
+		{Name: "validation: incorrect return results behavior", Input: "incorrect", Error: "unknown return results behavior: incorrect"},
+		{Name: "validation: empty input", Input: "", Error: "unknown return results behavior: "},
+		{Name: "validation: lower case input", Input: "volatile", Expected: ReturnResultsBehaviorVolatile},
+	}
+
+	for _, testCase := range testCases {
+		name := testCase.Name
+		if name == "" {
+			name = fmt.Sprintf("%v null input behavior", testCase.Input)
+		}
+		t.Run(name, func(t *testing.T) {
+			value, err := ToReturnResultsBehavior(testCase.Input)
+			if testCase.Error != "" {
+				assert.Empty(t, value)
+				assert.ErrorContains(t, err, testCase.Error)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, testCase.Expected, value)
+			}
+		})
+	}
+}
+
 func TestToTraceLevel(t *testing.T) {
 	testCases := []struct {
 		Name     string
@@ -317,6 +382,41 @@ func Test_ToMetricLevel(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			value, err := ToMetricLevel(tc.Input)
+			if tc.ExpectedError != "" {
+				assert.Empty(t, value)
+				assert.ErrorContains(t, err, tc.ExpectedError)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.Expected, value)
+			}
+		})
+	}
+}
+
+func Test_ToAutoEventLogging(t *testing.T) {
+	testCases := []struct {
+		Name          string
+		Input         string
+		Expected      AutoEventLogging
+		ExpectedError string
+	}{
+		{Input: string(AutoEventLoggingLogging), Expected: AutoEventLoggingLogging},
+		{Input: string(AutoEventLoggingTracing), Expected: AutoEventLoggingTracing},
+		{Input: string(AutoEventLoggingAll), Expected: AutoEventLoggingAll},
+		{Input: string(AutoEventLoggingOff), Expected: AutoEventLoggingOff},
+		{Name: "validation: incorrect auto event logging", Input: "incorrect", ExpectedError: "unknown auto event logging: incorrect"},
+		{Name: "validation: empty input", Input: "", ExpectedError: "unknown auto event logging: "},
+		{Name: "validation: lower case input", Input: "all", Expected: AutoEventLoggingAll},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		name := tc.Name
+		if name == "" {
+			name = fmt.Sprintf("%v auto event logging", tc.Input)
+		}
+		t.Run(name, func(t *testing.T) {
+			value, err := ToAutoEventLogging(tc.Input)
 			if tc.ExpectedError != "" {
 				assert.Empty(t, value)
 				assert.ErrorContains(t, err, tc.ExpectedError)

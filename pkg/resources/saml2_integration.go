@@ -161,7 +161,7 @@ func SAML2Integration() *schema.Resource {
 		ReadContext:   TrackingReadWrapper(resources.Saml2SecurityIntegration, ReadContextSAML2Integration(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.Saml2SecurityIntegration, UpdateContextSAML2Integration),
 		DeleteContext: TrackingDeleteWrapper(resources.Saml2SecurityIntegration, DeleteContextSAM2LIntegration),
-		Description:   "Resource used to manage saml2 security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2).",
+		Description:   "Resource used to manage SAML2 security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2).",
 
 		Schema: saml2IntegrationSchema,
 		Importer: &schema.ResourceImporter{

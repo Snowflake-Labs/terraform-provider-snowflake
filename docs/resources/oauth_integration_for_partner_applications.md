@@ -7,6 +7,8 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+!> **Note** The provider does not detect external changes on security integration type. In this case, remove the integration of wrong type manually with `terraform destroy` and recreate the resource. It will be addressed in the future.
+
 # snowflake_oauth_integration_for_partner_applications (Resource)
 
 Resource used to manage oauth security integration for partner applications objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake).
@@ -30,7 +32,7 @@ resource "snowflake_oauth_integration_for_partner_applications" "test" {
   oauth_issue_refresh_tokens   = "true"
   oauth_refresh_token_validity = 3600
   oauth_use_secondary_roles    = "IMPLICIT"
-  blocked_roles_list           = ["ACCOUNTADMIN", "SECURITYADMIN", "role_id1", "role_id2"]
+  blocked_roles_list           = ["ACCOUNTADMIN", "SECURITYADMIN", snowflake_role.one.fully_qualified_name, snowflake_role.two.fully_qualified_name]
   comment                      = "example oauth integration for partner applications"
 }
 ```
@@ -42,8 +44,8 @@ resource "snowflake_oauth_integration_for_partner_applications" "test" {
 
 ### Required
 
-- `blocked_roles_list` (Set of String) A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.
-- `name` (String) Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `blocked_roles_list` (Set of String) A set of Snowflake roles that a user cannot explicitly consent to using after authenticating. For more information about this resource, see [docs](./account_role).
+- `name` (String) Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 - `oauth_client` (String) Creates an OAuth interface between Snowflake and a partner application. Valid options are: `LOOKER` | `TABLEAU_DESKTOP` | `TABLEAU_SERVER`.
 
 ### Optional

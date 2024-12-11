@@ -49,7 +49,7 @@ var viewSchema = map[string]*schema.Schema{
 		Type:             schema.TypeBool,
 		Optional:         true,
 		Default:          false,
-		Description:      "Retains the access permissions from the original view when a new view is created using the OR REPLACE clause.",
+		Description:      copyGrantsDescription("Retains the access permissions from the original view when a view is recreated using the OR REPLACE clause."),
 		DiffSuppressFunc: IgnoreAfterCreation,
 	},
 	"is_secure": {
@@ -94,6 +94,7 @@ var viewSchema = map[string]*schema.Schema{
 					Required:         true,
 					Description:      "Identifier of the data metric function to add to the table or view or drop from the table or view. This function identifier must be provided without arguments in parenthesis.",
 					DiffSuppressFunc: suppressIdentifierQuoting,
+					ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 				},
 				"on": {
 					Type:     schema.TypeSet,
@@ -159,7 +160,8 @@ var viewSchema = map[string]*schema.Schema{
 								Type:             schema.TypeString,
 								Required:         true,
 								DiffSuppressFunc: suppressIdentifierQuoting,
-								Description:      "Specifies the masking policy to set on a column.",
+								ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
+								Description:      relatedResourceDescription("Specifies the masking policy to set on a column.", resources.MaskingPolicy),
 							},
 							"using": {
 								Type:     schema.TypeList,
@@ -167,7 +169,8 @@ var viewSchema = map[string]*schema.Schema{
 								Elem: &schema.Schema{
 									Type: schema.TypeString,
 								},
-								Description: "Specifies the arguments to pass into the conditional masking policy SQL expression. The first column in the list specifies the column for the policy conditions to mask or tokenize the data and must match the column to which the masking policy is set. The additional columns specify the columns to evaluate to determine whether to mask or tokenize the data in each row of the query result when a query is made on the first column. If the USING clause is omitted, Snowflake treats the conditional masking policy as a normal masking policy.",
+								DiffSuppressFunc: IgnoreMatchingColumnNameAndMaskingPolicyUsingFirstElem(),
+								Description:      "Specifies the arguments to pass into the conditional masking policy SQL expression. The first column in the list specifies the column for the policy conditions to mask or tokenize the data and must match the column to which the masking policy is set. The additional columns specify the columns to evaluate to determine whether to mask or tokenize the data in each row of the query result when a query is made on the first column. If the USING clause is omitted, Snowflake treats the conditional masking policy as a normal masking policy.",
 							},
 						},
 					},
@@ -182,6 +185,7 @@ var viewSchema = map[string]*schema.Schema{
 								Type:             schema.TypeString,
 								Required:         true,
 								DiffSuppressFunc: suppressIdentifierQuoting,
+								ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 								Description:      "Specifies the projection policy to set on a column.",
 							},
 						},
@@ -212,7 +216,8 @@ var viewSchema = map[string]*schema.Schema{
 					Type:             schema.TypeString,
 					Required:         true,
 					DiffSuppressFunc: suppressIdentifierQuoting,
-					Description:      "Row access policy name.",
+					ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
+					Description:      relatedResourceDescription("Row access policy name.", resources.RowAccessPolicy),
 				},
 				"on": {
 					Type:     schema.TypeSet,
@@ -236,6 +241,7 @@ var viewSchema = map[string]*schema.Schema{
 					Type:             schema.TypeString,
 					Required:         true,
 					DiffSuppressFunc: suppressIdentifierQuoting,
+					ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 					Description:      "Aggregation policy name.",
 				},
 				"entity_key": {
@@ -253,7 +259,7 @@ var viewSchema = map[string]*schema.Schema{
 	"statement": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      "Specifies the query used to create the view.",
+		Description:      diffSuppressStatementFieldDescription("Specifies the query used to create the view."),
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
 	ShowOutputAttributeName: {
@@ -917,6 +923,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 				return diag.FromErr(fmt.Errorf("error setting change_tracking for view %v: %w", d.Id(), err))
 			}
 		} else {
+			// No UNSET for CHANGE_TRACKING, so set false instead.
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetChangeTracking(false))
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error unsetting change_tracking for view %v: %w", d.Id(), err))

@@ -51,10 +51,14 @@ var databaseRoleSchema = map[string]*schema.Schema{
 
 func DatabaseRole() *schema.Resource {
 	return &schema.Resource{
+		SchemaVersion: 1,
+
 		CreateContext: TrackingCreateWrapper(resources.DatabaseRole, CreateDatabaseRole),
 		ReadContext:   TrackingReadWrapper(resources.DatabaseRole, ReadDatabaseRole),
 		UpdateContext: TrackingUpdateWrapper(resources.DatabaseRole, UpdateDatabaseRole),
 		DeleteContext: TrackingDeleteWrapper(resources.DatabaseRole, DeleteDatabaseRole),
+
+		Description: "Resource used to manage database roles. For more information, check [database roles documentation](https://docs.snowflake.com/en/sql-reference/sql/create-database-role).",
 
 		Schema: databaseRoleSchema,
 		Importer: &schema.ResourceImporter{
@@ -63,9 +67,9 @@ func DatabaseRole() *schema.Resource {
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.DatabaseRole, customdiff.All(
 			ComputedIfAnyAttributeChanged(databaseRoleSchema, ShowOutputAttributeName, "comment", "name"),
+			ComputedIfAnyAttributeChanged(databaseRoleSchema, FullyQualifiedNameAttributeName, "name"),
 		)),
 
-		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Version: 0,

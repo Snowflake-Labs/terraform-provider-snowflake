@@ -1,1 +1,1 @@
-terraform import snowflake_api_authentication_integration_with_authorization_code_grant.example "name"
+terraform import snowflake_api_authentication_integration_with_authorization_code_grant.example '"<integration_name>"'
