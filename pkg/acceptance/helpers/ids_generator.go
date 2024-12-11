@@ -100,7 +100,7 @@ func (c *IdsGenerator) NewSchemaObjectIdentifierWithArguments(name string, argum
 }
 
 func (c *IdsGenerator) NewSchemaObjectIdentifierWithArgumentsNewDataTypes(name string, arguments ...datatypes.DataType) sdk.SchemaObjectIdentifierWithArguments {
-	legacyDataTypes := collections.Map(arguments, func(dt datatypes.DataType) sdk.DataType { return sdk.LegacyDataTypeFrom(dt) })
+	legacyDataTypes := collections.Map(arguments, sdk.LegacyDataTypeFrom)
 	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), name, legacyDataTypes...)
 }
 
@@ -113,7 +113,7 @@ func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArguments(arguments ...sd
 }
 
 func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(arguments ...datatypes.DataType) sdk.SchemaObjectIdentifierWithArguments {
-	legacyDataTypes := collections.Map(arguments, func(dt datatypes.DataType) sdk.DataType { return sdk.LegacyDataTypeFrom(dt) })
+	legacyDataTypes := collections.Map(arguments, sdk.LegacyDataTypeFrom)
 	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), legacyDataTypes...)
 }
 

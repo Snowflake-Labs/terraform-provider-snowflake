@@ -349,7 +349,7 @@ func NewSchemaObjectIdentifierWithArgumentsNormalized(databaseName, schemaName, 
 		databaseName:      strings.Trim(databaseName, `"`),
 		schemaName:        strings.Trim(schemaName, `"`),
 		name:              strings.Trim(name, `"`),
-		argumentDataTypes: collections.Map(argumentDataTypes, func(dt datatypes.DataType) DataType { return LegacyDataTypeFrom(dt) }),
+		argumentDataTypes: collections.Map(argumentDataTypes, LegacyDataTypeFrom),
 	}
 }
 

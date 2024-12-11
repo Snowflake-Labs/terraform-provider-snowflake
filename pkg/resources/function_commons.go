@@ -336,11 +336,25 @@ func functionBaseSchema() map[string]schema.Schema {
 			},
 			Description: "Assigns the names of [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter.",
 		},
-		// TODO [SNOW-1348103]: because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6, maybe it will be better to split into stage + path
 		"target_path": {
-			Type:     schema.TypeString,
+			Type:     schema.TypeSet,
+			MaxItems: 1,
 			Optional: true,
 			ForceNew: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"stage_location": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Stage location without leading `@`. To use your user's stage set this to `~`, otherwise pass fully qualified name of the stage (with every part contained in double quotes or use `snowflake_stage.<your stage's resource name>.fully_qualified_name` if you manage this stage through terraform).",
+					},
+					"path_on_stage": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Path for import on stage, without the leading `/`.",
+					},
+				},
+			},
 		},
 		"function_definition": {
 			Type:             schema.TypeString,
@@ -418,6 +432,18 @@ func parseFunctionImportsCommon(d *schema.ResourceData) ([]sdk.FunctionImportReq
 	return imports, nil
 }
 
+func parseFunctionTargetPathCommon(d *schema.ResourceData) (string, error) {
+	var tp string
+	if v, ok := d.GetOk("target_path"); ok {
+		for _, tp := range v.(*schema.Set).List() {
+			stageLocation := tp.(map[string]any)["stage_location"].(string)
+			pathOnStage := tp.(map[string]any)["path_on_stage"].(string)
+			tp = fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)
+		}
+	}
+	return tp, nil
+}
+
 func parseFunctionReturnsCommon(d *schema.ResourceData) (*sdk.FunctionReturnsRequest, error) {
 	returnTypeRaw := d.Get("return_type").(string)
 	dataType, err := datatypes.ParseDataType(returnTypeRaw)
@@ -444,6 +470,15 @@ func setFunctionImportsInBuilder[T any](d *schema.ResourceData, setImports func(
 		return err
 	}
 	setImports(imports)
+	return nil
+}
+
+func setFunctionTargetPathInBuilder[T any](d *schema.ResourceData, setTargetPath func(string) T) error {
+	tp, err := parseFunctionTargetPathCommon(d)
+	if err != nil {
+		return err
+	}
+	setTargetPath(tp)
 	return nil
 }
 
@@ -507,4 +542,17 @@ func readFunctionImportsCommon(d *schema.ResourceData, imports []sdk.NormalizedP
 		}
 	}
 	return d.Set("imports", imps)
+}
+
+func readFunctionTargetPathCommon(d *schema.ResourceData, normalizedPath *sdk.NormalizedPath) error {
+	if normalizedPath == nil {
+		// don't do anything if imports not present
+		return nil
+	}
+	tp := make([]map[string]any, 1)
+	tp[0] = map[string]any{
+		"stage_location": normalizedPath.StageLocation,
+		"path_on_stage":  normalizedPath.PathOnStage,
+	}
+	return d.Set("target_path", tp)
 }

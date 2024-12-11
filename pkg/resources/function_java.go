@@ -78,7 +78,7 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 		// packages
 		// external_access_integrations
 		// secrets
-		// target_path
+		setFunctionTargetPathInBuilder(d, request.WithTargetPath),
 		stringAttributeCreateBuilder(d, "function_definition", request.WithFunctionDefinitionWrapped),
 	)
 	if errs != nil {
@@ -155,7 +155,7 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 		setRequiredFromStringPtr(d, "handler", allFunctionDetails.functionDetails.Handler),
 		// external_access_integrations
 		// secrets
-		// target_path
+		readFunctionTargetPathCommon(d, allFunctionDetails.functionDetails.NormalizedTargetPath),
 		setOptionalFromStringPtr(d, "function_definition", allFunctionDetails.functionDetails.Body),
 		d.Set("function_language", allFunctionDetails.functionDetails.Language),
 
