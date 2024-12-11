@@ -323,7 +323,6 @@ func TestAcc_FunctionJava_AllParameters(t *testing.T) {
 	})
 }
 
-// TODO [this PR]: Test with Java versus Scala staged (probably the only way to set up functions to have exactly the same config in both languages)
 func TestAcc_FunctionJava_handleExternalLanguageChange(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -335,9 +334,8 @@ func TestAcc_FunctionJava_handleExternalLanguageChange(t *testing.T) {
 
 	argName := "x"
 	handler := tmpJavaFunction.JavaHandler()
-	importPath := tmpJavaFunction.JarLocation()
 
-	functionModel := model.FunctionJavaBasicStaged("w", id, dataType, handler, importPath).
+	functionModel := model.FunctionJavaBasicStaged("w", id, dataType, handler, "~", tmpJavaFunction.JarName).
 		WithArgument(argName, dataType)
 
 	resource.Test(t, resource.TestCase{
@@ -360,8 +358,7 @@ func TestAcc_FunctionJava_handleExternalLanguageChange(t *testing.T) {
 			{
 				PreConfig: func() {
 					acc.TestClient().Function.DropFunctionFunc(t, id)()
-					// TODO [this PR]: create scala staged (id, args, return, import, handler)
-					acc.TestClient().Function.CreateSqlWithIdentifierAndArgument(t, id.SchemaObjectId(), dataType)
+					acc.TestClient().Function.CreateScalaStaged(t, id, dataType, tmpJavaFunction.JarLocation(), handler)
 					objectassert.Function(t, id).HasLanguage("SCALA")
 				},
 				Config: config.FromModel(t, functionModel),

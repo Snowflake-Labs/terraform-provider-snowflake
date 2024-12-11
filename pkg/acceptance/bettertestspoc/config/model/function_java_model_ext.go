@@ -37,10 +37,11 @@ func FunctionJavaBasicStaged(
 	id sdk.SchemaObjectIdentifierWithArguments,
 	returnType datatypes.DataType,
 	handler string,
-	importPath string,
+	stageLocation string,
+	pathOnStage string,
 ) *FunctionJavaModel {
 	return FunctionJavaf(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), id.SchemaName()).
-		WithImport(importPath)
+		WithImport(stageLocation, pathOnStage)
 }
 
 func FunctionJavaf(
@@ -71,8 +72,13 @@ func (f *FunctionJavaModel) WithArgument(argName string, argDataType datatypes.D
 	)
 }
 
-func (f *FunctionJavaModel) WithImport(importPath string) *FunctionJavaModel {
-	return f.WithArgumentsValue(
-		tfconfig.SetVariable(tfconfig.StringVariable(importPath)),
+func (f *FunctionJavaModel) WithImport(stageLocation string, pathOnStage string) *FunctionJavaModel {
+	return f.WithImportsValue(
+		tfconfig.ObjectVariable(
+			map[string]tfconfig.Variable{
+				"stage_location": tfconfig.StringVariable(stageLocation),
+				"path_on_stage":  tfconfig.StringVariable(pathOnStage),
+			},
+		),
 	)
 }

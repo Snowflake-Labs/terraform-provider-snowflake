@@ -384,15 +384,15 @@ func DeleteFunction(ctx context.Context, d *schema.ResourceData, meta any) diag.
 }
 
 // TODO [SNOW-1348103]: handle defaults
-func parseFunctionArgumentsCommon(d *schema.ResourceData) ([]sdk.FunctionArgumentRequest, diag.Diagnostics) {
+func parseFunctionArgumentsCommon(d *schema.ResourceData) ([]sdk.FunctionArgumentRequest, error) {
 	args := make([]sdk.FunctionArgumentRequest, 0)
 	if v, ok := d.GetOk("arguments"); ok {
 		for _, arg := range v.([]any) {
-			argName := arg.(map[string]interface{})["arg_name"].(string)
-			argDataType := arg.(map[string]interface{})["arg_data_type"].(string)
+			argName := arg.(map[string]any)["arg_name"].(string)
+			argDataType := arg.(map[string]any)["arg_data_type"].(string)
 			dataType, err := datatypes.ParseDataType(argDataType)
 			if err != nil {
-				return nil, diag.FromErr(err)
+				return nil, err
 			}
 			args = append(args, *sdk.NewFunctionArgumentRequest(argName, dataType))
 		}
@@ -400,11 +400,23 @@ func parseFunctionArgumentsCommon(d *schema.ResourceData) ([]sdk.FunctionArgumen
 	return args, nil
 }
 
-func parseFunctionReturnsCommon(d *schema.ResourceData) (*sdk.FunctionReturnsRequest, diag.Diagnostics) {
+func parseFunctionImportsCommon(d *schema.ResourceData) ([]sdk.FunctionImportRequest, error) {
+	imports := make([]sdk.FunctionImportRequest, 0)
+	if v, ok := d.GetOk("imports"); ok {
+		for _, imp := range v.([]any) {
+			stageLocation := imp.(map[string]any)["stage_location"].(string)
+			pathOnStage := imp.(map[string]any)["path_on_stage"].(string)
+			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)))
+		}
+	}
+	return imports, nil
+}
+
+func parseFunctionReturnsCommon(d *schema.ResourceData) (*sdk.FunctionReturnsRequest, error) {
 	returnTypeRaw := d.Get("return_type").(string)
 	dataType, err := datatypes.ParseDataType(returnTypeRaw)
 	if err != nil {
-		return nil, diag.FromErr(err)
+		return nil, err
 	}
 	returns := sdk.NewFunctionReturnsRequest()
 	switch v := dataType.(type) {
@@ -418,6 +430,15 @@ func parseFunctionReturnsCommon(d *schema.ResourceData) (*sdk.FunctionReturnsReq
 		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(dataType))
 	}
 	return returns, nil
+}
+
+func setFunctionImportsInBuilder[T any](d *schema.ResourceData, setImports func([]sdk.FunctionImportRequest) T) error {
+	imports, err := parseFunctionImportsCommon(d)
+	if err != nil {
+		return err
+	}
+	setImports(imports)
+	return nil
 }
 
 func queryAllFunctionsDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allFunctionDetailsCommon, diag.Diagnostics) {
@@ -465,4 +486,19 @@ type allFunctionDetailsCommon struct {
 	function           *sdk.Function
 	functionDetails    *sdk.FunctionDetails
 	functionParameters []*sdk.Parameter
+}
+
+func readFunctionImportsCommon(d *schema.ResourceData, imports []sdk.FunctionDetailsImport) error {
+	if len(imports) == 0 {
+		// don't do anything if imports not present
+		return nil
+	}
+	imps := make([]map[string]any, len(imports))
+	for i, imp := range imports {
+		imps[i] = map[string]any{
+			"stage_location": imp.StageLocation,
+			"path_on_stage":  imp.PathOnStage,
+		}
+	}
+	return d.Set("imports", imps)
 }

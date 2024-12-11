@@ -32,6 +32,10 @@ func FunctionJava() *schema.Resource {
 			ComputedIfAnyAttributeChanged(javaFunctionSchema, FullyQualifiedNameAttributeName, "name"),
 			ComputedIfAnyAttributeChanged(functionParametersSchema, ParametersAttributeName, collections.Map(sdk.AsStringList(sdk.AllFunctionParameters), strings.ToLower)...),
 			functionParametersCustomDiff,
+			// The language check is more for the future.
+			// Currently, almost all attributes are marked as forceNew.
+			// When language changes, these attributes also change, causing the object to recreate either way.
+			// The only potential option is java staged -> scala staged (however scala need runtime_version which may interfere).
 			RecreateWhenResourceFieldChangedExternally("function_language", "JAVA"),
 		)),
 
@@ -48,13 +52,13 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 	sc := d.Get("schema").(string)
 	name := d.Get("name").(string)
 
-	argumentRequests, diags := parseFunctionArgumentsCommon(d)
-	if diags != nil {
-		return diags
+	argumentRequests, err := parseFunctionArgumentsCommon(d)
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	returns, diags := parseFunctionReturnsCommon(d)
-	if diags != nil {
-		return diags
+	returns, err := parseFunctionReturnsCommon(d)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 	handler := d.Get("handler").(string)
 
@@ -70,7 +74,7 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 		stringAttributeCreateBuilder(d, "runtime_version", request.WithRuntimeVersion),
 		// TODO [this PR]: handle all attributes
 		// comment
-		// imports
+		setFunctionImportsInBuilder(d, request.WithImports),
 		// packages
 		// external_access_integrations
 		// secrets
@@ -146,7 +150,7 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 		// not reading return_results_behavior on purpose (handled as external change to show output)
 		setOptionalFromStringPtr(d, "runtime_version", allFunctionDetails.functionDetails.RuntimeVersion),
 		// comment
-		// imports
+		readFunctionImportsCommon(d, allFunctionDetails.functionDetails.NormalizedImports),
 		// packages
 		setRequiredFromStringPtr(d, "handler", allFunctionDetails.functionDetails.Handler),
 		// external_access_integrations
