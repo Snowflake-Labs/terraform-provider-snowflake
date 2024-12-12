@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -110,10 +111,10 @@ var authenticationPolicySchema = map[string]*schema.Schema{
 // AuthenticationPolicy returns a pointer to the resource representing an authentication policy.
 func AuthenticationPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.AuthenticationPolicy, CreateContextAuthenticationPolicy),
-		ReadContext:   TrackingReadWrapper(resources.AuthenticationPolicy, ReadContextAuthenticationPolicy),
-		UpdateContext: TrackingUpdateWrapper(resources.AuthenticationPolicy, UpdateContextAuthenticationPolicy),
-		DeleteContext: TrackingDeleteWrapper(resources.AuthenticationPolicy, DeleteContextAuthenticationPolicy),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.AuthenticationPolicyResource), TrackingCreateWrapper(resources.AuthenticationPolicy, CreateContextAuthenticationPolicy)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.AuthenticationPolicyResource), TrackingReadWrapper(resources.AuthenticationPolicy, ReadContextAuthenticationPolicy)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.AuthenticationPolicyResource), TrackingUpdateWrapper(resources.AuthenticationPolicy, UpdateContextAuthenticationPolicy)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.AuthenticationPolicyResource), TrackingDeleteWrapper(resources.AuthenticationPolicy, DeleteContextAuthenticationPolicy)),
 		Description:   "Resource used to manage authentication policy objects. For more information, check [authentication policy documentation](https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy).",
 
 		Schema: authenticationPolicySchema,

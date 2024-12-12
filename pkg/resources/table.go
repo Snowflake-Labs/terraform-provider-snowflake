@@ -9,6 +9,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -208,10 +209,10 @@ var tableSchema = map[string]*schema.Schema{
 
 func Table() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.Table, CreateTable),
-		ReadContext:   TrackingReadWrapper(resources.Table, ReadTable),
-		UpdateContext: TrackingUpdateWrapper(resources.Table, UpdateTable),
-		DeleteContext: TrackingDeleteWrapper(resources.Table, DeleteTable),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.TableResource), TrackingCreateWrapper(resources.Table, CreateTable)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.TableResource), TrackingReadWrapper(resources.Table, ReadTable)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.TableResource), TrackingUpdateWrapper(resources.Table, UpdateTable)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.TableResource), TrackingDeleteWrapper(resources.Table, DeleteTable)),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Table, customdiff.All(
 			ComputedIfAnyAttributeChanged(tableSchema, FullyQualifiedNameAttributeName, "name"),
