@@ -1811,7 +1811,7 @@ def filter_by_role(session, table_name, role):
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
-			HasArgumentsRawContains(expectedReturnDataType.ToLegacyDataTypeSql()),
+			HasArgumentsRawContains(strings.ReplaceAll(expectedReturnDataType.ToLegacyDataTypeSql(), "TABLE(", "TABLE (")),
 		)
 
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
