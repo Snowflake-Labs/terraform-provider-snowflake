@@ -202,4 +202,4 @@ var NotificationIntegrationsDef = g.NewInterface(
 			SQL("NOTIFICATION INTEGRATION").
 			Name().
 			WithValidation(g.ValidIdentifier, "name"),
-	).HelperMethodID()
+	)
