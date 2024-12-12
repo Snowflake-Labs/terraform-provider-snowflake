@@ -170,4 +170,4 @@ var ApiIntegrationsDef = g.NewInterface(
 			SQL("API INTEGRATION").
 			Name().
 			WithValidation(g.ValidIdentifier, "name"),
-	)
+	).HelperMethodID()

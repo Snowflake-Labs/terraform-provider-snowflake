@@ -138,4 +138,4 @@ var StreamlitsDef = g.NewInterface(
 		SQL("STREAMLIT").
 		Name().
 		WithValidation(g.ValidIdentifier, "name"),
-)
+).HelperMethodID()

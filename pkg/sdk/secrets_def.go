@@ -254,4 +254,5 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		Name().
 		WithValidation(g.ValidIdentifier, "name"),
-)
+).HelperMethodID().
+	HelperMethodObjectType()
