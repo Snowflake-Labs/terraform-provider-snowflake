@@ -256,9 +256,8 @@ func procedureBaseSchema() map[string]schema.Schema {
 			ForceNew: true,
 		},
 		"comment": {
-			Type:     schema.TypeString,
-			Optional: true,
-			// TODO [SNOW-1348103]: handle dynamic comment - this is a workaround for now
+			Type:        schema.TypeString,
+			Optional:    true,
 			Default:     "user-defined procedure",
 			Description: "Specifies a comment for the procedure.",
 		},
@@ -307,7 +306,6 @@ func procedureBaseSchema() map[string]schema.Schema {
 				ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			},
 			Optional:    true,
-			ForceNew:    true,
 			Description: "The names of [external access integrations](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) needed in order for this procedure’s handler code to access external networks. An external access integration specifies [network rules](https://docs.snowflake.com/en/sql-reference/sql/create-network-rule) and [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) that specify external locations and credentials (if any) allowed for use by handler code when making requests of an external network, such as an external REST API.",
 		},
 		"secrets": {
@@ -484,6 +482,16 @@ func parseProcedureImportsCommon(d *schema.ResourceData) ([]sdk.ProcedureImportR
 		}
 	}
 	return imports, nil
+}
+
+func parseProceduresPackagesCommon(d *schema.ResourceData) ([]sdk.ProcedurePackageRequest, error) {
+	packages := make([]sdk.ProcedurePackageRequest, 0)
+	if v, ok := d.GetOk("packages"); ok {
+		for _, pkg := range v.(*schema.Set).List() {
+			packages = append(packages, *sdk.NewProcedurePackageRequest(pkg.(string)))
+		}
+	}
+	return packages, nil
 }
 
 func parseProcedureTargetPathCommon(d *schema.ResourceData) (string, error) {

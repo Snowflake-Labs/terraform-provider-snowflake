@@ -173,6 +173,27 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
+	secretId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	secretId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.Create(t)
+	t.Cleanup(networkRuleCleanup)
+
+	secret, secretCleanup := acc.TestClient().Secret.CreateWithGenericString(t, secretId, "test_secret_string")
+	t.Cleanup(secretCleanup)
+
+	secret2, secret2Cleanup := acc.TestClient().Secret.CreateWithGenericString(t, secretId2, "test_secret_string_2")
+	t.Cleanup(secret2Cleanup)
+
+	externalAccessIntegration, externalAccessIntegrationCleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret.ID())
+	t.Cleanup(externalAccessIntegrationCleanup)
+
+	externalAccessIntegration2, externalAccessIntegration2Cleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret2.ID())
+	t.Cleanup(externalAccessIntegration2Cleanup)
+
+	tmpJavaFunction := acc.TestClient().CreateSampleJavaFunctionAndJarOnUserStage(t)
+	tmpJavaFunction2 := acc.TestClient().CreateSampleJavaFunctionAndJarOnUserStage(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"
@@ -187,8 +208,34 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 
 	functionModel := model.FunctionJavaBasicInline("w", id, dataType, handler, definition).
 		WithArgument(argName, dataType).
+		WithImports(
+			sdk.NormalizedPath{StageLocation: "~", PathOnStage: tmpJavaFunction.JarName},
+			sdk.NormalizedPath{StageLocation: "~", PathOnStage: tmpJavaFunction2.JarName},
+		).
+		WithPackages("com.snowflake:snowpark:1.14.0", "com.snowflake:telemetry:0.1.0").
+		WithExternalAccessIntegrations(externalAccessIntegration, externalAccessIntegration2).
+		WithSecrets(map[string]sdk.SchemaObjectIdentifier{
+			"abc": secretId,
+			"def": secretId2,
+		}).
 		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName).
-		WithRuntimeVersion("11")
+		WithRuntimeVersion("11").
+		WithComment("some comment")
+
+	functionModelUpdateWithoutRecreation := model.FunctionJavaBasicInline("w", id, dataType, handler, definition).
+		WithArgument(argName, dataType).
+		WithImports(
+			sdk.NormalizedPath{StageLocation: "~", PathOnStage: tmpJavaFunction.JarName},
+			sdk.NormalizedPath{StageLocation: "~", PathOnStage: tmpJavaFunction2.JarName},
+		).
+		WithPackages("com.snowflake:snowpark:1.14.0", "com.snowflake:telemetry:0.1.0").
+		WithExternalAccessIntegrations(externalAccessIntegration).
+		WithSecrets(map[string]sdk.SchemaObjectIdentifier{
+			"def": secretId2,
+		}).
+		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName).
+		WithRuntimeVersion("11").
+		WithComment("some other comment")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -198,22 +245,55 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		CheckDestroy: acc.CheckDestroy(t, resources.FunctionJava),
 		Steps: []resource.TestStep{
-			// CREATE BASIC
+			// CREATE WITH ALL
 			{
 				Config: config.FromModels(t, functionModel),
 				Check: assert.AssertThat(t,
 					resourceassert.FunctionJavaResource(t, functionModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanDefault).
-						HasCommentString(sdk.DefaultFunctionComment).
-						HasImportsLength(0).
+						HasImportsLength(2).
 						HasRuntimeVersionString("11").
 						HasFunctionDefinitionString(definition).
+						HasCommentString("some comment").
 						HasFunctionLanguageString("JAVA").
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					assert.Check(resource.TestCheckResourceAttr(functionModel.ResourceReference(), "target_path.0.stage_location", stage.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(functionModel.ResourceReference(), "target_path.0.path_on_stage", jarName)),
+					assert.Check(resource.TestCheckResourceAttr(functionModel.ResourceReference(), "secrets.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(functionModel.ResourceReference(), "external_access_integrations.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(functionModel.ResourceReference(), "packages.#", "2")),
 					resourceshowoutputassert.FunctionShowOutput(t, functionModel.ResourceReference()).
+						HasIsSecure(false),
+				),
+			},
+			// UPDATE WITHOUT RECREATION
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(functionModelUpdateWithoutRecreation.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModels(t, functionModelUpdateWithoutRecreation),
+				Check: assert.AssertThat(t,
+					resourceassert.FunctionJavaResource(t, functionModelUpdateWithoutRecreation.ResourceReference()).
+						HasNameString(id.Name()).
+						HasIsSecureString(r.BooleanDefault).
+						HasImportsLength(2).
+						HasRuntimeVersionString("11").
+						HasFunctionDefinitionString(definition).
+						HasCommentString("some other comment").
+						HasFunctionLanguageString("JAVA").
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					assert.Check(resource.TestCheckResourceAttr(functionModelUpdateWithoutRecreation.ResourceReference(), "target_path.0.stage_location", stage.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(functionModelUpdateWithoutRecreation.ResourceReference(), "target_path.0.path_on_stage", jarName)),
+					assert.Check(resource.TestCheckResourceAttr(functionModelUpdateWithoutRecreation.ResourceReference(), "secrets.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(functionModelUpdateWithoutRecreation.ResourceReference(), "secrets.0.secret_variable_name", "def")),
+					assert.Check(resource.TestCheckResourceAttr(functionModelUpdateWithoutRecreation.ResourceReference(), "secrets.0.secret_id", secretId2.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(functionModelUpdateWithoutRecreation.ResourceReference(), "external_access_integrations.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(functionModelUpdateWithoutRecreation.ResourceReference(), "external_access_integrations.0", externalAccessIntegration.Name())),
+					assert.Check(resource.TestCheckResourceAttr(functionModelUpdateWithoutRecreation.ResourceReference(), "packages.#", "2")),
+					resourceshowoutputassert.FunctionShowOutput(t, functionModelUpdateWithoutRecreation.ResourceReference()).
 						HasIsSecure(false),
 				),
 			},

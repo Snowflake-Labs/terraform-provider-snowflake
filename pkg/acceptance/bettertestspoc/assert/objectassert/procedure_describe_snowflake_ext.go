@@ -401,7 +401,7 @@ func (f *ProcedureDetailsAssert) HasExactlyImportsNormalizedInAnyOrder(imports .
 			return fmt.Errorf("expected imports to have value; got: nil")
 		}
 		if !assert2.ElementsMatch(t, imports, o.NormalizedImports) {
-			return fmt.Errorf("expected %v imports in task relations, got %v", imports, o.NormalizedImports)
+			return fmt.Errorf("expected %v imports, got %v", imports, o.NormalizedImports)
 		}
 		return nil
 	})
@@ -455,6 +455,71 @@ func (f *ProcedureDetailsAssert) HasReturnNotNull(expected bool) *ProcedureDetai
 		t.Helper()
 		if o.ReturnNotNull != expected {
 			return fmt.Errorf("expected return not null %t; got: %t", expected, o.ReturnNotNull)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *ProcedureDetailsAssert) HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(integrations ...sdk.AccountObjectIdentifier) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
+		t.Helper()
+		if o.NormalizedExternalAccessIntegrations == nil {
+			return fmt.Errorf("expected normalized external access integrations to have value; got: nil")
+		}
+		fullyQualifiedNamesExpected := collections.Map(integrations, func(id sdk.AccountObjectIdentifier) string { return id.FullyQualifiedName() })
+		fullyQualifiedNamesGot := collections.Map(o.NormalizedExternalAccessIntegrations, func(id sdk.AccountObjectIdentifier) string { return id.FullyQualifiedName() })
+		if !assert2.ElementsMatch(t, fullyQualifiedNamesExpected, fullyQualifiedNamesGot) {
+			return fmt.Errorf("expected %v normalized external access integrations, got %v", integrations, o.NormalizedExternalAccessIntegrations)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *ProcedureDetailsAssert) ContainsExactlySecrets(secrets map[string]sdk.SchemaObjectIdentifier) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
+		t.Helper()
+		if o.NormalizedSecrets == nil {
+			return fmt.Errorf("expected normalized secrets to have value; got: nil")
+		}
+		for k, v := range secrets {
+			if s, ok := o.NormalizedSecrets[k]; !ok {
+				return fmt.Errorf("expected normalized secrets to have a secret associated with key %s", k)
+			} else if s.FullyQualifiedName() != v.FullyQualifiedName() {
+				return fmt.Errorf("expected secret with key %s to have id %s, got %s", k, v.FullyQualifiedName(), s.FullyQualifiedName())
+			}
+		}
+		for k := range o.NormalizedSecrets {
+			if _, ok := secrets[k]; !ok {
+				return fmt.Errorf("normalized secrets have unexpected key: %s", k)
+			}
+		}
+
+		return nil
+	})
+	return f
+}
+
+func (f *ProcedureDetailsAssert) HasExactlyPackagesInAnyOrder(packages ...string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
+		t.Helper()
+		if o.NormalizedPackages == nil {
+			return fmt.Errorf("expected packages to have value; got: nil")
+		}
+		if !assert2.ElementsMatch(t, packages, o.NormalizedPackages) {
+			return fmt.Errorf("expected %v packages, got %v", packages, o.NormalizedPackages)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *ProcedureDetailsAssert) HasSnowparkVersion(expected string) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
+		t.Helper()
+		if o.SnowparkVersion != expected {
+			return fmt.Errorf("expected snowpark version %s; got: %s", expected, o.SnowparkVersion)
 		}
 		return nil
 	})
