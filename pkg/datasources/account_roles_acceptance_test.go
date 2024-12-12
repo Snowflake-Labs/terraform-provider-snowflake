@@ -94,14 +94,14 @@ func accountRolesDataSourceContainsRole(name string, comment string) func(s *ter
 				continue
 			}
 
-			iter, err := strconv.ParseInt(rs.Primary.Attributes["roles.#"], 10, 32)
+			iter, err := strconv.ParseInt(rs.Primary.Attributes["account_roles.#"], 10, 32)
 			if err != nil {
 				return err
 			}
 
 			for i := 0; i < int(iter); i++ {
-				if rs.Primary.Attributes[fmt.Sprintf("roles.%d.show_output.0.name", i)] == name {
-					actualComment := rs.Primary.Attributes[fmt.Sprintf("roles.%d.show_output.0.comment", i)]
+				if rs.Primary.Attributes[fmt.Sprintf("account_roles.%d.show_output.0.name", i)] == name {
+					actualComment := rs.Primary.Attributes[fmt.Sprintf("account_roles.%d.show_output.0.comment", i)]
 					if actualComment != comment {
 						return fmt.Errorf("expected comment: %s, but got: %s", comment, actualComment)
 					}
