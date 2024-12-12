@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"log"
 )
 
 type objectIdentifier string
@@ -97,7 +98,7 @@ func (i *Interface) HelperMethodID() *Interface {
 	identifierKind := identifierStringToObjectIdentifier(i.IdentifierKind)
 	requiredFeilds := requiredFieldsForIDMethodMapping[identifierKind]
 	if !hasRequiredFields(i.Operations, i.NameSingular, requiredFeilds...) {
-		fmt.Sprintf("WARNING: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing one of required fields: %v.", i.NameSingular, requiredFeilds)
+		log.Printf("WARNING: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing one of required fields: %v.\n", i.NameSingular, requiredFeilds)
 		return i
 	}
 	i.HelperMethods = append(i.HelperMethods, newIDHelperMethod(i.NameSingular, identifierKind))
