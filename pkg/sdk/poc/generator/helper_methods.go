@@ -77,11 +77,12 @@ func containsFieldNames(fields []*Field, names ...string) bool {
 
 func hasRequiredFields(operations []*Operation, structName string, requiredFields ...string) bool {
 	for _, op := range operations {
-		if op.Name == string(OperationKindShow) {
-			for _, field := range op.HelperStructs {
-				if field.Name == structName {
-					return containsFieldNames(field.Fields, requiredFields...)
-				}
+		if op.Name != string(OperationKindShow) {
+			continue
+		}
+		for _, field := range op.HelperStructs {
+			if field.Name == structName {
+				return containsFieldNames(field.Fields, requiredFields...)
 			}
 		}
 	}
