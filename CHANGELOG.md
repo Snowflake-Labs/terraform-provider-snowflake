@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.100.0...v1.0.0) (2024-12-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* True v1 release ([#3283](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3283))
+* Release v1
+
+### 🎉 **What's new:**
+
+* True v1 release ([#3283](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3283)) ([112c852](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/112c85244191a65bf552ffe27285299d6cc3831f))
+
+
+### 🔧 **Misc**
+
+* release 1.0.0 ([b8ddbf9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b8ddbf91bafdc8eef21a89da1ea86e6a455e2b96))
+* Release v1 ([#3281](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3281)) ([82f240e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/82f240eeed9ec24d6afc82cf5d0106544bec5838))
+
+
+### 🐛 **Bug fixes:**
+
+* Add missing preview features ([#3284](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3284)) ([3aac502](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3aac502beb404449674c54d153ca5aab6ef3cbaa))
+
 ## [0.100.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.99.0...v0.100.0) (2024-12-12)
 
 
