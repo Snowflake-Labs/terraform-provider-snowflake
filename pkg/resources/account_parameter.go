@@ -38,7 +38,7 @@ func AccountParameter() *schema.Resource {
 		UpdateContext: TrackingUpdateWrapper(resources.AccountParameter, UpdateAccountParameter),
 		DeleteContext: TrackingDeleteWrapper(resources.AccountParameter, DeleteAccountParameter),
 
-		Description: "Resource used to manage current account parameters. For more information, check [parameters documentation](https://docs.snowflake.com/en/sql-reference/parameters). To manage the whole account resource, see [account](./account) resource.",
+		Description: "Resource used to manage current account parameters. For more information, check [parameters documentation](https://docs.snowflake.com/en/sql-reference/parameters).",
 
 		Schema: accountParameterSchema,
 		Importer: &schema.ResourceImporter{

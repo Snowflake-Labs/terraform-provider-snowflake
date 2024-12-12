@@ -142,5 +142,5 @@ func TestAcc_AccountParameter_Issue3025(t *testing.T) {
 	})
 }
 
-// TODO(next pr): add more acc tests
+// TODO(next pr): add more acc tests for the remaining parameters
 // TODO(next pr): check unsetting in CheckDestroy

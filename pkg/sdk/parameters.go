@@ -465,7 +465,7 @@ type AccountParameter string
 // https://docs.snowflake.com/en/sql-reference/parameters#parameter-hierarchy-and-types
 // Account Parameters include Session Parameters, Object Parameters and User Parameters
 const (
-	// TODO(next pr): add remaining parameters
+	// TODO(next pr): add remaining parameters; also in parameters_impl.go
 	// Account Parameters
 	AccountParameterAllowClientMFACaching                            AccountParameter = "ALLOW_CLIENT_MFA_CACHING"
 	AccountParameterAllowIDToken                                     AccountParameter = "ALLOW_ID_TOKEN" // #nosec G101
@@ -489,45 +489,59 @@ const (
 	AccountParameterSSOLoginPage                                     AccountParameter = "SSO_LOGIN_PAGE"
 
 	// Session Parameters (inherited)
-	AccountParameterAbortDetachedQuery                    AccountParameter = "ABORT_DETACHED_QUERY"
-	AccountParameterAutocommit                            AccountParameter = "AUTOCOMMIT"
-	AccountParameterBinaryInputFormat                     AccountParameter = "BINARY_INPUT_FORMAT"
-	AccountParameterBinaryOutputFormat                    AccountParameter = "BINARY_OUTPUT_FORMAT"
-	AccountParameterClientMetadataRequestUseConnectionCtx AccountParameter = "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"
-	AccountParameterClientMetadataUseSessionDatabase      AccountParameter = "CLIENT_METADATA_USE_SESSION_DATABASE"
-	AccountParameterClientResultColumnCaseInsensitive     AccountParameter = "CLIENT_RESULT_COLUMN_CASE_INSENSITIVE"
-	AccountParameterDateInputFormat                       AccountParameter = "DATE_INPUT_FORMAT"
-	AccountParameterDateOutputFormat                      AccountParameter = "DATE_OUTPUT_FORMAT"
-	AccountParameterErrorOnNondeterministicMerge          AccountParameter = "ERROR_ON_NONDETERMINISTIC_MERGE"
-	AccountParameterErrorOnNondeterministicUpdate         AccountParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
-	AccountParameterGeographyOutputFormat                 AccountParameter = "GEOGRAPHY_OUTPUT_FORMAT"
-	AccountParameterJSONIndent                            AccountParameter = "JSON_INDENT"
-	AccountParameterLockTimeout                           AccountParameter = "LOCK_TIMEOUT"
-	AccountParameterMultiStatementCount                   AccountParameter = "MULTI_STATEMENT_COUNT"
-	AccountParameterQueryTag                              AccountParameter = "QUERY_TAG"
-	AccountParameterQuotedIdentifiersIgnoreCase           AccountParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
-	AccountParameterRowsPerResultset                      AccountParameter = "ROWS_PER_RESULTSET"
-	AccountParameterS3StageVpceDnsName                    AccountParameter = "S3_STAGE_VPCE_DNS_NAME"
-	AccountParameterSimulatedDataSharingConsumer          AccountParameter = "SIMULATED_DATA_SHARING_CONSUMER"
-	AccountParameterStatementTimeoutInSeconds             AccountParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
-	AccountParameterStrictJSONOutput                      AccountParameter = "STRICT_JSON_OUTPUT"
-	AccountParameterTimeInputFormat                       AccountParameter = "TIME_INPUT_FORMAT"
-	AccountParameterTimeOutputFormat                      AccountParameter = "TIME_OUTPUT_FORMAT"
-	AccountParameterTimestampDayIsAlways24h               AccountParameter = "TIMESTAMP_DAY_IS_ALWAYS_24H"
-	AccountParameterTimestampInputFormat                  AccountParameter = "TIMESTAMP_INPUT_FORMAT"
-	AccountParameterTimestampLtzOutputFormat              AccountParameter = "TIMESTAMP_LTZ_OUTPUT_FORMAT"
-	AccountParameterTimestampNtzOutputFormat              AccountParameter = "TIMESTAMP_NTZ_OUTPUT_FORMAT"
-	AccountParameterTimestampOutputFormat                 AccountParameter = "TIMESTAMP_OUTPUT_FORMAT"
-	AccountParameterTimestampTypeMapping                  AccountParameter = "TIMESTAMP_TYPE_MAPPING"
-	AccountParameterTimestampTzOutputFormat               AccountParameter = "TIMESTAMP_TZ_OUTPUT_FORMAT"
-	AccountParameterTimezone                              AccountParameter = "TIMEZONE"
-	AccountParameterTransactionAbortOnError               AccountParameter = "TRANSACTION_ABORT_ON_ERROR"
-	AccountParameterTransactionDefaultIsolationLevel      AccountParameter = "TRANSACTION_DEFAULT_ISOLATION_LEVEL"
-	AccountParameterTwoDigitCenturyStart                  AccountParameter = "TWO_DIGIT_CENTURY_START"
-	AccountParameterUnsupportedDdlAction                  AccountParameter = "UNSUPPORTED_DDL_ACTION"
-	AccountParameterUseCachedResult                       AccountParameter = "USE_CACHED_RESULT"
-	AccountParameterWeekOfYearPolicy                      AccountParameter = "WEEK_OF_YEAR_POLICY"
-	AccountParameterWeekStart                             AccountParameter = "WEEK_START"
+	AccountParameterAbortDetachedQuery                       AccountParameter = "ABORT_DETACHED_QUERY"
+	AccountParameterAutocommit                               AccountParameter = "AUTOCOMMIT"
+	AccountParameterBinaryInputFormat                        AccountParameter = "BINARY_INPUT_FORMAT"
+	AccountParameterBinaryOutputFormat                       AccountParameter = "BINARY_OUTPUT_FORMAT"
+	AccountParameterClientMemoryLimit                        AccountParameter = "CLIENT_MEMORY_LIMIT"
+	AccountParameterClientMetadataRequestUseConnectionCtx    AccountParameter = "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"
+	AccountParameterClientMetadataUseSessionDatabase         AccountParameter = "CLIENT_METADATA_USE_SESSION_DATABASE"
+	AccountParameterClientPrefetchThreads                    AccountParameter = "CLIENT_PREFETCH_THREADS"
+	AccountParameterClientResultChunkSize                    AccountParameter = "CLIENT_RESULT_CHUNK_SIZE"
+	AccountParameterClientResultColumnCaseInsensitive        AccountParameter = "CLIENT_RESULT_COLUMN_CASE_INSENSITIVE"
+	AccountParameterClientSessionKeepAlive                   AccountParameter = "CLIENT_SESSION_KEEP_ALIVE"
+	AccountParameterClientSessionKeepAliveHeartbeatFrequency AccountParameter = "CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY"
+	AccountParameterClientTimestampTypeMapping               AccountParameter = "CLIENT_TIMESTAMP_TYPE_MAPPING"
+	AccountParameterDateInputFormat                          AccountParameter = "DATE_INPUT_FORMAT"
+	AccountParameterDateOutputFormat                         AccountParameter = "DATE_OUTPUT_FORMAT"
+	AccountParameterEnableUnloadPhysicalTypeOptimization     AccountParameter = "ENABLE_UNLOAD_PHYSICAL_TYPE_OPTIMIZATION"
+	AccountParameterErrorOnNondeterministicMerge             AccountParameter = "ERROR_ON_NONDETERMINISTIC_MERGE"
+	AccountParameterErrorOnNondeterministicUpdate            AccountParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
+	AccountParameterGeographyOutputFormat                    AccountParameter = "GEOGRAPHY_OUTPUT_FORMAT"
+	AccountParameterGeometryOutputFormat                     AccountParameter = "GEOMETRY_OUTPUT_FORMAT"
+	AccountParameterJdbcTreatDecimalAsInt                    AccountParameter = "JDBC_TREAT_DECIMAL_AS_INT"
+	AccountParameterJdbcTreatTimestampNtzAsUtc               AccountParameter = "JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC"
+	AccountParameterJdbcUseSessionTimezone                   AccountParameter = "JDBC_USE_SESSION_TIMEZONE"
+	AccountParameterJSONIndent                               AccountParameter = "JSON_INDENT"
+	AccountParameterLockTimeout                              AccountParameter = "LOCK_TIMEOUT"
+	AccountParameterMultiStatementCount                      AccountParameter = "MULTI_STATEMENT_COUNT"
+	AccountParameterNoorderSequenceAsDefault                 AccountParameter = "NOORDER_SEQUENCE_AS_DEFAULT"
+	AccountParameterOdbcTreatDecimalAsInt                    AccountParameter = "ODBC_TREAT_DECIMAL_AS_INT"
+	AccountParameterQueryTag                                 AccountParameter = "QUERY_TAG"
+	AccountParameterQuotedIdentifiersIgnoreCase              AccountParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
+	AccountParameterRowsPerResultset                         AccountParameter = "ROWS_PER_RESULTSET"
+	AccountParameterS3StageVpceDnsName                       AccountParameter = "S3_STAGE_VPCE_DNS_NAME"
+	AccountParameterSearchPath                               AccountParameter = "SEARCH_PATH"
+	AccountParameterSimulatedDataSharingConsumer             AccountParameter = "SIMULATED_DATA_SHARING_CONSUMER"
+	AccountParameterStatementTimeoutInSeconds                AccountParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
+	AccountParameterStrictJSONOutput                         AccountParameter = "STRICT_JSON_OUTPUT"
+	AccountParameterTimeInputFormat                          AccountParameter = "TIME_INPUT_FORMAT"
+	AccountParameterTimeOutputFormat                         AccountParameter = "TIME_OUTPUT_FORMAT"
+	AccountParameterTimestampDayIsAlways24h                  AccountParameter = "TIMESTAMP_DAY_IS_ALWAYS_24H"
+	AccountParameterTimestampInputFormat                     AccountParameter = "TIMESTAMP_INPUT_FORMAT"
+	AccountParameterTimestampLtzOutputFormat                 AccountParameter = "TIMESTAMP_LTZ_OUTPUT_FORMAT"
+	AccountParameterTimestampNtzOutputFormat                 AccountParameter = "TIMESTAMP_NTZ_OUTPUT_FORMAT"
+	AccountParameterTimestampOutputFormat                    AccountParameter = "TIMESTAMP_OUTPUT_FORMAT"
+	AccountParameterTimestampTypeMapping                     AccountParameter = "TIMESTAMP_TYPE_MAPPING"
+	AccountParameterTimestampTzOutputFormat                  AccountParameter = "TIMESTAMP_TZ_OUTPUT_FORMAT"
+	AccountParameterTimezone                                 AccountParameter = "TIMEZONE"
+	AccountParameterTransactionAbortOnError                  AccountParameter = "TRANSACTION_ABORT_ON_ERROR"
+	AccountParameterTransactionDefaultIsolationLevel         AccountParameter = "TRANSACTION_DEFAULT_ISOLATION_LEVEL"
+	AccountParameterTwoDigitCenturyStart                     AccountParameter = "TWO_DIGIT_CENTURY_START"
+	AccountParameterUnsupportedDdlAction                     AccountParameter = "UNSUPPORTED_DDL_ACTION"
+	AccountParameterUseCachedResult                          AccountParameter = "USE_CACHED_RESULT"
+	AccountParameterWeekOfYearPolicy                         AccountParameter = "WEEK_OF_YEAR_POLICY"
+	AccountParameterWeekStart                                AccountParameter = "WEEK_START"
 
 	// Object Parameters (inherited)
 	AccountParameterCatalog                                 AccountParameter = "CATALOG"
@@ -580,21 +594,35 @@ var AllAccountParameters = []AccountParameter{
 	AccountParameterAutocommit,
 	AccountParameterBinaryInputFormat,
 	AccountParameterBinaryOutputFormat,
+	AccountParameterClientMemoryLimit,
 	AccountParameterClientMetadataRequestUseConnectionCtx,
 	AccountParameterClientMetadataUseSessionDatabase,
+	AccountParameterClientPrefetchThreads,
+	AccountParameterClientResultChunkSize,
+	AccountParameterClientSessionKeepAlive,
+	AccountParameterClientSessionKeepAliveHeartbeatFrequency,
+	AccountParameterClientTimestampTypeMapping,
+	AccountParameterEnableUnloadPhysicalTypeOptimization,
 	AccountParameterClientResultColumnCaseInsensitive,
 	AccountParameterDateInputFormat,
 	AccountParameterDateOutputFormat,
 	AccountParameterErrorOnNondeterministicMerge,
 	AccountParameterErrorOnNondeterministicUpdate,
 	AccountParameterGeographyOutputFormat,
+	AccountParameterGeometryOutputFormat,
+	AccountParameterJdbcTreatDecimalAsInt,
+	AccountParameterJdbcTreatTimestampNtzAsUtc,
+	AccountParameterJdbcUseSessionTimezone,
 	AccountParameterJSONIndent,
 	AccountParameterLockTimeout,
 	AccountParameterMultiStatementCount,
+	AccountParameterNoorderSequenceAsDefault,
+	AccountParameterOdbcTreatDecimalAsInt,
 	AccountParameterQueryTag,
 	AccountParameterQuotedIdentifiersIgnoreCase,
 	AccountParameterRowsPerResultset,
 	AccountParameterS3StageVpceDnsName,
+	AccountParameterSearchPath,
 	AccountParameterSimulatedDataSharingConsumer,
 	AccountParameterStatementTimeoutInSeconds,
 	AccountParameterStrictJSONOutput,
@@ -623,6 +651,7 @@ var AllAccountParameters = []AccountParameter{
 	AccountParameterMaxConcurrencyLevel,
 	AccountParameterMaxDataExtensionTimeInDays,
 	AccountParameterPipeExecutionPaused,
+	AccountParameterPreventUnloadToInternalStages,
 	AccountParameterReplaceInvalidCharacters,
 	AccountParameterStatementQueuedTimeoutInSeconds,
 	AccountParameterStorageSerializationPolicy,
