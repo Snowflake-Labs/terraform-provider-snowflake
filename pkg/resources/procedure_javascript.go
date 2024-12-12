@@ -17,7 +17,7 @@ func ProcedureJavascript() *schema.Resource {
 		CreateContext: TrackingCreateWrapper(resources.ProcedureJavascript, CreateContextProcedureJavascript),
 		ReadContext:   TrackingReadWrapper(resources.ProcedureJavascript, ReadContextProcedureJavascript),
 		UpdateContext: TrackingUpdateWrapper(resources.ProcedureJavascript, UpdateContextProcedureJavascript),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedureJavascript, DeleteContextProcedureJavascript),
+		DeleteContext: TrackingDeleteWrapper(resources.ProcedureJavascript, DeleteProcedure),
 		Description:   "Resource used to manage javascript procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedureJavascript, customdiff.All(
@@ -44,9 +44,5 @@ func ReadContextProcedureJavascript(ctx context.Context, d *schema.ResourceData,
 }
 
 func UpdateContextProcedureJavascript(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	return nil
-}
-
-func DeleteContextProcedureJavascript(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	return nil
 }

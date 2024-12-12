@@ -46,7 +46,6 @@ func ProcedurePython(
 	database string,
 	handler string,
 	name string,
-	procedureDefinition string,
 	returnType string,
 	runtimeVersion string,
 	schema string,
@@ -56,7 +55,6 @@ func ProcedurePython(
 	p.WithDatabase(database)
 	p.WithHandler(handler)
 	p.WithName(name)
-	p.WithProcedureDefinition(procedureDefinition)
 	p.WithReturnType(returnType)
 	p.WithRuntimeVersion(runtimeVersion)
 	p.WithSchema(schema)
@@ -68,7 +66,6 @@ func ProcedurePythonWithDefaultMeta(
 	database string,
 	handler string,
 	name string,
-	procedureDefinition string,
 	returnType string,
 	runtimeVersion string,
 	schema string,
@@ -78,7 +75,6 @@ func ProcedurePythonWithDefaultMeta(
 	p.WithDatabase(database)
 	p.WithHandler(handler)
 	p.WithName(name)
-	p.WithProcedureDefinition(procedureDefinition)
 	p.WithReturnType(returnType)
 	p.WithRuntimeVersion(runtimeVersion)
 	p.WithSchema(schema)
