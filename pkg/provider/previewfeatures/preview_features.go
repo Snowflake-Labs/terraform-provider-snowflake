@@ -48,11 +48,11 @@ const (
 	PasswordPolicyResource                        feature = "snowflake_password_policy_resource"
 	PipeResource                                  feature = "snowflake_pipe_resource"
 	PipesDatasource                               feature = "snowflake_pipes_datasource"
-	ProcedureJavaResource                         feature = "snowflake_procecure_java_resource"
-	ProcedureJavascriptResource                   feature = "snowflake_procecure_javascript_resource"
-	ProcedurePythonResource                       feature = "snowflake_procecure_python_resource"
-	ProcedureScalaResource                        feature = "snowflake_procecure_scala_resource"
-	ProcedureSqlResource                          feature = "snowflake_procecure_sql_resource"
+	ProcedureJavaResource                         feature = "snowflake_procedure_java_resource"
+	ProcedureJavascriptResource                   feature = "snowflake_procedure_javascript_resource"
+	ProcedurePythonResource                       feature = "snowflake_procedure_python_resource"
+	ProcedureScalaResource                        feature = "snowflake_procedure_scala_resource"
+	ProcedureSqlResource                          feature = "snowflake_procedure_sql_resource"
 	ProceduresDatasource                          feature = "snowflake_procedures_datasource"
 	CurrentRoleDatasource                         feature = "snowflake_current_role_datasource"
 	SequenceResource                              feature = "snowflake_sequence_resource"
@@ -100,6 +100,11 @@ var allPreviewFeatures = []feature{
 	FailoverGroupsDatasource,
 	FileFormatResource,
 	FileFormatsDatasource,
+	FunctionJavaResource,
+	FunctionJavascriptResource,
+	FunctionPythonResource,
+	FunctionScalaResource,
+	FunctionSqlResource,
 	ManagedAccountResource,
 	MaterializedViewResource,
 	MaterializedViewsDatasource,
@@ -117,6 +122,11 @@ var allPreviewFeatures = []feature{
 	ShareResource,
 	SharesDatasource,
 	ParametersDatasource,
+	ProcedureJavaResource,
+	ProcedureJavascriptResource,
+	ProcedurePythonResource,
+	ProcedureScalaResource,
+	ProcedureSqlResource,
 	StageResource,
 	StagesDatasource,
 	StorageIntegrationResource,
@@ -127,6 +137,7 @@ var allPreviewFeatures = []feature{
 	SystemGetSnowflakePlatformInfoDatasource,
 	TableColumnMaskingPolicyApplicationResource,
 	TableConstraintResource,
+	TableResource,
 	UserAuthenticationPolicyAttachmentResource,
 	UserPublicKeysResource,
 	UserPasswordPolicyAttachmentResource,
