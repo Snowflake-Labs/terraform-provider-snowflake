@@ -171,7 +171,7 @@ func Function() *schema.Resource {
 		CreateContext: TrackingCreateWrapper(resources.Function, CreateContextFunction),
 		ReadContext:   TrackingReadWrapper(resources.Function, ReadContextFunction),
 		UpdateContext: TrackingUpdateWrapper(resources.Function, UpdateContextFunction),
-		DeleteContext: TrackingDeleteWrapper(resources.Function, DeleteContextFunction),
+		DeleteContext: TrackingDeleteWrapper(resources.Function, DeleteFunction),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Function, customdiff.All(
 			// TODO(SNOW-1348103): add `arguments` to ComputedIfAnyAttributeChanged. This can't be done now because this function compares values without diff suppress.
@@ -720,20 +720,6 @@ func UpdateContextFunction(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return ReadContextFunction(ctx, d, meta)
-}
-
-func DeleteContextFunction(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-
-	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if err := client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id).WithIfExists(true)); err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId("")
-	return nil
 }
 
 func parseFunctionArguments(d *schema.ResourceData) ([]sdk.FunctionArgumentRequest, diag.Diagnostics) {

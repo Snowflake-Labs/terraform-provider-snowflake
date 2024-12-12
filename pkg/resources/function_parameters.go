@@ -80,16 +80,16 @@ func handleFunctionParameterRead(d *schema.ResourceData, functionParameters []*s
 }
 
 // They do not work in create, that's why are set in alter
-func handleFunctionParametersCreate(d *schema.ResourceData, alterOpts *sdk.FunctionSet) diag.Diagnostics {
+func handleFunctionParametersCreate(d *schema.ResourceData, set *sdk.FunctionSetRequest) diag.Diagnostics {
 	return JoinDiags(
-		handleParameterCreate(d, sdk.FunctionParameterEnableConsoleOutput, &alterOpts.EnableConsoleOutput),
-		handleParameterCreateWithMapping(d, sdk.FunctionParameterLogLevel, &alterOpts.LogLevel, stringToStringEnumProvider(sdk.ToLogLevel)),
-		handleParameterCreateWithMapping(d, sdk.FunctionParameterMetricLevel, &alterOpts.MetricLevel, stringToStringEnumProvider(sdk.ToMetricLevel)),
-		handleParameterCreateWithMapping(d, sdk.FunctionParameterTraceLevel, &alterOpts.TraceLevel, stringToStringEnumProvider(sdk.ToTraceLevel)),
+		handleParameterCreate(d, sdk.FunctionParameterEnableConsoleOutput, &set.EnableConsoleOutput),
+		handleParameterCreateWithMapping(d, sdk.FunctionParameterLogLevel, &set.LogLevel, stringToStringEnumProvider(sdk.ToLogLevel)),
+		handleParameterCreateWithMapping(d, sdk.FunctionParameterMetricLevel, &set.MetricLevel, stringToStringEnumProvider(sdk.ToMetricLevel)),
+		handleParameterCreateWithMapping(d, sdk.FunctionParameterTraceLevel, &set.TraceLevel, stringToStringEnumProvider(sdk.ToTraceLevel)),
 	)
 }
 
-func handleFunctionParametersUpdate(d *schema.ResourceData, set *sdk.FunctionSet, unset *sdk.FunctionUnset) diag.Diagnostics {
+func handleFunctionParametersUpdate(d *schema.ResourceData, set *sdk.FunctionSetRequest, unset *sdk.FunctionUnsetRequest) diag.Diagnostics {
 	return JoinDiags(
 		handleParameterUpdate(d, sdk.FunctionParameterEnableConsoleOutput, &set.EnableConsoleOutput, &unset.EnableConsoleOutput),
 		handleParameterUpdateWithMapping(d, sdk.FunctionParameterLogLevel, &set.LogLevel, &unset.LogLevel, stringToStringEnumProvider(sdk.ToLogLevel)),

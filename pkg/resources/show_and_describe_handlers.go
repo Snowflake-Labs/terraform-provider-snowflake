@@ -54,7 +54,7 @@ type outputMapping struct {
 	normalizeFunc  func(any) any
 }
 
-// handleExternalChangesToObjectInDescribe assumes that show output is kept in DescribeOutputAttributeName attribute
+// handleExternalChangesToObjectInDescribe assumes that describe output is kept in DescribeOutputAttributeName attribute
 func handleExternalChangesToObjectInDescribe(d *schema.ResourceData, mappings ...describeMapping) error {
 	if describeOutput, ok := d.GetOk(DescribeOutputAttributeName); ok {
 		describeOutputList := describeOutput.([]any)

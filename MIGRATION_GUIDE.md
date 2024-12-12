@@ -9,8 +9,46 @@ across different versions.
 
 ## v0.99.0 ➞ v0.100.0
 
+### *(new feature)* Account role data source
+Added a new `snowflake_account_roles` data source for account roles. Now it reflects It's based on `snowflake_roles` data source.
+`account_roles` field now organizes output of show under `show_output` field.
+
+Before:
+```terraform
+output "simple_output" {
+  value = data.snowflake_roles.test.roles[0].show_output[0].name
+}
+```
+After:
+```terraform
+output "simple_output" {
+  value = data.snowflake_account_roles.test.account_roles[0].show_output[0].name
+}
+```
+
 ### snowflake_roles data source deprecation
-`snowflake_roles` is now deprecated in favor of `snowflake_account_roles` with the same schema and behavior. It will be removed with the v1 release. Please adjust your configuration files.
+`snowflake_roles` is now deprecated in favor of `snowflake_account_roles` with a similar schema and behavior. It will be removed with the v1 release. Please adjust your configuration files.
+
+### snowflake_account_parameter resource changes
+
+#### *(behavior change)* resource deletion
+During resource deleting, provider now uses `UNSET` instead of `SET` with the default value.
+
+#### *(behavior change)* changes in `key` field
+The value of `key` field is now case-insensitive and is validated. The list of supported values is available in the resource documentation.
+
+### snowflake_oauth_integration_for_partner_applications and snowflake_oauth_integration_for_custom_clients resource changes
+#### *(behavior change)* `blocked_roles_list` field is no longer required
+
+Previously, `blocked_roles_list` field was required to handle default account roles like `ACCOUNTADMIN`, `ORGADMIN`, and `SECURITYADMIN`.
+
+Now, it is optional, because of using the value of `OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST` parameter (read more below).
+
+No changes in the configuration are necessary.
+
+#### *(behavior change)* new field `related_parameters`
+
+To handle `blocked_roles_list` field properly in both of the resources, we introduce `related_parameters` field. This field is a list of parameters related to OAuth integrations. It is a computed-only field containing value of `OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST` account parameter (see [docs](https://docs.snowflake.com/en/sql-reference/parameters#oauth-add-privileged-roles-to-blocked-list)).
 
 ### snowflake_account resource changes
 
