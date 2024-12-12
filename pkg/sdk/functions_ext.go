@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 const DefaultFunctionComment = "user-defined function"
@@ -27,9 +29,15 @@ type FunctionDetails struct {
 	Handler                    *string // present for python, java, and scala (hidden when SECURE)
 	RuntimeVersion             *string // present for python, java, and scala (hidden when SECURE)
 	Packages                   *string // list // present for python, java, and scala
-	TargetPath                 *string // list present for scala and java (hidden when SECURE)
+	TargetPath                 *string // present for scala and java (hidden when SECURE)
 	InstalledPackages          *string // list present for python (hidden when SECURE)
 	IsAggregate                *bool   // present for python
+
+	NormalizedImports    []NormalizedPath
+	NormalizedTargetPath *NormalizedPath
+	ReturnDataType       datatypes.DataType
+	ReturnNotNull        bool
+	NormalizedArguments  []NormalizedArgument
 }
 
 func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
@@ -69,6 +77,37 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 			v.TargetPath = row.Value
 		}
 	}
+	if e := errors.Join(errs...); e != nil {
+		return nil, e
+	}
+
+	if normalizedImports, err := parseFunctionOrProcedureImports(v.Imports); err != nil {
+		errs = append(errs, err)
+	} else {
+		v.NormalizedImports = normalizedImports
+	}
+
+	if v.TargetPath != nil {
+		if p, err := parseFunctionOrProcedureStageLocationPath(*v.TargetPath); err != nil {
+			errs = append(errs, err)
+		} else {
+			v.NormalizedTargetPath = p
+		}
+	}
+
+	if dt, returnNotNull, err := parseFunctionOrProcedureReturns(v.Returns); err != nil {
+		errs = append(errs, err)
+	} else {
+		v.ReturnDataType = dt
+		v.ReturnNotNull = returnNotNull
+	}
+
+	if args, err := parseFunctionOrProcedureSignature(v.Signature); err != nil {
+		errs = append(errs, err)
+	} else {
+		v.NormalizedArguments = args
+	}
+
 	return v, errors.Join(errs...)
 }
 

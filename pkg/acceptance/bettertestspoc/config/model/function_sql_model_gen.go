@@ -10,22 +10,22 @@ import (
 )
 
 type FunctionSqlModel struct {
-	Arguments           tfconfig.Variable `json:"arguments,omitempty"`
-	Comment             tfconfig.Variable `json:"comment,omitempty"`
-	Database            tfconfig.Variable `json:"database,omitempty"`
-	EnableConsoleOutput tfconfig.Variable `json:"enable_console_output,omitempty"`
-	FullyQualifiedName  tfconfig.Variable `json:"fully_qualified_name,omitempty"`
-	FunctionDefinition  tfconfig.Variable `json:"function_definition,omitempty"`
-	FunctionLanguage    tfconfig.Variable `json:"function_language,omitempty"`
-	IsSecure            tfconfig.Variable `json:"is_secure,omitempty"`
-	LogLevel            tfconfig.Variable `json:"log_level,omitempty"`
-	MetricLevel         tfconfig.Variable `json:"metric_level,omitempty"`
-	Name                tfconfig.Variable `json:"name,omitempty"`
-	NullInputBehavior   tfconfig.Variable `json:"null_input_behavior,omitempty"`
-	ReturnBehavior      tfconfig.Variable `json:"return_behavior,omitempty"`
-	ReturnType          tfconfig.Variable `json:"return_type,omitempty"`
-	Schema              tfconfig.Variable `json:"schema,omitempty"`
-	TraceLevel          tfconfig.Variable `json:"trace_level,omitempty"`
+	Arguments             tfconfig.Variable `json:"arguments,omitempty"`
+	Comment               tfconfig.Variable `json:"comment,omitempty"`
+	Database              tfconfig.Variable `json:"database,omitempty"`
+	EnableConsoleOutput   tfconfig.Variable `json:"enable_console_output,omitempty"`
+	FullyQualifiedName    tfconfig.Variable `json:"fully_qualified_name,omitempty"`
+	FunctionDefinition    tfconfig.Variable `json:"function_definition,omitempty"`
+	FunctionLanguage      tfconfig.Variable `json:"function_language,omitempty"`
+	IsSecure              tfconfig.Variable `json:"is_secure,omitempty"`
+	LogLevel              tfconfig.Variable `json:"log_level,omitempty"`
+	MetricLevel           tfconfig.Variable `json:"metric_level,omitempty"`
+	Name                  tfconfig.Variable `json:"name,omitempty"`
+	NullInputBehavior     tfconfig.Variable `json:"null_input_behavior,omitempty"`
+	ReturnResultsBehavior tfconfig.Variable `json:"return_results_behavior,omitempty"`
+	ReturnType            tfconfig.Variable `json:"return_type,omitempty"`
+	Schema                tfconfig.Variable `json:"schema,omitempty"`
+	TraceLevel            tfconfig.Variable `json:"trace_level,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -128,8 +128,8 @@ func (f *FunctionSqlModel) WithNullInputBehavior(nullInputBehavior string) *Func
 	return f
 }
 
-func (f *FunctionSqlModel) WithReturnBehavior(returnBehavior string) *FunctionSqlModel {
-	f.ReturnBehavior = tfconfig.StringVariable(returnBehavior)
+func (f *FunctionSqlModel) WithReturnResultsBehavior(returnResultsBehavior string) *FunctionSqlModel {
+	f.ReturnResultsBehavior = tfconfig.StringVariable(returnResultsBehavior)
 	return f
 }
 
@@ -212,8 +212,8 @@ func (f *FunctionSqlModel) WithNullInputBehaviorValue(value tfconfig.Variable) *
 	return f
 }
 
-func (f *FunctionSqlModel) WithReturnBehaviorValue(value tfconfig.Variable) *FunctionSqlModel {
-	f.ReturnBehavior = value
+func (f *FunctionSqlModel) WithReturnResultsBehaviorValue(value tfconfig.Variable) *FunctionSqlModel {
+	f.ReturnResultsBehavior = value
 	return f
 }
 
