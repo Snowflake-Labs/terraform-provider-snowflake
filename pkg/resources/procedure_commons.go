@@ -2,12 +2,15 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -23,6 +26,7 @@ func init() {
 type procedureSchemaDef struct {
 	additionalArguments            []string
 	procedureDefinitionDescription string
+	procedureDefinitionRequired    bool
 	returnTypeLinkName             string
 	returnTypeLinkUrl              string
 	runtimeVersionDescription      string
@@ -41,6 +45,11 @@ func setUpProcedureSchema(definition procedureSchemaDef) map[string]*schema.Sche
 	}
 	if v, ok := currentSchema["procedure_definition"]; ok && v != nil {
 		v.Description = diffSuppressStatementFieldDescription(definition.procedureDefinitionDescription)
+		if definition.procedureDefinitionRequired {
+			v.Required = true
+		} else {
+			v.Optional = true
+		}
 	}
 	if v, ok := currentSchema["return_type"]; ok && v != nil {
 		v.Description = procedureReturnsTemplate(definition.returnTypeLinkName, definition.returnTypeLinkUrl)
@@ -109,6 +118,7 @@ var (
 		returnTypeLinkName:             "SQL and JavaScript data type mapping",
 		returnTypeLinkUrl:              "https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript.html#label-stored-procedure-data-type-mapping",
 		procedureDefinitionDescription: procedureDefinitionTemplate("JavaScript", "JavaScript", "https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript"),
+		procedureDefinitionRequired:    true,
 	}
 	pythonProcedureSchemaDefinition = procedureSchemaDef{
 		additionalArguments: []string{
@@ -149,6 +159,7 @@ var (
 	sqlProcedureSchemaDefinition = procedureSchemaDef{
 		additionalArguments:            []string{},
 		procedureDefinitionDescription: procedureDefinitionTemplate("SQL", "Snowflake Scripting", "https://docs.snowflake.com/en/developer-guide/snowflake-scripting/index"),
+		procedureDefinitionRequired:    true,
 		returnTypeLinkName:             "SQL data type",
 		returnTypeLinkUrl:              "https://docs.snowflake.com/en/sql-reference-data-types",
 	}
@@ -212,13 +223,17 @@ func procedureBaseSchema() map[string]schema.Schema {
 						DiffSuppressFunc: DiffSuppressDataTypes,
 						Description:      "The argument type.",
 					},
+					"arg_default_value": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: externalChangesNotDetectedFieldDescription("Optional default value for the argument. For text values use single quotes. Numeric values can be unquoted."),
+					},
 				},
 			},
 			Optional:    true,
 			ForceNew:    true,
 			Description: "List of the arguments for the procedure. Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-procedure#all-languages) for more details.",
 		},
-		// TODO [SNOW-1348103]: for now, the proposal is to leave return type as string, add TABLE to data types, and here always parse (easier handling and diff suppression)
 		"return_type": {
 			Type:             schema.TypeString,
 			Required:         true,
@@ -231,7 +246,7 @@ func procedureBaseSchema() map[string]schema.Schema {
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: sdkValidation(sdk.ToNullInputBehavior),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior")),
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior)), // IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior")),
 			Description:      fmt.Sprintf("Specifies the behavior of the procedure when called with null inputs. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedNullInputBehaviors)),
 		},
 		// "return_behavior" removed because it is deprecated in the docs: https://docs.snowflake.com/en/sql-reference/sql/create-procedure#id1
@@ -249,9 +264,22 @@ func procedureBaseSchema() map[string]schema.Schema {
 		},
 		"imports": {
 			Type:     schema.TypeSet,
-			Elem:     &schema.Schema{Type: schema.TypeString},
 			Optional: true,
 			ForceNew: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"stage_location": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Stage location without leading `@`. To use your user's stage set this to `~`, otherwise pass fully qualified name of the stage (with every part contained in double quotes or use `snowflake_stage.<your stage's resource name>.fully_qualified_name` if you manage this stage through terraform).",
+					},
+					"path_on_stage": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Path for import on stage, without the leading `/`.",
+					},
+				},
+			},
 		},
 		"snowpark_package": {
 			Type:        schema.TypeString,
@@ -303,9 +331,24 @@ func procedureBaseSchema() map[string]schema.Schema {
 			Description: "Assigns the names of [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter.",
 		},
 		"target_path": {
-			Type:     schema.TypeString,
+			Type:     schema.TypeSet,
+			MaxItems: 1,
 			Optional: true,
 			ForceNew: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"stage_location": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Stage location without leading `@`. To use your user's stage set this to `~`, otherwise pass fully qualified name of the stage (with every part contained in double quotes or use `snowflake_stage.<your stage's resource name>.fully_qualified_name` if you manage this stage through terraform).",
+					},
+					"path_on_stage": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Path for import on stage, without the leading `/`.",
+					},
+				},
+			},
 		},
 		"execute_as": {
 			Type:             schema.TypeString,
@@ -316,7 +359,6 @@ func procedureBaseSchema() map[string]schema.Schema {
 		},
 		"procedure_definition": {
 			Type:             schema.TypeString,
-			Required:         true,
 			ForceNew:         true,
 			DiffSuppressFunc: DiffSuppressStatement,
 		},
@@ -358,5 +400,140 @@ func DeleteProcedure(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 
 	d.SetId("")
+	return nil
+}
+
+func queryAllProcedureDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allProcedureDetailsCommon, diag.Diagnostics) {
+	procedureDetails, err := client.Procedures.DescribeDetails(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			log.Printf("[DEBUG] procedure (%s) not found or we are not authorized. Err: %s", d.Id(), err)
+			d.SetId("")
+			return nil, diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query procedure. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Procedure: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return nil, diag.FromErr(err)
+	}
+	procedure, err := client.Procedures.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return nil, diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query procedure. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Procedure: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return nil, diag.FromErr(err)
+	}
+	procedureParameters, err := client.Procedures.ShowParameters(ctx, id)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	return &allProcedureDetailsCommon{
+		procedure:           procedure,
+		procedureDetails:    procedureDetails,
+		procedureParameters: procedureParameters,
+	}, nil
+}
+
+type allProcedureDetailsCommon struct {
+	procedure           *sdk.Procedure
+	procedureDetails    *sdk.ProcedureDetails
+	procedureParameters []*sdk.Parameter
+}
+
+// TODO [SNOW-1850370]: Make the rest of the functions in this file generic (for reuse with functions)
+// These were copy-pasted for now.
+func parseProcedureArgumentsCommon(d *schema.ResourceData) ([]sdk.ProcedureArgumentRequest, error) {
+	args := make([]sdk.ProcedureArgumentRequest, 0)
+	if v, ok := d.GetOk("arguments"); ok {
+		for _, arg := range v.([]any) {
+			argName := arg.(map[string]any)["arg_name"].(string)
+			argDataType := arg.(map[string]any)["arg_data_type"].(string)
+			dataType, err := datatypes.ParseDataType(argDataType)
+			if err != nil {
+				return nil, err
+			}
+			request := sdk.NewProcedureArgumentRequest(argName, dataType)
+
+			if argDefaultValue, defaultValuePresent := arg.(map[string]any)["arg_default_value"]; defaultValuePresent && argDefaultValue.(string) != "" {
+				request.WithDefaultValue(argDefaultValue.(string))
+			}
+
+			args = append(args, *request)
+		}
+	}
+	return args, nil
+}
+
+func parseProcedureImportsCommon(d *schema.ResourceData) ([]sdk.ProcedureImportRequest, error) {
+	imports := make([]sdk.ProcedureImportRequest, 0)
+	if v, ok := d.GetOk("imports"); ok {
+		for _, imp := range v.(*schema.Set).List() {
+			stageLocation := imp.(map[string]any)["stage_location"].(string)
+			pathOnStage := imp.(map[string]any)["path_on_stage"].(string)
+			imports = append(imports, *sdk.NewProcedureImportRequest(fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)))
+		}
+	}
+	return imports, nil
+}
+
+func parseProcedureTargetPathCommon(d *schema.ResourceData) (string, error) {
+	var tp string
+	if v, ok := d.GetOk("target_path"); ok {
+		for _, p := range v.(*schema.Set).List() {
+			stageLocation := p.(map[string]any)["stage_location"].(string)
+			pathOnStage := p.(map[string]any)["path_on_stage"].(string)
+			tp = fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)
+		}
+	}
+	return tp, nil
+}
+
+func parseProcedureReturnsCommon(d *schema.ResourceData) (*sdk.ProcedureReturnsRequest, error) {
+	returnTypeRaw := d.Get("return_type").(string)
+	dataType, err := datatypes.ParseDataType(returnTypeRaw)
+	if err != nil {
+		return nil, err
+	}
+	returns := sdk.NewProcedureReturnsRequest()
+	switch v := dataType.(type) {
+	case *datatypes.TableDataType:
+		var cr []sdk.ProcedureColumnRequest
+		for _, c := range v.Columns() {
+			cr = append(cr, *sdk.NewProcedureColumnRequest(c.ColumnName(), c.ColumnType()))
+		}
+		returns.WithTable(*sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
+	default:
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(dataType))
+	}
+	return returns, nil
+}
+
+func setProcedureImportsInBuilder[T any](d *schema.ResourceData, setImports func([]sdk.ProcedureImportRequest) T) error {
+	imports, err := parseProcedureImportsCommon(d)
+	if err != nil {
+		return err
+	}
+	setImports(imports)
+	return nil
+}
+
+func setProcedureTargetPathInBuilder[T any](d *schema.ResourceData, setTargetPath func(string) T) error {
+	tp, err := parseProcedureTargetPathCommon(d)
+	if err != nil {
+		return err
+	}
+	if tp != "" {
+		setTargetPath(tp)
+	}
 	return nil
 }

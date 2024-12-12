@@ -35,7 +35,7 @@ func FunctionJava() *schema.Resource {
 			// The language check is more for the future.
 			// Currently, almost all attributes are marked as forceNew.
 			// When language changes, these attributes also change, causing the object to recreate either way.
-			// The only potential option is java staged -> scala staged (however scala need runtime_version which may interfere).
+			// The only potential option is java staged <-> scala staged (however scala need runtime_version which may interfere).
 			RecreateWhenResourceStringFieldChangedExternally("function_language", "JAVA"),
 		)),
 
@@ -112,7 +112,7 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 		return diag.FromErr(err)
 	}
 
-	allFunctionDetails, diags := queryAllFunctionsDetailsCommon(ctx, d, client, id)
+	allFunctionDetails, diags := queryAllFunctionDetailsCommon(ctx, d, client, id)
 	if diags != nil {
 		return diags
 	}
@@ -123,18 +123,18 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 	errs := errors.Join(
 		// TODO [SNOW-1348103]: set the rest of the fields
 		// not reading is_secure on purpose (handled as external change to show output)
-		readFunctionArgumentsCommon(d, allFunctionDetails.functionDetails.NormalizedArguments),
+		readFunctionOrProcedureArguments(d, allFunctionDetails.functionDetails.NormalizedArguments),
 		d.Set("return_type", allFunctionDetails.functionDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
 		// not reading return_results_behavior on purpose (handled as external change to show output)
 		setOptionalFromStringPtr(d, "runtime_version", allFunctionDetails.functionDetails.RuntimeVersion),
 		// comment
-		readFunctionImportsCommon(d, allFunctionDetails.functionDetails.NormalizedImports),
+		readFunctionOrProcedureImports(d, allFunctionDetails.functionDetails.NormalizedImports),
 		// packages
 		setRequiredFromStringPtr(d, "handler", allFunctionDetails.functionDetails.Handler),
 		// external_access_integrations
 		// secrets
-		readFunctionTargetPathCommon(d, allFunctionDetails.functionDetails.NormalizedTargetPath),
+		readFunctionOrProcedureTargetPath(d, allFunctionDetails.functionDetails.NormalizedTargetPath),
 		setOptionalFromStringPtr(d, "function_definition", allFunctionDetails.functionDetails.Body),
 		d.Set("function_language", allFunctionDetails.functionDetails.Language),
 

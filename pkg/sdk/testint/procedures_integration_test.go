@@ -100,6 +100,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, procedure.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("JAVA").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -107,10 +109,12 @@ func TestInt_Procedures(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(`[]`).
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("OWNER"),
 		)
@@ -186,6 +190,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("JAVA").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -193,10 +199,14 @@ func TestInt_Procedures(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
+				StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPath(targetPath).
+			HasNormalizedTargetPath("~", jarName).
 			HasInstalledPackagesNil().
 			HasExecuteAs("OWNER"),
 		)
@@ -256,6 +266,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("JAVA").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -263,10 +275,14 @@ func TestInt_Procedures(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, importPath)).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
+				StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("OWNER"),
 		)
@@ -333,6 +349,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("JAVA").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -340,10 +358,14 @@ func TestInt_Procedures(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
+				StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("OWNER"),
 		)
@@ -386,8 +408,47 @@ func TestInt_Procedures(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasImports(fmt.Sprintf(`[@"%s"."%s".%s/%s]`, stage.ID().DatabaseName(), stage.ID().SchemaName(), stage.ID().Name(), tmpJavaProcedureDifferentStage.JarName)).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
+				StageLocation: stage.ID().FullyQualifiedName(), PathOnStage: tmpJavaProcedureDifferentStage.JarName,
+			}).
 			HasHandler(handler).
-			HasTargetPathNil(),
+			HasTargetPathNil().
+			HasNormalizedTargetPathNil(),
+		)
+	})
+
+	// proves that we don't get default argument values from SHOW and DESCRIBE
+	t.Run("create procedure for Java - default argument value", func(t *testing.T) {
+		className := "TestFunc"
+		funcName := "echoVarchar"
+		argName := "x"
+		dataType := testdatatypes.DataTypeVarchar_100
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType).WithDefaultValue(`'abc'`)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
+		handler := fmt.Sprintf("%s.%s", className, funcName)
+		definition := testClientHelper().Procedure.SampleJavaDefinition(t, className, funcName, argName)
+		packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0")}
+
+		request := sdk.NewCreateForJavaProcedureRequest(id.SchemaObjectId(), *returns, "11", packages, handler).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+			WithProcedureDefinitionWrapped(definition)
+
+		err := client.Procedures.CreateForJava(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(DEFAULT %[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())),
 		)
 	})
 
@@ -432,6 +493,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("JAVASCRIPT").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -439,10 +502,12 @@ func TestInt_Procedures(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImportsNil().
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandlerNil().
 			HasRuntimeVersionNil().
 			HasPackagesNil().
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("OWNER"),
 		)
@@ -500,6 +565,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("JAVASCRIPT").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -507,10 +574,12 @@ func TestInt_Procedures(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImportsNil().
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandlerNil().
 			HasRuntimeVersionNil().
 			HasPackagesNil().
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("CALLER"),
 		)
@@ -568,6 +637,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("PYTHON").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -575,10 +646,12 @@ func TestInt_Procedures(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(`[]`).
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandler(funcName).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['snowflake-snowpark-python==1.14.0']`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
 			HasExecuteAs("OWNER"),
 		)
@@ -648,6 +721,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL").
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("PYTHON").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -655,10 +730,14 @@ func TestInt_Procedures(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
+				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
+			}).
 			HasHandler(funcName).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['snowflake-snowpark-python==1.14.0','absl-py==0.10.0']`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
 			HasExecuteAs("CALLER"),
 		)
@@ -714,6 +793,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("PYTHON").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -721,10 +802,14 @@ func TestInt_Procedures(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
+				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
+			}).
 			HasHandler(tmpPythonFunction.PythonHandler()).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['snowflake-snowpark-python==1.14.0']`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
 			HasExecuteAs("OWNER"),
 		)
@@ -791,6 +876,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL").
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("PYTHON").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -798,10 +885,14 @@ func TestInt_Procedures(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
+				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
+			}).
 			HasHandler(tmpPythonFunction.PythonHandler()).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['snowflake-snowpark-python==1.14.0','absl-py==0.10.0']`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
 			HasExecuteAs("CALLER"),
 		)
@@ -861,6 +952,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("SCALA").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -868,10 +961,12 @@ func TestInt_Procedures(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(`[]`).
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("OWNER"),
 		)
@@ -948,6 +1043,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("SCALA").
 			HasBody(definition).
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -955,10 +1052,14 @@ func TestInt_Procedures(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
+				StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPath(targetPath).
+			HasNormalizedTargetPath("~", jarName).
 			HasInstalledPackagesNil().
 			HasExecuteAs("CALLER"),
 		)
@@ -1015,6 +1116,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("SCALA").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
@@ -1022,10 +1125,14 @@ func TestInt_Procedures(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, importPath)).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
+				StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("OWNER"),
 		)
@@ -1094,6 +1201,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("SCALA").
 			HasBodyNil().
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
@@ -1101,10 +1210,14 @@ func TestInt_Procedures(t *testing.T) {
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
+			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
+				StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName,
+			}).
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("CALLER"),
 		)
@@ -1157,6 +1270,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
 			HasLanguage("SQL").
 			HasBody(definition).
 			HasNullHandlingNil().
@@ -1164,10 +1279,12 @@ func TestInt_Procedures(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImportsNil().
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandlerNil().
 			HasRuntimeVersionNil().
 			HasPackagesNil().
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("OWNER"),
 		)
@@ -1175,6 +1292,35 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
+		)
+	})
+
+	// proves that we don't get default argument values from SHOW and DESCRIBE
+	t.Run("create procedure for SQL - default argument value", func(t *testing.T) {
+		argName := "x"
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.LegacyDataTypeFrom(dataType))
+
+		definition := testClientHelper().Procedure.SampleSqlDefinition(t)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt)
+		argument := sdk.NewProcedureArgumentRequest(argName, dataType).WithDefaultValue("3.123")
+		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
+			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
+
+		err := client.Procedures.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s(DEFAULT %[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())),
 		)
 	})
 
@@ -1227,6 +1373,8 @@ func TestInt_Procedures(t *testing.T) {
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(true).
 			HasLanguage("SQL").
 			HasBody(definition).
 			// TODO [SNOW-1348103]: null handling and volatility are not returned and is present in create syntax
@@ -1236,12 +1384,78 @@ func TestInt_Procedures(t *testing.T) {
 			HasExternalAccessIntegrationsNil().
 			HasSecretsNil().
 			HasImportsNil().
+			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandlerNil().
 			HasRuntimeVersionNil().
 			HasPackagesNil().
 			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
 			HasExecuteAs("CALLER"),
+		)
+
+		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+			HasAllDefaults().
+			HasAllDefaultsExplicit(),
+		)
+	})
+
+	t.Run("create procedure for SQL - no arguments", func(t *testing.T) {
+		dataType := testdatatypes.DataTypeFloat
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments()
+
+		definition := testClientHelper().Procedure.SampleSqlDefinition(t)
+		dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+		returns := sdk.NewProcedureSQLReturnsRequest().WithResultDataType(*dt)
+		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition)
+
+		err := client.Procedures.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
+
+		function, err := client.Procedures.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(id.SchemaName()).
+			HasIsBuiltin(false).
+			HasIsAggregate(false).
+			HasIsAnsi(false).
+			HasMinNumArguments(0).
+			HasMaxNumArguments(0).
+			HasArgumentsOld([]sdk.DataType{}).
+			HasArgumentsRaw(fmt.Sprintf(`%[1]s() RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())).
+			HasDescription(sdk.DefaultProcedureComment).
+			HasCatalogName(id.DatabaseName()).
+			HasIsTableFunction(false).
+			HasValidForClustering(false).
+			HasIsSecure(false).
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil(),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+			HasSignature("()").
+			HasReturns(dataType.ToSql()).
+			HasReturnDataType(dataType).
+			HasReturnNotNull(false).
+			HasLanguage("SQL").
+			HasBody(definition).
+			HasNullHandlingNil().
+			HasVolatilityNil().
+			HasExternalAccessIntegrationsNil().
+			HasSecretsNil().
+			HasImportsNil().
+			HasExactlyImportsNormalizedInAnyOrder().
+			HasHandlerNil().
+			HasRuntimeVersionNil().
+			HasPackagesNil().
+			HasTargetPathNil().
+			HasNormalizedTargetPathNil().
+			HasInstalledPackagesNil().
+			HasExecuteAs("OWNER"),
 		)
 
 		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).

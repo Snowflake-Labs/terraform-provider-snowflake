@@ -7,7 +7,6 @@ import (
 	"log"
 	"slices"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -241,7 +240,6 @@ func functionBaseSchema() map[string]schema.Schema {
 			ForceNew:    true,
 			Description: "List of the arguments for the function. Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages) for more details.",
 		},
-		// TODO [SNOW-1348103]: for now, the proposal is to leave return type as string, add TABLE to data types, and here always parse (easier handling and diff suppression)
 		"return_type": {
 			Type:             schema.TypeString,
 			Required:         true,
@@ -408,6 +406,7 @@ func DeleteFunction(ctx context.Context, d *schema.ResourceData, meta any) diag.
 	return nil
 }
 
+// TODO [SNOW-1850370]: Make the rest of the functions in this file generic (for reuse with procedures)
 func parseFunctionArgumentsCommon(d *schema.ResourceData) ([]sdk.FunctionArgumentRequest, error) {
 	args := make([]sdk.FunctionArgumentRequest, 0)
 	if v, ok := d.GetOk("arguments"); ok {
@@ -494,7 +493,7 @@ func setFunctionTargetPathInBuilder[T any](d *schema.ResourceData, setTargetPath
 	return nil
 }
 
-func queryAllFunctionsDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allFunctionDetailsCommon, diag.Diagnostics) {
+func queryAllFunctionDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allFunctionDetailsCommon, diag.Diagnostics) {
 	functionDetails, err := client.Functions.DescribeDetails(ctx, id)
 	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
@@ -539,49 +538,4 @@ type allFunctionDetailsCommon struct {
 	function           *sdk.Function
 	functionDetails    *sdk.FunctionDetails
 	functionParameters []*sdk.Parameter
-}
-
-func readFunctionArgumentsCommon(d *schema.ResourceData, args []sdk.NormalizedArgument) error {
-	if len(args) == 0 {
-		// TODO [SNOW-1348103]: handle empty list
-		return nil
-	}
-	// We do it the unusual way because the default values are not returned by SF.
-	// We update what we have - leaving the defaults unchanged.
-	if currentArgs, ok := d.Get("arguments").([]map[string]any); !ok {
-		return fmt.Errorf("arguments must be a list")
-	} else {
-		for i, arg := range args {
-			currentArgs[i]["arg_name"] = arg.Name
-			currentArgs[i]["arg_data_type"] = arg.DataType.ToSql()
-		}
-		return d.Set("arguments", currentArgs)
-	}
-}
-
-func readFunctionImportsCommon(d *schema.ResourceData, imports []sdk.NormalizedPath) error {
-	if len(imports) == 0 {
-		// don't do anything if imports not present
-		return nil
-	}
-	imps := collections.Map(imports, func(imp sdk.NormalizedPath) map[string]any {
-		return map[string]any{
-			"stage_location": imp.StageLocation,
-			"path_on_stage":  imp.PathOnStage,
-		}
-	})
-	return d.Set("imports", imps)
-}
-
-func readFunctionTargetPathCommon(d *schema.ResourceData, normalizedPath *sdk.NormalizedPath) error {
-	if normalizedPath == nil {
-		// don't do anything if imports not present
-		return nil
-	}
-	tp := make([]map[string]any, 1)
-	tp[0] = map[string]any{
-		"stage_location": normalizedPath.StageLocation,
-		"path_on_stage":  normalizedPath.PathOnStage,
-	}
-	return d.Set("target_path", tp)
 }

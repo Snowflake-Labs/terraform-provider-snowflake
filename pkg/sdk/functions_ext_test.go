@@ -9,7 +9,7 @@ import (
 )
 
 // TODO [SNOW-1850370]: test parsing single
-func Test_parseFunctionDetailsImport(t *testing.T) {
+func Test_parseFunctionOrProcedureImports(t *testing.T) {
 	inputs := []struct {
 		rawInput string
 		expected []NormalizedPath
@@ -43,9 +43,7 @@ func Test_parseFunctionDetailsImport(t *testing.T) {
 	for _, tc := range inputs {
 		tc := tc
 		t.Run(fmt.Sprintf("Snowflake raw imports: %s", tc.rawInput), func(t *testing.T) {
-			details := FunctionDetails{Imports: &tc.rawInput}
-
-			results, err := parseFunctionDetailsImport(details)
+			results, err := parseFunctionOrProcedureImports(&tc.rawInput)
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, results)
 		})
@@ -54,9 +52,7 @@ func Test_parseFunctionDetailsImport(t *testing.T) {
 	for _, tc := range badInputs {
 		tc := tc
 		t.Run(fmt.Sprintf("incorrect Snowflake input: %s, expecting error with: %s", tc.rawInput, tc.expectedErrorPart), func(t *testing.T) {
-			details := FunctionDetails{Imports: &tc.rawInput}
-
-			_, err := parseFunctionDetailsImport(details)
+			_, err := parseFunctionOrProcedureImports(&tc.rawInput)
 			require.Error(t, err)
 			require.ErrorContains(t, err, "could not parse imports from Snowflake")
 			require.ErrorContains(t, err, tc.expectedErrorPart)
@@ -64,9 +60,7 @@ func Test_parseFunctionDetailsImport(t *testing.T) {
 	}
 
 	t.Run("Snowflake raw imports nil", func(t *testing.T) {
-		details := FunctionDetails{Imports: nil}
-
-		results, err := parseFunctionDetailsImport(details)
+		results, err := parseFunctionOrProcedureImports(nil)
 		require.NoError(t, err)
 		require.Equal(t, []NormalizedPath{}, results)
 	})
