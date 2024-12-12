@@ -267,6 +267,7 @@ func IgnoreNewEmptyListOrSubfields(ignoredSubfields ...string) schema.SchemaDiff
 
 // IgnoreMatchingColumnNameAndMaskingPolicyUsingFirstElem ignores when the first element of USING is matching the column name.
 // see USING section in https://docs.snowflake.com/en/sql-reference/sql/create-view#optional-parameters
+// TODO(SNOW-1852423): improve docs and add more tests
 func IgnoreMatchingColumnNameAndMaskingPolicyUsingFirstElem() schema.SchemaDiffSuppressFunc {
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		// suppress diff when the name of the column matches the name of using

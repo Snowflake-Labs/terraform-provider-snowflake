@@ -33,7 +33,7 @@ func Role() *schema.Resource {
 	return &schema.Resource{
 		ReadContext:        TrackingReadWrapper(datasources.Role, ReadRole),
 		Schema:             roleSchema,
-		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_roles instead.",
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_account_roles instead.",
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

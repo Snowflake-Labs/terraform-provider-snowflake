@@ -9,6 +9,26 @@ across different versions.
 
 ## v0.99.0 ➞ v0.100.0
 
+### *(new feature)* Account role data source
+Added a new `snowflake_account_roles` data source for account roles. Now it reflects It's based on `snowflake_roles` data source.
+`account_roles` field now organizes output of show under `show_output` field.
+
+Before:
+```terraform
+output "simple_output" {
+  value = data.snowflake_roles.test.roles[0].show_output[0].name
+}
+```
+After:
+```terraform
+output "simple_output" {
+  value = data.snowflake_account_roles.test.account_roles[0].show_output[0].name
+}
+```
+
+### snowflake_roles data source deprecation
+`snowflake_roles` is now deprecated in favor of `snowflake_account_roles` with a similar schema and behavior. It will be removed with the v1 release. Please adjust your configuration files.
+
 ### snowflake_account_parameter resource changes
 
 #### *(behavior change)* resource deletion
