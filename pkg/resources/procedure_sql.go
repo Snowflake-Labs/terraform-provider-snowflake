@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,10 +21,10 @@ import (
 
 func ProcedureSql() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ProcedureSql, CreateContextProcedureSql),
-		ReadContext:   TrackingReadWrapper(resources.ProcedureSql, ReadContextProcedureSql),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedureSql, UpdateProcedure("SQL", ReadContextProcedureSql)),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedureSql, DeleteProcedure),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ProcedureSqlResource), TrackingCreateWrapper(resources.ProcedureSql, CreateContextProcedureSql)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ProcedureSqlResource), TrackingReadWrapper(resources.ProcedureSql, ReadContextProcedureSql)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ProcedureSqlResource), TrackingUpdateWrapper(resources.ProcedureSql, UpdateProcedure("SQL", ReadContextProcedureSql))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ProcedureSqlResource), TrackingDeleteWrapper(resources.ProcedureSql, DeleteProcedure)),
 		Description:   "Resource used to manage sql procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedureSql, customdiff.All(

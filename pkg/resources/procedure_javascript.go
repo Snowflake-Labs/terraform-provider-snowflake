@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,10 +21,10 @@ import (
 
 func ProcedureJavascript() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ProcedureJavascript, CreateContextProcedureJavascript),
-		ReadContext:   TrackingReadWrapper(resources.ProcedureJavascript, ReadContextProcedureJavascript),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedureJavascript, UpdateProcedure("JAVASCRIPT", ReadContextProcedureJavascript)),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedureJavascript, DeleteProcedure),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ProcedureJavascriptResource), TrackingCreateWrapper(resources.ProcedureJavascript, CreateContextProcedureJavascript)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ProcedureJavascriptResource), TrackingReadWrapper(resources.ProcedureJavascript, ReadContextProcedureJavascript)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ProcedureJavascriptResource), TrackingUpdateWrapper(resources.ProcedureJavascript, UpdateProcedure("JAVASCRIPT", ReadContextProcedureJavascript))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ProcedureJavascriptResource), TrackingDeleteWrapper(resources.ProcedureJavascript, DeleteProcedure)),
 		Description:   "Resource used to manage javascript procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedureJavascript, customdiff.All(

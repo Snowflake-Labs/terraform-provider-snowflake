@@ -5,8 +5,6 @@ description: |-
   Resource used to manage secondary (replicated) connections. To manage primary connection check resource snowflakeprimaryconnection ./primary_connection. For more information, check connection documentation https://docs.snowflake.com/en/sql-reference/sql/create-connection.html.
 ---
 
-!> **V1 release candidate** This resource is a release candidate for the V1. It is on the list of remaining GA objects for V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0970--v0980) to use it.
-
 # snowflake_secondary_connection (Resource)
 
 Resource used to manage secondary (replicated) connections. To manage primary connection check resource [snowflake_primary_connection](./primary_connection). For more information, check [connection documentation](https://docs.snowflake.com/en/sql-reference/sql/create-connection.html).

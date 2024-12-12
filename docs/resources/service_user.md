@@ -5,8 +5,6 @@ description: |-
   Resource used to manage service user objects. For more information, check user documentation https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management.
 ---
 
-!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0960--v0970) to use it.
-
 -> **Note** `snowflake_user_password_policy_attachment` will be reworked in the following versions of the provider which may still affect this resource.
 
 -> **Note** Attaching user policies will be handled in the following versions of the provider which may still affect this resource.
