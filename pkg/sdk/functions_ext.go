@@ -33,11 +33,14 @@ type FunctionDetails struct {
 	InstalledPackages          *string // list present for python (hidden when SECURE)
 	IsAggregate                *bool   // present for python
 
-	NormalizedImports    []NormalizedPath
-	NormalizedTargetPath *NormalizedPath
-	ReturnDataType       datatypes.DataType
-	ReturnNotNull        bool
-	NormalizedArguments  []NormalizedArgument
+	NormalizedImports                    []NormalizedPath
+	NormalizedTargetPath                 *NormalizedPath
+	ReturnDataType                       datatypes.DataType
+	ReturnNotNull                        bool
+	NormalizedArguments                  []NormalizedArgument
+	NormalizedExternalAccessIntegrations []AccountObjectIdentifier
+	NormalizedSecrets                    map[string]SchemaObjectIdentifier
+	NormalizedPackages                   []string
 }
 
 func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
@@ -106,6 +109,36 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 		errs = append(errs, err)
 	} else {
 		v.NormalizedArguments = args
+	}
+
+	if v.ExternalAccessIntegrations != nil {
+		if p, err := parseFunctionOrProcedureExternalAccessIntegrations(*v.ExternalAccessIntegrations); err != nil {
+			errs = append(errs, err)
+		} else {
+			v.NormalizedExternalAccessIntegrations = p
+		}
+	} else {
+		v.NormalizedExternalAccessIntegrations = []AccountObjectIdentifier{}
+	}
+
+	if v.Secrets != nil {
+		if p, err := parseFunctionOrProcedureSecrets(*v.Secrets); err != nil {
+			errs = append(errs, err)
+		} else {
+			v.NormalizedSecrets = p
+		}
+	} else {
+		v.NormalizedSecrets = map[string]SchemaObjectIdentifier{}
+	}
+
+	if v.Packages != nil {
+		if p, err := parseFunctionOrProcedurePackages(*v.Packages); err != nil {
+			errs = append(errs, err)
+		} else {
+			v.NormalizedPackages = p
+		}
+	} else {
+		v.NormalizedPackages = []string{}
 	}
 
 	return v, errors.Join(errs...)

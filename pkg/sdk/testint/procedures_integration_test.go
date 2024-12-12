@@ -107,12 +107,15 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(`[]`).
 			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0]`).
+			HasExactlyPackagesInAnyOrder().
+			HasSnowparkVersion("1.14.0").
 			HasTargetPathNil().
 			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
@@ -197,7 +200,9 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
+			ContainsExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName,
@@ -205,6 +210,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasExactlyPackagesInAnyOrder("com.snowflake:telemetry:0.1.0").
+			HasSnowparkVersion("1.14.0").
 			HasTargetPath(targetPath).
 			HasNormalizedTargetPath("~", jarName).
 			HasInstalledPackagesNil().
@@ -273,6 +280,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, importPath)).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -281,6 +289,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasExactlyPackagesInAnyOrder("com.snowflake:telemetry:0.1.0").
+			HasSnowparkVersion("1.14.0").
 			HasTargetPathNil().
 			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
@@ -356,7 +366,9 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
+			ContainsExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName,
@@ -364,6 +376,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasHandler(handler).
 			HasRuntimeVersion("11").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasExactlyPackagesInAnyOrder("com.snowflake:telemetry:0.1.0").
+			HasSnowparkVersion("1.14.0").
 			HasTargetPathNil().
 			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
@@ -500,6 +514,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImportsNil().
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -572,6 +587,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImportsNil().
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -644,12 +660,15 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(`[]`).
 			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandler(funcName).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['snowflake-snowpark-python==1.14.0']`).
+			HasExactlyPackagesInAnyOrder().
+			HasSnowparkVersion("1.14.0").
 			HasTargetPathNil().
 			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
@@ -728,7 +747,9 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
+			ContainsExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
@@ -736,6 +757,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasHandler(funcName).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['snowflake-snowpark-python==1.14.0','absl-py==0.10.0']`).
+			HasExactlyPackagesInAnyOrder("absl-py==0.10.0").
+			HasSnowparkVersion("1.14.0").
 			HasTargetPathNil().
 			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
@@ -800,6 +823,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -808,6 +832,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasHandler(tmpPythonFunction.PythonHandler()).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['snowflake-snowpark-python==1.14.0']`).
+			HasExactlyPackagesInAnyOrder().
+			HasSnowparkVersion("1.14.0").
 			HasTargetPathNil().
 			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
@@ -883,7 +909,9 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
+			ContainsExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpPythonFunction.PythonFileName(),
@@ -891,6 +919,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasHandler(tmpPythonFunction.PythonHandler()).
 			HasRuntimeVersion("3.8").
 			HasPackages(`['snowflake-snowpark-python==1.14.0','absl-py==0.10.0']`).
+			HasExactlyPackagesInAnyOrder("absl-py==0.10.0").
+			HasSnowparkVersion("1.14.0").
 			HasTargetPathNil().
 			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNotEmpty().
@@ -959,12 +989,15 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(`[]`).
 			HasExactlyImportsNormalizedInAnyOrder().
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0]`).
+			HasExactlyPackagesInAnyOrder().
+			HasSnowparkVersion("1.14.0").
 			HasTargetPathNil().
 			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
@@ -1050,7 +1083,9 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
+			ContainsExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName,
@@ -1058,6 +1093,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasExactlyPackagesInAnyOrder("com.snowflake:telemetry:0.1.0").
+			HasSnowparkVersion("1.14.0").
 			HasTargetPath(targetPath).
 			HasNormalizedTargetPath("~", jarName).
 			HasInstalledPackagesNil().
@@ -1123,6 +1160,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, importPath)).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -1131,6 +1169,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0]`).
+			HasExactlyPackagesInAnyOrder().
+			HasSnowparkVersion("1.14.0").
 			HasTargetPathNil().
 			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
@@ -1208,7 +1248,9 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
+			ContainsExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaProcedure.JarLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName,
@@ -1216,6 +1258,8 @@ func TestInt_Procedures(t *testing.T) {
 			HasHandler(handler).
 			HasRuntimeVersion("2.12").
 			HasPackages(`[com.snowflake:snowpark:1.14.0,com.snowflake:telemetry:0.1.0]`).
+			HasExactlyPackagesInAnyOrder("com.snowflake:telemetry:0.1.0").
+			HasSnowparkVersion("1.14.0").
 			HasTargetPathNil().
 			HasNormalizedTargetPathNil().
 			HasInstalledPackagesNil().
@@ -1277,6 +1321,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandlingNil().
 			HasVolatilityNil().
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImportsNil().
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -1382,6 +1427,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasVolatilityNil().
 			HasVolatilityNil().
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImportsNil().
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -1446,6 +1492,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasNullHandlingNil().
 			HasVolatilityNil().
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImportsNil().
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -1828,6 +1875,7 @@ def filter_by_role(session, table_name, role):
 
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil(),
 		)
 
@@ -1858,7 +1906,9 @@ def filter_by_role(session, table_name, role):
 
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
-			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}),
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
+			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
+			ContainsExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}),
 		)
 
 		assertParametersSet(t, objectparametersassert.ProcedureParameters(t, id))
@@ -1886,6 +1936,7 @@ def filter_by_role(session, table_name, role):
 
 		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			// TODO [SNOW-1850370]: apparently UNSET external access integrations cleans out secrets in the describe but leaves it in SHOW
 			HasSecretsNil(),
 		)

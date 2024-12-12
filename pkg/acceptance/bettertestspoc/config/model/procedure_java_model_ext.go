@@ -3,6 +3,8 @@ package model
 import (
 	"encoding/json"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -73,6 +75,55 @@ func (f *ProcedureJavaModel) WithImport(stageLocation string, pathOnStage string
 				"stage_location": tfconfig.StringVariable(stageLocation),
 				"path_on_stage":  tfconfig.StringVariable(pathOnStage),
 			},
+		),
+	)
+}
+
+func (f *ProcedureJavaModel) WithImports(imports ...sdk.NormalizedPath) *ProcedureJavaModel {
+	return f.WithImportsValue(
+		tfconfig.SetVariable(
+			collections.Map(imports, func(imp sdk.NormalizedPath) tfconfig.Variable {
+				return tfconfig.ObjectVariable(
+					map[string]tfconfig.Variable{
+						"stage_location": tfconfig.StringVariable(imp.StageLocation),
+						"path_on_stage":  tfconfig.StringVariable(imp.PathOnStage),
+					},
+				)
+			})...,
+		),
+	)
+}
+
+func (f *ProcedureJavaModel) WithPackages(pkgs ...string) *ProcedureJavaModel {
+	return f.WithPackagesValue(
+		tfconfig.SetVariable(
+			collections.Map(pkgs, func(pkg string) tfconfig.Variable { return tfconfig.StringVariable(pkg) })...,
+		),
+	)
+}
+
+func (f *ProcedureJavaModel) WithExternalAccessIntegrations(ids ...sdk.AccountObjectIdentifier) *ProcedureJavaModel {
+	return f.WithExternalAccessIntegrationsValue(
+		tfconfig.SetVariable(
+			collections.Map(ids, func(id sdk.AccountObjectIdentifier) tfconfig.Variable { return tfconfig.StringVariable(id.Name()) })...,
+		),
+	)
+}
+
+func (f *ProcedureJavaModel) WithSecrets(secrets map[string]sdk.SchemaObjectIdentifier) *ProcedureJavaModel {
+	objects := make([]tfconfig.Variable, 0)
+	for k, v := range secrets {
+		objects = append(objects, tfconfig.ObjectVariable(
+			map[string]tfconfig.Variable{
+				"secret_variable_name": tfconfig.StringVariable(k),
+				"secret_id":            tfconfig.StringVariable(v.FullyQualifiedName()),
+			},
+		))
+	}
+
+	return f.WithSecretsValue(
+		tfconfig.SetVariable(
+			objects...,
 		),
 	)
 }

@@ -1,10 +1,12 @@
 package sdk
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
@@ -115,4 +117,35 @@ func parseFunctionOrProcedureArgument(arg string) (*NormalizedArgument, error) {
 		return nil, fmt.Errorf("arg type %s cannot be parsed, err: %w", rest, err)
 	}
 	return &NormalizedArgument{argName, dt}, nil
+}
+
+// TODO [SNOW-1850370]: is this combo enough? - e.g. whitespace looks to be not trimmed
+func parseFunctionOrProcedureExternalAccessIntegrations(raw string) ([]AccountObjectIdentifier, error) {
+	log.Printf("[DEBUG] external access integrations: %s", raw)
+	return collections.MapErr(ParseCommaSeparatedStringArray(raw, false), ParseAccountObjectIdentifier)
+}
+
+// TODO [before V1]: test
+func parseFunctionOrProcedurePackages(raw string) ([]string, error) {
+	log.Printf("[DEBUG] external access integrations: %s", raw)
+	return collections.Map(ParseCommaSeparatedStringArray(raw, true), strings.TrimSpace), nil
+}
+
+// TODO [before V1]: unit test
+func parseFunctionOrProcedureSecrets(raw string) (map[string]SchemaObjectIdentifier, error) {
+	log.Printf("[DEBUG] parsing secrets: %s", raw)
+	secrets := make(map[string]string)
+	err := json.Unmarshal([]byte(raw), &secrets)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse secrets from Snowflake: %s, err: %w", raw, err)
+	}
+	normalizedSecrets := make(map[string]SchemaObjectIdentifier)
+	for k, v := range secrets {
+		id, err := ParseSchemaObjectIdentifier(v)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse secrets from Snowflake: %s, err: %w", raw, err)
+		}
+		normalizedSecrets[k] = id
+	}
+	return normalizedSecrets, nil
 }

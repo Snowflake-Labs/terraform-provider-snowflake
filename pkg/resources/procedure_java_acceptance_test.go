@@ -172,6 +172,27 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)
 
+	secretId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	secretId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	networkRule, networkRuleCleanup := acc.TestClient().NetworkRule.Create(t)
+	t.Cleanup(networkRuleCleanup)
+
+	secret, secretCleanup := acc.TestClient().Secret.CreateWithGenericString(t, secretId, "test_secret_string")
+	t.Cleanup(secretCleanup)
+
+	secret2, secret2Cleanup := acc.TestClient().Secret.CreateWithGenericString(t, secretId2, "test_secret_string_2")
+	t.Cleanup(secret2Cleanup)
+
+	externalAccessIntegration, externalAccessIntegrationCleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret.ID())
+	t.Cleanup(externalAccessIntegrationCleanup)
+
+	externalAccessIntegration2, externalAccessIntegration2Cleanup := acc.TestClient().ExternalAccessIntegration.CreateExternalAccessIntegrationWithNetworkRuleAndSecret(t, networkRule.ID(), secret2.ID())
+	t.Cleanup(externalAccessIntegration2Cleanup)
+
+	tmpJavaProcedure := acc.TestClient().CreateSampleJavaProcedureAndJarOnUserStage(t)
+	tmpJavaProcedure2 := acc.TestClient().CreateSampleJavaProcedureAndJarOnUserStage(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"
@@ -186,8 +207,36 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 
 	procedureModel := model.ProcedureJavaBasicInline("w", id, dataType, handler, definition).
 		WithArgument(argName, dataType).
+		WithImports(
+			sdk.NormalizedPath{StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName},
+			sdk.NormalizedPath{StageLocation: "~", PathOnStage: tmpJavaProcedure2.JarName},
+		).
+		WithSnowparkPackage("1.14.0").
+		WithPackages("com.snowflake:telemetry:0.1.0").
+		WithExternalAccessIntegrations(externalAccessIntegration, externalAccessIntegration2).
+		WithSecrets(map[string]sdk.SchemaObjectIdentifier{
+			"abc": secretId,
+			"def": secretId2,
+		}).
 		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName).
-		WithRuntimeVersion("11")
+		WithRuntimeVersion("11").
+		WithComment("some comment")
+
+	procedureModelUpdateWithoutRecreation := model.ProcedureJavaBasicInline("w", id, dataType, handler, definition).
+		WithArgument(argName, dataType).
+		WithImports(
+			sdk.NormalizedPath{StageLocation: "~", PathOnStage: tmpJavaProcedure.JarName},
+			sdk.NormalizedPath{StageLocation: "~", PathOnStage: tmpJavaProcedure2.JarName},
+		).
+		WithSnowparkPackage("1.14.0").
+		WithPackages("com.snowflake:telemetry:0.1.0").
+		WithExternalAccessIntegrations(externalAccessIntegration).
+		WithSecrets(map[string]sdk.SchemaObjectIdentifier{
+			"def": secretId2,
+		}).
+		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName).
+		WithRuntimeVersion("11").
+		WithComment("some other comment")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -204,15 +253,49 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 					resourceassert.ProcedureJavaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanDefault).
-						HasCommentString(sdk.DefaultProcedureComment).
-						HasImportsLength(0).
+						HasImportsLength(2).
 						HasRuntimeVersionString("11").
 						HasProcedureDefinitionString(definition).
+						HasCommentString("some comment").
 						HasProcedureLanguageString("JAVA").
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "target_path.0.stage_location", stage.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "target_path.0.path_on_stage", jarName)),
+					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "secrets.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "external_access_integrations.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "packages.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "packages.0", "com.snowflake:telemetry:0.1.0")),
 					resourceshowoutputassert.ProcedureShowOutput(t, procedureModel.ResourceReference()).
+						HasIsSecure(false),
+				),
+			},
+			// UPDATE WITHOUT RECREATION
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(procedureModelUpdateWithoutRecreation.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: config.FromModels(t, procedureModelUpdateWithoutRecreation),
+				Check: assert.AssertThat(t,
+					resourceassert.ProcedureJavaResource(t, procedureModelUpdateWithoutRecreation.ResourceReference()).
+						HasNameString(id.Name()).
+						HasIsSecureString(r.BooleanDefault).
+						HasImportsLength(2).
+						HasRuntimeVersionString("11").
+						HasProcedureDefinitionString(definition).
+						HasCommentString("some other comment").
+						HasProcedureLanguageString("JAVA").
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "target_path.0.stage_location", stage.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "target_path.0.path_on_stage", jarName)),
+					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "secrets.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "secrets.0.secret_variable_name", "def")),
+					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "secrets.0.secret_id", secretId2.FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "external_access_integrations.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "external_access_integrations.0", externalAccessIntegration.Name())),
+					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "packages.#", "1")),
+					resourceshowoutputassert.ProcedureShowOutput(t, procedureModelUpdateWithoutRecreation.ResourceReference()).
 						HasIsSecure(false),
 				),
 			},
