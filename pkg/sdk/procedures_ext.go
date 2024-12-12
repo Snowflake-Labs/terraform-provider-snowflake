@@ -185,7 +185,6 @@ func procedureDetailsFromRows(rows []ProcedureDetail) (*ProcedureDetails, error)
 		default:
 			v.NormalizedPackages = []string{}
 		}
-
 	}
 
 	return v, errors.Join(errs...)

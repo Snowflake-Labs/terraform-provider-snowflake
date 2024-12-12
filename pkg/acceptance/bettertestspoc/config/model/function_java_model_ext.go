@@ -110,7 +110,7 @@ func (f *FunctionJavaModel) WithExternalAccessIntegrations(ids ...sdk.AccountObj
 }
 
 func (f *FunctionJavaModel) WithSecrets(secrets map[string]sdk.SchemaObjectIdentifier) *FunctionJavaModel {
-	var objects []tfconfig.Variable
+	objects := make([]tfconfig.Variable, 0)
 	for k, v := range secrets {
 		objects = append(objects, tfconfig.ObjectVariable(
 			map[string]tfconfig.Variable{

@@ -486,13 +486,11 @@ func (f *ProcedureDetailsAssert) ContainsExactlySecrets(secrets map[string]sdk.S
 		for k, v := range secrets {
 			if s, ok := o.NormalizedSecrets[k]; !ok {
 				return fmt.Errorf("expected normalized secrets to have a secret associated with key %s", k)
-			} else {
-				if s.FullyQualifiedName() != v.FullyQualifiedName() {
-					return fmt.Errorf("expected secret with key %s to have id %s, got %s", k, v.FullyQualifiedName(), s.FullyQualifiedName())
-				}
+			} else if s.FullyQualifiedName() != v.FullyQualifiedName() {
+				return fmt.Errorf("expected secret with key %s to have id %s, got %s", k, v.FullyQualifiedName(), s.FullyQualifiedName())
 			}
 		}
-		for k, _ := range o.NormalizedSecrets {
+		for k := range o.NormalizedSecrets {
 			if _, ok := secrets[k]; !ok {
 				return fmt.Errorf("normalized secrets have unexpected key: %s", k)
 			}

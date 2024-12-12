@@ -184,7 +184,7 @@ func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 		func() error {
 			if d.HasChange("external_access_integrations") {
 				return setExternalAccessIntegrationsInBuilder(d, func(references []sdk.AccountObjectIdentifier) any {
-					if references == nil || len(references) == 0 {
+					if len(references) == 0 {
 						return unsetRequest.WithExternalAccessIntegrations(true)
 					} else {
 						return setRequest.WithExternalAccessIntegrations(references)

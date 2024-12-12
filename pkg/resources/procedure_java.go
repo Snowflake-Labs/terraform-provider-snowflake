@@ -62,8 +62,12 @@ func CreateContextProcedureJava(ctx context.Context, d *schema.ResourceData, met
 	}
 	handler := d.Get("handler").(string)
 	runtimeVersion := d.Get("runtime_version").(string)
-	// TODO [this PR]: handle real packages
-	packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0")}
+
+	packages, err := parseProceduresPackagesCommon(d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	packages = append(packages, *sdk.NewProcedurePackageRequest(fmt.Sprintf(`%s%s`, sdk.JavaSnowparkPackageString, d.Get("snowpark_package").(string))))
 
 	argumentDataTypes := collections.Map(argumentRequests, func(r sdk.ProcedureArgumentRequest) datatypes.DataType { return r.ArgDataType })
 	id := sdk.NewSchemaObjectIdentifierWithArgumentsNormalized(database, sc, name, argumentDataTypes...)
@@ -73,12 +77,10 @@ func CreateContextProcedureJava(ctx context.Context, d *schema.ResourceData, met
 	errs := errors.Join(
 		booleanStringAttributeCreateBuilder(d, "is_secure", request.WithSecure),
 		attributeMappedValueCreateBuilder[string](d, "null_input_behavior", request.WithNullInputBehavior, sdk.ToNullInputBehavior),
-		// TODO [SNOW-1348103]: handle the rest of the attributes
-		// comment
+		stringAttributeCreateBuilder(d, "comment", request.WithComment),
 		setProcedureImportsInBuilder(d, request.WithImports),
-		// packages
-		// external_access_integrations
-		// secrets
+		setExternalAccessIntegrationsInBuilder(d, request.WithExternalAccessIntegrations),
+		setSecretsInBuilder(d, request.WithSecrets),
 		setProcedureTargetPathInBuilder(d, request.WithTargetPath),
 		stringAttributeCreateBuilder(d, "procedure_definition", request.WithProcedureDefinitionWrapped),
 	)
@@ -122,18 +124,18 @@ func ReadContextProcedureJava(ctx context.Context, d *schema.ResourceData, meta 
 	// TODO [SNOW-1348103]: handle setting state to value from config
 
 	errs := errors.Join(
-		// TODO [SNOW-1348103]: set the rest of the fields
 		// not reading is_secure on purpose (handled as external change to show output)
 		readFunctionOrProcedureArguments(d, allProcedureDetails.procedureDetails.NormalizedArguments),
 		d.Set("return_type", allProcedureDetails.procedureDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
 		setRequiredFromStringPtr(d, "runtime_version", allProcedureDetails.procedureDetails.RuntimeVersion),
-		// comment
+		d.Set("comment", allProcedureDetails.procedure.Description),
 		readFunctionOrProcedureImports(d, allProcedureDetails.procedureDetails.NormalizedImports),
-		// packages
+		d.Set("packages", allProcedureDetails.procedureDetails.NormalizedPackages),
+		d.Set("snowpark_package", allProcedureDetails.procedureDetails.SnowparkVersion),
 		setRequiredFromStringPtr(d, "handler", allProcedureDetails.procedureDetails.Handler),
-		// external_access_integrations
-		// secrets
+		readFunctionOrProcedureExternalAccessIntegrations(d, allProcedureDetails.procedureDetails.NormalizedExternalAccessIntegrations),
+		readFunctionOrProcedureSecrets(d, allProcedureDetails.procedureDetails.NormalizedSecrets),
 		readFunctionOrProcedureTargetPath(d, allProcedureDetails.procedureDetails.NormalizedTargetPath),
 		setOptionalFromStringPtr(d, "procedure_definition", allProcedureDetails.procedureDetails.Body),
 		d.Set("procedure_language", allProcedureDetails.procedureDetails.Language),
@@ -173,11 +175,32 @@ func UpdateContextProcedureJava(ctx context.Context, d *schema.ResourceData, met
 	setRequest := sdk.NewProcedureSetRequest()
 	unsetRequest := sdk.NewProcedureUnsetRequest()
 
-	// TODO [SNOW-1348103]: handle all updates
-	// secure
-	// external access integration
-	// secrets
-	// comment
+	err = errors.Join(
+		stringAttributeUpdate(d, "comment", &setRequest.Comment, &unsetRequest.Comment),
+		func() error {
+			if d.HasChange("secrets") {
+				return setSecretsInBuilder(d, func(references []sdk.SecretReference) *sdk.ProcedureSetRequest {
+					return setRequest.WithSecretsList(sdk.SecretsListRequest{SecretsList: references})
+				})
+			}
+			return nil
+		}(),
+		func() error {
+			if d.HasChange("external_access_integrations") {
+				return setExternalAccessIntegrationsInBuilder(d, func(references []sdk.AccountObjectIdentifier) any {
+					if len(references) == 0 {
+						return unsetRequest.WithExternalAccessIntegrations(true)
+					} else {
+						return setRequest.WithExternalAccessIntegrations(references)
+					}
+				})
+			}
+			return nil
+		}(),
+	)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if updateParamDiags := handleProcedureParametersUpdate(d, setRequest, unsetRequest); len(updateParamDiags) > 0 {
 		return updateParamDiags
