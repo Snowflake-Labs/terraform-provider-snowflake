@@ -3,7 +3,7 @@
 page_title: "snowflake_execute Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.
+  Resource allowing execution of ANY SQL statement.
 ---
 
 # snowflake_execute (Resource)
@@ -14,7 +14,7 @@ description: |-
 
 ~> **Note** Use `query` parameter with caution. It will fetch **ALL** the results returned by the query provided. Try to limit the number of results by writing query with filters. Query failure does not stop resource creation; it simply results in `query_results` being empty.
 
-Resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.
+Resource allowing execution of ANY SQL statement.
 
 ## Example Usage
 
@@ -71,7 +71,7 @@ resource "snowflake_execute" "test" {
 ### fixing bad configuration
 ##################################
 
-# bad revert - simple
+# bad revert
 # 1 - resource created with a bad revert; it is constructed, revert is not validated before destroy happens
 resource "snowflake_execute" "test" {
   execute = "CREATE DATABASE ABC"
@@ -82,31 +82,6 @@ resource "snowflake_execute" "test" {
 resource "snowflake_execute" "test" {
   execute = "CREATE DATABASE ABC"
   revert  = "DROP DATABASE ABC"
-}
-
-# bad revert - complex (we assume that the problem is spotted after trying to change the execute)
-# 1 - resource created with a bad revert; it is constructed, revert is not validated before destroy happens
-resource "snowflake_execute" "test" {
-  execute = "CREATE DATABASE ABC"
-  revert  = "SELECT 1"
-}
-
-# 2 - try to create different database; it will fail on bad destroy
-resource "snowflake_execute" "test" {
-  execute = "CREATE DATABASE XYZ"
-  revert  = "SELECT 1"
-}
-
-# 3 - fix the revert first
-resource "snowflake_execute" "test" {
-  execute = "CREATE DATABASE ABC"
-  revert  = "DROP DATABASE ABC"
-}
-
-# 4 - create different database updating revert also
-resource "snowflake_execute" "test" {
-  execute = "CREATE DATABASE XYZ"
-  revert  = "DROP DATABASE XYZ"
 }
 
 # bad query
@@ -137,7 +112,7 @@ resource "snowflake_execute" "test" {
 
 ### Optional
 
-- `query` (String) Optional SQL statement to do a read. Invoked after creation and every time it is changed.
+- `query` (String) Optional SQL statement to do a read. Invoked on every resource refresh and every time it is changed.
 
 ### Read-Only
 
@@ -148,4 +123,6 @@ resource "snowflake_execute" "test" {
 
 Import is supported using the following syntax:
 
-{{codefile "shell" "/Users/jcieslak/Documents/terraform-provider-snowflake/examples/resources/snowflake_execute/import.sh"}}
+```shell
+terraform import snowflake_execute.example '<random-uuid>'
+```

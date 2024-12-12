@@ -50,7 +50,7 @@ resource "snowflake_execute" "test" {
 ### fixing bad configuration
 ##################################
 
-# bad revert - simple
+# bad revert
 # 1 - resource created with a bad revert; it is constructed, revert is not validated before destroy happens
 resource "snowflake_execute" "test" {
   execute = "CREATE DATABASE ABC"
@@ -61,31 +61,6 @@ resource "snowflake_execute" "test" {
 resource "snowflake_execute" "test" {
   execute = "CREATE DATABASE ABC"
   revert  = "DROP DATABASE ABC"
-}
-
-# bad revert - complex (we assume that the problem is spotted after trying to change the execute)
-# 1 - resource created with a bad revert; it is constructed, revert is not validated before destroy happens
-resource "snowflake_execute" "test" {
-  execute = "CREATE DATABASE ABC"
-  revert  = "SELECT 1"
-}
-
-# 2 - try to create different database; it will fail on bad destroy
-resource "snowflake_execute" "test" {
-  execute = "CREATE DATABASE XYZ"
-  revert  = "SELECT 1"
-}
-
-# 3 - fix the revert first
-resource "snowflake_execute" "test" {
-  execute = "CREATE DATABASE ABC"
-  revert  = "DROP DATABASE ABC"
-}
-
-# 4 - create different database updating revert also
-resource "snowflake_execute" "test" {
-  execute = "CREATE DATABASE XYZ"
-  revert  = "DROP DATABASE XYZ"
 }
 
 # bad query

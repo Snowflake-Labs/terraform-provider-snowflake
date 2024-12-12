@@ -31,7 +31,7 @@ var executeSchema = map[string]*schema.Schema{
 	"query": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Optional SQL statement to do a read. Invoked after creation and every time it is changed.",
+		Description: "Optional SQL statement to do a read. Invoked on every resource refresh and every time it is changed.",
 	},
 	"query_results": {
 		Type:        schema.TypeList,
@@ -59,7 +59,7 @@ func Execute() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Description: "Resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.",
+		Description: "Resource allowing execution of ANY SQL statement.",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.UnsafeExecute, customdiff.All(
 			customdiff.ForceNewIfChange("execute", func(ctx context.Context, oldValue, newValue, meta any) bool {
