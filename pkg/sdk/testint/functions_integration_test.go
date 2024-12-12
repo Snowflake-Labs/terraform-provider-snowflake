@@ -2049,4 +2049,38 @@ func TestInt_Functions(t *testing.T) {
 			assert.Equal(t, dataType.Canonical(), pairs["returns"])
 		})
 	}
+
+	t.Run("create function for SQL - return table data type", func(t *testing.T) {
+		argName := "x"
+
+		returnDataType, err := datatypes.ParseDataType(fmt.Sprintf("TABLE(ID %s, PRICE %s, THIRD %s)", datatypes.NumberLegacyDataType, datatypes.FloatLegacyDataType, datatypes.VarcharLegacyDataType))
+		require.NoError(t, err)
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(datatypes.VarcharLegacyDataType)
+
+		definition := ` SELECT 1, 2.2::float, 'abc';`
+		dt := sdk.NewFunctionReturnsResultDataTypeRequest(returnDataType)
+		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
+		argument := sdk.NewFunctionArgumentRequest(argName, nil).WithArgDataTypeOld(datatypes.VarcharLegacyDataType)
+		request := sdk.NewCreateForSQLFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
+			WithArguments([]sdk.FunctionArgumentRequest{*argument})
+
+		err = client.Functions.CreateForSQL(ctx, request)
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Function.DropFunctionFunc(t, id))
+
+		function, err := client.Functions.ShowByID(ctx, id)
+		require.NoError(t, err)
+
+		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(id.SchemaName()).
+			HasArgumentsRawContains(returnDataType.ToLegacyDataTypeSql()),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+			HasReturnDataType(returnDataType),
+		)
+	})
 }

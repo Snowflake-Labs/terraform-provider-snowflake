@@ -9,6 +9,14 @@ across different versions.
 
 ## v0.99.0 ➞ v0.100.0
 
+### snowflake_account_parameter resource changes
+
+#### *(behavior change)* resource deletion
+During resource deleting, provider now uses `UNSET` instead of `SET` with the default value.
+
+#### *(behavior change)* changes in `key` field
+The value of `key` field is now case-insensitive and is validated. The list of supported values is available in the resource documentation.
+
 ### unsafe_execute resource deprecation / new execute resource
 
 The `snowflake_unsafe_execute` gets deprecated in favor of the new resource `snowflake_execute`.
