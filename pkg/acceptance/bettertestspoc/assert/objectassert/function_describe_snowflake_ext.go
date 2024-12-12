@@ -2,12 +2,16 @@ package objectassert
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	assert2 "github.com/stretchr/testify/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 // TODO [SNOW-1501905]: this file should be fully regenerated when adding and option to assert the results of describe
@@ -363,6 +367,108 @@ func (f *FunctionDetailsAssert) HasInstalledPackagesNotEmpty() *FunctionDetailsA
 		}
 		if *o.InstalledPackages == "" {
 			return fmt.Errorf("expected installed packages to not be empty")
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionDetailsAssert) HasExactlyExternalAccessIntegrations(integrations ...sdk.AccountObjectIdentifier) *FunctionDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+		t.Helper()
+		if o.ExternalAccessIntegrations == nil {
+			return fmt.Errorf("expected external access integrations to have value; got: nil")
+		}
+		joined := strings.Join(collections.Map(integrations, func(ex sdk.AccountObjectIdentifier) string { return ex.FullyQualifiedName() }), ",")
+		expected := fmt.Sprintf(`[%s]`, joined)
+		if *o.ExternalAccessIntegrations != expected {
+			return fmt.Errorf("expected external access integrations: %v; got: %v", expected, *o.ExternalAccessIntegrations)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionDetailsAssert) HasExactlySecrets(expectedSecrets map[string]sdk.SchemaObjectIdentifier) *FunctionDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+		t.Helper()
+		if o.Secrets == nil {
+			return fmt.Errorf("expected secrets to have value; got: nil")
+		}
+		var parts []string
+		for k, v := range expectedSecrets {
+			parts = append(parts, fmt.Sprintf(`"%s":"\"%s\".\"%s\".%s"`, k, v.DatabaseName(), v.SchemaName(), v.Name()))
+		}
+		expected := fmt.Sprintf(`{%s}`, strings.Join(parts, ","))
+		if *o.Secrets != expected {
+			return fmt.Errorf("expected secrets: %v; got: %v", expected, *o.Secrets)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionDetailsAssert) HasExactlyImportsNormalizedInAnyOrder(imports ...sdk.NormalizedPath) *FunctionDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+		t.Helper()
+		if o.NormalizedImports == nil {
+			return fmt.Errorf("expected imports to have value; got: nil")
+		}
+		if !assert2.ElementsMatch(t, imports, o.NormalizedImports) {
+			return fmt.Errorf("expected %v imports in task relations, got %v", imports, o.NormalizedImports)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionDetailsAssert) HasNormalizedTargetPath(expectedStageLocation string, expectedPathOnStage string) *FunctionDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+		t.Helper()
+		if o.NormalizedTargetPath == nil {
+			return fmt.Errorf("expected normalized target path to have value; got: nil")
+		}
+		if o.NormalizedTargetPath.StageLocation != expectedStageLocation {
+			return fmt.Errorf("expected %s stage location for target path, got %v", expectedStageLocation, o.NormalizedTargetPath.StageLocation)
+		}
+		if o.NormalizedTargetPath.PathOnStage != expectedPathOnStage {
+			return fmt.Errorf("expected %s path on stage for target path, got %v", expectedPathOnStage, o.NormalizedTargetPath.PathOnStage)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionDetailsAssert) HasNormalizedTargetPathNil() *FunctionDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+		t.Helper()
+		if o.NormalizedTargetPath != nil {
+			return fmt.Errorf("expected normalized target path to be nil, got: %s", *o.NormalizedTargetPath)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionDetailsAssert) HasReturnDataType(expectedDataType datatypes.DataType) *FunctionDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+		t.Helper()
+		if o.ReturnDataType == nil {
+			return fmt.Errorf("expected return data type to have value; got: nil")
+		}
+		if !datatypes.AreTheSame(o.ReturnDataType, expectedDataType) {
+			return fmt.Errorf("expected %s return data type, got %v", expectedDataType, o.ReturnDataType.ToSql())
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionDetailsAssert) HasReturnNotNull(expected bool) *FunctionDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+		t.Helper()
+		if o.ReturnNotNull != expected {
+			return fmt.Errorf("expected return not null %t; got: %t", expected, o.ReturnNotNull)
 		}
 		return nil
 	})

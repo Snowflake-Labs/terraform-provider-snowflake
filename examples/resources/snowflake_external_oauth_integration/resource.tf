@@ -11,7 +11,7 @@ resource "snowflake_external_oauth_integration" "test" {
 resource "snowflake_external_oauth_integration" "test" {
   comment                                         = "comment"
   enabled                                         = true
-  external_oauth_allowed_roles_list               = ["user1"]
+  external_oauth_allowed_roles_list               = [snowflake_role.one.fully_qualified_name]
   external_oauth_any_role_mode                    = "ENABLE"
   external_oauth_audience_list                    = ["https://example.com"]
   external_oauth_issuer                           = "issuer"
@@ -29,7 +29,7 @@ resource "snowflake_external_oauth_integration" "test" {
   enabled                                         = true
   external_oauth_any_role_mode                    = "ENABLE"
   external_oauth_audience_list                    = ["https://example.com"]
-  external_oauth_blocked_roles_list               = ["user1"]
+  external_oauth_blocked_roles_list               = [snowflake_role.one.fully_qualified_name]
   external_oauth_issuer                           = "issuer"
   external_oauth_rsa_public_key                   = file("key.pem")
   external_oauth_rsa_public_key_2                 = file("key2.pem")

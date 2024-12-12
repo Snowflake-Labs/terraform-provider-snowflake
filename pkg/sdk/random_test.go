@@ -17,10 +17,14 @@ var (
 	emptySchemaObjectIdentifierWithArguments = NewSchemaObjectIdentifierWithArguments("", "", "")
 
 	// TODO [SNOW-1843440]: create using constructors (when we add them)?
-	dataTypeNumber, _  = datatypes.ParseDataType("NUMBER(36, 2)")
-	dataTypeVarchar, _ = datatypes.ParseDataType("VARCHAR(100)")
-	dataTypeFloat, _   = datatypes.ParseDataType("FLOAT")
-	dataTypeVariant, _ = datatypes.ParseDataType("VARIANT")
+	dataTypeNumber, _                     = datatypes.ParseDataType("NUMBER(36, 2)")
+	dataTypeVarchar, _                    = datatypes.ParseDataType("VARCHAR(100)")
+	dataTypeFloat, _                      = datatypes.ParseDataType("FLOAT")
+	dataTypeVariant, _                    = datatypes.ParseDataType("VARIANT")
+	dataTypeChar, _                       = datatypes.ParseDataType("CHAR")
+	dataTypeChar_100, _                   = datatypes.ParseDataType("CHAR(100)")
+	dataTypeDoublePrecision, _            = datatypes.ParseDataType("DOUBLE PRECISION")
+	dataTypeTimestampWithoutTimeZone_5, _ = datatypes.ParseDataType("TIMESTAMP WITHOUT TIME ZONE(5)")
 )
 
 func randomSchemaObjectIdentifierWithArguments(argumentDataTypes ...DataType) SchemaObjectIdentifierWithArguments {

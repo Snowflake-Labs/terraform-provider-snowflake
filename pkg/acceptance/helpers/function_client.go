@@ -138,6 +138,26 @@ func (c *FunctionClient) CreateJava(t *testing.T) (*sdk.Function, func()) {
 	return function, c.DropFunctionFunc(t, id)
 }
 
+func (c *FunctionClient) CreateScalaStaged(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, dataType datatypes.DataType, importPath string, handler string) (*sdk.Function, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	argName := "x"
+	argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+
+	request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler, "2.12").
+		WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+		WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(importPath)})
+
+	err := c.client().CreateForScala(ctx, request)
+	require.NoError(t, err)
+
+	function, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return function, c.DropFunctionFunc(t, id)
+}
+
 func (c *FunctionClient) CreateWithRequest(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, req *sdk.CreateForSQLFunctionRequest) *sdk.Function {
 	t.Helper()
 	ctx := context.Background()
@@ -192,6 +212,18 @@ func (c *FunctionClient) SampleJavaDefinition(t *testing.T, className string, fu
 `, className, funcName, argName)
 }
 
+func (c *FunctionClient) SampleJavaDefinitionNoArgs(t *testing.T, className string, funcName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+	class %[1]s {
+		public static String %[2]s() {
+			return "hello";
+		}
+	}
+`, className, funcName)
+}
+
 func (c *FunctionClient) SampleJavascriptDefinition(t *testing.T, argName string) string {
 	t.Helper()
 
@@ -232,6 +264,7 @@ func (c *FunctionClient) SampleScalaDefinition(t *testing.T, className string, f
 `, className, funcName, argName)
 }
 
+// TODO [SNOW-1850370]: use input argument like in other samples
 func (c *FunctionClient) SampleSqlDefinition(t *testing.T) string {
 	t.Helper()
 

@@ -7,6 +7,8 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0970--v0980) to use it.
 
+~> **Note about copy_grants** Fields like `stage`, and `stale` can not be ALTERed on Snowflake side (check [docs](https://docs.snowflake.com/en/sql-reference/sql/alter-stream)), and a change on these fields means recreation of the resource. ForceNew can not be used because it does not preserve grants from `copy_grants`. Beware that even though a change is marked as update, the resource is recreated.
+
 # snowflake_stream_on_directory_table (Resource)
 
 Resource used to manage streams on directory tables. For more information, check [stream documentation](https://docs.snowflake.com/en/sql-reference/sql/create-stream).
@@ -14,21 +16,13 @@ Resource used to manage streams on directory tables. For more information, check
 ## Example Usage
 
 ```terraform
-resource "snowflake_stage" "example_stage" {
-  name        = "EXAMPLE_STAGE"
-  url         = "s3://com.example.bucket/prefix"
-  database    = "EXAMPLE_DB"
-  schema      = "EXAMPLE_SCHEMA"
-  credentials = "AWS_KEY_ID='${var.example_aws_key_id}' AWS_SECRET_KEY='${var.example_aws_secret_key}'"
-}
-
 # basic resource
 resource "snowflake_stream_on_directory_table" "stream" {
   name     = "stream"
   schema   = "schema"
   database = "database"
 
-  stage = snowflake_stage.stage.fully_qualified_name
+  stage = snowflake_stage.example.fully_qualified_name
 }
 
 
@@ -39,11 +33,7 @@ resource "snowflake_stream_on_directory_table" "stream" {
   database = "database"
 
   copy_grants = true
-  stage       = snowflake_stage.stage.fully_qualified_name
-
-  at {
-    statement = "8e5d0ca9-005e-44e6-b858-a8f5b37c5726"
-  }
+  stage       = snowflake_stage.example.fully_qualified_name
 
   comment = "A stream."
 }
@@ -56,15 +46,15 @@ resource "snowflake_stream_on_directory_table" "stream" {
 
 ### Required
 
-- `database` (String) The database in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `name` (String) Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `schema` (String) The schema in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `stage` (String) Specifies an identifier for the stage the stream will monitor. Due to Snowflake limitations, the provider can not read the stage's database and schema. For stages, Snowflake returns only partially qualified name instead of fully qualified name. Please use stages located in the same schema as the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `database` (String) The database in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `name` (String) Specifies the identifier for the stream; must be unique for the database and schema in which the stream is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `schema` (String) The schema in which to create the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `stage` (String) Specifies an identifier for the stage the stream will monitor. Due to Snowflake limitations, the provider can not read the stage's database and schema. For stages, Snowflake returns only partially qualified name instead of fully qualified name. Please use stages located in the same schema as the stream. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`. For more information about this resource, see [docs](./stage).
 
 ### Optional
 
 - `comment` (String) Specifies a comment for the stream.
-- `copy_grants` (Boolean) Retains the access permissions from the original stream when a stream is recreated using the OR REPLACE clause. That is sometimes used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect when creating a new stream.
+- `copy_grants` (Boolean) Retains the access permissions from the original stream when a stream is recreated using the OR REPLACE clause. This is used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect during creating a new object with Terraform.
 
 ### Read-Only
 

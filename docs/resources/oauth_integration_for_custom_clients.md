@@ -7,6 +7,10 @@ description: |-
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0920--v0930) to use it.
 
+!> **Note** Setting a network policy with lowercase letters does not work correctly in Snowflake (see [issue](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3229)). As a workaround, set the network policy with uppercase letters only, or use unsafe_execute with network policy ID wrapped in `'`.
+
+!> **Note** The provider does not detect external changes on security integration type. In this case, remove the integration of wrong type manually with `terraform destroy` and recreate the resource. It will be addressed in the future.
+
 # snowflake_oauth_integration_for_custom_clients (Resource)
 
 Resource used to manage oauth security integration for custom clients objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake).
@@ -16,26 +20,25 @@ Resource used to manage oauth security integration for custom clients objects. F
 ```terraform
 # basic resource
 resource "snowflake_oauth_integration_for_custom_clients" "basic" {
-  name               = "saml_integration"
+  name               = "integration"
   oauth_client_type  = "CONFIDENTIAL"
   oauth_redirect_uri = "https://example.com"
-  blocked_roles_list = ["ACCOUNTADMIN", "SECURITYADMIN"]
 }
 
 # resource with all fields set
 resource "snowflake_oauth_integration_for_custom_clients" "complete" {
-  name                             = "saml_integration"
+  name                             = "integration"
   oauth_client_type                = "CONFIDENTIAL"
   oauth_redirect_uri               = "https://example.com"
   enabled                          = "true"
   oauth_allow_non_tls_redirect_uri = "true"
   oauth_enforce_pkce               = "true"
   oauth_use_secondary_roles        = "NONE"
-  pre_authorized_roles_list        = ["role_id1", "role_id2"]
-  blocked_roles_list               = ["ACCOUNTADMIN", "SECURITYADMIN", "role_id1", "role_id2"]
+  pre_authorized_roles_list        = [snowflake_role.one.fully_qualified_name, snowflake_role.two.fully_qualified_name]
+  blocked_roles_list               = ["ACCOUNTADMIN", "SECURITYADMIN", snowflake_role.three.fully_qualified_name, snowflake_role.four.fully_qualified_name]
   oauth_issue_refresh_tokens       = "true"
   oauth_refresh_token_validity     = 87600
-  network_policy                   = "network_policy_id"
+  network_policy                   = snowflake_network_policy.example.fully_qualified_name
   oauth_client_rsa_public_key      = file("rsa.pub")
   oauth_client_rsa_public_key_2    = file("rsa2.pub")
   comment                          = "my oauth integration"
@@ -49,30 +52,31 @@ resource "snowflake_oauth_integration_for_custom_clients" "complete" {
 
 ### Required
 
-- `blocked_roles_list` (Set of String) A set of Snowflake roles that a user cannot explicitly consent to using after authenticating.
-- `name` (String) Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `name` (String) Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 - `oauth_client_type` (String) Specifies the type of client being registered. Snowflake supports both confidential and public clients. Valid options are: `PUBLIC` | `CONFIDENTIAL`.
 - `oauth_redirect_uri` (String) Specifies the client URI. After a user is authenticated, the web browser is redirected to this URI.
 
 ### Optional
 
+- `blocked_roles_list` (Set of String) A set of Snowflake roles that a user cannot explicitly consent to using after authenticating. By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE. For more information about this resource, see [docs](./account_role).
 - `comment` (String) Specifies a comment for the OAuth integration.
 - `enabled` (String) Specifies whether this OAuth integration is enabled or disabled. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
-- `network_policy` (String) Specifies an existing network policy. This network policy controls network traffic that is attempting to exchange an authorization code for an access or refresh token or to use a refresh token to obtain a new access token.
+- `network_policy` (String) Specifies an existing network policy. This network policy controls network traffic that is attempting to exchange an authorization code for an access or refresh token or to use a refresh token to obtain a new access token. For more information about this resource, see [docs](./network_policy).
 - `oauth_allow_non_tls_redirect_uri` (String) If true, allows setting oauth_redirect_uri to a URI not protected by TLS. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
-- `oauth_client_rsa_public_key` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource using `terraform taint`.
-- `oauth_client_rsa_public_key_2` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource using `terraform taint`.
+- `oauth_client_rsa_public_key` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
+- `oauth_client_rsa_public_key_2` (String) Specifies a Base64-encoded RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `oauth_enforce_pkce` (String) Boolean that specifies whether Proof Key for Code Exchange (PKCE) should be required for the integration. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `oauth_issue_refresh_tokens` (String) Specifies whether to allow the client to exchange a refresh token for an access token when the current access token has expired. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `oauth_refresh_token_validity` (Number) Specifies how long refresh tokens should be valid (in seconds). OAUTH_ISSUE_REFRESH_TOKENS must be set to TRUE.
 - `oauth_use_secondary_roles` (String) Specifies whether default secondary roles set in the user properties are activated by default in the session being opened. Valid options are: `IMPLICIT` | `NONE`.
-- `pre_authorized_roles_list` (Set of String) A set of Snowflake roles that a user does not need to explicitly consent to using after authenticating.
+- `pre_authorized_roles_list` (Set of String) A set of Snowflake roles that a user does not need to explicitly consent to using after authenticating. For more information about this resource, see [docs](./account_role).
 
 ### Read-Only
 
 - `describe_output` (List of Object) Outputs the result of `DESCRIBE SECURITY INTEGRATION` for the given integration. (see [below for nested schema](#nestedatt--describe_output))
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+- `related_parameters` (List of Object) Parameters related to this security integration. (see [below for nested schema](#nestedatt--related_parameters))
 - `show_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATION` for the given integration. (see [below for nested schema](#nestedatt--show_output))
 
 <a id="nestedatt--describe_output"></a>
@@ -310,6 +314,26 @@ Read-Only:
 
 
 
+<a id="nestedatt--related_parameters"></a>
+### Nested Schema for `related_parameters`
+
+Read-Only:
+
+- `oauth_add_privileged_roles_to_blocked_list` (List of Object) (see [below for nested schema](#nestedobjatt--related_parameters--oauth_add_privileged_roles_to_blocked_list))
+
+<a id="nestedobjatt--related_parameters--oauth_add_privileged_roles_to_blocked_list"></a>
+### Nested Schema for `related_parameters.oauth_add_privileged_roles_to_blocked_list`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+
 <a id="nestedatt--show_output"></a>
 ### Nested Schema for `show_output`
 
@@ -327,5 +351,5 @@ Read-Only:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_oauth_integration_for_custom_clients.example "name"
+terraform import snowflake_oauth_integration_for_custom_clients.example '"<integration_name>"'
 ```

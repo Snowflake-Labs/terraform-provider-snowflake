@@ -25,7 +25,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Required:         true,
 		ForceNew:         true,
-		Description:      "The fully qualified name of the database role to which privileges will be granted.",
+		Description:      relatedResourceDescription("The fully qualified name of the database role to which privileges will be granted.", resources.DatabaseRole),
 		ValidateDiagFunc: IsValidIdentifier[sdk.DatabaseObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
@@ -75,7 +75,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 		Type:             schema.TypeString,
 		Optional:         true,
 		ForceNew:         true,
-		Description:      "The fully qualified name of the database on which privileges will be granted.",
+		Description:      relatedResourceDescription("The fully qualified name of the database on which privileges will be granted.", resources.Database),
 		ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 		DiffSuppressFunc: suppressIdentifierQuoting,
 		ExactlyOneOf: []string{

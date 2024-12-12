@@ -2,14 +2,16 @@
 page_title: "snowflake_tag Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Resource used to manage tags. For more information, check tag documentation https://docs.snowflake.com/en/sql-reference/sql/create-tag.
+  Resource used to manage tags. For more information, check tag documentation https://docs.snowflake.com/en/sql-reference/sql/create-tag. For asssigning tags to Snowflake objects, see tag_association resource https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association.
 ---
 
 !> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0980--v0990) to use it.
 
+~> **Required warehouse** For this resource, the provider now uses [tag references](https://docs.snowflake.com/en/sql-reference/functions/tag_references) to get information about masking policies attached to tags. This function requires a warehouse in the connection. Please, make sure you have either set a `DEFAULT_WAREHOUSE` for the user, or specified a warehouse in the provider configuration.
+
 # snowflake_tag (Resource)
 
-Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag).
+Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag). For asssigning tags to Snowflake objects, see [tag_association resource](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association).
 
 ## Example Usage
 
@@ -28,7 +30,7 @@ resource "snowflake_tag" "tag" {
   schema           = "schema"
   comment          = "comment"
   allowed_values   = ["finance", "engineering", ""]
-  masking_policies = [snowfalke_masking_policy.masking_policy.fully_qualified_name]
+  masking_policies = [snowfalke_masking_policy.example.fully_qualified_name]
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -39,15 +41,15 @@ resource "snowflake_tag" "tag" {
 
 ### Required
 
-- `database` (String) The database in which to create the tag. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `name` (String) Specifies the identifier for the tag; must be unique for the database in which the tag is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `schema` (String) The schema in which to create the tag. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `database` (String) The database in which to create the tag. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `name` (String) Specifies the identifier for the tag; must be unique for the database in which the tag is created. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `schema` (String) The schema in which to create the tag. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 
 ### Optional
 
 - `allowed_values` (Set of String) Set of allowed values for the tag.
 - `comment` (String) Specifies a comment for the tag.
-- `masking_policies` (Set of String) Set of masking policies for the tag. A tag can support one masking policy for each data type. If masking policies are assigned to the tag, before dropping the tag, the provider automatically unassigns them.
+- `masking_policies` (Set of String) Set of masking policies for the tag. A tag can support one masking policy for each data type. If masking policies are assigned to the tag, before dropping the tag, the provider automatically unassigns them. For more information about this resource, see [docs](./masking_policy).
 
 ### Read-Only
 

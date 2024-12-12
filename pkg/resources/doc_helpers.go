@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	providerresources "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 )
 
@@ -28,11 +30,11 @@ func externalChangesNotDetectedFieldDescription(description string) string {
 }
 
 func withPrivilegedRolesDescription(description, paramName string) string {
-	return fmt.Sprintf(`%s By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the %s account parameter to FALSE. `, description, paramName)
+	return fmt.Sprintf(`%s By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the %s account parameter to FALSE.`, description, paramName)
 }
 
 func blocklistedCharactersFieldDescription(description string) string {
-	return fmt.Sprintf(`%s Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: %s`, description, characterList([]rune{'|', '.', '"'}))
+	return fmt.Sprintf(`%s Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: %s.`, description, characterList([]rune{'|', '.', '"'}))
 }
 
 func diffSuppressStatementFieldDescription(description string) string {
@@ -44,5 +46,13 @@ func dataTypeFieldDescription(description string) string {
 }
 
 func deprecatedResourceDescription(alternatives ...string) string {
-	return fmt.Sprintf(`This resource is deprecated and will be removed in a future major version release. Please use one of the new resources instead: %s`, possibleValuesListed(alternatives))
+	return fmt.Sprintf(`This resource is deprecated and will be removed in a future major version release. Please use one of the new resources instead: %s.`, possibleValuesListed(alternatives))
+}
+
+func copyGrantsDescription(description string) string {
+	return fmt.Sprintf("%s This is used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect during creating a new object with Terraform.", description)
+}
+
+func relatedResourceDescription(description string, resource providerresources.Resource) string {
+	return fmt.Sprintf(`%s For more information about this resource, see [docs](./%s).`, description, strings.TrimPrefix(resource.String(), "snowflake_"))
 }

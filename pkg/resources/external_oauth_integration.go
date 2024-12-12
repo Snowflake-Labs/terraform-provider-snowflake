@@ -88,15 +88,19 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 		Type:             schema.TypeSet,
 		Elem:             &schema.Schema{Type: schema.TypeString},
 		Optional:         true,
-		Description:      withPrivilegedRolesDescription("Specifies the list of roles that a client cannot set as the primary role.", string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList)),
+		Description:      relatedResourceDescription(withPrivilegedRolesDescription("Specifies the list of roles that a client cannot set as the primary role.", string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList)), resources.AccountRole),
 		DiffSuppressFunc: IgnoreValuesFromSetIfParamSet("external_oauth_blocked_roles_list", string(sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList), privilegedRoles),
 		ConflictsWith:    []string{"external_oauth_allowed_roles_list"},
 	},
 	"external_oauth_allowed_roles_list": {
-		Type:          schema.TypeSet,
-		Elem:          &schema.Schema{Type: schema.TypeString},
-		Optional:      true,
-		Description:   "Specifies the list of roles that the client can set as the primary role.",
+		Type:             schema.TypeSet,
+		Elem:             &schema.Schema{Type: schema.TypeString},
+		Optional:         true,
+		Description:      relatedResourceDescription("Specifies the list of roles that the client can set as the primary role.", resources.AccountRole),
+		DiffSuppressFunc: SuppressIfAny(
+		// TODO(SNOW-1517937): uncomment
+		// NormalizeAndCompareIdentifiersInSet("external_oauth_allowed_roles_list"),
+		),
 		ConflictsWith: []string{"external_oauth_blocked_roles_list"},
 	},
 	"external_oauth_audience_list": {
@@ -146,7 +150,7 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 	RelatedParametersAttributeName: {
 		Type:        schema.TypeList,
 		Computed:    true,
-		Description: "Paramteres related to this security integration.",
+		Description: "Parameters related to this security integration.",
 		Elem: &schema.Resource{
 			Schema: schemas.ShowExternalOauthParametersSchema,
 		},

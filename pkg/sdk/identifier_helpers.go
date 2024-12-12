@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
@@ -124,6 +125,10 @@ func (i AccountIdentifier) AccountName() string {
 	return i.accountName
 }
 
+func (i AccountIdentifier) AsAccountObjectIdentifier() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(i.accountName)
+}
+
 func (i AccountIdentifier) Name() string {
 	if i.organizationName != "" && i.accountName != "" {
 		return fmt.Sprintf("%s.%s", i.organizationName, i.accountName)
@@ -207,7 +212,7 @@ type SchemaObjectIdentifier struct {
 	databaseName string
 	schemaName   string
 	name         string
-	// TODO(next prs): left right now for backward compatibility for procedures and externalFunctions
+	// TODO [SNOW-1850370]: left right now for backward compatibility for procedures and externalFunctions
 	arguments []DataType
 }
 
@@ -324,13 +329,27 @@ func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name strin
 		if err != nil {
 			log.Printf("[DEBUG] failed to normalize argument %d: %v, err = %v", i, argument, err)
 		}
-		normalizedArguments[i] = LegacyDataTypeFrom(normalizedArgument)
+		// TODO [SNOW-1348103]: temporary workaround to fix panic resulting from TestAcc_Grants_To_AccountRole test (because of unsupported TABLE data type)
+		if normalizedArgument != nil {
+			normalizedArguments[i] = LegacyDataTypeFrom(normalizedArgument)
+		} else {
+			normalizedArguments[i] = ""
+		}
 	}
 	return SchemaObjectIdentifierWithArguments{
 		databaseName:      strings.Trim(databaseName, `"`),
 		schemaName:        strings.Trim(schemaName, `"`),
 		name:              strings.Trim(name, `"`),
 		argumentDataTypes: normalizedArguments,
+	}
+}
+
+func NewSchemaObjectIdentifierWithArgumentsNormalized(databaseName, schemaName, name string, argumentDataTypes ...datatypes.DataType) SchemaObjectIdentifierWithArguments {
+	return SchemaObjectIdentifierWithArguments{
+		databaseName:      strings.Trim(databaseName, `"`),
+		schemaName:        strings.Trim(schemaName, `"`),
+		name:              strings.Trim(name, `"`),
+		argumentDataTypes: collections.Map(argumentDataTypes, LegacyDataTypeFrom),
 	}
 }
 
