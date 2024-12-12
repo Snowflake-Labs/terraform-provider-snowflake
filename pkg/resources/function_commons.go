@@ -316,7 +316,6 @@ func functionBaseSchema() map[string]schema.Schema {
 				ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			},
 			Optional:    true,
-			ForceNew:    true,
 			Description: "The names of [external access integrations](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) needed in order for this function’s handler code to access external networks. An external access integration specifies [network rules](https://docs.snowflake.com/en/sql-reference/sql/create-network-rule) and [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) that specify external locations and credentials (if any) allowed for use by handler code when making requests of an external network, such as an external REST API.",
 		},
 		"secrets": {

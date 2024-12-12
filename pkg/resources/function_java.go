@@ -173,14 +173,30 @@ func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 
 	err = errors.Join(
 		stringAttributeUpdate(d, "comment", &setRequest.Comment, &unsetRequest.Comment),
+		func() error {
+			if d.HasChange("secrets") {
+				return setSecretsInBuilder(d, func(references []sdk.SecretReference) *sdk.FunctionSetRequest {
+					return setRequest.WithSecretsList(sdk.SecretsListRequest{SecretsList: references})
+				})
+			}
+			return nil
+		}(),
+		func() error {
+			if d.HasChange("external_access_integrations") {
+				return setExternalAccessIntegrationsInBuilder(d, func(references []sdk.AccountObjectIdentifier) any {
+					if references == nil || len(references) == 0 {
+						return unsetRequest.WithExternalAccessIntegrations(true)
+					} else {
+						return setRequest.WithExternalAccessIntegrations(references)
+					}
+				})
+			}
+			return nil
+		}(),
 	)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	// TODO [SNOW-1348103]: handle all updates
-	// external access integration
-	// secrets
 
 	if updateParamDiags := handleFunctionParametersUpdate(d, setRequest, unsetRequest); len(updateParamDiags) > 0 {
 		return updateParamDiags

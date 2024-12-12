@@ -41,7 +41,7 @@ func readFunctionOrProcedureImports(d *schema.ResourceData, imports []sdk.Normal
 }
 
 func readFunctionOrProcedureExternalAccessIntegrations(d *schema.ResourceData, externalAccessIntegrations []sdk.AccountObjectIdentifier) error {
-	return d.Set("externalAccessIntegrations", collections.Map(externalAccessIntegrations, func(id sdk.AccountObjectIdentifier) string { return id.Name() }))
+	return d.Set("external_access_integrations", collections.Map(externalAccessIntegrations, func(id sdk.AccountObjectIdentifier) string { return id.Name() }))
 }
 
 func readFunctionOrProcedureSecrets(d *schema.ResourceData, secrets map[string]sdk.SchemaObjectIdentifier) error {
