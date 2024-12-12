@@ -1,1 +1,1 @@
-terraform import snowflake_execute.example '<random-uuid>'
+terraform import snowflake_execute.example '<random_uuid>'
