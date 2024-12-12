@@ -124,5 +124,5 @@ resource "snowflake_execute" "test" {
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_execute.example '<random-uuid>'
+terraform import snowflake_execute.example '<random_uuid>'
 ```
