@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"fmt"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -16,14 +15,14 @@ import (
 )
 
 func TestAcc_AccountParameter(t *testing.T) {
-	model := model.AccountParameter("test", "ALLOW_ID_TOKEN", "true")
+	model := model.AccountParameter("test", string(sdk.AccountParameterAllowIDToken), "true")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckAccountParameterUnset(t, sdk.AccountParameterAllowIDToken),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, model),
@@ -36,16 +35,6 @@ func TestAcc_AccountParameter(t *testing.T) {
 	})
 }
 
-func accountParameterBasic(key, value string) string {
-	s := `
-resource "snowflake_account_parameter" "p" {
-	key = "%s"
-	value = "%s"
-}
-`
-	return fmt.Sprintf(s, key, value)
-}
-
 func TestAcc_AccountParameter_PREVENT_LOAD_FROM_INLINE_URL(t *testing.T) {
 	model := model.AccountParameter("test", string(sdk.AccountParameterPreventLoadFromInlineURL), "true")
 	resource.Test(t, resource.TestCase{
@@ -54,7 +43,7 @@ func TestAcc_AccountParameter_PREVENT_LOAD_FROM_INLINE_URL(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckAccountParameterUnset(t, sdk.AccountParameterPreventLoadFromInlineURL),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, model),
@@ -75,7 +64,7 @@ func TestAcc_AccountParameter_REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION(t *
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckAccountParameterUnset(t, sdk.AccountParameterRequireStorageIntegrationForStageCreation),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, model),
@@ -96,7 +85,7 @@ func TestAcc_AccountParameter_Issue2573(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckAccountParameterUnset(t, sdk.AccountParameterTimezone),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, model),
@@ -123,7 +112,7 @@ func TestAcc_AccountParameter_Issue3025(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckAccountParameterUnset(t, sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList),
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModel(t, model),
@@ -143,4 +132,3 @@ func TestAcc_AccountParameter_Issue3025(t *testing.T) {
 }
 
 // TODO(next pr): add more acc tests for the remaining parameters
-// TODO(next pr): check unsetting in CheckDestroy
