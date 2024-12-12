@@ -47,7 +47,6 @@ func ProcedureJava(
 	database string,
 	handler string,
 	name string,
-	procedureDefinition string,
 	returnType string,
 	runtimeVersion string,
 	schema string,
@@ -57,7 +56,6 @@ func ProcedureJava(
 	p.WithDatabase(database)
 	p.WithHandler(handler)
 	p.WithName(name)
-	p.WithProcedureDefinition(procedureDefinition)
 	p.WithReturnType(returnType)
 	p.WithRuntimeVersion(runtimeVersion)
 	p.WithSchema(schema)
@@ -69,7 +67,6 @@ func ProcedureJavaWithDefaultMeta(
 	database string,
 	handler string,
 	name string,
-	procedureDefinition string,
 	returnType string,
 	runtimeVersion string,
 	schema string,
@@ -79,7 +76,6 @@ func ProcedureJavaWithDefaultMeta(
 	p.WithDatabase(database)
 	p.WithHandler(handler)
 	p.WithName(name)
-	p.WithProcedureDefinition(procedureDefinition)
 	p.WithReturnType(returnType)
 	p.WithRuntimeVersion(runtimeVersion)
 	p.WithSchema(schema)
@@ -186,10 +182,7 @@ func (p *ProcedureJavaModel) WithSnowparkPackage(snowparkPackage string) *Proced
 	return p
 }
 
-func (p *ProcedureJavaModel) WithTargetPath(targetPath string) *ProcedureJavaModel {
-	p.TargetPath = tfconfig.StringVariable(targetPath)
-	return p
-}
+// target_path attribute type is not yet supported, so WithTargetPath can't be generated
 
 func (p *ProcedureJavaModel) WithTraceLevel(traceLevel string) *ProcedureJavaModel {
 	p.TraceLevel = tfconfig.StringVariable(traceLevel)

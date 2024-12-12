@@ -186,7 +186,7 @@ func Procedure() *schema.Resource {
 		CreateContext: TrackingCreateWrapper(resources.Procedure, CreateContextProcedure),
 		ReadContext:   TrackingReadWrapper(resources.Procedure, ReadContextProcedure),
 		UpdateContext: TrackingUpdateWrapper(resources.Procedure, UpdateContextProcedure),
-		DeleteContext: TrackingDeleteWrapper(resources.Procedure, DeleteContextProcedure),
+		DeleteContext: TrackingDeleteWrapper(resources.Procedure, DeleteProcedure),
 
 		// TODO(SNOW-1348106): add `arguments` to ComputedIfAnyAttributeChanged for FullyQualifiedNameAttributeName.
 		// This can't be done now because this function compares values without diff suppress.
@@ -712,20 +712,6 @@ func UpdateContextProcedure(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return ReadContextProcedure(ctx, d, meta)
-}
-
-func DeleteContextProcedure(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-
-	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id).WithIfExists(true)); err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId("")
-	return nil
 }
 
 func getProcedureArguments(d *schema.ResourceData) ([]sdk.ProcedureArgumentRequest, diag.Diagnostics) {

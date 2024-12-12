@@ -122,6 +122,14 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.Account().Schema,
 	},
 	{
+		name:   "OauthIntegrationForCustomClients",
+		schema: resources.OauthIntegrationForCustomClients().Schema,
+	},
+	{
+		name:   "OauthIntegrationForPartnerApplications",
+		schema: resources.OauthIntegrationForPartnerApplications().Schema,
+	},
+	{
 		name:   "FunctionJava",
 		schema: resources.FunctionJava().Schema,
 	},

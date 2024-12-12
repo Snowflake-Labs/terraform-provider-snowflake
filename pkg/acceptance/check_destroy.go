@@ -67,9 +67,19 @@ func decodeSnowflakeId(rs *terraform.ResourceState, resource resources.Resource)
 	switch resource {
 	case resources.ExternalFunction:
 		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID), nil
-	case resources.Function:
+	case resources.Function,
+		resources.FunctionJava,
+		resources.FunctionJavascript,
+		resources.FunctionPython,
+		resources.FunctionScala,
+		resources.FunctionSql:
 		return sdk.ParseSchemaObjectIdentifierWithArguments(rs.Primary.ID)
-	case resources.Procedure:
+	case resources.Procedure,
+		resources.ProcedureJava,
+		resources.ProcedureJavascript,
+		resources.ProcedurePython,
+		resources.ProcedureScala,
+		resources.ProcedureSql:
 		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID), nil
 	default:
 		return helpers.DecodeSnowflakeID(rs.Primary.ID), nil
@@ -145,6 +155,21 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.Function: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Functions.ShowByID)
 	},
+	resources.FunctionJava: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
+	},
+	resources.FunctionJavascript: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
+	},
+	resources.FunctionPython: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
+	},
+	resources.FunctionScala: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
+	},
+	resources.FunctionSql: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Functions.ShowByID)
+	},
 	resources.LegacyServiceUser: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Users.ShowByID)
 	},
@@ -179,6 +204,21 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 		return runShowById(ctx, id, client.Pipes.ShowByID)
 	},
 	resources.Procedure: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ProcedureJava: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ProcedureJavascript: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ProcedurePython: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ProcedureScala: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.Procedures.ShowByID)
+	},
+	resources.ProcedureSql: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Procedures.ShowByID)
 	},
 	resources.ResourceMonitor: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
