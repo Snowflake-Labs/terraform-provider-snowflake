@@ -128,6 +128,16 @@ func procedureDetailsFromRows(rows []ProcedureDetail) (*ProcedureDetails, error)
 		v.NormalizedExternalAccessIntegrations = []AccountObjectIdentifier{}
 	}
 
+	if v.Secrets != nil {
+		if p, err := parseFunctionOrProcedureSecrets(*v.Secrets); err != nil {
+			errs = append(errs, err)
+		} else {
+			v.NormalizedSecrets = p
+		}
+	} else {
+		v.NormalizedSecrets = map[string]SchemaObjectIdentifier{}
+	}
+
 	if v.Packages != nil {
 		if p, err := parseFunctionOrProcedurePackages(*v.Packages); err != nil {
 			errs = append(errs, err)
