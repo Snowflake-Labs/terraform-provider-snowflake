@@ -179,7 +179,13 @@ func procedureDetailsFromRows(rows []ProcedureDetail) (*ProcedureDetails, error)
 			}
 		}
 	} else {
-		errs = append(errs, fmt.Errorf("could not parse package from Snowflake, expected at least snowpark package, got nil"))
+		switch strings.ToUpper(v.Language) {
+		case "JAVA", "SCALA", "PYTHON":
+			errs = append(errs, fmt.Errorf("could not parse package from Snowflake, expected at least snowpark package, got nil"))
+		default:
+			v.NormalizedPackages = []string{}
+		}
+
 	}
 
 	return v, errors.Join(errs...)
