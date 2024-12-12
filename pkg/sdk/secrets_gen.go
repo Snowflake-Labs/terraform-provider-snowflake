@@ -30,9 +30,11 @@ type CreateWithOAuthClientCredentialsFlowSecretOptions struct {
 	OauthScopes    *OauthScopesList        `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
 	Comment        *string                 `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
+
 type ApiIntegrationScope struct {
 	Scope string `ddl:"keyword,single_quotes"`
 }
+
 type OauthScopesList struct {
 	OauthScopesList []ApiIntegrationScope `ddl:"list,must_parentheses"`
 }
@@ -85,30 +87,37 @@ type AlterSecretOptions struct {
 	Set      *SecretSet             `ddl:"keyword" sql:"SET"`
 	Unset    *SecretUnset           `ddl:"keyword"`
 }
+
 type SecretSet struct {
 	Comment    *string     `ddl:"parameter,single_quotes" sql:"COMMENT"`
 	SetForFlow *SetForFlow `ddl:"keyword"`
 }
+
 type SetForFlow struct {
 	SetForOAuthClientCredentials *SetForOAuthClientCredentials `ddl:"keyword"`
 	SetForOAuthAuthorization     *SetForOAuthAuthorization     `ddl:"keyword"`
 	SetForBasicAuthentication    *SetForBasicAuthentication    `ddl:"keyword"`
 	SetForGenericString          *SetForGenericString          `ddl:"keyword"`
 }
+
 type SetForOAuthClientCredentials struct {
 	OauthScopes *OauthScopesList `ddl:"parameter,parentheses" sql:"OAUTH_SCOPES"`
 }
+
 type SetForOAuthAuthorization struct {
 	OauthRefreshToken           *string `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN"`
 	OauthRefreshTokenExpiryTime *string `ddl:"parameter,single_quotes" sql:"OAUTH_REFRESH_TOKEN_EXPIRY_TIME"`
 }
+
 type SetForBasicAuthentication struct {
 	Username *string `ddl:"parameter,single_quotes" sql:"USERNAME"`
 	Password *string `ddl:"parameter,single_quotes" sql:"PASSWORD"`
 }
+
 type SetForGenericString struct {
 	SecretString *string `ddl:"parameter,single_quotes" sql:"SECRET_STRING"`
 }
+
 type SecretUnset struct {
 	Comment *bool `ddl:"keyword" sql:"SET COMMENT = NULL"`
 }
@@ -128,6 +137,7 @@ type ShowSecretOptions struct {
 	Like    *Like       `ddl:"keyword" sql:"LIKE"`
 	In      *ExtendedIn `ddl:"keyword" sql:"IN"`
 }
+
 type secretDBRow struct {
 	CreatedOn     time.Time      `db:"created_on"`
 	Name          string         `db:"name"`
@@ -139,6 +149,7 @@ type secretDBRow struct {
 	OauthScopes   sql.NullString `db:"oauth_scopes"`
 	OwnerRoleType string         `db:"owner_role_type"`
 }
+
 type Secret struct {
 	CreatedOn     time.Time
 	Name          string
@@ -149,14 +160,6 @@ type Secret struct {
 	SecretType    string
 	OauthScopes   []string
 	OwnerRoleType string
-}
-
-func (s *Secret) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(s.DatabaseName, s.SchemaName, s.Name)
-}
-
-func (s *Secret) ObjectType() ObjectType {
-	return ObjectTypeSecret
 }
 
 // DescribeSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-secret.
@@ -192,4 +195,12 @@ type SecretDetails struct {
 	OauthRefreshTokenExpiryTime *time.Time
 	OauthScopes                 []string
 	IntegrationName             *string
+}
+
+func (v *Secret) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.Name, v.DatabaseName, v.SchemaName)
+}
+
+func (v *Secret) ObjectType() ObjectType {
+	return ObjectTypeSecret
 }
