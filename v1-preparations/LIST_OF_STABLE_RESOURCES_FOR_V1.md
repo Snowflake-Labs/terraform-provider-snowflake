@@ -16,11 +16,6 @@
     * [snowflake_database_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/database_role)
     * [snowflake_database_roles](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/database_roles) (data source)
 * Function
-    * [snowflake_function_java](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/function_java)
-    * [snowflake_function_javascript](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/function_javascript)
-    * [snowflake_function_python](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/function_python)
-    * [snowflake_function_scala](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/function_scala)
-    * [snowflake_function_sql](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/function_sql)
     * [snowflake_functions](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/functions)
 * Grants
     * [snowflake_grant_account_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/grant_account_role)
@@ -38,11 +33,6 @@
     * [snowflake_network_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/network_policy)
     * [snowflake_network_policies](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/network_policies) (data source)
 * Procedure
-    * [snowflake_procedure_java](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/procedure_java)
-    * [snowflake_procedure_javascript](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/procedure_javascript)
-    * [snowflake_procedure_python](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/procedure_python)
-    * [snowflake_procedure_scala](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/procedure_scala)
-    * [snowflake_procedure_sql](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/procedure_sql)
     * [snowflake_procedures](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/procedures)
 * Resource Monitor
     * [snowflake_resource_monitor](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/resource_monitor)
@@ -74,7 +64,7 @@
     * [snowflake_security_integrations](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/security_integrations) (data source)
 * Snowflake Parameters
     * [snowflake_account_parameter](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/account_parameter)
-* SQL Execute (in progress)
+* SQL Execute
     * [snowflake_execute](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/account_parameter)
 * Stream
     * [snowflake_stream_on_table](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/stream_on_table)
