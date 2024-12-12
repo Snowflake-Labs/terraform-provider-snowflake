@@ -234,6 +234,9 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 		}).
 		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName).
 		WithRuntimeVersion("11").
+		WithIsSecure("false").
+		WithNullInputBehavior(string(sdk.NullInputBehaviorCalledOnNullInput)).
+		WithReturnResultsBehavior(string(sdk.ReturnResultsBehaviorVolatile)).
 		WithComment("some comment")
 
 	functionModelUpdateWithoutRecreation := model.FunctionJavaBasicInline("w", id, dataType, handler, definition).
@@ -249,6 +252,9 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 		}).
 		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName).
 		WithRuntimeVersion("11").
+		WithIsSecure(r.BooleanFalse).
+		WithNullInputBehavior(string(sdk.NullInputBehaviorCalledOnNullInput)).
+		WithReturnResultsBehavior(string(sdk.ReturnResultsBehaviorVolatile)).
 		WithComment("some other comment")
 
 	resource.Test(t, resource.TestCase{
@@ -265,7 +271,7 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.FunctionJavaResource(t, functionModel.ResourceReference()).
 						HasNameString(id.Name()).
-						HasIsSecureString(r.BooleanDefault).
+						HasIsSecureString(r.BooleanFalse).
 						HasImportsLength(2).
 						HasRuntimeVersionString("11").
 						HasFunctionDefinitionString(definition).
@@ -281,6 +287,20 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 						HasIsSecure(false),
 				),
 			},
+			// IMPORT
+			{
+				ResourceName:            functionModel.ResourceReference(),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"arguments.0.arg_data_type"},
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedFunctionJavaResource(t, id.FullyQualifiedName()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_name", argName)),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_data_type", "VARCHAR(16777216)")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_default_value", "")),
+				),
+			},
 			// UPDATE WITHOUT RECREATION
 			{
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -292,7 +312,7 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.FunctionJavaResource(t, functionModelUpdateWithoutRecreation.ResourceReference()).
 						HasNameString(id.Name()).
-						HasIsSecureString(r.BooleanDefault).
+						HasIsSecureString(r.BooleanFalse).
 						HasImportsLength(2).
 						HasRuntimeVersionString("11").
 						HasFunctionDefinitionString(definition).
