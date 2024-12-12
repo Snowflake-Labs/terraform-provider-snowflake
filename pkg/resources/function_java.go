@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,10 +21,10 @@ import (
 
 func FunctionJava() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.FunctionJava, CreateContextFunctionJava),
-		ReadContext:   TrackingReadWrapper(resources.FunctionJava, ReadContextFunctionJava),
-		UpdateContext: TrackingUpdateWrapper(resources.FunctionJava, UpdateFunction("JAVA", ReadContextFunctionJava)),
-		DeleteContext: TrackingDeleteWrapper(resources.FunctionJava, DeleteFunction),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.FunctionJavaResource), TrackingCreateWrapper(resources.FunctionJava, CreateContextFunctionJava)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.FunctionJavaResource), TrackingReadWrapper(resources.FunctionJava, ReadContextFunctionJava)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.FunctionJavaResource), TrackingUpdateWrapper(resources.FunctionJava, UpdateFunction("JAVA", ReadContextFunctionJava))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.FunctionJavaResource), TrackingDeleteWrapper(resources.FunctionJava, DeleteFunction)),
 		Description:   "Resource used to manage java function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionJava, customdiff.All(

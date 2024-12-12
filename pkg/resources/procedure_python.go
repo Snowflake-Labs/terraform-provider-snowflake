@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -21,10 +22,10 @@ import (
 
 func ProcedurePython() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ProcedurePython, CreateContextProcedurePython),
-		ReadContext:   TrackingReadWrapper(resources.ProcedurePython, ReadContextProcedurePython),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedurePython, UpdateProcedure("PYTHON", ReadContextProcedurePython)),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedurePython, DeleteProcedure),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ProcedurePythonResource), TrackingCreateWrapper(resources.ProcedurePython, CreateContextProcedurePython)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ProcedurePythonResource), TrackingReadWrapper(resources.ProcedurePython, ReadContextProcedurePython)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ProcedurePythonResource), TrackingUpdateWrapper(resources.ProcedurePython, UpdateProcedure("PYTHON", ReadContextProcedurePython))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ProcedurePythonResource), TrackingDeleteWrapper(resources.ProcedurePython, DeleteProcedure)),
 		Description:   "Resource used to manage python procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedurePython, customdiff.All(
