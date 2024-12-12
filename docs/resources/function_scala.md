@@ -5,6 +5,20 @@ description: |-
   Resource used to manage scala function objects. For more information, check function documentation https://docs.snowflake.com/en/sql-reference/sql/create-function.
 ---
 
+-> **Note** External changes to `is_secure`, `return_results_behavior`, and `null_input_behavior` are not currently supported. They will be handled in the following versions of the provider which may still affect this resource.
+
+-> **Note** `COPY GRANTS` and `OR REPLACE` are not currently supported.
+
+-> **Note** `RETURN... [[ NOT ] NULL]` is not currently supported. It will be improved in the following versions of the provider which may still affect this resource.
+
+-> **Note** Snowflake is not returning full data type information for arguments which may lead to unexpected plan outputs. Diff suppression for such cases will be improved.
+
+-> **Note** Snowflake is not returning the default values for arguments so argument's `arg_default_value` external changes cannot be tracked.
+
+-> **Note** Limit the use of special characters (`.`, `'`, `/`, `"`, `(`, `)`, `[`, `]`, `{`, `}`, ` `) in argument names, stage ids, and secret ids. It's best to limit to only alphanumeric and underscores. There is a lot of parsing of SHOW/DESCRIBE outputs involved and using special characters may limit the possibility to achieve the correct results.
+
+~> **Required warehouse** This resource may require active warehouse. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the provider configuration.
+
 # snowflake_function_scala (Resource)
 
 Resource used to manage scala function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).
@@ -12,10 +26,74 @@ Resource used to manage scala function objects. For more information, check [fun
 ## Example Usage
 
 ```terraform
-resource "snowflake_function_scala" "example" {
+# Minimal
+resource "snowflake_function_scala" "minimal" {
+  database = snowflake_database.test.name
+  schema   = snowflake_schema.test.name
+  name     = "my_scala_function"
+  arguments {
+    arg_data_type = "VARCHAR(100)"
+    arg_name      = "x"
+  }
+  function_definition = <<EOF
+  class TestFunc {
+    def echoVarchar(x : String): String = {
+      return x
+    }
+  }
+  EOF
+  runtime_version     = "2.12"
+  handler             = "TestFunc.echoVarchar"
+  return_type         = "VARCHAR(100)"
+}
+
+# Complete
+resource "snowflake_function_scala" "complete" {
+  database  = snowflake_database.test.name
+  schema    = snowflake_schema.test.name
+  name      = "my_scala_function"
+  is_secure = "false"
+  arguments {
+    arg_data_type = "VARCHAR(100)"
+    arg_name      = "x"
+  }
+  comment                      = "some comment"
+  external_access_integrations = ["external_access_integration_name", "external_access_integration_name_2"]
+  function_definition          = <<EOF
+  class TestFunc {
+    def echoVarchar(x : String): String = {
+      return x
+    }
+  }
+  EOF
+  handler                      = "TestFunc.echoVarchar"
+  null_input_behavior          = "CALLED ON NULL INPUT"
+  return_results_behavior      = "VOLATILE"
+  return_type                  = "VARCHAR(100)"
+  imports {
+    path_on_stage  = "jar_name.jar"
+    stage_location = "~"
+  }
+  imports {
+    path_on_stage  = "second_jar_name.jar"
+    stage_location = "~"
+  }
+  packages        = ["com.snowflake:snowpark:1.14.0", "com.snowflake:telemetry:0.1.0"]
+  runtime_version = "2.12"
+  secrets {
+    secret_id            = snowflake_secret_with_authorization_code_grant.one.fully_qualified_name
+    secret_variable_name = "abc"
+  }
+  secrets {
+    secret_id            = snowflake_secret_with_authorization_code_grant.two.fully_qualified_name
+    secret_variable_name = "def"
+  }
+  target_path {
+    path_on_stage  = "target_jar_name.jar"
+    stage_location = snowflake_stage.test.fully_qualified_name
+  }
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
@@ -189,3 +267,6 @@ Import is supported using the following syntax:
 ```shell
 terraform import snowflake_function_scala.example '"<database_name>"."<schema_name>"."<function_name>"(varchar, varchar, varchar)'
 ```
+
+Note: Snowflake is not returning all information needed to populate the state correctly after import (e.g. data types with attributes like NUMBER(32, 10) are returned as NUMBER, default values for arguments are not returned at all).
+Also, `ALTER` for functions is very limited so most of the attributes on this resource are marked as force new. Because of that, in multiple situations plan won't be empty after importing and manual state operations may be required.

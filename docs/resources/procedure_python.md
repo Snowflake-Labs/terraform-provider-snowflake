@@ -5,6 +5,24 @@ description: |-
   Resource used to manage python procedure objects. For more information, check procedure documentation https://docs.snowflake.com/en/sql-reference/sql/create-procedure.
 ---
 
+-> **Note** External changes to `is_secure` and `null_input_behavior` are not currently supported. They will be handled in the following versions of the provider which may still affect this resource.
+
+-> **Note** `COPY GRANTS` and `OR REPLACE` are not currently supported.
+
+-> **Note** `RETURN... [[ NOT ] NULL]` is not currently supported. It will be improved in the following versions of the provider which may still affect this resource.
+
+-> **Note** `is_aggregate` is not currently supported. It will be improved in the following versions of the provider which may still affect this resource.
+
+-> **Note** Use of return type `TABLE` is currently limited. It will be improved in the following versions of the provider which may still affect this resource.
+
+-> **Note** Snowflake is not returning full data type information for arguments which may lead to unexpected plan outputs. Diff suppression for such cases will be improved.
+
+-> **Note** Snowflake is not returning the default values for arguments so argument's `arg_default_value` external changes cannot be tracked.
+
+-> **Note** Limit the use of special characters (`.`, `'`, `/`, `"`, `(`, `)`, `[`, `]`, `{`, `}`, ` `) in argument names, stage ids, and secret ids. It's best to limit to only alphanumeric and underscores. There is a lot of parsing of SHOW/DESCRIBE outputs involved and using special characters may limit the possibility to achieve the correct results.
+
+~> **Required warehouse** This resource may require active warehouse. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the provider configuration.
+
 # snowflake_procedure_python (Resource)
 
 Resource used to manage python procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).
@@ -12,10 +30,21 @@ Resource used to manage python procedure objects. For more information, check [p
 ## Example Usage
 
 ```terraform
-resource "snowflake_procedure_python" "example" {
+resource "snowflake_procedure_python" "w" {
+  database = "Database"
+  schema   = "Schema"
+  name     = "Name"
+  arguments {
+    arg_data_type = "VARCHAR(100)"
+    arg_name      = "x"
+  }
+  return_type          = "VARCHAR(100)"
+  handler              = "echoVarchar"
+  procedure_definition = "\ndef echoVarchar(x):\n\tresult = \"\"\n\tfor a in range(5):\n\t\tresult += x\n\treturn result\n"
+  runtime_version      = "3.8"
+  snowpark_package     = "1.14.0"
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
@@ -176,3 +205,6 @@ Import is supported using the following syntax:
 ```shell
 terraform import snowflake_procedure_python.example '"<database_name>"."<schema_name>"."<function_name>"(varchar, varchar, varchar)'
 ```
+
+Note: Snowflake is not returning all information needed to populate the state correctly after import (e.g. data types with attributes like NUMBER(32, 10) are returned as NUMBER, default values for arguments are not returned at all).
+Also, `ALTER` for functions is very limited so most of the attributes on this resource are marked as force new. Because of that, in multiple situations plan won't be empty after importing and manual state operations may be required.

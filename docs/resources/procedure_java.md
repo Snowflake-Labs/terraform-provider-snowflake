@@ -5,6 +5,22 @@ description: |-
   Resource used to manage java procedure objects. For more information, check procedure documentation https://docs.snowflake.com/en/sql-reference/sql/create-procedure.
 ---
 
+-> **Note** External changes to `is_secure` and `null_input_behavior` are not currently supported. They will be handled in the following versions of the provider which may still affect this resource.
+
+-> **Note** `COPY GRANTS` and `OR REPLACE` are not currently supported.
+
+-> **Note** `RETURN... [[ NOT ] NULL]` is not currently supported. It will be improved in the following versions of the provider which may still affect this resource.
+
+-> **Note** Use of return type `TABLE` is currently limited. It will be improved in the following versions of the provider which may still affect this resource.
+
+-> **Note** Snowflake is not returning full data type information for arguments which may lead to unexpected plan outputs. Diff suppression for such cases will be improved.
+
+-> **Note** Snowflake is not returning the default values for arguments so argument's `arg_default_value` external changes cannot be tracked.
+
+-> **Note** Limit the use of special characters (`.`, `'`, `/`, `"`, `(`, `)`, `[`, `]`, `{`, `}`, ` `) in argument names, stage ids, and secret ids. It's best to limit to only alphanumeric and underscores. There is a lot of parsing of SHOW/DESCRIBE outputs involved and using special characters may limit the possibility to achieve the correct results.
+
+~> **Required warehouse** This resource may require active warehouse. Please, make sure you have either set a DEFAULT_WAREHOUSE for the user, or specified a warehouse in the provider configuration.
+
 # snowflake_procedure_java (Resource)
 
 Resource used to manage java procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).
@@ -12,10 +28,67 @@ Resource used to manage java procedure objects. For more information, check [pro
 ## Example Usage
 
 ```terraform
-resource "snowflake_procedure_java" "example" {
+# basic example
+resource "snowflake_procedure_java" "basic" {
+  database = "Database"
+  schema   = "Schema"
+  name     = "ProcedureName"
+  arguments {
+    arg_data_type = "VARCHAR(100)"
+    arg_name      = "x"
+  }
+  return_type          = "VARCHAR(100)"
+  handler              = "TestFunc.echoVarchar"
+  procedure_definition = "\n\timport com.snowflake.snowpark_java.*;\n\tclass TestFunc {\n\t\tpublic static String echoVarchar(Session session, String x) {\n\t\t\treturn x;\n\t\t}\n\t}\n"
+  runtime_version      = "11"
+  snowpark_package     = "1.14.0"
+}
+
+# full example
+resource "snowflake_procedure_java" "full" {
+  database = "Database"
+  schema   = "Schema"
+  name     = "ProcedureName"
+  arguments {
+    arg_data_type = "VARCHAR(100)"
+    arg_name      = "x"
+  }
+  return_type          = "VARCHAR(100)"
+  handler              = "TestFunc.echoVarchar"
+  procedure_definition = "\n\timport com.snowflake.snowpark_java.*;\n\tclass TestFunc {\n\t\tpublic static String echoVarchar(Session session, String x) {\n\t\t\treturn x;\n\t\t}\n\t}\n"
+  runtime_version      = "11"
+  snowpark_package     = "1.14.0"
+
+  comment    = "some comment"
+  execute_as = "CALLER"
+  target_path {
+    path_on_stage  = "tf-1734028493-OkoTf.jar"
+    stage_location = snowflake_stage.example.fully_qualified_name
+  }
+  packages = ["com.snowflake:telemetry:0.1.0"]
+  imports {
+    path_on_stage  = "tf-1734028486-OLJpF.jar"
+    stage_location = "~"
+  }
+  imports {
+    path_on_stage  = "tf-1734028491-EMoDC.jar"
+    stage_location = "~"
+  }
+  is_secure           = "false"
+  null_input_behavior = "CALLED ON NULL INPUT"
+  external_access_integrations = [
+    "INTEGRATION_1", "INTEGRATION_2"
+  ]
+  secrets {
+    secret_id            = snowflake_secret_with_generic_string.example1.fully_qualified_name
+    secret_variable_name = "abc"
+  }
+  secrets {
+    secret_id            = snowflake_secret_with_generic_string.example2.fully_qualified_name
+    secret_variable_name = "def"
+  }
 }
 ```
-
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
@@ -186,3 +259,6 @@ Import is supported using the following syntax:
 ```shell
 terraform import snowflake_procedure_java.example '"<database_name>"."<schema_name>"."<function_name>"(varchar, varchar, varchar)'
 ```
+
+Note: Snowflake is not returning all information needed to populate the state correctly after import (e.g. data types with attributes like NUMBER(32, 10) are returned as NUMBER, default values for arguments are not returned at all).
+Also, `ALTER` for functions is very limited so most of the attributes on this resource are marked as force new. Because of that, in multiple situations plan won't be empty after importing and manual state operations may be required.

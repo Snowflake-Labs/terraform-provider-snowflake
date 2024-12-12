@@ -29,19 +29,19 @@ resource "snowflake_function_scala" "complete" {
     arg_data_type = "VARCHAR(100)"
     arg_name      = "x"
   }
-  comment                 = "some comment"
+  comment                      = "some comment"
   external_access_integrations = ["external_access_integration_name", "external_access_integration_name_2"]
-  function_definition     = <<EOF
+  function_definition          = <<EOF
   class TestFunc {
     def echoVarchar(x : String): String = {
       return x
     }
   }
   EOF
-  handler                 = "TestFunc.echoVarchar"
-  null_input_behavior     = "CALLED ON NULL INPUT"
-  return_results_behavior = "VOLATILE"
-  return_type             = "VARCHAR(100)"
+  handler                      = "TestFunc.echoVarchar"
+  null_input_behavior          = "CALLED ON NULL INPUT"
+  return_results_behavior      = "VOLATILE"
+  return_type                  = "VARCHAR(100)"
   imports {
     path_on_stage  = "jar_name.jar"
     stage_location = "~"
@@ -50,7 +50,7 @@ resource "snowflake_function_scala" "complete" {
     path_on_stage  = "second_jar_name.jar"
     stage_location = "~"
   }
-  packages = ["com.snowflake:snowpark:1.14.0", "com.snowflake:telemetry:0.1.0"]
+  packages        = ["com.snowflake:snowpark:1.14.0", "com.snowflake:telemetry:0.1.0"]
   runtime_version = "2.12"
   secrets {
     secret_id            = snowflake_secret_with_authorization_code_grant.one.fully_qualified_name
