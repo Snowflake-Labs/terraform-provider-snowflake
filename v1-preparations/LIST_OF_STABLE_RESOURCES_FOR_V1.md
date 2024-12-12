@@ -15,8 +15,6 @@
 * Database Role
     * [snowflake_database_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/database_role)
     * [snowflake_database_roles](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/database_roles) (data source)
-* Function
-    * [snowflake_functions](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/functions)
 * Grants
     * [snowflake_grant_account_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/grant_account_role)
     * [snowflake_grant_application_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/grant_application_role)
@@ -32,8 +30,6 @@
 * Network Policy
     * [snowflake_network_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/network_policy)
     * [snowflake_network_policies](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/network_policies) (data source)
-* Procedure
-    * [snowflake_procedures](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/procedures)
 * Resource Monitor
     * [snowflake_resource_monitor](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/resource_monitor)
     * [snowflake_resource_monitors](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/resource_monitors) (data source)
