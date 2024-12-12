@@ -34,7 +34,7 @@ import (
 // TODO [SNOW-1348103]: test secure
 // TODO [SNOW-1348103]: python aggregate func (100357 (P0000): Could not find accumulate method in function CVVEMHIT_06547800_08D6_DBCA_1AC7_5E422AFF8B39 with handler dump)
 // TODO [SNOW-1348103]: add test with multiple imports
-// TODO [this PR]: test with multiple external access integrations and secrets
+// TODO [SNOW-1348103]: test with multiple external access integrations and secrets
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()
@@ -2053,12 +2053,13 @@ func TestInt_Functions(t *testing.T) {
 	t.Run("create function for SQL - return table data type", func(t *testing.T) {
 		argName := "x"
 
-		returnDataType, err := datatypes.ParseDataType(fmt.Sprintf("TABLE(ID %s, PRICE %s, THIRD %s)", datatypes.NumberLegacyDataType, datatypes.FloatLegacyDataType, datatypes.VarcharLegacyDataType))
+		returnDataType, err := datatypes.ParseDataType(fmt.Sprintf("TABLE(PRICE %s, THIRD %s)", datatypes.FloatLegacyDataType, datatypes.VarcharLegacyDataType))
 		require.NoError(t, err)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(datatypes.VarcharLegacyDataType)
 
-		definition := ` SELECT 1, 2.2::float, 'abc';`
+		definition := `
+SELECT 2.2::float, 'abc');` // the ending parenthesis has to be there (otherwise SQL compilation error is thrown)
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(returnDataType)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest(argName, nil).WithArgDataTypeOld(datatypes.VarcharLegacyDataType)
@@ -2076,7 +2077,7 @@ func TestInt_Functions(t *testing.T) {
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
-			HasArgumentsRawContains(returnDataType.ToLegacyDataTypeSql()),
+			HasArgumentsRawContains(strings.ReplaceAll(returnDataType.ToLegacyDataTypeSql(), "TABLE(", "TABLE (")),
 		)
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).

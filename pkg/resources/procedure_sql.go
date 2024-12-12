@@ -69,6 +69,7 @@ func CreateContextProcedureSql(ctx context.Context, d *schema.ResourceData, meta
 	errs := errors.Join(
 		booleanStringAttributeCreateBuilder(d, "is_secure", request.WithSecure),
 		attributeMappedValueCreateBuilder[string](d, "null_input_behavior", request.WithNullInputBehavior, sdk.ToNullInputBehavior),
+		attributeMappedValueCreateBuilder[string](d, "execute_as", request.WithExecuteAs, sdk.ToExecuteAs),
 		stringAttributeCreateBuilder(d, "comment", request.WithComment),
 	)
 	if errs != nil {
@@ -115,6 +116,7 @@ func ReadContextProcedureSql(ctx context.Context, d *schema.ResourceData, meta a
 		readFunctionOrProcedureArguments(d, allProcedureDetails.procedureDetails.NormalizedArguments),
 		d.Set("return_type", allProcedureDetails.procedureDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
+		// not reading execute_as on purpose (handled as external change to show output)
 		d.Set("comment", allProcedureDetails.procedure.Description),
 		setOptionalFromStringPtr(d, "procedure_definition", allProcedureDetails.procedureDetails.Body),
 		d.Set("procedure_language", allProcedureDetails.procedureDetails.Language),

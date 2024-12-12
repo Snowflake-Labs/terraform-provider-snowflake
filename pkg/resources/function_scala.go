@@ -65,7 +65,7 @@ func CreateContextFunctionScala(ctx context.Context, d *schema.ResourceData, met
 
 	argumentDataTypes := collections.Map(argumentRequests, func(r sdk.FunctionArgumentRequest) datatypes.DataType { return r.ArgDataType })
 	id := sdk.NewSchemaObjectIdentifierWithArgumentsNormalized(database, sc, name, argumentDataTypes...)
-	request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), returnDataType, runtimeVersion, handler).
+	request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), returnDataType, handler, runtimeVersion).
 		WithArguments(argumentRequests)
 
 	errs := errors.Join(
