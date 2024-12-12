@@ -23,7 +23,7 @@ func ProcedureScala() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.ProcedureScala, CreateContextProcedureScala),
 		ReadContext:   TrackingReadWrapper(resources.ProcedureScala, ReadContextProcedureScala),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedureScala, UpdateProcedure("SQL", ReadContextProcedureScala)),
+		UpdateContext: TrackingUpdateWrapper(resources.ProcedureScala, UpdateProcedure("SCALA", ReadContextProcedureScala)),
 		DeleteContext: TrackingDeleteWrapper(resources.ProcedureScala, DeleteProcedure),
 		Description:   "Resource used to manage scala procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
