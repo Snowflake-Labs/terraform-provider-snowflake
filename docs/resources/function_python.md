@@ -30,7 +30,22 @@ Resource used to manage python function objects. For more information, check [fu
 ## Example Usage
 
 ```terraform
-resource "snowflake_function_python" "example" {
+# Minimal
+resource "snowflake_function_python" "minimal" {
+  database        = snowflake_database.test.name
+  schema          = snowflake_schema.test.name
+  name            = "my_function_function"
+  runtime_version = "3.8"
+  arguments {
+    arg_data_type = "NUMBER(36, 2)"
+    arg_name      = "x"
+  }
+  function_definition = <<EOF
+    def some_function(x):
+      return x
+  EOF
+  handler             = "some_function"
+  return_type         = "NUMBER(36, 2)"
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
