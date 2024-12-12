@@ -107,6 +107,40 @@ Additionally, `JWT` value is no longer available for `authenticator` field in th
 
 ## v0.99.0 ➞ v0.100.0
 
+### *(preview feature/deprecation)* Function and procedure resources
+
+`snowflake_function` is now deprecated in favor of 5 new preview resources:
+
+- `snowflake_function_java`
+- `snowflake_function_javascript`
+- `snowflake_function_python`
+- `snowflake_function_scala`
+- `snowflake_function_sql`
+
+It will be removed with the v1 release. Please check the docs for the new resources and adjust your configuration files.
+For no downtime migration, follow our [guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+
+The new resources are more aligned with current features like:
+- external access integrations support
+- secrets support
+- argument default values
+
+`snowflake_procedure` is now deprecated in favor of 5 new preview resources:
+
+- `snowflake_procedure_java`
+- `snowflake_procedure_javascript`
+- `snowflake_procedure_python`
+- `snowflake_procedure_scala`
+- `snowflake_procedure_sql`
+
+It will be removed with the v1 release. Please check the docs for the new resources and adjust your configuration files.
+For no downtime migration, follow our [guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+
+The new resources are more aligned with current features like:
+- external access integrations support
+- secrets support
+- argument default values
+
 ### *(new feature)* Account role data source
 Added a new `snowflake_account_roles` data source for account roles. Now it reflects It's based on `snowflake_roles` data source.
 `account_roles` field now organizes output of show under `show_output` field.

@@ -23,7 +23,7 @@ func ProcedureScala() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.ProcedureScala, CreateContextProcedureScala),
 		ReadContext:   TrackingReadWrapper(resources.ProcedureScala, ReadContextProcedureScala),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedureScala, UpdateProcedure("SQL", ReadContextProcedureScala)),
+		UpdateContext: TrackingUpdateWrapper(resources.ProcedureScala, UpdateProcedure("SCALA", ReadContextProcedureScala)),
 		DeleteContext: TrackingDeleteWrapper(resources.ProcedureScala, DeleteProcedure),
 		Description:   "Resource used to manage scala procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
@@ -77,6 +77,7 @@ func CreateContextProcedureScala(ctx context.Context, d *schema.ResourceData, me
 	errs := errors.Join(
 		booleanStringAttributeCreateBuilder(d, "is_secure", request.WithSecure),
 		attributeMappedValueCreateBuilder[string](d, "null_input_behavior", request.WithNullInputBehavior, sdk.ToNullInputBehavior),
+		attributeMappedValueCreateBuilder[string](d, "execute_as", request.WithExecuteAs, sdk.ToExecuteAs),
 		stringAttributeCreateBuilder(d, "comment", request.WithComment),
 		setProcedureImportsInBuilder(d, request.WithImports),
 		setExternalAccessIntegrationsInBuilder(d, request.WithExternalAccessIntegrations),
@@ -128,6 +129,7 @@ func ReadContextProcedureScala(ctx context.Context, d *schema.ResourceData, meta
 		readFunctionOrProcedureArguments(d, allProcedureDetails.procedureDetails.NormalizedArguments),
 		d.Set("return_type", allProcedureDetails.procedureDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
+		// not reading execute_as on purpose (handled as external change to show output)
 		setRequiredFromStringPtr(d, "runtime_version", allProcedureDetails.procedureDetails.RuntimeVersion),
 		d.Set("comment", allProcedureDetails.procedure.Description),
 		readFunctionOrProcedureImports(d, allProcedureDetails.procedureDetails.NormalizedImports),

@@ -273,7 +273,7 @@ func Test_ToExecuteAs(t *testing.T) {
 		{Input: string(ExecuteAsOwner), Expected: ExecuteAsOwner},
 		{Name: "validation: incorrect execute as", Input: "incorrect", Error: "unknown execute as: incorrect"},
 		{Name: "validation: empty input", Input: "", Error: "unknown execute as: "},
-		{Name: "validation: lower case input", Input: "execute as caller", Expected: ExecuteAsCaller},
+		{Name: "validation: lower case input", Input: "caller", Expected: ExecuteAsCaller},
 	}
 
 	for _, testCase := range testCases {

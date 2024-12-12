@@ -240,6 +240,11 @@ func (c *FunctionClient) SampleJavascriptDefinition(t *testing.T, argName string
 `, argName)
 }
 
+func (c *FunctionClient) SampleJavascriptDefinitionNoArgs(t *testing.T) string {
+	t.Helper()
+	return `return 1;`
+}
+
 func (c *FunctionClient) SamplePythonDefinition(t *testing.T, funcName string, argName string) string {
 	t.Helper()
 
@@ -269,6 +274,14 @@ func (c *FunctionClient) SampleSqlDefinition(t *testing.T) string {
 	t.Helper()
 
 	return "3.141592654::FLOAT"
+}
+
+func (c *FunctionClient) SampleSqlDefinitionWithArgument(t *testing.T, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+%s
+`, argName)
 }
 
 func (c *FunctionClient) PythonIdentityDefinition(t *testing.T, funcName string, argName string) string {

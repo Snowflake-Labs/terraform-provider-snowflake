@@ -93,7 +93,7 @@ func (f *FunctionSqlResourceAssert) HasNullInputBehaviorString(expected string) 
 }
 
 func (f *FunctionSqlResourceAssert) HasReturnBehaviorString(expected string) *FunctionSqlResourceAssert {
-	f.AddAssertion(assert.ValueSet("return_behavior", expected))
+	f.AddAssertion(assert.ValueSet("return_results_behavior", expected))
 	return f
 }
 

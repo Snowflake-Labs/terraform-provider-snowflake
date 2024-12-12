@@ -127,7 +127,7 @@ func parseFunctionOrProcedureExternalAccessIntegrations(raw string) ([]AccountOb
 
 // TODO [before V1]: test
 func parseFunctionOrProcedurePackages(raw string) ([]string, error) {
-	log.Printf("[DEBUG] external access integrations: %s", raw)
+	log.Printf("[DEBUG] packages: %s", raw)
 	return collections.Map(ParseCommaSeparatedStringArray(raw, true), strings.TrimSpace), nil
 }
 
