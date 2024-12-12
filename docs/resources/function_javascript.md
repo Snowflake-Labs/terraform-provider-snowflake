@@ -28,7 +28,19 @@ Resource used to manage javascript function objects. For more information, check
 ## Example Usage
 
 ```terraform
-resource "snowflake_function_javascript" "example" {
+# Minimal
+resource "snowflake_function_javascript" "minimal" {
+  database = snowflake_database.test.name
+  schema   = snowflake_schema.test.name
+  name     = "my_javascript_function"
+  arguments {
+    arg_data_type = "VARIANT"
+    arg_name      = "x"
+  }
+  function_definition = <<EOF
+    return x;
+  EOF
+  return_type         = "VARIANT"
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
