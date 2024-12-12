@@ -75,7 +75,7 @@ func containsFieldNames(fields []*Field, names ...string) bool {
 	return true
 }
 
-func hasRequiredFields(operations []*Operation, structName string, requiredFields ...string) bool {
+func hasRequiredFieldsForIDMethod(operations []*Operation, structName string, requiredFields ...string) bool {
 	for _, op := range operations {
 		if op.Name != string(OperationKindShow) {
 			continue
@@ -85,7 +85,9 @@ func hasRequiredFields(operations []*Operation, structName string, requiredField
 				return containsFieldNames(field.Fields, requiredFields...)
 			}
 		}
+		log.Printf("WARNING: Struct '%s' not found in '%s' operation. Couldn't generate ID() helper method.", structName, OperationKindShow)
 	}
+	log.Printf("WARNING: '%s' not found. Couldn't generate ID() helper method.", OperationKindShow)
 	return false
 }
 
@@ -97,9 +99,9 @@ func newObjectTypeHelperMethod(structName string) *HelperMethod {
 // HelperMethodID adds a helper method "ID()" to the interface file that returns the ObjectIdentifier of the object
 func (i *Interface) HelperMethodID() *Interface {
 	identifierKind := identifierStringToObjectIdentifier(i.IdentifierKind)
-	requiredFeilds := requiredFieldsForIDMethodMapping[identifierKind]
-	if !hasRequiredFields(i.Operations, i.NameSingular, requiredFeilds...) {
-		log.Printf("WARNING: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing one of required fields: %v.\n", i.NameSingular, requiredFeilds)
+	requiredFields := requiredFieldsForIDMethodMapping[identifierKind]
+	if !hasRequiredFieldsForIDMethod(i.Operations, i.NameSingular, requiredFields...) {
+		log.Printf("WARNING: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing one of required fields: %v.\n", i.NameSingular, requiredFields)
 		return i
 	}
 	i.HelperMethods = append(i.HelperMethods, newIDHelperMethod(i.NameSingular, identifierKind))
