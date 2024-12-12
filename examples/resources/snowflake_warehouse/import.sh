@@ -1,1 +1,1 @@
-terraform import snowflake_warehouse.example warehouseName
+terraform import snowflake_warehouse.example '"<warehouse_name>"'

@@ -56,7 +56,7 @@ func Streams() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: TrackingReadWrapper(datasources.Streams, ReadStreams),
 		Schema:      streamsSchema,
-		Description: "Datasource used to get details of filtered streams. Filtering is aligned with the current possibilities for [SHOW STREAMS](https://docs.snowflake.com/en/sql-reference/sql/show-streams) query. The results of SHOW and DESCRIBE are encapsulated in one output collection `streams`.",
+		Description: "Data source used to get details of filtered streams. Filtering is aligned with the current possibilities for [SHOW STREAMS](https://docs.snowflake.com/en/sql-reference/sql/show-streams) query. The results of SHOW and DESCRIBE are encapsulated in one output collection `streams`.",
 	}
 }
 

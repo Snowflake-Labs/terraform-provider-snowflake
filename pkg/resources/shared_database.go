@@ -28,7 +28,7 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<share_name>\"`.",
+		Description: relatedResourceDescription("A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<share_name>\"`.", resources.Share),
 		// TODO(SNOW-1495079): Add validation when ExternalObjectIdentifier will be available in IsValidIdentifierDescription:      "A fully qualified path to a share from which the database will be created. A fully qualified path follows the format of `\"<organization_name>\".\"<account_name>\".\"<share_name>\"`.",
 		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
@@ -37,7 +37,7 @@ var sharedDatabaseSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Specifies a comment for the database.",
 	},
-	// TODO(SNOW-1325381): Add it as an item to discuss and either remove or uncomment (and implement) it
+	// TODO(SNOW-1843347): Add it as an item to discuss and either remove or uncomment (and implement) it
 	// "is_transient": {
 	//	Type:        schema.TypeBool,
 	//	Optional:    true,
@@ -80,7 +80,7 @@ func CreateSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	opts := &sdk.CreateSharedDatabaseOptions{
-		// TODO(SNOW-1325381)
+		// TODO(SNOW-1843347)
 		// Transient:                  GetPropertyAsPointer[bool](d, "is_transient"),
 		Comment: GetConfigPropertyAsPointerAllowingZeroValue[string](d, "comment"),
 	}
@@ -179,7 +179,7 @@ func ReadSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 	}
 
-	// TODO(SNOW-1325381)
+	// TODO(SNOW-1843347)
 	// if err := d.Set("is_transient", database.Transient); err != nil {
 	//	return diag.FromErr(err)
 	// }
@@ -207,6 +207,7 @@ func DeleteSharedDatabase(ctx context.Context, d *schema.ResourceData, meta any)
 		return diag.FromErr(err)
 	}
 
+	// TODO(SNOW-1818849): unassign network policies inside the database before dropping
 	err = client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{
 		IfExists: sdk.Bool(true),
 	})

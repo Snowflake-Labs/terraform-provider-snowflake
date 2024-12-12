@@ -23,7 +23,7 @@ var streamOnExternalTableSchema = func() map[string]*schema.Schema {
 		"external_table": {
 			Type:             schema.TypeString,
 			Required:         true,
-			Description:      blocklistedCharactersFieldDescription("Specifies an identifier for the external table the stream will monitor."),
+			Description:      relatedResourceDescription(blocklistedCharactersFieldDescription("Specifies an identifier for the external table the stream will monitor."), resources.ExternalTable),
 			DiffSuppressFunc: SuppressIfAny(suppressIdentifierQuoting, IgnoreChangeToCurrentSnowflakeValueInShow("table_name")),
 			ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 		},

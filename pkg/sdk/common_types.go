@@ -220,10 +220,27 @@ func ExecuteAsPointer(v ExecuteAs) *ExecuteAs {
 	return &v
 }
 
+// TODO [SNOW-1348103]: fix SDK - constants should have only CALLER and OWNER (not the EXECUTE AS part)
 const (
 	ExecuteAsCaller ExecuteAs = "EXECUTE AS CALLER"
 	ExecuteAsOwner  ExecuteAs = "EXECUTE AS OWNER"
 )
+
+func ToExecuteAs(value string) (ExecuteAs, error) {
+	switch strings.ToUpper(value) {
+	case string(ExecuteAsCaller):
+		return ExecuteAsCaller, nil
+	case string(ExecuteAsOwner):
+		return ExecuteAsOwner, nil
+	default:
+		return "", fmt.Errorf("unknown execute as: %s", value)
+	}
+}
+
+var AllAllowedExecuteAs = []ExecuteAs{
+	ExecuteAsCaller,
+	ExecuteAsOwner,
+}
 
 type NullInputBehavior string
 
@@ -233,16 +250,49 @@ func NullInputBehaviorPointer(v NullInputBehavior) *NullInputBehavior {
 
 const (
 	NullInputBehaviorCalledOnNullInput NullInputBehavior = "CALLED ON NULL INPUT"
-	NullInputBehaviorReturnNullInput   NullInputBehavior = "RETURNS NULL ON NULL INPUT"
+	NullInputBehaviorReturnsNullInput  NullInputBehavior = "RETURNS NULL ON NULL INPUT"
 	NullInputBehaviorStrict            NullInputBehavior = "STRICT"
 )
 
+// ToNullInputBehavior maps STRICT to RETURNS NULL ON NULL INPUT, because Snowflake returns RETURNS NULL ON NULL INPUT for any of these two options
+func ToNullInputBehavior(value string) (NullInputBehavior, error) {
+	switch strings.ToUpper(value) {
+	case string(NullInputBehaviorCalledOnNullInput):
+		return NullInputBehaviorCalledOnNullInput, nil
+	case string(NullInputBehaviorReturnsNullInput), string(NullInputBehaviorStrict):
+		return NullInputBehaviorReturnsNullInput, nil
+	default:
+		return "", fmt.Errorf("unknown null input behavior: %s", value)
+	}
+}
+
+var AllAllowedNullInputBehaviors = []NullInputBehavior{
+	NullInputBehaviorCalledOnNullInput,
+	NullInputBehaviorReturnsNullInput,
+}
+
 type ReturnResultsBehavior string
 
-var (
+const (
 	ReturnResultsBehaviorVolatile  ReturnResultsBehavior = "VOLATILE"
 	ReturnResultsBehaviorImmutable ReturnResultsBehavior = "IMMUTABLE"
 )
+
+func ToReturnResultsBehavior(value string) (ReturnResultsBehavior, error) {
+	switch strings.ToUpper(value) {
+	case string(ReturnResultsBehaviorVolatile):
+		return ReturnResultsBehaviorVolatile, nil
+	case string(ReturnResultsBehaviorImmutable):
+		return ReturnResultsBehaviorImmutable, nil
+	default:
+		return "", fmt.Errorf("unknown return results behavior: %s", value)
+	}
+}
+
+var AllAllowedReturnResultsBehaviors = []ReturnResultsBehavior{
+	ReturnResultsBehaviorVolatile,
+	ReturnResultsBehaviorImmutable,
+}
 
 func ReturnResultsBehaviorPointer(v ReturnResultsBehavior) *ReturnResultsBehavior {
 	return &v
@@ -378,6 +428,37 @@ func ToMetricLevel(value string) (MetricLevel, error) {
 var AllMetricLevels = []MetricLevel{
 	MetricLevelAll,
 	MetricLevelNone,
+}
+
+type AutoEventLogging string
+
+const (
+	AutoEventLoggingLogging AutoEventLogging = "LOGGING"
+	AutoEventLoggingTracing AutoEventLogging = "TRACING"
+	AutoEventLoggingAll     AutoEventLogging = "ALL"
+	AutoEventLoggingOff     AutoEventLogging = "OFF"
+)
+
+func ToAutoEventLogging(value string) (AutoEventLogging, error) {
+	switch strings.ToUpper(value) {
+	case string(AutoEventLoggingLogging):
+		return AutoEventLoggingLogging, nil
+	case string(AutoEventLoggingTracing):
+		return AutoEventLoggingTracing, nil
+	case string(AutoEventLoggingAll):
+		return AutoEventLoggingAll, nil
+	case string(AutoEventLoggingOff):
+		return AutoEventLoggingOff, nil
+	default:
+		return "", fmt.Errorf("unknown auto event logging: %s", value)
+	}
+}
+
+var AllAutoEventLoggings = []AutoEventLogging{
+	AutoEventLoggingLogging,
+	AutoEventLoggingTracing,
+	AutoEventLoggingAll,
+	AutoEventLoggingOff,
 }
 
 // StringAllowEmpty is a wrapper on string to allow using empty strings in SQL.

@@ -1,2 +1,1 @@
-# format is the resource monitor name
-terraform import snowflake_resource_monitor.example 'resourceMonitorName'
+terraform import snowflake_resource_monitor.example '"<resource_monitor_name>"'

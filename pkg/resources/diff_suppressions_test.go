@@ -204,3 +204,85 @@ func Test_ignoreNewEmptyList(t *testing.T) {
 		})
 	}
 }
+
+func Test_IgnoreMatchingColumnNameAndMaskingPolicyUsingFirstElem(t *testing.T) {
+	resourceSchema := map[string]*schema.Schema{
+		"column": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"column_name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"masking_policy": {
+						Type: schema.TypeList,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"using": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type: schema.TypeString,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	resourceData := func(using ...any) map[string]any {
+		return map[string]any{
+			"column": []any{
+				map[string]any{
+					"column_name": "foo",
+					"masking_policy": []any{
+						map[string]any{
+							"using": using,
+						},
+					},
+				},
+			},
+		}
+	}
+	tests := []struct {
+		name         string
+		key          string
+		old          string
+		new          string
+		resourceData *schema.ResourceData
+		wantSuppress bool
+	}{
+		{
+			name:         "suppress when USING is not specified in the config, but is in the state - check count",
+			key:          "column.0.masking_policy.0.using.#",
+			old:          "1",
+			new:          "0",
+			resourceData: schema.TestResourceDataRaw(t, resourceSchema, resourceData("foo")),
+			wantSuppress: true,
+		},
+		{
+			name:         "suppress when USING is not specified in the config, but is in the state - check elem",
+			key:          "column.0.masking_policy.0.using.0",
+			old:          "foo",
+			new:          "",
+			resourceData: schema.TestResourceDataRaw(t, resourceSchema, resourceData("foo")),
+			wantSuppress: true,
+		},
+		{
+			name:         "do not suppress when there is column name mismatch",
+			key:          "column.0.masking_policy.0.using.0",
+			old:          "foo",
+			new:          "bar",
+			resourceData: schema.TestResourceDataRaw(t, resourceSchema, resourceData("foo")),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.wantSuppress, resources.IgnoreMatchingColumnNameAndMaskingPolicyUsingFirstElem()(tt.key, tt.old, tt.new, tt.resourceData))
+		})
+	}
+}

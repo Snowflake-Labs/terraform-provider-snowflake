@@ -182,14 +182,14 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 
 ### Required
 
-- `database_role_name` (String) The fully qualified name of the database role to which privileges will be granted.
+- `database_role_name` (String) The fully qualified name of the database role to which privileges will be granted. For more information about this resource, see [docs](./database_role).
 
 ### Optional
 
 - `all_privileges` (Boolean) Grant all privileges on the database role.
 - `always_apply` (Boolean) If true, the resource will always produce a “plan” and on “apply” it will re-grant defined privileges. It is supposed to be used only in “grant privileges on all X’s in database / schema Y” or “grant all privileges to X” scenarios to make sure that every new object in a given database / schema is granted by the account role and every new privilege is granted to the database role. Important note: this flag is not compliant with the Terraform assumptions of the config being eventually convergent (producing an empty plan).
 - `always_apply_trigger` (String) This is a helper field and should not be set. Its main purpose is to help to achieve the functionality described by the always_apply field.
-- `on_database` (String) The fully qualified name of the database on which privileges will be granted.
+- `on_database` (String) The fully qualified name of the database on which privileges will be granted. For more information about this resource, see [docs](./database).
 - `on_schema` (Block List, Max: 1) Specifies the schema on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema))
 - `on_schema_object` (Block List, Max: 1) Specifies the schema object on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema_object))
 - `privileges` (Set of String) The privileges to grant on the database role.

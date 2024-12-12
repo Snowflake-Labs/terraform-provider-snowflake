@@ -5,8 +5,7 @@ description: |-
   Resource used to manage authentication policy objects. For more information, check authentication policy documentation https://docs.snowflake.com/en/sql-reference/sql/create-authentication-policy.
 ---
 
-> [!WARNING]
-> According to Snowflake [docs](https://docs.snowflake.com/en/sql-reference/sql/drop-authentication-policy#usage-notes), an authentication policy cannot be dropped successfully if it is currently assigned to another object. Currently, the provider does not unassign such objects automatically. Before dropping the resource, list the assigned objects with `SELECT * from table(information_schema.policy_references(policy_name=>'<string>'));` and unassign them manually with `ALTER ...` or with updated Terraform configuration, if possible.
+!> **Note** According to Snowflake [docs](https://docs.snowflake.com/en/sql-reference/sql/drop-authentication-policy#usage-notes), an authentication policy cannot be dropped successfully if it is currently assigned to another object. Currently, the provider does not unassign such objects automatically. Before dropping the resource, first unassign the policy from the relevant objects. See [guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies) for more details.
 
 # snowflake_authentication_policy (Resource)
 
@@ -44,9 +43,9 @@ resource "snowflake_authentication_policy" "complete" {
 
 ### Required
 
-- `database` (String) The database in which to create the authentication policy. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `name` (String) Specifies the identifier for the authentication policy. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
-- `schema` (String) The schema in which to create the authentication policy. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`
+- `database` (String) The database in which to create the authentication policy. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `name` (String) Specifies the identifier for the authentication policy. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `schema` (String) The schema in which to create the authentication policy. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 
 ### Optional
 
