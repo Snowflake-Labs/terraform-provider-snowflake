@@ -59,11 +59,11 @@ func CreateContextFunctionJavascript(ctx context.Context, d *schema.ResourceData
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	handler := d.Get("handler").(string)
+	functionDefinition := d.Get("function_definition").(string)
 
 	argumentDataTypes := collections.Map(argumentRequests, func(r sdk.FunctionArgumentRequest) datatypes.DataType { return r.ArgDataType })
 	id := sdk.NewSchemaObjectIdentifierWithArgumentsNormalized(database, sc, name, argumentDataTypes...)
-	request := sdk.NewCreateForJavascriptFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, handler).
+	request := sdk.NewCreateForJavascriptFunctionRequestDefinitionWrapped(id.SchemaObjectId(), *returns, functionDefinition).
 		WithArguments(argumentRequests)
 
 	errs := errors.Join(

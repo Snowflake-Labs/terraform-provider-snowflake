@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -401,6 +403,83 @@ func DeleteProcedure(ctx context.Context, d *schema.ResourceData, meta any) diag
 	return nil
 }
 
+func UpdateProcedure(language string, readFunc func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics) func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if d.HasChange("name") {
+			newId := sdk.NewSchemaObjectIdentifierWithArgumentsInSchema(id.SchemaId(), d.Get("name").(string), id.ArgumentDataTypes()...)
+
+			err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithRenameTo(newId.SchemaObjectId()))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error renaming procedure %v err = %w", d.Id(), err))
+			}
+
+			d.SetId(helpers.EncodeResourceIdentifier(newId))
+			id = newId
+		}
+
+		// Batch SET operations and UNSET operations
+		setRequest := sdk.NewProcedureSetRequest()
+		unsetRequest := sdk.NewProcedureUnsetRequest()
+
+		_ = stringAttributeUpdate(d, "comment", &setRequest.Comment, &unsetRequest.Comment)
+
+		switch language {
+		case "JAVA", "SCALA", "PYTHON":
+			err = errors.Join(
+				func() error {
+					if d.HasChange("secrets") {
+						return setSecretsInBuilder(d, func(references []sdk.SecretReference) *sdk.ProcedureSetRequest {
+							return setRequest.WithSecretsList(sdk.SecretsListRequest{SecretsList: references})
+						})
+					}
+					return nil
+				}(),
+				func() error {
+					if d.HasChange("external_access_integrations") {
+						return setExternalAccessIntegrationsInBuilder(d, func(references []sdk.AccountObjectIdentifier) any {
+							if len(references) == 0 {
+								return unsetRequest.WithExternalAccessIntegrations(true)
+							} else {
+								return setRequest.WithExternalAccessIntegrations(references)
+							}
+						})
+					}
+					return nil
+				}(),
+			)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if updateParamDiags := handleProcedureParametersUpdate(d, setRequest, unsetRequest); len(updateParamDiags) > 0 {
+			return updateParamDiags
+		}
+
+		// Apply SET and UNSET changes
+		if !reflect.DeepEqual(*setRequest, *sdk.NewProcedureSetRequest()) {
+			err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*setRequest))
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		if !reflect.DeepEqual(*unsetRequest, *sdk.NewProcedureUnsetRequest()) {
+			err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnset(*unsetRequest))
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		return readFunc(ctx, d, meta)
+	}
+}
+
 func queryAllProcedureDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allProcedureDetailsCommon, diag.Diagnostics) {
 	procedureDetails, err := client.Procedures.DescribeDetails(ctx, id)
 	if err != nil {
@@ -513,6 +592,26 @@ func parseProcedureReturnsCommon(d *schema.ResourceData) (*sdk.ProcedureReturnsR
 		return nil, err
 	}
 	returns := sdk.NewProcedureReturnsRequest()
+	switch v := dataType.(type) {
+	case *datatypes.TableDataType:
+		var cr []sdk.ProcedureColumnRequest
+		for _, c := range v.Columns() {
+			cr = append(cr, *sdk.NewProcedureColumnRequest(c.ColumnName(), c.ColumnType()))
+		}
+		returns.WithTable(*sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
+	default:
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(dataType))
+	}
+	return returns, nil
+}
+
+func parseProcedureSqlReturns(d *schema.ResourceData) (*sdk.ProcedureSQLReturnsRequest, error) {
+	returnTypeRaw := d.Get("return_type").(string)
+	dataType, err := datatypes.ParseDataType(returnTypeRaw)
+	if err != nil {
+		return nil, err
+	}
+	returns := sdk.NewProcedureSQLReturnsRequest()
 	switch v := dataType.(type) {
 	case *datatypes.TableDataType:
 		var cr []sdk.ProcedureColumnRequest

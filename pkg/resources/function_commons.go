@@ -88,7 +88,6 @@ var (
 		"is_secure",
 		"arguments",
 		"return_type",
-		"null_input_behavior",
 		"return_results_behavior",
 		"comment",
 		"function_definition",
@@ -100,6 +99,7 @@ var (
 	javaFunctionSchemaDefinition = functionSchemaDef{
 		additionalArguments: []string{
 			"runtime_version",
+			"null_input_behavior",
 			"imports",
 			"packages",
 			"handler",
@@ -117,7 +117,9 @@ var (
 		targetPathDescription:     "The TARGET_PATH clause specifies the location to which Snowflake should write the compiled code (JAR file) after compiling the source code specified in the `function_definition`. If this clause is included, the user should manually remove the JAR file when it is no longer needed (typically when the Java UDF is dropped). If this clause is omitted, Snowflake re-compiles the source code each time the code is needed. The JAR file is not stored permanently, and the user does not need to clean up the JAR file. Snowflake returns an error if the TARGET_PATH matches an existing file; you cannot use TARGET_PATH to overwrite an existing file.",
 	}
 	javascriptFunctionSchemaDefinition = functionSchemaDef{
-		additionalArguments:           []string{},
+		additionalArguments: []string{
+			"null_input_behavior",
+		},
 		functionDefinitionDescription: functionDefinitionTemplate("JavaScript", "https://docs.snowflake.com/en/developer-guide/udf/javascript/udf-javascript-introduction"),
 		functionDefinitionRequired:    true,
 	}
@@ -125,6 +127,7 @@ var (
 		additionalArguments: []string{
 			"is_aggregate",
 			"runtime_version",
+			"null_input_behavior",
 			"imports",
 			"packages",
 			"handler",
@@ -141,6 +144,7 @@ var (
 	scalaFunctionSchemaDefinition = functionSchemaDef{
 		additionalArguments: []string{
 			"runtime_version",
+			"null_input_behavior",
 			"imports",
 			"packages",
 			"handler",
