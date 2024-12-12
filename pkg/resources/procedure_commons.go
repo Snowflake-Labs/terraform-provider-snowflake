@@ -467,12 +467,33 @@ func UpdateProcedure(language string, readFunc func(ctx context.Context, d *sche
 		if !reflect.DeepEqual(*setRequest, *sdk.NewProcedureSetRequest()) {
 			err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*setRequest))
 			if err != nil {
+				d.Partial(true)
 				return diag.FromErr(err)
 			}
 		}
 		if !reflect.DeepEqual(*unsetRequest, *sdk.NewProcedureUnsetRequest()) {
 			err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnset(*unsetRequest))
 			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		}
+
+		// has to be handled separately
+		if d.HasChange("execute_as") {
+			var value sdk.ExecuteAs
+			if v, ok := d.GetOk("execute_as"); ok {
+				value, err = sdk.ToExecuteAs(v.(string))
+				if err != nil {
+					return diag.FromErr(err)
+				}
+			} else {
+				// there is no UNSET, so we need to set it manually
+				value = sdk.ExecuteAsOwner
+			}
+			err = client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithExecuteAs(value))
+			if err != nil {
+				d.Partial(true)
 				return diag.FromErr(err)
 			}
 		}
@@ -505,6 +526,7 @@ func ImportProcedure(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 		d.Set("name", id.Name()),
 		d.Set("is_secure", booleanStringFromBool(procedure.IsSecure)),
 		setOptionalFromStringPtr(d, "null_input_behavior", procedureDetails.NullHandling),
+		d.Set("execute_as", procedureDetails.ExecuteAs),
 		importFunctionOrProcedureArguments(d, procedureDetails.NormalizedArguments),
 		// all others are set in read
 	)
