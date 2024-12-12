@@ -3,7 +3,6 @@ resource "snowflake_oauth_integration_for_custom_clients" "basic" {
   name               = "integration"
   oauth_client_type  = "CONFIDENTIAL"
   oauth_redirect_uri = "https://example.com"
-  blocked_roles_list = ["ACCOUNTADMIN", "SECURITYADMIN"]
 }
 
 # resource with all fields set
