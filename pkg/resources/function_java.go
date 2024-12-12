@@ -40,7 +40,7 @@ func FunctionJava() *schema.Resource {
 
 		Schema: collections.MergeMaps(javaFunctionSchema, functionParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.FunctionJava, ImportFunction),
 		},
 	}
 }

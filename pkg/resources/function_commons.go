@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -509,6 +510,41 @@ func UpdateFunction(language string, readFunc func(ctx context.Context, d *schem
 
 		return readFunc(ctx, d, meta)
 	}
+}
+
+func ImportFunction(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting function import")
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	functionDetails, err := client.Functions.DescribeDetails(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	function, err := client.Functions.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = errors.Join(
+		d.Set("database", id.DatabaseName()),
+		d.Set("schema", id.SchemaName()),
+		d.Set("name", id.Name()),
+		d.Set("is_secure", booleanStringFromBool(function.IsSecure)),
+		setOptionalFromStringPtr(d, "null_input_behavior", functionDetails.NullHandling),
+		setOptionalFromStringPtr(d, "return_results_behavior", functionDetails.Volatility),
+		importFunctionOrProcedureArguments(d, functionDetails.NormalizedArguments),
+		// all others are set in read
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 // TODO [SNOW-1850370]: Make the rest of the functions in this file generic (for reuse with procedures)

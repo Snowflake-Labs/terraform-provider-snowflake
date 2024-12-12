@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -478,6 +479,40 @@ func UpdateProcedure(language string, readFunc func(ctx context.Context, d *sche
 
 		return readFunc(ctx, d, meta)
 	}
+}
+
+func ImportProcedure(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting procedure import")
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	procedureDetails, err := client.Procedures.DescribeDetails(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	procedure, err := client.Procedures.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = errors.Join(
+		d.Set("database", id.DatabaseName()),
+		d.Set("schema", id.SchemaName()),
+		d.Set("name", id.Name()),
+		d.Set("is_secure", booleanStringFromBool(procedure.IsSecure)),
+		setOptionalFromStringPtr(d, "null_input_behavior", procedureDetails.NullHandling),
+		importFunctionOrProcedureArguments(d, procedureDetails.NormalizedArguments),
+		// all others are set in read
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func queryAllProcedureDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allProcedureDetailsCommon, diag.Diagnostics) {

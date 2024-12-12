@@ -40,7 +40,7 @@ func ProcedureSql() *schema.Resource {
 
 		Schema: collections.MergeMaps(sqlProcedureSchema, procedureParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.ProcedureSql, ImportProcedure),
 		},
 	}
 }

@@ -26,6 +26,17 @@ func readFunctionOrProcedureArguments(d *schema.ResourceData, args []sdk.Normali
 	}
 }
 
+func importFunctionOrProcedureArguments(d *schema.ResourceData, args []sdk.NormalizedArgument) error {
+	currentArgs := make([]map[string]any, len(args))
+	for i, arg := range args {
+		currentArgs[i] = map[string]any{
+			"arg_name":      arg.Name,
+			"arg_data_type": arg.DataType.ToSql(),
+		}
+	}
+	return d.Set("arguments", currentArgs)
+}
+
 func readFunctionOrProcedureImports(d *schema.ResourceData, imports []sdk.NormalizedPath) error {
 	if len(imports) == 0 {
 		// don't do anything if imports not present
