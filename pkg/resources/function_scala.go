@@ -40,7 +40,7 @@ func FunctionScala() *schema.Resource {
 
 		Schema: collections.MergeMaps(scalaFunctionSchema, functionParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.FunctionScala, ImportFunction),
 		},
 	}
 }

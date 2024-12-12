@@ -40,7 +40,7 @@ func FunctionJavascript() *schema.Resource {
 
 		Schema: collections.MergeMaps(javascriptFunctionSchema, functionParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.FunctionJavascript, ImportFunction),
 		},
 	}
 }
