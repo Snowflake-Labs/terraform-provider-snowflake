@@ -41,7 +41,7 @@ func ProcedureJava() *schema.Resource {
 
 		Schema: collections.MergeMaps(javaProcedureSchema, procedureParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.ProcedureJava, ImportProcedure),
 		},
 	}
 }

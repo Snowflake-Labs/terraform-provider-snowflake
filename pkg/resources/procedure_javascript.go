@@ -40,7 +40,7 @@ func ProcedureJavascript() *schema.Resource {
 
 		Schema: collections.MergeMaps(javascriptProcedureSchema, procedureParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.ProcedureJavascript, ImportProcedure),
 		},
 	}
 }

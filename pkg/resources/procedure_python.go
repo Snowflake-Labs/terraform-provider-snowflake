@@ -41,7 +41,7 @@ func ProcedurePython() *schema.Resource {
 
 		Schema: collections.MergeMaps(pythonProcedureSchema, procedureParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.ProcedurePython, ImportProcedure),
 		},
 	}
 }
