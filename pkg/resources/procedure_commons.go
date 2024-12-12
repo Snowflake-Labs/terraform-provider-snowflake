@@ -500,8 +500,12 @@ func ImportProcedure(ctx context.Context, d *schema.ResourceData, meta any) ([]*
 	}
 
 	err = errors.Join(
+		d.Set("database", id.DatabaseName()),
+		d.Set("schema", id.SchemaName()),
+		d.Set("name", id.Name()),
 		d.Set("is_secure", booleanStringFromBool(procedure.IsSecure)),
 		setOptionalFromStringPtr(d, "null_input_behavior", procedureDetails.NullHandling),
+		importFunctionOrProcedureArguments(d, procedureDetails.NormalizedArguments),
 		// all others are set in read
 	)
 	if err != nil {
