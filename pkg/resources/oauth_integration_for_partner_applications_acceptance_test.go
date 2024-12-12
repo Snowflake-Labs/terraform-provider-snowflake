@@ -36,11 +36,11 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 		values := config.Variables{
 			"name":               config.StringVariable(id.Name()),
 			"oauth_client":       config.StringVariable(string(sdk.OauthSecurityIntegrationClientLooker)),
-			"blocked_roles_list": config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN")),
 			"oauth_redirect_uri": config.StringVariable(validUrl),
 		}
 		if complete {
 			values["enabled"] = config.BoolVariable(true)
+			values["blocked_roles_list"] = config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN"))
 			values["oauth_issue_refresh_tokens"] = config.BoolVariable(false)
 			values["oauth_refresh_token_validity"] = config.IntegerVariable(86400)
 			values["oauth_use_secondary_roles"] = config.StringVariable(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))
@@ -69,7 +69,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", "default"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", "-1"),
 					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list.#", "2"),
+					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", ""),
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),

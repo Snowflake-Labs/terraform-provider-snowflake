@@ -47,7 +47,6 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 			"name":               config.StringVariable(id.Name()),
 			"oauth_client_type":  config.StringVariable(string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
 			"oauth_redirect_uri": config.StringVariable(validUrl),
-			"blocked_roles_list": config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN")),
 		}
 		if complete {
 			c["blocked_roles_list"] = config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN"), config.StringVariable(blockedRole.ID().Name()))
@@ -89,7 +88,6 @@ func TestAcc_OauthIntegrationForCustomClients_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_enforce_pkce", resources.BooleanDefault),
 					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_use_secondary_roles"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "pre_authorized_roles_list.#", "0"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "blocked_roles_list.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_issue_refresh_tokens", resources.BooleanDefault),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "oauth_refresh_token_validity", "-1"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_custom_clients.test", "network_policy", ""),

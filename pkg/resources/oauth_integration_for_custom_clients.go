@@ -269,6 +269,15 @@ func ImportOauthForCustomClientsIntegration(ctx context.Context, d *schema.Resou
 		}
 	}
 
+	if prop, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		return property.Name == "BLOCKED_ROLES_LIST"
+	}); err == nil {
+		roles := sdk.ParseCommaSeparatedStringArray(prop.Value, false)
+		if err = d.Set("blocked_roles_list", roles); err != nil {
+			return nil, err
+		}
+	}
+
 	return []*schema.ResourceData{d}, nil
 }
 
