@@ -623,10 +623,10 @@ func TestAcc_Provider_sessionParameters(t *testing.T) {
 							"statement_timeout_in_seconds": tfconfig.IntegerVariable(31337),
 						},
 					),
-				)) + unsafeExecuteShowSessionParameter(),
+				)) + executeShowSessionParameter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_unsafe_execute.t", "query_results.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_unsafe_execute.t", "query_results.0.value", "31337"),
+					resource.TestCheckResourceAttr("snowflake_execute.t", "query_results.#", "1"),
+					resource.TestCheckResourceAttr("snowflake_execute.t", "query_results.0.value", "31337"),
 				),
 			},
 		},
@@ -803,9 +803,9 @@ func datasourceModel() config.DatasourceModel {
 	return datasourcemodel.Database("t", acc.TestDatabaseName)
 }
 
-func unsafeExecuteShowSessionParameter() string {
+func executeShowSessionParameter() string {
 	return `
-resource snowflake_unsafe_execute "t" {
+resource snowflake_execute "t" {
     execute = "SELECT 1"
     query = "SHOW PARAMETERS LIKE 'STATEMENT_TIMEOUT_IN_SECONDS' IN SESSION"
     revert        = "SELECT 1"

@@ -1,11 +1,14 @@
 package resources_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -20,17 +23,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAcc_UnsafeExecute_basic(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+func TestAcc_Execute_basic(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
-	secondId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	secondId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	nameLowerCase := strings.ToLower(secondId.Name())
 	secondIdLowerCased := sdk.NewAccountObjectIdentifier(nameLowerCase)
 	nameLowerCaseEscaped := fmt.Sprintf(`"%s"`, nameLowerCase)
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 
-	resourceName := "snowflake_unsafe_execute.test"
+	resourceName := "snowflake_execute.test"
 	createConfigVariables := func(id string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"execute": config.StringVariable(createDatabaseStatement(id)),
@@ -47,7 +50,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseExistence(t, id, false),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: createConfigVariables(name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -73,7 +76,7 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseExistence(t, secondIdLowerCased, false),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: createConfigVariables(nameLowerCaseEscaped),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -91,14 +94,14 @@ func TestAcc_UnsafeExecute_basic(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeExecute_withRead(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+func TestAcc_Execute_withRead(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
 
-	resourceName := "snowflake_unsafe_execute.test"
+	resourceName := "snowflake_execute.test"
 	createConfigVariables := func(id string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"execute": config.StringVariable(createDatabaseStatement(id)),
@@ -116,7 +119,7 @@ func TestAcc_UnsafeExecute_withRead(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseExistence(t, id, false),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_withRead"),
 				ConfigVariables: createConfigVariables(name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -138,13 +141,13 @@ func TestAcc_UnsafeExecute_withRead(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeExecute_readRemoved(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+func TestAcc_Execute_readRemoved(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
-	resourceName := "snowflake_unsafe_execute.test"
+	resourceName := "snowflake_execute.test"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -155,7 +158,7 @@ func TestAcc_UnsafeExecute_readRemoved(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseExistence(t, id, false),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_withRead"),
 				ConfigVariables: map[string]config.Variable{
 					"execute": config.StringVariable(createDatabaseStatement(name)),
 					"revert":  config.StringVariable(dropDatabaseStatement(name)),
@@ -170,7 +173,7 @@ func TestAcc_UnsafeExecute_readRemoved(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_withRead"),
 				ConfigVariables: map[string]config.Variable{
 					"execute": config.StringVariable(createDatabaseStatement(name)),
 					"revert":  config.StringVariable(dropDatabaseStatement(name)),
@@ -188,13 +191,13 @@ func TestAcc_UnsafeExecute_readRemoved(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeExecute_badQuery(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+func TestAcc_Execute_badQuery(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	showDatabaseStatement := func(id string) string { return fmt.Sprintf("show databases like '%%%s%%'", id) }
-	resourceName := "snowflake_unsafe_execute.test"
+	resourceName := "snowflake_execute.test"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -205,7 +208,7 @@ func TestAcc_UnsafeExecute_badQuery(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseExistence(t, id, false),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_withRead"),
 				ConfigVariables: map[string]config.Variable{
 					"execute": config.StringVariable(createDatabaseStatement(name)),
 					"revert":  config.StringVariable(dropDatabaseStatement(name)),
@@ -223,7 +226,7 @@ func TestAcc_UnsafeExecute_badQuery(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_withRead"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_withRead"),
 				ConfigVariables: map[string]config.Variable{
 					"execute": config.StringVariable(createDatabaseStatement(name)),
 					"revert":  config.StringVariable(dropDatabaseStatement(name)),
@@ -243,7 +246,7 @@ func TestAcc_UnsafeExecute_badQuery(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeExecute_invalidExecuteStatement(t *testing.T) {
+func TestAcc_Execute_invalidExecuteStatement(t *testing.T) {
 	invalidCreateStatement := "create database"
 	invalidDropStatement := "drop database"
 
@@ -262,7 +265,7 @@ func TestAcc_UnsafeExecute_invalidExecuteStatement(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: createConfigVariables(),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -273,16 +276,16 @@ func TestAcc_UnsafeExecute_invalidExecuteStatement(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+func TestAcc_Execute_invalidRevertStatement(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
-	updatedId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	updatedId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	updatedName := updatedId.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
 	dropDatabaseStatement := func(id string) string { return fmt.Sprintf("drop database %s", id) }
 	invalidDropStatement := "drop database"
 
-	resourceName := "snowflake_unsafe_execute.test"
+	resourceName := "snowflake_execute.test"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -303,7 +306,7 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: map[string]config.Variable{
 					"execute": config.StringVariable(createDatabaseStatement(name)),
 					"revert":  config.StringVariable(invalidDropStatement),
@@ -319,7 +322,7 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: map[string]config.Variable{
 					"execute": config.StringVariable(createDatabaseStatement(updatedName)),
 					"revert":  config.StringVariable(invalidDropStatement),
@@ -330,7 +333,7 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 				ExpectError: regexp.MustCompile("SQL compilation error"),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: map[string]config.Variable{
 					"execute": config.StringVariable(createDatabaseStatement(name)),
 					"revert":  config.StringVariable(dropDatabaseStatement(name)),
@@ -347,7 +350,7 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: map[string]config.Variable{
 					"execute": config.StringVariable(createDatabaseStatement(updatedName)),
 					"revert":  config.StringVariable(dropDatabaseStatement(updatedName)),
@@ -367,15 +370,15 @@ func TestAcc_UnsafeExecute_invalidRevertStatement(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+func TestAcc_Execute_revertUpdated(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	execute := fmt.Sprintf("create database %s", name)
 	revert := fmt.Sprintf("drop database %s", name)
 	notMatchingRevert := "select 1"
 	var savedId string
 
-	resourceName := "snowflake_unsafe_execute.test"
+	resourceName := "snowflake_execute.test"
 	createConfigVariables := func(execute string, revert string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"execute": config.StringVariable(execute),
@@ -392,7 +395,7 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 		CheckDestroy: testAccCheckDatabaseExistence(t, id, false),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: createConfigVariables(execute, notMatchingRevert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -409,7 +412,7 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: createConfigVariables(execute, revert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -431,20 +434,20 @@ func TestAcc_UnsafeExecute_revertUpdated(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+func TestAcc_Execute_executeUpdated(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	execute := fmt.Sprintf("create database %s", name)
 	revert := fmt.Sprintf("drop database %s", name)
 
-	newId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("UNSAFE_EXECUTE_TEST_DATABASE_")
+	newId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	newName := newId.Name()
 	newExecute := fmt.Sprintf("create database %s", newName)
 	newRevert := fmt.Sprintf("drop database %s", newName)
 
 	var savedId string
 
-	resourceName := "snowflake_unsafe_execute.test"
+	resourceName := "snowflake_execute.test"
 	createConfigVariables := func(execute string, revert string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"execute": config.StringVariable(execute),
@@ -471,7 +474,7 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: createConfigVariables(execute, revert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -488,7 +491,7 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: createConfigVariables(newExecute, newRevert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -511,7 +514,7 @@ func TestAcc_UnsafeExecute_executeUpdated(t *testing.T) {
 	})
 }
 
-func TestAcc_UnsafeExecute_grants(t *testing.T) {
+func TestAcc_Execute_grants(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -527,7 +530,7 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 	execute := fmt.Sprintf("GRANT %s ON DATABASE %s TO ROLE %s", privilege, database.ID().FullyQualifiedName(), role.ID().FullyQualifiedName())
 	revert := fmt.Sprintf("REVOKE %s ON DATABASE %s FROM ROLE %s", privilege, database.ID().FullyQualifiedName(), role.ID().FullyQualifiedName())
 
-	resourceName := "snowflake_unsafe_execute.test"
+	resourceName := "snowflake_execute.test"
 	createConfigVariables := func(execute string, revert string) map[string]config.Variable {
 		return map[string]config.Variable{
 			"execute": config.StringVariable(execute),
@@ -547,7 +550,7 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_UnsafeExecute_commonSetup"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_commonSetup"),
 				ConfigVariables: createConfigVariables(execute, revert),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
@@ -563,19 +566,19 @@ func TestAcc_UnsafeExecute_grants(t *testing.T) {
 	})
 }
 
-// TestAcc_UnsafeExecute_grantsComplex test fails with:
+// TestAcc_Execute_grantsComplex test fails with:
 //
-//	testing_new_config.go:156: unexpected index type (string) for "snowflake_unsafe_execute.test[\"0\"]", for_each is not supported
-//	testing_new.go:68: unexpected index type (string) for "snowflake_unsafe_execute.test[\"0\"]", for_each is not supported
+//	testing_new_config.go:156: unexpected index type (string) for "snowflake_execute.test[\"0\"]", for_each is not supported
+//	testing_new.go:68: unexpected index type (string) for "snowflake_execute.test[\"0\"]", for_each is not supported
 //
 // Quick search unveiled this issue: https://github.com/hashicorp/terraform-plugin-sdk/issues/536.
 //
 // It also seems that it is working correctly underneath; with TF_LOG set to DEBUG we have:
 //
-//	2023/11/26 17:16:03 [DEBUG] SQL "GRANT CREATE SCHEMA,MODIFY ON DATABASE UNSAFE_EXECUTE_TEST_DATABASE_4397 TO ROLE UNSAFE_EXECUTE_TEST_ROLE_1145" applied successfully
-//	2023/11/26 17:16:03 [DEBUG] SQL "GRANT MODIFY,USAGE ON DATABASE UNSAFE_EXECUTE_TEST_DATABASE_3740 TO ROLE UNSAFE_EXECUTE_TEST_ROLE_3008" applied successfully
-func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
-	t.Skip("Skipping TestAcc_UnsafeExecute_grantsComplex because of https://github.com/hashicorp/terraform-plugin-sdk/issues/536 issue")
+//	2023/11/26 17:16:03 [DEBUG] SQL "GRANT CREATE SCHEMA,MODIFY ON DATABASE EXECUTE_TEST_DATABASE_4397 TO ROLE EXECUTE_TEST_ROLE_1145" applied successfully
+//	2023/11/26 17:16:03 [DEBUG] SQL "GRANT MODIFY,USAGE ON DATABASE EXECUTE_TEST_DATABASE_3740 TO ROLE EXECUTE_TEST_ROLE_3008" applied successfully
+func TestAcc_Execute_grantsComplex(t *testing.T) {
+	t.Skip("Skipping TestAcc_Execute_grantsComplex because of https://github.com/hashicorp/terraform-plugin-sdk/issues/536 issue")
 
 	client := acc.TestClient()
 
@@ -599,8 +602,8 @@ func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 	privilege2 := sdk.AccountObjectPrivilegeModify
 	privilege3 := sdk.AccountObjectPrivilegeUsage
 
-	// resourceName1 := "snowflake_unsafe_execute.test.0"
-	// resourceName2 := "snowflake_unsafe_execute.test.1"
+	// resourceName1 := "snowflake_execute.test.0"
+	// resourceName2 := "snowflake_execute.test.1"
 	createConfigVariables := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"database_grants": config.ListVariable(config.ObjectVariable(map[string]config.Variable{
@@ -671,8 +674,8 @@ func TestAcc_UnsafeExecute_grantsComplex(t *testing.T) {
 }
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2491
-func TestAcc_UnsafeExecute_queryResultsBug(t *testing.T) {
-	resourceName := "snowflake_unsafe_execute.test"
+func TestAcc_Execute_queryResultsBug(t *testing.T) {
+	resourceName := "snowflake_execute.test"
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -682,7 +685,7 @@ func TestAcc_UnsafeExecute_queryResultsBug(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: unsafeExecuteConfig(108),
+				Config: executeConfig(108),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "query", "SELECT 108"),
 					resource.TestCheckResourceAttrSet(resourceName, "query_results.#"),
@@ -690,7 +693,7 @@ func TestAcc_UnsafeExecute_queryResultsBug(t *testing.T) {
 				),
 			},
 			{
-				Config: unsafeExecuteConfig(96),
+				Config: executeConfig(96),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "query", "SELECT 96"),
 					resource.TestCheckResourceAttrSet(resourceName, "query_results.#"),
@@ -704,18 +707,66 @@ func TestAcc_UnsafeExecute_queryResultsBug(t *testing.T) {
 	})
 }
 
-func unsafeExecuteConfig(queryNumber int) string {
+func executeConfig(queryNumber int) string {
 	return fmt.Sprintf(`
-resource "snowflake_unsafe_execute" "test" {
+resource "snowflake_execute" "test" {
   execute = "SELECT 18"
   revert  = "SELECT 36"
   query  = "SELECT %d"
 }
 
-output "unsafe" {
-  value = snowflake_unsafe_execute.test.query_results
+output "query_results_output" {
+  value = snowflake_execute.test.query_results
 }
 `, queryNumber)
+}
+
+func TestAcc_Execute_QueryResultsRecomputedWithoutQueryChanges(t *testing.T) {
+	resourceName := "snowflake_execute.test"
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: executeConfigCreateDatabase(id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "query_results.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.comment", ""),
+				),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().Database.Alter(t, id, &sdk.AlterDatabaseOptions{
+						Set: &sdk.DatabaseSet{
+							Comment: sdk.String("some comment"),
+						},
+					})
+				},
+				Config: executeConfigCreateDatabase(id),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "query_results.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "query_results.0.comment", "some comment"),
+				),
+			},
+		},
+	})
+}
+
+func executeConfigCreateDatabase(id sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_execute" "test" {
+  execute = "CREATE DATABASE \"%[1]s\""
+  revert  = "DROP DATABASE \"%[1]s\""
+  query   = "SHOW DATABASES LIKE '%[1]s'"
+}
+`, id.Name())
 }
 
 func verifyGrantExists(t *testing.T, roleId sdk.AccountObjectIdentifier, privilege sdk.AccountObjectPrivilege, shouldExist bool) func(state *terraform.State) error {
@@ -739,4 +790,60 @@ func verifyGrantExists(t *testing.T, roleId sdk.AccountObjectIdentifier, privile
 		// it does not matter what we return, because we have assertions above
 		return nil
 	}
+}
+
+func TestAcc_Execute_ImportWithRandomId(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					_, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, id)
+					t.Cleanup(databaseCleanup)
+				},
+				Config:                  executeConfigCreateDatabase(id),
+				ResourceName:            "snowflake_execute.test",
+				ImportState:             true,
+				ImportStatePersist:      true,
+				ImportStateId:           "random_id",
+				ImportStateVerifyIgnore: []string{"query_results"},
+			},
+			// filling the empty state fields (execute changed from empty)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_execute.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: executeConfigCreateDatabase(id),
+			},
+			// change the id in every query to see if:
+			// 1. execute will trigger force new behavior
+			// 2. an old database is used in delete (it is)
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_execute.test", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						resources.PlanCheckFunc(func(ctx context.Context, req plancheck.CheckPlanRequest, resp *plancheck.CheckPlanResponse) {
+							_, err := acc.TestClient().Database.Show(t, id)
+							if err == nil {
+								resp.Error = fmt.Errorf("database %s still exist", id.FullyQualifiedName())
+								t.Cleanup(acc.TestClient().Database.DropDatabaseFunc(t, id))
+							}
+						}),
+					},
+				},
+				Config: executeConfigCreateDatabase(newId),
+			},
+		},
+	})
 }

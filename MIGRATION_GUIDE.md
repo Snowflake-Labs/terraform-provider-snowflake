@@ -17,6 +17,16 @@ During resource deleting, provider now uses `UNSET` instead of `SET` with the de
 #### *(behavior change)* changes in `key` field
 The value of `key` field is now case-insensitive and is validated. The list of supported values is available in the resource documentation.
 
+### unsafe_execute resource deprecation / new execute resource
+
+The `snowflake_unsafe_execute` gets deprecated in favor of the new resource `snowflake_execute`.
+The `snowflake_execute` was build on top of `snowflake_unsafe_execute` with a few improvements.
+The unsafe version will be removed with the v1 release, so please migrate to the `snowflake_execute` resource.
+
+For no downtime migration, follow our [guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+When importing, remember that the given resource id has to be unique (using UUIDs is recommended).
+Also, because of the nature of the resource, first apply after importing is necessary to "copy" values from the configuration to the state.
+
 ### snowflake_oauth_integration_for_partner_applications and snowflake_oauth_integration_for_custom_clients resource changes
 #### *(behavior change)* `blocked_roles_list` field is no longer required
 
