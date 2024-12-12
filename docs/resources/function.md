@@ -7,7 +7,7 @@ description: |-
 
 # snowflake_function (Resource)
 
-
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use snowflake_function_java, snowflake_function_javascript, snowflake_function_python, snowflake_function_scala, and snowflake_function_sql instead. <deprecation>
 
 ## Example Usage
 

@@ -173,6 +173,8 @@ func Function() *schema.Resource {
 		UpdateContext: TrackingUpdateWrapper(resources.Function, UpdateContextFunction),
 		DeleteContext: TrackingDeleteWrapper(resources.Function, DeleteFunction),
 
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_function_java, snowflake_function_javascript, snowflake_function_python, snowflake_function_scala, and snowflake_function_sql instead.",
+
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Function, customdiff.All(
 			// TODO(SNOW-1348103): add `arguments` to ComputedIfAnyAttributeChanged. This can't be done now because this function compares values without diff suppress.
 			ComputedIfAnyAttributeChanged(functionSchema, FullyQualifiedNameAttributeName, "name"),
