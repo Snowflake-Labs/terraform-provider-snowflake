@@ -81,7 +81,7 @@ func TestAcc_ProcedureJava_InlineBasic(t *testing.T) {
 				ResourceName:            procedureModel.ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"is_secure", "arguments.0.arg_data_type", "null_input_behavior"},
+				ImportStateVerifyIgnore: []string{"is_secure", "arguments.0.arg_data_type", "null_input_behavior", "execute_as"},
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedProcedureJavaResource(t, id.FullyQualifiedName()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
@@ -236,6 +236,7 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 		WithRuntimeVersion("11").
 		WithIsSecure("false").
 		WithNullInputBehavior(string(sdk.NullInputBehaviorCalledOnNullInput)).
+		WithExecuteAs(string(sdk.ExecuteAsCaller)).
 		WithComment("some comment")
 
 	procedureModelUpdateWithoutRecreation := model.ProcedureJavaBasicInline("w", id, dataType, handler, definition).
@@ -254,6 +255,7 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 		WithRuntimeVersion("11").
 		WithIsSecure("false").
 		WithNullInputBehavior(string(sdk.NullInputBehaviorCalledOnNullInput)).
+		WithExecuteAs(string(sdk.ExecuteAsOwner)).
 		WithComment("some other comment")
 
 	resource.Test(t, resource.TestCase{
@@ -276,6 +278,7 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 						HasProcedureDefinitionString(definition).
 						HasCommentString("some comment").
 						HasProcedureLanguageString("JAVA").
+						HasExecuteAsString(string(sdk.ExecuteAsCaller)).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "target_path.0.stage_location", stage.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "target_path.0.path_on_stage", jarName)),
@@ -318,6 +321,7 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 						HasProcedureDefinitionString(definition).
 						HasCommentString("some other comment").
 						HasProcedureLanguageString("JAVA").
+						HasExecuteAsString(string(sdk.ExecuteAsOwner)).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "target_path.0.stage_location", stage.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "target_path.0.path_on_stage", jarName)),
