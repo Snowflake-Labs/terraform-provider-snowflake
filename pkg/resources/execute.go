@@ -61,7 +61,7 @@ func Execute() *schema.Resource {
 
 		Description: "Resource allowing execution of ANY SQL statement.",
 
-		CustomizeDiff: TrackingCustomDiffWrapper(resources.UnsafeExecute, customdiff.All(
+		CustomizeDiff: TrackingCustomDiffWrapper(resources.Execute, customdiff.All(
 			customdiff.ForceNewIfChange("execute", func(ctx context.Context, oldValue, newValue, meta any) bool {
 				return oldValue != ""
 			}),

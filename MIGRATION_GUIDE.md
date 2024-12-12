@@ -7,7 +7,7 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
-## v0.99.0 ➞ v1.0.0
+## v0.100.0 ➞ v1.0.0
 
 ### Preview features flag
 All of the preview features objects are now disabled by default. This includes:
@@ -72,33 +72,38 @@ provider "snowflake" {
 
 ### Removed deprecated objects
 All of the deprecated objects are removed from v1 release. This includes:
-<!-- TODO(next pr): link to entries in the migration guide regarding details for each of the resource/data source-->
 - Resources
-  - `snowflake_database_old`
-  - `snowflake_role`
-  - `snowflake_oauth_integration`
-  - `snowflake_saml_integration`
+  - `snowflake_database_old` - see [migration guide](#new-feature-new-database-resources)
+  - `snowflake_role` - see [migration guide](#new-feature-new-snowflake_account_role-resource)
+  - `snowflake_oauth_integration` - see [migration guide](#new-feature-snowflake_oauth_integration_for_custom_clients-and-snowflake_oauth_integration_for_partner_applications-resources)
+  - `snowflake_saml_integration` - see [migration guide](#new-feature-snowflake_saml2_integration-resource)
   - `snowflake_session_parameter`
-  - `snowflake_stream`
-  - `snowflake_tag_masking_policy_association`
+  - `snowflake_stream` - see [migration guide](#new-feature-snowflake_stream_on_directory_table-and-snowflake_stream_on_view-resource)
+  - `snowflake_tag_masking_policy_association` - see [migration guide](#snowflake_tag_masking_policy_association-deprecation)
+  - `snowflake_function`
+  - `snowflake_procedure`
+  - `snowflake_unsafe_execute` - see [migration guide](#unsafe_execute-resource-deprecation--new-execute-resource)
 - Data sources
-  - `snowflake_role`
+  - `snowflake_role` - see [migration guide](#snowflake_role-data-source-deprecation)
+  - `snowflake_roles` - see [migration guide](#new-feature-account-role-data-source)
 - Fields in the provider configuration:
-  - `account`
-  - `oauth_access_token`
-  - `oauth_client_id`
-  - `oauth_client_secret`
-  - `oauth_endpoint`
-  - `oauth_redirect_url`
-  - `oauth_refresh_token`
-  - `private_key_path`
-  - `region`
-  - `session_params`
-  - `username`
+  - `account` - see [migration guide](#behavior-change-deprecated-fields)
+  - OAuth related fields - see [migration guide](#structural-change-oauth-api):
+    - `oauth_access_token`
+    - `oauth_client_id`
+    - `oauth_client_secret`
+    - `oauth_endpoint`
+    - `oauth_redirect_url`
+    - `oauth_refresh_token`
+    - `browser_auth`
+  - `private_key_path` - see [migration guide](#private_key_path-deprecation)
+  - `region` - see [migration guide](#remove-redundant-information-region)
+  - `session_params` - see [migration guide](#rename-session_params--params)
+  - `username` - see [migration guide](#rename-username--user)
+- Fields in `tag` resource:
+  - `object_name`
 
 Additionally, `JWT` value is no longer available for `authenticator` field in the provider configuration.
-
-
 
 ## v0.99.0 ➞ v0.100.0
 
@@ -1389,21 +1394,6 @@ Changes:
 - `pattern` was renamed to `like`
 - output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
 
-### *(new feature)* new snowflake_account_role resource
-
-Already existing `snowflake_role` was deprecated in favor of the new `snowflake_account_role`. The old resource got upgraded to
-have the same features as the new one. The only difference is the deprecation message on the old resource.
-
-New fields:
-- added `show_output` field that holds the response from SHOW ROLES. Remember that the field will be only recomputed if one of the fields (`name` or `comment`) are changed.
-
-### *(breaking change)* refactored snowflake_roles data source
-
-Changes:
-- New `in_class` filtering option to filter out roles by class name, e.g. `in_class = "SNOWFLAKE.CORE.BUDGET"`
-- `pattern` was renamed to `like`
-- output of SHOW is enclosed in `show_output`, so before, e.g. `roles.0.comment` is now `roles.0.show_output.0.comment`
-
 ### *(new feature)* snowflake_streamlit resource
 Added a new resource for managing streamlits. See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit). In this resource, we decided to split `ROOT_LOCATION` in Snowflake to two fields: `stage` representing stage fully qualified name and `directory_location` containing a path within this stage to root location.
 
@@ -1759,6 +1749,11 @@ The `ForceNew` field was removed in favor of in-place Update for `name` paramete
 So from now, these objects won't be re-created when the `name` changes, but instead only the name will be updated with `ALTER .. RENAME TO` statements.
 
 ## v0.87.0 ➞ v0.88.0
+
+### snowflake_role data source deprecation
+
+Already existing `snowflake_role` was deprecated in favor of the new `snowflake_roles`. You can have a similar behavior like before by specifying `pattern` field. Please adjust your Terraform configurations.
+
 ### snowflake_procedure resource changes
 #### *(behavior change)* Execute as validation added
 From now on, the `snowflake_procedure`'s `execute_as` parameter allows only two values: OWNER and CALLER (case-insensitive). Setting other values earlier resulted in falling back to the Snowflake default (currently OWNER) and creating a permadiff.
@@ -1961,7 +1956,7 @@ were already available in Golang Snowflake driver. This lead to several attribut
 We will focus on the deprecated ones and show you how to adapt your current configuration to the new changes.
 
 #### *(rename)* username ➞ user
-
+Provider field `username` were renamed to `user`. Adjust your provider configuration like below:
 ```terraform
 provider "snowflake" {
   # before
@@ -1973,6 +1968,7 @@ provider "snowflake" {
 ```
 
 #### *(structural change)* OAuth API
+Provider fields regarding Oauth were renamed and nested. Adjust your provider configuration like below:
 
 ```terraform
 provider "snowflake" {
@@ -2014,7 +2010,8 @@ provider "snowflake" {
 }
 ```
 
-#### *(todo)* private key path
+#### private_key_path deprecation
+Provider field `private_key_path` is now deprecated in favor of `private_key` and `file` Terraform function (see [docs](https://developer.hashicorp.com/terraform/language/functions/file)). Adjust your provider configuration like below:
 
 ```terraform
 provider "snowflake" {
@@ -2027,7 +2024,7 @@ provider "snowflake" {
 ```
 
 #### *(rename)* session_params ➞ params
-
+Provider field `session_params` were renamed to `params`. Adjust your provider configuration like below:
 ```terraform
 provider "snowflake" {
   # before

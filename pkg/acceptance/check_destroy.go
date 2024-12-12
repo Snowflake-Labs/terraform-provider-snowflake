@@ -67,15 +67,13 @@ func decodeSnowflakeId(rs *terraform.ResourceState, resource resources.Resource)
 	switch resource {
 	case resources.ExternalFunction:
 		return sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(rs.Primary.ID), nil
-	case resources.Function,
-		resources.FunctionJava,
+	case resources.FunctionJava,
 		resources.FunctionJavascript,
 		resources.FunctionPython,
 		resources.FunctionScala,
 		resources.FunctionSql:
 		return sdk.ParseSchemaObjectIdentifierWithArguments(rs.Primary.ID)
-	case resources.Procedure,
-		resources.ProcedureJava,
+	case resources.ProcedureJava,
 		resources.ProcedureJavascript,
 		resources.ProcedurePython,
 		resources.ProcedureScala,
@@ -149,9 +147,6 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	resources.FileFormat: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.FileFormats.ShowByID)
 	},
-	resources.Function: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
-		return runShowById(ctx, id, client.Functions.ShowByID)
-	},
 	resources.FunctionJava: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Functions.ShowByID)
 	},
@@ -199,9 +194,6 @@ var showByIdFunctions = map[resources.Resource]showByIdFunc{
 	},
 	resources.Pipe: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Pipes.ShowByID)
-	},
-	resources.Procedure: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
-		return runShowById(ctx, id, client.Procedures.ShowByID)
 	},
 	resources.ProcedureJava: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.Procedures.ShowByID)
