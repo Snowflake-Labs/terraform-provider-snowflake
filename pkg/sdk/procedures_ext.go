@@ -33,11 +33,12 @@ type ProcedureDetails struct {
 	InstalledPackages          *string // list present for python (hidden when SECURE)
 	ExecuteAs                  string  // present for all procedure types
 
-	NormalizedImports    []NormalizedPath
-	NormalizedTargetPath *NormalizedPath
-	ReturnDataType       datatypes.DataType
-	ReturnNotNull        bool
-	NormalizedArguments  []NormalizedArgument
+	NormalizedImports                    []NormalizedPath
+	NormalizedTargetPath                 *NormalizedPath
+	ReturnDataType                       datatypes.DataType
+	ReturnNotNull                        bool
+	NormalizedArguments                  []NormalizedArgument
+	NormalizedExternalAccessIntegrations []AccountObjectIdentifier
 }
 
 func procedureDetailsFromRows(rows []ProcedureDetail) (*ProcedureDetails, error) {
@@ -106,6 +107,14 @@ func procedureDetailsFromRows(rows []ProcedureDetail) (*ProcedureDetails, error)
 		errs = append(errs, err)
 	} else {
 		v.NormalizedArguments = args
+	}
+
+	if v.ExternalAccessIntegrations != nil {
+		if p, err := parseFunctionOrProcedureExternalAccessIntegrations(*v.ExternalAccessIntegrations); err != nil {
+			errs = append(errs, err)
+		} else {
+			v.NormalizedExternalAccessIntegrations = p
+		}
 	}
 
 	return v, errors.Join(errs...)

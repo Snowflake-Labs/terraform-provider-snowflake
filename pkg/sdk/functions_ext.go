@@ -33,11 +33,12 @@ type FunctionDetails struct {
 	InstalledPackages          *string // list present for python (hidden when SECURE)
 	IsAggregate                *bool   // present for python
 
-	NormalizedImports    []NormalizedPath
-	NormalizedTargetPath *NormalizedPath
-	ReturnDataType       datatypes.DataType
-	ReturnNotNull        bool
-	NormalizedArguments  []NormalizedArgument
+	NormalizedImports                    []NormalizedPath
+	NormalizedTargetPath                 *NormalizedPath
+	ReturnDataType                       datatypes.DataType
+	ReturnNotNull                        bool
+	NormalizedArguments                  []NormalizedArgument
+	NormalizedExternalAccessIntegrations []AccountObjectIdentifier
 }
 
 func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
@@ -106,6 +107,14 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 		errs = append(errs, err)
 	} else {
 		v.NormalizedArguments = args
+	}
+
+	if v.ExternalAccessIntegrations != nil {
+		if p, err := parseFunctionOrProcedureExternalAccessIntegrations(*v.ExternalAccessIntegrations); err != nil {
+			errs = append(errs, err)
+		} else {
+			v.NormalizedExternalAccessIntegrations = p
+		}
 	}
 
 	return v, errors.Join(errs...)

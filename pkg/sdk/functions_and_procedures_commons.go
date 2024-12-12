@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
@@ -115,4 +116,10 @@ func parseFunctionOrProcedureArgument(arg string) (*NormalizedArgument, error) {
 		return nil, fmt.Errorf("arg type %s cannot be parsed, err: %w", rest, err)
 	}
 	return &NormalizedArgument{argName, dt}, nil
+}
+
+// TODO [SNOW-1850370]: is this combo enough? - e.g. whitespace looks to be not trimmed
+func parseFunctionOrProcedureExternalAccessIntegrations(raw string) ([]AccountObjectIdentifier, error) {
+	log.Printf("[DEBUG] external access integrations: %s", raw)
+	return collections.MapErr(ParseCommaSeparatedStringArray(raw, false), ParseAccountObjectIdentifier)
 }
