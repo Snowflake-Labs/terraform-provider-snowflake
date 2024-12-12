@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -23,7 +22,7 @@ func FunctionJava() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.FunctionJava, CreateContextFunctionJava),
 		ReadContext:   TrackingReadWrapper(resources.FunctionJava, ReadContextFunctionJava),
-		UpdateContext: TrackingUpdateWrapper(resources.FunctionJava, UpdateContextFunctionJava),
+		UpdateContext: TrackingUpdateWrapper(resources.FunctionJava, UpdateFunction("JAVA", ReadContextFunctionJava)),
 		DeleteContext: TrackingDeleteWrapper(resources.FunctionJava, DeleteFunction),
 		Description:   "Resource used to manage java function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
@@ -146,98 +145,4 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	return nil
-}
-
-func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if d.HasChange("name") {
-		newId := sdk.NewSchemaObjectIdentifierWithArgumentsInSchema(id.SchemaId(), d.Get("name").(string), id.ArgumentDataTypes()...)
-
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithRenameTo(newId.SchemaObjectId()))
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error renaming function %v err = %w", d.Id(), err))
-		}
-
-		d.SetId(helpers.EncodeResourceIdentifier(newId))
-		id = newId
-	}
-
-	// Batch SET operations and UNSET operations
-	setRequest := sdk.NewFunctionSetRequest()
-	unsetRequest := sdk.NewFunctionUnsetRequest()
-
-	err = errors.Join(
-		stringAttributeUpdate(d, "comment", &setRequest.Comment, &unsetRequest.Comment),
-		func() error {
-			if d.HasChange("secrets") {
-				return setSecretsInBuilder(d, func(references []sdk.SecretReference) *sdk.FunctionSetRequest {
-					return setRequest.WithSecretsList(sdk.SecretsListRequest{SecretsList: references})
-				})
-			}
-			return nil
-		}(),
-		func() error {
-			if d.HasChange("external_access_integrations") {
-				return setExternalAccessIntegrationsInBuilder(d, func(references []sdk.AccountObjectIdentifier) any {
-					if len(references) == 0 {
-						return unsetRequest.WithExternalAccessIntegrations(true)
-					} else {
-						return setRequest.WithExternalAccessIntegrations(references)
-					}
-				})
-			}
-			return nil
-		}(),
-	)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if updateParamDiags := handleFunctionParametersUpdate(d, setRequest, unsetRequest); len(updateParamDiags) > 0 {
-		return updateParamDiags
-	}
-
-	// Apply SET and UNSET changes
-	if !reflect.DeepEqual(*setRequest, *sdk.NewFunctionSetRequest()) {
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*setRequest))
-		if err != nil {
-			d.Partial(true)
-			return diag.FromErr(err)
-		}
-	}
-	if !reflect.DeepEqual(*unsetRequest, *sdk.NewFunctionUnsetRequest()) {
-		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*unsetRequest))
-		if err != nil {
-			d.Partial(true)
-			return diag.FromErr(err)
-		}
-	}
-
-	// has to be handled separately
-	if d.HasChange("is_secure") {
-		if v := d.Get("is_secure").(string); v != BooleanDefault {
-			parsed, err := booleanStringToBool(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			err = client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetSecure(parsed))
-			if err != nil {
-				d.Partial(true)
-				return diag.FromErr(err)
-			}
-		} else {
-			err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetSecure(true))
-			if err != nil {
-				d.Partial(true)
-				return diag.FromErr(err)
-			}
-		}
-	}
-
-	return ReadContextFunctionJava(ctx, d, meta)
 }
