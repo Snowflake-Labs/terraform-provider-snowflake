@@ -5,6 +5,8 @@ description: |-
   
 ---
 
+!> **Caution: Preview Feature** This feature is considered a preview feature in the provider, regardless of the state of the resource in Snowflake. We do not guarantee its stability. It will be reworked and marked as a stable feature in future releases. Breaking changes are expected, even without bumping the major version. To use this feature, add the relevant feature name to `preview_features_enabled field` in the [provider configuration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#schema). Please always refer to the [Getting Help](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
+
 # snowflake_procedure (Resource)
 
 ~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use snowflake_procedure_java, snowflake_procedure_javascript, snowflake_procedure_python, snowflake_procedure_scala, and snowflake_procedure_sql instead. <deprecation>

@@ -5,6 +5,8 @@ description: |-
   
 ---
 
+!> **Caution: Preview Feature** This feature is considered a preview feature in the provider, regardless of the state of the resource in Snowflake. We do not guarantee its stability. It will be reworked and marked as a stable feature in future releases. Breaking changes are expected, even without bumping the major version. To use this feature, add the relevant feature name to `preview_features_enabled field` in the [provider configuration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#schema). Please always refer to the [Getting Help](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
+
 # snowflake_function (Resource)
 
 ~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use snowflake_function_java, snowflake_function_javascript, snowflake_function_python, snowflake_function_scala, and snowflake_function_sql instead. <deprecation>

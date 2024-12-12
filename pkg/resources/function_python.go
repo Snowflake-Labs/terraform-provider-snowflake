@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,10 +21,10 @@ import (
 
 func FunctionPython() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.FunctionPython, CreateContextFunctionPython),
-		ReadContext:   TrackingReadWrapper(resources.FunctionPython, ReadContextFunctionPython),
-		UpdateContext: TrackingUpdateWrapper(resources.FunctionPython, UpdateFunction("PYTHON", ReadContextFunctionPython)),
-		DeleteContext: TrackingDeleteWrapper(resources.FunctionPython, DeleteFunction),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.FunctionPythonResource), TrackingCreateWrapper(resources.FunctionPython, CreateContextFunctionPython)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.FunctionPythonResource), TrackingReadWrapper(resources.FunctionPython, ReadContextFunctionPython)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.FunctionPythonResource), TrackingUpdateWrapper(resources.FunctionPython, UpdateFunction("PYTHON", ReadContextFunctionPython))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.FunctionPythonResource), TrackingDeleteWrapper(resources.FunctionPython, DeleteFunction)),
 		Description:   "Resource used to manage python function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionPython, customdiff.All(

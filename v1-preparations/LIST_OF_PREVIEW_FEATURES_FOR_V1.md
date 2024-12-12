@@ -2,8 +2,10 @@
 
 * [snowflake_current_account](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/current_account) (datasource)
 * [snowflake_account_password_policy_attachment](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/account_password_policy_attachment)
+* [snowflake_account_authentication_policy_attachment](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/account_authentication_policy_attachment)
 * [snowflake_alert](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/alert)
 * [snowflake_alerts](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/alerts) (datasource)
+* [snowflake_authentication_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/authentication_policy)
 * [snowflake_api_integration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/api_integration)
 * [snowflake_cortex_search_service](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/resources/cortex_search_service)
 * [snowflake_cortex_search_services](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs/data-sources/cortex_search_services) (datasource)

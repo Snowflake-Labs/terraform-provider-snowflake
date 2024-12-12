@@ -5,8 +5,6 @@ description: |-
   Data source used to get details of filtered tasks. Filtering is aligned with the current possibilities for SHOW TASKS https://docs.snowflake.com/en/sql-reference/sql/show-tasks query. The results of SHOW and SHOW PARAMETERS IN are encapsulated in one output collection tasks.
 ---
 
-!> **V1 release candidate** This data source was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the data source if needed. Any errors reported will be resolved with a higher priority. We encourage checking this data source out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0980--v0990) to use it.
-
 # snowflake_tasks (Data Source)
 
 Data source used to get details of filtered tasks. Filtering is aligned with the current possibilities for [SHOW TASKS](https://docs.snowflake.com/en/sql-reference/sql/show-tasks) query. The results of SHOW and SHOW PARAMETERS IN are encapsulated in one output collection `tasks`.
