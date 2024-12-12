@@ -22,6 +22,11 @@ across different versions.
 It will be removed with the v1 release. Please check the docs for the new resources and adjust your configuration files.
 For no downtime migration, follow our [guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
 
+The new resources are more aligned with current features like:
+- external access integrations support
+- secrets support
+- argument default values
+
 `snowflake_procedure` is now deprecated in favor of 5 new preview resources:
 
 - `snowflake_procedure_java`
@@ -32,6 +37,11 @@ For no downtime migration, follow our [guide](https://github.com/Snowflake-Labs/
 
 It will be removed with the v1 release. Please check the docs for the new resources and adjust your configuration files.
 For no downtime migration, follow our [guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+
+The new resources are more aligned with current features like:
+- external access integrations support
+- secrets support
+- argument default values
 
 ### *(new feature)* Account role data source
 Added a new `snowflake_account_roles` data source for account roles. Now it reflects It's based on `snowflake_roles` data source.
