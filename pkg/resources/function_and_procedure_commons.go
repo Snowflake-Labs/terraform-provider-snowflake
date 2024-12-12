@@ -10,7 +10,7 @@ import (
 
 func readFunctionOrProcedureArguments(d *schema.ResourceData, args []sdk.NormalizedArgument) error {
 	if len(args) == 0 {
-		// TODO [SNOW-1348103]: handle empty list
+		// TODO [before V1]: handle empty list
 		return nil
 	}
 	// We do it the unusual way because the default values are not returned by SF.
@@ -38,6 +38,21 @@ func readFunctionOrProcedureImports(d *schema.ResourceData, imports []sdk.Normal
 		}
 	})
 	return d.Set("imports", imps)
+}
+
+func readFunctionOrProcedureExternalAccessIntegrations(d *schema.ResourceData, externalAccessIntegrations []sdk.AccountObjectIdentifier) error {
+	return d.Set("externalAccessIntegrations", collections.Map(externalAccessIntegrations, func(id sdk.AccountObjectIdentifier) string { return id.Name() }))
+}
+
+func readFunctionOrProcedureSecrets(d *schema.ResourceData, secrets map[string]sdk.SchemaObjectIdentifier) error {
+	all := make([]map[string]any, 0)
+	for k, v := range secrets {
+		all = append(all, map[string]any{
+			"secret_variable_name": k,
+			"secret_id":            v.FullyQualifiedName(),
+		})
+	}
+	return d.Set("secrets", all)
 }
 
 func readFunctionOrProcedureTargetPath(d *schema.ResourceData, normalizedPath *sdk.NormalizedPath) error {

@@ -72,12 +72,11 @@ func CreateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 		attributeMappedValueCreateBuilder[string](d, "null_input_behavior", request.WithNullInputBehavior, sdk.ToNullInputBehavior),
 		attributeMappedValueCreateBuilder[string](d, "return_results_behavior", request.WithReturnResultsBehavior, sdk.ToReturnResultsBehavior),
 		stringAttributeCreateBuilder(d, "runtime_version", request.WithRuntimeVersion),
-		// TODO [SNOW-1348103]: handle the rest of the attributes
-		// comment
+		stringAttributeCreateBuilder(d, "comment", request.WithComment),
 		setFunctionImportsInBuilder(d, request.WithImports),
-		// packages
-		// external_access_integrations
-		// secrets
+		setFunctionPackagesInBuilder(d, request.WithPackages),
+		setExternalAccessIntegrationsInBuilder(d, request.WithExternalAccessIntegrations),
+		setSecretsInBuilder(d, request.WithSecrets),
 		setFunctionTargetPathInBuilder(d, request.WithTargetPath),
 		stringAttributeCreateBuilder(d, "function_definition", request.WithFunctionDefinitionWrapped),
 	)
@@ -121,19 +120,18 @@ func ReadContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta a
 	// TODO [SNOW-1348103]: handle setting state to value from config
 
 	errs := errors.Join(
-		// TODO [SNOW-1348103]: set the rest of the fields
 		// not reading is_secure on purpose (handled as external change to show output)
 		readFunctionOrProcedureArguments(d, allFunctionDetails.functionDetails.NormalizedArguments),
 		d.Set("return_type", allFunctionDetails.functionDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
 		// not reading return_results_behavior on purpose (handled as external change to show output)
 		setOptionalFromStringPtr(d, "runtime_version", allFunctionDetails.functionDetails.RuntimeVersion),
-		// comment
+		d.Set("comment", allFunctionDetails.function.Description),
 		readFunctionOrProcedureImports(d, allFunctionDetails.functionDetails.NormalizedImports),
-		// packages
+		d.Set("packages", allFunctionDetails.functionDetails.NormalizedPackages),
 		setRequiredFromStringPtr(d, "handler", allFunctionDetails.functionDetails.Handler),
-		// external_access_integrations
-		// secrets
+		readFunctionOrProcedureExternalAccessIntegrations(d, allFunctionDetails.functionDetails.NormalizedExternalAccessIntegrations),
+		readFunctionOrProcedureSecrets(d, allFunctionDetails.functionDetails.NormalizedSecrets),
 		readFunctionOrProcedureTargetPath(d, allFunctionDetails.functionDetails.NormalizedTargetPath),
 		setOptionalFromStringPtr(d, "function_definition", allFunctionDetails.functionDetails.Body),
 		d.Set("function_language", allFunctionDetails.functionDetails.Language),

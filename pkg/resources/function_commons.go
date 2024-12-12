@@ -441,6 +441,46 @@ func parseFunctionImportsCommon(d *schema.ResourceData) ([]sdk.FunctionImportReq
 	return imports, nil
 }
 
+func parseFunctionPackagesCommon(d *schema.ResourceData) ([]sdk.FunctionPackageRequest, error) {
+	packages := make([]sdk.FunctionPackageRequest, 0)
+	if v, ok := d.GetOk("packages"); ok {
+		for _, pkg := range v.(*schema.Set).List() {
+			packages = append(packages, *sdk.NewFunctionPackageRequest().WithPackage(pkg.(string)))
+		}
+	}
+	return packages, nil
+}
+
+func parseExternalAccessIntegrationsCommon(d *schema.ResourceData) ([]sdk.AccountObjectIdentifier, error) {
+	integrations := make([]sdk.AccountObjectIdentifier, 0)
+	if v, ok := d.GetOk("external_access_integrations"); ok {
+		for _, i := range v.(*schema.Set).List() {
+			id, err := sdk.ParseAccountObjectIdentifier(i.(string))
+			if err != nil {
+				return nil, err
+			}
+			integrations = append(integrations, id)
+		}
+	}
+	return integrations, nil
+}
+
+func parseSecretsCommon(d *schema.ResourceData) ([]sdk.SecretReference, error) {
+	secretReferences := make([]sdk.SecretReference, 0)
+	if v, ok := d.GetOk("secrets"); ok {
+		for _, s := range v.(*schema.Set).List() {
+			name := s.(map[string]any)["secret_variable_name"].(string)
+			idRaw := s.(map[string]any)["secret_id"].(string)
+			id, err := sdk.ParseSchemaObjectIdentifier(idRaw)
+			if err != nil {
+				return nil, err
+			}
+			secretReferences = append(secretReferences, sdk.SecretReference{VariableName: name, Name: id})
+		}
+	}
+	return secretReferences, nil
+}
+
 func parseFunctionTargetPathCommon(d *schema.ResourceData) (string, error) {
 	var tp string
 	if v, ok := d.GetOk("target_path"); ok {
@@ -479,6 +519,33 @@ func setFunctionImportsInBuilder[T any](d *schema.ResourceData, setImports func(
 		return err
 	}
 	setImports(imports)
+	return nil
+}
+
+func setFunctionPackagesInBuilder[T any](d *schema.ResourceData, setPackages func([]sdk.FunctionPackageRequest) T) error {
+	packages, err := parseFunctionPackagesCommon(d)
+	if err != nil {
+		return err
+	}
+	setPackages(packages)
+	return nil
+}
+
+func setExternalAccessIntegrationsInBuilder[T any](d *schema.ResourceData, setIntegrations func([]sdk.AccountObjectIdentifier) T) error {
+	integrations, err := parseExternalAccessIntegrationsCommon(d)
+	if err != nil {
+		return err
+	}
+	setIntegrations(integrations)
+	return nil
+}
+
+func setSecretsInBuilder[T any](d *schema.ResourceData, setSecrets func([]sdk.SecretReference) T) error {
+	secrets, err := parseSecretsCommon(d)
+	if err != nil {
+		return err
+	}
+	setSecrets(secrets)
 	return nil
 }
 
