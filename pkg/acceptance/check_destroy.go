@@ -630,3 +630,19 @@ func TestAccCheckGrantApplicationRoleDestroy(s *terraform.State) error {
 	}
 	return nil
 }
+
+func CheckAccountParameterUnset(t *testing.T, paramName sdk.AccountParameter) func(*terraform.State) error {
+	t.Helper()
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "snowflake_account_parameter" {
+				continue
+			}
+			parameter := TestClient().Parameter.ShowAccountParameter(t, paramName)
+			if parameter.Level != sdk.ParameterTypeSnowflakeDefault {
+				return fmt.Errorf("expected parameter level empty, got %v", parameter.Level)
+			}
+		}
+		return nil
+	}
+}

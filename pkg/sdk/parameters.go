@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -22,6 +23,7 @@ var _ Parameters = (*parameters)(nil)
 
 type Parameters interface {
 	SetAccountParameter(ctx context.Context, parameter AccountParameter, value string) error
+	UnsetAccountParameter(ctx context.Context, parameter AccountParameter) error
 	SetSessionParameterOnAccount(ctx context.Context, parameter SessionParameter, value string) error
 	SetSessionParameterOnUser(ctx context.Context, userID AccountObjectIdentifier, parameter SessionParameter, value string) error
 	SetObjectParameterOnAccount(ctx context.Context, parameter ObjectParameter, value string) error
@@ -174,6 +176,64 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 	return nil
 }
 
+// TODO(next pr): add integration tests
+func (parameters *parameters) UnsetAccountParameter(ctx context.Context, parameter AccountParameter) error {
+	opts := AlterAccountOptions{
+		Unset: &AccountUnset{
+			Parameters: &AccountLevelParametersUnset{
+				AccountParameters: &AccountParametersUnset{},
+			},
+		},
+	}
+	switch parameter {
+	case AccountParameterAllowClientMFACaching:
+		opts.Unset.Parameters.AccountParameters.AllowClientMFACaching = Pointer(true)
+	case AccountParameterAllowIDToken:
+		opts.Unset.Parameters.AccountParameters.AllowIDToken = Pointer(true)
+	case AccountParameterClientEncryptionKeySize:
+		opts.Unset.Parameters.AccountParameters.ClientEncryptionKeySize = Pointer(true)
+	case AccountParameterEnableIdentifierFirstLogin:
+		opts.Unset.Parameters.AccountParameters.EnableIdentifierFirstLogin = Pointer(true)
+	case AccountParameterEnableInternalStagesPrivatelink:
+		opts.Unset.Parameters.AccountParameters.EnableInternalStagesPrivatelink = Pointer(true)
+	case AccountParameterEnableTriSecretAndRekeyOptOutForImageRepository:
+		opts.Unset.Parameters.AccountParameters.EnableTriSecretAndRekeyOptOutForImageRepository = Pointer(true)
+	case AccountParameterEnableTriSecretAndRekeyOptOutForSpcsBlockStorage:
+		opts.Unset.Parameters.AccountParameters.EnableTriSecretAndRekeyOptOutForSpcsBlockStorage = Pointer(true)
+	case AccountParameterEnableUnredactedQuerySyntaxError:
+		opts.Unset.Parameters.AccountParameters.EnableUnredactedQuerySyntaxError = Pointer(true)
+	case AccountParameterEventTable:
+		opts.Unset.Parameters.AccountParameters.EventTable = Pointer(true)
+	case AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList:
+		opts.Unset.Parameters.AccountParameters.ExternalOAuthAddPrivilegedRolesToBlockedList = Pointer(true)
+	case AccountParameterInitialReplicationSizeLimitInTB:
+		opts.Unset.Parameters.AccountParameters.InitialReplicationSizeLimitInTB = Pointer(true)
+	case AccountParameterMinDataRetentionTimeInDays:
+		opts.Unset.Parameters.AccountParameters.MinDataRetentionTimeInDays = Pointer(true)
+	case AccountParameterNetworkPolicy:
+		opts.Unset.Parameters.AccountParameters.NetworkPolicy = Pointer(true)
+	case AccountParameterOAuthAddPrivilegedRolesToBlockedList:
+		opts.Unset.Parameters.AccountParameters.OAuthAddPrivilegedRolesToBlockedList = Pointer(true)
+	case AccountParameterPeriodicDataRekeying:
+		opts.Unset.Parameters.AccountParameters.PeriodicDataRekeying = Pointer(true)
+	case AccountParameterPreventLoadFromInlineURL:
+		opts.Unset.Parameters.AccountParameters.PreventLoadFromInlineURL = Pointer(true)
+	case AccountParameterPreventUnloadToInlineURL:
+		opts.Unset.Parameters.AccountParameters.PreventUnloadToInlineURL = Pointer(true)
+	case AccountParameterPreventUnloadToInternalStages:
+		opts.Unset.Parameters.AccountParameters.PreventUnloadToInternalStages = Pointer(true)
+	case AccountParameterRequireStorageIntegrationForStageCreation:
+		opts.Unset.Parameters.AccountParameters.RequireStorageIntegrationForStageCreation = Pointer(true)
+	case AccountParameterRequireStorageIntegrationForStageOperation:
+		opts.Unset.Parameters.AccountParameters.RequireStorageIntegrationForStageOperation = Pointer(true)
+	case AccountParameterSSOLoginPage:
+		opts.Unset.Parameters.AccountParameters.SSOLoginPage = Pointer(true)
+	default:
+		return parameters.UnsetSessionParameterOnAccount(ctx, SessionParameter(parameter))
+	}
+	return parameters.client.Accounts.Alter(ctx, &opts)
+}
+
 func (parameters *parameters) SetSessionParameterOnAccount(ctx context.Context, parameter SessionParameter, value string) error {
 	sp := &SessionParameters{}
 	err := sp.setParam(parameter, value)
@@ -187,6 +247,24 @@ func (parameters *parameters) SetSessionParameterOnAccount(ctx context.Context, 
 	} else {
 		if strings.Contains(err.Error(), "session parameter is not supported") {
 			return parameters.SetObjectParameterOnAccount(ctx, ObjectParameter(parameter), value)
+		}
+		return err
+	}
+}
+
+func (parameters *parameters) UnsetSessionParameterOnAccount(ctx context.Context, parameter SessionParameter) error {
+	sp := &SessionParametersUnset{}
+	err := sp.setParam(parameter)
+	if err == nil {
+		opts := AlterAccountOptions{Unset: &AccountUnset{Parameters: &AccountLevelParametersUnset{SessionParameters: sp}}}
+		err = parameters.client.Accounts.Alter(ctx, &opts)
+		if err != nil {
+			return err
+		}
+		return nil
+	} else {
+		if strings.Contains(err.Error(), "session parameter is not supported") {
+			return parameters.UnsetObjectParameterOnAccount(ctx, ObjectParameter(parameter))
 		}
 		return err
 	}
@@ -297,6 +375,49 @@ func (parameters *parameters) SetObjectParameterOnAccount(ctx context.Context, p
 	return nil
 }
 
+func (parameters *parameters) UnsetObjectParameterOnAccount(ctx context.Context, parameter ObjectParameter) error {
+	opts := AlterAccountOptions{Unset: &AccountUnset{Parameters: &AccountLevelParametersUnset{ObjectParameters: &ObjectParametersUnset{}}}}
+	switch parameter {
+	case ObjectParameterCatalog:
+		opts.Unset.Parameters.ObjectParameters.Catalog = Pointer(true)
+	case ObjectParameterDataRetentionTimeInDays:
+		opts.Unset.Parameters.ObjectParameters.DataRetentionTimeInDays = Pointer(true)
+	case ObjectParameterDefaultDDLCollation:
+		opts.Unset.Parameters.ObjectParameters.DefaultDDLCollation = Pointer(true)
+	case ObjectParameterLogLevel:
+		opts.Unset.Parameters.ObjectParameters.LogLevel = Pointer(true)
+	case ObjectParameterMaxConcurrencyLevel:
+		opts.Unset.Parameters.ObjectParameters.MaxConcurrencyLevel = Pointer(true)
+	case ObjectParameterMaxDataExtensionTimeInDays:
+		opts.Unset.Parameters.ObjectParameters.MaxDataExtensionTimeInDays = Pointer(true)
+	case ObjectParameterPipeExecutionPaused:
+		opts.Unset.Parameters.ObjectParameters.PipeExecutionPaused = Pointer(true)
+	case ObjectParameterPreventUnloadToInternalStages:
+		opts.Unset.Parameters.ObjectParameters.PreventUnloadToInternalStages = Pointer(true)
+	case ObjectParameterStatementQueuedTimeoutInSeconds:
+		opts.Unset.Parameters.ObjectParameters.StatementQueuedTimeoutInSeconds = Pointer(true)
+	case ObjectParameterStatementTimeoutInSeconds:
+		opts.Unset.Parameters.ObjectParameters.StatementTimeoutInSeconds = Pointer(true)
+	case ObjectParameterNetworkPolicy:
+		opts.Unset.Parameters.ObjectParameters.NetworkPolicy = Pointer(true)
+	case ObjectParameterShareRestrictions:
+		opts.Unset.Parameters.ObjectParameters.ShareRestrictions = Pointer(true)
+	case ObjectParameterSuspendTaskAfterNumFailures:
+		opts.Unset.Parameters.ObjectParameters.SuspendTaskAfterNumFailures = Pointer(true)
+	case ObjectParameterTraceLevel:
+		opts.Unset.Parameters.ObjectParameters.TraceLevel = Pointer(true)
+	case ObjectParameterUserTaskManagedInitialWarehouseSize:
+		opts.Unset.Parameters.ObjectParameters.UserTaskManagedInitialWarehouseSize = Pointer(true)
+	case ObjectParameterUserTaskTimeoutMs:
+		opts.Unset.Parameters.ObjectParameters.UserTaskTimeoutMs = Pointer(true)
+	case ObjectParameterEnableUnredactedQuerySyntaxError:
+		opts.Unset.Parameters.ObjectParameters.EnableUnredactedQuerySyntaxError = Pointer(true)
+	default:
+		return fmt.Errorf("invalid object parameter: %v", string(parameter))
+	}
+	return parameters.client.Accounts.Alter(ctx, &opts)
+}
+
 type setParameterOnObject struct {
 	alter            bool             `ddl:"static" sql:"ALTER"`
 	objectType       ObjectType       `ddl:"keyword"`
@@ -344,6 +465,7 @@ type AccountParameter string
 // https://docs.snowflake.com/en/sql-reference/parameters#parameter-hierarchy-and-types
 // Account Parameters include Session Parameters, Object Parameters and User Parameters
 const (
+	// TODO(next pr): add remaining parameters; also in parameters_impl.go
 	// Account Parameters
 	AccountParameterAllowClientMFACaching                            AccountParameter = "ALLOW_CLIENT_MFA_CACHING"
 	AccountParameterAllowIDToken                                     AccountParameter = "ALLOW_ID_TOKEN" // #nosec G101
@@ -367,45 +489,59 @@ const (
 	AccountParameterSSOLoginPage                                     AccountParameter = "SSO_LOGIN_PAGE"
 
 	// Session Parameters (inherited)
-	AccountParameterAbortDetachedQuery                    AccountParameter = "ABORT_DETACHED_QUERY"
-	AccountParameterAutocommit                            AccountParameter = "AUTOCOMMIT"
-	AccountParameterBinaryInputFormat                     AccountParameter = "BINARY_INPUT_FORMAT"
-	AccountParameterBinaryOutputFormat                    AccountParameter = "BINARY_OUTPUT_FORMAT"
-	AccountParameterClientMetadataRequestUseConnectionCtx AccountParameter = "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"
-	AccountParameterClientMetadataUseSessionDatabase      AccountParameter = "CLIENT_METADATA_USE_SESSION_DATABASE"
-	AccountParameterClientResultColumnCaseInsensitive     AccountParameter = "CLIENT_RESULT_COLUMN_CASE_INSENSITIVE"
-	AccountParameterDateInputFormat                       AccountParameter = "DATE_INPUT_FORMAT"
-	AccountParameterGeographyOutputFormat                 AccountParameter = "GEOGRAPHY_OUTPUT_FORMAT"
-	AccountParameterDateOutputFormat                      AccountParameter = "DATE_OUTPUT_FORMAT"
-	AccountParameterErrorOnNondeterministicMerge          AccountParameter = "ERROR_ON_NONDETERMINISTIC_MERGE"
-	AccountParameterErrorOnNondeterministicUpdate         AccountParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
-	AccountParameterJSONIndent                            AccountParameter = "JSON_INDENT"
-	AccountParameterLockTimeout                           AccountParameter = "LOCK_TIMEOUT"
-	AccountParameterMultiStatementCount                   AccountParameter = "MULTI_STATEMENT_COUNT"
-	AccountParameterQueryTag                              AccountParameter = "QUERY_TAG"
-	AccountParameterQuotedIdentifiersIgnoreCase           AccountParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
-	AccountParameterRowsPerResultset                      AccountParameter = "ROWS_PER_RESULTSET"
-	AccountParameterS3StageVpceDnsName                    AccountParameter = "S3_STAGE_VPCE_DNS_NAME"
-	AccountParameterSimulatedDataSharingConsumer          AccountParameter = "SIMULATED_DATA_SHARING_CONSUMER"
-	AccountParameterStatementTimeoutInSeconds             AccountParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
-	AccountParameterStrictJSONOutput                      AccountParameter = "STRICT_JSON_OUTPUT"
-	AccountParameterTimeInputFormat                       AccountParameter = "TIME_INPUT_FORMAT"
-	AccountParameterTimeOutputFormat                      AccountParameter = "TIME_OUTPUT_FORMAT"
-	AccountParameterTimestampDayIsAlways24h               AccountParameter = "TIMESTAMP_DAY_IS_ALWAYS_24H"
-	AccountParameterTimestampInputFormat                  AccountParameter = "TIMESTAMP_INPUT_FORMAT"
-	AccountParameterTimestampLtzOutputFormat              AccountParameter = "TIMESTAMP_LTZ_OUTPUT_FORMAT"
-	AccountParameterTimestampNtzOutputFormat              AccountParameter = "TIMESTAMP_NTZ_OUTPUT_FORMAT"
-	AccountParameterTimestampOutputFormat                 AccountParameter = "TIMESTAMP_OUTPUT_FORMAT"
-	AccountParameterTimestampTypeMapping                  AccountParameter = "TIMESTAMP_TYPE_MAPPING"
-	AccountParameterTimestampTzOutputFormat               AccountParameter = "TIMESTAMP_TZ_OUTPUT_FORMAT"
-	AccountParameterTimezone                              AccountParameter = "TIMEZONE"
-	AccountParameterTransactionAbortOnError               AccountParameter = "TRANSACTION_ABORT_ON_ERROR"
-	AccountParameterTransactionDefaultIsolationLevel      AccountParameter = "TRANSACTION_DEFAULT_ISOLATION_LEVEL"
-	AccountParameterTwoDigitCenturyStart                  AccountParameter = "TWO_DIGIT_CENTURY_START"
-	AccountParameterUnsupportedDdlAction                  AccountParameter = "UNSUPPORTED_DDL_ACTION"
-	AccountParameterUseCachedResult                       AccountParameter = "USE_CACHED_RESULT"
-	AccountParameterWeekOfYearPolicy                      AccountParameter = "WEEK_OF_YEAR_POLICY"
-	AccountParameterWeekStart                             AccountParameter = "WEEK_START"
+	AccountParameterAbortDetachedQuery                       AccountParameter = "ABORT_DETACHED_QUERY"
+	AccountParameterAutocommit                               AccountParameter = "AUTOCOMMIT"
+	AccountParameterBinaryInputFormat                        AccountParameter = "BINARY_INPUT_FORMAT"
+	AccountParameterBinaryOutputFormat                       AccountParameter = "BINARY_OUTPUT_FORMAT"
+	AccountParameterClientMemoryLimit                        AccountParameter = "CLIENT_MEMORY_LIMIT"
+	AccountParameterClientMetadataRequestUseConnectionCtx    AccountParameter = "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"
+	AccountParameterClientMetadataUseSessionDatabase         AccountParameter = "CLIENT_METADATA_USE_SESSION_DATABASE"
+	AccountParameterClientPrefetchThreads                    AccountParameter = "CLIENT_PREFETCH_THREADS"
+	AccountParameterClientResultChunkSize                    AccountParameter = "CLIENT_RESULT_CHUNK_SIZE"
+	AccountParameterClientResultColumnCaseInsensitive        AccountParameter = "CLIENT_RESULT_COLUMN_CASE_INSENSITIVE"
+	AccountParameterClientSessionKeepAlive                   AccountParameter = "CLIENT_SESSION_KEEP_ALIVE"
+	AccountParameterClientSessionKeepAliveHeartbeatFrequency AccountParameter = "CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY"
+	AccountParameterClientTimestampTypeMapping               AccountParameter = "CLIENT_TIMESTAMP_TYPE_MAPPING"
+	AccountParameterDateInputFormat                          AccountParameter = "DATE_INPUT_FORMAT"
+	AccountParameterDateOutputFormat                         AccountParameter = "DATE_OUTPUT_FORMAT"
+	AccountParameterEnableUnloadPhysicalTypeOptimization     AccountParameter = "ENABLE_UNLOAD_PHYSICAL_TYPE_OPTIMIZATION"
+	AccountParameterErrorOnNondeterministicMerge             AccountParameter = "ERROR_ON_NONDETERMINISTIC_MERGE"
+	AccountParameterErrorOnNondeterministicUpdate            AccountParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
+	AccountParameterGeographyOutputFormat                    AccountParameter = "GEOGRAPHY_OUTPUT_FORMAT"
+	AccountParameterGeometryOutputFormat                     AccountParameter = "GEOMETRY_OUTPUT_FORMAT"
+	AccountParameterJdbcTreatDecimalAsInt                    AccountParameter = "JDBC_TREAT_DECIMAL_AS_INT"
+	AccountParameterJdbcTreatTimestampNtzAsUtc               AccountParameter = "JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC"
+	AccountParameterJdbcUseSessionTimezone                   AccountParameter = "JDBC_USE_SESSION_TIMEZONE"
+	AccountParameterJSONIndent                               AccountParameter = "JSON_INDENT"
+	AccountParameterLockTimeout                              AccountParameter = "LOCK_TIMEOUT"
+	AccountParameterMultiStatementCount                      AccountParameter = "MULTI_STATEMENT_COUNT"
+	AccountParameterNoorderSequenceAsDefault                 AccountParameter = "NOORDER_SEQUENCE_AS_DEFAULT"
+	AccountParameterOdbcTreatDecimalAsInt                    AccountParameter = "ODBC_TREAT_DECIMAL_AS_INT"
+	AccountParameterQueryTag                                 AccountParameter = "QUERY_TAG"
+	AccountParameterQuotedIdentifiersIgnoreCase              AccountParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
+	AccountParameterRowsPerResultset                         AccountParameter = "ROWS_PER_RESULTSET"
+	AccountParameterS3StageVpceDnsName                       AccountParameter = "S3_STAGE_VPCE_DNS_NAME"
+	AccountParameterSearchPath                               AccountParameter = "SEARCH_PATH"
+	AccountParameterSimulatedDataSharingConsumer             AccountParameter = "SIMULATED_DATA_SHARING_CONSUMER"
+	AccountParameterStatementTimeoutInSeconds                AccountParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
+	AccountParameterStrictJSONOutput                         AccountParameter = "STRICT_JSON_OUTPUT"
+	AccountParameterTimeInputFormat                          AccountParameter = "TIME_INPUT_FORMAT"
+	AccountParameterTimeOutputFormat                         AccountParameter = "TIME_OUTPUT_FORMAT"
+	AccountParameterTimestampDayIsAlways24h                  AccountParameter = "TIMESTAMP_DAY_IS_ALWAYS_24H"
+	AccountParameterTimestampInputFormat                     AccountParameter = "TIMESTAMP_INPUT_FORMAT"
+	AccountParameterTimestampLtzOutputFormat                 AccountParameter = "TIMESTAMP_LTZ_OUTPUT_FORMAT"
+	AccountParameterTimestampNtzOutputFormat                 AccountParameter = "TIMESTAMP_NTZ_OUTPUT_FORMAT"
+	AccountParameterTimestampOutputFormat                    AccountParameter = "TIMESTAMP_OUTPUT_FORMAT"
+	AccountParameterTimestampTypeMapping                     AccountParameter = "TIMESTAMP_TYPE_MAPPING"
+	AccountParameterTimestampTzOutputFormat                  AccountParameter = "TIMESTAMP_TZ_OUTPUT_FORMAT"
+	AccountParameterTimezone                                 AccountParameter = "TIMEZONE"
+	AccountParameterTransactionAbortOnError                  AccountParameter = "TRANSACTION_ABORT_ON_ERROR"
+	AccountParameterTransactionDefaultIsolationLevel         AccountParameter = "TRANSACTION_DEFAULT_ISOLATION_LEVEL"
+	AccountParameterTwoDigitCenturyStart                     AccountParameter = "TWO_DIGIT_CENTURY_START"
+	AccountParameterUnsupportedDdlAction                     AccountParameter = "UNSUPPORTED_DDL_ACTION"
+	AccountParameterUseCachedResult                          AccountParameter = "USE_CACHED_RESULT"
+	AccountParameterWeekOfYearPolicy                         AccountParameter = "WEEK_OF_YEAR_POLICY"
+	AccountParameterWeekStart                                AccountParameter = "WEEK_START"
 
 	// Object Parameters (inherited)
 	AccountParameterCatalog                                 AccountParameter = "CATALOG"
@@ -432,6 +568,112 @@ const (
 	// User Parameters (inherited)
 	AccountParameterEnableUnredactedQuerySyntaxError AccountParameter = "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"
 )
+
+var AllAccountParameters = []AccountParameter{
+	AccountParameterAllowClientMFACaching,
+	AccountParameterAllowIDToken,
+	AccountParameterClientEncryptionKeySize,
+	AccountParameterEnableIdentifierFirstLogin,
+	AccountParameterEnableInternalStagesPrivatelink,
+	AccountParameterEnableTriSecretAndRekeyOptOutForImageRepository,
+	AccountParameterEnableTriSecretAndRekeyOptOutForSpcsBlockStorage,
+	AccountParameterEventTable,
+	AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList,
+	AccountParameterInitialReplicationSizeLimitInTB,
+	AccountParameterMinDataRetentionTimeInDays,
+	AccountParameterNetworkPolicy,
+	AccountParameterOAuthAddPrivilegedRolesToBlockedList,
+	AccountParameterPeriodicDataRekeying,
+	AccountParameterPreventLoadFromInlineURL,
+	AccountParameterPreventUnloadToInlineURL,
+	AccountParameterPreventUnloadToInternalStages,
+	AccountParameterRequireStorageIntegrationForStageCreation,
+	AccountParameterRequireStorageIntegrationForStageOperation,
+	AccountParameterSSOLoginPage,
+	AccountParameterAbortDetachedQuery,
+	AccountParameterAutocommit,
+	AccountParameterBinaryInputFormat,
+	AccountParameterBinaryOutputFormat,
+	AccountParameterClientMemoryLimit,
+	AccountParameterClientMetadataRequestUseConnectionCtx,
+	AccountParameterClientMetadataUseSessionDatabase,
+	AccountParameterClientPrefetchThreads,
+	AccountParameterClientResultChunkSize,
+	AccountParameterClientSessionKeepAlive,
+	AccountParameterClientSessionKeepAliveHeartbeatFrequency,
+	AccountParameterClientTimestampTypeMapping,
+	AccountParameterEnableUnloadPhysicalTypeOptimization,
+	AccountParameterClientResultColumnCaseInsensitive,
+	AccountParameterDateInputFormat,
+	AccountParameterDateOutputFormat,
+	AccountParameterErrorOnNondeterministicMerge,
+	AccountParameterErrorOnNondeterministicUpdate,
+	AccountParameterGeographyOutputFormat,
+	AccountParameterGeometryOutputFormat,
+	AccountParameterJdbcTreatDecimalAsInt,
+	AccountParameterJdbcTreatTimestampNtzAsUtc,
+	AccountParameterJdbcUseSessionTimezone,
+	AccountParameterJSONIndent,
+	AccountParameterLockTimeout,
+	AccountParameterMultiStatementCount,
+	AccountParameterNoorderSequenceAsDefault,
+	AccountParameterOdbcTreatDecimalAsInt,
+	AccountParameterQueryTag,
+	AccountParameterQuotedIdentifiersIgnoreCase,
+	AccountParameterRowsPerResultset,
+	AccountParameterS3StageVpceDnsName,
+	AccountParameterSearchPath,
+	AccountParameterSimulatedDataSharingConsumer,
+	AccountParameterStatementTimeoutInSeconds,
+	AccountParameterStrictJSONOutput,
+	AccountParameterTimeInputFormat,
+	AccountParameterTimeOutputFormat,
+	AccountParameterTimestampDayIsAlways24h,
+	AccountParameterTimestampInputFormat,
+	AccountParameterTimestampLtzOutputFormat,
+	AccountParameterTimestampNtzOutputFormat,
+	AccountParameterTimestampOutputFormat,
+	AccountParameterTimestampTypeMapping,
+	AccountParameterTimestampTzOutputFormat,
+	AccountParameterTimezone,
+	AccountParameterTransactionAbortOnError,
+	AccountParameterTransactionDefaultIsolationLevel,
+	AccountParameterTwoDigitCenturyStart,
+	AccountParameterUnsupportedDdlAction,
+	AccountParameterUseCachedResult,
+	AccountParameterWeekOfYearPolicy,
+	AccountParameterWeekStart,
+	AccountParameterCatalog,
+	AccountParameterDataRetentionTimeInDays,
+	AccountParameterDefaultDDLCollation,
+	AccountParameterExternalVolume,
+	AccountParameterLogLevel,
+	AccountParameterMaxConcurrencyLevel,
+	AccountParameterMaxDataExtensionTimeInDays,
+	AccountParameterPipeExecutionPaused,
+	AccountParameterPreventUnloadToInternalStages,
+	AccountParameterReplaceInvalidCharacters,
+	AccountParameterStatementQueuedTimeoutInSeconds,
+	AccountParameterStorageSerializationPolicy,
+	AccountParameterShareRestrictions,
+	AccountParameterSuspendTaskAfterNumFailures,
+	AccountParameterTraceLevel,
+	AccountParameterUserTaskManagedInitialWarehouseSize,
+	AccountParameterUserTaskTimeoutMs,
+	AccountParameterTaskAutoRetryAttempts,
+	AccountParameterUserTaskMinimumTriggerIntervalInSeconds,
+	AccountParameterMetricLevel,
+	AccountParameterEnableConsoleOutput,
+	AccountParameterEnableUnredactedQuerySyntaxError,
+}
+
+func ToAccountParameter(s string) (AccountParameter, error) {
+	s = strings.ToUpper(s)
+	if !slices.Contains(AllAccountParameters, AccountParameter(s)) {
+		return "", fmt.Errorf("invalid account parameter: %s", s)
+	}
+	return AccountParameter(s), nil
+}
 
 type SessionParameter string
 
@@ -922,11 +1164,14 @@ type AccountParametersUnset struct {
 	EnableTriSecretAndRekeyOptOutForImageRepository  *bool `ddl:"keyword" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"`
 	EnableTriSecretAndRekeyOptOutForSpcsBlockStorage *bool `ddl:"keyword" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE"`
 	EventTable                                       *bool `ddl:"keyword" sql:"EVENT_TABLE"`
+	EnableUnredactedQuerySyntaxError                 *bool `ddl:"keyword" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
 	ExternalOAuthAddPrivilegedRolesToBlockedList     *bool `ddl:"keyword" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	InitialReplicationSizeLimitInTB                  *bool `ddl:"keyword" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
 	MinDataRetentionTimeInDays                       *bool `ddl:"keyword" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
 	NetworkPolicy                                    *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
+	OAuthAddPrivilegedRolesToBlockedList             *bool `ddl:"keyword" sql:"OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	PeriodicDataRekeying                             *bool `ddl:"keyword" sql:"PERIODIC_DATA_REKEYING"`
+	PreventLoadFromInlineURL                         *bool `ddl:"keyword" sql:"PREVENT_LOAD_FROM_INLINE_URL"`
 	PreventUnloadToInlineURL                         *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
 	PreventUnloadToInternalStages                    *bool `ddl:"keyword" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
 	RequireStorageIntegrationForStageCreation        *bool `ddl:"keyword" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
@@ -1267,6 +1512,7 @@ func (v *SessionParametersUnset) validate() error {
 
 // ObjectParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#object-parameters.
 type ObjectParameters struct {
+	Catalog                             *string        `ddl:"parameter" sql:"CATALOG"`
 	DataRetentionTimeInDays             *int           `ddl:"parameter" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	DefaultDDLCollation                 *string        `ddl:"parameter,single_quotes" sql:"DEFAULT_DDL_COLLATION"`
 	EnableUnredactedQuerySyntaxError    *bool          `ddl:"parameter" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
@@ -1283,7 +1529,6 @@ type ObjectParameters struct {
 	TraceLevel                          *TraceLevel    `ddl:"parameter" sql:"TRACE_LEVEL"`
 	UserTaskManagedInitialWarehouseSize *WarehouseSize `ddl:"parameter" sql:"USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE"`
 	UserTaskTimeoutMs                   *int           `ddl:"parameter" sql:"USER_TASK_TIMEOUT_MS"`
-	Catalog                             *string        `ddl:"parameter" sql:"CATALOG"`
 }
 
 func (v *ObjectParameters) validate() error {
@@ -1327,8 +1572,10 @@ func (v *ObjectParameters) validate() error {
 }
 
 type ObjectParametersUnset struct {
+	Catalog                             *bool `ddl:"keyword" sql:"CATALOG"`
 	DataRetentionTimeInDays             *bool `ddl:"keyword" sql:"DATA_RETENTION_TIME_IN_DAYS"`
 	DefaultDDLCollation                 *bool `ddl:"keyword" sql:"DEFAULT_DDL_COLLATION"`
+	EnableUnredactedQuerySyntaxError    *bool `ddl:"keyword" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
 	LogLevel                            *bool `ddl:"keyword" sql:"LOG_LEVEL"`
 	MaxConcurrencyLevel                 *bool `ddl:"keyword" sql:"MAX_CONCURRENCY_LEVEL"`
 	MaxDataExtensionTimeInDays          *bool `ddl:"keyword" sql:"MAX_DATA_EXTENSION_TIME_IN_DAYS"`

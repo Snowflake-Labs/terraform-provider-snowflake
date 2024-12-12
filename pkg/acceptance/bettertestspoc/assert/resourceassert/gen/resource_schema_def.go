@@ -122,6 +122,10 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.Account().Schema,
 	},
 	{
+		name:   "AccountParameter",
+		schema: resources.AccountParameter().Schema,
+	},
+	{
 		name:   "OauthIntegrationForCustomClients",
 		schema: resources.OauthIntegrationForCustomClients().Schema,
 	},
