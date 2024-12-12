@@ -401,7 +401,7 @@ func (f *ProcedureDetailsAssert) HasExactlyImportsNormalizedInAnyOrder(imports .
 			return fmt.Errorf("expected imports to have value; got: nil")
 		}
 		if !assert2.ElementsMatch(t, imports, o.NormalizedImports) {
-			return fmt.Errorf("expected %v imports in task relations, got %v", imports, o.NormalizedImports)
+			return fmt.Errorf("expected %v imports, got %v", imports, o.NormalizedImports)
 		}
 		return nil
 	})
