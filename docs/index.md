@@ -351,6 +351,8 @@ provider "snowflake" {
 <!-- Section of deprecated resources -->
  ## Currently deprecated resources 
 
+- [snowflake_function](./docs/resources/function)
+- [snowflake_procedure](./docs/resources/procedure)
 - [snowflake_unsafe_execute](./docs/resources/unsafe_execute) - use [snowflake_execute](./docs/resources/execute) instead
 
 <!-- Section of deprecated data sources -->

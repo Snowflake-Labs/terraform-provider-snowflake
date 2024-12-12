@@ -188,6 +188,8 @@ func Procedure() *schema.Resource {
 		UpdateContext: TrackingUpdateWrapper(resources.Procedure, UpdateContextProcedure),
 		DeleteContext: TrackingDeleteWrapper(resources.Procedure, DeleteProcedure),
 
+		DeprecationMessage: "This resource is deprecated and will be removed in a future major version release. Please use snowflake_procedure_java, snowflake_procedure_javascript, snowflake_procedure_python, snowflake_procedure_scala, and snowflake_procedure_sql instead.",
+
 		// TODO(SNOW-1348106): add `arguments` to ComputedIfAnyAttributeChanged for FullyQualifiedNameAttributeName.
 		// This can't be done now because this function compares values without diff suppress.
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Procedure, customdiff.All(

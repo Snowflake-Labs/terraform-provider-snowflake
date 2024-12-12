@@ -52,7 +52,7 @@ type CreateForJavaProcedureOptions struct {
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	ExecuteAs                  *ExecuteAs                `ddl:"keyword"`
+	ExecuteAs                  *ExecuteAs                `ddl:"parameter,no_quotes,no_equals" sql:"EXECUTE AS"`
 	ProcedureDefinition        *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
@@ -110,7 +110,7 @@ type CreateForJavaScriptProcedureOptions struct {
 	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
 	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
 	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	ExecuteAs             *ExecuteAs             `ddl:"keyword"`
+	ExecuteAs             *ExecuteAs             `ddl:"parameter,no_quotes,no_equals" sql:"EXECUTE AS"`
 	ProcedureDefinition   string                 `ddl:"parameter,no_equals" sql:"AS"`
 }
 
@@ -134,7 +134,7 @@ type CreateForPythonProcedureOptions struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"parameter,parentheses" sql:"EXTERNAL_ACCESS_INTEGRATIONS"`
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	ExecuteAs                  *ExecuteAs                `ddl:"keyword"`
+	ExecuteAs                  *ExecuteAs                `ddl:"parameter,no_quotes,no_equals" sql:"EXECUTE AS"`
 	ProcedureDefinition        *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
@@ -159,7 +159,7 @@ type CreateForScalaProcedureOptions struct {
 	Secrets                    []SecretReference         `ddl:"parameter,parentheses" sql:"SECRETS"`
 	TargetPath                 *string                   `ddl:"parameter,single_quotes" sql:"TARGET_PATH"`
 	Comment                    *string                   `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	ExecuteAs                  *ExecuteAs                `ddl:"keyword"`
+	ExecuteAs                  *ExecuteAs                `ddl:"parameter,no_quotes,no_equals" sql:"EXECUTE AS"`
 	ProcedureDefinition        *string                   `ddl:"parameter,no_equals" sql:"AS"`
 }
 
@@ -177,7 +177,7 @@ type CreateForSQLProcedureOptions struct {
 	NullInputBehavior     *NullInputBehavior     `ddl:"keyword"`
 	ReturnResultsBehavior *ReturnResultsBehavior `ddl:"keyword"`
 	Comment               *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
-	ExecuteAs             *ExecuteAs             `ddl:"keyword"`
+	ExecuteAs             *ExecuteAs             `ddl:"parameter,no_quotes,no_equals" sql:"EXECUTE AS"`
 	ProcedureDefinition   string                 `ddl:"parameter,no_equals" sql:"AS"`
 }
 
@@ -198,7 +198,7 @@ type AlterProcedureOptions struct {
 	Unset     *ProcedureUnset                     `ddl:"list" sql:"UNSET"`
 	SetTags   []TagAssociation                    `ddl:"keyword" sql:"SET TAG"`
 	UnsetTags []ObjectIdentifier                  `ddl:"keyword" sql:"UNSET TAG"`
-	ExecuteAs *ExecuteAs                          `ddl:"keyword"`
+	ExecuteAs *ExecuteAs                          `ddl:"parameter,no_quotes,no_equals" sql:"EXECUTE AS"`
 }
 
 type ProcedureSet struct {

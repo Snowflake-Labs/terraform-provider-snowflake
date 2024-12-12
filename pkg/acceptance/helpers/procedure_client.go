@@ -245,3 +245,13 @@ BEGIN
 END;
 `
 }
+
+func (c *ProcedureClient) SampleSqlDefinitionWithArgument(t *testing.T) string {
+	t.Helper()
+
+	return `
+BEGIN
+  RETURN message;
+END;
+`
+}

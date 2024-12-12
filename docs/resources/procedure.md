@@ -9,7 +9,7 @@ description: |-
 
 # snowflake_procedure (Resource)
 
-
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use snowflake_procedure_java, snowflake_procedure_javascript, snowflake_procedure_python, snowflake_procedure_scala, and snowflake_procedure_sql instead. <deprecation>
 
 ## Example Usage
 
