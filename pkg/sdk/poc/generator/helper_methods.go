@@ -2,7 +2,6 @@ package generator
 
 import (
 	"fmt"
-	"slices"
 )
 
 type objectIdentifier string
@@ -68,12 +67,13 @@ func newObjectTypeHelperMethod(structName string) *HelperMethod {
 }
 
 func containsFieldNames(fields []*Field, names ...string) bool {
-	var fieldNames []string
+	fieldNames := map[string]bool{}
 	for _, field := range fields {
-		fieldNames = append(fieldNames, field.Name)
+		fieldNames[field.Name] = true
 	}
+
 	for _, name := range names {
-		if !slices.Contains(fieldNames, name) {
+		if _, ok := fieldNames[name]; !ok {
 			return false
 		}
 	}
