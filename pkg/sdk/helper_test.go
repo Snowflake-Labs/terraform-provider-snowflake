@@ -1,9 +1,11 @@
 package sdk
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
+	"github.com/snowflakedb/gosnowflake"
 )
 
 func defaultTestClient(t *testing.T) *Client {
@@ -45,4 +47,11 @@ func testClient(t *testing.T, profile string) *Client {
 	}
 
 	return client
+}
+
+func configAccountId(t *testing.T, cfg *gosnowflake.Config) AccountIdentifier {
+	t.Helper()
+	accountIdRaw := cfg.Account
+	parts := strings.SplitN(accountIdRaw, "-", 2)
+	return NewAccountIdentifier(parts[0], parts[1])
 }

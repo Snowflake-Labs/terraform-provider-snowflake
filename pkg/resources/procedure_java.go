@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -21,10 +22,10 @@ import (
 
 func ProcedureJava() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ProcedureJava, CreateContextProcedureJava),
-		ReadContext:   TrackingReadWrapper(resources.ProcedureJava, ReadContextProcedureJava),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedureJava, UpdateProcedure("JAVA", ReadContextProcedureJava)),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedureJava, DeleteProcedure),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ProcedureJavaResource), TrackingCreateWrapper(resources.ProcedureJava, CreateContextProcedureJava)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ProcedureJavaResource), TrackingReadWrapper(resources.ProcedureJava, ReadContextProcedureJava)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ProcedureJavaResource), TrackingUpdateWrapper(resources.ProcedureJava, UpdateProcedure("JAVA", ReadContextProcedureJava))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ProcedureJavaResource), TrackingDeleteWrapper(resources.ProcedureJava, DeleteProcedure)),
 		Description:   "Resource used to manage java procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedureJava, customdiff.All(

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -48,10 +49,10 @@ var shareSchema = map[string]*schema.Schema{
 // Share returns a pointer to the resource representing a share.
 func Share() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.Share, CreateShare),
-		ReadContext:   TrackingReadWrapper(resources.Share, ReadShare),
-		UpdateContext: TrackingUpdateWrapper(resources.Share, UpdateShare),
-		DeleteContext: TrackingDeleteWrapper(resources.Share, DeleteShare),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ShareResource), TrackingCreateWrapper(resources.Share, CreateShare)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ShareResource), TrackingReadWrapper(resources.Share, ReadShare)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ShareResource), TrackingUpdateWrapper(resources.Share, UpdateShare)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ShareResource), TrackingDeleteWrapper(resources.Share, DeleteShare)),
 
 		Schema: shareSchema,
 		Importer: &schema.ResourceImporter{

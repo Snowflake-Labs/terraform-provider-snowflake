@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -67,7 +68,7 @@ var proceduresSchema = map[string]*schema.Schema{
 
 func Procedures() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.Procedures, ReadContextProcedures),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.ProceduresDatasource), TrackingReadWrapper(datasources.Procedures, ReadContextProcedures)),
 		Schema:      proceduresSchema,
 	}
 }

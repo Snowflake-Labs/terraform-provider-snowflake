@@ -77,7 +77,6 @@ type snowflakeProviderModelV0 struct {
 	OauthEndpoint     types.String `tfsdk:"oauth_endpoint"`
 	OauthRedirectURL  types.String `tfsdk:"oauth_redirect_url"`
 	BrowserAuth       types.Bool   `tfsdk:"browser_auth"`
-	PrivateKeyPath    types.String `tfsdk:"private_key_path"`
 	SessionParams     types.Map    `tfsdk:"session_params"`
 }
 
@@ -111,11 +110,11 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 				DeprecationMessage: "Use `user` instead",
 			},
 			"password": schema.StringAttribute{
-				Description: "Password for username+password auth. Cannot be used with `browser_auth` or `private_key_path`. Can also be sourced from the `SNOWFLAKE_PASSWORD` environment variable.",
+				Description: "Password for username+password auth. Cannot be used with `browser_auth`. Can also be sourced from the `SNOWFLAKE_PASSWORD` environment variable.",
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key_path"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("oauth_access_token"), path.MatchRoot("oauth_refresh_token")),
+					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("oauth_access_token"), path.MatchRoot("oauth_refresh_token")),
 				},
 			},
 			"warehouse": schema.StringAttribute{
@@ -225,7 +224,7 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("password"), path.MatchRoot("private_key_path"), path.MatchRoot("oauth_access_token"), path.MatchRoot("oauth_refresh_token")),
+					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token"), path.MatchRoot("oauth_refresh_token")),
 				},
 			},
 			"private_key_passphrase": schema.StringAttribute{
@@ -233,7 +232,7 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("password"), path.MatchRoot("private_key_path"), path.MatchRoot("oauth_access_token"), path.MatchRoot("oauth_refresh_token")),
+					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token"), path.MatchRoot("oauth_refresh_token")),
 				},
 			},
 			"disable_telemetry": schema.BoolAttribute{
@@ -277,20 +276,20 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 				DeprecationMessage: "Use `params` instead",
 			},
 			"oauth_access_token": schema.StringAttribute{
-				Description: "Token for use with OAuth. Generating the token is left to other tools. Cannot be used with `browser_auth`, `private_key_path`, `oauth_refresh_token` or `password`. Can also be sourced from `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.",
+				Description: "Token for use with OAuth. Generating the token is left to other tools. Cannot be used with `browser_auth`, `oauth_refresh_token` or `password`. Can also be sourced from `SNOWFLAKE_OAUTH_ACCESS_TOKEN` environment variable.",
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key_path"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_refresh_token")),
+					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_refresh_token")),
 				},
 				DeprecationMessage: "Use `token` instead",
 			},
 			"oauth_refresh_token": schema.StringAttribute{
-				Description: "Token for use with OAuth. Setup and generation of the token is left to other tools. Should be used in conjunction with `oauth_client_id`, `oauth_client_secret`, `oauth_endpoint`, `oauth_redirect_url`. Cannot be used with `browser_auth`, `private_key_path`, `oauth_access_token` or `password`. Can also be sourced from `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment variable.",
+				Description: "Token for use with OAuth. Setup and generation of the token is left to other tools. Should be used in conjunction with `oauth_client_id`, `oauth_client_secret`, `oauth_endpoint`, `oauth_redirect_url`. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can also be sourced from `SNOWFLAKE_OAUTH_REFRESH_TOKEN` environment variable.",
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key_path"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token")),
+					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token")),
 					stringvalidator.AlsoRequires(path.MatchRoot("oauth_client_id"), path.MatchRoot("oauth_client_secret"), path.MatchRoot("oauth_endpoint"), path.MatchRoot("oauth_redirect_url")),
 				},
 				DeprecationMessage: "Use `token_accessor.0.refresh_token` instead",
@@ -300,7 +299,7 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key_path"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token")),
+					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token")),
 					stringvalidator.AlsoRequires(path.MatchRoot("oauth_refresh_token"), path.MatchRoot("oauth_client_secret"), path.MatchRoot("oauth_endpoint"), path.MatchRoot("oauth_redirect_url")),
 				},
 				DeprecationMessage: "Use `token_accessor.0.client_id` instead",
@@ -310,7 +309,7 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key_path"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token")),
+					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token")),
 					stringvalidator.AlsoRequires(path.MatchRoot("oauth_refresh_token"), path.MatchRoot("oauth_client_id"), path.MatchRoot("oauth_endpoint"), path.MatchRoot("oauth_redirect_url")),
 				},
 				DeprecationMessage: "Use `token_accessor.0.client_secret` instead",
@@ -320,7 +319,7 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key_path"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token")),
+					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token")),
 					stringvalidator.AlsoRequires(path.MatchRoot("oauth_refresh_token"), path.MatchRoot("oauth_client_id"), path.MatchRoot("oauth_client_secret"), path.MatchRoot("oauth_redirect_url")),
 				},
 				DeprecationMessage: "Use `token_accessor.0.token_endpoint` instead",
@@ -330,7 +329,7 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 				Optional:    true,
 				Sensitive:   true,
 				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key_path"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token")),
+					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("private_key"), path.MatchRoot("private_key_passphrase"), path.MatchRoot("password"), path.MatchRoot("oauth_access_token")),
 					stringvalidator.AlsoRequires(path.MatchRoot("oauth_refresh_token"), path.MatchRoot("oauth_client_id"), path.MatchRoot("oauth_client_secret"), path.MatchRoot("oauth_endpoint")),
 				},
 				DeprecationMessage: "Use `token_accessor.0.redirect_uri` instead",
@@ -340,15 +339,6 @@ func (p *SnowflakeProvider) Schema(ctx context.Context, req provider.SchemaReque
 				Optional:           true,
 				Sensitive:          false,
 				DeprecationMessage: "Use `authenticator` instead",
-			},
-			"private_key_path": schema.StringAttribute{
-				Description: "Path to a private key for using keypair authentication. Cannot be used with `browser_auth`, `oauth_access_token` or `password`. Can also be sourced from `SNOWFLAKE_PRIVATE_KEY_PATH` environment variable.",
-				Optional:    true,
-				Sensitive:   true,
-				Validators: []validator.String{
-					stringvalidator.ConflictsWith(path.MatchRoot("browser_auth"), path.MatchRoot("oauth_access_token"), path.MatchRoot("password")),
-				},
-				DeprecationMessage: "use the [file Function](https://developer.hashicorp.com/terraform/language/functions/file) instead",
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -612,16 +602,12 @@ func (p *SnowflakeProvider) Configure(ctx context.Context, req provider.Configur
 	if data.PrivateKey.ValueString() != "" {
 		privateKey = data.PrivateKey.ValueString()
 	}
-	privateKeyPath := os.Getenv("SNOWFLAKE_PRIVATE_KEY_PATH")
-	if data.PrivateKeyPath.ValueString() != "" {
-		privateKeyPath = data.PrivateKeyPath.ValueString()
-	}
 	privateKeyPassphrase := os.Getenv("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE")
 	if data.PrivateKeyPassphrase.ValueString() != "" {
 		privateKeyPassphrase = data.PrivateKeyPassphrase.ValueString()
 	}
-	if privateKey != "" || privateKeyPath != "" {
-		if v, err := getPrivateKey(privateKeyPath, privateKey, privateKeyPassphrase); err != nil && v != nil {
+	if privateKey != "" {
+		if v, err := getPrivateKey(privateKey, privateKeyPassphrase); err != nil && v != nil {
 			config.PrivateKey = v
 		}
 	}

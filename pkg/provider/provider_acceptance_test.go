@@ -6,11 +6,13 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -172,6 +174,13 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 	})
 }
 
+func configAccountId(t *testing.T, cfg *gosnowflake.Config) sdk.AccountIdentifier {
+	t.Helper()
+	accountIdRaw := cfg.Account
+	parts := strings.SplitN(accountIdRaw, "-", 2)
+	return sdk.NewAccountIdentifier(parts[0], parts[1])
+}
+
 func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -308,7 +317,6 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 		PreCheck: func() {
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
-			testenvs.AssertEnvNotSet(t, snowflakeenvs.Account)
 			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
 
 			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
@@ -670,11 +678,6 @@ func TestAcc_Provider_JwtAuth(t *testing.T) {
 				},
 				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithAuthenticatorType(sdk.AuthenticationTypeJwt), datasourceModel()),
 			},
-			// authenticate with unencrypted private key with a legacy authenticator value
-			// solves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2983
-			{
-				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithAuthenticatorType(sdk.AuthenticationTypeJwtLegacy), datasourceModel()),
-			},
 			// check encrypted private key with incorrect password
 			{
 				PreConfig: func() {
@@ -795,8 +798,84 @@ func TestAcc_Provider_invalidConfigurations(t *testing.T) {
 				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile("non-existing"), datasourceModel()),
 				ExpectError: regexp.MustCompile(fmt.Sprintf(`profile "non-existing" not found in file %s`, tmpServiceUserConfig.Path)),
 			},
+			{
+				Config:      providerConfigWithDatasourcePreviewFeatureEnabled(testprofiles.Default, "snowflake_invalid_feature"),
+				ExpectError: regexp.MustCompile(`expected .* preview_features_enabled.* to be one of((.|\n)*), got snowflake_invalid_feature`),
+			},
 		},
 	})
+}
+
+func TestAcc_Provider_PreviewFeaturesEnabled(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	t.Setenv(string(testenvs.EnableAllPreviewFeatures), "")
+	acc.TestAccPreCheck(t)
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithPreviewFeaturesEnabled(string(previewfeatures.DatabaseDatasource)), datasourceModel()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceModel().DatasourceReference(), "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_PreviewFeaturesDisabled(t *testing.T) {
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+	t.Setenv(string(testenvs.EnableAllPreviewFeatures), "")
+	acc.TestAccPreCheck(t)
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigForServiceUser(t, tmpServiceUser)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile), datasourceModel()),
+				ExpectError: regexp.MustCompile("snowflake_database_datasource is currently a preview feature, and must be enabled by adding snowflake_database_datasource to `preview_features_enabled` in Terraform configuration"),
+			},
+		},
+	})
+}
+
+func providerConfigWithDatasourcePreviewFeatureEnabled(profile, feature string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+	preview_features_enabled = ["%[2]s_datasource"]
+}
+data %[2]s t {}
+`, profile, feature)
+}
+
+func providerConfigWithDatasourcePreviewFeature(profile, feature string) string {
+	return fmt.Sprintf(`
+provider "snowflake" {
+	profile = "%[1]s"
+}
+data %[2]s t {}
+`, profile, feature)
 }
 
 func datasourceModel() config.DatasourceModel {

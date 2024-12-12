@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -22,7 +23,7 @@ var currentRoleSchema = map[string]*schema.Schema{
 
 func CurrentRole() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.CurrentRole, ReadCurrentRole),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.CurrentRoleDatasource), TrackingReadWrapper(datasources.CurrentRole, ReadCurrentRole)),
 		Schema:      currentRoleSchema,
 	}
 }

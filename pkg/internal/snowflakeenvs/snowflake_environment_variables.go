@@ -1,11 +1,9 @@
 package snowflakeenvs
 
 const (
-	Account                   = "SNOWFLAKE_ACCOUNT"
 	AccountName               = "SNOWFLAKE_ACCOUNT_NAME"
 	OrganizationName          = "SNOWFLAKE_ORGANIZATION_NAME"
 	User                      = "SNOWFLAKE_USER"
-	Username                  = "SNOWFLAKE_USERNAME"
 	Password                  = "SNOWFLAKE_PASSWORD"
 	Warehouse                 = "SNOWFLAKE_WAREHOUSE"
 	Role                      = "SNOWFLAKE_ROLE"

@@ -20,7 +20,6 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.6.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/luna-duclos/instrumentedsql v1.1.3
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pelletier/go-toml/v2 v2.1.1
 	github.com/snowflakedb/gosnowflake v1.10.0
 	github.com/stretchr/testify v1.8.4

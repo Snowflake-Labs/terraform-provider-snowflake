@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -120,7 +121,7 @@ var failoverGroupsSchema = map[string]*schema.Schema{
 // FailoverGroups Snowflake FailoverGroups resource.
 func FailoverGroups() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.FailoverGroups, ReadFailoverGroups),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.FailoverGroupsDatasource), TrackingReadWrapper(datasources.FailoverGroups, ReadFailoverGroups)),
 		Schema:      failoverGroupsSchema,
 	}
 }

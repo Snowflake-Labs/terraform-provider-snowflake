@@ -1,4 +1,3 @@
-## Currently deprecated datasources
+<!-- Section of deprecated data sources -->
 
-- [snowflake_role](./docs/data-sources/role) - use [snowflake_account_roles](./docs/data-sources/account_roles) instead
-- [snowflake_roles](./docs/data-sources/roles) - use [snowflake_account_roles](./docs/data-sources/account_roles) instead
+

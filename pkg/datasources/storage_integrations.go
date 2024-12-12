@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -45,7 +46,7 @@ var storageIntegrationsSchema = map[string]*schema.Schema{
 
 func StorageIntegrations() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.StorageIntegrations, ReadStorageIntegrations),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.StorageIntegrationsDatasource), TrackingReadWrapper(datasources.StorageIntegrations, ReadStorageIntegrations)),
 		Schema:      storageIntegrationsSchema,
 	}
 }
