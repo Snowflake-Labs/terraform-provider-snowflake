@@ -72,7 +72,7 @@ func Provider() *schema.Provider {
 			},
 			"password": {
 				Type:          schema.TypeString,
-				Description:   envNameFieldDescription("Password for user + password auth. Cannot be used with `browser_auth` or `private_key_path`.", snowflakeenvs.Password),
+				Description:   envNameFieldDescription("Password for user + password auth. Cannot be used with `private_key` and `private_key_passphrase`.", snowflakeenvs.Password),
 				Optional:      true,
 				Sensitive:     true,
 				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.Password, nil),
