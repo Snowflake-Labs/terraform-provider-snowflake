@@ -23,7 +23,7 @@ func ProcedureJava() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.ProcedureJava, CreateContextProcedureJava),
 		ReadContext:   TrackingReadWrapper(resources.ProcedureJava, ReadContextProcedureJava),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedureJava, UpdateContextProcedureJava),
+		UpdateContext: TrackingUpdateWrapper(resources.ProcedureJava, UpdateProcedure("JAVA", ReadContextProcedureJava)),
 		DeleteContext: TrackingDeleteWrapper(resources.ProcedureJava, DeleteProcedure),
 		Description:   "Resource used to manage java procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
@@ -150,75 +150,4 @@ func ReadContextProcedureJava(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return nil
-}
-
-func UpdateContextProcedureJava(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if d.HasChange("name") {
-		newId := sdk.NewSchemaObjectIdentifierWithArgumentsInSchema(id.SchemaId(), d.Get("name").(string), id.ArgumentDataTypes()...)
-
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithRenameTo(newId.SchemaObjectId()))
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error renaming procedure %v err = %w", d.Id(), err))
-		}
-
-		d.SetId(helpers.EncodeResourceIdentifier(newId))
-		id = newId
-	}
-
-	// Batch SET operations and UNSET operations
-	setRequest := sdk.NewProcedureSetRequest()
-	unsetRequest := sdk.NewProcedureUnsetRequest()
-
-	err = errors.Join(
-		stringAttributeUpdate(d, "comment", &setRequest.Comment, &unsetRequest.Comment),
-		func() error {
-			if d.HasChange("secrets") {
-				return setSecretsInBuilder(d, func(references []sdk.SecretReference) *sdk.ProcedureSetRequest {
-					return setRequest.WithSecretsList(sdk.SecretsListRequest{SecretsList: references})
-				})
-			}
-			return nil
-		}(),
-		func() error {
-			if d.HasChange("external_access_integrations") {
-				return setExternalAccessIntegrationsInBuilder(d, func(references []sdk.AccountObjectIdentifier) any {
-					if len(references) == 0 {
-						return unsetRequest.WithExternalAccessIntegrations(true)
-					} else {
-						return setRequest.WithExternalAccessIntegrations(references)
-					}
-				})
-			}
-			return nil
-		}(),
-	)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if updateParamDiags := handleProcedureParametersUpdate(d, setRequest, unsetRequest); len(updateParamDiags) > 0 {
-		return updateParamDiags
-	}
-
-	// Apply SET and UNSET changes
-	if !reflect.DeepEqual(*setRequest, *sdk.NewProcedureSetRequest()) {
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*setRequest))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	if !reflect.DeepEqual(*unsetRequest, *sdk.NewProcedureUnsetRequest()) {
-		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnset(*unsetRequest))
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	return ReadContextProcedureJava(ctx, d, meta)
 }
