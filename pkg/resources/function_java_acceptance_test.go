@@ -234,7 +234,7 @@ func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 		}).
 		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName).
 		WithRuntimeVersion("11").
-		WithIsSecure("false").
+		WithIsSecure(r.BooleanFalse).
 		WithNullInputBehavior(string(sdk.NullInputBehaviorCalledOnNullInput)).
 		WithReturnResultsBehavior(string(sdk.ReturnResultsBehaviorVolatile)).
 		WithComment("some comment")
