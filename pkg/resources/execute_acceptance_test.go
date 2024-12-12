@@ -847,3 +847,21 @@ func TestAcc_Execute_ImportWithRandomId(t *testing.T) {
 		},
 	})
 }
+
+// TODO [SNOW-1348121]: Move this to the file with check_destroy functions.
+func testAccCheckDatabaseExistence(t *testing.T, id sdk.AccountObjectIdentifier, shouldExist bool) func(state *terraform.State) error {
+	t.Helper()
+	return func(state *terraform.State) error {
+		_, err := acc.TestClient().Database.Show(t, id)
+		if shouldExist {
+			if err != nil {
+				return fmt.Errorf("error while retrieving database %s, err = %w", id, err)
+			}
+		} else {
+			if err == nil {
+				return fmt.Errorf("database %v still exists", id)
+			}
+		}
+		return nil
+	}
+}

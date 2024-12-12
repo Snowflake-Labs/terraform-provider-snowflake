@@ -349,5 +349,11 @@ provider "snowflake" {
 ```
 
 <!-- Section of deprecated resources -->
+ ## Currently deprecated resources 
+
+- [snowflake_unsafe_execute](./docs/resources/unsafe_execute) - use [snowflake_execute](./docs/resources/execute) instead
 
 <!-- Section of deprecated data sources -->
+ ## Currently deprecated data sources 
+
+- [snowflake_roles](./docs/data-sources/roles) - use [snowflake_account_roles](./docs/data-sources/account_roles) instead
