@@ -74,7 +74,7 @@ func (t *TaskParametersAssert) HasAllDefaults() *TaskParametersAssert {
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterUserTaskMinimumTriggerIntervalInSeconds, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterUserTaskTimeoutMs, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterAbortDetachedQuery, sdk.ParameterTypeSnowflakeDefault).
-		HasDefaultParameterValueOnLevel(sdk.TaskParameterAutocommit, sdk.ParameterTypeAccount).
+		HasDefaultParameterValueOnLevel(sdk.TaskParameterAutocommit, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterBinaryInputFormat, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterBinaryOutputFormat, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterClientMemoryLimit, sdk.ParameterTypeSnowflakeDefault).
@@ -101,7 +101,7 @@ func (t *TaskParametersAssert) HasAllDefaults() *TaskParametersAssert {
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterNoorderSequenceAsDefault, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterOdbcTreatDecimalAsInt, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterQueryTag, sdk.ParameterTypeSnowflakeDefault).
-		HasDefaultParameterValueOnLevel(sdk.TaskParameterQuotedIdentifiersIgnoreCase, sdk.ParameterTypeAccount).
+		HasDefaultParameterValueOnLevel(sdk.TaskParameterQuotedIdentifiersIgnoreCase, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterRowsPerResultset, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterS3StageVpceDnsName, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterSearchPath, sdk.ParameterTypeSnowflakeDefault).
@@ -119,7 +119,7 @@ func (t *TaskParametersAssert) HasAllDefaults() *TaskParametersAssert {
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterTimeInputFormat, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterTimeOutputFormat, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterTraceLevel, sdk.ParameterTypeSnowflakeDefault).
-		HasDefaultParameterValueOnLevel(sdk.TaskParameterTransactionAbortOnError, sdk.ParameterTypeAccount).
+		HasDefaultParameterValueOnLevel(sdk.TaskParameterTransactionAbortOnError, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterTransactionDefaultIsolationLevel, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterTwoDigitCenturyStart, sdk.ParameterTypeSnowflakeDefault).
 		HasDefaultParameterValueOnLevel(sdk.TaskParameterUnsupportedDdlAction, sdk.ParameterTypeSnowflakeDefault).
