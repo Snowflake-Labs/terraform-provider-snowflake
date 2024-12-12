@@ -119,6 +119,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(`[]`).
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -295,6 +296,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, importPath)).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -383,6 +385,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -529,6 +532,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImportsNil().
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -606,6 +610,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImportsNil().
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -679,6 +684,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(`[]`).
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -765,6 +771,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -838,6 +845,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -923,6 +931,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpPythonFunction.PythonModuleLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -999,6 +1008,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(`[]`).
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -1094,6 +1104,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -1168,6 +1179,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorCalledOnNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorVolatile)).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImports(fmt.Sprintf(`[%s]`, importPath)).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -1253,6 +1265,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandling(string(sdk.NullInputBehaviorReturnsNullInput)).
 			HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
 			HasImports(fmt.Sprintf(`[%s]`, tmpJavaFunction.JarLocation())).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
@@ -1326,6 +1339,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandlingNil().
 			HasVolatilityNil().
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImportsNil().
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -1434,6 +1448,7 @@ func TestInt_Functions(t *testing.T) {
 			// HasVolatility(string(sdk.ReturnResultsBehaviorImmutable)).
 			HasVolatilityNil().
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImportsNil().
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -1502,6 +1517,7 @@ func TestInt_Functions(t *testing.T) {
 			HasNullHandlingNil().
 			HasVolatilityNil().
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil().
 			HasImportsNil().
 			HasExactlyImportsNormalizedInAnyOrder().
@@ -1581,6 +1597,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil(),
 		)
 
@@ -1609,6 +1626,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}),
 		)
 
@@ -1636,6 +1654,7 @@ func TestInt_Functions(t *testing.T) {
 
 		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
 			HasExternalAccessIntegrationsNil().
+			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			// TODO [SNOW-1850370]: apparently UNSET external access integrations cleans out secrets in the describe but leaves it in SHOW
 			HasSecretsNil(),
 		)

@@ -115,6 +115,8 @@ func procedureDetailsFromRows(rows []ProcedureDetail) (*ProcedureDetails, error)
 		} else {
 			v.NormalizedExternalAccessIntegrations = p
 		}
+	} else {
+		v.NormalizedExternalAccessIntegrations = []AccountObjectIdentifier{}
 	}
 
 	return v, errors.Join(errs...)

@@ -415,7 +415,7 @@ func (f *FunctionDetailsAssert) HasExactlyImportsNormalizedInAnyOrder(imports ..
 			return fmt.Errorf("expected imports to have value; got: nil")
 		}
 		if !assert2.ElementsMatch(t, imports, o.NormalizedImports) {
-			return fmt.Errorf("expected %v imports in task relations, got %v", imports, o.NormalizedImports)
+			return fmt.Errorf("expected %v imports, got %v", imports, o.NormalizedImports)
 		}
 		return nil
 	})
@@ -469,6 +469,22 @@ func (f *FunctionDetailsAssert) HasReturnNotNull(expected bool) *FunctionDetails
 		t.Helper()
 		if o.ReturnNotNull != expected {
 			return fmt.Errorf("expected return not null %t; got: %t", expected, o.ReturnNotNull)
+		}
+		return nil
+	})
+	return f
+}
+
+func (f *FunctionDetailsAssert) HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(integrations ...sdk.AccountObjectIdentifier) *FunctionDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.FunctionDetails) error {
+		t.Helper()
+		if o.NormalizedExternalAccessIntegrations == nil {
+			return fmt.Errorf("expected normalized external access integrations to have value; got: nil")
+		}
+		fullyQualifiedNamesExpected := collections.Map(integrations, func(id sdk.AccountObjectIdentifier) string { return id.FullyQualifiedName() })
+		fullyQualifiedNamesGot := collections.Map(o.NormalizedExternalAccessIntegrations, func(id sdk.AccountObjectIdentifier) string { return id.FullyQualifiedName() })
+		if !assert2.ElementsMatch(t, fullyQualifiedNamesExpected, fullyQualifiedNamesGot) {
+			return fmt.Errorf("expected %v normalized external access integrations, got %v", integrations, o.NormalizedExternalAccessIntegrations)
 		}
 		return nil
 	})

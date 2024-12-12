@@ -460,3 +460,19 @@ func (f *ProcedureDetailsAssert) HasReturnNotNull(expected bool) *ProcedureDetai
 	})
 	return f
 }
+
+func (f *ProcedureDetailsAssert) HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(integrations ...sdk.AccountObjectIdentifier) *ProcedureDetailsAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.ProcedureDetails) error {
+		t.Helper()
+		if o.NormalizedExternalAccessIntegrations == nil {
+			return fmt.Errorf("expected normalized external access integrations to have value; got: nil")
+		}
+		fullyQualifiedNamesExpected := collections.Map(integrations, func(id sdk.AccountObjectIdentifier) string { return id.FullyQualifiedName() })
+		fullyQualifiedNamesGot := collections.Map(o.NormalizedExternalAccessIntegrations, func(id sdk.AccountObjectIdentifier) string { return id.FullyQualifiedName() })
+		if !assert2.ElementsMatch(t, fullyQualifiedNamesExpected, fullyQualifiedNamesGot) {
+			return fmt.Errorf("expected %v normalized external access integrations, got %v", integrations, o.NormalizedExternalAccessIntegrations)
+		}
+		return nil
+	})
+	return f
+}
