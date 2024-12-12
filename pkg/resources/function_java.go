@@ -171,11 +171,16 @@ func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 	setRequest := sdk.NewFunctionSetRequest()
 	unsetRequest := sdk.NewFunctionUnsetRequest()
 
+	err = errors.Join(
+		stringAttributeUpdate(d, "comment", &setRequest.Comment, &unsetRequest.Comment),
+	)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	// TODO [SNOW-1348103]: handle all updates
-	// secure
 	// external access integration
 	// secrets
-	// comment
 
 	if updateParamDiags := handleFunctionParametersUpdate(d, setRequest, unsetRequest); len(updateParamDiags) > 0 {
 		return updateParamDiags
@@ -185,13 +190,36 @@ func UpdateContextFunctionJava(ctx context.Context, d *schema.ResourceData, meta
 	if !reflect.DeepEqual(*setRequest, *sdk.NewFunctionSetRequest()) {
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSet(*setRequest))
 		if err != nil {
+			d.Partial(true)
 			return diag.FromErr(err)
 		}
 	}
 	if !reflect.DeepEqual(*unsetRequest, *sdk.NewFunctionUnsetRequest()) {
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnset(*unsetRequest))
 		if err != nil {
+			d.Partial(true)
 			return diag.FromErr(err)
+		}
+	}
+
+	// has to be handled separately
+	if d.HasChange("is_secure") {
+		if v := d.Get("is_secure").(string); v != BooleanDefault {
+			parsed, err := booleanStringToBool(v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			err = client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetSecure(parsed))
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		} else {
+			err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetSecure(true))
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
 		}
 	}
 
