@@ -5,7 +5,7 @@ description: |-
   Resource used to manage current account parameters. For more information, check parameters documentation https://docs.snowflake.com/en/sql-reference/parameters.
 ---
 
-!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0990--v01000) to use it.
+!> **Caution: Preview Feature** This feature is considered a preview feature in the provider, regardless of the state of the resource in Snowflake. We do not guarantee its stability. It will be reworked and marked as a stable feature in future releases. Breaking changes are expected, even without bumping the major version. To use this feature, add the relevant feature name to `preview_features_enabled field` in the [provider configuration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#schema). Please always refer to the [Getting Help](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
 
 -> **Note** This resource does not support all account parameters. The supported ones are listed below. This feature gap will be addressed in future releases.
 

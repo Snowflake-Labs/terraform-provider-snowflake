@@ -5,8 +5,6 @@ description: |-
   Resource used to manage resource monitor objects. For more information, check resource monitor documentation https://docs.snowflake.com/en/user-guide/resource-monitors.
 ---
 
-!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0950--v0960) to use it.
-
 ~> **Note** For more details about resource monitor usage, please visit [this guide on Snowflake documentation page](https://docs.snowflake.com/en/user-guide/resource-monitors).
 
 **! Warning !** Due to Snowflake limitations, the following actions are not supported:
