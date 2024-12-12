@@ -39,6 +39,8 @@ type FunctionDetails struct {
 	ReturnNotNull                        bool
 	NormalizedArguments                  []NormalizedArgument
 	NormalizedExternalAccessIntegrations []AccountObjectIdentifier
+	NormalizedSecrets                    map[string]SchemaObjectIdentifier
+	NormalizedPackages                   []string
 }
 
 func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
@@ -117,6 +119,16 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 		}
 	} else {
 		v.NormalizedExternalAccessIntegrations = []AccountObjectIdentifier{}
+	}
+
+	if v.Packages != nil {
+		if p, err := parseFunctionOrProcedurePackages(*v.Packages); err != nil {
+			errs = append(errs, err)
+		} else {
+			v.NormalizedPackages = p
+		}
+	} else {
+		v.NormalizedPackages = []string{}
 	}
 
 	return v, errors.Join(errs...)

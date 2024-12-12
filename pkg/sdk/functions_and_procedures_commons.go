@@ -123,3 +123,15 @@ func parseFunctionOrProcedureExternalAccessIntegrations(raw string) ([]AccountOb
 	log.Printf("[DEBUG] external access integrations: %s", raw)
 	return collections.MapErr(ParseCommaSeparatedStringArray(raw, false), ParseAccountObjectIdentifier)
 }
+
+// TODO [test before V1]:
+func parseFunctionOrProcedurePackages(raw string) ([]string, error) {
+	log.Printf("[DEBUG] external access integrations: %s", raw)
+	return collections.Map(ParseCommaSeparatedStringArray(raw, false), strings.TrimSpace), nil
+}
+
+// TODO [this PR]: parse them
+func parseFunctionOrProcedureSecrets(raw string) (map[string]SchemaObjectIdentifier, error) {
+	log.Printf("[DEBUG] parsing secrets: %s", raw)
+	return nil, nil
+}

@@ -34,6 +34,7 @@ import (
 // TODO [SNOW-1348103]: test secure
 // TODO [SNOW-1348103]: python aggregate func (100357 (P0000): Could not find accumulate method in function CVVEMHIT_06547800_08D6_DBCA_1AC7_5E422AFF8B39 with handler dump)
 // TODO [SNOW-1348103]: add test with multiple imports
+// TODO [this PR]: test with multiple external access integrations and secrets
 func TestInt_Functions(t *testing.T) {
 	client := testClient(t)
 	ctx := context.Background()

@@ -5,11 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
-const DefaultProcedureComment = "user-defined procedure"
+const (
+	DefaultProcedureComment     = "user-defined procedure"
+	JavaSnowparkPackageString   = "com.snowflake:snowpark:"
+	PythonSnowparkPackageString = "snowflake-snowpark-python=="
+)
 
 func (v *Procedure) ID() SchemaObjectIdentifierWithArguments {
 	return NewSchemaObjectIdentifierWithArguments(v.CatalogName, v.SchemaName, v.Name, v.ArgumentsOld...)
@@ -39,6 +44,10 @@ type ProcedureDetails struct {
 	ReturnNotNull                        bool
 	NormalizedArguments                  []NormalizedArgument
 	NormalizedExternalAccessIntegrations []AccountObjectIdentifier
+	NormalizedSecrets                    map[string]SchemaObjectIdentifier
+	// NormalizedPackages does not contain a snowpark package - it is extracted only as a version in SnowparkVersion below
+	NormalizedPackages []string
+	SnowparkVersion    string
 }
 
 func procedureDetailsFromRows(rows []ProcedureDetail) (*ProcedureDetails, error) {
@@ -117,6 +126,50 @@ func procedureDetailsFromRows(rows []ProcedureDetail) (*ProcedureDetails, error)
 		}
 	} else {
 		v.NormalizedExternalAccessIntegrations = []AccountObjectIdentifier{}
+	}
+
+	if v.Packages != nil {
+		if p, err := parseFunctionOrProcedurePackages(*v.Packages); err != nil {
+			errs = append(errs, err)
+		} else {
+			// TODO [SNOW-1850370]: merge these and unit test
+			switch strings.ToUpper(v.Language) {
+			case "JAVA", "SCALA":
+				filtered := make([]string, 0)
+				var found bool
+				for _, o := range p {
+					o := strings.TrimSpace(o)
+					if strings.HasPrefix(o, JavaSnowparkPackageString) {
+						v.SnowparkVersion = strings.TrimPrefix(o, JavaSnowparkPackageString)
+						found = true
+					} else {
+						filtered = append(filtered, o)
+					}
+				}
+				v.NormalizedPackages = filtered
+				if !found {
+					errs = append(errs, fmt.Errorf("could not parse package from Snowflake, expected at least snowpark package, got %v", filtered))
+				}
+			case "PYTHON":
+				filtered := make([]string, 0)
+				var found bool
+				for _, o := range p {
+					o := strings.TrimSpace(o)
+					if strings.HasPrefix(o, PythonSnowparkPackageString) {
+						v.SnowparkVersion = strings.TrimPrefix(o, PythonSnowparkPackageString)
+						found = true
+					} else {
+						filtered = append(filtered, o)
+					}
+				}
+				v.NormalizedPackages = filtered
+				if !found {
+					errs = append(errs, fmt.Errorf("could not parse package from Snowflake, expected at least snowpark package, got %v", filtered))
+				}
+			}
+		}
+	} else {
+		errs = append(errs, fmt.Errorf("could not parse package from Snowflake, expected at least snowpark package, got nil"))
 	}
 
 	return v, errors.Join(errs...)
