@@ -73,10 +73,58 @@ Required:
 
 Read-Only:
 
-- `enable_console_output` (Boolean)
-- `log_level` (String)
-- `metric_level` (String)
-- `trace_level` (String)
+- `enable_console_output` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--enable_console_output))
+- `log_level` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--log_level))
+- `metric_level` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--metric_level))
+- `trace_level` (List of Object) (see [below for nested schema](#nestedobjatt--parameters--trace_level))
+
+<a id="nestedobjatt--parameters--enable_console_output"></a>
+### Nested Schema for `parameters.enable_console_output`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--log_level"></a>
+### Nested Schema for `parameters.log_level`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--metric_level"></a>
+### Nested Schema for `parameters.metric_level`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--parameters--trace_level"></a>
+### Nested Schema for `parameters.trace_level`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
+- `value` (String)
+
 
 
 <a id="nestedatt--show_output"></a>

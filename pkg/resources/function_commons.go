@@ -1,11 +1,18 @@
 package resources
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"log"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -20,6 +27,7 @@ func init() {
 type functionSchemaDef struct {
 	additionalArguments           []string
 	functionDefinitionDescription string
+	functionDefinitionRequired    bool
 	runtimeVersionRequired        bool
 	runtimeVersionDescription     string
 	importsDescription            string
@@ -38,6 +46,11 @@ func setUpFunctionSchema(definition functionSchemaDef) map[string]*schema.Schema
 	}
 	if v, ok := currentSchema["function_definition"]; ok && v != nil {
 		v.Description = diffSuppressStatementFieldDescription(definition.functionDefinitionDescription)
+		if definition.functionDefinitionRequired {
+			v.Required = true
+		} else {
+			v.Optional = true
+		}
 	}
 	if v, ok := currentSchema["runtime_version"]; ok && v != nil {
 		if definition.runtimeVersionRequired {
@@ -75,7 +88,7 @@ var (
 		"arguments",
 		"return_type",
 		"null_input_behavior",
-		"return_behavior",
+		"return_results_behavior",
 		"comment",
 		"function_definition",
 		"function_language",
@@ -94,16 +107,18 @@ var (
 			"target_path",
 		},
 		functionDefinitionDescription: functionDefinitionTemplate("Java", "https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-introduction"),
-		runtimeVersionRequired:        false,
-		runtimeVersionDescription:     "Specifies the Java JDK runtime version to use. The supported versions of Java are 11.x and 17.x. If RUNTIME_VERSION is not set, Java JDK 11 is used.",
-		importsDescription:            "The location (stage), path, and name of the file(s) to import. A file can be a JAR file or another type of file. If the file is a JAR file, it can contain one or more .class files and zero or more resource files. JNI (Java Native Interface) is not supported. Snowflake prohibits loading libraries that contain native code (as opposed to Java bytecode). Java UDFs can also read non-JAR files. For an example, see [Reading a file specified statically in IMPORTS](https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-cookbook.html#label-reading-file-from-java-udf-imports). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#java).",
-		packagesDescription:           "The name and version number of Snowflake system packages required as dependencies. The value should be of the form `package_name:version_number`, where `package_name` is `snowflake_domain:package`.",
-		handlerDescription:            "The name of the handler method or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a method name, as in the following form: `MyClass.myMethod`. If the handler is for a tabular UDF, the HANDLER value should be the name of a handler class.",
-		targetPathDescription:         "The TARGET_PATH clause specifies the location to which Snowflake should write the compiled code (JAR file) after compiling the source code specified in the `function_definition`. If this clause is included, the user should manually remove the JAR file when it is no longer needed (typically when the Java UDF is dropped). If this clause is omitted, Snowflake re-compiles the source code each time the code is needed. The JAR file is not stored permanently, and the user does not need to clean up the JAR file. Snowflake returns an error if the TARGET_PATH matches an existing file; you cannot use TARGET_PATH to overwrite an existing file.",
+		// May be optional for java because if it is not set, describe return empty version.
+		runtimeVersionRequired:    false,
+		runtimeVersionDescription: "Specifies the Java JDK runtime version to use. The supported versions of Java are 11.x and 17.x. If RUNTIME_VERSION is not set, Java JDK 11 is used.",
+		importsDescription:        "The location (stage), path, and name of the file(s) to import. A file can be a JAR file or another type of file. If the file is a JAR file, it can contain one or more .class files and zero or more resource files. JNI (Java Native Interface) is not supported. Snowflake prohibits loading libraries that contain native code (as opposed to Java bytecode). Java UDFs can also read non-JAR files. For an example, see [Reading a file specified statically in IMPORTS](https://docs.snowflake.com/en/developer-guide/udf/java/udf-java-cookbook.html#label-reading-file-from-java-udf-imports). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#java).",
+		packagesDescription:       "The name and version number of Snowflake system packages required as dependencies. The value should be of the form `package_name:version_number`, where `package_name` is `snowflake_domain:package`.",
+		handlerDescription:        "The name of the handler method or class. If the handler is for a scalar UDF, returning a non-tabular value, the HANDLER value should be a method name, as in the following form: `MyClass.myMethod`. If the handler is for a tabular UDF, the HANDLER value should be the name of a handler class.",
+		targetPathDescription:     "The TARGET_PATH clause specifies the location to which Snowflake should write the compiled code (JAR file) after compiling the source code specified in the `function_definition`. If this clause is included, the user should manually remove the JAR file when it is no longer needed (typically when the Java UDF is dropped). If this clause is omitted, Snowflake re-compiles the source code each time the code is needed. The JAR file is not stored permanently, and the user does not need to clean up the JAR file. Snowflake returns an error if the TARGET_PATH matches an existing file; you cannot use TARGET_PATH to overwrite an existing file.",
 	}
 	javascriptFunctionSchemaDefinition = functionSchemaDef{
 		additionalArguments:           []string{},
 		functionDefinitionDescription: functionDefinitionTemplate("JavaScript", "https://docs.snowflake.com/en/developer-guide/udf/javascript/udf-javascript-introduction"),
+		functionDefinitionRequired:    true,
 	}
 	pythonFunctionSchemaDefinition = functionSchemaDef{
 		additionalArguments: []string{
@@ -143,6 +158,7 @@ var (
 	sqlFunctionSchemaDefinition = functionSchemaDef{
 		additionalArguments:           []string{},
 		functionDefinitionDescription: functionDefinitionTemplate("SQL", "https://docs.snowflake.com/en/developer-guide/udf/sql/udf-sql-introduction"),
+		functionDefinitionRequired:    true,
 	}
 )
 
@@ -214,6 +230,11 @@ func functionBaseSchema() map[string]schema.Schema {
 						DiffSuppressFunc: DiffSuppressDataTypes,
 						Description:      "The argument type.",
 					},
+					"arg_default_value": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: externalChangesNotDetectedFieldDescription("Optional default value for the argument. For text values use single quotes. Numeric values can be unquoted."),
+					},
 				},
 			},
 			Optional:    true,
@@ -228,28 +249,26 @@ func functionBaseSchema() map[string]schema.Schema {
 			ValidateDiagFunc: IsDataTypeValid,
 			DiffSuppressFunc: DiffSuppressDataTypes,
 			Description:      "Specifies the results returned by the UDF, which determines the UDF type. Use `<result_data_type>` to create a scalar UDF that returns a single value with the specified data type. Use `TABLE (col_name col_data_type, ...)` to creates a table UDF that returns tabular results with the specified table column(s) and column type(s). For the details, consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages).",
-			// TODO [SNOW-1348103]: adjust DiffSuppressFunc
 		},
 		"null_input_behavior": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: sdkValidation(sdk.ToNullInputBehavior),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior")),
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior)), // TODO [SNOW-1348103]: IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior") but not in show
 			Description:      fmt.Sprintf("Specifies the behavior of the function when called with null inputs. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedNullInputBehaviors)),
 		},
-		"return_behavior": {
+		"return_results_behavior": {
 			Type:             schema.TypeString,
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: sdkValidation(sdk.ToReturnResultsBehavior),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToReturnResultsBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("return_behavior")),
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToReturnResultsBehavior)), // TODO [SNOW-1348103]: IgnoreChangeToCurrentSnowflakeValueInShow("return_results_behavior") but not in show
 			Description:      fmt.Sprintf("Specifies the behavior of the function when returning results. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedReturnResultsBehaviors)),
 		},
 		"runtime_version": {
 			Type:     schema.TypeString,
 			ForceNew: true,
-			// TODO [SNOW-1348103]: may be optional for java without consequence because if it is not set, the describe is not returning any version.
 		},
 		"comment": {
 			Type:     schema.TypeString,
@@ -258,12 +277,26 @@ func functionBaseSchema() map[string]schema.Schema {
 			Default:     "user-defined function",
 			Description: "Specifies a comment for the function.",
 		},
-		// TODO [SNOW-1348103]: because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6, maybe it will be better to split into stage_name + target_path
+		// split into two because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6
+		// TODO [SNOW-1348103]: add validations preventing setting improper stage and path
 		"imports": {
 			Type:     schema.TypeSet,
-			Elem:     &schema.Schema{Type: schema.TypeString},
 			Optional: true,
 			ForceNew: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"stage_location": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Stage location without leading `@`. To use your user's stage set this to `~`, otherwise pass fully qualified name of the stage (with every part contained in double quotes or use `snowflake_stage.<your stage's resource name>.fully_qualified_name` if you manage this stage through terraform).",
+					},
+					"path_on_stage": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Path for import on stage, without the leading `/`.",
+					},
+				},
+			},
 		},
 		// TODO [SNOW-1348103]: what do we do with the version "latest".
 		"packages": {
@@ -308,15 +341,28 @@ func functionBaseSchema() map[string]schema.Schema {
 			},
 			Description: "Assigns the names of [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter.",
 		},
-		// TODO [SNOW-1348103]: because of https://docs.snowflake.com/en/sql-reference/sql/create-function#id6, maybe it will be better to split into stage + path
 		"target_path": {
-			Type:     schema.TypeString,
+			Type:     schema.TypeSet,
+			MaxItems: 1,
 			Optional: true,
 			ForceNew: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"stage_location": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Stage location without leading `@`. To use your user's stage set this to `~`, otherwise pass fully qualified name of the stage (with every part contained in double quotes or use `snowflake_stage.<your stage's resource name>.fully_qualified_name` if you manage this stage through terraform).",
+					},
+					"path_on_stage": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Path for import on stage, without the leading `/`.",
+					},
+				},
+			},
 		},
 		"function_definition": {
 			Type:             schema.TypeString,
-			Required:         true,
 			ForceNew:         true,
 			DiffSuppressFunc: DiffSuppressStatement,
 		},
@@ -338,9 +384,204 @@ func functionBaseSchema() map[string]schema.Schema {
 			Computed:    true,
 			Description: "Outputs the result of `SHOW PARAMETERS IN FUNCTION` for the given function.",
 			Elem: &schema.Resource{
-				Schema: functionParametersSchema,
+				Schema: schemas.ShowFunctionParametersSchema,
 			},
 		},
 		FullyQualifiedNameAttributeName: *schemas.FullyQualifiedNameSchema,
 	}
+}
+
+func DeleteFunction(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = client.Functions.Drop(ctx, sdk.NewDropFunctionRequest(id).WithIfExists(true))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+	return nil
+}
+
+func parseFunctionArgumentsCommon(d *schema.ResourceData) ([]sdk.FunctionArgumentRequest, error) {
+	args := make([]sdk.FunctionArgumentRequest, 0)
+	if v, ok := d.GetOk("arguments"); ok {
+		for _, arg := range v.([]any) {
+			argName := arg.(map[string]any)["arg_name"].(string)
+			argDataType := arg.(map[string]any)["arg_data_type"].(string)
+			dataType, err := datatypes.ParseDataType(argDataType)
+			if err != nil {
+				return nil, err
+			}
+			request := sdk.NewFunctionArgumentRequest(argName, dataType)
+
+			if argDefaultValue, defaultValuePresent := arg.(map[string]any)["arg_default_value"]; defaultValuePresent && argDefaultValue.(string) != "" {
+				request.WithDefaultValue(argDefaultValue.(string))
+			}
+
+			args = append(args, *request)
+		}
+	}
+	return args, nil
+}
+
+func parseFunctionImportsCommon(d *schema.ResourceData) ([]sdk.FunctionImportRequest, error) {
+	imports := make([]sdk.FunctionImportRequest, 0)
+	if v, ok := d.GetOk("imports"); ok {
+		for _, imp := range v.(*schema.Set).List() {
+			stageLocation := imp.(map[string]any)["stage_location"].(string)
+			pathOnStage := imp.(map[string]any)["path_on_stage"].(string)
+			imports = append(imports, *sdk.NewFunctionImportRequest().WithImport(fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)))
+		}
+	}
+	return imports, nil
+}
+
+func parseFunctionTargetPathCommon(d *schema.ResourceData) (string, error) {
+	var tp string
+	if v, ok := d.GetOk("target_path"); ok {
+		for _, p := range v.(*schema.Set).List() {
+			stageLocation := p.(map[string]any)["stage_location"].(string)
+			pathOnStage := p.(map[string]any)["path_on_stage"].(string)
+			tp = fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)
+		}
+	}
+	return tp, nil
+}
+
+func parseFunctionReturnsCommon(d *schema.ResourceData) (*sdk.FunctionReturnsRequest, error) {
+	returnTypeRaw := d.Get("return_type").(string)
+	dataType, err := datatypes.ParseDataType(returnTypeRaw)
+	if err != nil {
+		return nil, err
+	}
+	returns := sdk.NewFunctionReturnsRequest()
+	switch v := dataType.(type) {
+	case *datatypes.TableDataType:
+		var cr []sdk.FunctionColumnRequest
+		for _, c := range v.Columns() {
+			cr = append(cr, *sdk.NewFunctionColumnRequest(c.ColumnName(), c.ColumnType()))
+		}
+		returns.WithTable(*sdk.NewFunctionReturnsTableRequest().WithColumns(cr))
+	default:
+		returns.WithResultDataType(*sdk.NewFunctionReturnsResultDataTypeRequest(dataType))
+	}
+	return returns, nil
+}
+
+func setFunctionImportsInBuilder[T any](d *schema.ResourceData, setImports func([]sdk.FunctionImportRequest) T) error {
+	imports, err := parseFunctionImportsCommon(d)
+	if err != nil {
+		return err
+	}
+	setImports(imports)
+	return nil
+}
+
+func setFunctionTargetPathInBuilder[T any](d *schema.ResourceData, setTargetPath func(string) T) error {
+	tp, err := parseFunctionTargetPathCommon(d)
+	if err != nil {
+		return err
+	}
+	if tp != "" {
+		setTargetPath(tp)
+	}
+	return nil
+}
+
+func queryAllFunctionsDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allFunctionDetailsCommon, diag.Diagnostics) {
+	functionDetails, err := client.Functions.DescribeDetails(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			log.Printf("[DEBUG] function (%s) not found or we are not authorized. Err: %s", d.Id(), err)
+			d.SetId("")
+			return nil, diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query function. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Function: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return nil, diag.FromErr(err)
+	}
+	function, err := client.Functions.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return nil, diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query function. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Function: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return nil, diag.FromErr(err)
+	}
+	functionParameters, err := client.Functions.ShowParameters(ctx, id)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	return &allFunctionDetailsCommon{
+		function:           function,
+		functionDetails:    functionDetails,
+		functionParameters: functionParameters,
+	}, nil
+}
+
+type allFunctionDetailsCommon struct {
+	function           *sdk.Function
+	functionDetails    *sdk.FunctionDetails
+	functionParameters []*sdk.Parameter
+}
+
+func readFunctionArgumentsCommon(d *schema.ResourceData, args []sdk.NormalizedArgument) error {
+	if len(args) == 0 {
+		// TODO [SNOW-1348103]: handle empty list
+		return nil
+	}
+	// We do it the unusual way because the default values are not returned by SF.
+	// We update what we have - leaving the defaults unchanged.
+	if currentArgs, ok := d.Get("arguments").([]map[string]any); !ok {
+		return fmt.Errorf("arguments must be a list")
+	} else {
+		for i, arg := range args {
+			currentArgs[i]["arg_name"] = arg.Name
+			currentArgs[i]["arg_data_type"] = arg.DataType.ToSql()
+		}
+		return d.Set("arguments", currentArgs)
+	}
+}
+
+func readFunctionImportsCommon(d *schema.ResourceData, imports []sdk.NormalizedPath) error {
+	if len(imports) == 0 {
+		// don't do anything if imports not present
+		return nil
+	}
+	imps := collections.Map(imports, func(imp sdk.NormalizedPath) map[string]any {
+		return map[string]any{
+			"stage_location": imp.StageLocation,
+			"path_on_stage":  imp.PathOnStage,
+		}
+	})
+	return d.Set("imports", imps)
+}
+
+func readFunctionTargetPathCommon(d *schema.ResourceData, normalizedPath *sdk.NormalizedPath) error {
+	if normalizedPath == nil {
+		// don't do anything if imports not present
+		return nil
+	}
+	tp := make([]map[string]any, 1)
+	tp[0] = map[string]any{
+		"stage_location": normalizedPath.StageLocation,
+		"path_on_stage":  normalizedPath.PathOnStage,
+	}
+	return d.Set("target_path", tp)
 }

@@ -4,7 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
+	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
 const DefaultFunctionComment = "user-defined function"
@@ -27,9 +31,28 @@ type FunctionDetails struct {
 	Handler                    *string // present for python, java, and scala (hidden when SECURE)
 	RuntimeVersion             *string // present for python, java, and scala (hidden when SECURE)
 	Packages                   *string // list // present for python, java, and scala
-	TargetPath                 *string // list present for scala and java (hidden when SECURE)
+	TargetPath                 *string // present for scala and java (hidden when SECURE)
 	InstalledPackages          *string // list present for python (hidden when SECURE)
 	IsAggregate                *bool   // present for python
+
+	NormalizedImports    []NormalizedPath
+	NormalizedTargetPath *NormalizedPath
+	ReturnDataType       datatypes.DataType
+	ReturnNotNull        bool
+	NormalizedArguments  []NormalizedArgument
+}
+
+type NormalizedPath struct {
+	// StageLocation is a normalized (fully-quoted id or `~`) stage location
+	StageLocation string
+	// PathOnStage is path to the file on stage without opening `/`
+	PathOnStage string
+}
+
+// NormalizedArgument does not contain default value because it is not returned in the Signature (or any other field).
+type NormalizedArgument struct {
+	Name     string
+	DataType datatypes.DataType
 }
 
 func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
@@ -69,7 +92,134 @@ func functionDetailsFromRows(rows []FunctionDetail) (*FunctionDetails, error) {
 			v.TargetPath = row.Value
 		}
 	}
+	if e := errors.Join(errs...); e != nil {
+		return nil, e
+	}
+
+	if functionDetailsImports, err := parseFunctionDetailsImport(*v); err != nil {
+		errs = append(errs, err)
+	} else {
+		v.NormalizedImports = functionDetailsImports
+	}
+
+	if v.TargetPath != nil {
+		if p, err := parseStageLocationPath(*v.TargetPath); err != nil {
+			errs = append(errs, err)
+		} else {
+			v.NormalizedTargetPath = p
+		}
+	}
+
+	if dt, returnNotNull, err := parseFunctionOrProcedureReturns(v.Returns); err != nil {
+		errs = append(errs, err)
+	} else {
+		v.ReturnDataType = dt
+		v.ReturnNotNull = returnNotNull
+	}
+
+	if args, err := parseFunctionOrProcedureSignature(v.Signature); err != nil {
+		errs = append(errs, err)
+	} else {
+		v.NormalizedArguments = args
+	}
+
 	return v, errors.Join(errs...)
+}
+
+// TODO [SNOW-1850370]: use ParseCommaSeparatedStringArray + collections.MapErr combo here and in other methods?
+func parseFunctionDetailsImport(details FunctionDetails) ([]NormalizedPath, error) {
+	functionDetailsImports := make([]NormalizedPath, 0)
+	if details.Imports == nil || *details.Imports == "" || *details.Imports == "[]" {
+		return functionDetailsImports, nil
+	}
+	if !strings.HasPrefix(*details.Imports, "[") || !strings.HasSuffix(*details.Imports, "]") {
+		return functionDetailsImports, fmt.Errorf("could not parse imports from Snowflake: %s, wrapping brackets not found", *details.Imports)
+	}
+	raw := (*details.Imports)[1 : len(*details.Imports)-1]
+	imports := strings.Split(raw, ",")
+	for _, imp := range imports {
+		p, err := parseStageLocationPath(imp)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse imports from Snowflake: %s, err: %w", *details.Imports, err)
+		}
+		functionDetailsImports = append(functionDetailsImports, *p)
+	}
+	return functionDetailsImports, nil
+}
+
+func parseStageLocationPath(location string) (*NormalizedPath, error) {
+	log.Printf("[DEBUG] parsing stage location path part: %s", location)
+	idx := strings.Index(location, "/")
+	if idx < 0 {
+		return nil, fmt.Errorf("part %s cannot be split into stage and path", location)
+	}
+	stageRaw := strings.TrimPrefix(strings.TrimSpace(location[:idx]), "@")
+	if stageRaw != "~" {
+		stageId, err := ParseSchemaObjectIdentifier(stageRaw)
+		if err != nil {
+			return nil, fmt.Errorf("part %s contains incorrect stage location: %w", location, err)
+		}
+		stageRaw = stageId.FullyQualifiedName()
+	}
+	pathRaw := strings.TrimPrefix(strings.TrimSpace(location[idx:]), "/")
+	if pathRaw == "" {
+		return nil, fmt.Errorf("part %s contains empty path", location)
+	}
+	return &NormalizedPath{stageRaw, pathRaw}, nil
+}
+
+func parseFunctionOrProcedureReturns(returns string) (datatypes.DataType, bool, error) {
+	var returnNotNull bool
+	trimmed := strings.TrimSpace(returns)
+	if strings.HasSuffix(trimmed, " NOT NULL") {
+		returnNotNull = true
+		trimmed = strings.TrimSuffix(trimmed, " NOT NULL")
+	}
+	dt, err := datatypes.ParseDataType(trimmed)
+	return dt, returnNotNull, err
+}
+
+// Format in Snowflake DB is: (argName argType, argName argType, ...).
+func parseFunctionOrProcedureSignature(signature string) ([]NormalizedArgument, error) {
+	normalizedArguments := make([]NormalizedArgument, 0)
+	trimmed := strings.TrimSpace(signature)
+	if trimmed == "" {
+		return normalizedArguments, fmt.Errorf("could not parse signature from Snowflake: %s, can't be empty", signature)
+	}
+	if trimmed == "()" {
+		return normalizedArguments, nil
+	}
+	if !strings.HasPrefix(trimmed, "(") || !strings.HasSuffix(trimmed, ")") {
+		return normalizedArguments, fmt.Errorf("could not parse signature from Snowflake: %s, wrapping parentheses not found", trimmed)
+	}
+	raw := (trimmed)[1 : len(trimmed)-1]
+	args := strings.Split(raw, ",")
+
+	for _, arg := range args {
+		a, err := parseFunctionOrProcedureArgument(arg)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse signature from Snowflake: %s, err: %w", trimmed, err)
+		}
+		normalizedArguments = append(normalizedArguments, *a)
+	}
+	return normalizedArguments, nil
+}
+
+// TODO [SNOW-1850370]: test with strange arg names (first integration test)
+func parseFunctionOrProcedureArgument(arg string) (*NormalizedArgument, error) {
+	log.Printf("[DEBUG] parsing argument: %s", arg)
+	trimmed := strings.TrimSpace(arg)
+	idx := strings.Index(trimmed, " ")
+	if idx < 0 {
+		return nil, fmt.Errorf("arg %s cannot be split into arg name, data type, and default", arg)
+	}
+	argName := trimmed[:idx]
+	rest := strings.TrimSpace(trimmed[idx:])
+	dt, err := datatypes.ParseDataType(rest)
+	if err != nil {
+		return nil, fmt.Errorf("arg type %s cannot be parsed, err: %w", rest, err)
+	}
+	return &NormalizedArgument{argName, dt}, nil
 }
 
 func (v *functions) DescribeDetails(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*FunctionDetails, error) {

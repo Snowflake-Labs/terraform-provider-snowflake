@@ -17,7 +17,7 @@ func FunctionPython() *schema.Resource {
 		CreateContext: TrackingCreateWrapper(resources.FunctionPython, CreateContextFunctionPython),
 		ReadContext:   TrackingReadWrapper(resources.FunctionPython, ReadContextFunctionPython),
 		UpdateContext: TrackingUpdateWrapper(resources.FunctionPython, UpdateContextFunctionPython),
-		DeleteContext: TrackingDeleteWrapper(resources.FunctionPython, DeleteContextFunctionPython),
+		DeleteContext: TrackingDeleteWrapper(resources.FunctionPython, DeleteFunction),
 		Description:   "Resource used to manage python function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionPython, customdiff.All(
