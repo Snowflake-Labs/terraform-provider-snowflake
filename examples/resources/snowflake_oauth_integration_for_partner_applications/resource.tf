@@ -3,7 +3,6 @@ resource "snowflake_oauth_integration_for_partner_applications" "test" {
   name               = "example"
   oauth_client       = "LOOKER"
   oauth_redirect_uri = "http://example.com"
-  blocked_roles_list = ["ACCOUNTADMIN", "SECURITYADMIN"]
 }
 
 # resource with all fields set

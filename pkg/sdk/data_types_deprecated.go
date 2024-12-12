@@ -47,5 +47,9 @@ func IsStringType(_type string) bool {
 }
 
 func LegacyDataTypeFrom(newDataType datatypes.DataType) DataType {
+	// TODO [SNOW-1850370]: remove this check?
+	if newDataType == nil {
+		return ""
+	}
 	return DataType(newDataType.ToLegacyDataTypeSql())
 }

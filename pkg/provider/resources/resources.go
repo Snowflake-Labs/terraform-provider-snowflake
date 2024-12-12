@@ -19,6 +19,7 @@ const (
 	DatabaseRole                                           resource = "snowflake_database_role"
 	DynamicTable                                           resource = "snowflake_dynamic_table"
 	EmailNotificationIntegration                           resource = "snowflake_email_notification_integration"
+	Execute                                                resource = "snowflake_execute"
 	ExternalFunction                                       resource = "snowflake_external_function"
 	ExternalTable                                          resource = "snowflake_external_table"
 	ExternalOauthSecurityIntegration                       resource = "snowflake_external_oauth_security_integration"

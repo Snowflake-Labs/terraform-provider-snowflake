@@ -87,6 +87,29 @@ func (c *ProcedureClient) CreateJava(t *testing.T) (*sdk.Procedure, func()) {
 	return function, c.DropProcedureFunc(t, id)
 }
 
+func (c *ProcedureClient) CreateScalaStaged(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, dataType datatypes.DataType, importPath string, handler string) (*sdk.Procedure, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	argName := "x"
+	argument := sdk.NewProcedureArgumentRequest(argName, dataType)
+	dt := sdk.NewProcedureReturnsResultDataTypeRequest(dataType)
+	returns := sdk.NewProcedureReturnsRequest().WithResultDataType(*dt)
+	packages := []sdk.ProcedurePackageRequest{*sdk.NewProcedurePackageRequest("com.snowflake:snowpark:1.14.0")}
+
+	request := sdk.NewCreateForScalaProcedureRequest(id.SchemaObjectId(), *returns, "2.12", packages, handler).
+		WithArguments([]sdk.ProcedureArgumentRequest{*argument}).
+		WithImports([]sdk.ProcedureImportRequest{*sdk.NewProcedureImportRequest(importPath)})
+
+	err := c.client().CreateForScala(ctx, request)
+	require.NoError(t, err)
+
+	function, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return function, c.DropProcedureFunc(t, id)
+}
+
 func (c *ProcedureClient) Create(t *testing.T, arguments ...sdk.DataType) *sdk.Procedure {
 	t.Helper()
 	return c.CreateWithIdentifier(t, c.ids.RandomSchemaObjectIdentifierWithArguments(arguments...))
@@ -154,6 +177,19 @@ func (c *ProcedureClient) SampleJavaDefinition(t *testing.T, className string, f
 		}
 	}
 `, className, funcName, argName)
+}
+
+func (c *ProcedureClient) SampleJavaDefinitionNoArgs(t *testing.T, className string, funcName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+	import com.snowflake.snowpark_java.*;
+	class %[1]s {
+		public static String %[2]s(Session session) {
+			return "hello";
+		}
+	}
+`, className, funcName)
 }
 
 // For more references: https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript

@@ -7,6 +7,3 @@ variable "oauth_client_type" {
 variable "oauth_redirect_uri" {
   type = string
 }
-variable "blocked_roles_list" {
-  type = set(string)
-}

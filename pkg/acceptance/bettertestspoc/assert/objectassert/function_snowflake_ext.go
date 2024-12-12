@@ -65,3 +65,14 @@ func (f *FunctionAssert) HasExactlySecrets(expectedSecrets map[string]sdk.Schema
 	})
 	return f
 }
+
+func (f *FunctionAssert) HasArgumentsRawContains(substring string) *FunctionAssert {
+	f.AddAssertion(func(t *testing.T, o *sdk.Function) error {
+		t.Helper()
+		if !strings.Contains(o.ArgumentsRaw, substring) {
+			return fmt.Errorf("expected arguments raw contain: %v, to contain: %v", o.ArgumentsRaw, substring)
+		}
+		return nil
+	})
+	return f
+}

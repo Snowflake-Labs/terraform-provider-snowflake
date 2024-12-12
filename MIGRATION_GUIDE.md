@@ -102,6 +102,57 @@ Additionally, `JWT` value is no longer available for `authenticator` field in th
 
 ## v0.99.0 ➞ v0.100.0
 
+### *(new feature)* Account role data source
+Added a new `snowflake_account_roles` data source for account roles. Now it reflects It's based on `snowflake_roles` data source.
+`account_roles` field now organizes output of show under `show_output` field.
+
+Before:
+```terraform
+output "simple_output" {
+  value = data.snowflake_roles.test.roles[0].show_output[0].name
+}
+```
+After:
+```terraform
+output "simple_output" {
+  value = data.snowflake_account_roles.test.account_roles[0].show_output[0].name
+}
+```
+
+### snowflake_roles data source deprecation
+`snowflake_roles` is now deprecated in favor of `snowflake_account_roles` with a similar schema and behavior. It will be removed with the v1 release. Please adjust your configuration files.
+
+### snowflake_account_parameter resource changes
+
+#### *(behavior change)* resource deletion
+During resource deleting, provider now uses `UNSET` instead of `SET` with the default value.
+
+#### *(behavior change)* changes in `key` field
+The value of `key` field is now case-insensitive and is validated. The list of supported values is available in the resource documentation.
+
+### unsafe_execute resource deprecation / new execute resource
+
+The `snowflake_unsafe_execute` gets deprecated in favor of the new resource `snowflake_execute`.
+The `snowflake_execute` was build on top of `snowflake_unsafe_execute` with a few improvements.
+The unsafe version will be removed with the v1 release, so please migrate to the `snowflake_execute` resource.
+
+For no downtime migration, follow our [guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+When importing, remember that the given resource id has to be unique (using UUIDs is recommended).
+Also, because of the nature of the resource, first apply after importing is necessary to "copy" values from the configuration to the state.
+
+### snowflake_oauth_integration_for_partner_applications and snowflake_oauth_integration_for_custom_clients resource changes
+#### *(behavior change)* `blocked_roles_list` field is no longer required
+
+Previously, `blocked_roles_list` field was required to handle default account roles like `ACCOUNTADMIN`, `ORGADMIN`, and `SECURITYADMIN`.
+
+Now, it is optional, because of using the value of `OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST` parameter (read more below).
+
+No changes in the configuration are necessary.
+
+#### *(behavior change)* new field `related_parameters`
+
+To handle `blocked_roles_list` field properly in both of the resources, we introduce `related_parameters` field. This field is a list of parameters related to OAuth integrations. It is a computed-only field containing value of `OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST` account parameter (see [docs](https://docs.snowflake.com/en/sql-reference/parameters#oauth-add-privileged-roles-to-blocked-list)).
+
 ### snowflake_account resource changes
 
 Changes:
@@ -112,6 +163,30 @@ Changes:
 - `must_change_password` and `is_org_admin` type was changed from `bool` to bool-string (more on that [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#empty-values)). No action required during the migration.
 - The underlying resource identifier was changed from `<account_locator>` to `<organization_name>.<account_name>`. Migration will be done automatically. Notice this introduces changes in how `snowflake_account` resource is imported.
 - New `show_output` field was added (see [raw Snowflake output](./v1-preparations/CHANGES_BEFORE_V1.md#raw-snowflake-output)).
+
+### snowflake_accounts data source changes
+New filtering options:
+- `with_history`
+
+New output fields
+- `show_output`
+
+Breaking changes:
+- `pattern` renamed to `like`
+- `accounts` field now organizes output of show under `show_output` field and the output of show parameters under `parameters` field.
+
+Before:
+```terraform
+output "simple_output" {
+  value = data.snowflake_accounts.test.accounts[0].account_name
+}
+```
+After:
+```terraform
+output "simple_output" {
+  value = data.snowflake_accounts.test.accounts[0].show_output[0].account_name
+}
+```
 
 ### snowflake_tag_association resource changes
 #### *(behavior change)* new id format

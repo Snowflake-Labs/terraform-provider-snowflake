@@ -10,11 +10,11 @@ description: |-
 
 !> **Warning** This is a dangerous resource that allows executing **ANY** SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.
 
-~> **Note** This resource will be included in the V1 (check [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/ESSENTIAL_GA_OBJECTS.MD)) but may be slightly modified before. Design decisions and changes will be listed in the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#migration-guide).
-
 ~> **Note** It can be theoretically used to manage resource that are not supported by the provider. This is risky and may brake other resources if used incorrectly.
 
 ~> **Note** Use `query` parameter with caution. It will fetch **ALL** the results returned by the query provided. Try to limit the number of results by writing query with filters. Query failure does not stop resource creation; it simply results in `query_results` being empty.
+
+~> **Deprecation** This resource is deprecated and will be removed in a future major version release. Please use [snowflake_execute](./execute) instead. <deprecation>
 
 Experimental resource allowing execution of ANY SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.
 
@@ -139,7 +139,7 @@ resource "snowflake_unsafe_execute" "test" {
 
 ### Optional
 
-- `query` (String) Optional SQL statement to do a read. Invoked after creation and every time it is changed.
+- `query` (String) Optional SQL statement to do a read. Invoked on every resource refresh and every time it is changed.
 
 ### Read-Only
 
