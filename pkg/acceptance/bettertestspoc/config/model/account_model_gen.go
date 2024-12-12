@@ -13,6 +13,7 @@ type AccountModel struct {
 	AdminName          tfconfig.Variable `json:"admin_name,omitempty"`
 	AdminPassword      tfconfig.Variable `json:"admin_password,omitempty"`
 	AdminRsaPublicKey  tfconfig.Variable `json:"admin_rsa_public_key,omitempty"`
+	AdminUserType      tfconfig.Variable `json:"admin_user_type,omitempty"`
 	Comment            tfconfig.Variable `json:"comment,omitempty"`
 	Edition            tfconfig.Variable `json:"edition,omitempty"`
 	Email              tfconfig.Variable `json:"email,omitempty"`
@@ -38,12 +39,14 @@ func Account(
 	adminName string,
 	edition string,
 	email string,
+	gracePeriodInDays int,
 	name string,
 ) *AccountModel {
 	a := &AccountModel{ResourceModelMeta: config.Meta(resourceName, resources.Account)}
 	a.WithAdminName(adminName)
 	a.WithEdition(edition)
 	a.WithEmail(email)
+	a.WithGracePeriodInDays(gracePeriodInDays)
 	a.WithName(name)
 	return a
 }
@@ -52,12 +55,14 @@ func AccountWithDefaultMeta(
 	adminName string,
 	edition string,
 	email string,
+	gracePeriodInDays int,
 	name string,
 ) *AccountModel {
 	a := &AccountModel{ResourceModelMeta: config.DefaultMeta(resources.Account)}
 	a.WithAdminName(adminName)
 	a.WithEdition(edition)
 	a.WithEmail(email)
+	a.WithGracePeriodInDays(gracePeriodInDays)
 	a.WithName(name)
 	return a
 }
@@ -78,6 +83,11 @@ func (a *AccountModel) WithAdminPassword(adminPassword string) *AccountModel {
 
 func (a *AccountModel) WithAdminRsaPublicKey(adminRsaPublicKey string) *AccountModel {
 	a.AdminRsaPublicKey = tfconfig.StringVariable(adminRsaPublicKey)
+	return a
+}
+
+func (a *AccountModel) WithAdminUserType(adminUserType string) *AccountModel {
+	a.AdminUserType = tfconfig.StringVariable(adminUserType)
 	return a
 }
 
@@ -111,8 +121,8 @@ func (a *AccountModel) WithGracePeriodInDays(gracePeriodInDays int) *AccountMode
 	return a
 }
 
-func (a *AccountModel) WithIsOrgAdmin(isOrgAdmin bool) *AccountModel {
-	a.IsOrgAdmin = tfconfig.BoolVariable(isOrgAdmin)
+func (a *AccountModel) WithIsOrgAdmin(isOrgAdmin string) *AccountModel {
+	a.IsOrgAdmin = tfconfig.StringVariable(isOrgAdmin)
 	return a
 }
 
@@ -121,8 +131,8 @@ func (a *AccountModel) WithLastName(lastName string) *AccountModel {
 	return a
 }
 
-func (a *AccountModel) WithMustChangePassword(mustChangePassword bool) *AccountModel {
-	a.MustChangePassword = tfconfig.BoolVariable(mustChangePassword)
+func (a *AccountModel) WithMustChangePassword(mustChangePassword string) *AccountModel {
+	a.MustChangePassword = tfconfig.StringVariable(mustChangePassword)
 	return a
 }
 
@@ -157,6 +167,11 @@ func (a *AccountModel) WithAdminPasswordValue(value tfconfig.Variable) *AccountM
 
 func (a *AccountModel) WithAdminRsaPublicKeyValue(value tfconfig.Variable) *AccountModel {
 	a.AdminRsaPublicKey = value
+	return a
+}
+
+func (a *AccountModel) WithAdminUserTypeValue(value tfconfig.Variable) *AccountModel {
+	a.AdminUserType = value
 	return a
 }
 
