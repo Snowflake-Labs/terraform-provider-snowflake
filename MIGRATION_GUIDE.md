@@ -17,6 +17,19 @@ During resource deleting, provider now uses `UNSET` instead of `SET` with the de
 #### *(behavior change)* changes in `key` field
 The value of `key` field is now case-insensitive and is validated. The list of supported values is available in the resource documentation.
 
+### snowflake_oauth_integration_for_partner_applications and snowflake_oauth_integration_for_custom_clients resource changes
+#### *(behavior change)* `blocked_roles_list` field is no longer required
+
+Previously, `blocked_roles_list` field was required to handle default account roles like `ACCOUNTADMIN`, `ORGADMIN`, and `SECURITYADMIN`.
+
+Now, it is optional, because of using the value of `OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST` parameter (read more below).
+
+No changes in the configuration are necessary.
+
+#### *(behavior change)* new field `related_parameters`
+
+To handle `blocked_roles_list` field properly in both of the resources, we introduce `related_parameters` field. This field is a list of parameters related to OAuth integrations. It is a computed-only field containing value of `OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST` account parameter (see [docs](https://docs.snowflake.com/en/sql-reference/parameters#oauth-add-privileged-roles-to-blocked-list)).
+
 ### snowflake_account resource changes
 
 Changes:

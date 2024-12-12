@@ -21,7 +21,6 @@ resource "snowflake_oauth_integration_for_partner_applications" "test" {
   name               = "example"
   oauth_client       = "LOOKER"
   oauth_redirect_uri = "http://example.com"
-  blocked_roles_list = ["ACCOUNTADMIN", "SECURITYADMIN"]
 }
 
 # resource with all fields set
@@ -44,12 +43,12 @@ resource "snowflake_oauth_integration_for_partner_applications" "test" {
 
 ### Required
 
-- `blocked_roles_list` (Set of String) A set of Snowflake roles that a user cannot explicitly consent to using after authenticating. For more information about this resource, see [docs](./account_role).
 - `name` (String) Specifies the name of the OAuth integration. This name follows the rules for Object Identifiers. The name should be unique among security integrations in your account. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 - `oauth_client` (String) Creates an OAuth interface between Snowflake and a partner application. Valid options are: `LOOKER` | `TABLEAU_DESKTOP` | `TABLEAU_SERVER`.
 
 ### Optional
 
+- `blocked_roles_list` (Set of String) A set of Snowflake roles that a user cannot explicitly consent to using after authenticating. By default, this list includes the ACCOUNTADMIN, ORGADMIN and SECURITYADMIN roles. To remove these privileged roles from the list, use the ALTER ACCOUNT command to set the OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST account parameter to FALSE. For more information about this resource, see [docs](./account_role).
 - `comment` (String) Specifies a comment for the OAuth integration.
 - `enabled` (String) Specifies whether this OAuth integration is enabled or disabled. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 - `oauth_issue_refresh_tokens` (String) Specifies whether to allow the client to exchange a refresh token for an access token when the current access token has expired. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
@@ -62,6 +61,7 @@ resource "snowflake_oauth_integration_for_partner_applications" "test" {
 - `describe_output` (List of Object) Outputs the result of `DESCRIBE SECURITY INTEGRATION` for the given integration. (see [below for nested schema](#nestedatt--describe_output))
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+- `related_parameters` (List of Object) Parameters related to this security integration. (see [below for nested schema](#nestedatt--related_parameters))
 - `show_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATION` for the given integration. (see [below for nested schema](#nestedatt--show_output))
 
 <a id="nestedatt--describe_output"></a>
@@ -295,6 +295,26 @@ Read-Only:
 - `default` (String)
 - `name` (String)
 - `type` (String)
+- `value` (String)
+
+
+
+<a id="nestedatt--related_parameters"></a>
+### Nested Schema for `related_parameters`
+
+Read-Only:
+
+- `oauth_add_privileged_roles_to_blocked_list` (List of Object) (see [below for nested schema](#nestedobjatt--related_parameters--oauth_add_privileged_roles_to_blocked_list))
+
+<a id="nestedobjatt--related_parameters--oauth_add_privileged_roles_to_blocked_list"></a>
+### Nested Schema for `related_parameters.oauth_add_privileged_roles_to_blocked_list`
+
+Read-Only:
+
+- `default` (String)
+- `description` (String)
+- `key` (String)
+- `level` (String)
 - `value` (String)
 
 

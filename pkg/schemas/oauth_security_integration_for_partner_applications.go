@@ -65,3 +65,17 @@ func DescribeOauthIntegrationForPartnerApplicationsToSchema(integrationPropertie
 	}
 	return securityIntegrationProperties
 }
+
+var ShowOauthForPartnerApplicationsParametersSchema = map[string]*schema.Schema{
+	strings.ToLower(string(sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList)): ParameterListSchema,
+}
+
+func OauthForPartnerApplicationsParametersToSchema(parameters []*sdk.Parameter) map[string]any {
+	schemaMap := make(map[string]any)
+	for _, param := range parameters {
+		if slices.Contains([]sdk.AccountParameter{sdk.AccountParameterOAuthAddPrivilegedRolesToBlockedList}, sdk.AccountParameter(param.Key)) {
+			schemaMap[strings.ToLower(param.Key)] = []map[string]any{ParameterToSchema(param)}
+		}
+	}
+	return schemaMap
+}
