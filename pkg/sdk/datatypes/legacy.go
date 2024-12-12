@@ -16,4 +16,5 @@ const (
 	TimestampNtzLegacyDataType = "TIMESTAMP_NTZ"
 	TimestampTzLegacyDataType  = "TIMESTAMP_TZ"
 	VariantLegacyDataType      = "VARIANT"
+	TableLegacyDataType        = "TABLE"
 )

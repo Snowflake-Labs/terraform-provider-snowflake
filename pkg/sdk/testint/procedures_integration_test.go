@@ -1483,22 +1483,21 @@ def filter_by_role(session, table_name, role):
 		require.GreaterOrEqual(t, len(procedures), 1)
 	})
 
-	// TODO [SNOW-1348103]: adjust or remove
 	t.Run("create procedure for SQL: returns table", func(t *testing.T) {
-		t.Skipf("Skipped for now; left as inspiration for resource rework as part of SNOW-1348103")
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
 
-		name := "find_invoice_by_id"
-		id := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeVARCHAR)
-
+		column1 := sdk.NewProcedureColumnRequest("id", nil).WithColumnDataTypeOld("INTEGER")
+		column2 := sdk.NewProcedureColumnRequest("price", nil).WithColumnDataTypeOld("double")
+		column3 := sdk.NewProcedureColumnRequest("third", nil).WithColumnDataTypeOld("Geometry")
+		returnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2, *column3})
+		expectedReturnDataType, err := datatypes.ParseDataType(fmt.Sprintf("TABLE(id %s, price %s, third %s)", datatypes.NumberLegacyDataType, datatypes.FloatLegacyDataType, datatypes.GeometryLegacyDataType))
+		require.NoError(t, err)
 		definition := `
 		DECLARE
 			res RESULTSET DEFAULT (SELECT * FROM invoices WHERE id = :id);
 		BEGIN
 			RETURN TABLE(res);
 		END;`
-		column1 := sdk.NewProcedureColumnRequest("id", nil).WithColumnDataTypeOld("INTEGER")
-		column2 := sdk.NewProcedureColumnRequest("price", nil).WithColumnDataTypeOld("NUMBER(12,2)")
-		returnsTable := sdk.NewProcedureReturnsTableRequest().WithColumns([]sdk.ProcedureColumnRequest{*column1, *column2})
 		returns := sdk.NewProcedureSQLReturnsRequest().WithTable(*returnsTable)
 		argument := sdk.NewProcedureArgumentRequest("id", nil).WithArgDataTypeOld(sdk.DataTypeVARCHAR)
 		request := sdk.NewCreateForSQLProcedureRequestDefinitionWrapped(id.SchemaObjectId(), *returns, definition).
@@ -1506,13 +1505,15 @@ def filter_by_role(session, table_name, role):
 			// SNOW-1051627 todo: uncomment once null input behavior working again
 			// WithNullInputBehavior(sdk.NullInputBehaviorPointer(sdk.NullInputBehaviorReturnsNullInput)).
 			WithArguments([]sdk.ProcedureArgumentRequest{*argument})
-		err := client.Procedures.CreateForSQL(ctx, request)
+		err = client.Procedures.CreateForSQL(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
-		procedures, err := client.Procedures.Show(ctx, sdk.NewShowProcedureRequest())
-		require.NoError(t, err)
-		require.GreaterOrEqual(t, len(procedures), 1)
+		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+			HasCreatedOnNotEmpty().
+			HasName(id.Name()).
+			HasSchemaName(id.SchemaName()).
+			HasArgumentsRawContains(fmt.Sprintf(`RETURN %s`, expectedReturnDataType.ToLegacyDataTypeSql())))
 	})
 
 	t.Run("show parameters", func(t *testing.T) {

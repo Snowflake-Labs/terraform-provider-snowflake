@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -1095,6 +1097,88 @@ func Test_ParseDataType_Vector(t *testing.T) {
 	}
 }
 
+func Test_ParseDataType_Table(t *testing.T) {
+	type column struct {
+		name       string
+		legacyType string
+	}
+	type test struct {
+		input           string
+		expectedColumns []column
+	}
+
+	positiveTestCases := []test{
+		{input: "TABLE()", expectedColumns: []column{}},
+		{input: "TABLE ()", expectedColumns: []column{}},
+		{input: "TABLE(arg_name NUMBER)", expectedColumns: []column{{"arg_name", NumberLegacyDataType}}},
+		{input: "TABLE(arg_name number, second float, third GEOGRAPHY)", expectedColumns: []column{{"arg_name", NumberLegacyDataType}, {"second", FloatLegacyDataType}, {"third", GeographyLegacyDataType}}},
+		{input: "TABLE  (		arg_name 		varchar, 		second 	date, third TIME 			)", expectedColumns: []column{{"arg_name", VarcharLegacyDataType}, {"second", DateLegacyDataType}, {"third", TimeLegacyDataType}}},
+		// TODO: Support types with parameters (for now, only legacy types are supported because Snowflake returns only with this output), e.g. TABLE(ARG NUMBER(38, 0))
+		// TODO: Support nested tables, e.g. TABLE(ARG NUMBER, NESTED TABLE(A VARCHAR, B GEOMETRY))
+	}
+
+	negativeTestCases := []test{
+		{input: "TABLE(1, 2)"},
+		{input: "TABLE(INT, INT)"},
+		{input: "TABLE(a b)"},
+		{input: "TABLE(1)"},
+		{input: "TABLE(2, INT)"},
+		{input: "TABLE"},
+		{input: "TABLE(INT, 2, 3)"},
+		{input: "TABLE(INT)"},
+		{input: "TABLE(x, 2)"},
+		{input: "TABLE("},
+		{input: "TABLE)"},
+		{input: "TA BLE"},
+	}
+
+	for _, tc := range positiveTestCases {
+		tc := tc
+		t.Run(tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.NoError(t, err)
+			require.IsType(t, &TableDataType{}, parsed)
+
+			assert.Equal(t, "TABLE", parsed.(*TableDataType).underlyingType)
+			assert.Equal(t, len(tc.expectedColumns), len(parsed.(*TableDataType).columns))
+			for i, column := range tc.expectedColumns {
+				assert.Equal(t, column.name, parsed.(*TableDataType).columns[i].name)
+				assert.Equal(t, column.legacyType, parsed.(*TableDataType).columns[i].dataType.ToLegacyDataTypeSql())
+			}
+
+			legacyColumns := strings.Join(collections.Map(tc.expectedColumns, func(col column) string {
+				return fmt.Sprintf("%s %s", col.name, col.legacyType)
+			}), ", ")
+			assert.Equal(t, fmt.Sprintf("TABLE(%s)", legacyColumns), parsed.ToLegacyDataTypeSql())
+
+			canonicalColumns := strings.Join(collections.Map(tc.expectedColumns, func(col column) string {
+				parsedType, err := ParseDataType(col.legacyType)
+				require.NoError(t, err)
+				return fmt.Sprintf("%s %s", col.name, parsedType.Canonical())
+			}), ", ")
+			assert.Equal(t, fmt.Sprintf("TABLE(%s)", canonicalColumns), parsed.Canonical())
+
+			columns := strings.Join(collections.Map(tc.expectedColumns, func(col column) string {
+				parsedType, err := ParseDataType(col.legacyType)
+				require.NoError(t, err)
+				return fmt.Sprintf("%s %s", col.name, parsedType.ToSql())
+			}), ", ")
+			assert.Equal(t, fmt.Sprintf("TABLE(%s)", columns), parsed.ToSql())
+		})
+	}
+
+	for _, tc := range negativeTestCases {
+		tc := tc
+		t.Run("negative: "+tc.input, func(t *testing.T) {
+			parsed, err := ParseDataType(tc.input)
+
+			require.Error(t, err)
+			require.Nil(t, parsed)
+		})
+	}
+}
+
 func Test_AreTheSame(t *testing.T) {
 	// empty d1/d2 means nil DataType input
 	type test struct {
@@ -1145,6 +1229,12 @@ func Test_AreTheSame(t *testing.T) {
 		{d1: "TIME", d2: "TIME", expectedOutcome: true},
 		{d1: "TIME", d2: "TIME(5)", expectedOutcome: false},
 		{d1: "TIME", d2: fmt.Sprintf("TIME(%d)", DefaultTimePrecision), expectedOutcome: true},
+		{d1: "TABLE()", d2: "TABLE()", expectedOutcome: true},
+		{d1: "TABLE(A NUMBER)", d2: "TABLE(B NUMBER)", expectedOutcome: false},
+		{d1: "TABLE(A NUMBER)", d2: "TABLE(a NUMBER)", expectedOutcome: false},
+		{d1: "TABLE(A NUMBER)", d2: "TABLE(A VARCHAR)", expectedOutcome: false},
+		{d1: "TABLE(A NUMBER, B VARCHAR)", d2: "TABLE(A NUMBER, B VARCHAR)", expectedOutcome: true},
+		{d1: "TABLE(A NUMBER, B NUMBER)", d2: "TABLE(A NUMBER, B VARCHAR)", expectedOutcome: false},
 	}
 
 	for _, tc := range testCases {

@@ -32,6 +32,7 @@ func (t *VectorDataType) Canonical() string {
 
 var (
 	VectorDataTypeSynonyms  = []string{"VECTOR"}
+	TableDataTypeSynonyms   = []string{"TABLE"}
 	VectorAllowedInnerTypes = []string{"INT", "FLOAT"}
 )
 

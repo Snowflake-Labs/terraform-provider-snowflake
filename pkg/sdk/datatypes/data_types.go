@@ -80,6 +80,9 @@ func ParseDataType(raw string) (DataType, error) {
 	if idx := slices.IndexFunc(VectorDataTypeSynonyms, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
 		return parseVectorDataTypeRaw(sanitizedDataTypeRaw{dataTypeRaw, VectorDataTypeSynonyms[idx]})
 	}
+	if idx := slices.IndexFunc(TableDataTypeSynonyms, func(s string) bool { return strings.HasPrefix(dataTypeRaw, s) }); idx >= 0 {
+		return parseTableDataTypeRaw(sanitizedDataTypeRaw{strings.TrimSpace(raw), TableDataTypeSynonyms[idx]})
+	}
 
 	return nil, fmt.Errorf("invalid data type: %s", raw)
 }
@@ -118,6 +121,8 @@ func AreTheSame(a DataType, b DataType) bool {
 		return castSuccessfully(v, b, areNumberDataTypesTheSame)
 	case *ObjectDataType:
 		return castSuccessfully(v, b, noArgsDataTypesAreTheSame)
+	case *TableDataType:
+		return castSuccessfully(v, b, areTableDataTypesTheSame)
 	case *TextDataType:
 		return castSuccessfully(v, b, areTextDataTypesTheSame)
 	case *TimeDataType:
