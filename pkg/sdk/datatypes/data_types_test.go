@@ -1099,8 +1099,8 @@ func Test_ParseDataType_Vector(t *testing.T) {
 
 func Test_ParseDataType_Table(t *testing.T) {
 	type column struct {
-		name       string
-		legacyType string
+		Name string
+		Type string
 	}
 	type test struct {
 		input           string
@@ -1110,14 +1110,20 @@ func Test_ParseDataType_Table(t *testing.T) {
 	positiveTestCases := []test{
 		{input: "TABLE()", expectedColumns: []column{}},
 		{input: "TABLE ()", expectedColumns: []column{}},
-		{input: "TABLE(arg_name NUMBER)", expectedColumns: []column{{"arg_name", NumberLegacyDataType}}},
-		{input: "TABLE(arg_name number, second float, third GEOGRAPHY)", expectedColumns: []column{{"arg_name", NumberLegacyDataType}, {"second", FloatLegacyDataType}, {"third", GeographyLegacyDataType}}},
-		{input: "TABLE  (		arg_name 		varchar, 		second 	date, third TIME 			)", expectedColumns: []column{{"arg_name", VarcharLegacyDataType}, {"second", DateLegacyDataType}, {"third", TimeLegacyDataType}}},
+		{input: "TABLE ( 	 )", expectedColumns: []column{}},
+		{input: "TABLE(arg_name NUMBER)", expectedColumns: []column{{"arg_name", "NUMBER"}}},
+		{input: "TABLE(arg_name double precision, arg_name_2 NUMBER)", expectedColumns: []column{{"arg_name", "double precision"}, {"arg_name_2", "NUMBER"}}},
+		{input: "TABLE(arg_name NUMBER(38))", expectedColumns: []column{{"arg_name", "NUMBER(38)"}}},
+		{input: "TABLE(arg_name NUMBER(38), arg_name_2 VARCHAR)", expectedColumns: []column{{"arg_name", "NUMBER(38)"}, {"arg_name_2", "VARCHAR"}}},
+		{input: "TABLE(arg_name number, second float, third GEOGRAPHY)", expectedColumns: []column{{"arg_name", "number"}, {"second", "float"}, {"third", "GEOGRAPHY"}}},
+		{input: "TABLE  (		arg_name 		varchar, 		second 	date, third TIME 			)", expectedColumns: []column{{"arg_name", "varchar"}, {"second", "date"}, {"third", "time"}}},
 		// TODO: Support types with parameters (for now, only legacy types are supported because Snowflake returns only with this output), e.g. TABLE(ARG NUMBER(38, 0))
 		// TODO: Support nested tables, e.g. TABLE(ARG NUMBER, NESTED TABLE(A VARCHAR, B GEOMETRY))
+		// TODO: Support complex argument names (with quotes / spaces / special characters / etc)
 	}
 
 	negativeTestCases := []test{
+		{input: "TABLE())"},
 		{input: "TABLE(1, 2)"},
 		{input: "TABLE(INT, INT)"},
 		{input: "TABLE(a b)"},
@@ -1143,26 +1149,30 @@ func Test_ParseDataType_Table(t *testing.T) {
 			assert.Equal(t, "TABLE", parsed.(*TableDataType).underlyingType)
 			assert.Equal(t, len(tc.expectedColumns), len(parsed.(*TableDataType).columns))
 			for i, column := range tc.expectedColumns {
-				assert.Equal(t, column.name, parsed.(*TableDataType).columns[i].name)
-				assert.Equal(t, column.legacyType, parsed.(*TableDataType).columns[i].dataType.ToLegacyDataTypeSql())
+				assert.Equal(t, column.Name, parsed.(*TableDataType).columns[i].name)
+				parsedType, err := ParseDataType(column.Type)
+				require.NoError(t, err)
+				assert.Equal(t, parsedType.ToLegacyDataTypeSql(), parsed.(*TableDataType).columns[i].dataType.ToLegacyDataTypeSql())
 			}
 
 			legacyColumns := strings.Join(collections.Map(tc.expectedColumns, func(col column) string {
-				return fmt.Sprintf("%s %s", col.name, col.legacyType)
+				parsedType, err := ParseDataType(col.Type)
+				require.NoError(t, err)
+				return fmt.Sprintf("%s %s", col.Name, parsedType.ToLegacyDataTypeSql())
 			}), ", ")
 			assert.Equal(t, fmt.Sprintf("TABLE(%s)", legacyColumns), parsed.ToLegacyDataTypeSql())
 
 			canonicalColumns := strings.Join(collections.Map(tc.expectedColumns, func(col column) string {
-				parsedType, err := ParseDataType(col.legacyType)
+				parsedType, err := ParseDataType(col.Type)
 				require.NoError(t, err)
-				return fmt.Sprintf("%s %s", col.name, parsedType.Canonical())
+				return fmt.Sprintf("%s %s", col.Name, parsedType.Canonical())
 			}), ", ")
 			assert.Equal(t, fmt.Sprintf("TABLE(%s)", canonicalColumns), parsed.Canonical())
 
 			columns := strings.Join(collections.Map(tc.expectedColumns, func(col column) string {
-				parsedType, err := ParseDataType(col.legacyType)
+				parsedType, err := ParseDataType(col.Type)
 				require.NoError(t, err)
-				return fmt.Sprintf("%s %s", col.name, parsedType.ToSql())
+				return fmt.Sprintf("%s %s", col.Name, parsedType.ToSql())
 			}), ", ")
 			assert.Equal(t, fmt.Sprintf("TABLE(%s)", columns), parsed.ToSql())
 		})
@@ -1235,6 +1245,7 @@ func Test_AreTheSame(t *testing.T) {
 		{d1: "TABLE(A NUMBER)", d2: "TABLE(A VARCHAR)", expectedOutcome: false},
 		{d1: "TABLE(A NUMBER, B VARCHAR)", d2: "TABLE(A NUMBER, B VARCHAR)", expectedOutcome: true},
 		{d1: "TABLE(A NUMBER, B NUMBER)", d2: "TABLE(A NUMBER, B VARCHAR)", expectedOutcome: false},
+		{d1: "TABLE()", d2: "TABLE(A NUMBER)", expectedOutcome: false},
 	}
 
 	for _, tc := range testCases {

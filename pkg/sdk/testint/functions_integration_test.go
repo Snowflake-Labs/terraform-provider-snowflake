@@ -2016,7 +2016,7 @@ func TestInt_Functions(t *testing.T) {
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(datatypes.VarcharLegacyDataType)
 
-		definition := ` SELECT 1, 2.2::float, 'abc');`
+		definition := ` SELECT 1, 2.2::float, 'abc';`
 		dt := sdk.NewFunctionReturnsResultDataTypeRequest(returnDataType)
 		returns := sdk.NewFunctionReturnsRequest().WithResultDataType(*dt)
 		argument := sdk.NewFunctionArgumentRequest(argName, nil).WithArgDataTypeOld(datatypes.VarcharLegacyDataType)
@@ -2034,7 +2034,11 @@ func TestInt_Functions(t *testing.T) {
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
-			HasArgumentsRawContains(fmt.Sprintf(`RETURN %s`, returnDataType.ToLegacyDataTypeSql())),
+			HasArgumentsRawContains(returnDataType.ToLegacyDataTypeSql()),
+		)
+
+		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+			HasReturnDataType(returnDataType),
 		)
 	})
 }

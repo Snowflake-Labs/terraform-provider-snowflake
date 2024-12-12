@@ -8,7 +8,8 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 )
 
-// TableDataType does not have synonyms.
+// TableDataType is based on https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#returning-tabular-data.
+// It does not have synonyms.
 // It consists of a list of column name + column type; may be empty.
 type TableDataType struct {
 	columns        []TableDataTypeColumn
@@ -19,6 +20,8 @@ type TableDataTypeColumn struct {
 	name     string
 	dataType DataType
 }
+
+var TableDataTypeSynonyms = []string{"TABLE"}
 
 func (c *TableDataTypeColumn) ColumnName() string {
 	return c.name
@@ -32,21 +35,21 @@ func (t *TableDataType) ToSql() string {
 	columns := strings.Join(collections.Map(t.columns, func(col TableDataTypeColumn) string {
 		return fmt.Sprintf("%s %s", col.name, col.dataType.ToSql())
 	}), ", ")
-	return fmt.Sprintf("%s (%s)", TableLegacyDataType, columns)
+	return fmt.Sprintf("%s(%s)", t.underlyingType, columns)
 }
 
 func (t *TableDataType) ToLegacyDataTypeSql() string {
 	columns := strings.Join(collections.Map(t.columns, func(col TableDataTypeColumn) string {
 		return fmt.Sprintf("%s %s", col.name, col.dataType.ToLegacyDataTypeSql())
 	}), ", ")
-	return fmt.Sprintf("%s (%s)", TableLegacyDataType, columns)
+	return fmt.Sprintf("%s(%s)", TableLegacyDataType, columns)
 }
 
 func (t *TableDataType) Canonical() string {
 	columns := strings.Join(collections.Map(t.columns, func(col TableDataTypeColumn) string {
 		return fmt.Sprintf("%s %s", col.name, col.dataType.Canonical())
 	}), ", ")
-	return fmt.Sprintf("%s (%s)", TableLegacyDataType, columns)
+	return fmt.Sprintf("%s(%s)", TableLegacyDataType, columns)
 }
 
 func (t *TableDataType) Columns() []TableDataTypeColumn {
@@ -55,19 +58,19 @@ func (t *TableDataType) Columns() []TableDataTypeColumn {
 
 func parseTableDataTypeRaw(raw sanitizedDataTypeRaw) (*TableDataType, error) {
 	r := strings.TrimSpace(strings.TrimPrefix(raw.raw, raw.matchedByType))
-	if r == "()" {
+	if r == "" || (!strings.HasPrefix(r, "(") || !strings.HasSuffix(r, ")")) {
+		logging.DebugLogger.Printf(`table %s could not be parsed, use "%s(argName argType, ...)" format`, raw.raw, raw.matchedByType)
+		return nil, fmt.Errorf(`table %s could not be parsed, use "%s(argName argType, ...)" format`, raw.raw, raw.matchedByType)
+	}
+	onlyArgs := strings.TrimSpace(r[1 : len(r)-1])
+	if onlyArgs == "" {
 		return &TableDataType{
 			columns:        make([]TableDataTypeColumn, 0),
 			underlyingType: raw.matchedByType,
 		}, nil
 	}
-	if r == "" || (!strings.HasPrefix(r, "(") || !strings.HasSuffix(r, ")")) {
-		logging.DebugLogger.Printf(`table %s could not be parsed, use "%s(argName argType, ...)" format`, raw.raw, raw.matchedByType)
-		return nil, fmt.Errorf(`table %s could not be parsed, use "%s(argName argType, ...)" format`, raw.raw, raw.matchedByType)
-	}
-	onlyArgs := r[1 : len(r)-1]
 	columns, err := collections.MapErr(strings.Split(onlyArgs, ","), func(arg string) (TableDataTypeColumn, error) {
-		argParts := strings.Split(strings.TrimSpace(arg), " ")
+		argParts := strings.SplitN(strings.TrimSpace(arg), " ", 2)
 		if len(argParts) != 2 {
 			return TableDataTypeColumn{}, fmt.Errorf("could not parse table column: %s, it should contain the following format `<arg_name> <arg_type>`; parser failure may be connected to the complex argument names", arg)
 		}

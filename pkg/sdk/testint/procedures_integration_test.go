@@ -1764,7 +1764,12 @@ def filter_by_role(session, table_name, role):
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
-			HasArgumentsRawContains(fmt.Sprintf(`RETURN %s`, expectedReturnDataType.ToLegacyDataTypeSql())))
+			HasArgumentsRawContains(expectedReturnDataType.ToLegacyDataTypeSql()),
+		)
+
+		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+			HasReturnDataType(expectedReturnDataType),
+		)
 	})
 
 	t.Run("show parameters", func(t *testing.T) {
