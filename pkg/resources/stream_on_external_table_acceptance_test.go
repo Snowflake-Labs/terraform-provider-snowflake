@@ -93,9 +93,9 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables(externalTable.ID()).
+						HasBaseTablesList(externalTable.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -155,9 +155,9 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables(externalTable.ID()).
+						HasBaseTablesList(externalTable.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -207,9 +207,9 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables(externalTable.ID()).
+						HasBaseTablesList(externalTable.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -256,9 +256,9 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables(externalTable.ID()).
+						HasBaseTablesList(externalTable.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -305,9 +305,9 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables(externalTable.ID()).
+						HasBaseTablesList(externalTable.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -709,9 +709,9 @@ func TestAcc_StreamOnExternalTable_At(t *testing.T) {
 						HasComment("foo").
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables(externalTable.ID()).
+						HasBaseTablesList(externalTable.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -801,9 +801,9 @@ func TestAcc_StreamOnExternalTable_Before(t *testing.T) {
 						HasComment("foo").
 						HasTableName(externalTable.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeExternalTable).
-						HasBaseTables(externalTable.ID()).
+						HasBaseTablesList(externalTable.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeInsertOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").

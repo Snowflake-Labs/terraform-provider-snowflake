@@ -25,32 +25,7 @@ func (t *TaskShowOutputAssert) HasErrorIntegrationEmpty() *TaskShowOutputAssert 
 	return t
 }
 
-func (t *TaskShowOutputAssert) HasCreatedOnNotEmpty() *TaskShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
-	return t
-}
-
-func (t *TaskShowOutputAssert) HasIdNotEmpty() *TaskShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputValuePresent("id"))
-	return t
-}
-
-func (t *TaskShowOutputAssert) HasOwnerNotEmpty() *TaskShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
-	return t
-}
-
-func (t *TaskShowOutputAssert) HasLastCommittedOnNotEmpty() *TaskShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputValuePresent("last_committed_on"))
-	return t
-}
-
-func (t *TaskShowOutputAssert) HasLastSuspendedOnNotEmpty() *TaskShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputValuePresent("last_suspended_on"))
-	return t
-}
-
-func (t *TaskShowOutputAssert) HasPredecessors(predecessors ...sdk.SchemaObjectIdentifier) *TaskShowOutputAssert {
+func (t *TaskShowOutputAssert) HasPredecessorsList(predecessors ...sdk.SchemaObjectIdentifier) *TaskShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputValueSet("predecessors.#", strconv.Itoa(len(predecessors))))
 	for i, predecessor := range predecessors {
 		t.AddAssertion(assert.ResourceShowOutputValueSet(fmt.Sprintf("predecessors.%d", i), predecessor.FullyQualifiedName()))
@@ -58,7 +33,7 @@ func (t *TaskShowOutputAssert) HasPredecessors(predecessors ...sdk.SchemaObjectI
 	return t
 }
 
-func (t *TaskShowOutputAssert) HasTaskRelations(expected sdk.TaskRelations) *TaskShowOutputAssert {
+func (t *TaskShowOutputAssert) HasTaskRelationsObject(expected sdk.TaskRelations) *TaskShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.#", "1"))
 	t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.0.predecessors.#", strconv.Itoa(len(expected.Predecessors))))
 	for i, predecessor := range expected.Predecessors {
@@ -70,11 +45,6 @@ func (t *TaskShowOutputAssert) HasTaskRelations(expected sdk.TaskRelations) *Tas
 	if expected.FinalizedRootTask != nil && len(expected.FinalizedRootTask.Name()) > 0 {
 		t.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueSet("task_relations.0.finalized_root_task", expected.FinalizedRootTask.FullyQualifiedName()))
 	}
-	return t
-}
-
-func (t *TaskShowOutputAssert) HasNoSchedule() *TaskShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputValueSet("schedule", ""))
 	return t
 }
 

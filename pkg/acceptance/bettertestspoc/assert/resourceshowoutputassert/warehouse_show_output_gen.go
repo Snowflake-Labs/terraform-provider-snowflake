@@ -20,21 +20,21 @@ type WarehouseShowOutputAssert struct {
 func WarehouseShowOutput(t *testing.T, name string) *WarehouseShowOutputAssert {
 	t.Helper()
 
-	w := WarehouseShowOutputAssert{
+	warehouseAssert := WarehouseShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	w.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &w
+	warehouseAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &warehouseAssert
 }
 
 func ImportedWarehouseShowOutput(t *testing.T, id string) *WarehouseShowOutputAssert {
 	t.Helper()
 
-	w := WarehouseShowOutputAssert{
+	warehouseAssert := WarehouseShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	w.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &w
+	warehouseAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &warehouseAssert
 }
 
 ////////////////////////////
@@ -173,5 +173,307 @@ func (w *WarehouseShowOutputAssert) HasScalingPolicy(expected sdk.ScalingPolicy)
 
 func (w *WarehouseShowOutputAssert) HasOwnerRoleType(expected string) *WarehouseShowOutputAssert {
 	w.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", expected))
+	return w
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+func (w *WarehouseShowOutputAssert) HasNoName() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueNotSet("name"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoState() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueNotSet("state"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoType() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueNotSet("type"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoSize() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueNotSet("size"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoMinClusterCount() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValueNotSet("min_cluster_count"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoMaxClusterCount() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValueNotSet("max_cluster_count"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoStartedClusters() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValueNotSet("started_clusters"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoRunning() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValueNotSet("running"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoQueued() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValueNotSet("queued"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoIsDefault() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_default"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoIsCurrent() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_current"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoAutoSuspend() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValueNotSet("auto_suspend"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoAutoResume() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("auto_resume"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoAvailable() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputFloatValueNotSet("available"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoProvisioning() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputFloatValueNotSet("provisioning"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoQuiescing() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputFloatValueNotSet("quiescing"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoOther() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputFloatValueNotSet("other"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoCreatedOn() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueNotSet("created_on"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoResumedOn() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueNotSet("resumed_on"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoUpdatedOn() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueNotSet("updated_on"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoOwner() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueNotSet("owner"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoComment() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueNotSet("comment"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoEnableQueryAcceleration() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("enable_query_acceleration"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoQueryAccelerationMaxScaleFactor() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValueNotSet("query_acceleration_max_scale_factor"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoResourceMonitor() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueNotSet("resource_monitor"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoScalingPolicy() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueNotSet("scaling_policy"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasNoOwnerRoleType() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueNotSet("owner_role_type"))
+	return w
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (w *WarehouseShowOutputAssert) HasNameEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueSet("name", ""))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasOwnerEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueSet("owner", ""))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasCommentEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueSet("comment", ""))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasOwnerRoleTypeEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", ""))
+	return w
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (w *WarehouseShowOutputAssert) HasNameNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValuePresent("name"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasStateNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputStringUnderlyingValuePresent("state"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasTypeNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputStringUnderlyingValuePresent("type"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasSizeNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputStringUnderlyingValuePresent("size"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasMinClusterCountNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValuePresent("min_cluster_count"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasMaxClusterCountNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValuePresent("max_cluster_count"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasStartedClustersNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValuePresent("started_clusters"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasRunningNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValuePresent("running"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasQueuedNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValuePresent("queued"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasIsDefaultNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_default"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasIsCurrentNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_current"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasAutoSuspendNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValuePresent("auto_suspend"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasAutoResumeNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputBoolValuePresent("auto_resume"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasAvailableNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputFloatValuePresent("available"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasProvisioningNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputFloatValuePresent("provisioning"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasQuiescingNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputFloatValuePresent("quiescing"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasOtherNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputFloatValuePresent("other"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasCreatedOnNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasResumedOnNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValuePresent("resumed_on"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasUpdatedOnNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValuePresent("updated_on"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasOwnerNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasCommentNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValuePresent("comment"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasEnableQueryAccelerationNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputBoolValuePresent("enable_query_acceleration"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasQueryAccelerationMaxScaleFactorNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputIntValuePresent("query_acceleration_max_scale_factor"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasResourceMonitorNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputStringUnderlyingValuePresent("resource_monitor"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasScalingPolicyNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputStringUnderlyingValuePresent("scaling_policy"))
+	return w
+}
+
+func (w *WarehouseShowOutputAssert) HasOwnerRoleTypeNotEmpty() *WarehouseShowOutputAssert {
+	w.AddAssertion(assert.ResourceShowOutputValuePresent("owner_role_type"))
 	return w
 }

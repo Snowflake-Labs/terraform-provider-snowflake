@@ -3,6 +3,7 @@
 package resourceshowoutputassert
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -20,21 +21,21 @@ type TagShowOutputAssert struct {
 func TagShowOutput(t *testing.T, name string) *TagShowOutputAssert {
 	t.Helper()
 
-	tt := TagShowOutputAssert{
+	tagAssert := TagShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	tt.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &tt
+	tagAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &tagAssert
 }
 
 func ImportedTagShowOutput(t *testing.T, id string) *TagShowOutputAssert {
 	t.Helper()
 
-	tt := TagShowOutputAssert{
+	tagAssert := TagShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	tt.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &tt
+	tagAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &tagAssert
 }
 
 ////////////////////////////
@@ -71,7 +72,134 @@ func (t *TagShowOutputAssert) HasComment(expected string) *TagShowOutputAssert {
 	return t
 }
 
+func (t *TagShowOutputAssert) HasAllowedValues(expected []string) *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueSet("allowed_values", fmt.Sprintf("%v", expected)))
+	return t
+}
+
 func (t *TagShowOutputAssert) HasOwnerRoleType(expected string) *TagShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", expected))
+	return t
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+func (t *TagShowOutputAssert) HasNoCreatedOn() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueNotSet("created_on"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasNoName() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueNotSet("name"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasNoDatabaseName() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueNotSet("database_name"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasNoSchemaName() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueNotSet("schema_name"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasNoOwner() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueNotSet("owner"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasNoComment() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueNotSet("comment"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasNoAllowedValues() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueNotSet("allowed_values"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasNoOwnerRoleType() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueNotSet("owner_role_type"))
+	return t
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (t *TagShowOutputAssert) HasNameEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueSet("name", ""))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasDatabaseNameEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueSet("database_name", ""))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasSchemaNameEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueSet("schema_name", ""))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasOwnerEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueSet("owner", ""))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasCommentEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueSet("comment", ""))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasOwnerRoleTypeEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", ""))
+	return t
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (t *TagShowOutputAssert) HasCreatedOnNotEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasNameNotEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValuePresent("name"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasDatabaseNameNotEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValuePresent("database_name"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasSchemaNameNotEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValuePresent("schema_name"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasOwnerNotEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasCommentNotEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValuePresent("comment"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasAllowedValuesNotEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValuePresent("allowed_values"))
+	return t
+}
+
+func (t *TagShowOutputAssert) HasOwnerRoleTypeNotEmpty() *TagShowOutputAssert {
+	t.AddAssertion(assert.ResourceShowOutputValuePresent("owner_role_type"))
 	return t
 }

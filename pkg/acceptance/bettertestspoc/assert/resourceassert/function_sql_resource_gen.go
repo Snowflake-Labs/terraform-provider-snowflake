@@ -87,12 +87,7 @@ func (f *FunctionSqlResourceAssert) HasNameString(expected string) *FunctionSqlR
 	return f
 }
 
-func (f *FunctionSqlResourceAssert) HasNullInputBehaviorString(expected string) *FunctionSqlResourceAssert {
-	f.AddAssertion(assert.ValueSet("null_input_behavior", expected))
-	return f
-}
-
-func (f *FunctionSqlResourceAssert) HasReturnBehaviorString(expected string) *FunctionSqlResourceAssert {
+func (f *FunctionSqlResourceAssert) HasReturnResultsBehaviorString(expected string) *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("return_results_behavior", expected))
 	return f
 }
@@ -112,12 +107,12 @@ func (f *FunctionSqlResourceAssert) HasTraceLevelString(expected string) *Functi
 	return f
 }
 
-////////////////////////////
-// Attribute empty checks //
-////////////////////////////
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
 
 func (f *FunctionSqlResourceAssert) HasNoArguments() *FunctionSqlResourceAssert {
-	f.AddAssertion(assert.ValueNotSet("arguments"))
+	f.AddAssertion(assert.ValueSet("arguments.#", "0"))
 	return f
 }
 
@@ -171,13 +166,8 @@ func (f *FunctionSqlResourceAssert) HasNoName() *FunctionSqlResourceAssert {
 	return f
 }
 
-func (f *FunctionSqlResourceAssert) HasNoNullInputBehavior() *FunctionSqlResourceAssert {
-	f.AddAssertion(assert.ValueNotSet("null_input_behavior"))
-	return f
-}
-
-func (f *FunctionSqlResourceAssert) HasNoReturnBehavior() *FunctionSqlResourceAssert {
-	f.AddAssertion(assert.ValueNotSet("return_behavior"))
+func (f *FunctionSqlResourceAssert) HasNoReturnResultsBehavior() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueNotSet("return_results_behavior"))
 	return f
 }
 
@@ -193,5 +183,141 @@ func (f *FunctionSqlResourceAssert) HasNoSchema() *FunctionSqlResourceAssert {
 
 func (f *FunctionSqlResourceAssert) HasNoTraceLevel() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueNotSet("trace_level"))
+	return f
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (f *FunctionSqlResourceAssert) HasCommentEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("comment", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasDatabaseEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("database", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasFullyQualifiedNameEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasFunctionDefinitionEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("function_definition", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasFunctionLanguageEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("function_language", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasIsSecureEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("is_secure", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasLogLevelEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("log_level", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasMetricLevelEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("metric_level", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasNameEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("name", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasReturnResultsBehaviorEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("return_results_behavior", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasReturnTypeEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("return_type", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasSchemaEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("schema", ""))
+	return f
+}
+func (f *FunctionSqlResourceAssert) HasTraceLevelEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValueSet("trace_level", ""))
+	return f
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (f *FunctionSqlResourceAssert) HasArgumentsNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("arguments"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasCommentNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("comment"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasDatabaseNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("database"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasEnableConsoleOutputNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("enable_console_output"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasFullyQualifiedNameNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("fully_qualified_name"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasFunctionDefinitionNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("function_definition"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasFunctionLanguageNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("function_language"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasIsSecureNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("is_secure"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasLogLevelNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("log_level"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasMetricLevelNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("metric_level"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasNameNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("name"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasReturnResultsBehaviorNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("return_results_behavior"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasReturnTypeNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("return_type"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasSchemaNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("schema"))
+	return f
+}
+
+func (f *FunctionSqlResourceAssert) HasTraceLevelNotEmpty() *FunctionSqlResourceAssert {
+	f.AddAssertion(assert.ValuePresent("trace_level"))
 	return f
 }

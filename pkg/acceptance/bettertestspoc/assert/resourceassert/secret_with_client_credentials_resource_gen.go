@@ -72,9 +72,9 @@ func (s *SecretWithClientCredentialsResourceAssert) HasSecretTypeString(expected
 	return s
 }
 
-////////////////////////////
-// Attribute empty checks //
-////////////////////////////
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
 
 func (s *SecretWithClientCredentialsResourceAssert) HasNoApiAuthentication() *SecretWithClientCredentialsResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("api_authentication"))
@@ -102,7 +102,7 @@ func (s *SecretWithClientCredentialsResourceAssert) HasNoName() *SecretWithClien
 }
 
 func (s *SecretWithClientCredentialsResourceAssert) HasNoOauthScopes() *SecretWithClientCredentialsResourceAssert {
-	s.AddAssertion(assert.ValueNotSet("oauth_scopes"))
+	s.AddAssertion(assert.ValueSet("oauth_scopes.#", "0"))
 	return s
 }
 
@@ -113,5 +113,82 @@ func (s *SecretWithClientCredentialsResourceAssert) HasNoSchema() *SecretWithCli
 
 func (s *SecretWithClientCredentialsResourceAssert) HasNoSecretType() *SecretWithClientCredentialsResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("secret_type"))
+	return s
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (s *SecretWithClientCredentialsResourceAssert) HasApiAuthenticationEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValueSet("api_authentication", ""))
+	return s
+}
+func (s *SecretWithClientCredentialsResourceAssert) HasCommentEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValueSet("comment", ""))
+	return s
+}
+func (s *SecretWithClientCredentialsResourceAssert) HasDatabaseEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValueSet("database", ""))
+	return s
+}
+func (s *SecretWithClientCredentialsResourceAssert) HasFullyQualifiedNameEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
+	return s
+}
+func (s *SecretWithClientCredentialsResourceAssert) HasNameEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValueSet("name", ""))
+	return s
+}
+func (s *SecretWithClientCredentialsResourceAssert) HasSchemaEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValueSet("schema", ""))
+	return s
+}
+func (s *SecretWithClientCredentialsResourceAssert) HasSecretTypeEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValueSet("secret_type", ""))
+	return s
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (s *SecretWithClientCredentialsResourceAssert) HasApiAuthenticationNotEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValuePresent("api_authentication"))
+	return s
+}
+
+func (s *SecretWithClientCredentialsResourceAssert) HasCommentNotEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValuePresent("comment"))
+	return s
+}
+
+func (s *SecretWithClientCredentialsResourceAssert) HasDatabaseNotEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValuePresent("database"))
+	return s
+}
+
+func (s *SecretWithClientCredentialsResourceAssert) HasFullyQualifiedNameNotEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValuePresent("fully_qualified_name"))
+	return s
+}
+
+func (s *SecretWithClientCredentialsResourceAssert) HasNameNotEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValuePresent("name"))
+	return s
+}
+
+func (s *SecretWithClientCredentialsResourceAssert) HasOauthScopesNotEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValuePresent("oauth_scopes"))
+	return s
+}
+
+func (s *SecretWithClientCredentialsResourceAssert) HasSchemaNotEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValuePresent("schema"))
+	return s
+}
+
+func (s *SecretWithClientCredentialsResourceAssert) HasSecretTypeNotEmpty() *SecretWithClientCredentialsResourceAssert {
+	s.AddAssertion(assert.ValuePresent("secret_type"))
 	return s
 }

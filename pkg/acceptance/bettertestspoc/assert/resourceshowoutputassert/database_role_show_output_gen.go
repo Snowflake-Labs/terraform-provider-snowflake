@@ -19,21 +19,21 @@ type DatabaseRoleShowOutputAssert struct {
 func DatabaseRoleShowOutput(t *testing.T, name string) *DatabaseRoleShowOutputAssert {
 	t.Helper()
 
-	d := DatabaseRoleShowOutputAssert{
+	databaseRoleAssert := DatabaseRoleShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	d.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &d
+	databaseRoleAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &databaseRoleAssert
 }
 
 func ImportedDatabaseRoleShowOutput(t *testing.T, id string) *DatabaseRoleShowOutputAssert {
 	t.Helper()
 
-	d := DatabaseRoleShowOutputAssert{
+	databaseRoleAssert := DatabaseRoleShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	d.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &d
+	databaseRoleAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &databaseRoleAssert
 }
 
 ////////////////////////////
@@ -97,5 +97,167 @@ func (d *DatabaseRoleShowOutputAssert) HasComment(expected string) *DatabaseRole
 
 func (d *DatabaseRoleShowOutputAssert) HasOwnerRoleType(expected string) *DatabaseRoleShowOutputAssert {
 	d.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", expected))
+	return d
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+func (d *DatabaseRoleShowOutputAssert) HasNoCreatedOn() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueNotSet("created_on"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoName() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueNotSet("name"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoDatabaseName() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueNotSet("database_name"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoIsDefault() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_default"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoIsCurrent() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_current"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoIsInherited() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_inherited"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoGrantedToRoles() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputIntValueNotSet("granted_to_roles"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoGrantedToDatabaseRoles() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputIntValueNotSet("granted_to_database_roles"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoGrantedDatabaseRoles() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputIntValueNotSet("granted_database_roles"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoOwner() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueNotSet("owner"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoComment() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueNotSet("comment"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNoOwnerRoleType() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueNotSet("owner_role_type"))
+	return d
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (d *DatabaseRoleShowOutputAssert) HasCreatedOnEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueSet("created_on", ""))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNameEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueSet("name", ""))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasDatabaseNameEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueSet("database_name", ""))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasOwnerEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueSet("owner", ""))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasCommentEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueSet("comment", ""))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasOwnerRoleTypeEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", ""))
+	return d
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (d *DatabaseRoleShowOutputAssert) HasCreatedOnNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasNameNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValuePresent("name"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasDatabaseNameNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValuePresent("database_name"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasIsDefaultNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_default"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasIsCurrentNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_current"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasIsInheritedNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_inherited"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasGrantedToRolesNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputIntValuePresent("granted_to_roles"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasGrantedToDatabaseRolesNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputIntValuePresent("granted_to_database_roles"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasGrantedDatabaseRolesNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputIntValuePresent("granted_database_roles"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasOwnerNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasCommentNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValuePresent("comment"))
+	return d
+}
+
+func (d *DatabaseRoleShowOutputAssert) HasOwnerRoleTypeNotEmpty() *DatabaseRoleShowOutputAssert {
+	d.AddAssertion(assert.ResourceShowOutputValuePresent("owner_role_type"))
 	return d
 }
