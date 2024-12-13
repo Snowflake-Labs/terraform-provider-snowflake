@@ -3,14 +3,39 @@
 {{- $assertName := .Name | printf "%sShowOutputAssert" -}}
 {{- $nameLowerCase := FirstLetterLowercase .Name -}}
 {{- $assertVar := FirstLetter $nameLowerCase }}
+
 ////////////////////////////
 // Attribute value checks //
 ////////////////////////////
 
 {{ range .Attributes -}}
     func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ .ConcreteType }}) *{{ $assertName }} {
-        {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}("{{ SnakeCase .Name }}", {{ RunMapper .Mapper "expected" }}))
+        {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}Set("{{ SnakeCase .Name }}", {{ RunMapper .Mapper "expected" }}))
         return {{ $assertVar }}
+    }
+
+{{ end -}}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+{{ range .Attributes -}}
+    func ({{ $assertVar }} *{{ $assertName }}) HasNo{{ .Name }}() *{{ $assertName }} {
+    {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}NotSet("{{ SnakeCase .Name }}"))
+    return {{ $assertVar }}
+    }
+
+{{ end -}}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+{{ range .Attributes -}}
+    func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}NotEmpty() *{{ $assertName }} {
+    {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}Present("{{ SnakeCase .Name }}"))
+    return {{ $assertVar }}
     }
 
 {{ end -}}
