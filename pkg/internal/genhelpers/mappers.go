@@ -5,6 +5,7 @@ import "fmt"
 type Mapper func(string) string
 
 var (
+	PrintToString      = func(field string) string { return fmt.Sprintf(`fmt.Sprintf("%%v", %s)`, field) }
 	Identity           = func(field string) string { return field }
 	ToString           = func(field string) string { return fmt.Sprintf("%s.String()", field) }
 	FullyQualifiedName = func(field string) string { return fmt.Sprintf("%s.FullyQualifiedName()", field) }

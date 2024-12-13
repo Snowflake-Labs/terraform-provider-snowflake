@@ -15,15 +15,34 @@
 
 {{ end -}}
 
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+{{ range .Attributes -}}
+    func ({{ $assertVar }} *{{ $assertName }}) HasNo{{ SnakeCaseToCamel .Name }}() *{{ $assertName }} {
+        {{ if or (eq .AttributeType "TypeList") (eq .AttributeType "TypeSet") -}}
+            {{ $assertVar }}.AddAssertion(assert.ValueSet("{{ .Name }}.#", "0"))
+            return {{ $assertVar }}
+        {{ else -}}
+            {{ $assertVar }}.AddAssertion(assert.ValueNotSet("{{ .Name }}"))
+            return {{ $assertVar }}
+        {{ end -}}
+    }
+
+{{ end -}}
+
 ////////////////////////////
 // Attribute empty checks //
 ////////////////////////////
 
 {{ range .Attributes -}}
-    func ({{ $assertVar }} *{{ $assertName }}) HasNo{{ SnakeCaseToCamel .Name }}() *{{ $assertName }} {
-        {{ $assertVar }}.AddAssertion(assert.ValueNotSet("{{ .Name }}"))
-        return {{ $assertVar }}
-    }
+    {{ if eq .AttributeType "TypeString" -}}
+        func ({{ $assertVar }} *{{ $assertName }}) Has{{ SnakeCaseToCamel .Name }}Empty() *{{ $assertName }} {
+            {{ $assertVar }}.AddAssertion(assert.ValueSet("{{ .Name }}", ""))
+            return {{ $assertVar }}
+        }
+    {{ end -}}
 
 {{ end -}}
 

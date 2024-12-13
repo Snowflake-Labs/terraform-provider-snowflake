@@ -9,9 +9,22 @@
 ////////////////////////////
 
 {{ range .Attributes -}}
+    {{/* TODO: jeśli nie znasz typu -> defaultuj do stringa */}}
     func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ .ConcreteType }}) *{{ $assertName }} {
         {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}Set("{{ SnakeCase .Name }}", {{ RunMapper .Mapper "expected" }}))
         return {{ $assertVar }}
+    }
+
+{{ end -}}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+{{ range .Attributes -}}
+    func ({{ $assertVar }} *{{ $assertName }}) HasNo{{ .Name }}() *{{ $assertName }} {
+    {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}NotSet("{{ SnakeCase .Name }}"))
+    return {{ $assertVar }}
     }
 
 {{ end -}}
@@ -21,10 +34,13 @@
 ////////////////////////////
 
 {{ range .Attributes -}}
-    func ({{ $assertVar }} *{{ $assertName }}) HasNo{{ .Name }}() *{{ $assertName }} {
-    {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}NotSet("{{ SnakeCase .Name }}"))
-    return {{ $assertVar }}
-    }
+
+    {{ if eq .ConcreteType "string" -}}
+        func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}Empty() *{{ $assertName }} {
+            {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}Set("{{ SnakeCase .Name }}", ""))
+            return {{ $assertVar }}
+        }
+    {{ end }}
 
 {{ end -}}
 

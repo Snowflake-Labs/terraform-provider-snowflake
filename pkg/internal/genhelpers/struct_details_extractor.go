@@ -83,6 +83,7 @@ func AdditionalStandardImports(fields []Field) []string {
 	}
 	additionalImports := make([]string, 0)
 	for k := range imports {
+		k, _ := strings.CutPrefix(k, "[]")
 		if !slices.Contains([]string{"sdk"}, k) {
 			additionalImports = append(additionalImports, k)
 		}
