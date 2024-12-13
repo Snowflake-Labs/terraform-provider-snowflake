@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.0...v1.0.1) (2024-12-13)
+
+
+### 🔧 **Misc**
+
+* Add holidays note, change the disclaimer, and fix an example ([#3288](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3288)) ([39a0cb7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/39a0cb76a1e64f2c4b5ee5923223d6e0df0ddb46))
+* Adjust GitHub templates to the new development branch ([#3286](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3286)) ([fc10672](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fc10672318af90ab6d879dfa63b8efaf93589e62))
+
 ## [1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.100.0...v1.0.0) (2024-12-12)
 
 
