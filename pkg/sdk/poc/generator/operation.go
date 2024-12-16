@@ -181,9 +181,9 @@ func (i *Interface) ShowByIdOperationWithNoFiltering() *Interface {
 
 // ShowByIdOperationWithFiltering adds a ShowByID operation to the interface with filtering. Should be used for objects that implement filtering options e.g. Like or In.
 func (i *Interface) ShowByIdOperationWithFiltering(filter ShowByIDFilteringKind, filtering ...ShowByIDFilteringKind) *Interface {
-	op := newNoSqlOperation(string(OperationKindShowByID))
-	op.ObjectInterface = i
-	op.withFiltering(append([]ShowByIDFilteringKind{filter}, filtering...)...)
+	op := newNoSqlOperation(string(OperationKindShowByID)).
+		withObjectInterface(i).
+		withFiltering(append(filtering, filter)...)
 	i.Operations = append(i.Operations, op)
 	return i
 }
