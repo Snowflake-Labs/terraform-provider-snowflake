@@ -124,7 +124,7 @@ func (i *Interface) newOperationWithDBMapping(
 	resourceRepresentation *plainStruct,
 	queryStruct *QueryStruct,
 	addMappingFunc func(op *Operation, from, to *Field),
-	objectHelperMethods ...ResourceHelperMethodKind,
+	resourceHelperMethods ...ResourceHelperMethodKind,
 ) *Operation {
 	db := dbRepresentation.IntoField()
 	res := resourceRepresentation.IntoField()
@@ -136,7 +136,7 @@ func (i *Interface) newOperationWithDBMapping(
 		withHelperStruct(res).
 		withOptionsStruct(queryStruct.IntoField()).
 		withObjectInterface(i).
-		withResourceHelperMethods(res.Name, objectHelperMethods...)
+		withResourceHelperMethods(res.Name, resourceHelperMethods...)
 
 	addMappingFunc(op, db, res)
 	i.Operations = append(i.Operations, op)
