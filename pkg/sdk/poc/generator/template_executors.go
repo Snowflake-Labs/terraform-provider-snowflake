@@ -30,7 +30,7 @@ func GenerateInterface(writer io.Writer, def *Interface) {
 }
 
 func generateHelperMethods(writer io.Writer, hm *ResourceHelperMethod) {
-	printTo(writer, HelperMethodTemplate, hm)
+	printTo(writer, ResourceHelperMethodTemplate, hm)
 }
 
 func generateOptionsStruct(writer io.Writer, operation *Operation) {
