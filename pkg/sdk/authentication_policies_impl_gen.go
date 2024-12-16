@@ -38,11 +38,10 @@ func (v *authenticationPolicies) Show(ctx context.Context, request *ShowAuthenti
 }
 
 func (v *authenticationPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*AuthenticationPolicy, error) {
-	authenticationPolicies, err := v.Show(ctx, NewShowAuthenticationPolicyRequest().WithIn(In{
-		Schema: id.SchemaId(),
-	}).WithLike(Like{
-		Pattern: String(id.Name()),
-	}))
+	request := NewShowAuthenticationPolicyRequest().
+		WithLike(Like{Pattern: String(id.Name())}).
+		WithIn(In{Schema: id.SchemaId()})
+	authenticationPolicies, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}

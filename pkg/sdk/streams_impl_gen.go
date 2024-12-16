@@ -59,13 +59,10 @@ func (v *streams) Show(ctx context.Context, request *ShowStreamRequest) ([]Strea
 }
 
 func (v *streams) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error) {
-	streams, err := v.Show(ctx, NewShowStreamRequest().
-		WithIn(ExtendedIn{
-			In: In{
-				Schema: id.SchemaId(),
-			},
-		}).
-		WithLike(Like{Pattern: String(id.Name())}))
+	request := NewShowStreamRequest().
+		WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).
+		WithLike(Like{Pattern: String(id.Name())})
+	streams, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}

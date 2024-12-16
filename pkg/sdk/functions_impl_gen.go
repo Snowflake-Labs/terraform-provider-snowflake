@@ -60,7 +60,10 @@ func (v *functions) Show(ctx context.Context, request *ShowFunctionRequest) ([]F
 }
 
 func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error) {
-	functions, err := v.Show(ctx, NewShowFunctionRequest().WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).WithLike(Like{String(id.Name())}))
+	request := NewShowFunctionRequest().
+		WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).
+		WithLike(Like{Pattern: String(id.Name())})
+	functions, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}
