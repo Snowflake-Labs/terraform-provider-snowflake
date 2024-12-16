@@ -181,7 +181,9 @@ var NotificationIntegrationsDef = g.NewInterface(
 			SQL("NOTIFICATION INTEGRATIONS").
 			OptionalLike(),
 	).
-	ShowByIdOperation().
+	ShowByIdOperationWithFiltering(
+		g.ShowByIDLikeFiltering,
+	).
 	DescribeOperation(
 		g.DescriptionMappingKindSlice,
 		"https://docs.snowflake.com/en/sql-reference/sql/desc-integration",

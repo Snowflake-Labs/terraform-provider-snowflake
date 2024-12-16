@@ -65,7 +65,7 @@ func ReadSequences(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 	databaseName := d.Get("database").(string)
 	schemaName := d.Get("schema").(string)
 
-	req := sdk.NewShowSequenceRequest().WithIn(&sdk.In{
+	req := sdk.NewShowSequenceRequest().WithIn(sdk.In{
 		Schema: sdk.NewDatabaseObjectIdentifier(databaseName, schemaName),
 	})
 	seqs, err := client.Sequences.Show(ctx, req)

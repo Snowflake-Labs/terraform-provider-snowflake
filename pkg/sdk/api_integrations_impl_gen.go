@@ -38,9 +38,9 @@ func (v *apiIntegrations) Show(ctx context.Context, request *ShowApiIntegrationR
 }
 
 func (v *apiIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ApiIntegration, error) {
-	apiIntegrations, err := v.Show(ctx, NewShowApiIntegrationRequest().WithLike(&Like{
-		Pattern: String(id.Name()),
-	}))
+	request := NewShowApiIntegrationRequest().
+		WithLike(Like{Pattern: String(id.Name())})
+	apiIntegrations, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}

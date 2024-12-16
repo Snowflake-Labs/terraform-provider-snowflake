@@ -355,7 +355,10 @@ var ProceduresDef = g.NewInterface(
 		SQL("PROCEDURES").
 		OptionalLike().
 		OptionalExtendedIn(),
-).ShowByIdOperation().DescribeOperation(
+).ShowByIdOperationWithFiltering(
+	g.ShowByIDInFiltering,
+	g.ShowByIDLikeFiltering,
+).DescribeOperation(
 	g.DescriptionMappingKindSlice,
 	"https://docs.snowflake.com/en/sql-reference/sql/desc-procedure",
 	g.DbStruct("procedureDetailRow").

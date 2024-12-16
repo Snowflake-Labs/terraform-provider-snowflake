@@ -101,11 +101,6 @@ func GenerateValidations(writer io.Writer, def *Interface) {
 	printTo(writer, ValidationsTemplate, def)
 }
 
-func GenerateIntegrationTests(writer io.Writer, def *Interface) {
-	generatePackageDirective(writer)
-	printTo(writer, IntegrationTestsTemplate, def)
-}
-
 func generatePackageDirective(writer io.Writer) {
 	printTo(writer, PackageTemplate, os.Getenv("GOPACKAGE"))
 }
