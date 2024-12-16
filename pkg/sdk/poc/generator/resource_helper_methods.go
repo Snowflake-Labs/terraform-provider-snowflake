@@ -75,7 +75,7 @@ func containsFieldNames(fields []*Field, names ...string) bool {
 	}
 
 	for _, name := range names {
-		if !slices.Contains(names, name) {
+		if !slices.Contains(fieldNames, name) {
 			return false
 		}
 	}
