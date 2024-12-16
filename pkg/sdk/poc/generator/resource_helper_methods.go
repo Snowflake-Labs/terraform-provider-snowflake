@@ -115,7 +115,7 @@ func (s *Operation) withResourceHelperMethods(structName string, helperMethods .
 		case ResourceObjectTypeHelperMethod:
 			s.ResourceHelperMethods = append(s.ResourceHelperMethods, newResourceObjectTypeHelperMethod(structName))
 		default:
-			log.Println("No object helper method found for kind:", helperMethod)
+			log.Println("No resourceHelperMethod found for kind:", helperMethod)
 		}
 	}
 	return s
