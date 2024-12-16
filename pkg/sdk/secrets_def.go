@@ -241,6 +241,8 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRETS").
 		OptionalLike().
 		OptionalExtendedIn(),
+    g.ObjectHelperMethodID,
+    g.ObjectHelperMethodObjectType,
 ).ShowByIdOperationWithFiltering(
 	g.ShowByIDLikeFiltering,
 	g.ShowByIDExtendedInFiltering,
@@ -254,5 +256,4 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRET").
 		Name().
 		WithValidation(g.ValidIdentifier, "name"),
-).HelperMethodID().
-	HelperMethodObjectType()
+)

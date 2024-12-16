@@ -40,6 +40,8 @@ type Operation struct {
 	DescribeMapping *Mapping
 	// ShowByIDFiltering defines a kind of filterings performed in ShowByID operation
 	ShowByIDFiltering []ShowByIDFiltering
+	// HelperMethods contains helper methods for the Interface file (i.e. ID(), ObjectType())
+	HelperMethods []*HelperMethod
 }
 
 type Mapping struct {
@@ -77,6 +79,11 @@ func (s *Operation) withHelperStruct(helperStruct *Field) *Operation {
 func (s *Operation) withHelperStructs(helperStructs ...*Field) *Operation {
 	s.HelperStructs = append(s.HelperStructs, helperStructs...)
 	return s
+}
+
+func (i *Operation) withObjectInterface(objectInterface *Interface) *Operation {
+	i.ObjectInterface = objectInterface
+	return i
 }
 
 func addShowMapping(op *Operation, from, to *Field) {
@@ -117,6 +124,7 @@ func (i *Interface) newOperationWithDBMapping(
 	resourceRepresentation *plainStruct,
 	queryStruct *QueryStruct,
 	addMappingFunc func(op *Operation, from, to *Field),
+	objectHelperMethods ...ObjectHelperMethodKind,
 ) *Operation {
 	db := dbRepresentation.IntoField()
 	res := resourceRepresentation.IntoField()
@@ -126,7 +134,10 @@ func (i *Interface) newOperationWithDBMapping(
 	op := newOperation(kind, doc).
 		withHelperStruct(db).
 		withHelperStruct(res).
-		withOptionsStruct(queryStruct.IntoField())
+		withOptionsStruct(queryStruct.IntoField()).
+		withObjectInterface(i).
+		withObjectHelperMethods(res.Name, objectHelperMethods...)
+
 	addMappingFunc(op, db, res)
 	i.Operations = append(i.Operations, op)
 	return op
@@ -156,8 +167,8 @@ func (i *Interface) RevokeOperation(doc string, queryStruct *QueryStruct) *Inter
 	return i.newSimpleOperation(string(OperationKindRevoke), doc, queryStruct)
 }
 
-func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct) *Interface {
-	i.newOperationWithDBMapping(string(OperationKindShow), doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping)
+func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct, helperMethods ...ObjectHelperMethodKind) *Interface {
+	i.newOperationWithDBMapping(string(OperationKindShow), doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping, helperMethods...)
 	return i
 }
 

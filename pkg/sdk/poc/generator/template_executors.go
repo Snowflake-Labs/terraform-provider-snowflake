@@ -21,10 +21,10 @@ func GenerateInterface(writer io.Writer, def *Interface) {
 		if o.OptsField != nil {
 			generateOptionsStruct(writer, o)
 		}
-	}
-	for _, m := range def.HelperMethods {
-		if m != nil {
-			generateHelperMethods(writer, m)
+		if o.HelperMethods != nil {
+			for _, m := range o.HelperMethods {
+					generateHelperMethods(writer, m)
+			}
 		}
 	}
 }
