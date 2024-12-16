@@ -1,11 +1,20 @@
 package resources
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"log"
+	"reflect"
 	"slices"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -20,6 +29,7 @@ func init() {
 type procedureSchemaDef struct {
 	additionalArguments            []string
 	procedureDefinitionDescription string
+	procedureDefinitionRequired    bool
 	returnTypeLinkName             string
 	returnTypeLinkUrl              string
 	runtimeVersionDescription      string
@@ -38,6 +48,11 @@ func setUpProcedureSchema(definition procedureSchemaDef) map[string]*schema.Sche
 	}
 	if v, ok := currentSchema["procedure_definition"]; ok && v != nil {
 		v.Description = diffSuppressStatementFieldDescription(definition.procedureDefinitionDescription)
+		if definition.procedureDefinitionRequired {
+			v.Required = true
+		} else {
+			v.Optional = true
+		}
 	}
 	if v, ok := currentSchema["return_type"]; ok && v != nil {
 		v.Description = procedureReturnsTemplate(definition.returnTypeLinkName, definition.returnTypeLinkUrl)
@@ -106,6 +121,7 @@ var (
 		returnTypeLinkName:             "SQL and JavaScript data type mapping",
 		returnTypeLinkUrl:              "https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript.html#label-stored-procedure-data-type-mapping",
 		procedureDefinitionDescription: procedureDefinitionTemplate("JavaScript", "JavaScript", "https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript"),
+		procedureDefinitionRequired:    true,
 	}
 	pythonProcedureSchemaDefinition = procedureSchemaDef{
 		additionalArguments: []string{
@@ -146,6 +162,7 @@ var (
 	sqlProcedureSchemaDefinition = procedureSchemaDef{
 		additionalArguments:            []string{},
 		procedureDefinitionDescription: procedureDefinitionTemplate("SQL", "Snowflake Scripting", "https://docs.snowflake.com/en/developer-guide/snowflake-scripting/index"),
+		procedureDefinitionRequired:    true,
 		returnTypeLinkName:             "SQL data type",
 		returnTypeLinkUrl:              "https://docs.snowflake.com/en/sql-reference-data-types",
 	}
@@ -209,13 +226,17 @@ func procedureBaseSchema() map[string]schema.Schema {
 						DiffSuppressFunc: DiffSuppressDataTypes,
 						Description:      "The argument type.",
 					},
+					"arg_default_value": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: externalChangesNotDetectedFieldDescription("Optional default value for the argument. For text values use single quotes. Numeric values can be unquoted."),
+					},
 				},
 			},
 			Optional:    true,
 			ForceNew:    true,
 			Description: "List of the arguments for the procedure. Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-procedure#all-languages) for more details.",
 		},
-		// TODO [SNOW-1348103]: for now, the proposal is to leave return type as string, add TABLE to data types, and here always parse (easier handling and diff suppression)
 		"return_type": {
 			Type:             schema.TypeString,
 			Required:         true,
@@ -228,7 +249,7 @@ func procedureBaseSchema() map[string]schema.Schema {
 			Optional:         true,
 			ForceNew:         true,
 			ValidateDiagFunc: sdkValidation(sdk.ToNullInputBehavior),
-			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior), IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior")),
+			DiffSuppressFunc: SuppressIfAny(NormalizeAndCompare(sdk.ToNullInputBehavior)), // IgnoreChangeToCurrentSnowflakeValueInShow("null_input_behavior")),
 			Description:      fmt.Sprintf("Specifies the behavior of the procedure when called with null inputs. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AllAllowedNullInputBehaviors)),
 		},
 		// "return_behavior" removed because it is deprecated in the docs: https://docs.snowflake.com/en/sql-reference/sql/create-procedure#id1
@@ -238,17 +259,29 @@ func procedureBaseSchema() map[string]schema.Schema {
 			ForceNew: true,
 		},
 		"comment": {
-			Type:     schema.TypeString,
-			Optional: true,
-			// TODO [SNOW-1348103]: handle dynamic comment - this is a workaround for now
+			Type:        schema.TypeString,
+			Optional:    true,
 			Default:     "user-defined procedure",
 			Description: "Specifies a comment for the procedure.",
 		},
 		"imports": {
 			Type:     schema.TypeSet,
-			Elem:     &schema.Schema{Type: schema.TypeString},
 			Optional: true,
 			ForceNew: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"stage_location": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Stage location without leading `@`. To use your user's stage set this to `~`, otherwise pass fully qualified name of the stage (with every part contained in double quotes or use `snowflake_stage.<your stage's resource name>.fully_qualified_name` if you manage this stage through terraform).",
+					},
+					"path_on_stage": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Path for import on stage, without the leading `/`.",
+					},
+				},
+			},
 		},
 		"snowpark_package": {
 			Type:        schema.TypeString,
@@ -276,7 +309,6 @@ func procedureBaseSchema() map[string]schema.Schema {
 				ValidateDiagFunc: IsValidIdentifier[sdk.AccountObjectIdentifier](),
 			},
 			Optional:    true,
-			ForceNew:    true,
 			Description: "The names of [external access integrations](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) needed in order for this procedure’s handler code to access external networks. An external access integration specifies [network rules](https://docs.snowflake.com/en/sql-reference/sql/create-network-rule) and [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) that specify external locations and credentials (if any) allowed for use by handler code when making requests of an external network, such as an external REST API.",
 		},
 		"secrets": {
@@ -300,9 +332,24 @@ func procedureBaseSchema() map[string]schema.Schema {
 			Description: "Assigns the names of [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter.",
 		},
 		"target_path": {
-			Type:     schema.TypeString,
+			Type:     schema.TypeSet,
+			MaxItems: 1,
 			Optional: true,
 			ForceNew: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"stage_location": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Stage location without leading `@`. To use your user's stage set this to `~`, otherwise pass fully qualified name of the stage (with every part contained in double quotes or use `snowflake_stage.<your stage's resource name>.fully_qualified_name` if you manage this stage through terraform).",
+					},
+					"path_on_stage": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Path for import on stage, without the leading `/`.",
+					},
+				},
+			},
 		},
 		"execute_as": {
 			Type:             schema.TypeString,
@@ -313,7 +360,6 @@ func procedureBaseSchema() map[string]schema.Schema {
 		},
 		"procedure_definition": {
 			Type:             schema.TypeString,
-			Required:         true,
 			ForceNew:         true,
 			DiffSuppressFunc: DiffSuppressStatement,
 		},
@@ -335,9 +381,323 @@ func procedureBaseSchema() map[string]schema.Schema {
 			Computed:    true,
 			Description: "Outputs the result of `SHOW PARAMETERS IN PROCEDURE` for the given procedure.",
 			Elem: &schema.Resource{
-				Schema: procedureParametersSchema,
+				Schema: schemas.ShowProcedureParametersSchema,
 			},
 		},
 		FullyQualifiedNameAttributeName: *schemas.FullyQualifiedNameSchema,
 	}
+}
+
+func DeleteProcedure(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	client := meta.(*provider.Context).Client
+
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id).WithIfExists(true)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId("")
+	return nil
+}
+
+func UpdateProcedure(language string, readFunc func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics) func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		client := meta.(*provider.Context).Client
+		id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if d.HasChange("name") {
+			newId := sdk.NewSchemaObjectIdentifierWithArgumentsInSchema(id.SchemaId(), d.Get("name").(string), id.ArgumentDataTypes()...)
+
+			err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithRenameTo(newId.SchemaObjectId()))
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error renaming procedure %v err = %w", d.Id(), err))
+			}
+
+			d.SetId(helpers.EncodeResourceIdentifier(newId))
+			id = newId
+		}
+
+		// Batch SET operations and UNSET operations
+		setRequest := sdk.NewProcedureSetRequest()
+		unsetRequest := sdk.NewProcedureUnsetRequest()
+
+		_ = stringAttributeUpdate(d, "comment", &setRequest.Comment, &unsetRequest.Comment)
+
+		switch language {
+		case "JAVA", "SCALA", "PYTHON":
+			err = errors.Join(
+				func() error {
+					if d.HasChange("secrets") {
+						return setSecretsInBuilder(d, func(references []sdk.SecretReference) *sdk.ProcedureSetRequest {
+							return setRequest.WithSecretsList(sdk.SecretsListRequest{SecretsList: references})
+						})
+					}
+					return nil
+				}(),
+				func() error {
+					if d.HasChange("external_access_integrations") {
+						return setExternalAccessIntegrationsInBuilder(d, func(references []sdk.AccountObjectIdentifier) any {
+							if len(references) == 0 {
+								return unsetRequest.WithExternalAccessIntegrations(true)
+							} else {
+								return setRequest.WithExternalAccessIntegrations(references)
+							}
+						})
+					}
+					return nil
+				}(),
+			)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+
+		if updateParamDiags := handleProcedureParametersUpdate(d, setRequest, unsetRequest); len(updateParamDiags) > 0 {
+			return updateParamDiags
+		}
+
+		// Apply SET and UNSET changes
+		if !reflect.DeepEqual(*setRequest, *sdk.NewProcedureSetRequest()) {
+			err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithSet(*setRequest))
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		}
+		if !reflect.DeepEqual(*unsetRequest, *sdk.NewProcedureUnsetRequest()) {
+			err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithUnset(*unsetRequest))
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		}
+
+		// has to be handled separately
+		if d.HasChange("execute_as") {
+			var value sdk.ExecuteAs
+			if v, ok := d.GetOk("execute_as"); ok {
+				value, err = sdk.ToExecuteAs(v.(string))
+				if err != nil {
+					return diag.FromErr(err)
+				}
+			} else {
+				// there is no UNSET, so we need to set it manually
+				value = sdk.ExecuteAsOwner
+			}
+			err = client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithExecuteAs(value))
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+		}
+
+		return readFunc(ctx, d, meta)
+	}
+}
+
+func ImportProcedure(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	logging.DebugLogger.Printf("[DEBUG] Starting procedure import")
+	client := meta.(*provider.Context).Client
+	id, err := sdk.ParseSchemaObjectIdentifierWithArguments(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	procedureDetails, err := client.Procedures.DescribeDetails(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	procedure, err := client.Procedures.ShowByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = errors.Join(
+		d.Set("database", id.DatabaseName()),
+		d.Set("schema", id.SchemaName()),
+		d.Set("name", id.Name()),
+		d.Set("is_secure", booleanStringFromBool(procedure.IsSecure)),
+		setOptionalFromStringPtr(d, "null_input_behavior", procedureDetails.NullHandling),
+		d.Set("execute_as", procedureDetails.ExecuteAs),
+		importFunctionOrProcedureArguments(d, procedureDetails.NormalizedArguments),
+		// all others are set in read
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func queryAllProcedureDetailsCommon(ctx context.Context, d *schema.ResourceData, client *sdk.Client, id sdk.SchemaObjectIdentifierWithArguments) (*allProcedureDetailsCommon, diag.Diagnostics) {
+	procedureDetails, err := client.Procedures.DescribeDetails(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			log.Printf("[DEBUG] procedure (%s) not found or we are not authorized. Err: %s", d.Id(), err)
+			d.SetId("")
+			return nil, diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query procedure. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Procedure: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return nil, diag.FromErr(err)
+	}
+	procedure, err := client.Procedures.ShowByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return nil, diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query procedure. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Procedure: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return nil, diag.FromErr(err)
+	}
+	procedureParameters, err := client.Procedures.ShowParameters(ctx, id)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	return &allProcedureDetailsCommon{
+		procedure:           procedure,
+		procedureDetails:    procedureDetails,
+		procedureParameters: procedureParameters,
+	}, nil
+}
+
+type allProcedureDetailsCommon struct {
+	procedure           *sdk.Procedure
+	procedureDetails    *sdk.ProcedureDetails
+	procedureParameters []*sdk.Parameter
+}
+
+// TODO [SNOW-1850370]: Make the rest of the functions in this file generic (for reuse with functions)
+// These were copy-pasted for now.
+func parseProcedureArgumentsCommon(d *schema.ResourceData) ([]sdk.ProcedureArgumentRequest, error) {
+	args := make([]sdk.ProcedureArgumentRequest, 0)
+	if v, ok := d.GetOk("arguments"); ok {
+		for _, arg := range v.([]any) {
+			argName := arg.(map[string]any)["arg_name"].(string)
+			argDataType := arg.(map[string]any)["arg_data_type"].(string)
+			dataType, err := datatypes.ParseDataType(argDataType)
+			if err != nil {
+				return nil, err
+			}
+			request := sdk.NewProcedureArgumentRequest(argName, dataType)
+
+			if argDefaultValue, defaultValuePresent := arg.(map[string]any)["arg_default_value"]; defaultValuePresent && argDefaultValue.(string) != "" {
+				request.WithDefaultValue(argDefaultValue.(string))
+			}
+
+			args = append(args, *request)
+		}
+	}
+	return args, nil
+}
+
+func parseProcedureImportsCommon(d *schema.ResourceData) ([]sdk.ProcedureImportRequest, error) {
+	imports := make([]sdk.ProcedureImportRequest, 0)
+	if v, ok := d.GetOk("imports"); ok {
+		for _, imp := range v.(*schema.Set).List() {
+			stageLocation := imp.(map[string]any)["stage_location"].(string)
+			pathOnStage := imp.(map[string]any)["path_on_stage"].(string)
+			imports = append(imports, *sdk.NewProcedureImportRequest(fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)))
+		}
+	}
+	return imports, nil
+}
+
+func parseProceduresPackagesCommon(d *schema.ResourceData) ([]sdk.ProcedurePackageRequest, error) {
+	packages := make([]sdk.ProcedurePackageRequest, 0)
+	if v, ok := d.GetOk("packages"); ok {
+		for _, pkg := range v.(*schema.Set).List() {
+			packages = append(packages, *sdk.NewProcedurePackageRequest(pkg.(string)))
+		}
+	}
+	return packages, nil
+}
+
+func parseProcedureTargetPathCommon(d *schema.ResourceData) (string, error) {
+	var tp string
+	if v, ok := d.GetOk("target_path"); ok {
+		for _, p := range v.(*schema.Set).List() {
+			stageLocation := p.(map[string]any)["stage_location"].(string)
+			pathOnStage := p.(map[string]any)["path_on_stage"].(string)
+			tp = fmt.Sprintf("@%s/%s", stageLocation, pathOnStage)
+		}
+	}
+	return tp, nil
+}
+
+func parseProcedureReturnsCommon(d *schema.ResourceData) (*sdk.ProcedureReturnsRequest, error) {
+	returnTypeRaw := d.Get("return_type").(string)
+	dataType, err := datatypes.ParseDataType(returnTypeRaw)
+	if err != nil {
+		return nil, err
+	}
+	returns := sdk.NewProcedureReturnsRequest()
+	switch v := dataType.(type) {
+	case *datatypes.TableDataType:
+		var cr []sdk.ProcedureColumnRequest
+		for _, c := range v.Columns() {
+			cr = append(cr, *sdk.NewProcedureColumnRequest(c.ColumnName(), c.ColumnType()))
+		}
+		returns.WithTable(*sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
+	default:
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(dataType))
+	}
+	return returns, nil
+}
+
+func parseProcedureSqlReturns(d *schema.ResourceData) (*sdk.ProcedureSQLReturnsRequest, error) {
+	returnTypeRaw := d.Get("return_type").(string)
+	dataType, err := datatypes.ParseDataType(returnTypeRaw)
+	if err != nil {
+		return nil, err
+	}
+	returns := sdk.NewProcedureSQLReturnsRequest()
+	switch v := dataType.(type) {
+	case *datatypes.TableDataType:
+		var cr []sdk.ProcedureColumnRequest
+		for _, c := range v.Columns() {
+			cr = append(cr, *sdk.NewProcedureColumnRequest(c.ColumnName(), c.ColumnType()))
+		}
+		returns.WithTable(*sdk.NewProcedureReturnsTableRequest().WithColumns(cr))
+	default:
+		returns.WithResultDataType(*sdk.NewProcedureReturnsResultDataTypeRequest(dataType))
+	}
+	return returns, nil
+}
+
+func setProcedureImportsInBuilder[T any](d *schema.ResourceData, setImports func([]sdk.ProcedureImportRequest) T) error {
+	imports, err := parseProcedureImportsCommon(d)
+	if err != nil {
+		return err
+	}
+	setImports(imports)
+	return nil
+}
+
+func setProcedureTargetPathInBuilder[T any](d *schema.ResourceData, setTargetPath func(string) T) error {
+	tp, err := parseProcedureTargetPathCommon(d)
+	if err != nil {
+		return err
+	}
+	if tp != "" {
+		setTargetPath(tp)
+	}
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -35,10 +36,11 @@ var userPasswordPolicyAttachmentSchema = map[string]*schema.Schema{
 func UserPasswordPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Specifies the password policy to use for a certain user.",
-		CreateContext: TrackingCreateWrapper(resources.UserPasswordPolicyAttachment, CreateUserPasswordPolicyAttachment),
-		ReadContext:   TrackingReadWrapper(resources.UserPasswordPolicyAttachment, ReadUserPasswordPolicyAttachment),
-		DeleteContext: TrackingDeleteWrapper(resources.UserPasswordPolicyAttachment, DeleteUserPasswordPolicyAttachment),
-		Schema:        userPasswordPolicyAttachmentSchema,
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.UserPasswordPolicyAttachmentResource), TrackingCreateWrapper(resources.UserPasswordPolicyAttachment, CreateUserPasswordPolicyAttachment)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.UserPasswordPolicyAttachmentResource), TrackingReadWrapper(resources.UserPasswordPolicyAttachment, ReadUserPasswordPolicyAttachment)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.UserPasswordPolicyAttachmentResource), TrackingDeleteWrapper(resources.UserPasswordPolicyAttachment, DeleteUserPasswordPolicyAttachment)),
+
+		Schema: userPasswordPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

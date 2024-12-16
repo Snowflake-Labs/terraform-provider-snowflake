@@ -57,3 +57,14 @@ func (f *ProcedureAssert) HasExactlyExternalAccessIntegrations(integrations ...s
 	})
 	return f
 }
+
+func (p *ProcedureAssert) HasArgumentsRawContains(substring string) *ProcedureAssert {
+	p.AddAssertion(func(t *testing.T, o *sdk.Procedure) error {
+		t.Helper()
+		if !strings.Contains(o.ArgumentsRaw, substring) {
+			return fmt.Errorf("expected arguments raw contain: %v, to contain: %v", o.ArgumentsRaw, substring)
+		}
+		return nil
+	})
+	return p
+}

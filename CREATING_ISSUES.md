@@ -181,7 +181,7 @@ resource "snowflake_grant_privileges_to_account_role" "grant_on_procedure" {
   account_role_name = snowflake_account_role.name
   on_schema_object {
     object_type = "PROCEDURE"
-    object_name = "\"${snowflake_database.database.name}\".\"${snowflake_schema.schema.name}\".\"${snowflake_procedure.procedure.name}\""
+    object_name = "\"${snowflake_database.database.name}\".\"${snowflake_schema.schema.name}\".\"${snowflake_procedure_sql.procedure.name}\""
   }
 }
 ```
@@ -202,7 +202,7 @@ resource "snowflake_grant_privileges_to_account_role" "grant_on_procedure" {
   account_role_name = snowflake_account_role.name
   on_schema_object {
     object_type = "PROCEDURE"
-    object_name = "\"${snowflake_database.database.name}\".\"${snowflake_schema.schema.name}\".\"${snowflake_procedure.procedure.name}\"(NUMBER, VARCHAR)"
+    object_name = "\"${snowflake_database.database.name}\".\"${snowflake_schema.schema.name}\".\"${snowflake_procedure_sql.procedure.name}\"(NUMBER, VARCHAR)"
   }
 }
 ```
@@ -215,7 +215,7 @@ resource "snowflake_grant_privileges_to_account_role" "grant_on_procedure" {
   account_role_name = snowflake_account_role.name
   on_schema_object {
     object_type = "PROCEDURE"
-    object_name = snowflake_procedure.procedure_name.fully_qualified_name
+    object_name = snowflake_procedure_sql.procedure_name.fully_qualified_name
   }
 }
 ```

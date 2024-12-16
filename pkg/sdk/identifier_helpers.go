@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
 
@@ -211,7 +212,7 @@ type SchemaObjectIdentifier struct {
 	databaseName string
 	schemaName   string
 	name         string
-	// TODO(next prs): left right now for backward compatibility for procedures and externalFunctions
+	// TODO [SNOW-1850370]: left right now for backward compatibility for procedures and externalFunctions
 	arguments []DataType
 }
 
@@ -340,6 +341,15 @@ func NewSchemaObjectIdentifierWithArguments(databaseName, schemaName, name strin
 		schemaName:        strings.Trim(schemaName, `"`),
 		name:              strings.Trim(name, `"`),
 		argumentDataTypes: normalizedArguments,
+	}
+}
+
+func NewSchemaObjectIdentifierWithArgumentsNormalized(databaseName, schemaName, name string, argumentDataTypes ...datatypes.DataType) SchemaObjectIdentifierWithArguments {
+	return SchemaObjectIdentifierWithArguments{
+		databaseName:      strings.Trim(databaseName, `"`),
+		schemaName:        strings.Trim(schemaName, `"`),
+		name:              strings.Trim(name, `"`),
+		argumentDataTypes: collections.Map(argumentDataTypes, LegacyDataTypeFrom),
 	}
 }
 

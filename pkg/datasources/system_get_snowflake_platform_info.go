@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -33,7 +34,7 @@ var systemGetSnowflakePlatformInfoSchema = map[string]*schema.Schema{
 
 func SystemGetSnowflakePlatformInfo() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.SystemGetSnowflakePlatformInfo, ReadSystemGetSnowflakePlatformInfo),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.SystemGetSnowflakePlatformInfoDatasource), TrackingReadWrapper(datasources.SystemGetSnowflakePlatformInfo, ReadSystemGetSnowflakePlatformInfo)),
 		Schema:      systemGetSnowflakePlatformInfoSchema,
 	}
 }

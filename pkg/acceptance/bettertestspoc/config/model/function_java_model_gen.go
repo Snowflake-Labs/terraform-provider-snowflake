@@ -26,7 +26,7 @@ type FunctionJavaModel struct {
 	Name                       tfconfig.Variable `json:"name,omitempty"`
 	NullInputBehavior          tfconfig.Variable `json:"null_input_behavior,omitempty"`
 	Packages                   tfconfig.Variable `json:"packages,omitempty"`
-	ReturnBehavior             tfconfig.Variable `json:"return_behavior,omitempty"`
+	ReturnResultsBehavior      tfconfig.Variable `json:"return_results_behavior,omitempty"`
 	ReturnType                 tfconfig.Variable `json:"return_type,omitempty"`
 	RuntimeVersion             tfconfig.Variable `json:"runtime_version,omitempty"`
 	Schema                     tfconfig.Variable `json:"schema,omitempty"`
@@ -44,7 +44,6 @@ type FunctionJavaModel struct {
 func FunctionJava(
 	resourceName string,
 	database string,
-	functionDefinition string,
 	handler string,
 	name string,
 	returnType string,
@@ -52,7 +51,6 @@ func FunctionJava(
 ) *FunctionJavaModel {
 	f := &FunctionJavaModel{ResourceModelMeta: config.Meta(resourceName, resources.FunctionJava)}
 	f.WithDatabase(database)
-	f.WithFunctionDefinition(functionDefinition)
 	f.WithHandler(handler)
 	f.WithName(name)
 	f.WithReturnType(returnType)
@@ -62,7 +60,6 @@ func FunctionJava(
 
 func FunctionJavaWithDefaultMeta(
 	database string,
-	functionDefinition string,
 	handler string,
 	name string,
 	returnType string,
@@ -70,7 +67,6 @@ func FunctionJavaWithDefaultMeta(
 ) *FunctionJavaModel {
 	f := &FunctionJavaModel{ResourceModelMeta: config.DefaultMeta(resources.FunctionJava)}
 	f.WithDatabase(database)
-	f.WithFunctionDefinition(functionDefinition)
 	f.WithHandler(handler)
 	f.WithName(name)
 	f.WithReturnType(returnType)
@@ -150,8 +146,8 @@ func (f *FunctionJavaModel) WithNullInputBehavior(nullInputBehavior string) *Fun
 
 // packages attribute type is not yet supported, so WithPackages can't be generated
 
-func (f *FunctionJavaModel) WithReturnBehavior(returnBehavior string) *FunctionJavaModel {
-	f.ReturnBehavior = tfconfig.StringVariable(returnBehavior)
+func (f *FunctionJavaModel) WithReturnResultsBehavior(returnResultsBehavior string) *FunctionJavaModel {
+	f.ReturnResultsBehavior = tfconfig.StringVariable(returnResultsBehavior)
 	return f
 }
 
@@ -172,10 +168,7 @@ func (f *FunctionJavaModel) WithSchema(schema string) *FunctionJavaModel {
 
 // secrets attribute type is not yet supported, so WithSecrets can't be generated
 
-func (f *FunctionJavaModel) WithTargetPath(targetPath string) *FunctionJavaModel {
-	f.TargetPath = tfconfig.StringVariable(targetPath)
-	return f
-}
+// target_path attribute type is not yet supported, so WithTargetPath can't be generated
 
 func (f *FunctionJavaModel) WithTraceLevel(traceLevel string) *FunctionJavaModel {
 	f.TraceLevel = tfconfig.StringVariable(traceLevel)
@@ -266,8 +259,8 @@ func (f *FunctionJavaModel) WithPackagesValue(value tfconfig.Variable) *Function
 	return f
 }
 
-func (f *FunctionJavaModel) WithReturnBehaviorValue(value tfconfig.Variable) *FunctionJavaModel {
-	f.ReturnBehavior = value
+func (f *FunctionJavaModel) WithReturnResultsBehaviorValue(value tfconfig.Variable) *FunctionJavaModel {
+	f.ReturnResultsBehavior = value
 	return f
 }
 

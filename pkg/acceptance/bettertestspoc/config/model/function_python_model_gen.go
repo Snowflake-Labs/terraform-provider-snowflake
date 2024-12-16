@@ -27,7 +27,7 @@ type FunctionPythonModel struct {
 	Name                       tfconfig.Variable `json:"name,omitempty"`
 	NullInputBehavior          tfconfig.Variable `json:"null_input_behavior,omitempty"`
 	Packages                   tfconfig.Variable `json:"packages,omitempty"`
-	ReturnBehavior             tfconfig.Variable `json:"return_behavior,omitempty"`
+	ReturnResultsBehavior      tfconfig.Variable `json:"return_results_behavior,omitempty"`
 	ReturnType                 tfconfig.Variable `json:"return_type,omitempty"`
 	RuntimeVersion             tfconfig.Variable `json:"runtime_version,omitempty"`
 	Schema                     tfconfig.Variable `json:"schema,omitempty"`
@@ -44,7 +44,6 @@ type FunctionPythonModel struct {
 func FunctionPython(
 	resourceName string,
 	database string,
-	functionDefinition string,
 	handler string,
 	name string,
 	returnType string,
@@ -53,7 +52,6 @@ func FunctionPython(
 ) *FunctionPythonModel {
 	f := &FunctionPythonModel{ResourceModelMeta: config.Meta(resourceName, resources.FunctionPython)}
 	f.WithDatabase(database)
-	f.WithFunctionDefinition(functionDefinition)
 	f.WithHandler(handler)
 	f.WithName(name)
 	f.WithReturnType(returnType)
@@ -64,7 +62,6 @@ func FunctionPython(
 
 func FunctionPythonWithDefaultMeta(
 	database string,
-	functionDefinition string,
 	handler string,
 	name string,
 	returnType string,
@@ -73,7 +70,6 @@ func FunctionPythonWithDefaultMeta(
 ) *FunctionPythonModel {
 	f := &FunctionPythonModel{ResourceModelMeta: config.DefaultMeta(resources.FunctionPython)}
 	f.WithDatabase(database)
-	f.WithFunctionDefinition(functionDefinition)
 	f.WithHandler(handler)
 	f.WithName(name)
 	f.WithReturnType(returnType)
@@ -159,8 +155,8 @@ func (f *FunctionPythonModel) WithNullInputBehavior(nullInputBehavior string) *F
 
 // packages attribute type is not yet supported, so WithPackages can't be generated
 
-func (f *FunctionPythonModel) WithReturnBehavior(returnBehavior string) *FunctionPythonModel {
-	f.ReturnBehavior = tfconfig.StringVariable(returnBehavior)
+func (f *FunctionPythonModel) WithReturnResultsBehavior(returnResultsBehavior string) *FunctionPythonModel {
+	f.ReturnResultsBehavior = tfconfig.StringVariable(returnResultsBehavior)
 	return f
 }
 
@@ -275,8 +271,8 @@ func (f *FunctionPythonModel) WithPackagesValue(value tfconfig.Variable) *Functi
 	return f
 }
 
-func (f *FunctionPythonModel) WithReturnBehaviorValue(value tfconfig.Variable) *FunctionPythonModel {
-	f.ReturnBehavior = value
+func (f *FunctionPythonModel) WithReturnResultsBehaviorValue(value tfconfig.Variable) *FunctionPythonModel {
+	f.ReturnResultsBehavior = value
 	return f
 }
 

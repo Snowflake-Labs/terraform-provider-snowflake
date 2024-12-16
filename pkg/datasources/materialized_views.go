@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -55,7 +56,7 @@ var materializedViewsSchema = map[string]*schema.Schema{
 
 func MaterializedViews() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.MaterializedViews, ReadMaterializedViews),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.MaterializedViewsDatasource), TrackingReadWrapper(datasources.MaterializedViews, ReadMaterializedViews)),
 		Schema:      materializedViewsSchema,
 	}
 }

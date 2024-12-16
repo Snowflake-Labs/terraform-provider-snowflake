@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -45,10 +46,10 @@ var emailNotificationIntegrationSchema = map[string]*schema.Schema{
 // EmailNotificationIntegration returns a pointer to the resource representing a notification integration.
 func EmailNotificationIntegration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.EmailNotificationIntegration, CreateEmailNotificationIntegration),
-		ReadContext:   TrackingReadWrapper(resources.EmailNotificationIntegration, ReadEmailNotificationIntegration),
-		UpdateContext: TrackingUpdateWrapper(resources.EmailNotificationIntegration, UpdateEmailNotificationIntegration),
-		DeleteContext: TrackingDeleteWrapper(resources.EmailNotificationIntegration, DeleteEmailNotificationIntegration),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.EmailNotificationIntegrationResource), TrackingCreateWrapper(resources.EmailNotificationIntegration, CreateEmailNotificationIntegration)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.EmailNotificationIntegrationResource), TrackingReadWrapper(resources.EmailNotificationIntegration, ReadEmailNotificationIntegration)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.EmailNotificationIntegrationResource), TrackingUpdateWrapper(resources.EmailNotificationIntegration, UpdateEmailNotificationIntegration)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.EmailNotificationIntegrationResource), TrackingDeleteWrapper(resources.EmailNotificationIntegration, DeleteEmailNotificationIntegration)),
 
 		Schema: emailNotificationIntegrationSchema,
 		Importer: &schema.ResourceImporter{

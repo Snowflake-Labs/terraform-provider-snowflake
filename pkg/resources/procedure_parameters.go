@@ -80,16 +80,16 @@ func handleProcedureParameterRead(d *schema.ResourceData, procedureParameters []
 }
 
 // They do not work in create, that's why are set in alter
-func handleProcedureParametersCreate(d *schema.ResourceData, alterOpts *sdk.ProcedureSet) diag.Diagnostics {
+func handleProcedureParametersCreate(d *schema.ResourceData, set *sdk.ProcedureSetRequest) diag.Diagnostics {
 	return JoinDiags(
-		handleParameterCreate(d, sdk.ProcedureParameterEnableConsoleOutput, &alterOpts.EnableConsoleOutput),
-		handleParameterCreateWithMapping(d, sdk.ProcedureParameterLogLevel, &alterOpts.LogLevel, stringToStringEnumProvider(sdk.ToLogLevel)),
-		handleParameterCreateWithMapping(d, sdk.ProcedureParameterMetricLevel, &alterOpts.MetricLevel, stringToStringEnumProvider(sdk.ToMetricLevel)),
-		handleParameterCreateWithMapping(d, sdk.ProcedureParameterTraceLevel, &alterOpts.TraceLevel, stringToStringEnumProvider(sdk.ToTraceLevel)),
+		handleParameterCreate(d, sdk.ProcedureParameterEnableConsoleOutput, &set.EnableConsoleOutput),
+		handleParameterCreateWithMapping(d, sdk.ProcedureParameterLogLevel, &set.LogLevel, stringToStringEnumProvider(sdk.ToLogLevel)),
+		handleParameterCreateWithMapping(d, sdk.ProcedureParameterMetricLevel, &set.MetricLevel, stringToStringEnumProvider(sdk.ToMetricLevel)),
+		handleParameterCreateWithMapping(d, sdk.ProcedureParameterTraceLevel, &set.TraceLevel, stringToStringEnumProvider(sdk.ToTraceLevel)),
 	)
 }
 
-func handleProcedureParametersUpdate(d *schema.ResourceData, set *sdk.ProcedureSet, unset *sdk.ProcedureUnset) diag.Diagnostics {
+func handleProcedureParametersUpdate(d *schema.ResourceData, set *sdk.ProcedureSetRequest, unset *sdk.ProcedureUnsetRequest) diag.Diagnostics {
 	return JoinDiags(
 		handleParameterUpdate(d, sdk.ProcedureParameterEnableConsoleOutput, &set.EnableConsoleOutput, &unset.EnableConsoleOutput),
 		handleParameterUpdateWithMapping(d, sdk.ProcedureParameterLogLevel, &set.LogLevel, &unset.LogLevel, stringToStringEnumProvider(sdk.ToLogLevel)),

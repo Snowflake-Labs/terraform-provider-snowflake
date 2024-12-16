@@ -1,5 +1,74 @@
 # Changelog
 
+## [1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.100.0...v1.0.0) (2024-12-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* True v1 release ([#3283](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3283))
+* Release v1
+
+### 🎉 **What's new:**
+
+* True v1 release ([#3283](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3283)) ([112c852](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/112c85244191a65bf552ffe27285299d6cc3831f))
+
+
+### 🔧 **Misc**
+
+* release 1.0.0 ([b8ddbf9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b8ddbf91bafdc8eef21a89da1ea86e6a455e2b96))
+* Release v1 ([#3281](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3281)) ([82f240e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/82f240eeed9ec24d6afc82cf5d0106544bec5838))
+
+
+### 🐛 **Bug fixes:**
+
+* Add missing preview features ([#3284](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3284)) ([3aac502](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3aac502beb404449674c54d153ca5aab6ef3cbaa))
+
+## [0.100.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.99.0...v0.100.0) (2024-12-12)
+
+
+### 🎉 **What's new:**
+
+* Account v1 readiness ([#3236](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3236)) ([5df33a8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5df33a8c1abe38c29124bac1e03727202c556347))
+* Account v1 readiness generated files ([#3242](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3242)) ([3df59dd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3df59dd51b53acae9155b732811cfda56d7f20b8))
+* Account v1 readiness resource ([#3252](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3252)) ([8f5698d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8f5698dbce3325461d572c4029ef2dbc364e819b))
+* Add a new account roles data source ([#3257](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3257)) ([b3d6b9e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b3d6b9e5b4f327b186161f50dc9ac732d199fb19))
+* Add account data source ([#3261](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3261)) ([6087fc9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6087fc9fdb2467e022ec7489137e7f5a5fe1ff25))
+* Add all other functions and procedures implementations ([#3275](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3275)) ([7a6f68d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7a6f68df2fb0a0a4696a5442569344039a839c27))
+* Basic functions implementation ([#3269](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3269)) ([6d4a103](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6d4a10364276e92fa791eaa022c3bd7bce16228d))
+* Basic procedures implementation ([#3271](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3271)) ([933335f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/933335f56d1e53bf3e95d1f552672f35425b4878))
+* Docs, test, and missing parameter ([#3280](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3280)) ([10517f3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/10517f337c6b22d5f7f2a4f6c747b6fd2d2f47e9))
+* Functions and procedures schemas and generated sources ([#3262](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3262)) ([9b70f87](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9b70f872ca799126bc2051b4ed70160f868ac267))
+* Functions sdk update ([#3254](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3254)) ([fc1eace](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fc1eace306e8d919c3349d56480fa3386ca664af))
+* Handle missing fields in function and procedure ([#3273](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3273)) ([53e7a0a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/53e7a0aea3350e9e03a804d67e7df796f15bff3a))
+* Procedures schemas and generated sources ([#3263](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3263)) ([211ad46](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/211ad46223f1bdf03b20cc7a06110bfce18a967e))
+* Procedures sdk update ([#3255](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3255)) ([682606a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/682606adea5e40befa7e599ced5aa7dc8570f80a))
+* Rework account parameter resource ([#3264](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3264)) ([15aa9c2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/15aa9c2c94d80ae1d299a333b8035e38de6a6dfc))
+* Rework data types ([#3244](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3244)) ([05ada91](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/05ada917414ea7c574be3974c7de4f09535961fd))
+* support table data type ([#3274](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3274)) ([13401d5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/13401d5fff320eedcf40eed7c0831154cc6cc13a))
+* Tag association v1 readiness ([#3210](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3210)) ([04f6d54](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/04f6d54a83cf4e9ea4b292087eefa056114eb5b5))
+* Test imports and small fixes ([#3276](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3276)) ([a712195](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a7121952892847f61e24e7a7a4fe78c38a450985))
+* Unsafe execute v1 readiness ([#3266](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3266)) ([c4f1e8f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c4f1e8fd55150e40d8a556580016ff83fe65bdaf))
+* Use new data types in sql builder for functions and procedures ([#3247](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3247)) ([69f677a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/69f677a6f86faa79cdece4d422eb61284c1599a6))
+
+
+### 🔧 **Misc**
+
+* Add ShowByID filtering generation ([#3227](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3227)) ([548ec42](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/548ec42ae7bcb8daa038de4cb2f81ced9c028f2d))
+* Adress small task-related todos ([#3243](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3243)) ([40de9ae](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/40de9ae93796afbc3091aa2fbb2c5dfba71f911c))
+* Apply masking ([#3234](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3234)) ([c209a8a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c209a8ae6c15fa9515e933d18add962070b60257))
+* fix missing references in toOpts and changes with newlines ([#3240](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3240)) ([246547f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/246547f8eb13118a325881630f33433b3f5d8f0a))
+* function tests ([#3279](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3279)) ([5af6efb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5af6efb08c479edbaea54f87f79672c802edcc86))
+* Improve config builders ([#3207](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3207)) ([425787c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/425787c5938e88895af1157f505889611bdef398))
+* Revert to proper env ([#3238](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3238)) ([5d4ed3b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5d4ed3bc233a77196f01351d9c972bb56730298e))
+* Use service user for ci ([#3228](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3228)) ([2fb50d7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2fb50d7b5beb1f361d3c761b344bab3216f6ea59))
+
+
+### 🐛 **Bug fixes:**
+
+* Make blocked_roles_field optional in OAuth security integrations ([#3267](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3267)) ([7197b57](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7197b57c5dd75be34fc77eb82aabbd091074b809))
+* Minor fixes ([#3231](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3231)) ([1863bf6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1863bf697f05177f27c351c0687c4bee24fe2c1b))
+* Minor fixes 2 ([#3230](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3230)) ([73b7e74](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/73b7e74bf44b1ae6ddc78cac752f2b7febb836cd))
+
 ## [0.99.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.98.0...v0.99.0) (2024-11-26)
 
 

@@ -47,7 +47,6 @@ func ProcedureScala(
 	database string,
 	handler string,
 	name string,
-	procedureDefinition string,
 	returnType string,
 	runtimeVersion string,
 	schema string,
@@ -57,7 +56,6 @@ func ProcedureScala(
 	p.WithDatabase(database)
 	p.WithHandler(handler)
 	p.WithName(name)
-	p.WithProcedureDefinition(procedureDefinition)
 	p.WithReturnType(returnType)
 	p.WithRuntimeVersion(runtimeVersion)
 	p.WithSchema(schema)
@@ -69,7 +67,6 @@ func ProcedureScalaWithDefaultMeta(
 	database string,
 	handler string,
 	name string,
-	procedureDefinition string,
 	returnType string,
 	runtimeVersion string,
 	schema string,
@@ -79,7 +76,6 @@ func ProcedureScalaWithDefaultMeta(
 	p.WithDatabase(database)
 	p.WithHandler(handler)
 	p.WithName(name)
-	p.WithProcedureDefinition(procedureDefinition)
 	p.WithReturnType(returnType)
 	p.WithRuntimeVersion(runtimeVersion)
 	p.WithSchema(schema)
@@ -186,10 +182,7 @@ func (p *ProcedureScalaModel) WithSnowparkPackage(snowparkPackage string) *Proce
 	return p
 }
 
-func (p *ProcedureScalaModel) WithTargetPath(targetPath string) *ProcedureScalaModel {
-	p.TargetPath = tfconfig.StringVariable(targetPath)
-	return p
-}
+// target_path attribute type is not yet supported, so WithTargetPath can't be generated
 
 func (p *ProcedureScalaModel) WithTraceLevel(traceLevel string) *ProcedureScalaModel {
 	p.TraceLevel = tfconfig.StringVariable(traceLevel)

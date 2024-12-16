@@ -214,7 +214,6 @@ func GetConfigFileName() (string, error) {
 
 // TODO(SNOW-1787920): improve TOML parsing
 type ConfigDTO struct {
-	Account                *string             `toml:"account"`
 	AccountName            *string             `toml:"accountname"`
 	OrganizationName       *string             `toml:"organizationname"`
 	User                   *string             `toml:"user"`
@@ -258,7 +257,6 @@ type ConfigDTO struct {
 
 func (c *ConfigDTO) DriverConfig() (gosnowflake.Config, error) {
 	driverCfg := gosnowflake.Config{}
-	pointerAttributeSet(c.Account, &driverCfg.Account)
 	if c.AccountName != nil && c.OrganizationName != nil {
 		driverCfg.Account = fmt.Sprintf("%s-%s", *c.OrganizationName, *c.AccountName)
 	}
@@ -412,7 +410,6 @@ const (
 	AuthenticationTypeOauth               AuthenticationType = "OAUTH"
 	AuthenticationTypeExternalBrowser     AuthenticationType = "EXTERNALBROWSER"
 	AuthenticationTypeOkta                AuthenticationType = "OKTA"
-	AuthenticationTypeJwtLegacy           AuthenticationType = "JWT"
 	AuthenticationTypeJwt                 AuthenticationType = "SNOWFLAKE_JWT"
 	AuthenticationTypeTokenAccessor       AuthenticationType = "TOKENACCESSOR"
 	AuthenticationTypeUsernamePasswordMfa AuthenticationType = "USERNAMEPASSWORDMFA"
@@ -425,7 +422,6 @@ var AllAuthenticationTypes = []AuthenticationType{
 	AuthenticationTypeOauth,
 	AuthenticationTypeExternalBrowser,
 	AuthenticationTypeOkta,
-	AuthenticationTypeJwtLegacy,
 	AuthenticationTypeJwt,
 	AuthenticationTypeTokenAccessor,
 	AuthenticationTypeUsernamePasswordMfa,
@@ -441,7 +437,7 @@ func ToAuthenticatorType(s string) (gosnowflake.AuthType, error) {
 		return gosnowflake.AuthTypeExternalBrowser, nil
 	case string(AuthenticationTypeOkta):
 		return gosnowflake.AuthTypeOkta, nil
-	case string(AuthenticationTypeJwt), string(AuthenticationTypeJwtLegacy):
+	case string(AuthenticationTypeJwt):
 		return gosnowflake.AuthTypeJwt, nil
 	case string(AuthenticationTypeTokenAccessor):
 		return gosnowflake.AuthTypeTokenAccessor, nil

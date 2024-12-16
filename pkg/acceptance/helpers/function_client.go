@@ -138,6 +138,26 @@ func (c *FunctionClient) CreateJava(t *testing.T) (*sdk.Function, func()) {
 	return function, c.DropFunctionFunc(t, id)
 }
 
+func (c *FunctionClient) CreateScalaStaged(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, dataType datatypes.DataType, importPath string, handler string) (*sdk.Function, func()) {
+	t.Helper()
+	ctx := context.Background()
+
+	argName := "x"
+	argument := sdk.NewFunctionArgumentRequest(argName, dataType)
+
+	request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), dataType, handler, "2.12").
+		WithArguments([]sdk.FunctionArgumentRequest{*argument}).
+		WithImports([]sdk.FunctionImportRequest{*sdk.NewFunctionImportRequest().WithImport(importPath)})
+
+	err := c.client().CreateForScala(ctx, request)
+	require.NoError(t, err)
+
+	function, err := c.client().ShowByID(ctx, id)
+	require.NoError(t, err)
+
+	return function, c.DropFunctionFunc(t, id)
+}
+
 func (c *FunctionClient) CreateWithRequest(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments, req *sdk.CreateForSQLFunctionRequest) *sdk.Function {
 	t.Helper()
 	ctx := context.Background()
@@ -192,6 +212,18 @@ func (c *FunctionClient) SampleJavaDefinition(t *testing.T, className string, fu
 `, className, funcName, argName)
 }
 
+func (c *FunctionClient) SampleJavaDefinitionNoArgs(t *testing.T, className string, funcName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+	class %[1]s {
+		public static String %[2]s() {
+			return "hello";
+		}
+	}
+`, className, funcName)
+}
+
 func (c *FunctionClient) SampleJavascriptDefinition(t *testing.T, argName string) string {
 	t.Helper()
 
@@ -206,6 +238,11 @@ func (c *FunctionClient) SampleJavascriptDefinition(t *testing.T, argName string
 		return result;
 	}
 `, argName)
+}
+
+func (c *FunctionClient) SampleJavascriptDefinitionNoArgs(t *testing.T) string {
+	t.Helper()
+	return `return 1;`
 }
 
 func (c *FunctionClient) SamplePythonDefinition(t *testing.T, funcName string, argName string) string {
@@ -237,6 +274,14 @@ func (c *FunctionClient) SampleSqlDefinition(t *testing.T) string {
 	t.Helper()
 
 	return "3.141592654::FLOAT"
+}
+
+func (c *FunctionClient) SampleSqlDefinitionWithArgument(t *testing.T, argName string) string {
+	t.Helper()
+
+	return fmt.Sprintf(`
+%s
+`, argName)
 }
 
 func (c *FunctionClient) PythonIdentityDefinition(t *testing.T, funcName string, argName string) string {

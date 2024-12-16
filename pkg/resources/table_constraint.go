@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -182,10 +183,10 @@ var tableConstraintSchema = map[string]*schema.Schema{
 
 func TableConstraint() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.TableConstraint, CreateTableConstraint),
-		ReadContext:   TrackingReadWrapper(resources.TableConstraint, ReadTableConstraint),
-		UpdateContext: TrackingUpdateWrapper(resources.TableConstraint, UpdateTableConstraint),
-		DeleteContext: TrackingDeleteWrapper(resources.TableConstraint, DeleteTableConstraint),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.TableConstraintResource), TrackingCreateWrapper(resources.TableConstraint, CreateTableConstraint)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.TableConstraintResource), TrackingReadWrapper(resources.TableConstraint, ReadTableConstraint)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.TableConstraintResource), TrackingUpdateWrapper(resources.TableConstraint, UpdateTableConstraint)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.TableConstraintResource), TrackingDeleteWrapper(resources.TableConstraint, DeleteTableConstraint)),
 
 		Schema: tableConstraintSchema,
 		Importer: &schema.ResourceImporter{

@@ -222,8 +222,8 @@ func ExecuteAsPointer(v ExecuteAs) *ExecuteAs {
 
 // TODO [SNOW-1348103]: fix SDK - constants should have only CALLER and OWNER (not the EXECUTE AS part)
 const (
-	ExecuteAsCaller ExecuteAs = "EXECUTE AS CALLER"
-	ExecuteAsOwner  ExecuteAs = "EXECUTE AS OWNER"
+	ExecuteAsCaller ExecuteAs = "CALLER"
+	ExecuteAsOwner  ExecuteAs = "OWNER"
 )
 
 func ToExecuteAs(value string) (ExecuteAs, error) {

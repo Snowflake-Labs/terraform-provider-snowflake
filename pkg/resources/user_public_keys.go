@@ -8,6 +8,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -54,10 +55,10 @@ var userPublicKeysSchema = map[string]*schema.Schema{
 
 func UserPublicKeys() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.UserPublicKeys, CreateUserPublicKeys),
-		ReadContext:   TrackingReadWrapper(resources.UserPublicKeys, ReadUserPublicKeys),
-		UpdateContext: TrackingUpdateWrapper(resources.UserPublicKeys, UpdateUserPublicKeys),
-		DeleteContext: TrackingDeleteWrapper(resources.UserPublicKeys, DeleteUserPublicKeys),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.UserPublicKeysResource), TrackingCreateWrapper(resources.UserPublicKeys, CreateUserPublicKeys)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.UserPublicKeysResource), TrackingReadWrapper(resources.UserPublicKeys, ReadUserPublicKeys)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.UserPublicKeysResource), TrackingUpdateWrapper(resources.UserPublicKeys, UpdateUserPublicKeys)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.UserPublicKeysResource), TrackingDeleteWrapper(resources.UserPublicKeys, DeleteUserPublicKeys)),
 
 		Schema: userPublicKeysSchema,
 		Importer: &schema.ResourceImporter{

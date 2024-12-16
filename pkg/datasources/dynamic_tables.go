@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -197,7 +198,7 @@ var dynamicTablesSchema = map[string]*schema.Schema{
 // DynamicTables Snowflake Dynamic Tables resource.
 func DynamicTables() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.DynamicTables, ReadDynamicTables),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.DynamicTablesDatasource), TrackingReadWrapper(datasources.DynamicTables, ReadDynamicTables)),
 		Schema:      dynamicTablesSchema,
 	}
 }

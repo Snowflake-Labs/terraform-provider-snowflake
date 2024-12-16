@@ -4,6 +4,7 @@ type datasource string
 
 const (
 	Accounts                       datasource = "snowflake_accounts"
+	AccountRoles                   datasource = "snowflake_account_roles"
 	Alerts                         datasource = "snowflake_alerts"
 	Connections                    datasource = "snowflake_connections"
 	CortexSearchServices           datasource = "snowflake_cortex_search_services"
@@ -27,8 +28,6 @@ const (
 	Pipes                          datasource = "snowflake_pipes"
 	Procedures                     datasource = "snowflake_procedures"
 	ResourceMonitors               datasource = "snowflake_resource_monitors"
-	Role                           datasource = "snowflake_role"
-	Roles                          datasource = "snowflake_roles"
 	RowAccessPolicies              datasource = "snowflake_row_access_policies"
 	Schemas                        datasource = "snowflake_schemas"
 	Secrets                        datasource = "snowflake_secrets"

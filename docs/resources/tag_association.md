@@ -5,8 +5,6 @@ description: |-
   Resource used to manage tag associations. For more information, check object tagging documentation https://docs.snowflake.com/en/user-guide/object-tagging.
 ---
 
-!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0980--v0990) to use it.
-
 -> **Note** For `ACCOUNT` object type, only identifiers with organization name are supported. See [account identifier docs](https://docs.snowflake.com/en/user-guide/admin-account-identifier#format-1-preferred-account-name-in-your-organization) for more details.
 
 -> **Note** Tag association resource ID has the following format: `"TAG_DATABASE"."TAG_SCHEMA"."TAG_NAME"|TAG_VALUE|OBJECT_TYPE`. This means that a tuple of tag ID, tag value and object type should be unique across the resources. If you want to specify this combination for more than one object, you should use only one `tag_association` resource with specified `object_identifiers` set.
@@ -94,7 +92,6 @@ resource "snowflake_tag_association" "account_association" {
 
 ### Optional
 
-- `object_name` (String, Deprecated) Specifies the object identifier for the tag association.
 - `skip_validation` (Boolean) If true, skips validation of the tag association.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 

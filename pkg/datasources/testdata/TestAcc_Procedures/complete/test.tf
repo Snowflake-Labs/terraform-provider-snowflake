@@ -14,18 +14,17 @@ variable "schema" {
   type = string
 }
 
-resource "snowflake_procedure" "test_proc_one" {
+resource "snowflake_procedure_javascript" "test_proc_one" {
   name        = var.proc_name_one
   database    = var.database
   schema      = var.schema
   return_type = "VARCHAR"
-  language    = "JAVASCRIPT"
   statement   = <<-EOF
 		return "Hi"
 	EOF
 }
 
-resource "snowflake_procedure" "test_proc_two" {
+resource "snowflake_procedure_javascript" "test_proc_two" {
   name     = var.proc_name_two
   database = var.database
   schema   = var.schema
@@ -35,7 +34,6 @@ resource "snowflake_procedure" "test_proc_two" {
   }
   comment     = "Terraform acceptance test"
   return_type = "varchar"
-  language    = "JAVASCRIPT"
   statement   = <<-EOF
 		var X=1
 		return X
@@ -45,5 +43,5 @@ resource "snowflake_procedure" "test_proc_two" {
 data "snowflake_procedures" "procedures" {
   database   = var.database
   schema     = var.schema
-  depends_on = [snowflake_procedure.test_proc_one, snowflake_procedure.test_proc_two]
+  depends_on = [snowflake_procedure_javascript.test_proc_one, snowflake_procedure_javascript.test_proc_two]
 }
