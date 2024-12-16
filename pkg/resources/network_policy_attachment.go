@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -39,10 +40,10 @@ var networkPolicyAttachmentSchema = map[string]*schema.Schema{
 // NetworkPolicyAttachment returns a pointer to the resource representing a network policy attachment.
 func NetworkPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.NetworkPolicyAttachment, CreateNetworkPolicyAttachment),
-		ReadContext:   TrackingReadWrapper(resources.NetworkPolicyAttachment, ReadNetworkPolicyAttachment),
-		UpdateContext: TrackingUpdateWrapper(resources.NetworkPolicyAttachment, UpdateNetworkPolicyAttachment),
-		DeleteContext: TrackingDeleteWrapper(resources.NetworkPolicyAttachment, DeleteNetworkPolicyAttachment),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.NetworkPolicyAttachmentResource), TrackingCreateWrapper(resources.NetworkPolicyAttachment, CreateNetworkPolicyAttachment)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.NetworkPolicyAttachmentResource), TrackingReadWrapper(resources.NetworkPolicyAttachment, ReadNetworkPolicyAttachment)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.NetworkPolicyAttachmentResource), TrackingUpdateWrapper(resources.NetworkPolicyAttachment, UpdateNetworkPolicyAttachment)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.NetworkPolicyAttachmentResource), TrackingDeleteWrapper(resources.NetworkPolicyAttachment, DeleteNetworkPolicyAttachment)),
 
 		Schema: networkPolicyAttachmentSchema,
 		Importer: &schema.ResourceImporter{

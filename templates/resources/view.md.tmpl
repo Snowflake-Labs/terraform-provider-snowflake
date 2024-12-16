@@ -9,8 +9,6 @@ description: |-
 {{- end }}
 ---
 
-!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v094x--v0950) to use it.
-
 !> Due to Snowflake limitations, to properly compute diff on `statement` field, the provider parses a `text` field which contains the whole CREATE query used to create the resource. We recommend not using special characters, especially `(`, `,`, `)` in any of the fields, if possible.
 
 ~> **Note about copy_grants** Fields like `is_recursive`, `is_temporary`, `copy_grants` and `statement` can not be ALTERed on Snowflake side (check [docs](https://docs.snowflake.com/en/sql-reference/sql/alter-view)), and a change on these fields means recreation of the resource. ForceNew can not be used because it does not preserve grants from `copy_grants`. Beware that even though a change is marked as update, the resource is recreated.

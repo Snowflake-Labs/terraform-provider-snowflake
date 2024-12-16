@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,10 +21,10 @@ import (
 
 func FunctionScala() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.FunctionScala, CreateContextFunctionScala),
-		ReadContext:   TrackingReadWrapper(resources.FunctionScala, ReadContextFunctionScala),
-		UpdateContext: TrackingUpdateWrapper(resources.FunctionScala, UpdateFunction("SCALA", ReadContextFunctionScala)),
-		DeleteContext: TrackingDeleteWrapper(resources.FunctionScala, DeleteFunction),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.FunctionScalaResource), TrackingCreateWrapper(resources.FunctionScala, CreateContextFunctionScala)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.FunctionScalaResource), TrackingReadWrapper(resources.FunctionScala, ReadContextFunctionScala)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.FunctionScalaResource), TrackingUpdateWrapper(resources.FunctionScala, UpdateFunction("SCALA", ReadContextFunctionScala))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.FunctionScalaResource), TrackingDeleteWrapper(resources.FunctionScala, DeleteFunction)),
 		Description:   "Resource used to manage scala function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionScala, customdiff.All(
@@ -40,7 +41,7 @@ func FunctionScala() *schema.Resource {
 
 		Schema: collections.MergeMaps(scalaFunctionSchema, functionParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.FunctionScala, ImportFunction),
 		},
 	}
 }
@@ -65,7 +66,7 @@ func CreateContextFunctionScala(ctx context.Context, d *schema.ResourceData, met
 
 	argumentDataTypes := collections.Map(argumentRequests, func(r sdk.FunctionArgumentRequest) datatypes.DataType { return r.ArgDataType })
 	id := sdk.NewSchemaObjectIdentifierWithArgumentsNormalized(database, sc, name, argumentDataTypes...)
-	request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), returnDataType, runtimeVersion, handler).
+	request := sdk.NewCreateForScalaFunctionRequest(id.SchemaObjectId(), returnDataType, handler, runtimeVersion).
 		WithArguments(argumentRequests)
 
 	errs := errors.Join(

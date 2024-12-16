@@ -93,7 +93,7 @@ func (f *FunctionJavascriptResourceAssert) HasNullInputBehaviorString(expected s
 }
 
 func (f *FunctionJavascriptResourceAssert) HasReturnBehaviorString(expected string) *FunctionJavascriptResourceAssert {
-	f.AddAssertion(assert.ValueSet("return_behavior", expected))
+	f.AddAssertion(assert.ValueSet("return_results_behavior", expected))
 	return f
 }
 

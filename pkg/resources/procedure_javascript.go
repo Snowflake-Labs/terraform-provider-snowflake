@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,10 +21,10 @@ import (
 
 func ProcedureJavascript() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ProcedureJavascript, CreateContextProcedureJavascript),
-		ReadContext:   TrackingReadWrapper(resources.ProcedureJavascript, ReadContextProcedureJavascript),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedureJavascript, UpdateProcedure("JAVASCRIPT", ReadContextProcedureJavascript)),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedureJavascript, DeleteProcedure),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ProcedureJavascriptResource), TrackingCreateWrapper(resources.ProcedureJavascript, CreateContextProcedureJavascript)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ProcedureJavascriptResource), TrackingReadWrapper(resources.ProcedureJavascript, ReadContextProcedureJavascript)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ProcedureJavascriptResource), TrackingUpdateWrapper(resources.ProcedureJavascript, UpdateProcedure("JAVASCRIPT", ReadContextProcedureJavascript))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ProcedureJavascriptResource), TrackingDeleteWrapper(resources.ProcedureJavascript, DeleteProcedure)),
 		Description:   "Resource used to manage javascript procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedureJavascript, customdiff.All(
@@ -40,7 +41,7 @@ func ProcedureJavascript() *schema.Resource {
 
 		Schema: collections.MergeMaps(javascriptProcedureSchema, procedureParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.ProcedureJavascript, ImportProcedure),
 		},
 	}
 }
@@ -70,6 +71,7 @@ func CreateContextProcedureJavascript(ctx context.Context, d *schema.ResourceDat
 	errs := errors.Join(
 		booleanStringAttributeCreateBuilder(d, "is_secure", request.WithSecure),
 		attributeMappedValueCreateBuilder[string](d, "null_input_behavior", request.WithNullInputBehavior, sdk.ToNullInputBehavior),
+		attributeMappedValueCreateBuilder[string](d, "execute_as", request.WithExecuteAs, sdk.ToExecuteAs),
 		stringAttributeCreateBuilder(d, "comment", request.WithComment),
 	)
 	if errs != nil {
@@ -116,6 +118,7 @@ func ReadContextProcedureJavascript(ctx context.Context, d *schema.ResourceData,
 		readFunctionOrProcedureArguments(d, allProcedureDetails.procedureDetails.NormalizedArguments),
 		d.Set("return_type", allProcedureDetails.procedureDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
+		// not reading execute_as on purpose (handled as external change to show output)
 		d.Set("comment", allProcedureDetails.procedure.Description),
 		setOptionalFromStringPtr(d, "procedure_definition", allProcedureDetails.procedureDetails.Body),
 		d.Set("procedure_language", allProcedureDetails.procedureDetails.Language),

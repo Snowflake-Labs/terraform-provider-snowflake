@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -61,7 +62,7 @@ var externalFunctionsSchema = map[string]*schema.Schema{
 
 func ExternalFunctions() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.ExternalFunctions, ReadContextExternalFunctions),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.ExternalFunctionsDatasource), TrackingReadWrapper(datasources.ExternalFunctions, ReadContextExternalFunctions)),
 		Schema:      externalFunctionsSchema,
 	}
 }

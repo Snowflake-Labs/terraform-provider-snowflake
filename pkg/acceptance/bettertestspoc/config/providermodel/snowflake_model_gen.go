@@ -9,10 +9,8 @@ import (
 )
 
 type SnowflakeModel struct {
-	Account                        tfconfig.Variable `json:"account,omitempty"`
 	AccountName                    tfconfig.Variable `json:"account_name,omitempty"`
 	Authenticator                  tfconfig.Variable `json:"authenticator,omitempty"`
-	BrowserAuth                    tfconfig.Variable `json:"browser_auth,omitempty"`
 	ClientIp                       tfconfig.Variable `json:"client_ip,omitempty"`
 	ClientRequestMfaToken          tfconfig.Variable `json:"client_request_mfa_token,omitempty"`
 	ClientStoreTemporaryCredential tfconfig.Variable `json:"client_store_temporary_credential,omitempty"`
@@ -30,12 +28,6 @@ type SnowflakeModel struct {
 	KeepSessionAlive               tfconfig.Variable `json:"keep_session_alive,omitempty"`
 	LoginTimeout                   tfconfig.Variable `json:"login_timeout,omitempty"`
 	MaxRetryCount                  tfconfig.Variable `json:"max_retry_count,omitempty"`
-	OauthAccessToken               tfconfig.Variable `json:"oauth_access_token,omitempty"`
-	OauthClientId                  tfconfig.Variable `json:"oauth_client_id,omitempty"`
-	OauthClientSecret              tfconfig.Variable `json:"oauth_client_secret,omitempty"`
-	OauthEndpoint                  tfconfig.Variable `json:"oauth_endpoint,omitempty"`
-	OauthRedirectUrl               tfconfig.Variable `json:"oauth_redirect_url,omitempty"`
-	OauthRefreshToken              tfconfig.Variable `json:"oauth_refresh_token,omitempty"`
 	OcspFailOpen                   tfconfig.Variable `json:"ocsp_fail_open,omitempty"`
 	OktaUrl                        tfconfig.Variable `json:"okta_url,omitempty"`
 	OrganizationName               tfconfig.Variable `json:"organization_name,omitempty"`
@@ -44,20 +36,17 @@ type SnowflakeModel struct {
 	PasscodeInPassword             tfconfig.Variable `json:"passcode_in_password,omitempty"`
 	Password                       tfconfig.Variable `json:"password,omitempty"`
 	Port                           tfconfig.Variable `json:"port,omitempty"`
+	PreviewFeaturesEnabled         tfconfig.Variable `json:"preview_features_enabled,omitempty"`
 	PrivateKey                     tfconfig.Variable `json:"private_key,omitempty"`
 	PrivateKeyPassphrase           tfconfig.Variable `json:"private_key_passphrase,omitempty"`
-	PrivateKeyPath                 tfconfig.Variable `json:"private_key_path,omitempty"`
 	Profile                        tfconfig.Variable `json:"profile,omitempty"`
 	Protocol                       tfconfig.Variable `json:"protocol,omitempty"`
-	Region                         tfconfig.Variable `json:"region,omitempty"`
 	RequestTimeout                 tfconfig.Variable `json:"request_timeout,omitempty"`
 	Role                           tfconfig.Variable `json:"role,omitempty"`
-	SessionParams                  tfconfig.Variable `json:"session_params,omitempty"`
 	TmpDirectoryPath               tfconfig.Variable `json:"tmp_directory_path,omitempty"`
 	Token                          tfconfig.Variable `json:"token,omitempty"`
 	TokenAccessor                  tfconfig.Variable `json:"token_accessor,omitempty"`
 	User                           tfconfig.Variable `json:"user,omitempty"`
-	Username                       tfconfig.Variable `json:"username,omitempty"`
 	ValidateDefaultParameters      tfconfig.Variable `json:"validate_default_parameters,omitempty"`
 	Warehouse                      tfconfig.Variable `json:"warehouse,omitempty"`
 
@@ -84,11 +73,6 @@ func SnowflakeProviderAlias(
 // below all the proper values //
 /////////////////////////////////
 
-func (s *SnowflakeModel) WithAccount(account string) *SnowflakeModel {
-	s.Account = tfconfig.StringVariable(account)
-	return s
-}
-
 func (s *SnowflakeModel) WithAccountName(accountName string) *SnowflakeModel {
 	s.AccountName = tfconfig.StringVariable(accountName)
 	return s
@@ -96,11 +80,6 @@ func (s *SnowflakeModel) WithAccountName(accountName string) *SnowflakeModel {
 
 func (s *SnowflakeModel) WithAuthenticator(authenticator string) *SnowflakeModel {
 	s.Authenticator = tfconfig.StringVariable(authenticator)
-	return s
-}
-
-func (s *SnowflakeModel) WithBrowserAuth(browserAuth bool) *SnowflakeModel {
-	s.BrowserAuth = tfconfig.BoolVariable(browserAuth)
 	return s
 }
 
@@ -189,36 +168,6 @@ func (s *SnowflakeModel) WithMaxRetryCount(maxRetryCount int) *SnowflakeModel {
 	return s
 }
 
-func (s *SnowflakeModel) WithOauthAccessToken(oauthAccessToken string) *SnowflakeModel {
-	s.OauthAccessToken = tfconfig.StringVariable(oauthAccessToken)
-	return s
-}
-
-func (s *SnowflakeModel) WithOauthClientId(oauthClientId string) *SnowflakeModel {
-	s.OauthClientId = tfconfig.StringVariable(oauthClientId)
-	return s
-}
-
-func (s *SnowflakeModel) WithOauthClientSecret(oauthClientSecret string) *SnowflakeModel {
-	s.OauthClientSecret = tfconfig.StringVariable(oauthClientSecret)
-	return s
-}
-
-func (s *SnowflakeModel) WithOauthEndpoint(oauthEndpoint string) *SnowflakeModel {
-	s.OauthEndpoint = tfconfig.StringVariable(oauthEndpoint)
-	return s
-}
-
-func (s *SnowflakeModel) WithOauthRedirectUrl(oauthRedirectUrl string) *SnowflakeModel {
-	s.OauthRedirectUrl = tfconfig.StringVariable(oauthRedirectUrl)
-	return s
-}
-
-func (s *SnowflakeModel) WithOauthRefreshToken(oauthRefreshToken string) *SnowflakeModel {
-	s.OauthRefreshToken = tfconfig.StringVariable(oauthRefreshToken)
-	return s
-}
-
 func (s *SnowflakeModel) WithOcspFailOpen(ocspFailOpen string) *SnowflakeModel {
 	s.OcspFailOpen = tfconfig.StringVariable(ocspFailOpen)
 	return s
@@ -256,6 +205,8 @@ func (s *SnowflakeModel) WithPort(port int) *SnowflakeModel {
 	return s
 }
 
+// preview_features_enabled attribute type is not yet supported, so WithPreviewFeaturesEnabled can't be generated
+
 func (s *SnowflakeModel) WithPrivateKey(privateKey string) *SnowflakeModel {
 	s.PrivateKey = tfconfig.StringVariable(privateKey)
 	return s
@@ -263,11 +214,6 @@ func (s *SnowflakeModel) WithPrivateKey(privateKey string) *SnowflakeModel {
 
 func (s *SnowflakeModel) WithPrivateKeyPassphrase(privateKeyPassphrase string) *SnowflakeModel {
 	s.PrivateKeyPassphrase = tfconfig.StringVariable(privateKeyPassphrase)
-	return s
-}
-
-func (s *SnowflakeModel) WithPrivateKeyPath(privateKeyPath string) *SnowflakeModel {
-	s.PrivateKeyPath = tfconfig.StringVariable(privateKeyPath)
 	return s
 }
 
@@ -281,11 +227,6 @@ func (s *SnowflakeModel) WithProtocol(protocol string) *SnowflakeModel {
 	return s
 }
 
-func (s *SnowflakeModel) WithRegion(region string) *SnowflakeModel {
-	s.Region = tfconfig.StringVariable(region)
-	return s
-}
-
 func (s *SnowflakeModel) WithRequestTimeout(requestTimeout int) *SnowflakeModel {
 	s.RequestTimeout = tfconfig.IntegerVariable(requestTimeout)
 	return s
@@ -295,8 +236,6 @@ func (s *SnowflakeModel) WithRole(role string) *SnowflakeModel {
 	s.Role = tfconfig.StringVariable(role)
 	return s
 }
-
-// session_params attribute type is not yet supported, so WithSessionParams can't be generated
 
 func (s *SnowflakeModel) WithTmpDirectoryPath(tmpDirectoryPath string) *SnowflakeModel {
 	s.TmpDirectoryPath = tfconfig.StringVariable(tmpDirectoryPath)
@@ -315,11 +254,6 @@ func (s *SnowflakeModel) WithUser(user string) *SnowflakeModel {
 	return s
 }
 
-func (s *SnowflakeModel) WithUsername(username string) *SnowflakeModel {
-	s.Username = tfconfig.StringVariable(username)
-	return s
-}
-
 func (s *SnowflakeModel) WithValidateDefaultParameters(validateDefaultParameters string) *SnowflakeModel {
 	s.ValidateDefaultParameters = tfconfig.StringVariable(validateDefaultParameters)
 	return s
@@ -334,11 +268,6 @@ func (s *SnowflakeModel) WithWarehouse(warehouse string) *SnowflakeModel {
 // below it's possible to set any value //
 //////////////////////////////////////////
 
-func (s *SnowflakeModel) WithAccountValue(value tfconfig.Variable) *SnowflakeModel {
-	s.Account = value
-	return s
-}
-
 func (s *SnowflakeModel) WithAccountNameValue(value tfconfig.Variable) *SnowflakeModel {
 	s.AccountName = value
 	return s
@@ -346,11 +275,6 @@ func (s *SnowflakeModel) WithAccountNameValue(value tfconfig.Variable) *Snowflak
 
 func (s *SnowflakeModel) WithAuthenticatorValue(value tfconfig.Variable) *SnowflakeModel {
 	s.Authenticator = value
-	return s
-}
-
-func (s *SnowflakeModel) WithBrowserAuthValue(value tfconfig.Variable) *SnowflakeModel {
-	s.BrowserAuth = value
 	return s
 }
 
@@ -439,36 +363,6 @@ func (s *SnowflakeModel) WithMaxRetryCountValue(value tfconfig.Variable) *Snowfl
 	return s
 }
 
-func (s *SnowflakeModel) WithOauthAccessTokenValue(value tfconfig.Variable) *SnowflakeModel {
-	s.OauthAccessToken = value
-	return s
-}
-
-func (s *SnowflakeModel) WithOauthClientIdValue(value tfconfig.Variable) *SnowflakeModel {
-	s.OauthClientId = value
-	return s
-}
-
-func (s *SnowflakeModel) WithOauthClientSecretValue(value tfconfig.Variable) *SnowflakeModel {
-	s.OauthClientSecret = value
-	return s
-}
-
-func (s *SnowflakeModel) WithOauthEndpointValue(value tfconfig.Variable) *SnowflakeModel {
-	s.OauthEndpoint = value
-	return s
-}
-
-func (s *SnowflakeModel) WithOauthRedirectUrlValue(value tfconfig.Variable) *SnowflakeModel {
-	s.OauthRedirectUrl = value
-	return s
-}
-
-func (s *SnowflakeModel) WithOauthRefreshTokenValue(value tfconfig.Variable) *SnowflakeModel {
-	s.OauthRefreshToken = value
-	return s
-}
-
 func (s *SnowflakeModel) WithOcspFailOpenValue(value tfconfig.Variable) *SnowflakeModel {
 	s.OcspFailOpen = value
 	return s
@@ -509,6 +403,11 @@ func (s *SnowflakeModel) WithPortValue(value tfconfig.Variable) *SnowflakeModel 
 	return s
 }
 
+func (s *SnowflakeModel) WithPreviewFeaturesEnabledValue(value tfconfig.Variable) *SnowflakeModel {
+	s.PreviewFeaturesEnabled = value
+	return s
+}
+
 func (s *SnowflakeModel) WithPrivateKeyValue(value tfconfig.Variable) *SnowflakeModel {
 	s.PrivateKey = value
 	return s
@@ -516,11 +415,6 @@ func (s *SnowflakeModel) WithPrivateKeyValue(value tfconfig.Variable) *Snowflake
 
 func (s *SnowflakeModel) WithPrivateKeyPassphraseValue(value tfconfig.Variable) *SnowflakeModel {
 	s.PrivateKeyPassphrase = value
-	return s
-}
-
-func (s *SnowflakeModel) WithPrivateKeyPathValue(value tfconfig.Variable) *SnowflakeModel {
-	s.PrivateKeyPath = value
 	return s
 }
 
@@ -534,11 +428,6 @@ func (s *SnowflakeModel) WithProtocolValue(value tfconfig.Variable) *SnowflakeMo
 	return s
 }
 
-func (s *SnowflakeModel) WithRegionValue(value tfconfig.Variable) *SnowflakeModel {
-	s.Region = value
-	return s
-}
-
 func (s *SnowflakeModel) WithRequestTimeoutValue(value tfconfig.Variable) *SnowflakeModel {
 	s.RequestTimeout = value
 	return s
@@ -546,11 +435,6 @@ func (s *SnowflakeModel) WithRequestTimeoutValue(value tfconfig.Variable) *Snowf
 
 func (s *SnowflakeModel) WithRoleValue(value tfconfig.Variable) *SnowflakeModel {
 	s.Role = value
-	return s
-}
-
-func (s *SnowflakeModel) WithSessionParamsValue(value tfconfig.Variable) *SnowflakeModel {
-	s.SessionParams = value
 	return s
 }
 
@@ -571,11 +455,6 @@ func (s *SnowflakeModel) WithTokenAccessorValue(value tfconfig.Variable) *Snowfl
 
 func (s *SnowflakeModel) WithUserValue(value tfconfig.Variable) *SnowflakeModel {
 	s.User = value
-	return s
-}
-
-func (s *SnowflakeModel) WithUsernameValue(value tfconfig.Variable) *SnowflakeModel {
-	s.Username = value
 	return s
 }
 

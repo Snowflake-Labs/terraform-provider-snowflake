@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -73,7 +74,7 @@ var systemGetPrivateLinkConfigSchema = map[string]*schema.Schema{
 
 func SystemGetPrivateLinkConfig() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.SystemGetPrivateLinkConfig, ReadSystemGetPrivateLinkConfig),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.SystemGetPrivateLinkConfigDatasource), TrackingReadWrapper(datasources.SystemGetPrivateLinkConfig, ReadSystemGetPrivateLinkConfig)),
 		Schema:      systemGetPrivateLinkConfigSchema,
 	}
 }

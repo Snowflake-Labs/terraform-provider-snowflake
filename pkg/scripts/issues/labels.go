@@ -18,6 +18,7 @@ var RepositoryLabels = []string{
 	"resource:database_role",
 	"resource:dynamic_table",
 	"resource:email_notification_integration",
+	"resource:execute",
 	"resource:external_function",
 	"resource:external_oauth_integration",
 	"resource:external_table",

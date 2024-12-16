@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
@@ -60,7 +61,7 @@ var stagesSchema = map[string]*schema.Schema{
 
 func Stages() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.Stages, ReadStages),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.StagesDatasource), TrackingReadWrapper(datasources.Stages, ReadStages)),
 		Schema:      stagesSchema,
 	}
 }

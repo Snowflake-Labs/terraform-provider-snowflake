@@ -11,11 +11,10 @@ resource "snowflake_schema" "test" {
   database = snowflake_database.test.name
 }
 
-resource "snowflake_procedure" "test" {
+resource "snowflake_procedure_javascript" "test" {
   name     = var.procedure_name
   database = snowflake_database.test.name
   schema   = snowflake_schema.test.name
-  language = "JAVASCRIPT"
   arguments {
     name = "ARG1"
     type = "FLOAT"
@@ -34,6 +33,6 @@ resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_account_role.test.name
   on {
     object_type = "PROCEDURE"
-    object_name = snowflake_procedure.test.fully_qualified_name
+    object_name = snowflake_procedure_javascript.test.fully_qualified_name
   }
 }

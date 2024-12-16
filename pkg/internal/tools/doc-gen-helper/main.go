@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -72,25 +71,22 @@ func main() {
 		}
 	}
 
-	var deprecatedResourcesBuffer bytes.Buffer
-	printTo(&deprecatedResourcesBuffer, DeprecatedResourcesTemplate, DeprecatedResourcesContext{deprecatedResources})
-
-	var deprecatedDatasourcesBuffer bytes.Buffer
-	printTo(&deprecatedDatasourcesBuffer, DeprecatedDatasourcesTemplate, DeprecatedDatasourcesContext{deprecatedDatasources})
-
-	err := os.WriteFile(filepath.Join(additionalExamplesPath, deprecatedResourcesFilename), deprecatedResourcesBuffer.Bytes(), 0o600)
+	err := printTo(DeprecatedResourcesTemplate, DeprecatedResourcesContext{deprecatedResources}, filepath.Join(additionalExamplesPath, deprecatedResourcesFilename))
 	if err != nil {
-		log.Panicln(err)
+		log.Fatal(err)
 	}
-	err = os.WriteFile(filepath.Join(additionalExamplesPath, deprecatedDatasourcesFilename), deprecatedDatasourcesBuffer.Bytes(), 0o600)
+
+	err = printTo(DeprecatedDatasourcesTemplate, DeprecatedDatasourcesContext{deprecatedDatasources}, filepath.Join(additionalExamplesPath, deprecatedDatasourcesFilename))
 	if err != nil {
-		log.Panicln(err)
+		log.Fatal(err)
 	}
 }
 
-func printTo(writer io.Writer, template *template.Template, model any) {
-	err := template.Execute(writer, model)
+func printTo(template *template.Template, model any, filepath string) error {
+	var writer bytes.Buffer
+	err := template.Execute(&writer, model)
 	if err != nil {
-		log.Panicln(err)
+		return err
 	}
+	return os.WriteFile(filepath, writer.Bytes(), 0o600)
 }

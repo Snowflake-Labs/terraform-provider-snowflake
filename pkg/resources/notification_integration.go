@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -154,10 +155,10 @@ var notificationIntegrationSchema = map[string]*schema.Schema{
 // NotificationIntegration returns a pointer to the resource representing a notification integration.
 func NotificationIntegration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.NotificationIntegration, CreateNotificationIntegration),
-		ReadContext:   TrackingReadWrapper(resources.NotificationIntegration, ReadNotificationIntegration),
-		UpdateContext: TrackingUpdateWrapper(resources.NotificationIntegration, UpdateNotificationIntegration),
-		DeleteContext: TrackingDeleteWrapper(resources.NotificationIntegration, DeleteNotificationIntegration),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.NotificationIntegrationResource), TrackingCreateWrapper(resources.NotificationIntegration, CreateNotificationIntegration)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.NotificationIntegrationResource), TrackingReadWrapper(resources.NotificationIntegration, ReadNotificationIntegration)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.NotificationIntegrationResource), TrackingUpdateWrapper(resources.NotificationIntegration, UpdateNotificationIntegration)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.NotificationIntegrationResource), TrackingDeleteWrapper(resources.NotificationIntegration, DeleteNotificationIntegration)),
 
 		Schema: notificationIntegrationSchema,
 		Importer: &schema.ResourceImporter{

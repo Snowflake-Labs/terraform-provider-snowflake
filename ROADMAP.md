@@ -1,5 +1,17 @@
 # Our roadmap
 
+## (13.12.2024) V1 release update
+
+We have released a long-awaited [v1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/releases/tag/v1.0.0). A few things to know now:
+- Together with v1.0.0 we have also released "the last" 0.x.x version - 0.100.0. v1.0.0 is built on top of that; it removed the [deprecated resources](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/ab015e8cf6f4db762b4043e8bfce2a010b623602/v1-preparations/LIST_OF_REMOVED_RESOURCES_FOR_V1.md) and attributes mostly, so if you are using one of the latest 0.x versions, you should be really close to v1.
+- Check the migration guides for [v1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v01000--v100) and [v0.100.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0990--v01000).
+- The provider entered a stable version from the engineering point of view. It will prohibit us from introducing breaking changes in stable resources without bumping the major version.
+- Resources and data sources in our provider now have two states, [stable](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/ab015e8cf6f4db762b4043e8bfce2a010b623602/v1-preparations/LIST_OF_STABLE_RESOURCES_FOR_V1.md) and [preview](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/ab015e8cf6f4db762b4043e8bfce2a010b623602/v1-preparations/LIST_OF_PREVIEW_FEATURES_FOR_V1.md). To allow the given preview feature you have to explicitly set it in [the provider config](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#preview_features_enabled-1). Please familiarize yourselves with the limitations of the preview feature before enabling it (most notably, preview features may require migrations between minor versions).
+- Our current main goal is to help with migration and address all the incoming v1 issues.
+- Keep in mind that V1 does not mean we have an official Snowflake support (check our new disclaimer in [README](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#snowflake-terraform-provider)).
+- Our next milestone is reaching GA, which requires mostly procedural steps. Before that, no big changes are planned for the provider.
+- Besides the GA, we want to focus mostly on stabilizing the preview resources. We will share their current prioritization in January. The main ones for now are functions, procedures, and tables.
+
 ## (25.10.2024) Project state overview
 
 ### Goals

@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,10 +21,10 @@ import (
 
 func FunctionJavascript() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.FunctionJavascript, CreateContextFunctionJavascript),
-		ReadContext:   TrackingReadWrapper(resources.FunctionJavascript, ReadContextFunctionJavascript),
-		UpdateContext: TrackingUpdateWrapper(resources.FunctionJavascript, UpdateFunction("JAVASCRIPT", ReadContextFunctionJavascript)),
-		DeleteContext: TrackingDeleteWrapper(resources.FunctionJavascript, DeleteFunction),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.FunctionJavascriptResource), TrackingCreateWrapper(resources.FunctionJavascript, CreateContextFunctionJavascript)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.FunctionJavascriptResource), TrackingReadWrapper(resources.FunctionJavascript, ReadContextFunctionJavascript)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.FunctionJavascriptResource), TrackingUpdateWrapper(resources.FunctionJavascript, UpdateFunction("JAVASCRIPT", ReadContextFunctionJavascript))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.FunctionJavascriptResource), TrackingDeleteWrapper(resources.FunctionJavascript, DeleteFunction)),
 		Description:   "Resource used to manage javascript function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionJavascript, customdiff.All(
@@ -40,7 +41,7 @@ func FunctionJavascript() *schema.Resource {
 
 		Schema: collections.MergeMaps(javascriptFunctionSchema, functionParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.FunctionJavascript, ImportFunction),
 		},
 	}
 }

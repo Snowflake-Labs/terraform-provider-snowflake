@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -215,5 +217,19 @@ func TrackingReadWrapper(datasourceName datasources.Datasource, readImplementati
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		ctx = tracking.NewContext(ctx, tracking.NewVersionedDatasourceMetadata(datasourceName))
 		return readImplementation(ctx, d, meta)
+	}
+}
+
+func PreviewFeatureReadWrapper(featureRaw string, readFunc schema.ReadContextFunc) schema.ReadContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+		enabled := meta.(*provider.Context).EnabledFeatures
+		feature, err := previewfeatures.StringToFeature(featureRaw)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err := previewfeatures.EnsurePreviewFeatureEnabled(feature, enabled); err != nil {
+			return diag.FromErr(err)
+		}
+		return readFunc(ctx, d, meta)
 	}
 }

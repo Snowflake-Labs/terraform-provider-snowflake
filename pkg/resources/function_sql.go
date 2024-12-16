@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,10 +21,10 @@ import (
 
 func FunctionSql() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.FunctionSql, CreateContextFunctionSql),
-		ReadContext:   TrackingReadWrapper(resources.FunctionSql, ReadContextFunctionSql),
-		UpdateContext: TrackingUpdateWrapper(resources.FunctionSql, UpdateFunction("SQL", ReadContextFunctionSql)),
-		DeleteContext: TrackingDeleteWrapper(resources.FunctionSql, DeleteFunction),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.FunctionSqlResource), TrackingCreateWrapper(resources.FunctionSql, CreateContextFunctionSql)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.FunctionSqlResource), TrackingReadWrapper(resources.FunctionSql, ReadContextFunctionSql)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.FunctionSqlResource), TrackingUpdateWrapper(resources.FunctionSql, UpdateFunction("SQL", ReadContextFunctionSql))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.FunctionSqlResource), TrackingDeleteWrapper(resources.FunctionSql, DeleteFunction)),
 		Description:   "Resource used to manage sql function objects. For more information, check [function documentation](https://docs.snowflake.com/en/sql-reference/sql/create-function).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.FunctionSql, customdiff.All(
@@ -40,7 +41,7 @@ func FunctionSql() *schema.Resource {
 
 		Schema: collections.MergeMaps(sqlFunctionSchema, functionParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.FunctionSql, ImportFunction),
 		},
 	}
 }
@@ -114,7 +115,6 @@ func ReadContextFunctionSql(ctx context.Context, d *schema.ResourceData, meta an
 		// not reading is_secure on purpose (handled as external change to show output)
 		readFunctionOrProcedureArguments(d, allFunctionDetails.functionDetails.NormalizedArguments),
 		d.Set("return_type", allFunctionDetails.functionDetails.ReturnDataType.ToSql()),
-		// not reading null_input_behavior on purpose (handled as external change to show output)
 		// not reading return_results_behavior on purpose (handled as external change to show output)
 		d.Set("comment", allFunctionDetails.function.Description),
 		setRequiredFromStringPtr(d, "handler", allFunctionDetails.functionDetails.Handler),

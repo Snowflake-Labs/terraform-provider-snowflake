@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,10 +21,10 @@ import (
 
 func ProcedureSql() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ProcedureSql, CreateContextProcedureSql),
-		ReadContext:   TrackingReadWrapper(resources.ProcedureSql, ReadContextProcedureSql),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedureSql, UpdateProcedure("SQL", ReadContextProcedureSql)),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedureSql, DeleteProcedure),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ProcedureSqlResource), TrackingCreateWrapper(resources.ProcedureSql, CreateContextProcedureSql)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ProcedureSqlResource), TrackingReadWrapper(resources.ProcedureSql, ReadContextProcedureSql)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ProcedureSqlResource), TrackingUpdateWrapper(resources.ProcedureSql, UpdateProcedure("SQL", ReadContextProcedureSql))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ProcedureSqlResource), TrackingDeleteWrapper(resources.ProcedureSql, DeleteProcedure)),
 		Description:   "Resource used to manage sql procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedureSql, customdiff.All(
@@ -40,7 +41,7 @@ func ProcedureSql() *schema.Resource {
 
 		Schema: collections.MergeMaps(sqlProcedureSchema, procedureParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.ProcedureSql, ImportProcedure),
 		},
 	}
 }
@@ -69,6 +70,7 @@ func CreateContextProcedureSql(ctx context.Context, d *schema.ResourceData, meta
 	errs := errors.Join(
 		booleanStringAttributeCreateBuilder(d, "is_secure", request.WithSecure),
 		attributeMappedValueCreateBuilder[string](d, "null_input_behavior", request.WithNullInputBehavior, sdk.ToNullInputBehavior),
+		attributeMappedValueCreateBuilder[string](d, "execute_as", request.WithExecuteAs, sdk.ToExecuteAs),
 		stringAttributeCreateBuilder(d, "comment", request.WithComment),
 	)
 	if errs != nil {
@@ -115,6 +117,7 @@ func ReadContextProcedureSql(ctx context.Context, d *schema.ResourceData, meta a
 		readFunctionOrProcedureArguments(d, allProcedureDetails.procedureDetails.NormalizedArguments),
 		d.Set("return_type", allProcedureDetails.procedureDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
+		// not reading execute_as on purpose (handled as external change to show output)
 		d.Set("comment", allProcedureDetails.procedure.Description),
 		setOptionalFromStringPtr(d, "procedure_definition", allProcedureDetails.procedureDetails.Body),
 		d.Set("procedure_language", allProcedureDetails.procedureDetails.Language),

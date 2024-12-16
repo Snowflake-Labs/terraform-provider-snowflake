@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -21,10 +22,10 @@ import (
 
 func ProcedureJava() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ProcedureJava, CreateContextProcedureJava),
-		ReadContext:   TrackingReadWrapper(resources.ProcedureJava, ReadContextProcedureJava),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedureJava, UpdateProcedure("JAVA", ReadContextProcedureJava)),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedureJava, DeleteProcedure),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ProcedureJavaResource), TrackingCreateWrapper(resources.ProcedureJava, CreateContextProcedureJava)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ProcedureJavaResource), TrackingReadWrapper(resources.ProcedureJava, ReadContextProcedureJava)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ProcedureJavaResource), TrackingUpdateWrapper(resources.ProcedureJava, UpdateProcedure("JAVA", ReadContextProcedureJava))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ProcedureJavaResource), TrackingDeleteWrapper(resources.ProcedureJava, DeleteProcedure)),
 		Description:   "Resource used to manage java procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedureJava, customdiff.All(
@@ -41,7 +42,7 @@ func ProcedureJava() *schema.Resource {
 
 		Schema: collections.MergeMaps(javaProcedureSchema, procedureParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.ProcedureJava, ImportProcedure),
 		},
 	}
 }
@@ -77,6 +78,7 @@ func CreateContextProcedureJava(ctx context.Context, d *schema.ResourceData, met
 	errs := errors.Join(
 		booleanStringAttributeCreateBuilder(d, "is_secure", request.WithSecure),
 		attributeMappedValueCreateBuilder[string](d, "null_input_behavior", request.WithNullInputBehavior, sdk.ToNullInputBehavior),
+		attributeMappedValueCreateBuilder[string](d, "execute_as", request.WithExecuteAs, sdk.ToExecuteAs),
 		stringAttributeCreateBuilder(d, "comment", request.WithComment),
 		setProcedureImportsInBuilder(d, request.WithImports),
 		setExternalAccessIntegrationsInBuilder(d, request.WithExternalAccessIntegrations),
@@ -128,6 +130,7 @@ func ReadContextProcedureJava(ctx context.Context, d *schema.ResourceData, meta 
 		readFunctionOrProcedureArguments(d, allProcedureDetails.procedureDetails.NormalizedArguments),
 		d.Set("return_type", allProcedureDetails.procedureDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
+		// not reading execute_as on purpose (handled as external change to show output)
 		setRequiredFromStringPtr(d, "runtime_version", allProcedureDetails.procedureDetails.RuntimeVersion),
 		d.Set("comment", allProcedureDetails.procedure.Description),
 		readFunctionOrProcedureImports(d, allProcedureDetails.procedureDetails.NormalizedImports),

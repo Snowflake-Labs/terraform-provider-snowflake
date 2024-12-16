@@ -16,6 +16,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -26,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-// TODO [SNOW-1348103]: test import
 // TODO [SNOW-1348103]: test external changes
 // TODO [SNOW-1348103]: test changes of attributes separately
 
@@ -74,6 +74,20 @@ func TestAcc_ProcedureJava_InlineBasic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "arguments.0.arg_name", argName)),
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "arguments.0.arg_data_type", dataType.ToSql())),
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "arguments.0.arg_default_value", "")),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:            procedureModel.ResourceReference(),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"is_secure", "arguments.0.arg_data_type", "null_input_behavior", "execute_as"},
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedProcedureJavaResource(t, id.FullyQualifiedName()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_name", argName)),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_data_type", "VARCHAR(16777216)")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_default_value", "")),
 				),
 			},
 			// RENAME
@@ -220,6 +234,9 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 		}).
 		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName).
 		WithRuntimeVersion("11").
+		WithIsSecure("false").
+		WithNullInputBehavior(string(sdk.NullInputBehaviorCalledOnNullInput)).
+		WithExecuteAs(string(sdk.ExecuteAsCaller)).
 		WithComment("some comment")
 
 	procedureModelUpdateWithoutRecreation := model.ProcedureJavaBasicInline("w", id, dataType, handler, definition).
@@ -236,6 +253,9 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 		}).
 		WithTargetPathParts(stage.ID().FullyQualifiedName(), jarName).
 		WithRuntimeVersion("11").
+		WithIsSecure("false").
+		WithNullInputBehavior(string(sdk.NullInputBehaviorCalledOnNullInput)).
+		WithExecuteAs(string(sdk.ExecuteAsOwner)).
 		WithComment("some other comment")
 
 	resource.Test(t, resource.TestCase{
@@ -252,12 +272,13 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()).
-						HasIsSecureString(r.BooleanDefault).
+						HasIsSecureString(r.BooleanFalse).
 						HasImportsLength(2).
 						HasRuntimeVersionString("11").
 						HasProcedureDefinitionString(definition).
 						HasCommentString("some comment").
 						HasProcedureLanguageString("JAVA").
+						HasExecuteAsString(string(sdk.ExecuteAsCaller)).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "target_path.0.stage_location", stage.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "target_path.0.path_on_stage", jarName)),
@@ -267,6 +288,20 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "packages.0", "com.snowflake:telemetry:0.1.0")),
 					resourceshowoutputassert.ProcedureShowOutput(t, procedureModel.ResourceReference()).
 						HasIsSecure(false),
+				),
+			},
+			// IMPORT
+			{
+				ResourceName:            procedureModel.ResourceReference(),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"arguments.0.arg_data_type"},
+				ImportStateCheck: assert.AssertThatImport(t,
+					resourceassert.ImportedProcedureJavaResource(t, id.FullyQualifiedName()).
+						HasFullyQualifiedNameString(id.FullyQualifiedName()),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_name", argName)),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_data_type", "VARCHAR(16777216)")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_default_value", "")),
 				),
 			},
 			// UPDATE WITHOUT RECREATION
@@ -280,12 +315,13 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 				Check: assert.AssertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModelUpdateWithoutRecreation.ResourceReference()).
 						HasNameString(id.Name()).
-						HasIsSecureString(r.BooleanDefault).
+						HasIsSecureString(r.BooleanFalse).
 						HasImportsLength(2).
 						HasRuntimeVersionString("11").
 						HasProcedureDefinitionString(definition).
 						HasCommentString("some other comment").
 						HasProcedureLanguageString("JAVA").
+						HasExecuteAsString(string(sdk.ExecuteAsOwner)).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "target_path.0.stage_location", stage.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(procedureModelUpdateWithoutRecreation.ResourceReference(), "target_path.0.path_on_stage", jarName)),

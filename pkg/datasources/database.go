@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -57,7 +58,7 @@ var databaseSchema = map[string]*schema.Schema{
 // Database the Snowflake Database resource.
 func Database() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: TrackingReadWrapper(datasources.Database, ReadDatabase),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.DatabaseDatasource), TrackingReadWrapper(datasources.Database, ReadDatabase)),
 		Schema:      databaseSchema,
 	}
 }

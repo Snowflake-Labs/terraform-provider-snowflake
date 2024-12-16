@@ -21,13 +21,15 @@ import (
 func TestLoadConfigFile(t *testing.T) {
 	c := `
 	[default]
-	account='TEST_ACCOUNT'
+	accountname='TEST_ACCOUNT'
+	organizationname='TEST_ORG'
 	user='TEST_USER'
 	password='abcd1234'
 	role='ACCOUNTADMIN'
 
 	[securityadmin]
-	account='TEST_ACCOUNT'
+	accountname='TEST_ACCOUNT'
+	organizationname='TEST_ORG'
 	user='TEST_USER'
 	password='abcd1234'
 	role='SECURITYADMIN'
@@ -36,14 +38,44 @@ func TestLoadConfigFile(t *testing.T) {
 
 	m, err := loadConfigFile(configPath)
 	require.NoError(t, err)
-	assert.Equal(t, "TEST_ACCOUNT", *m["default"].Account)
+	assert.Equal(t, "TEST_ACCOUNT", *m["default"].AccountName)
+	assert.Equal(t, "TEST_ORG", *m["default"].OrganizationName)
 	assert.Equal(t, "TEST_USER", *m["default"].User)
 	assert.Equal(t, "abcd1234", *m["default"].Password)
 	assert.Equal(t, "ACCOUNTADMIN", *m["default"].Role)
-	assert.Equal(t, "TEST_ACCOUNT", *m["securityadmin"].Account)
+	assert.Equal(t, "TEST_ACCOUNT", *m["securityadmin"].AccountName)
+	assert.Equal(t, "TEST_ORG", *m["securityadmin"].OrganizationName)
 	assert.Equal(t, "TEST_USER", *m["securityadmin"].User)
 	assert.Equal(t, "abcd1234", *m["securityadmin"].Password)
 	assert.Equal(t, "SECURITYADMIN", *m["securityadmin"].Role)
+}
+
+func TestLoadConfigFileWithUnknownFields(t *testing.T) {
+	c := `
+	[default]
+	unknown='TEST_ACCOUNT'
+	accountname='TEST_ACCOUNT'
+	`
+	configPath := testhelpers.TestFile(t, "config", []byte(c))
+
+	m, err := loadConfigFile(configPath)
+	require.NoError(t, err)
+	assert.Equal(t, map[string]ConfigDTO{
+		"default": {
+			AccountName: Pointer("TEST_ACCOUNT"),
+		},
+	}, m)
+}
+
+func TestLoadConfigFileWithInvalidFieldValue(t *testing.T) {
+	c := `
+	[default]
+	accountname=42
+	`
+	configPath := testhelpers.TestFile(t, "config", []byte(c))
+
+	_, err := loadConfigFile(configPath)
+	require.ErrorContains(t, err, "toml: cannot decode TOML integer into struct field sdk.ConfigDTO.AccountName of type *string")
 }
 
 func TestProfileConfig(t *testing.T) {
@@ -72,7 +104,7 @@ func TestProfileConfig(t *testing.T) {
 	jwtexpiretimeout=50
 	externalbrowsertimeout=60
 	maxretrycount=1
-	authenticator='jwt'
+	authenticator='SNOWFLAKE_JWT'
 	insecuremode=true
 	ocspfailopen=true
 	token='token'
@@ -293,7 +325,6 @@ func Test_ToAuthenticationType(t *testing.T) {
 		{input: "OAUTH", want: gosnowflake.AuthTypeOAuth},
 		{input: "EXTERNALBROWSER", want: gosnowflake.AuthTypeExternalBrowser},
 		{input: "OKTA", want: gosnowflake.AuthTypeOkta},
-		{input: "JWT", want: gosnowflake.AuthTypeJwt},
 		{input: "SNOWFLAKE_JWT", want: gosnowflake.AuthTypeJwt},
 		{input: "TOKENACCESSOR", want: gosnowflake.AuthTypeTokenAccessor},
 		{input: "USERNAMEPASSWORDMFA", want: gosnowflake.AuthTypeUsernamePasswordMFA},

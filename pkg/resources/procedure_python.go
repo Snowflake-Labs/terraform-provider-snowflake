@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -21,10 +22,10 @@ import (
 
 func ProcedurePython() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ProcedurePython, CreateContextProcedurePython),
-		ReadContext:   TrackingReadWrapper(resources.ProcedurePython, ReadContextProcedurePython),
-		UpdateContext: TrackingUpdateWrapper(resources.ProcedurePython, UpdateProcedure("PYTHON", ReadContextProcedurePython)),
-		DeleteContext: TrackingDeleteWrapper(resources.ProcedurePython, DeleteProcedure),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ProcedurePythonResource), TrackingCreateWrapper(resources.ProcedurePython, CreateContextProcedurePython)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ProcedurePythonResource), TrackingReadWrapper(resources.ProcedurePython, ReadContextProcedurePython)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ProcedurePythonResource), TrackingUpdateWrapper(resources.ProcedurePython, UpdateProcedure("PYTHON", ReadContextProcedurePython))),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ProcedurePythonResource), TrackingDeleteWrapper(resources.ProcedurePython, DeleteProcedure)),
 		Description:   "Resource used to manage python procedure objects. For more information, check [procedure documentation](https://docs.snowflake.com/en/sql-reference/sql/create-procedure).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ProcedurePython, customdiff.All(
@@ -41,7 +42,7 @@ func ProcedurePython() *schema.Resource {
 
 		Schema: collections.MergeMaps(pythonProcedureSchema, procedureParametersSchema),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: TrackingImportWrapper(resources.ProcedurePython, ImportProcedure),
 		},
 	}
 }
@@ -77,6 +78,7 @@ func CreateContextProcedurePython(ctx context.Context, d *schema.ResourceData, m
 	errs := errors.Join(
 		booleanStringAttributeCreateBuilder(d, "is_secure", request.WithSecure),
 		attributeMappedValueCreateBuilder[string](d, "null_input_behavior", request.WithNullInputBehavior, sdk.ToNullInputBehavior),
+		attributeMappedValueCreateBuilder[string](d, "execute_as", request.WithExecuteAs, sdk.ToExecuteAs),
 		stringAttributeCreateBuilder(d, "comment", request.WithComment),
 		setProcedureImportsInBuilder(d, request.WithImports),
 		setExternalAccessIntegrationsInBuilder(d, request.WithExternalAccessIntegrations),
@@ -127,6 +129,7 @@ func ReadContextProcedurePython(ctx context.Context, d *schema.ResourceData, met
 		readFunctionOrProcedureArguments(d, allProcedureDetails.procedureDetails.NormalizedArguments),
 		d.Set("return_type", allProcedureDetails.procedureDetails.ReturnDataType.ToSql()),
 		// not reading null_input_behavior on purpose (handled as external change to show output)
+		// not reading execute_as on purpose (handled as external change to show output)
 		setRequiredFromStringPtr(d, "runtime_version", allProcedureDetails.procedureDetails.RuntimeVersion),
 		d.Set("comment", allProcedureDetails.procedure.Description),
 		readFunctionOrProcedureImports(d, allProcedureDetails.procedureDetails.NormalizedImports),

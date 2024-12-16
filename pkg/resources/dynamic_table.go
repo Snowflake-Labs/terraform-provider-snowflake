@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -166,10 +167,10 @@ var dynamicTableSchema = map[string]*schema.Schema{
 // DynamicTable returns a pointer to the resource representing a dynamic table.
 func DynamicTable() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.DynamicTable, CreateDynamicTable),
-		ReadContext:   TrackingReadWrapper(resources.DynamicTable, ReadDynamicTable),
-		UpdateContext: TrackingUpdateWrapper(resources.DynamicTable, UpdateDynamicTable),
-		DeleteContext: TrackingDeleteWrapper(resources.DynamicTable, DeleteDynamicTable),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.DynamicTableResource), TrackingCreateWrapper(resources.DynamicTable, CreateDynamicTable)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.DynamicTableResource), TrackingReadWrapper(resources.DynamicTable, ReadDynamicTable)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.DynamicTableResource), TrackingUpdateWrapper(resources.DynamicTable, UpdateDynamicTable)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.DynamicTableResource), TrackingDeleteWrapper(resources.DynamicTable, DeleteDynamicTable)),
 
 		Schema: dynamicTableSchema,
 		Importer: &schema.ResourceImporter{

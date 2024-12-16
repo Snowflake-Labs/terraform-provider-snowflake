@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -124,10 +125,10 @@ var apiIntegrationSchema = map[string]*schema.Schema{
 // APIIntegration returns a pointer to the resource representing an api integration.
 func APIIntegration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: TrackingCreateWrapper(resources.ApiIntegration, CreateAPIIntegration),
-		ReadContext:   TrackingReadWrapper(resources.ApiIntegration, ReadAPIIntegration),
-		UpdateContext: TrackingUpdateWrapper(resources.ApiIntegration, UpdateAPIIntegration),
-		DeleteContext: TrackingDeleteWrapper(resources.ApiIntegration, DeleteAPIIntegration),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.ApiIntegrationResource), TrackingCreateWrapper(resources.ApiIntegration, CreateAPIIntegration)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.ApiIntegrationResource), TrackingReadWrapper(resources.ApiIntegration, ReadAPIIntegration)),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.ApiIntegrationResource), TrackingUpdateWrapper(resources.ApiIntegration, UpdateAPIIntegration)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.ApiIntegrationResource), TrackingDeleteWrapper(resources.ApiIntegration, DeleteAPIIntegration)),
 
 		Schema: apiIntegrationSchema,
 		Importer: &schema.ResourceImporter{
