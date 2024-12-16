@@ -241,8 +241,8 @@ var SecretsDef = g.NewInterface(
 		SQL("SECRETS").
 		OptionalLike().
 		OptionalExtendedIn(),
-    g.ObjectHelperMethodID,
-    g.ObjectHelperMethodObjectType,
+	g.ResourceIDHelperMethod,
+	g.ResourceObjectTypeHelperMethod,
 ).ShowByIdOperationWithFiltering(
 	g.ShowByIDLikeFiltering,
 	g.ShowByIDExtendedInFiltering,

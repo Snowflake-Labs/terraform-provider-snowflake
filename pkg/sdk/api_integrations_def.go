@@ -150,6 +150,7 @@ var ApiIntegrationsDef = g.NewInterface(
 			Show().
 			SQL("API INTEGRATIONS").
 			OptionalLike(),
+		g.ResourceIDHelperMethod,
 	).
 	ShowByIdOperationWithFiltering(
 		g.ShowByIDLikeFiltering,
