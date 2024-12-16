@@ -81,9 +81,9 @@ func (s *Operation) withHelperStructs(helperStructs ...*Field) *Operation {
 	return s
 }
 
-func (i *Operation) withObjectInterface(objectInterface *Interface) *Operation {
-	i.ObjectInterface = objectInterface
-	return i
+func (s *Operation) withObjectInterface(objectInterface *Interface) *Operation {
+	s.ObjectInterface = objectInterface
+	return s
 }
 
 func addShowMapping(op *Operation, from, to *Field) {
