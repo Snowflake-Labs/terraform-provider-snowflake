@@ -61,6 +61,11 @@ func newIDHelperMethod(structName string, objectIdentifier objectIdentifier) *He
 	return newHelperMethod("ID", structName, returnValue, string(objectIdentifier))
 }
 
+func newObjectTypeHelperMethod(structName string) *HelperMethod {
+	returnValue := fmt.Sprintf("ObjectType%v", structName)
+	return newHelperMethod("ObjectType", structName, returnValue, "ObjectType")
+}
+
 func containsFieldNames(fields []*Field, names ...string) bool {
 	fieldNames := map[string]any{}
 	for _, field := range fields {
@@ -85,15 +90,10 @@ func hasRequiredFieldsForIDMethod(operations []*Operation, structName string, re
 				return containsFieldNames(field.Fields, requiredFields...)
 			}
 		}
-		log.Printf("WARNING: Struct '%s' not found in '%s' operation. Couldn't generate ID() helper method.", structName, OperationKindShow)
+		log.Printf("WARNING: Struct: '%s' not found in '%s' operation. Couldn't generate ID() helper method.", structName, OperationKindShow)
 	}
-	log.Printf("WARNING: '%s' not found. Couldn't generate ID() helper method.", OperationKindShow)
+	log.Printf("WARNING: Operation: '%s' not found. Couldn't generate ID() helper method.", OperationKindShow)
 	return false
-}
-
-func newObjectTypeHelperMethod(structName string) *HelperMethod {
-	returnValue := fmt.Sprintf("ObjectType%v", structName)
-	return newHelperMethod("ObjectType", structName, returnValue, "ObjectType")
 }
 
 // HelperMethodID adds a helper method "ID()" to the interface file that returns the ObjectIdentifier of the object
