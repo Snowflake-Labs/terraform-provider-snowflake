@@ -68,7 +68,7 @@ func ReadMaterializedViews(ctx context.Context, d *schema.ResourceData, meta any
 
 	schemaId := sdk.NewDatabaseObjectIdentifier(databaseName, schemaName)
 	extractedMaterializedViews, err := client.MaterializedViews.Show(ctx, sdk.NewShowMaterializedViewRequest().WithIn(
-		&sdk.In{Schema: schemaId},
+		sdk.In{Schema: schemaId},
 	))
 	if err != nil {
 		log.Printf("[DEBUG] failed when searching materialized views in schema (%s), err = %s", schemaId.FullyQualifiedName(), err.Error())

@@ -119,9 +119,9 @@ func (v *securityIntegrations) Show(ctx context.Context, request *ShowSecurityIn
 }
 
 func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error) {
-	securityIntegrations, err := v.Show(ctx, NewShowSecurityIntegrationRequest().WithLike(Like{
-		Pattern: String(id.Name()),
-	}))
+	request := NewShowSecurityIntegrationRequest().
+		WithLike(Like{Pattern: String(id.Name())})
+	securityIntegrations, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}

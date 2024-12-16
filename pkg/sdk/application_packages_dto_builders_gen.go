@@ -275,8 +275,8 @@ func NewShowApplicationPackageRequest() *ShowApplicationPackageRequest {
 	return &ShowApplicationPackageRequest{}
 }
 
-func (s *ShowApplicationPackageRequest) WithLike(Like *Like) *ShowApplicationPackageRequest {
-	s.Like = Like
+func (s *ShowApplicationPackageRequest) WithLike(Like Like) *ShowApplicationPackageRequest {
+	s.Like = &Like
 	return s
 }
 

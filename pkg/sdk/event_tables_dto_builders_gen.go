@@ -74,13 +74,13 @@ func (s *ShowEventTableRequest) WithTerse(Terse *bool) *ShowEventTableRequest {
 	return s
 }
 
-func (s *ShowEventTableRequest) WithLike(Like *Like) *ShowEventTableRequest {
-	s.Like = Like
+func (s *ShowEventTableRequest) WithLike(Like Like) *ShowEventTableRequest {
+	s.Like = &Like
 	return s
 }
 
-func (s *ShowEventTableRequest) WithIn(In *In) *ShowEventTableRequest {
-	s.In = In
+func (s *ShowEventTableRequest) WithIn(In In) *ShowEventTableRequest {
+	s.In = &In
 	return s
 }
 

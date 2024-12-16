@@ -40,7 +40,9 @@ func (v *views) Show(ctx context.Context, request *ShowViewRequest) ([]View, err
 }
 
 func (v *views) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*View, error) {
-	request := NewShowViewRequest().WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).WithLike(Like{String(id.Name())})
+	request := NewShowViewRequest().
+		WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).
+		WithLike(Like{Pattern: String(id.Name())})
 	views, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err

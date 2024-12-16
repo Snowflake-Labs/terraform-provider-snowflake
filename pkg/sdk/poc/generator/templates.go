@@ -32,10 +32,6 @@ var (
 	dtoStructsTemplateContent string
 	DtoDeclTemplate, _        = template.New("dtoTemplate").Parse(dtoStructsTemplateContent)
 
-	//go:embed templates/integration_tests.tmpl
-	integrationTestTemplateContent string
-	IntegrationTestsTemplate, _    = template.New("integrationTestsTemplate").Parse(integrationTestTemplateContent)
-
 	//go:embed templates/implementation.tmpl
 	implementationTemplateContent string
 	ImplementationTemplate        *template.Template

@@ -16,10 +16,8 @@
     {{ else if eq .Name "ShowByID" }}
         func (v *{{ $impl }}) ShowByID(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error) {
             request := NewShow{{ .ObjectInterface.NameSingular }}Request()
-            {{- range .ShowByIDFiltering }}
-                {{- if not (eq .Name "NoFiltering") -}}.
-                    {{ .WithFiltering }}
-                {{- end }}
+            {{- range .ShowByIDFiltering }}.
+                {{ .WithFiltering }}
             {{- end }}
         {{ $impl }}, err := v.Show(ctx, request)
         if err != nil {
