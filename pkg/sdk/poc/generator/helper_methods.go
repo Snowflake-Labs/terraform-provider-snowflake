@@ -30,53 +30,27 @@ func identifierStringToObjectIdentifier(s string) objectIdentifier {
 	}
 }
 
-type ObjectHelperMethodKind uint
+type ResourceHelperMethodKind uint
 
 const (
-	ObjectHelperMethodID ObjectHelperMethodKind = iota
-	ObjectHelperMethodObjectType
+	ResourceIDHelperMethod ResourceHelperMethodKind = iota
+	ResourceObjectTypeHelperMethod
 )
 
-type HelperMethod struct {
+type ResourceHelperMethod struct {
 	Name        string
 	StructName  string
 	ReturnValue string
 	ReturnType  string
 }
 
-func newHelperMethod(name, structName, returnValue string, returnType string) *HelperMethod {
-	return &HelperMethod{
+func newResourceHelperMethod(name, structName, returnValue string, returnType string) *ResourceHelperMethod {
+	return &ResourceHelperMethod{
 		Name:        name,
 		StructName:  structName,
 		ReturnValue: returnValue,
 		ReturnType:  returnType,
 	}
-}
-
-func newObjectHelperMethodID(structName string, helperStructs []*Field, identifierString string) *HelperMethod {
-	objectIdentifier := identifierStringToObjectIdentifier(identifierString)
-	requiredFields, ok := requiredFieldsForIDMethodMapping[objectIdentifier]
-	if !ok {
-		log.Printf("WARNING: No required fields mapping defined for identifier %s", objectIdentifier)
-		return nil
-	}
-	if !hasRequiredFieldsForIDMethod(structName, helperStructs, requiredFields...) {
-		log.Printf("WARNING: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing one of required fields: %v.\n", structName, requiredFields)
-		return nil
-	}
-
-	var args string
-	for _, field := range requiredFields {
-		args += fmt.Sprintf("v.%v, ", field)
-	}
-
-	returnValue := fmt.Sprintf("New%v(%v)", objectIdentifier, args)
-	return newHelperMethod("ID", structName, returnValue, string(objectIdentifier))
-}
-
-func newObjectHelperMethodObjectType(structName string) *HelperMethod {
-	returnValue := fmt.Sprintf("ObjectType%v", structName)
-	return newHelperMethod("ObjectType", structName, returnValue, "ObjectType")
 }
 
 var requiredFieldsForIDMethodMapping map[objectIdentifier][]string = map[objectIdentifier][]string{
@@ -105,17 +79,41 @@ func containsFieldNames(fields []*Field, names ...string) bool {
 			return false
 		}
 	}
-
 	return true
 }
 
-func (s *Operation) withObjectHelperMethods(structName string, helperMethods ...ObjectHelperMethodKind) *Operation {
+func newResourceIDHelperMethod(structName string, helperStructs []*Field, identifierString string) *ResourceHelperMethod {
+	objectIdentifier := identifierStringToObjectIdentifier(identifierString)
+	requiredFields, ok := requiredFieldsForIDMethodMapping[objectIdentifier]
+	if !ok {
+		log.Printf("WARNING: No required fields mapping defined for identifier %s", objectIdentifier)
+		return nil
+	}
+	if !hasRequiredFieldsForIDMethod(structName, helperStructs, requiredFields...) {
+		log.Printf("WARNING: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing one of required fields: %v.\n", structName, requiredFields)
+		return nil
+	}
+
+	var args string
+	for _, field := range requiredFields {
+		args += fmt.Sprintf("v.%v, ", field)
+	}
+
+	returnValue := fmt.Sprintf("New%v(%v)", objectIdentifier, args)
+	return newResourceHelperMethod("ID", structName, returnValue, string(objectIdentifier))
+}
+
+func newResourceObjectTypeHelperMethod(structName string) *ResourceHelperMethod {
+	return newResourceHelperMethod("ObjectType", structName, "ObjectType"+structName, "ObjectType")
+}
+
+func (s *Operation) withResourceHelperMethods(structName string, helperMethods ...ResourceHelperMethodKind) *Operation {
 	for _, helperMethod := range helperMethods {
 		switch helperMethod {
-		case ObjectHelperMethodID:
-			s.HelperMethods = append(s.HelperMethods, newObjectHelperMethodID(structName, s.HelperStructs, s.ObjectInterface.IdentifierKind))
-		case ObjectHelperMethodObjectType:
-			s.HelperMethods = append(s.HelperMethods, newObjectHelperMethodObjectType(structName))
+		case ResourceIDHelperMethod:
+			s.ResourceHelperMethods = append(s.ResourceHelperMethods, newResourceIDHelperMethod(structName, s.HelperStructs, s.ObjectInterface.IdentifierKind))
+		case ResourceObjectTypeHelperMethod:
+			s.ResourceHelperMethods = append(s.ResourceHelperMethods, newResourceObjectTypeHelperMethod(structName))
 		default:
 			log.Println("No object helper method found for kind:", helperMethod)
 		}

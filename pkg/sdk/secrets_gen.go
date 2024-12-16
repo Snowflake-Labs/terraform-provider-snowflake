@@ -162,6 +162,14 @@ type Secret struct {
 	OwnerRoleType string
 }
 
+func (v *Secret) ID() SchemaObjectIdentifier {
+	return NewSchemaObjectIdentifier(v.Name, v.DatabaseName, v.SchemaName)
+}
+
+func (v *Secret) ObjectType() ObjectType {
+	return ObjectTypeSecret
+}
+
 // DescribeSecretOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-secret.
 type DescribeSecretOptions struct {
 	describe bool                   `ddl:"static" sql:"DESCRIBE"`
@@ -195,12 +203,4 @@ type SecretDetails struct {
 	OauthRefreshTokenExpiryTime *time.Time
 	OauthScopes                 []string
 	IntegrationName             *string
-}
-
-func (v *Secret) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.Name, v.DatabaseName, v.SchemaName)
-}
-
-func (v *Secret) ObjectType() ObjectType {
-	return ObjectTypeSecret
 }
