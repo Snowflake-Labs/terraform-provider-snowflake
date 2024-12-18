@@ -124,7 +124,7 @@ func (i *Interface) newOperationWithDBMapping(
 	resourceRepresentation *plainStruct,
 	queryStruct *QueryStruct,
 	addMappingFunc func(op *Operation, from, to *Field),
-	resourceHelperMethods ...ShowObjectMethodKind,
+	showObjectMethods ...ShowObjectMethodType,
 ) *Operation {
 	db := dbRepresentation.IntoField()
 	res := resourceRepresentation.IntoField()
@@ -136,7 +136,7 @@ func (i *Interface) newOperationWithDBMapping(
 		withHelperStruct(res).
 		withOptionsStruct(queryStruct.IntoField()).
 		withObjectInterface(i).
-		withShowObjectMethods(res.Name, resourceHelperMethods...)
+		withShowObjectMethods(res.Name, showObjectMethods...)
 
 	addMappingFunc(op, db, res)
 	i.Operations = append(i.Operations, op)
@@ -167,8 +167,8 @@ func (i *Interface) RevokeOperation(doc string, queryStruct *QueryStruct) *Inter
 	return i.newSimpleOperation(string(OperationKindRevoke), doc, queryStruct)
 }
 
-func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct, helperMethods ...ShowObjectMethodKind) *Interface {
-	i.newOperationWithDBMapping(string(OperationKindShow), doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping, helperMethods...)
+func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct, showObjectMethods ...ShowObjectMethodType) *Interface {
+	i.newOperationWithDBMapping(string(OperationKindShow), doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping, showObjectMethods...)
 	return i
 }
 
