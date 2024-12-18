@@ -2,16 +2,16 @@ package generator
 
 import "fmt"
 
-type objectIdentifier string
+type objectIdentifierKind string
 
 const (
-	AccountObjectIdentifier             objectIdentifier = "AccountObjectIdentifier"
-	DatabaseObjectIdentifier            objectIdentifier = "DatabaseObjectIdentifier"
-	SchemaObjectIdentifier              objectIdentifier = "SchemaObjectIdentifier"
-	SchemaObjectIdentifierWithArguments objectIdentifier = "SchemaObjectIdentifierWithArguments"
+	AccountObjectIdentifier             objectIdentifierKind = "AccountObjectIdentifier"
+	DatabaseObjectIdentifier            objectIdentifierKind = "DatabaseObjectIdentifier"
+	SchemaObjectIdentifier              objectIdentifierKind = "SchemaObjectIdentifier"
+	SchemaObjectIdentifierWithArguments objectIdentifierKind = "SchemaObjectIdentifierWithArguments"
 )
 
-func identifierStringToObjectIdentifier(s string) (objectIdentifier, error) {
+func identifierStringToObjectIdentifier(s string) (objectIdentifierKind, error) {
 	switch s {
 	case "AccountObjectIdentifier":
 		return AccountObjectIdentifier, nil

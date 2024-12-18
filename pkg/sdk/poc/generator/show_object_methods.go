@@ -29,38 +29,6 @@ func newShowObjectMethod(name, structName, returnValue string, returnType string
 	}
 }
 
-var idTypeParts map[objectIdentifier][]string = map[objectIdentifier][]string{
-	AccountObjectIdentifier:  {"Name"},
-	DatabaseObjectIdentifier: {"DatabaseName", "Name"},
-	SchemaObjectIdentifier:   {"DatabaseName", "SchemaName", "Name"},
-}
-
-func hasRequiredFieldsForIDMethod(structName string, helperStructs []*Field, idType objectIdentifier) bool {
-	if requiredFields, ok := idTypeParts[idType]; ok {
-		for _, field := range helperStructs {
-			if field.Name == structName {
-				return containsFieldNames(field.Fields, requiredFields...)
-			}
-		}
-	}
-	log.Printf("[WARN]: No required fields mapping defined for identifier %s", idType)
-	return false
-}
-
-func containsFieldNames(fields []*Field, names ...string) bool {
-	fieldNames := []string{}
-	for _, field := range fields {
-		fieldNames = append(fieldNames, field.Name)
-	}
-
-	for _, name := range names {
-		if !slices.Contains(fieldNames, name) {
-			return false
-		}
-	}
-	return true
-}
-
 func (s *Operation) withShowObjectMethods(structName string, showObjectMethodsKind ...ShowObjectMethodType) *Operation {
 	for _, methodKind := range showObjectMethodsKind {
 		switch methodKind {
@@ -84,7 +52,39 @@ func (s *Operation) withShowObjectMethods(structName string, showObjectMethodsKi
 	return s
 }
 
-func newShowObjectIDMethod(structName string, helperStructs []*Field, idType objectIdentifier) *ShowObjectMethod {
+func hasRequiredFieldsForIDMethod(structName string, helperStructs []*Field, idType objectIdentifierKind) bool {
+	if requiredFields, ok := idTypeParts[idType]; ok {
+		for _, field := range helperStructs {
+			if field.Name == structName {
+				return containsFieldNames(field.Fields, requiredFields...)
+			}
+		}
+	}
+	log.Printf("[WARN]: No required fields mapping defined for identifier %s", idType)
+	return false
+}
+
+var idTypeParts map[objectIdentifierKind][]string = map[objectIdentifierKind][]string{
+	AccountObjectIdentifier:  {"Name"},
+	DatabaseObjectIdentifier: {"DatabaseName", "Name"},
+	SchemaObjectIdentifier:   {"DatabaseName", "SchemaName", "Name"},
+}
+
+func containsFieldNames(fields []*Field, names ...string) bool {
+	fieldNames := []string{}
+	for _, field := range fields {
+		fieldNames = append(fieldNames, field.Name)
+	}
+
+	for _, name := range names {
+		if !slices.Contains(fieldNames, name) {
+			return false
+		}
+	}
+	return true
+}
+
+func newShowObjectIDMethod(structName string, helperStructs []*Field, idType objectIdentifierKind) *ShowObjectMethod {
 	requiredFields := idTypeParts[idType]
 	var args string
 	for _, field := range requiredFields {
