@@ -90,6 +90,12 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 			return err
 		}
 		opts.Set.Parameters.AccountParameters.EnableTriSecretAndRekeyOptOutForSpcsBlockStorage = b
+	case AccountParameterEnforceNetworkRulesForInternalStages:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
+		}
+		opts.Set.Parameters.AccountParameters.EnforceNetworkRulesForInternalStages = b
 	case AccountParameterEventTable:
 		opts.Set.Parameters.AccountParameters.EventTable = &value
 	case AccountParameterEnableUnredactedQuerySyntaxError:
@@ -202,6 +208,8 @@ func (parameters *parameters) UnsetAccountParameter(ctx context.Context, paramet
 		opts.Unset.Parameters.AccountParameters.EnableTriSecretAndRekeyOptOutForSpcsBlockStorage = Pointer(true)
 	case AccountParameterEnableUnredactedQuerySyntaxError:
 		opts.Unset.Parameters.AccountParameters.EnableUnredactedQuerySyntaxError = Pointer(true)
+	case AccountParameterEnforceNetworkRulesForInternalStages:
+		opts.Unset.Parameters.AccountParameters.EnforceNetworkRulesForInternalStages = Pointer(true)
 	case AccountParameterEventTable:
 		opts.Unset.Parameters.AccountParameters.EventTable = Pointer(true)
 	case AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList:
@@ -474,6 +482,7 @@ const (
 	AccountParameterEnableInternalStagesPrivatelink                  AccountParameter = "ENABLE_INTERNAL_STAGES_PRIVATELINK"
 	AccountParameterEnableTriSecretAndRekeyOptOutForImageRepository  AccountParameter = "ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"   // #nosec G101
 	AccountParameterEnableTriSecretAndRekeyOptOutForSpcsBlockStorage AccountParameter = "ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE" // #nosec G101
+	AccountParameterEnforceNetworkRulesForInternalStages             AccountParameter = "ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES"
 	AccountParameterEventTable                                       AccountParameter = "EVENT_TABLE"
 	AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList     AccountParameter = "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"
 	AccountParameterInitialReplicationSizeLimitInTB                  AccountParameter = "INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"
@@ -577,6 +586,7 @@ var AllAccountParameters = []AccountParameter{
 	AccountParameterEnableInternalStagesPrivatelink,
 	AccountParameterEnableTriSecretAndRekeyOptOutForImageRepository,
 	AccountParameterEnableTriSecretAndRekeyOptOutForSpcsBlockStorage,
+	AccountParameterEnforceNetworkRulesForInternalStages,
 	AccountParameterEventTable,
 	AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList,
 	AccountParameterInitialReplicationSizeLimitInTB,
@@ -1119,6 +1129,7 @@ type AccountParameters struct {
 	EnableUnredactedQuerySyntaxError                 *bool    `ddl:"parameter" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
 	EnableTriSecretAndRekeyOptOutForImageRepository  *bool    `ddl:"parameter" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"`
 	EnableTriSecretAndRekeyOptOutForSpcsBlockStorage *bool    `ddl:"parameter" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE"`
+	EnforceNetworkRulesForInternalStages             *bool    `ddl:"keyword" sql:"ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES"`
 	EventTable                                       *string  `ddl:"parameter,single_quotes" sql:"EVENT_TABLE"`
 	ExternalOAuthAddPrivilegedRolesToBlockedList     *bool    `ddl:"parameter" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	InitialReplicationSizeLimitInTB                  *float64 `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
@@ -1165,6 +1176,7 @@ type AccountParametersUnset struct {
 	EnableTriSecretAndRekeyOptOutForSpcsBlockStorage *bool `ddl:"keyword" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE"`
 	EventTable                                       *bool `ddl:"keyword" sql:"EVENT_TABLE"`
 	EnableUnredactedQuerySyntaxError                 *bool `ddl:"keyword" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
+	EnforceNetworkRulesForInternalStages             *bool `ddl:"keyword" sql:"ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES"`
 	ExternalOAuthAddPrivilegedRolesToBlockedList     *bool `ddl:"keyword" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	InitialReplicationSizeLimitInTB                  *bool `ddl:"keyword" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
 	MinDataRetentionTimeInDays                       *bool `ddl:"keyword" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
@@ -1437,8 +1449,8 @@ func (v *SessionParameters) validate() error {
 		}
 	}
 	if valueSet(v.WeekStart) {
-		if !validateIntInRange(*v.WeekStart, 0, 1) {
-			errs = append(errs, fmt.Errorf("WEEK_START must be either 0 or 1"))
+		if !validateIntInRange(*v.WeekStart, 0, 7) {
+			errs = append(errs, fmt.Errorf("WEEK_START must be between 0 and 7 (inclusive)"))
 		}
 	}
 	return errors.Join(errs...)

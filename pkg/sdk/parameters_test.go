@@ -72,6 +72,7 @@ func TestToAccountParameter(t *testing.T) {
 		{input: "ENABLE_INTERNAL_STAGES_PRIVATELINK", want: AccountParameterEnableInternalStagesPrivatelink},
 		{input: "ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY", want: AccountParameterEnableTriSecretAndRekeyOptOutForImageRepository},
 		{input: "ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE", want: AccountParameterEnableTriSecretAndRekeyOptOutForSpcsBlockStorage},
+		{input: "ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES", want: AccountParameterEnforceNetworkRulesForInternalStages},
 		{input: "EVENT_TABLE", want: AccountParameterEventTable},
 		{input: "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST", want: AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList},
 		{input: "INITIAL_REPLICATION_SIZE_LIMIT_IN_TB", want: AccountParameterInitialReplicationSizeLimitInTB},
