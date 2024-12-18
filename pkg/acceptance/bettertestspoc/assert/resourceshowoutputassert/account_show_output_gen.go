@@ -20,21 +20,21 @@ type AccountShowOutputAssert struct {
 func AccountShowOutput(t *testing.T, name string) *AccountShowOutputAssert {
 	t.Helper()
 
-	a := AccountShowOutputAssert{
+	accountAssert := AccountShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	a.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &a
+	accountAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &accountAssert
 }
 
 func ImportedAccountShowOutput(t *testing.T, id string) *AccountShowOutputAssert {
 	t.Helper()
 
-	a := AccountShowOutputAssert{
+	accountAssert := AccountShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	a.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &a
+	accountAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &accountAssert
 }
 
 ////////////////////////////
@@ -86,7 +86,7 @@ func (a *AccountShowOutputAssert) HasAccountLocator(expected string) *AccountSho
 	return a
 }
 
-func (a *AccountShowOutputAssert) HasAccountLocatorURL(expected string) *AccountShowOutputAssert {
+func (a *AccountShowOutputAssert) HasAccountLocatorUrl(expected string) *AccountShowOutputAssert {
 	a.AddAssertion(assert.ResourceShowOutputValueSet("account_locator_url", expected))
 	return a
 }
@@ -183,5 +183,382 @@ func (a *AccountShowOutputAssert) HasMovedOn(expected string) *AccountShowOutput
 
 func (a *AccountShowOutputAssert) HasOrganizationUrlExpirationOn(expected time.Time) *AccountShowOutputAssert {
 	a.AddAssertion(assert.ResourceShowOutputValueSet("organization_url_expiration_on", expected.String()))
+	return a
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+func (a *AccountShowOutputAssert) HasNoOrganizationName() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("organization_name"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoAccountName() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("account_name"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoSnowflakeRegion() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("snowflake_region"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoRegionGroup() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("region_group"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoEdition() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueNotSet("edition"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoAccountURL() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("account_url"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoCreatedOn() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("created_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoComment() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("comment"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoAccountLocator() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("account_locator"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoAccountLocatorUrl() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("account_locator_url"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoManagedAccounts() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputIntValueNotSet("managed_accounts"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoConsumptionBillingEntityName() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("consumption_billing_entity_name"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoMarketplaceConsumerBillingEntityName() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("marketplace_consumer_billing_entity_name"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoMarketplaceProviderBillingEntityName() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("marketplace_provider_billing_entity_name"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoOldAccountURL() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("old_account_url"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoIsOrgAdmin() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_org_admin"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoAccountOldUrlSavedOn() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("account_old_url_saved_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoAccountOldUrlLastUsed() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("account_old_url_last_used"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoOrganizationOldUrl() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("organization_old_url"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoOrganizationOldUrlSavedOn() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("organization_old_url_saved_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoOrganizationOldUrlLastUsed() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("organization_old_url_last_used"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoIsEventsAccount() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_events_account"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoIsOrganizationAccount() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_organization_account"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoDroppedOn() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("dropped_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoScheduledDeletionTime() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("scheduled_deletion_time"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoRestoredOn() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("restored_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoMovedToOrganization() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("moved_to_organization"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoMovedOn() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("moved_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasNoOrganizationUrlExpirationOn() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("organization_url_expiration_on"))
+	return a
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (a *AccountShowOutputAssert) HasOrganizationNameEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("organization_name", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasAccountNameEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("account_name", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasSnowflakeRegionEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("snowflake_region", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasRegionGroupEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("region_group", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasAccountURLEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("account_url", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasCommentEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("comment", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasAccountLocatorEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("account_locator", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasAccountLocatorUrlEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("account_locator_url", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasConsumptionBillingEntityNameEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("consumption_billing_entity_name", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasMarketplaceConsumerBillingEntityNameEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("marketplace_consumer_billing_entity_name", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasMarketplaceProviderBillingEntityNameEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("marketplace_provider_billing_entity_name", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasOldAccountURLEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("old_account_url", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasOrganizationOldUrlEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("organization_old_url", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasMovedToOrganizationEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("moved_to_organization", ""))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasMovedOnEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("moved_on", ""))
+	return a
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (a *AccountShowOutputAssert) HasOrganizationNameNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("organization_name"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasAccountNameNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("account_name"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasSnowflakeRegionNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("snowflake_region"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasRegionGroupNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("region_group"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasEditionNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputStringUnderlyingValuePresent("edition"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasAccountURLNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("account_url"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasCreatedOnNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasCommentNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("comment"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasAccountLocatorNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("account_locator"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasAccountLocatorUrlNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("account_locator_url"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasManagedAccountsNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputIntValuePresent("managed_accounts"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasConsumptionBillingEntityNameNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("consumption_billing_entity_name"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasMarketplaceConsumerBillingEntityNameNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("marketplace_consumer_billing_entity_name"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasMarketplaceProviderBillingEntityNameNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("marketplace_provider_billing_entity_name"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasOldAccountURLNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("old_account_url"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasIsOrgAdminNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_org_admin"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasAccountOldUrlSavedOnNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("account_old_url_saved_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasAccountOldUrlLastUsedNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("account_old_url_last_used"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasOrganizationOldUrlNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("organization_old_url"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasOrganizationOldUrlSavedOnNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("organization_old_url_saved_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasOrganizationOldUrlLastUsedNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("organization_old_url_last_used"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasIsEventsAccountNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_events_account"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasIsOrganizationAccountNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_organization_account"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasDroppedOnNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("dropped_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasScheduledDeletionTimeNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("scheduled_deletion_time"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasRestoredOnNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("restored_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasMovedToOrganizationNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("moved_to_organization"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasMovedOnNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("moved_on"))
+	return a
+}
+
+func (a *AccountShowOutputAssert) HasOrganizationUrlExpirationOnNotEmpty() *AccountShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("organization_url_expiration_on"))
 	return a
 }

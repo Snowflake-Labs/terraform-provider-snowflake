@@ -67,7 +67,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 							HasComment("").
 							HasIsPrimary(false).
 							HasPrimaryIdentifier(primaryConnectionAsExternalId).
-							HasFailoverAllowedToAccounts(accountId).
+							HasFailoverAllowedToAccountsList(accountId).
 							HasConnectionUrl(
 								acc.SecondaryTestClient().Connection.GetConnectionUrl(accountId.OrganizationName(), id.Name()),
 							),

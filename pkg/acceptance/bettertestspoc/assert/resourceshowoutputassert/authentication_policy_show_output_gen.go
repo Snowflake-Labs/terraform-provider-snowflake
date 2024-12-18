@@ -19,21 +19,21 @@ type AuthenticationPolicyShowOutputAssert struct {
 func AuthenticationPolicyShowOutput(t *testing.T, name string) *AuthenticationPolicyShowOutputAssert {
 	t.Helper()
 
-	a := AuthenticationPolicyShowOutputAssert{
+	authenticationPolicyAssert := AuthenticationPolicyShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	a.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &a
+	authenticationPolicyAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &authenticationPolicyAssert
 }
 
 func ImportedAuthenticationPolicyShowOutput(t *testing.T, id string) *AuthenticationPolicyShowOutputAssert {
 	t.Helper()
 
-	a := AuthenticationPolicyShowOutputAssert{
+	authenticationPolicyAssert := AuthenticationPolicyShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	a.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &a
+	authenticationPolicyAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &authenticationPolicyAssert
 }
 
 ////////////////////////////
@@ -77,5 +77,137 @@ func (a *AuthenticationPolicyShowOutputAssert) HasOwnerRoleType(expected string)
 
 func (a *AuthenticationPolicyShowOutputAssert) HasOptions(expected string) *AuthenticationPolicyShowOutputAssert {
 	a.AddAssertion(assert.ResourceShowOutputValueSet("options", expected))
+	return a
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+func (a *AuthenticationPolicyShowOutputAssert) HasNoCreatedOn() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("created_on"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasNoName() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("name"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasNoComment() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("comment"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasNoDatabaseName() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("database_name"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasNoSchemaName() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("schema_name"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasNoOwner() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("owner"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasNoOwnerRoleType() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("owner_role_type"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasNoOptions() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueNotSet("options"))
+	return a
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (a *AuthenticationPolicyShowOutputAssert) HasCreatedOnEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("created_on", ""))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasNameEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("name", ""))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasCommentEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("comment", ""))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasDatabaseNameEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("database_name", ""))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasSchemaNameEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("schema_name", ""))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasOwnerEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("owner", ""))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasOwnerRoleTypeEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", ""))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasOptionsEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValueSet("options", ""))
+	return a
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (a *AuthenticationPolicyShowOutputAssert) HasCreatedOnNotEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasNameNotEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("name"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasCommentNotEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("comment"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasDatabaseNameNotEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("database_name"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasSchemaNameNotEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("schema_name"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasOwnerNotEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasOwnerRoleTypeNotEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("owner_role_type"))
+	return a
+}
+
+func (a *AuthenticationPolicyShowOutputAssert) HasOptionsNotEmpty() *AuthenticationPolicyShowOutputAssert {
+	a.AddAssertion(assert.ResourceShowOutputValuePresent("options"))
 	return a
 }

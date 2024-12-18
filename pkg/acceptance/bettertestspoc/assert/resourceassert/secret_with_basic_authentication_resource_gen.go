@@ -72,9 +72,9 @@ func (s *SecretWithBasicAuthenticationResourceAssert) HasUsernameString(expected
 	return s
 }
 
-////////////////////////////
-// Attribute empty checks //
-////////////////////////////
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
 
 func (s *SecretWithBasicAuthenticationResourceAssert) HasNoComment() *SecretWithBasicAuthenticationResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("comment"))
@@ -113,5 +113,86 @@ func (s *SecretWithBasicAuthenticationResourceAssert) HasNoSecretType() *SecretW
 
 func (s *SecretWithBasicAuthenticationResourceAssert) HasNoUsername() *SecretWithBasicAuthenticationResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("username"))
+	return s
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (s *SecretWithBasicAuthenticationResourceAssert) HasCommentEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValueSet("comment", ""))
+	return s
+}
+func (s *SecretWithBasicAuthenticationResourceAssert) HasDatabaseEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValueSet("database", ""))
+	return s
+}
+func (s *SecretWithBasicAuthenticationResourceAssert) HasFullyQualifiedNameEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
+	return s
+}
+func (s *SecretWithBasicAuthenticationResourceAssert) HasNameEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValueSet("name", ""))
+	return s
+}
+func (s *SecretWithBasicAuthenticationResourceAssert) HasPasswordEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValueSet("password", ""))
+	return s
+}
+func (s *SecretWithBasicAuthenticationResourceAssert) HasSchemaEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValueSet("schema", ""))
+	return s
+}
+func (s *SecretWithBasicAuthenticationResourceAssert) HasSecretTypeEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValueSet("secret_type", ""))
+	return s
+}
+func (s *SecretWithBasicAuthenticationResourceAssert) HasUsernameEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValueSet("username", ""))
+	return s
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (s *SecretWithBasicAuthenticationResourceAssert) HasCommentNotEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValuePresent("comment"))
+	return s
+}
+
+func (s *SecretWithBasicAuthenticationResourceAssert) HasDatabaseNotEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValuePresent("database"))
+	return s
+}
+
+func (s *SecretWithBasicAuthenticationResourceAssert) HasFullyQualifiedNameNotEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValuePresent("fully_qualified_name"))
+	return s
+}
+
+func (s *SecretWithBasicAuthenticationResourceAssert) HasNameNotEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValuePresent("name"))
+	return s
+}
+
+func (s *SecretWithBasicAuthenticationResourceAssert) HasPasswordNotEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValuePresent("password"))
+	return s
+}
+
+func (s *SecretWithBasicAuthenticationResourceAssert) HasSchemaNotEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValuePresent("schema"))
+	return s
+}
+
+func (s *SecretWithBasicAuthenticationResourceAssert) HasSecretTypeNotEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValuePresent("secret_type"))
+	return s
+}
+
+func (s *SecretWithBasicAuthenticationResourceAssert) HasUsernameNotEmpty() *SecretWithBasicAuthenticationResourceAssert {
+	s.AddAssertion(assert.ValuePresent("username"))
 	return s
 }

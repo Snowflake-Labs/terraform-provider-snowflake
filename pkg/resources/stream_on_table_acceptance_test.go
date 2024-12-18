@@ -83,9 +83,9 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables(table.ID()).
+						HasBaseTablesList(table.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeDefault).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -141,9 +141,9 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables(table.ID()).
+						HasBaseTablesList(table.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeAppendOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -193,9 +193,9 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables(table.ID()).
+						HasBaseTablesList(table.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeAppendOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -242,9 +242,9 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables(table.ID()).
+						HasBaseTablesList(table.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeDefault).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -620,9 +620,9 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 						HasComment("foo").
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables(table.ID()).
+						HasBaseTablesList(table.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeAppendOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -737,9 +737,9 @@ func TestAcc_StreamOnTable_Before(t *testing.T) {
 						HasComment("foo").
 						HasTableName(table.ID().FullyQualifiedName()).
 						HasSourceType(sdk.StreamSourceTypeTable).
-						HasBaseTables(table.ID()).
+						HasBaseTablesList(table.ID()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeAppendOnly).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").

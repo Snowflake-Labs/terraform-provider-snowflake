@@ -16,23 +16,3 @@ func ResourceMonitorDatasourceShowOutput(t *testing.T, name string) *ResourceMon
 	u.AddAssertion(assert.ValueSet("show_output.#", "1"))
 	return &u
 }
-
-func (r *ResourceMonitorShowOutputAssert) HasStartTimeNotEmpty() *ResourceMonitorShowOutputAssert {
-	r.AddAssertion(assert.ResourceShowOutputValuePresent("start_time"))
-	return r
-}
-
-func (r *ResourceMonitorShowOutputAssert) HasEndTimeNotEmpty() *ResourceMonitorShowOutputAssert {
-	r.AddAssertion(assert.ResourceShowOutputValuePresent("end_time"))
-	return r
-}
-
-func (r *ResourceMonitorShowOutputAssert) HasCreatedOnNotEmpty() *ResourceMonitorShowOutputAssert {
-	r.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
-	return r
-}
-
-func (r *ResourceMonitorShowOutputAssert) HasOwnerNotEmpty() *ResourceMonitorShowOutputAssert {
-	r.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
-	return r
-}
