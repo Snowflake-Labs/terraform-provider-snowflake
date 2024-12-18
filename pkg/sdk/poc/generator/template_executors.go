@@ -28,7 +28,7 @@ func GenerateInterface(writer io.Writer, def *Interface) {
 }
 
 func generateShowObjectMethods(writer io.Writer, hm *ShowObjectMethod) {
-	printTo(writer, ResourceHelperMethodTemplate, hm)
+	printTo(writer, ShowObjectMethodTemplate, hm)
 }
 
 func generateOptionsStruct(writer io.Writer, operation *Operation) {
