@@ -163,7 +163,7 @@ type Secret struct {
 }
 
 func (v *Secret) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.Name, v.DatabaseName, v.SchemaName)
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
 func (v *Secret) ObjectType() ObjectType {
