@@ -104,7 +104,7 @@ type Streamlit struct {
 }
 
 func (v *Streamlit) ID() SchemaObjectIdentifier {
-	return NewSchemaObjectIdentifier(v.Name, v.DatabaseName, v.SchemaName)
+	return NewSchemaObjectIdentifier(v.DatabaseName, v.SchemaName, v.Name)
 }
 
 // DescribeStreamlitOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-streamlit.
