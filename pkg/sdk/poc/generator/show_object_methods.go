@@ -72,7 +72,7 @@ func (s *Operation) withShowObjectMethods(structName string, showObjectMethodsKi
 			}
 			if !hasRequiredFieldsForIDMethod(structName, s.HelperStructs, id) {
 				log.Printf("[WARN]: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing fields: %v.\n", structName, idTypeParts[id])
-				return nil
+				continue
 			}
 			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectIDMethod(structName, s.HelperStructs, id))
 		case ShowObjectTypeMethod:
