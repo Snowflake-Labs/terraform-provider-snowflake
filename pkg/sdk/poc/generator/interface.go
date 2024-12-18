@@ -1,5 +1,31 @@
 package generator
 
+import "fmt"
+
+type objectIdentifier string
+
+const (
+	AccountObjectIdentifier             objectIdentifier = "AccountObjectIdentifier"
+	DatabaseObjectIdentifier            objectIdentifier = "DatabaseObjectIdentifier"
+	SchemaObjectIdentifier              objectIdentifier = "SchemaObjectIdentifier"
+	SchemaObjectIdentifierWithArguments objectIdentifier = "SchemaObjectIdentifierWithArguments"
+)
+
+func identifierStringToObjectIdentifier(s string) (objectIdentifier, error) {
+	switch s {
+	case "AccountObjectIdentifier":
+		return AccountObjectIdentifier, nil
+	case "DatabaseObjectIdentifier":
+		return DatabaseObjectIdentifier, nil
+	case "SchemaObjectIdentifier":
+		return SchemaObjectIdentifier, nil
+	case "SchemaObjectIdentifierWithArguments":
+		return SchemaObjectIdentifierWithArguments, nil
+	default:
+		return "", fmt.Errorf("invalid string identifier type: %s", s)
+	}
+}
+
 // Interface groups operations for particular object or objects family (e.g. DATABASE ROLE)
 type Interface struct {
 	// Name is the interface's name, e.g. "DatabaseRoles"
