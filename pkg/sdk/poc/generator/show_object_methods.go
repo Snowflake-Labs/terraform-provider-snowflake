@@ -35,18 +35,18 @@ func (s *Operation) withShowObjectMethods(structName string, showObjectMethodsKi
 		case ShowObjectIdMethod:
 			id, err := identifierStringToObjectIdentifier(s.ObjectInterface.IdentifierKind)
 			if err != nil {
-				log.Printf("[WARN]: %v, for showObjectIdMethod", err)
+				log.Printf("[WARN] for showObjectIdMethod: %v", err)
 				continue
 			}
 			if !hasRequiredFieldsForIDMethod(structName, s.HelperStructs, id) {
-				log.Printf("[WARN]: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing fields: %v.\n", structName, idTypeParts[id])
+				log.Printf("[WARN] struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing fields: %v.\n", structName, idTypeParts[id])
 				continue
 			}
 			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectIDMethod(structName, s.HelperStructs, id))
 		case ShowObjectTypeMethod:
 			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectTypeMethod(structName))
 		default:
-			log.Println("No showObjectMethod found for kind:", methodKind)
+			log.Println("[WARN] no showObjectMethod found for kind:", methodKind)
 		}
 	}
 	return s
@@ -60,7 +60,7 @@ func hasRequiredFieldsForIDMethod(structName string, helperStructs []*Field, idT
 			}
 		}
 	}
-	log.Printf("[WARN]: No required fields mapping defined for identifier %s", idType)
+	log.Printf("[WARN] no required fields mapping defined for identifier %s", idType)
 	return false
 }
 
