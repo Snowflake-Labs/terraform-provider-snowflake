@@ -70,6 +70,10 @@ func (s *Operation) withShowObjectMethods(structName string, showObjectMethodsKi
 				log.Printf("[WARN]: %v, for showObjectIdMethod", err)
 				continue
 			}
+			if !hasRequiredFieldsForIDMethod(structName, s.HelperStructs, id) {
+				log.Printf("[WARN]: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing fields: %v.\n", structName, idTypeParts[id])
+				return nil
+			}
 			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectIDMethod(structName, s.HelperStructs, id))
 		case ShowObjectTypeMethod:
 			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectTypeMethod(structName))
@@ -81,13 +85,9 @@ func (s *Operation) withShowObjectMethods(structName string, showObjectMethodsKi
 }
 
 func newShowObjectIDMethod(structName string, helperStructs []*Field, idType objectIdentifier) *ShowObjectMethod {
-	if !hasRequiredFieldsForIDMethod(structName, helperStructs, idType) {
-		log.Printf("[WARN]: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing fields: %v.\n", structName, idTypeParts[idType])
-		return nil
-	}
-	fields := idTypeParts[idType]
+	requiredFields := idTypeParts[idType]
 	var args string
-	for _, field := range fields {
+	for _, field := range requiredFields {
 		args += fmt.Sprintf("v.%v, ", field)
 	}
 
