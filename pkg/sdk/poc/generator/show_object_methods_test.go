@@ -9,7 +9,7 @@ import (
 func TestIdentifierStringToObjectIdentifier(t *testing.T) {
 	tests := []struct {
 		input    string
-		expected objectIdentifier
+		expected objectIdentifierKind
 	}{
 		{"AccountObjectIdentifier", AccountObjectIdentifier},
 		{"DatabaseObjectIdentifier", DatabaseObjectIdentifier},
