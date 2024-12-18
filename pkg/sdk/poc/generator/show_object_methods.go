@@ -30,22 +30,22 @@ func identifierStringToObjectIdentifier(s string) objectIdentifier {
 	}
 }
 
-type ResourceHelperMethodKind uint
+type ShowObjectMethodKind uint
 
 const (
-	ResourceIDHelperMethod ResourceHelperMethodKind = iota
-	ResourceObjectTypeHelperMethod
+	ShowObjectIdMethod ShowObjectMethodKind = iota
+	ShowObjectTypeMethod
 )
 
-type ResourceHelperMethod struct {
+type ShowObjectMethod struct {
 	Name        string
 	StructName  string
 	ReturnValue string
 	ReturnType  string
 }
 
-func newResourceHelperMethod(name, structName, returnValue string, returnType string) *ResourceHelperMethod {
-	return &ResourceHelperMethod{
+func newShowObjectMethod(name, structName, returnValue string, returnType string) *ShowObjectMethod {
+	return &ShowObjectMethod{
 		Name:        name,
 		StructName:  structName,
 		ReturnValue: returnValue,
@@ -53,10 +53,10 @@ func newResourceHelperMethod(name, structName, returnValue string, returnType st
 	}
 }
 
-var requiredFieldsForIDMethodMapping map[objectIdentifier][]string = map[objectIdentifier][]string{
+var idTypeParts map[objectIdentifier][]string = map[objectIdentifier][]string{
 	AccountObjectIdentifier:  {"Name"},
-	DatabaseObjectIdentifier: {"Name", "DatabaseName"},
-	SchemaObjectIdentifier:   {"Name", "DatabaseName", "SchemaName"},
+	DatabaseObjectIdentifier: {"DatabaseName", "Name"},
+	SchemaObjectIdentifier:   {"DatabaseName", "SchemaName", "Name"},
 }
 
 func hasRequiredFieldsForIDMethod(structName string, helperStructs []*Field, requiredFields ...string) bool {
@@ -82,15 +82,29 @@ func containsFieldNames(fields []*Field, names ...string) bool {
 	return true
 }
 
-func newResourceIDHelperMethod(structName string, helperStructs []*Field, identifierString string) *ResourceHelperMethod {
+func (s *Operation) withShowObjectMethods(structName string, showObjectMethodsKind ...ShowObjectMethodKind) *Operation {
+	for _, methodKind := range showObjectMethodsKind {
+		switch methodKind {
+		case ShowObjectIdMethod:
+			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectIDMethod(structName, s.HelperStructs, s.ObjectInterface.IdentifierKind))
+		case ShowObjectTypeMethod:
+			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectTypeMethod(structName))
+		default:
+			log.Println("No showObjectMethod found for kind:", methodKind)
+		}
+	}
+	return s
+}
+
+func newShowObjectIDMethod(structName string, helperStructs []*Field, identifierString string) *ShowObjectMethod {
 	objectIdentifier := identifierStringToObjectIdentifier(identifierString)
-	requiredFields, ok := requiredFieldsForIDMethodMapping[objectIdentifier]
+	requiredFields, ok := idTypeParts[objectIdentifier]
 	if !ok {
-		log.Printf("WARNING: No required fields mapping defined for identifier %s", objectIdentifier)
+		log.Printf("[WARN]: No required fields mapping defined for identifier %s", objectIdentifier)
 		return nil
 	}
 	if !hasRequiredFieldsForIDMethod(structName, helperStructs, requiredFields...) {
-		log.Printf("WARNING: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing one of required fields: %v.\n", structName, requiredFields)
+		log.Printf("[WARN]: Struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing one of required fields: %v.\n", structName, requiredFields)
 		return nil
 	}
 
@@ -100,23 +114,9 @@ func newResourceIDHelperMethod(structName string, helperStructs []*Field, identi
 	}
 
 	returnValue := fmt.Sprintf("New%v(%v)", objectIdentifier, args)
-	return newResourceHelperMethod("ID", structName, returnValue, string(objectIdentifier))
+	return newShowObjectMethod("ID", structName, returnValue, string(objectIdentifier))
 }
 
-func newResourceObjectTypeHelperMethod(structName string) *ResourceHelperMethod {
-	return newResourceHelperMethod("ObjectType", structName, "ObjectType"+structName, "ObjectType")
-}
-
-func (s *Operation) withResourceHelperMethods(structName string, helperMethods ...ResourceHelperMethodKind) *Operation {
-	for _, helperMethod := range helperMethods {
-		switch helperMethod {
-		case ResourceIDHelperMethod:
-			s.ResourceHelperMethods = append(s.ResourceHelperMethods, newResourceIDHelperMethod(structName, s.HelperStructs, s.ObjectInterface.IdentifierKind))
-		case ResourceObjectTypeHelperMethod:
-			s.ResourceHelperMethods = append(s.ResourceHelperMethods, newResourceObjectTypeHelperMethod(structName))
-		default:
-			log.Println("No resourceHelperMethod found for kind:", helperMethod)
-		}
-	}
-	return s
+func newShowObjectTypeMethod(structName string) *ShowObjectMethod {
+	return newShowObjectMethod("ObjectType", structName, "ObjectType"+structName, "ObjectType")
 }
