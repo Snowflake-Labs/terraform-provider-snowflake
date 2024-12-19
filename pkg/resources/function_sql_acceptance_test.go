@@ -26,7 +26,7 @@ func TestAcc_FunctionSql_InlineBasic(t *testing.T) {
 	argName := "abc"
 	dataType := testdatatypes.DataTypeFloat
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
-	idWithChangedNameButTheSameDataType := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes()
+	idWithChangedNameButTheSameDataType := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(dataType)
 
 	definition := acc.TestClient().Function.SampleSqlDefinitionWithArgument(t, argName)
 
