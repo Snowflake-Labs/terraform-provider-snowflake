@@ -1,6 +1,6 @@
-{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator.ResourceHelperMethod*/ -}}
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/generator.ShowObjectMethod*/ -}}
 
-func (v *{{ .StructName }}) {{ .Name }}() {{ .ReturnType }} {
-    return {{ .ReturnValue }}
+func (v *{{ .StructName }}) ObjectType() ObjectType {
+    return ObjectType{{ .StructName }}
 }
 

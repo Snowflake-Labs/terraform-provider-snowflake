@@ -19,7 +19,7 @@ func TestIdentifierStringToObjectIdentifier(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.input, func(t *testing.T) {
-			result, err := identifierStringToObjectIdentifier(test.input)
+			result, err := toObjectIdentifierKind(test.input)
 			require.NoError(t, err)
 			require.Equal(t, test.expected, result)
 		})
@@ -43,7 +43,7 @@ func TestIdentifierStringToObjectIdentifier_Invalid(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.input, func(t *testing.T) {
-			_, err := identifierStringToObjectIdentifier(tc.input)
+			_, err := toObjectIdentifierKind(tc.input)
 			require.ErrorContains(t, err, tc.err)
 		})
 	}

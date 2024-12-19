@@ -6,18 +6,16 @@ import (
 	"slices"
 )
 
-type ShowObjectMethodType uint
-
-const (
-	ShowObjectIdMethod ShowObjectMethodType = iota
-	ShowObjectTypeMethod
-)
 
 type ShowObjectMethod struct {
 	Name        string
 	StructName  string
 	ReturnValue string
 	ReturnType  string
+}
+
+type ShowObjectIdMethod struct {
+
 }
 
 func newShowObjectMethod(name, structName, returnValue string, returnType string) *ShowObjectMethod {
@@ -29,38 +27,15 @@ func newShowObjectMethod(name, structName, returnValue string, returnType string
 	}
 }
 
-func (s *Operation) withShowObjectMethods(structName string, showObjectMethodsKind ...ShowObjectMethodType) *Operation {
-	for _, methodKind := range showObjectMethodsKind {
-		switch methodKind {
-		case ShowObjectIdMethod:
-			id, err := identifierStringToObjectIdentifier(s.ObjectInterface.IdentifierKind)
-			if err != nil {
-				log.Printf("[WARN] for showObjectIdMethod: %v", err)
-				continue
-			}
-			if !hasRequiredFieldsForIDMethod(structName, s.HelperStructs, id) {
-				log.Printf("[WARN] struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing fields: %v.\n", structName, idTypeParts[id])
-				continue
-			}
-			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectIDMethod(structName, id))
-		case ShowObjectTypeMethod:
-			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectTypeMethod(structName))
-		default:
-			log.Println("[WARN] no showObjectMethod found for kind:", methodKind)
-		}
-	}
-	return s
-}
-
-func hasRequiredFieldsForIDMethod(structName string, helperStructs []*Field, idType objectIdentifierKind) bool {
-	if requiredFields, ok := idTypeParts[idType]; ok {
+func checkRequiredFieldsForIDMethod(structName string, helperStructs []*Field, idKind objectIdentifierKind) bool {
+	if requiredFields, ok := idTypeParts[idKind]; ok {
 		for _, field := range helperStructs {
 			if field.Name == structName {
 				return containsFieldNames(field.Fields, requiredFields...)
 			}
 		}
 	}
-	log.Printf("[WARN] no required fields mapping defined for identifier %s", idType)
+	log.Printf("[WARN] no required fields mapping defined for identifier %s", idKind)
 	return false
 }
 
