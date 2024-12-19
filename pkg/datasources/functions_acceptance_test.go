@@ -10,6 +10,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -27,7 +28,7 @@ func TestAcc_Functions(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		CheckDestroy: nil,
+		CheckDestroy: acc.CheckDestroy(t, resources.FunctionJava),
 		Steps: []resource.TestStep{
 			{
 				Config: functionsConfig(t),
@@ -59,7 +60,7 @@ func functionsConfig(t *testing.T) string {
 		model.FunctionJavaBasicInline("f2", id2, dataType, handler, definition).WithArgument(argName, dataType),
 	)
 
-	s := fmt.Sprintf(`
+	return fmt.Sprintf(`
 %s
 data "snowflake_functions" "functions" {
   database   = "%s"
@@ -67,8 +68,4 @@ data "snowflake_functions" "functions" {
   depends_on = [snowflake_function_java.f1, snowflake_function_java.f2]
 }
 `, functionsSetup, acc.TestDatabaseName, acc.TestSchemaName)
-
-	t.Logf(s)
-
-	return s
 }
