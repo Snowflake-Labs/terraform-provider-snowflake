@@ -115,6 +115,7 @@ func TestAcc_FunctionScala_InlineBasic(t *testing.T) {
 func TestAcc_FunctionScala_InlineFull(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
 	t.Cleanup(stageCleanup)

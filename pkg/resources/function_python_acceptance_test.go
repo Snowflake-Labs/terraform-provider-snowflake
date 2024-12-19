@@ -23,6 +23,10 @@ import (
 )
 
 func TestAcc_FunctionPython_InlineBasic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	funcName := "some_function"
 	argName := "x"
 	dataType := testdatatypes.DataTypeNumber_36_2
@@ -110,6 +114,7 @@ func TestAcc_FunctionPython_InlineBasic(t *testing.T) {
 func TestAcc_FunctionPython_InlineFull(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	secretId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	secretId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
