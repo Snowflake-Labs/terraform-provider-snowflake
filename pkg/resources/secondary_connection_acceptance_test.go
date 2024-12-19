@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
@@ -48,7 +49,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryConnection),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, secondartyConnectionModel),
+				Config: config.FromModels(t, secondartyConnectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModel.ResourceReference()).
@@ -76,7 +77,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 			},
 			// set comment
 			{
-				Config: config.FromModel(t, secondartyConnectionModelWithComment),
+				Config: config.FromModels(t, secondartyConnectionModelWithComment),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModelWithComment.ResourceReference()).
@@ -101,7 +102,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 			},
 			// unset comment
 			{
-				Config: config.FromModel(t, secondartyConnectionModel),
+				Config: config.FromModels(t, secondartyConnectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModel.ResourceReference()).
@@ -117,7 +118,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(id).WithPrimary(true))
 				},
-				Config: config.FromModel(t, secondartyConnectionModel),
+				Config: config.FromModels(t, secondartyConnectionModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secondartyConnectionModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),

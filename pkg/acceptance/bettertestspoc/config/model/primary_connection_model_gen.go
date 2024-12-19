@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -37,6 +39,26 @@ func PrimaryConnectionWithDefaultMeta(
 ) *PrimaryConnectionModel {
 	p := &PrimaryConnectionModel{ResourceModelMeta: config.DefaultMeta(resources.PrimaryConnection)}
 	p.WithName(name)
+	return p
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (p *PrimaryConnectionModel) MarshalJSON() ([]byte, error) {
+	type Alias PrimaryConnectionModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(p),
+		DependsOn: p.DependsOn(),
+	})
+}
+
+func (p *PrimaryConnectionModel) WithDependsOn(values ...string) *PrimaryConnectionModel {
+	p.SetDependsOn(values...)
 	return p
 }
 

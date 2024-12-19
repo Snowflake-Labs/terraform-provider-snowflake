@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -51,6 +53,26 @@ func SecretWithGenericStringWithDefaultMeta(
 	s.WithName(name)
 	s.WithSchema(schema)
 	s.WithSecretString(secretString)
+	return s
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (s *SecretWithGenericStringModel) MarshalJSON() ([]byte, error) {
+	type Alias SecretWithGenericStringModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(s),
+		DependsOn: s.DependsOn(),
+	})
+}
+
+func (s *SecretWithGenericStringModel) WithDependsOn(values ...string) *SecretWithGenericStringModel {
+	s.SetDependsOn(values...)
 	return s
 }
 

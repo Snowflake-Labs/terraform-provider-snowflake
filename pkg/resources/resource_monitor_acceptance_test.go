@@ -37,7 +37,7 @@ func TestAcc_ResourceMonitor_Basic(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
 						HasNameString(id.Name()).
@@ -111,7 +111,7 @@ func TestAcc_ResourceMonitor_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
 						HasNameString(id.Name()).
@@ -146,7 +146,7 @@ func TestAcc_ResourceMonitor_Complete(t *testing.T) {
 			{
 				ResourceName: "snowflake_resource_monitor.test",
 				ImportState:  true,
-				Config:       config.FromModel(t, configModel),
+				Config:       config.FromModels(t, configModel),
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedResourceMonitorResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
@@ -211,7 +211,7 @@ func TestAcc_ResourceMonitor_Updates(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModelNothingSet),
+				Config: config.FromModels(t, configModelNothingSet),
 				Check: assert.AssertThat(t,
 					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
 						HasNameString(id.Name()).
@@ -242,7 +242,7 @@ func TestAcc_ResourceMonitor_Updates(t *testing.T) {
 			},
 			// Set
 			{
-				Config: config.FromModel(t, configModelEverythingSet),
+				Config: config.FromModels(t, configModelEverythingSet),
 				Check: assert.AssertThat(t,
 					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
 						HasNameString(id.Name()).
@@ -276,7 +276,7 @@ func TestAcc_ResourceMonitor_Updates(t *testing.T) {
 			},
 			// Update
 			{
-				Config: config.FromModel(t, configModelUpdated),
+				Config: config.FromModels(t, configModelUpdated),
 				Check: assert.AssertThat(t,
 					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
 						HasNameString(id.Name()).
@@ -311,7 +311,7 @@ func TestAcc_ResourceMonitor_Updates(t *testing.T) {
 			},
 			// Unset
 			{
-				Config: config.FromModel(t, configModelEverythingUnset),
+				Config: config.FromModels(t, configModelEverythingUnset),
 				Check: assert.AssertThat(t,
 					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
 						HasNameString(id.Name()).
@@ -382,7 +382,7 @@ func TestAcc_ResourceMonitor_ExternalChanges(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModelEverythingSet),
+				Config: config.FromModels(t, configModelEverythingSet),
 			},
 			// Update externally, but match the updated configuration (expected updates to the same values)
 			{
@@ -426,7 +426,7 @@ func TestAcc_ResourceMonitor_ExternalChanges(t *testing.T) {
 						planchecks.PrintPlanDetails(configModelUpdated.ResourceReference(), "credit_quota", "end_timestamp", "frequency", "fully_qualified_name", "name", "notify_triggers", "notify_users", "start_timestamp", "suspend_immediate_trigger", "suspend_trigger", r.ShowOutputAttributeName),
 					},
 				},
-				Config: config.FromModel(t, configModelUpdated),
+				Config: config.FromModels(t, configModelUpdated),
 			},
 		},
 	})
@@ -454,10 +454,10 @@ func TestAcc_ResourceMonitor_PartialUpdate(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 			},
 			{
-				Config:      config.FromModel(t, configModelInvalidUpdate),
+				Config:      config.FromModels(t, configModelInvalidUpdate),
 				ExpectError: regexp.MustCompile("Invalid date/time format string"),
 				Check: assert.AssertThat(t,
 					resourceassert.ResourceMonitorResource(t, "snowflake_resource_monitor.test").
@@ -468,7 +468,7 @@ func TestAcc_ResourceMonitor_PartialUpdate(t *testing.T) {
 			// The following was printed (indicating the invalid value was saved into the state):
 			// ComputedIfAnyAttributeChanged: changed key: end_timestamp old: 2024-11-19 10:11abc new: 2024-11-09 10:11
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -500,13 +500,13 @@ func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configNoUsers),
+				Config: config.FromModels(t, configNoUsers),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_resource_monitor.test", "name", id.Name()),
 				),
 			},
 			{
-				Config:      config.FromModel(t, configWithNonExistingUser),
+				Config:      config.FromModels(t, configWithNonExistingUser),
 				ExpectError: regexp.MustCompile(`.*090268 \(22023\): User non_existing_user does not exist.*`),
 			},
 		},
@@ -534,7 +534,7 @@ func TestAcc_ResourceMonitor_Issue1990_RemovingResourceMonitorOutsideOfTerraform
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 			},
 			// Same configuration, but we drop resource monitor externally
 			{
@@ -547,7 +547,7 @@ func TestAcc_ResourceMonitor_Issue1990_RemovingResourceMonitorOutsideOfTerraform
 				PreConfig: func() {
 					acc.TestClient().ResourceMonitor.DropResourceMonitorFunc(t, id)()
 				},
-				Config:      config.FromModel(t, configModel),
+				Config:      config.FromModels(t, configModel),
 				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
 			},
 			// Same configuration, but it's the last version where it's still not working
@@ -558,14 +558,14 @@ func TestAcc_ResourceMonitor_Issue1990_RemovingResourceMonitorOutsideOfTerraform
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config:      config.FromModel(t, configModel),
+				Config:      config.FromModels(t, configModel),
 				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
 			},
 			// Same configuration, but it's the latest version of the provider (0.96.0 and above)
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModel),
+				Config:                   config.FromModels(t, configModel),
 			},
 		},
 	})
@@ -606,7 +606,7 @@ func TestAcc_ResourceMonitor_Issue_TimestampInfinitePlan(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 			},
 			// Alter resource timestamps to have the following format: 2006-01-02 (produces a plan because of the format difference)
 			{
@@ -616,7 +616,7 @@ func TestAcc_ResourceMonitor_Issue_TimestampInfinitePlan(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config:             config.FromModel(t, configModelWithDateStartTimestamp),
+				Config:             config.FromModels(t, configModelWithDateStartTimestamp),
 				ExpectNonEmptyPlan: true,
 			},
 			// Alter resource timestamps to have the following format: 2006-01-02 15:04 (won't produce plan because of the internal format mapping to this exact format)
@@ -627,7 +627,7 @@ func TestAcc_ResourceMonitor_Issue_TimestampInfinitePlan(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: config.FromModel(t, configModelWithDateTimeFormat),
+				Config: config.FromModels(t, configModelWithDateTimeFormat),
 			},
 			// Destroy the resource
 			{
@@ -637,24 +637,24 @@ func TestAcc_ResourceMonitor_Issue_TimestampInfinitePlan(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config:  config.FromModel(t, configModelWithDateTimeFormat),
+				Config:  config.FromModels(t, configModelWithDateTimeFormat),
 				Destroy: true,
 			},
 			// Create resource monitor without the timestamps
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModel),
+				Config:                   config.FromModels(t, configModel),
 			},
 			// Alter resource timestamps to have the following format: 2006-01-02 (no plan produced)
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithDateStartTimestamp),
+				Config:                   config.FromModels(t, configModelWithDateStartTimestamp),
 			},
 			// Alter resource timestamps to have the following format: 2006-01-02 15:04 (no plan produced and the internal mapping is not applied in this version)
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithDateTimeFormat),
+				Config:                   config.FromModels(t, configModelWithDateTimeFormat),
 			},
 		},
 	})
@@ -687,14 +687,14 @@ func TestAcc_ResourceMonitor_Issue1500_CreatingWithOnlyTriggers(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config:      config.FromModel(t, configModel),
+				Config:      config.FromModels(t, configModel),
 				ExpectError: regexp.MustCompile("SQL compilation error"),
 			},
 			// Create resource monitor with only triggers (the latest version)
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModel),
+				Config:                   config.FromModels(t, configModel),
 				ExpectError:              regexp.MustCompile("due to Snowflake limiltations you cannot create Resource Monitor with only triggers set"),
 			},
 		},
@@ -741,7 +741,7 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: config.FromModel(t, configModelWithCreditQuota),
+				Config: config.FromModels(t, configModelWithCreditQuota),
 			},
 			// Update only triggers (not allowed in Snowflake)
 			{
@@ -751,7 +751,7 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: config.FromModel(t, configModelWithUpdatedTriggers),
+				Config: config.FromModels(t, configModelWithUpdatedTriggers),
 				// For some reason, not returning error (SQL compilation error should be returned in this case; most likely update was handled incorrectly, or it was handled similarly as in the current version)
 			},
 			// Remove all triggers (not allowed in Snowflake)
@@ -762,7 +762,7 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: config.FromModel(t, configModelWithoutTriggers),
+				Config: config.FromModels(t, configModelWithoutTriggers),
 				// For some reason, not returning the correct error (SQL compilation error should be returned in this case; most likely update was processed incorrectly)
 				ExpectError: regexp.MustCompile(`at least one of AlterResourceMonitorOptions fields \[Set Triggers] must be set`),
 			},
@@ -770,12 +770,12 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithCreditQuota),
+				Config:                   config.FromModels(t, configModelWithCreditQuota),
 			},
 			// Update only triggers (not allowed in Snowflake)
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithUpdatedTriggers),
+				Config:                   config.FromModels(t, configModelWithUpdatedTriggers),
 			},
 			// Update only triggers (not allowed in Snowflake; recreating)
 			{
@@ -785,7 +785,7 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 					},
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithoutTriggers),
+				Config:                   config.FromModels(t, configModelWithoutTriggers),
 			},
 		},
 	})
@@ -831,7 +831,7 @@ func TestAcc_ResourceMonitor_RemovingAllTriggers(t *testing.T) {
 			// Config with all triggers
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithAllTriggers),
+				Config:                   config.FromModels(t, configModelWithAllTriggers),
 			},
 			// No triggers (force new expected)
 			{
@@ -841,12 +841,12 @@ func TestAcc_ResourceMonitor_RemovingAllTriggers(t *testing.T) {
 					},
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithoutTriggers),
+				Config:                   config.FromModels(t, configModelWithoutTriggers),
 			},
 			// Config with only notify triggers
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithNotifyTriggers),
+				Config:                   config.FromModels(t, configModelWithNotifyTriggers),
 			},
 			// No triggers (force new expected)
 			{
@@ -856,12 +856,12 @@ func TestAcc_ResourceMonitor_RemovingAllTriggers(t *testing.T) {
 					},
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithoutTriggers),
+				Config:                   config.FromModels(t, configModelWithoutTriggers),
 			},
 			// Config with only suspend trigger
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithSuspendTrigger),
+				Config:                   config.FromModels(t, configModelWithSuspendTrigger),
 			},
 			// No triggers (force new expected)
 			{
@@ -871,12 +871,12 @@ func TestAcc_ResourceMonitor_RemovingAllTriggers(t *testing.T) {
 					},
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithoutTriggers),
+				Config:                   config.FromModels(t, configModelWithoutTriggers),
 			},
 			// Config with only suspend immediate trigger
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithSuspendImmediateTrigger),
+				Config:                   config.FromModels(t, configModelWithSuspendImmediateTrigger),
 			},
 			// No triggers (force new expected)
 			{
@@ -886,7 +886,7 @@ func TestAcc_ResourceMonitor_RemovingAllTriggers(t *testing.T) {
 					},
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModelWithoutTriggers),
+				Config:                   config.FromModels(t, configModelWithoutTriggers),
 			},
 		},
 	})

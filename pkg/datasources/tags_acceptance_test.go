@@ -6,16 +6,16 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	testconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
-	testconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
-	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -93,13 +93,13 @@ func TestAcc_Tags_Filtering(t *testing.T) {
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testconfig.FromModel(t, model1) + testconfig.FromModel(t, model2) + testconfig.FromModel(t, model3) + tagsDatasourceLike(id1.Name()),
+				Config: testconfig.FromModels(t, model1) + testconfig.FromModels(t, model2) + testconfig.FromModels(t, model3) + tagsDatasourceLike(id1.Name()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_tags.test", "tags.#", "1"),
 				),
 			},
 			{
-				Config: testconfig.FromModel(t, model1) + testconfig.FromModel(t, model2) + testconfig.FromModel(t, model3) + tagsDatasourceLike(prefix+"%"),
+				Config: testconfig.FromModels(t, model1) + testconfig.FromModels(t, model2) + testconfig.FromModels(t, model3) + tagsDatasourceLike(prefix+"%"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_tags.test", "tags.#", "2"),
 				),

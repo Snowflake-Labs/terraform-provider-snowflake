@@ -1,9 +1,10 @@
 package model
 
 import (
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 )
 
 func (p *MaskingPolicyModel) WithArgument(argument []sdk.TableColumnSignature) *MaskingPolicyModel {

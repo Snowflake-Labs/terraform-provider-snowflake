@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -26,6 +28,7 @@ type OauthIntegrationForCustomClientsModel struct {
 	OauthRefreshTokenValidity   tfconfig.Variable `json:"oauth_refresh_token_validity,omitempty"`
 	OauthUseSecondaryRoles      tfconfig.Variable `json:"oauth_use_secondary_roles,omitempty"`
 	PreAuthorizedRolesList      tfconfig.Variable `json:"pre_authorized_roles_list,omitempty"`
+	RelatedParameters           tfconfig.Variable `json:"related_parameters,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -56,6 +59,26 @@ func OauthIntegrationForCustomClientsWithDefaultMeta(
 	o.WithName(name)
 	o.WithOauthClientType(oauthClientType)
 	o.WithOauthRedirectUri(oauthRedirectUri)
+	return o
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (o *OauthIntegrationForCustomClientsModel) MarshalJSON() ([]byte, error) {
+	type Alias OauthIntegrationForCustomClientsModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(o),
+		DependsOn: o.DependsOn(),
+	})
+}
+
+func (o *OauthIntegrationForCustomClientsModel) WithDependsOn(values ...string) *OauthIntegrationForCustomClientsModel {
+	o.SetDependsOn(values...)
 	return o
 }
 
@@ -136,6 +159,8 @@ func (o *OauthIntegrationForCustomClientsModel) WithOauthUseSecondaryRoles(oauth
 }
 
 // pre_authorized_roles_list attribute type is not yet supported, so WithPreAuthorizedRolesList can't be generated
+
+// related_parameters attribute type is not yet supported, so WithRelatedParameters can't be generated
 
 //////////////////////////////////////////
 // below it's possible to set any value //
@@ -218,5 +243,10 @@ func (o *OauthIntegrationForCustomClientsModel) WithOauthUseSecondaryRolesValue(
 
 func (o *OauthIntegrationForCustomClientsModel) WithPreAuthorizedRolesListValue(value tfconfig.Variable) *OauthIntegrationForCustomClientsModel {
 	o.PreAuthorizedRolesList = value
+	return o
+}
+
+func (o *OauthIntegrationForCustomClientsModel) WithRelatedParametersValue(value tfconfig.Variable) *OauthIntegrationForCustomClientsModel {
+	o.RelatedParameters = value
 	return o
 }

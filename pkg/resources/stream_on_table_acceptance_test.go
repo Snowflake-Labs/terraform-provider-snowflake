@@ -6,22 +6,23 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	tfjson "github.com/hashicorp/terraform-json"
+	pluginconfig "github.com/hashicorp/terraform-plugin-testing/config"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
-	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	tfjson "github.com/hashicorp/terraform-json"
-	pluginconfig "github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -67,7 +68,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				Config: config.FromModel(t, baseModel),
+				Config: config.FromModels(t, baseModel),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -109,7 +110,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			},
 			// import without optionals
 			{
-				Config:       config.FromModel(t, baseModel),
+				Config:       config.FromModels(t, baseModel),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
@@ -269,7 +270,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 			},
 			// import
 			{
-				Config:       config.FromModel(t, modelWithExtraFieldsDefaultMode),
+				Config:       config.FromModels(t, modelWithExtraFieldsDefaultMode),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
@@ -305,7 +306,7 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model.WithCopyGrants(false)),
+				Config: config.FromModels(t, model.WithCopyGrants(false)),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
@@ -315,7 +316,7 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, model.WithCopyGrants(true)),
+				Config: config.FromModels(t, model.WithCopyGrants(true)),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
@@ -327,7 +328,7 @@ func TestAcc_StreamOnTable_CopyGrants(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, model.WithCopyGrants(false)),
+				Config: config.FromModels(t, model.WithCopyGrants(false)),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
@@ -372,7 +373,7 @@ func TestAcc_StreamOnTable_CheckGrantsAfterRecreation(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnExternalTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model1) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Config: config.FromModels(t, model1) + grantStreamPrivilegesConfig(resourceName, role.ID()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
@@ -380,14 +381,14 @@ func TestAcc_StreamOnTable_CheckGrantsAfterRecreation(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, model2) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Config: config.FromModels(t, model2) + grantStreamPrivilegesConfig(resourceName, role.ID()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
 				),
 			},
 			{
-				Config:             config.FromModel(t, model1WithoutCopyGrants) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Config:             config.FromModels(t, model1WithoutCopyGrants) + grantStreamPrivilegesConfig(resourceName, role.ID()),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -432,7 +433,7 @@ func TestAcc_StreamOnTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.
 		Steps: []resource.TestStep{
 			// check that stale state is marked properly and forces an update
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -453,7 +454,7 @@ func TestAcc_StreamOnTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *testing.
 			// check that the resource was recreated
 			// note that it is stale again because we still have schema parameters set to 0
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -507,7 +508,7 @@ func TestAcc_StreamOnTable_StaleWithExternalChanges(t *testing.T) {
 		Steps: []resource.TestStep{
 			// initial creation does not lead to stale stream
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
@@ -543,7 +544,7 @@ func TestAcc_StreamOnTable_StaleWithExternalChanges(t *testing.T) {
 						HasStale(false),
 					)
 				},
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
@@ -830,7 +831,7 @@ func TestAcc_StreamOnTable_InvalidConfiguration(t *testing.T) {
 			},
 			// invalid table id
 			{
-				Config:      config.FromModel(t, modelWithInvalidTableId),
+				Config:      config.FromModels(t, modelWithInvalidTableId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
 			},
 		},
@@ -853,7 +854,7 @@ func TestAcc_StreamOnTable_ExternalStreamTypeChange(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.StreamOnTableResource(t, model.ResourceReference()).
@@ -874,7 +875,7 @@ func TestAcc_StreamOnTable_ExternalStreamTypeChange(t *testing.T) {
 					t.Cleanup(cleanup)
 					require.Equal(t, sdk.StreamSourceTypeView, *externalChangeStream.SourceType)
 				},
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),

@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -42,6 +44,26 @@ func ResourceMonitorWithDefaultMeta(
 ) *ResourceMonitorModel {
 	r := &ResourceMonitorModel{ResourceModelMeta: config.DefaultMeta(resources.ResourceMonitor)}
 	r.WithName(name)
+	return r
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (r *ResourceMonitorModel) MarshalJSON() ([]byte, error) {
+	type Alias ResourceMonitorModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(r),
+		DependsOn: r.DependsOn(),
+	})
+}
+
+func (r *ResourceMonitorModel) WithDependsOn(values ...string) *ResourceMonitorModel {
+	r.SetDependsOn(values...)
 	return r
 }
 

@@ -8,9 +8,10 @@ import (
 	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
-	accConfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
@@ -35,7 +36,7 @@ func TestAcc_Secrets_WithClientCredentials(t *testing.T) {
 
 	secretModel := model.SecretWithClientCredentials("test", integrationId.Name(), id.DatabaseName(), id.SchemaName(), id.Name(), []string{"username", "test_scope"})
 
-	dataSecretsClientCredentials := accConfig.FromModel(t, secretModel) + secretsData(secretModel, id)
+	dataSecretsClientCredentials := accconfig.FromModels(t, secretModel) + secretsData(secretModel, id)
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -90,7 +91,7 @@ func TestAcc_Secrets_WithAuthorizationCodeGrant(t *testing.T) {
 
 	secretModel := model.SecretWithAuthorizationCodeGrant("test", integrationId.Name(), id.DatabaseName(), id.SchemaName(), id.Name(), "test_token", time.Now().Add(24*time.Hour).Format(time.DateTime)).WithComment("test_comment")
 
-	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretModel, id)
+	dataSecretsAuthorizationCode := accconfig.FromModels(t, secretModel) + secretsData(secretModel, id)
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -131,7 +132,7 @@ func TestAcc_Secrets_WithBasicAuthentication(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	secretModel := model.SecretWithBasicAuthentication("test", id.DatabaseName(), id.Name(), "test_passwd", id.SchemaName(), "test_username")
-	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretModel, id)
+	dataSecretsAuthorizationCode := accconfig.FromModels(t, secretModel) + secretsData(secretModel, id)
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -172,7 +173,7 @@ func TestAcc_Secrets_WithGenericString(t *testing.T) {
 
 	secretModel := model.SecretWithGenericString("test", id.DatabaseName(), id.Name(), id.SchemaName(), "test_secret_string")
 
-	dataSecretsAuthorizationCode := accConfig.FromModel(t, secretModel) + secretsData(secretModel, id)
+	dataSecretsAuthorizationCode := accconfig.FromModels(t, secretModel) + secretsData(secretModel, id)
 
 	dsName := "data.snowflake_secrets.test"
 	resource.Test(t, resource.TestCase{
@@ -209,7 +210,7 @@ func TestAcc_Secrets_WithGenericString(t *testing.T) {
 	})
 }
 
-func secretsData(secretModel accConfig.ResourceModel, secretId sdk.SchemaObjectIdentifier) string {
+func secretsData(secretModel accconfig.ResourceModel, secretId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
     data "snowflake_secrets" "test" {
         depends_on = [%s.test]
@@ -247,11 +248,11 @@ func TestAcc_Secrets_Filtering(t *testing.T) {
 	secretModelAuthorizationCodeGrant := model.SecretWithAuthorizationCodeGrant("s4", integrationId.Name(), idFour.DatabaseName(), idFour.SchemaName(), idFour.Name(), "test_token", time.Now().Add(24*time.Hour).Format(time.DateTime))
 	secretModelInDifferentSchema := model.SecretWithBasicAuthentication("s5", idFive.DatabaseName(), idFive.Name(), "test_passwd", idFive.SchemaName(), "test_username")
 
-	multipleSecretModels := accConfig.FromModel(t, secretModelBasicAuth) +
-		accConfig.FromModel(t, secretModelGenericString) +
-		accConfig.FromModel(t, secretModelClientCredentials) +
-		accConfig.FromModel(t, secretModelAuthorizationCodeGrant) +
-		accConfig.FromModel(t, secretModelInDifferentSchema)
+	multipleSecretModels := accconfig.FromModels(t, secretModelBasicAuth) +
+		accconfig.FromModels(t, secretModelGenericString) +
+		accconfig.FromModels(t, secretModelClientCredentials) +
+		accconfig.FromModels(t, secretModelAuthorizationCodeGrant) +
+		accconfig.FromModels(t, secretModelInDifferentSchema)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

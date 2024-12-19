@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -53,6 +55,26 @@ func StreamOnDirectoryTableWithDefaultMeta(
 	s.WithName(name)
 	s.WithSchema(schema)
 	s.WithStage(stage)
+	return s
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (s *StreamOnDirectoryTableModel) MarshalJSON() ([]byte, error) {
+	type Alias StreamOnDirectoryTableModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(s),
+		DependsOn: s.DependsOn(),
+	})
+}
+
+func (s *StreamOnDirectoryTableModel) WithDependsOn(values ...string) *StreamOnDirectoryTableModel {
+	s.SetDependsOn(values...)
 	return s
 }
 

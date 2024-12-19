@@ -3,6 +3,8 @@
 package datasourcemodel
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -10,8 +12,9 @@ import (
 )
 
 type AccountsModel struct {
-	Accounts tfconfig.Variable `json:"accounts,omitempty"`
-	Pattern  tfconfig.Variable `json:"pattern,omitempty"`
+	Accounts    tfconfig.Variable `json:"accounts,omitempty"`
+	Like        tfconfig.Variable `json:"like,omitempty"`
+	WithHistory tfconfig.Variable `json:"with_history,omitempty"`
 
 	*config.DatasourceModelMeta
 }
@@ -32,14 +35,39 @@ func AccountsWithDefaultMeta() *AccountsModel {
 	return a
 }
 
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (a *AccountsModel) MarshalJSON() ([]byte, error) {
+	type Alias AccountsModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(a),
+		DependsOn: a.DependsOn(),
+	})
+}
+
+func (a *AccountsModel) WithDependsOn(values ...string) *AccountsModel {
+	a.SetDependsOn(values...)
+	return a
+}
+
 /////////////////////////////////
 // below all the proper values //
 /////////////////////////////////
 
 // accounts attribute type is not yet supported, so WithAccounts can't be generated
 
-func (a *AccountsModel) WithPattern(pattern string) *AccountsModel {
-	a.Pattern = tfconfig.StringVariable(pattern)
+func (a *AccountsModel) WithLike(like string) *AccountsModel {
+	a.Like = tfconfig.StringVariable(like)
+	return a
+}
+
+func (a *AccountsModel) WithWithHistory(withHistory bool) *AccountsModel {
+	a.WithHistory = tfconfig.BoolVariable(withHistory)
 	return a
 }
 
@@ -52,7 +80,12 @@ func (a *AccountsModel) WithAccountsValue(value tfconfig.Variable) *AccountsMode
 	return a
 }
 
-func (a *AccountsModel) WithPatternValue(value tfconfig.Variable) *AccountsModel {
-	a.Pattern = value
+func (a *AccountsModel) WithLikeValue(value tfconfig.Variable) *AccountsModel {
+	a.Like = value
+	return a
+}
+
+func (a *AccountsModel) WithWithHistoryValue(value tfconfig.Variable) *AccountsModel {
+	a.WithHistory = value
 	return a
 }

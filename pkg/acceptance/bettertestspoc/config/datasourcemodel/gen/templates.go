@@ -23,6 +23,14 @@ var (
 		genhelpers.SnakeCaseToCamel,
 	)).Parse(definitionTemplateContent)
 
+	//go:embed templates/marshal_json.tmpl
+	marshalJsonTemplateContent string
+	MarshalJsonTemplate, _     = template.New("marshalJsonTemplate").Funcs(genhelpers.BuildTemplateFuncMap(
+		genhelpers.FirstLetterLowercase,
+		genhelpers.FirstLetter,
+		genhelpers.SnakeCaseToCamel,
+	)).Parse(marshalJsonTemplateContent)
+
 	// TODO [SNOW-1501905]: consider duplicating the builders template from resource (currently same template used for datasources and provider which limits the customization possibilities for just one block type)
-	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, resourcemodel.BuildersTemplate}
+	AllTemplates = []*template.Template{PreambleTemplate, DefinitionTemplate, MarshalJsonTemplate, resourcemodel.BuildersTemplate}
 )

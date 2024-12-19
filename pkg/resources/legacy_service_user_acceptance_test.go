@@ -89,7 +89,7 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE WITHOUT ATTRIBUTES
 			{
-				Config: config.FromModel(t, userModelNoAttributes),
+				Config: config.FromModels(t, userModelNoAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.LegacyServiceUserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
@@ -116,7 +116,7 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 			},
 			// RENAME AND CHANGE ONE PROP
 			{
-				Config: config.FromModel(t, userModelNoAttributesRenamed),
+				Config: config.FromModels(t, userModelNoAttributesRenamed),
 				Check: assert.AssertThat(t,
 					resourceassert.LegacyServiceUserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id2.Name()).
@@ -143,12 +143,12 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 			},
 			// DESTROY
 			{
-				Config:  config.FromModel(t, userModelNoAttributes),
+				Config:  config.FromModels(t, userModelNoAttributes),
 				Destroy: true,
 			},
 			// CREATE WITH ALL ATTRIBUTES
 			{
-				Config: config.FromModel(t, userModelAllAttributes),
+				Config: config.FromModels(t, userModelAllAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.LegacyServiceUserResource(t, userModelAllAttributes.ResourceReference()).
 						HasNameString(id.Name()).
@@ -172,7 +172,7 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: config.FromModel(t, userModelAllAttributesChanged(id.Name()+"_other_login")),
+				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_other_login")),
 				Check: assert.AssertThat(t,
 					resourceassert.LegacyServiceUserResource(t, userModelAllAttributesChanged(id.Name()+"_other_login").ResourceReference()).
 						HasNameString(id.Name()).
@@ -211,7 +211,7 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().User.SetLoginName(t, id, id.Name()+"_different_login")
 				},
-				Config: config.FromModel(t, userModelAllAttributesChanged(id.Name()+"_different_login")),
+				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_different_login")),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -220,7 +220,7 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 			},
 			// UNSET ALL
 			{
-				Config: config.FromModel(t, userModelNoAttributes),
+				Config: config.FromModels(t, userModelNoAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.LegacyServiceUserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
@@ -327,7 +327,7 @@ func TestAcc_LegacyServiceUser_AllParameters(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create with default values for all the parameters
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
@@ -347,7 +347,7 @@ func TestAcc_LegacyServiceUser_AllParameters(t *testing.T) {
 			},
 			// set all parameters
 			{
-				Config: config.FromModel(t, userModelWithAllParametersSet),
+				Config: config.FromModels(t, userModelWithAllParametersSet),
 				Check: assert.AssertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAbortDetachedQuery(true).
@@ -537,7 +537,7 @@ func TestAcc_LegacyServiceUser_AllParameters(t *testing.T) {
 			},
 			// unset all the parameters
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
@@ -564,7 +564,7 @@ func TestAcc_LegacyServiceUser_handleExternalTypeChange(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.LegacyServiceUser),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).HasNameString(userId.Name()).HasUserTypeString("LEGACY_SERVICE"),
 					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType("LEGACY_SERVICE"),
@@ -575,7 +575,7 @@ func TestAcc_LegacyServiceUser_handleExternalTypeChange(t *testing.T) {
 					acc.TestClient().User.SetType(t, userId, sdk.UserTypeService)
 					objectassert.User(t, userId).HasType(string(sdk.UserTypeService))
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(userModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
@@ -591,7 +591,7 @@ func TestAcc_LegacyServiceUser_handleExternalTypeChange(t *testing.T) {
 					acc.TestClient().User.UnsetType(t, userId)
 					objectassert.User(t, userId).HasType("")
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(userModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
