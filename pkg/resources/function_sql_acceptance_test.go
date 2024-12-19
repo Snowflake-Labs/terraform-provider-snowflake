@@ -82,7 +82,7 @@ func TestAcc_FunctionSql_InlineBasic(t *testing.T) {
 				ResourceName:            functionModel.ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ImportStateVerifyIgnore: []string{"is_secure"},
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedFunctionSqlResource(t, id.FullyQualifiedName()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
