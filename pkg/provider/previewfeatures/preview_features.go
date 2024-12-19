@@ -140,6 +140,7 @@ var allPreviewFeatures = []feature{
 	TableColumnMaskingPolicyApplicationResource,
 	TableConstraintResource,
 	TableResource,
+	TablesDatasource,
 	UserAuthenticationPolicyAttachmentResource,
 	UserPublicKeysResource,
 	UserPasswordPolicyAttachmentResource,
