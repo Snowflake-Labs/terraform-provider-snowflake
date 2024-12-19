@@ -2,8 +2,9 @@ package datasources_test
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -46,6 +47,8 @@ func TestAcc_Procedures(t *testing.T) {
 
 // TODO [SNOW-1348103]: use generated config builder when reworking the datasource
 func proceduresConfig(t *testing.T) string {
+	t.Helper()
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"

@@ -44,6 +44,8 @@ func TestAcc_Functions(t *testing.T) {
 
 // TODO [SNOW-1348103]: use generated config builder when reworking the datasource
 func functionsConfig(t *testing.T) string {
+	t.Helper()
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"
