@@ -90,17 +90,6 @@ func FromModels(t *testing.T, models ...any) string {
 	return sb.String()
 }
 
-// FromModelsDeprecated allows to combine multiple resource models.
-// Use FromModels instead.
-func FromModelsDeprecated(t *testing.T, models ...ResourceModel) string {
-	t.Helper()
-	var sb strings.Builder
-	for _, model := range models {
-		sb.WriteString(FromModels(t, model) + "\n")
-	}
-	return sb.String()
-}
-
 // ConfigVariablesFromModel constructs config.Variables needed in acceptance tests that are using ConfigVariables in
 // combination with ConfigDirectory. It's necessary for cases not supported by FromModel, like lists of objects.
 // Use ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels instead.
