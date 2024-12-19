@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	tfjson "github.com/hashicorp/terraform-json"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
@@ -15,7 +17,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -41,7 +42,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create
 			{
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
@@ -75,7 +76,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 			},
 			// set secret_string and comment
 			{
-				Config: config.FromModel(t, secretModel.
+				Config: config.FromModels(t, secretModel.
 					WithSecretString("bar").
 					WithComment(comment),
 				),
@@ -106,7 +107,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 						),
 					)
 				},
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretName, plancheck.ResourceActionUpdate),
@@ -138,7 +139,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 			},
 			// unset comment
 			{
-				Config: config.FromModel(t, secretModelEmptySecretString),
+				Config: config.FromModels(t, secretModelEmptySecretString),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -165,12 +166,12 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 			},
 			// destroy
 			{
-				Config:  config.FromModel(t, secretModel),
+				Config:  config.FromModels(t, secretModel),
 				Destroy: true,
 			},
 			// create with empty secret_string
 			{
-				Config: config.FromModel(t, secretModelEmptySecretString),
+				Config: config.FromModels(t, secretModelEmptySecretString),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretModelEmptySecretString.ResourceReference()).
@@ -201,7 +202,7 @@ func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create
 			{
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
@@ -218,7 +219,7 @@ func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
 					_, cleanup := acc.TestClient().Secret.CreateWithBasicAuthenticationFlow(t, id, "test_pswd", "test_usr")
 					t.Cleanup(cleanup)
 				},
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),

@@ -7,24 +7,24 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -49,7 +49,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -263,7 +263,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, basicConfigModel),
+				Config: config.FromModels(t, basicConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -357,7 +357,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 			},
 			// Unset
 			{
-				Config: config.FromModel(t, basicConfigModel),
+				Config: config.FromModels(t, basicConfigModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(basicConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -459,7 +459,7 @@ func TestAcc_Task_UpdatesInComplexDAG(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, basicConfigModel),
+				Config: config.FromModels(t, basicConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(child3Id.FullyQualifiedName()).
@@ -480,7 +480,7 @@ func TestAcc_Task_UpdatesInComplexDAG(t *testing.T) {
 			},
 			// Update some fields in child3
 			{
-				Config: config.FromModel(t, basicConfigModelAfterUpdate),
+				Config: config.FromModels(t, basicConfigModelAfterUpdate),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, basicConfigModelAfterUpdate.ResourceReference()).
 						HasFullyQualifiedNameString(child3Id.FullyQualifiedName()).
@@ -527,7 +527,7 @@ func TestAcc_Task_StatementSpaces(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -545,7 +545,7 @@ func TestAcc_Task_StatementSpaces(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, configModelWithSpacesInStatements),
+				Config: config.FromModels(t, configModelWithSpacesInStatements),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -712,7 +712,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 			},
 			// Unset optional values
 			{
-				Config: config.FromModel(t, basicConfigModel),
+				Config: config.FromModels(t, basicConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -774,7 +774,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						plancheck.ExpectResourceAction(basicConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Config: config.FromModel(t, basicConfigModel),
+				Config: config.FromModels(t, basicConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -839,7 +839,7 @@ func TestAcc_Task_CallingProcedure(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -2537,7 +2537,7 @@ func TestAcc_Task_StateUpgradeWithAfter(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModel),
+				Config:                   config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).

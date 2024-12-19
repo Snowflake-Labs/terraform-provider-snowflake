@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	accConfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
@@ -37,7 +37,7 @@ func TestAcc_Connections_Minimal(t *testing.T) {
 
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
 
-	dataConnections := accConfig.FromModel(t, connectionModel) + connectionsData()
+	dataConnections := accconfig.FromModels(t, connectionModel) + connectionsData()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -85,7 +85,7 @@ func TestAcc_Connections_Complete(t *testing.T) {
 
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
 
-	dataConnections := accConfig.FromModel(t, connectionModel) + connectionsData()
+	dataConnections := accconfig.FromModels(t, connectionModel) + connectionsData()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -135,9 +135,9 @@ func TestAcc_Connections_Filtering(t *testing.T) {
 	connectionModelTwo := model.PrimaryConnection("c2", idTwo.Name())
 	connectionModelThree := model.PrimaryConnection("c3", idThree.Name())
 
-	configWithLike := accConfig.FromModel(t, connectionModelOne) +
-		accConfig.FromModel(t, connectionModelTwo) +
-		accConfig.FromModel(t, connectionModelThree)
+	configWithLike := accconfig.FromModels(t, connectionModelOne) +
+		accconfig.FromModels(t, connectionModelTwo) +
+		accconfig.FromModels(t, connectionModelThree)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -181,8 +181,8 @@ func TestAcc_Connections_FilteringWithReplica(t *testing.T) {
 	connectionModelOne := model.PrimaryConnection("c1", idOne.Name())
 	connectionModelTwo := model.SecondaryConnection("c2", primaryConnectionAsExternalId.FullyQualifiedName(), idTwo.Name())
 
-	configWithLike := accConfig.FromModel(t, connectionModelOne) +
-		accConfig.FromModel(t, connectionModelTwo)
+	configWithLike := accconfig.FromModels(t, connectionModelOne) +
+		accconfig.FromModels(t, connectionModelTwo)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

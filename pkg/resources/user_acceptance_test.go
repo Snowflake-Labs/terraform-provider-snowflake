@@ -103,7 +103,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE WITHOUT ATTRIBUTES
 			{
-				Config: config.FromModel(t, userModelNoAttributes),
+				Config: config.FromModels(t, userModelNoAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
@@ -135,7 +135,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 			},
 			// RENAME AND CHANGE ONE PROP
 			{
-				Config: config.FromModel(t, userModelNoAttributesRenamed),
+				Config: config.FromModels(t, userModelNoAttributesRenamed),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id2.Name()).
@@ -162,12 +162,12 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 			},
 			// DESTROY
 			{
-				Config:  config.FromModel(t, userModelNoAttributes),
+				Config:  config.FromModels(t, userModelNoAttributes),
 				Destroy: true,
 			},
 			// CREATE WITH ALL ATTRIBUTES
 			{
-				Config: config.FromModel(t, userModelAllAttributes),
+				Config: config.FromModels(t, userModelAllAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelAllAttributes.ResourceReference()).
 						HasNameString(id.Name()).
@@ -196,7 +196,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: config.FromModel(t, userModelAllAttributesChanged(id.Name()+"_other_login")),
+				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_other_login")),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelAllAttributesChanged(id.Name()+"_other_login").ResourceReference()).
 						HasNameString(id.Name()).
@@ -240,7 +240,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().User.SetLoginName(t, id, id.Name()+"_different_login")
 				},
-				Config: config.FromModel(t, userModelAllAttributesChanged(id.Name()+"_different_login")),
+				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_different_login")),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -249,7 +249,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 			},
 			// UNSET ALL
 			{
-				Config: config.FromModel(t, userModelNoAttributes),
+				Config: config.FromModels(t, userModelNoAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
@@ -299,7 +299,7 @@ func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -308,7 +308,7 @@ func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
 			},
 			{
 				PreConfig: acc.TestClient().User.DropUserFunc(t, userId),
-				Config:    config.FromModel(t, userModel),
+				Config:    config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -347,7 +347,7 @@ func TestAcc_User_issue2058(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel1),
+				Config: config.FromModels(t, userModel1),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel1.ResourceReference()).HasNameString(userId.Name()),
 				),
@@ -434,7 +434,7 @@ func TestAcc_User_AllParameters(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create with default values for all the parameters
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
@@ -454,7 +454,7 @@ func TestAcc_User_AllParameters(t *testing.T) {
 			},
 			// set all parameters
 			{
-				Config: config.FromModel(t, userModelWithAllParametersSet),
+				Config: config.FromModels(t, userModelWithAllParametersSet),
 				Check: assert.AssertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAbortDetachedQuery(true).
@@ -644,7 +644,7 @@ func TestAcc_User_AllParameters(t *testing.T) {
 			},
 			// unset all the parameters
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
@@ -674,7 +674,7 @@ func TestAcc_User_issue2836(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					objectassert.User(t, userId).
 						HasDefaultRole(defaultRole),
@@ -715,7 +715,7 @@ func TestAcc_User_issue2970(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasPasswordString(pass).
@@ -723,7 +723,7 @@ func TestAcc_User_issue2970(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, newUserModelIncorrectNewKey),
+				Config: config.FromModels(t, newUserModelIncorrectNewKey),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(newUserModelIncorrectNewKey.ResourceReference(), "password", tfjson.ActionUpdate, sdk.String(pass), sdk.String(newPass)),
@@ -733,7 +733,7 @@ func TestAcc_User_issue2970(t *testing.T) {
 				ExpectError: regexp.MustCompile("New public key rejected by current policy"),
 			},
 			{
-				Config: config.FromModel(t, newUserModel),
+				Config: config.FromModels(t, newUserModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(newUserModel.ResourceReference(), "password", tfjson.ActionUpdate, sdk.String(pass), sdk.String(newPass)),
@@ -764,7 +764,7 @@ func TestAcc_User_issue1572(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasDisabledString(r.BooleanDefault),
@@ -776,7 +776,7 @@ func TestAcc_User_issue1572(t *testing.T) {
 					acc.TestClient().User.Disable(t, userId)
 					objectassert.User(t, userId).HasDisabled(true)
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectDrift(userModel.ResourceReference(), "disabled", sdk.String(r.BooleanDefault), sdk.String(r.BooleanTrue)),
@@ -812,14 +812,14 @@ func TestAcc_User_issue1535_withNullPassword(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasPasswordString(pass),
 				),
 			},
 			{
-				Config: config.FromModel(t, userWithNullPasswordModel),
+				Config: config.FromModels(t, userWithNullPasswordModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userWithNullPasswordModel.ResourceReference(), "password", tfjson.ActionUpdate, sdk.String(pass), nil),
@@ -852,14 +852,14 @@ func TestAcc_User_issue1535_withRemovedPassword(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasPasswordString(pass),
 				),
 			},
 			{
-				Config: config.FromModel(t, userWithoutPasswordModel),
+				Config: config.FromModels(t, userWithoutPasswordModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userWithoutPasswordModel.ResourceReference(), "password", tfjson.ActionUpdate, sdk.String(pass), nil),
@@ -892,7 +892,7 @@ func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
 		Steps: []resource.TestStep{
 			// 1. create without days_to_expiry
 			{
-				Config: config.FromModel(t, userModelWithoutDaysToExpiry),
+				Config: config.FromModels(t, userModelWithoutDaysToExpiry),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithoutDaysToExpiry.ResourceReference()).HasNoDaysToExpiry(),
 					objectassert.User(t, userId).HasDaysToExpiryEmpty(),
@@ -900,7 +900,7 @@ func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
 			},
 			// 2. change to 10 (no plan after)
 			{
-				Config: config.FromModel(t, userModelDaysToExpiry10),
+				Config: config.FromModels(t, userModelDaysToExpiry10),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelDaysToExpiry10.ResourceReference()).HasDaysToExpiryString("10"),
 					objectassert.User(t, userId).HasDaysToExpiryNotEmpty(),
@@ -911,7 +911,7 @@ func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().User.SetDaysToExpiry(t, userId, 2)
 				},
-				Config: config.FromModel(t, userModelDaysToExpiry10),
+				Config: config.FromModels(t, userModelDaysToExpiry10),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -923,7 +923,7 @@ func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().User.SetDaysToExpiry(t, userId, 0)
 				},
-				Config: config.FromModel(t, userModelDaysToExpiry10),
+				Config: config.FromModels(t, userModelDaysToExpiry10),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -932,7 +932,7 @@ func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
 			},
 			// 5. change in config to 5 (change)
 			{
-				Config: config.FromModel(t, userModelDaysToExpiry5),
+				Config: config.FromModels(t, userModelDaysToExpiry5),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelDaysToExpiry5.ResourceReference(), "days_to_expiry", tfjson.ActionUpdate, sdk.String("10"), sdk.String("5")),
@@ -945,7 +945,7 @@ func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
 			},
 			// 6. change in config to 0 (change)
 			{
-				Config: config.FromModel(t, userModelDaysToExpiry0),
+				Config: config.FromModels(t, userModelDaysToExpiry0),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelDaysToExpiry0.ResourceReference(), "days_to_expiry", tfjson.ActionUpdate, sdk.String("5"), sdk.String("0")),
@@ -958,7 +958,7 @@ func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
 			},
 			// 7. remove from config (no change)
 			{
-				Config: config.FromModel(t, userModelWithoutDaysToExpiry),
+				Config: config.FromModels(t, userModelWithoutDaysToExpiry),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -987,7 +987,7 @@ func TestAcc_User_handleExternalTypeChange(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).HasNameString(userId.Name()).HasUserTypeString(""),
 					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType(""),
@@ -998,7 +998,7 @@ func TestAcc_User_handleExternalTypeChange(t *testing.T) {
 					acc.TestClient().User.SetType(t, userId, sdk.UserTypeService)
 					objectassert.User(t, userId).HasType(string(sdk.UserTypeService))
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(userModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
@@ -1015,7 +1015,7 @@ func TestAcc_User_handleExternalTypeChange(t *testing.T) {
 					acc.TestClient().User.SetType(t, userId, sdk.UserTypePerson)
 					objectassert.User(t, userId).HasType("PERSON")
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1032,7 +1032,7 @@ func TestAcc_User_handleExternalTypeChange(t *testing.T) {
 					acc.TestClient().User.UnsetType(t, userId)
 					objectassert.User(t, userId).HasType("")
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1068,7 +1068,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 		Steps: []resource.TestStep{
 			// 1. create without default secondary roles option set (DEFAULT will be used)
 			{
-				Config: config.FromModel(t, userModelEmpty),
+				Config: config.FromModels(t, userModelEmpty),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(""),
@@ -1076,7 +1076,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 			},
 			// 2. add default secondary roles NONE (expecting change because null != [] on Snowflake side)
 			{
-				Config: config.FromModel(t, userModelWithOptionNone),
+				Config: config.FromModels(t, userModelWithOptionNone),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectNonEmptyPlan(),
@@ -1089,7 +1089,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 			},
 			// 3. add default secondary roles ALL
 			{
-				Config: config.FromModel(t, userModelWithOptionAll),
+				Config: config.FromModels(t, userModelWithOptionAll),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithOptionAll.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(`["ALL"]`),
@@ -1097,7 +1097,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 			},
 			// 4. change to lowercase (no changes)
 			{
-				Config: config.FromModel(t, userModelLowercaseValue),
+				Config: config.FromModels(t, userModelLowercaseValue),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1109,7 +1109,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().User.UnsetDefaultSecondaryRoles(t, userId)
 				},
-				Config: config.FromModel(t, userModelWithOptionAll),
+				Config: config.FromModels(t, userModelWithOptionAll),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelWithOptionAll.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("DEFAULT"), sdk.String("ALL")),
@@ -1122,7 +1122,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 			},
 			// 6. unset in config (change)
 			{
-				Config: config.FromModel(t, userModelEmpty),
+				Config: config.FromModels(t, userModelEmpty),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelEmpty.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("ALL"), sdk.String("DEFAULT")),
@@ -1135,17 +1135,17 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 			},
 			// 7. incorrect value used
 			{
-				Config:      config.FromModel(t, userModelIncorrectValue),
+				Config:      config.FromModels(t, userModelIncorrectValue),
 				ExpectError: regexp.MustCompile("invalid secondary roles option: OTHER"),
 			},
 			// 8. set to empty in config (invalid)
 			{
-				Config:      config.FromModel(t, userModelEmptyValue),
+				Config:      config.FromModels(t, userModelEmptyValue),
 				ExpectError: regexp.MustCompile("invalid secondary roles option: "),
 			},
 			// 9. set in config to NONE (change)
 			{
-				Config: config.FromModel(t, userModelWithOptionNone),
+				Config: config.FromModels(t, userModelWithOptionNone),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelWithOptionNone.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("DEFAULT"), sdk.String("NONE")),
@@ -1158,7 +1158,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 			},
 			// 10. unset in config (change)
 			{
-				Config: config.FromModel(t, userModelEmpty),
+				Config: config.FromModels(t, userModelEmpty),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelEmpty.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("NONE"), sdk.String("DEFAULT")),
@@ -1171,7 +1171,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 			},
 			// 11. add default secondary roles ALL
 			{
-				Config: config.FromModel(t, userModelWithOptionAll),
+				Config: config.FromModels(t, userModelWithOptionAll),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithOptionAll.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(`["ALL"]`),
@@ -1179,7 +1179,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 			},
 			// 12. set to null value in config (change)
 			{
-				Config: config.FromModel(t, userModelNullValue),
+				Config: config.FromModels(t, userModelNullValue),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelNullValue.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("ALL"), sdk.String("DEFAULT")),
@@ -1218,7 +1218,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
 				},
-				Config: config.FromModel(t, userModelEmpty),
+				Config: config.FromModels(t, userModelEmpty),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(`["ALL"]`),
@@ -1231,11 +1231,11 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
-				Config: config.FromModel(t, userModelWithOptionAll),
+				Config: config.FromModels(t, userModelWithOptionAll),
 			},
 			// 3. change to lowercase (change because we have DEFAULT in state because previous step was suppressed so none of the suppressors NormalizeAndCompare nor IgnoreChangeToCurrentSnowflakeValueInShowWithMapping suppresses it; it can be made better later)
 			{
-				Config: config.FromModel(t, userModelLowercaseValue),
+				Config: config.FromModels(t, userModelLowercaseValue),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelWithOptionNone.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("DEFAULT"), sdk.String("all")),
@@ -1248,7 +1248,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 			},
 			// 4. add default secondary roles NONE
 			{
-				Config: config.FromModel(t, userModelWithOptionNone),
+				Config: config.FromModels(t, userModelWithOptionNone),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithOptionNone.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionNone),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(`[]`),
@@ -1259,7 +1259,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().User.UnsetDefaultSecondaryRoles(t, userId)
 				},
-				Config: config.FromModel(t, userModelWithOptionNone),
+				Config: config.FromModels(t, userModelWithOptionNone),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelWithOptionNone.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("ALL"), sdk.String("NONE")),
@@ -1272,7 +1272,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 			},
 			// 6. unset in config (change)
 			{
-				Config: config.FromModel(t, userModelEmpty),
+				Config: config.FromModels(t, userModelEmpty),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelEmpty.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("NONE"), sdk.String("DEFAULT")),
@@ -1285,17 +1285,17 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 			},
 			// 7. incorrect value used
 			{
-				Config:      config.FromModel(t, userModelIncorrectValue),
+				Config:      config.FromModels(t, userModelIncorrectValue),
 				ExpectError: regexp.MustCompile("invalid secondary roles option: OTHER"),
 			},
 			// 8. set to empty in config (invalid)
 			{
-				Config:      config.FromModel(t, userModelEmptyValue),
+				Config:      config.FromModels(t, userModelEmptyValue),
 				ExpectError: regexp.MustCompile("invalid secondary roles option: "),
 			},
 			// 9. set in config to NONE (change)
 			{
-				Config: config.FromModel(t, userModelWithOptionNone),
+				Config: config.FromModels(t, userModelWithOptionNone),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelWithOptionNone.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("DEFAULT"), sdk.String("NONE")),
@@ -1308,7 +1308,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 			},
 			// 10. unset in config (change)
 			{
-				Config: config.FromModel(t, userModelEmpty),
+				Config: config.FromModels(t, userModelEmpty),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectChange(userModelEmpty.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String("NONE"), sdk.String("DEFAULT")),
@@ -1321,7 +1321,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 			},
 			// 11. add default secondary roles NONE
 			{
-				Config: config.FromModel(t, userModelWithOptionNone),
+				Config: config.FromModels(t, userModelWithOptionNone),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionNone),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(`[]`),
@@ -1329,7 +1329,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 			},
 			// 12. set to null value in config (change)
 			{
-				Config: config.FromModel(t, userModelNullValue),
+				Config: config.FromModels(t, userModelNullValue),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(`["ALL"]`),
@@ -1359,7 +1359,7 @@ func TestAcc_User_migrateFromVersion094_noDefaultSecondaryRolesSet(t *testing.T)
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(userModel.ResourceReference(), "name", id.Name()),
 					resource.TestCheckResourceAttr(userModel.ResourceReference(), "default_secondary_roles.#", "0"),
@@ -1368,7 +1368,7 @@ func TestAcc_User_migrateFromVersion094_noDefaultSecondaryRolesSet(t *testing.T)
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, userModel),
+				Config:                   config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// we do not have a plancheck yet to validate no changes on the given field; this is a current alternative
@@ -1420,7 +1420,7 @@ resource "snowflake_user" "test" {
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, userModelWithOptionAll),
+				Config:                   config.FromModels(t, userModelWithOptionAll),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						// we do not have a plancheck yet to validate no changes on the given field; this is a current alternative
@@ -1459,7 +1459,7 @@ func TestAcc_User_ParameterValidationsAndDiffSuppressions(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasBinaryInputFormatString(string(sdk.BinaryInputFormatHex)).
@@ -1493,7 +1493,7 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create without both set
 			{
-				Config: config.FromModel(t, userModelWithoutBoth),
+				Config: config.FromModels(t, userModelWithoutBoth),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithoutBoth.ResourceReference()).
 						HasNoDisplayName().
@@ -1505,7 +1505,7 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 			},
 			// Rename
 			{
-				Config: config.FromModel(t, userModelWithNewId),
+				Config: config.FromModels(t, userModelWithNewId),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithNewId.ResourceReference()).
 						HasNoDisplayName().
@@ -1517,7 +1517,7 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 			},
 			// Set both params
 			{
-				Config: config.FromModel(t, userModelWithBoth),
+				Config: config.FromModels(t, userModelWithBoth),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithBoth.ResourceReference()).
 						HasDisplayNameString("display_name").
@@ -1539,7 +1539,7 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 						},
 					})
 				},
-				Config: config.FromModel(t, userModelWithBoth),
+				Config: config.FromModels(t, userModelWithBoth),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithBoth.ResourceReference()).
 						HasDisplayNameString("display_name").
@@ -1551,7 +1551,7 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 			},
 			// Unset both params
 			{
-				Config: config.FromModel(t, userModelWithNewId),
+				Config: config.FromModels(t, userModelWithNewId),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithNewId.ResourceReference()).
 						HasDisplayNameString("").
@@ -1575,7 +1575,7 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 						},
 					})
 				},
-				Config: config.FromModel(t, userModelWithNewId),
+				Config: config.FromModels(t, userModelWithNewId),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithNewId.ResourceReference()).
 						HasDisplayNameString("").
@@ -1609,14 +1609,14 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
 				},
-				Config: config.FromModel(t, userModelNoAttributes),
+				Config: config.FromModels(t, userModelNoAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelNoAttributes.ResourceReference()).
 						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
 				),
 			},
 			{
-				Config: config.FromModel(t, userModelWithNoneDefaultSecondaryRoles),
+				Config: config.FromModels(t, userModelWithNoneDefaultSecondaryRoles),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModelWithNoneDefaultSecondaryRoles.ResourceReference()).
 						HasAllDefaults(userId, sdk.SecondaryRolesOptionNone),
@@ -1647,7 +1647,7 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125_withbcr202407(t *tes
 					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
 					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasAllDefaults(userId, sdk.SecondaryRolesOptionNone),
@@ -1683,7 +1683,7 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_enabled
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
@@ -1695,7 +1695,7 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_enabled
 					func() { acc.UnsetConfigPathEnv(t) }()
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, userModel),
+				Config:                   config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1733,7 +1733,7 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_disable
 					},
 				},
 				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				Config:    config.FromModel(t, userModel),
+				Config:    config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
@@ -1745,7 +1745,7 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_disable
 					func() { acc.UnsetConfigPathEnv(t) }()
 				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, userModel),
+				Config:                   config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.ExpectDrift(userModel.ResourceReference(), "default_secondary_roles_option", sdk.String(string(sdk.SecondaryRolesOptionDefault)), sdk.String(string(sdk.SecondaryRolesOptionAll))),
@@ -1790,7 +1790,7 @@ func TestAcc_User_importPassword(t *testing.T) {
 		Steps: []resource.TestStep{
 			// IMPORT
 			{
-				Config:        config.FromModel(t, userModel),
+				Config:        config.FromModels(t, userModel),
 				ResourceName:  userModel.ResourceReference(),
 				ImportState:   true,
 				ImportStateId: userId.Name(),
@@ -1802,7 +1802,7 @@ func TestAcc_User_importPassword(t *testing.T) {
 				ImportStatePersist: true,
 			},
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasNotEmptyPassword().
@@ -1815,7 +1815,7 @@ func TestAcc_User_importPassword(t *testing.T) {
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasNotEmptyPassword().

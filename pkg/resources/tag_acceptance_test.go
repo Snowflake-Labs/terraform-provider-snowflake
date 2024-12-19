@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
@@ -12,10 +14,8 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -59,7 +59,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// base model
 			{
-				Config: config.FromModel(t, baseModel),
+				Config: config.FromModels(t, baseModel),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, baseModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -81,14 +81,14 @@ func TestAcc_Tag_basic(t *testing.T) {
 			},
 			// import without optionals
 			{
-				Config:            config.FromModel(t, baseModel),
+				Config:            config.FromModels(t, baseModel),
 				ResourceName:      baseModel.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			// set all fields
 			{
-				Config: config.FromModel(t, modelWithExtraFields),
+				Config: config.FromModels(t, modelWithExtraFields),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithExtraFields.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -120,7 +120,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().Tag.Alter(t, sdk.NewAlterTagRequest(id).WithDrop([]string{"foo"}))
 				},
-				Config: config.FromModel(t, modelWithExtraFields),
+				Config: config.FromModels(t, modelWithExtraFields),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithExtraFields.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -149,7 +149,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			},
 			// different set ordering
 			{
-				Config: config.FromModel(t, modelWithDifferentListOrder),
+				Config: config.FromModels(t, modelWithDifferentListOrder),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(modelWithDifferentListOrder.ResourceReference(), plancheck.ResourceActionNoop),
@@ -183,7 +183,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			},
 			// change some values
 			{
-				Config: config.FromModel(t, modelWithDifferentValues),
+				Config: config.FromModels(t, modelWithDifferentValues),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithDifferentValues.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -212,7 +212,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			},
 			// unset optionals
 			{
-				Config: config.FromModel(t, baseModel),
+				Config: config.FromModels(t, baseModel),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, baseModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -257,7 +257,7 @@ func TestAcc_Tag_complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Tag),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -285,7 +285,7 @@ func TestAcc_Tag_complete(t *testing.T) {
 				),
 			},
 			{
-				Config:            config.FromModel(t, model),
+				Config:            config.FromModels(t, model),
 				ResourceName:      model.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -310,7 +310,7 @@ func TestAcc_Tag_Rename(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Tag),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, modelWithOldId),
+				Config: config.FromModels(t, modelWithOldId),
 				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithOldId.ResourceReference()).
 					HasNameString(oldId.Name()).
 					HasDatabaseString(oldId.DatabaseName()).
@@ -318,7 +318,7 @@ func TestAcc_Tag_Rename(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, modelWithNewId),
+				Config: config.FromModels(t, modelWithNewId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(modelWithOldId.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -360,7 +360,7 @@ func TestAcc_Tag_migrateFromVersion_0_98_0(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, model),
+				Config:                   config.FromModels(t, model),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionNoop),

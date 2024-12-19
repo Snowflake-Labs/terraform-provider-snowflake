@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
@@ -15,7 +17,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -54,7 +55,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// without optionals
 			{
-				Config: config.FromModel(t, baseModel()),
+				Config: config.FromModels(t, baseModel()),
 				Check: assert.AssertThat(t, resourceassert.StreamOnDirectoryTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -95,7 +96,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 			},
 			// import without optionals
 			{
-				Config:       config.FromModel(t, baseModel()),
+				Config:       config.FromModels(t, baseModel()),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
@@ -109,7 +110,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 			},
 			// set all fields
 			{
-				Config: config.FromModel(t, modelWithExtraFields),
+				Config: config.FromModels(t, modelWithExtraFields),
 				Check: assert.AssertThat(t, resourceassert.StreamOnDirectoryTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -154,7 +155,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().Stream.Alter(t, sdk.NewAlterStreamRequest(id).WithSetComment("bar"))
 				},
-				Config: config.FromModel(t, modelWithExtraFields),
+				Config: config.FromModels(t, modelWithExtraFields),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -201,7 +202,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 			},
 			// update fields
 			{
-				Config: config.FromModel(t, modelWithExtraFieldsModified),
+				Config: config.FromModels(t, modelWithExtraFieldsModified),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -248,7 +249,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 			},
 			// import
 			{
-				Config:       config.FromModel(t, modelWithExtraFieldsModified),
+				Config:       config.FromModels(t, modelWithExtraFieldsModified),
 				ResourceName: resourceName,
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
@@ -285,7 +286,7 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model.WithCopyGrants(true)),
+				Config: config.FromModels(t, model.WithCopyGrants(true)),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
@@ -295,7 +296,7 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, model.WithCopyGrants(false)),
+				Config: config.FromModels(t, model.WithCopyGrants(false)),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
@@ -307,7 +308,7 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, model.WithCopyGrants(true)),
+				Config: config.FromModels(t, model.WithCopyGrants(true)),
 				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
@@ -350,7 +351,7 @@ func TestAcc_StreamOnDirectoryTable_CheckGrantsAfterRecreation(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model1) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Config: config.FromModels(t, model1) + grantStreamPrivilegesConfig(resourceName, role.ID()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
@@ -358,14 +359,14 @@ func TestAcc_StreamOnDirectoryTable_CheckGrantsAfterRecreation(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, model2) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Config: config.FromModels(t, model2) + grantStreamPrivilegesConfig(resourceName, role.ID()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
 				),
 			},
 			{
-				Config:             config.FromModel(t, model1WithoutCopyGrants) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Config:             config.FromModels(t, model1WithoutCopyGrants) + grantStreamPrivilegesConfig(resourceName, role.ID()),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -429,7 +430,7 @@ func TestAcc_StreamOnDirectoryTable_RecreateWhenStale(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				Check: assert.AssertThat(t, resourceassert.StreamOnDirectoryTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
@@ -454,7 +455,7 @@ func TestAcc_StreamOnDirectoryTable_InvalidConfiguration(t *testing.T) {
 		Steps: []resource.TestStep{
 			// invalid stage id
 			{
-				Config:      config.FromModel(t, modelWithInvalidStageId),
+				Config:      config.FromModels(t, modelWithInvalidStageId),
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
 			},
 		},
@@ -476,7 +477,7 @@ func TestAcc_StreamOnDirectoryTable_ExternalStreamTypeChange(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.StreamOnDirectoryTableResource(t, model.ResourceReference()).
@@ -496,7 +497,7 @@ func TestAcc_StreamOnDirectoryTable_ExternalStreamTypeChange(t *testing.T) {
 					t.Cleanup(cleanup)
 					require.Equal(t, sdk.StreamSourceTypeTable, *externalChangeStream.SourceType)
 				},
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),

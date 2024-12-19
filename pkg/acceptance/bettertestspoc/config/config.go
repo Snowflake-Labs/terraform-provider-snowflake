@@ -1,8 +1,6 @@
 package config
 
 import (
-	"encoding/json"
-	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -67,7 +65,8 @@ func ProviderFromModel(t *testing.T, model ProviderModel) string {
 	return hcl
 }
 
-// FromModels allows to combine multiple models.
+// FromModels should be used in terraform acceptance tests for Config attribute to get string config from all models.
+// FromModels allows to combine multiple model types.
 // TODO [SNOW-1501905]: introduce some common interface for all three existing models (ResourceModel, DatasourceModel, and ProviderModel)
 func FromModels(t *testing.T, models ...any) string {
 	t.Helper()
@@ -91,46 +90,13 @@ func FromModels(t *testing.T, models ...any) string {
 	return sb.String()
 }
 
-// FromModel should be used in terraform acceptance tests for Config attribute to get string config from ResourceModel.
-// Current implementation is really straightforward but it could be improved and tested. It may not handle all cases (like objects, lists, sets) correctly.
-// TODO [SNOW-1501905]: use reflection to build config directly from model struct (or some other different way)
-// TODO [SNOW-1501905]: add support for config.TestStepConfigFunc (to use as ConfigFile); the naive implementation would be to just create a tmp directory and save file there
-// TODO [SNOW-1501905]: add generating MarshalJSON() function
-// TODO [SNOW-1501905]: migrate resources to new config generation method (above needed first)
-// Use ResourceFromModel, DatasourceFromModel, ProviderFromModel, and FromModels instead.
-func FromModel(t *testing.T, model ResourceModel) string {
-	t.Helper()
-
-	b, err := json.Marshal(model)
-	require.NoError(t, err)
-
-	var objMap map[string]json.RawMessage
-	err = json.Unmarshal(b, &objMap)
-	require.NoError(t, err)
-
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf(`resource "%s" "%s" {`, model.Resource(), model.ResourceName()))
-	sb.WriteRune('\n')
-	for k, v := range objMap {
-		sb.WriteString(fmt.Sprintf("\t%s = %s\n", k, v))
-	}
-	if len(model.DependsOn()) > 0 {
-		sb.WriteString(fmt.Sprintf("\tdepends_on = [%s]\n", strings.Join(model.DependsOn(), ", ")))
-	}
-	sb.WriteString(`}`)
-	sb.WriteRune('\n')
-	s := sb.String()
-	t.Logf("Generated config:\n%s", s)
-	return s
-}
-
 // FromModelsDeprecated allows to combine multiple resource models.
 // Use FromModels instead.
 func FromModelsDeprecated(t *testing.T, models ...ResourceModel) string {
 	t.Helper()
 	var sb strings.Builder
 	for _, model := range models {
-		sb.WriteString(FromModel(t, model) + "\n")
+		sb.WriteString(FromModels(t, model) + "\n")
 	}
 	return sb.String()
 }

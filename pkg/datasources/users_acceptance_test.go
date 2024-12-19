@@ -60,7 +60,7 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModelAllAttributes) + datasourceWithLike(resources.User),
+				Config: config.FromModels(t, userModelAllAttributes) + datasourceWithLike(resources.User),
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
@@ -122,7 +122,7 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, userModelNoAttributes) + datasourceWithLike(resources.User),
+				Config: config.FromModels(t, userModelNoAttributes) + datasourceWithLike(resources.User),
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
@@ -217,7 +217,7 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ServiceUser),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModelAllAttributes) + datasourceWithLike(resources.ServiceUser),
+				Config: config.FromModels(t, userModelAllAttributes) + datasourceWithLike(resources.ServiceUser),
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
@@ -279,7 +279,7 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, userModelNoAttributes) + datasourceWithLike(resources.ServiceUser),
+				Config: config.FromModels(t, userModelNoAttributes) + datasourceWithLike(resources.ServiceUser),
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
@@ -377,7 +377,7 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.LegacyServiceUser),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModelAllAttributes) + datasourceWithLike(resources.LegacyServiceUser),
+				Config: config.FromModels(t, userModelAllAttributes) + datasourceWithLike(resources.LegacyServiceUser),
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
@@ -439,7 +439,7 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, userModelNoAttributes) + datasourceWithLike(resources.LegacyServiceUser),
+				Config: config.FromModels(t, userModelNoAttributes) + datasourceWithLike(resources.LegacyServiceUser),
 				Check: assert.AssertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
@@ -512,7 +512,7 @@ func TestAcc_Users_DifferentFiltering(t *testing.T) {
 	user2Model := model.User("u2", id2.Name())
 	user3Model := model.User("u3", id3.Name())
 
-	allUsersConfig := config.FromModel(t, userModel) + config.FromModel(t, user2Model) + config.FromModel(t, user3Model)
+	allUsersConfig := config.FromModels(t, userModel) + config.FromModels(t, user2Model) + config.FromModels(t, user3Model)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
