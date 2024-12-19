@@ -65,6 +65,22 @@ func TestAcc_ProcedurePython_InlineBasic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(procedureModel.ResourceReference(), "arguments.0.arg_default_value", "")),
 				),
 			},
+			// REMOVE EXTERNALLY (CHECK RECREATION)
+			{
+				PreConfig: func() {
+					acc.TestClient().Procedure.DropProcedureFunc(t, id)()
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(procedureModel.ResourceReference(), plancheck.ResourceActionCreate),
+					},
+				},
+				Config: config.FromModels(t, procedureModel),
+				Check: assert.AssertThat(t,
+					resourceassert.ProcedurePythonResource(t, procedureModel.ResourceReference()).
+						HasNameString(id.Name()),
+				),
+			},
 			// IMPORT
 			{
 				ResourceName:            procedureModel.ResourceReference(),
