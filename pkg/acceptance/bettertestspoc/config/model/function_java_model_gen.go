@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -71,6 +73,26 @@ func FunctionJavaWithDefaultMeta(
 	f.WithName(name)
 	f.WithReturnType(returnType)
 	f.WithSchema(schema)
+	return f
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (f *FunctionJavaModel) MarshalJSON() ([]byte, error) {
+	type Alias FunctionJavaModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(f),
+		DependsOn: f.DependsOn(),
+	})
+}
+
+func (f *FunctionJavaModel) WithDependsOn(values ...string) *FunctionJavaModel {
+	f.SetDependsOn(values...)
 	return f
 }
 

@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -56,6 +58,26 @@ func RowAccessPolicyWithDefaultMeta(
 	r.WithDatabase(database)
 	r.WithName(name)
 	r.WithSchema(schema)
+	return r
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (r *RowAccessPolicyModel) MarshalJSON() ([]byte, error) {
+	type Alias RowAccessPolicyModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(r),
+		DependsOn: r.DependsOn(),
+	})
+}
+
+func (r *RowAccessPolicyModel) WithDependsOn(values ...string) *RowAccessPolicyModel {
+	r.SetDependsOn(values...)
 	return r
 }
 

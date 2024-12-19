@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -62,6 +64,26 @@ func MaskingPolicyWithDefaultMeta(
 	m.WithName(name)
 	m.WithReturnDataType(returnDataType)
 	m.WithSchema(schema)
+	return m
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (m *MaskingPolicyModel) MarshalJSON() ([]byte, error) {
+	type Alias MaskingPolicyModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(m),
+		DependsOn: m.DependsOn(),
+	})
+}
+
+func (m *MaskingPolicyModel) WithDependsOn(values ...string) *MaskingPolicyModel {
+	m.SetDependsOn(values...)
 	return m
 }
 
