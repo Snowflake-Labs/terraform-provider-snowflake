@@ -66,6 +66,8 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 			return fmt.Errorf("CLIENT_ENCRYPTION_KEY_SIZE session parameter is an integer, got %v", value)
 		}
 		opts.Set.Parameters.AccountParameters.ClientEncryptionKeySize = Pointer(v)
+	case AccountParameterCortexEnabledCrossRegion:
+		opts.Set.Parameters.AccountParameters.CortexEnabledCrossRegion = &value
 	case AccountParameterEnableIdentifierFirstLogin:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
@@ -78,6 +80,12 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 			return err
 		}
 		opts.Set.Parameters.AccountParameters.AllowIDToken = b
+	case AccountParameterEnablePersonalDatabase:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
+		}
+		opts.Set.Parameters.AccountParameters.EnablePersonalDatabase = b
 	case AccountParameterEnableTriSecretAndRekeyOptOutForImageRepository:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
@@ -90,6 +98,12 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 			return err
 		}
 		opts.Set.Parameters.AccountParameters.EnableTriSecretAndRekeyOptOutForSpcsBlockStorage = b
+	case AccountParameterEnableUnhandledExceptionsReporting:
+		b, err := parseBooleanParameter(string(parameter), value)
+		if err != nil {
+			return err
+		}
+		opts.Set.Parameters.AccountParameters.EnableUnhandledExceptionsReporting = b
 	case AccountParameterEnforceNetworkRulesForInternalStages:
 		b, err := parseBooleanParameter(string(parameter), value)
 		if err != nil {
@@ -198,6 +212,8 @@ func (parameters *parameters) UnsetAccountParameter(ctx context.Context, paramet
 		opts.Unset.Parameters.AccountParameters.AllowIDToken = Pointer(true)
 	case AccountParameterClientEncryptionKeySize:
 		opts.Unset.Parameters.AccountParameters.ClientEncryptionKeySize = Pointer(true)
+	case AccountParameterCortexEnabledCrossRegion:
+		opts.Unset.Parameters.AccountParameters.CortexEnabledCrossRegion = Pointer(true)
 	case AccountParameterEnableIdentifierFirstLogin:
 		opts.Unset.Parameters.AccountParameters.EnableIdentifierFirstLogin = Pointer(true)
 	case AccountParameterEnableInternalStagesPrivatelink:
@@ -206,6 +222,10 @@ func (parameters *parameters) UnsetAccountParameter(ctx context.Context, paramet
 		opts.Unset.Parameters.AccountParameters.EnableTriSecretAndRekeyOptOutForImageRepository = Pointer(true)
 	case AccountParameterEnableTriSecretAndRekeyOptOutForSpcsBlockStorage:
 		opts.Unset.Parameters.AccountParameters.EnableTriSecretAndRekeyOptOutForSpcsBlockStorage = Pointer(true)
+	case AccountParameterEnablePersonalDatabase:
+		opts.Unset.Parameters.AccountParameters.EnablePersonalDatabase = Pointer(true)
+	case AccountParameterEnableUnhandledExceptionsReporting:
+		opts.Unset.Parameters.AccountParameters.EnableUnhandledExceptionsReporting = Pointer(true)
 	case AccountParameterEnableUnredactedQuerySyntaxError:
 		opts.Unset.Parameters.AccountParameters.EnableUnredactedQuerySyntaxError = Pointer(true)
 	case AccountParameterEnforceNetworkRulesForInternalStages:
@@ -473,15 +493,17 @@ type AccountParameter string
 // https://docs.snowflake.com/en/sql-reference/parameters#parameter-hierarchy-and-types
 // Account Parameters include Session Parameters, Object Parameters and User Parameters
 const (
-	// TODO(next pr): add remaining parameters; also in parameters_impl.go
 	// Account Parameters
+
 	AccountParameterAllowClientMFACaching                            AccountParameter = "ALLOW_CLIENT_MFA_CACHING"
 	AccountParameterAllowIDToken                                     AccountParameter = "ALLOW_ID_TOKEN" // #nosec G101
 	AccountParameterClientEncryptionKeySize                          AccountParameter = "CLIENT_ENCRYPTION_KEY_SIZE"
+	AccountParameterCortexEnabledCrossRegion                         AccountParameter = "CORTEX_ENABLED_CROSS_REGION"
 	AccountParameterEnableIdentifierFirstLogin                       AccountParameter = "ENABLE_IDENTIFIER_FIRST_LOGIN"
 	AccountParameterEnableInternalStagesPrivatelink                  AccountParameter = "ENABLE_INTERNAL_STAGES_PRIVATELINK"
 	AccountParameterEnableTriSecretAndRekeyOptOutForImageRepository  AccountParameter = "ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"   // #nosec G101
 	AccountParameterEnableTriSecretAndRekeyOptOutForSpcsBlockStorage AccountParameter = "ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE" // #nosec G101
+	AccountParameterEnableUnhandledExceptionsReporting               AccountParameter = "ENABLE_UNHANDLED_EXCEPTIONS_REPORTING"
 	AccountParameterEnforceNetworkRulesForInternalStages             AccountParameter = "ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES"
 	AccountParameterEventTable                                       AccountParameter = "EVENT_TABLE"
 	AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList     AccountParameter = "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"
@@ -492,7 +514,6 @@ const (
 	AccountParameterPeriodicDataRekeying                             AccountParameter = "PERIODIC_DATA_REKEYING"
 	AccountParameterPreventLoadFromInlineURL                         AccountParameter = "PREVENT_LOAD_FROM_INLINE_URL"
 	AccountParameterPreventUnloadToInlineURL                         AccountParameter = "PREVENT_UNLOAD_TO_INLINE_URL"
-	AccountParameterPreventUnloadToInternalStages                    AccountParameter = "PREVENT_UNLOAD_TO_INTERNAL_STAGES"
 	AccountParameterRequireStorageIntegrationForStageCreation        AccountParameter = "REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"
 	AccountParameterRequireStorageIntegrationForStageOperation       AccountParameter = "REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"
 	AccountParameterSSOLoginPage                                     AccountParameter = "SSO_LOGIN_PAGE"
@@ -502,6 +523,7 @@ const (
 	AccountParameterAutocommit                               AccountParameter = "AUTOCOMMIT"
 	AccountParameterBinaryInputFormat                        AccountParameter = "BINARY_INPUT_FORMAT"
 	AccountParameterBinaryOutputFormat                       AccountParameter = "BINARY_OUTPUT_FORMAT"
+	AccountParameterClientEnableLogInfoStatementParameters   AccountParameter = "CLIENT_ENABLE_LOG_INFO_STATEMENT_PARAMETERS"
 	AccountParameterClientMemoryLimit                        AccountParameter = "CLIENT_MEMORY_LIMIT"
 	AccountParameterClientMetadataRequestUseConnectionCtx    AccountParameter = "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"
 	AccountParameterClientMetadataUseSessionDatabase         AccountParameter = "CLIENT_METADATA_USE_SESSION_DATABASE"
@@ -518,10 +540,12 @@ const (
 	AccountParameterErrorOnNondeterministicUpdate            AccountParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
 	AccountParameterGeographyOutputFormat                    AccountParameter = "GEOGRAPHY_OUTPUT_FORMAT"
 	AccountParameterGeometryOutputFormat                     AccountParameter = "GEOMETRY_OUTPUT_FORMAT"
+	AccountParameterHybridTableLockTimeout                   AccountParameter = "HYBRID_TABLE_LOCK_TIMEOUT"
 	AccountParameterJdbcTreatDecimalAsInt                    AccountParameter = "JDBC_TREAT_DECIMAL_AS_INT"
 	AccountParameterJdbcTreatTimestampNtzAsUtc               AccountParameter = "JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC"
 	AccountParameterJdbcUseSessionTimezone                   AccountParameter = "JDBC_USE_SESSION_TIMEZONE"
 	AccountParameterJSONIndent                               AccountParameter = "JSON_INDENT"
+	AccountParameterJsTreatIntegerAsBigInt                   AccountParameter = "JS_TREAT_INTEGER_AS_BIGINT"
 	AccountParameterLockTimeout                              AccountParameter = "LOCK_TIMEOUT"
 	AccountParameterMultiStatementCount                      AccountParameter = "MULTI_STATEMENT_COUNT"
 	AccountParameterNoorderSequenceAsDefault                 AccountParameter = "NOORDER_SEQUENCE_AS_DEFAULT"
@@ -532,7 +556,6 @@ const (
 	AccountParameterS3StageVpceDnsName                       AccountParameter = "S3_STAGE_VPCE_DNS_NAME"
 	AccountParameterSearchPath                               AccountParameter = "SEARCH_PATH"
 	AccountParameterSimulatedDataSharingConsumer             AccountParameter = "SIMULATED_DATA_SHARING_CONSUMER"
-	AccountParameterStatementTimeoutInSeconds                AccountParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
 	AccountParameterStrictJSONOutput                         AccountParameter = "STRICT_JSON_OUTPUT"
 	AccountParameterTimeInputFormat                          AccountParameter = "TIME_INPUT_FORMAT"
 	AccountParameterTimeOutputFormat                         AccountParameter = "TIME_OUTPUT_FORMAT"
@@ -563,6 +586,7 @@ const (
 	AccountParameterPipeExecutionPaused                     AccountParameter = "PIPE_EXECUTION_PAUSED"
 	AccountParameterReplaceInvalidCharacters                AccountParameter = "REPLACE_INVALID_CHARACTERS"
 	AccountParameterStatementQueuedTimeoutInSeconds         AccountParameter = "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS"
+	AccountParameterStatementTimeoutInSeconds               AccountParameter = "STATEMENT_TIMEOUT_IN_SECONDS"
 	AccountParameterStorageSerializationPolicy              AccountParameter = "STORAGE_SERIALIZATION_POLICY"
 	AccountParameterShareRestrictions                       AccountParameter = "SHARE_RESTRICTIONS"
 	AccountParameterSuspendTaskAfterNumFailures             AccountParameter = "SUSPEND_TASK_AFTER_NUM_FAILURES"
@@ -575,17 +599,21 @@ const (
 	AccountParameterEnableConsoleOutput                     AccountParameter = "ENABLE_CONSOLE_OUTPUT"
 
 	// User Parameters (inherited)
+	AccountParameterEnablePersonalDatabase           AccountParameter = "ENABLE_PERSONAL_DATABASE"
 	AccountParameterEnableUnredactedQuerySyntaxError AccountParameter = "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"
+	AccountParameterPreventUnloadToInternalStages    AccountParameter = "PREVENT_UNLOAD_TO_INTERNAL_STAGES"
 )
 
 var AllAccountParameters = []AccountParameter{
 	AccountParameterAllowClientMFACaching,
 	AccountParameterAllowIDToken,
 	AccountParameterClientEncryptionKeySize,
+	AccountParameterCortexEnabledCrossRegion,
 	AccountParameterEnableIdentifierFirstLogin,
 	AccountParameterEnableInternalStagesPrivatelink,
 	AccountParameterEnableTriSecretAndRekeyOptOutForImageRepository,
 	AccountParameterEnableTriSecretAndRekeyOptOutForSpcsBlockStorage,
+	AccountParameterEnableUnhandledExceptionsReporting,
 	AccountParameterEnforceNetworkRulesForInternalStages,
 	AccountParameterEventTable,
 	AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList,
@@ -596,14 +624,15 @@ var AllAccountParameters = []AccountParameter{
 	AccountParameterPeriodicDataRekeying,
 	AccountParameterPreventLoadFromInlineURL,
 	AccountParameterPreventUnloadToInlineURL,
-	AccountParameterPreventUnloadToInternalStages,
 	AccountParameterRequireStorageIntegrationForStageCreation,
 	AccountParameterRequireStorageIntegrationForStageOperation,
 	AccountParameterSSOLoginPage,
+
 	AccountParameterAbortDetachedQuery,
 	AccountParameterAutocommit,
 	AccountParameterBinaryInputFormat,
 	AccountParameterBinaryOutputFormat,
+	AccountParameterClientEnableLogInfoStatementParameters,
 	AccountParameterClientMemoryLimit,
 	AccountParameterClientMetadataRequestUseConnectionCtx,
 	AccountParameterClientMetadataUseSessionDatabase,
@@ -620,10 +649,12 @@ var AllAccountParameters = []AccountParameter{
 	AccountParameterErrorOnNondeterministicUpdate,
 	AccountParameterGeographyOutputFormat,
 	AccountParameterGeometryOutputFormat,
+	AccountParameterHybridTableLockTimeout,
 	AccountParameterJdbcTreatDecimalAsInt,
 	AccountParameterJdbcTreatTimestampNtzAsUtc,
 	AccountParameterJdbcUseSessionTimezone,
 	AccountParameterJSONIndent,
+	AccountParameterJsTreatIntegerAsBigInt,
 	AccountParameterLockTimeout,
 	AccountParameterMultiStatementCount,
 	AccountParameterNoorderSequenceAsDefault,
@@ -653,6 +684,7 @@ var AllAccountParameters = []AccountParameter{
 	AccountParameterUseCachedResult,
 	AccountParameterWeekOfYearPolicy,
 	AccountParameterWeekStart,
+
 	AccountParameterCatalog,
 	AccountParameterDataRetentionTimeInDays,
 	AccountParameterDefaultDDLCollation,
@@ -675,6 +707,7 @@ var AllAccountParameters = []AccountParameter{
 	AccountParameterMetricLevel,
 	AccountParameterEnableConsoleOutput,
 	AccountParameterEnableUnredactedQuerySyntaxError,
+	AccountParameterEnablePersonalDatabase,
 }
 
 func ToAccountParameter(s string) (AccountParameter, error) {
@@ -692,6 +725,7 @@ const (
 	SessionParameterAutocommit                               SessionParameter = "AUTOCOMMIT"
 	SessionParameterBinaryInputFormat                        SessionParameter = "BINARY_INPUT_FORMAT"
 	SessionParameterBinaryOutputFormat                       SessionParameter = "BINARY_OUTPUT_FORMAT"
+	SessionParameterClientEnableLogInfoStatementParameters   SessionParameter = "CLIENT_ENABLE_LOG_INFO_STATEMENT_PARAMETERS"
 	SessionParameterClientMemoryLimit                        SessionParameter = "CLIENT_MEMORY_LIMIT"
 	SessionParameterClientMetadataRequestUseConnectionCtx    SessionParameter = "CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"
 	SessionParameterClientPrefetchThreads                    SessionParameter = "CLIENT_PREFETCH_THREADS"
@@ -708,10 +742,12 @@ const (
 	SessionParameterErrorOnNondeterministicUpdate            SessionParameter = "ERROR_ON_NONDETERMINISTIC_UPDATE"
 	SessionParameterGeographyOutputFormat                    SessionParameter = "GEOGRAPHY_OUTPUT_FORMAT"
 	SessionParameterGeometryOutputFormat                     SessionParameter = "GEOMETRY_OUTPUT_FORMAT"
+	SessionParameterHybridTableLockTimeout                   SessionParameter = "HYBRID_TABLE_LOCK_TIMEOUT"
 	SessionParameterJdbcTreatDecimalAsInt                    SessionParameter = "JDBC_TREAT_DECIMAL_AS_INT"
 	SessionParameterJdbcTreatTimestampNtzAsUtc               SessionParameter = "JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC"
 	SessionParameterJdbcUseSessionTimezone                   SessionParameter = "JDBC_USE_SESSION_TIMEZONE"
 	SessionParameterJSONIndent                               SessionParameter = "JSON_INDENT"
+	SessionParameterJsTreatIntegerAsBigInt                   SessionParameter = "JS_TREAT_INTEGER_AS_BIGINT"
 	SessionParameterLockTimeout                              SessionParameter = "LOCK_TIMEOUT"
 	SessionParameterLogLevel                                 SessionParameter = "LOG_LEVEL"
 	SessionParameterMultiStatementCount                      SessionParameter = "MULTI_STATEMENT_COUNT"
@@ -1124,11 +1160,14 @@ type AccountParameters struct {
 	AllowClientMFACaching                            *bool    `ddl:"parameter" sql:"ALLOW_CLIENT_MFA_CACHING"`
 	AllowIDToken                                     *bool    `ddl:"parameter" sql:"ALLOW_ID_TOKEN"`
 	ClientEncryptionKeySize                          *int     `ddl:"parameter" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
+	CortexEnabledCrossRegion                         *string  `ddl:"parameter,single_quotes" sql:"CORTEX_ENABLED_CROSS_REGION"`
 	EnableIdentifierFirstLogin                       *bool    `ddl:"parameter" sql:"ENABLE_IDENTIFIER_FIRST_LOGIN"`
 	EnableInternalStagesPrivatelink                  *bool    `ddl:"parameter" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
+	EnablePersonalDatabase                           *bool    `ddl:"parameter" sql:"ENABLE_PERSONAL_DATABASE"`
 	EnableUnredactedQuerySyntaxError                 *bool    `ddl:"parameter" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
 	EnableTriSecretAndRekeyOptOutForImageRepository  *bool    `ddl:"parameter" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"`
 	EnableTriSecretAndRekeyOptOutForSpcsBlockStorage *bool    `ddl:"parameter" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE"`
+	EnableUnhandledExceptionsReporting               *bool    `ddl:"parameter" sql:"ENABLE_UNHANDLED_EXCEPTIONS_REPORTING"`
 	EnforceNetworkRulesForInternalStages             *bool    `ddl:"keyword" sql:"ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES"`
 	EventTable                                       *string  `ddl:"parameter,single_quotes" sql:"EVENT_TABLE"`
 	ExternalOAuthAddPrivilegedRolesToBlockedList     *bool    `ddl:"parameter" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
@@ -1170,10 +1209,13 @@ type AccountParametersUnset struct {
 	AllowClientMFACaching                            *bool `ddl:"keyword" sql:"ALLOW_CLIENT_MFA_CACHING"`
 	AllowIDToken                                     *bool `ddl:"keyword" sql:"ALLOW_ID_TOKEN"`
 	ClientEncryptionKeySize                          *bool `ddl:"keyword" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
+	CortexEnabledCrossRegion                         *bool `ddl:"keyword" sql:"CORTEX_ENABLED_CROSS_REGION"`
 	EnableIdentifierFirstLogin                       *bool `ddl:"keyword" sql:"ENABLE_IDENTIFIER_FIRST_LOGIN"`
 	EnableInternalStagesPrivatelink                  *bool `ddl:"keyword" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
+	EnablePersonalDatabase                           *bool `ddl:"keyword" sql:"ENABLE_PERSONAL_DATABASE"`
 	EnableTriSecretAndRekeyOptOutForImageRepository  *bool `ddl:"keyword" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"`
 	EnableTriSecretAndRekeyOptOutForSpcsBlockStorage *bool `ddl:"keyword" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE"`
+	EnableUnhandledExceptionsReporting               *bool `ddl:"keyword" sql:"ENABLE_UNHANDLED_EXCEPTIONS_REPORTING"`
 	EventTable                                       *bool `ddl:"keyword" sql:"EVENT_TABLE"`
 	EnableUnredactedQuerySyntaxError                 *bool `ddl:"keyword" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
 	EnforceNetworkRulesForInternalStages             *bool `ddl:"keyword" sql:"ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES"`
@@ -1362,6 +1404,7 @@ type SessionParameters struct {
 	Autocommit                               *bool                             `ddl:"parameter" sql:"AUTOCOMMIT"`
 	BinaryInputFormat                        *BinaryInputFormat                `ddl:"parameter,single_quotes" sql:"BINARY_INPUT_FORMAT"`
 	BinaryOutputFormat                       *BinaryOutputFormat               `ddl:"parameter,single_quotes" sql:"BINARY_OUTPUT_FORMAT"`
+	ClientEnableLogInfoStatementParameters   *bool                             `ddl:"parameter" sql:"CLIENT_ENABLE_LOG_INFO_STATEMENT_PARAMETERS"`
 	ClientMemoryLimit                        *int                              `ddl:"parameter" sql:"CLIENT_MEMORY_LIMIT"`
 	ClientMetadataRequestUseConnectionCtx    *bool                             `ddl:"parameter" sql:"CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"`
 	ClientPrefetchThreads                    *int                              `ddl:"parameter" sql:"CLIENT_PREFETCH_THREADS"`
@@ -1378,10 +1421,12 @@ type SessionParameters struct {
 	ErrorOnNondeterministicUpdate            *bool                             `ddl:"parameter" sql:"ERROR_ON_NONDETERMINISTIC_UPDATE"`
 	GeographyOutputFormat                    *GeographyOutputFormat            `ddl:"parameter,single_quotes" sql:"GEOGRAPHY_OUTPUT_FORMAT"`
 	GeometryOutputFormat                     *GeometryOutputFormat             `ddl:"parameter,single_quotes" sql:"GEOMETRY_OUTPUT_FORMAT"`
+	HybridTableLockTimeout                   *int                              `ddl:"parameter" sql:"HYBRID_TABLE_LOCK_TIMEOUT"`
 	JdbcTreatDecimalAsInt                    *bool                             `ddl:"parameter" sql:"JDBC_TREAT_DECIMAL_AS_INT"`
 	JdbcTreatTimestampNtzAsUtc               *bool                             `ddl:"parameter" sql:"JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC"`
 	JdbcUseSessionTimezone                   *bool                             `ddl:"parameter" sql:"JDBC_USE_SESSION_TIMEZONE"`
 	JSONIndent                               *int                              `ddl:"parameter" sql:"JSON_INDENT"`
+	JsTreatIntegerAsBigInt                   *bool                             `ddl:"parameter" sql:"JS_TREAT_INTEGER_AS_BIGINT"`
 	LockTimeout                              *int                              `ddl:"parameter" sql:"LOCK_TIMEOUT"`
 	LogLevel                                 *LogLevel                         `ddl:"parameter" sql:"LOG_LEVEL"`
 	MultiStatementCount                      *int                              `ddl:"parameter" sql:"MULTI_STATEMENT_COUNT"`
@@ -1461,6 +1506,7 @@ type SessionParametersUnset struct {
 	Autocommit                               *bool `ddl:"keyword" sql:"AUTOCOMMIT"`
 	BinaryInputFormat                        *bool `ddl:"keyword" sql:"BINARY_INPUT_FORMAT"`
 	BinaryOutputFormat                       *bool `ddl:"keyword" sql:"BINARY_OUTPUT_FORMAT"`
+	ClientEnableLogInfoStatementParameters   *bool `ddl:"keyword" sql:"CLIENT_ENABLE_LOG_INFO_STATEMENT_PARAMETERS"`
 	ClientMemoryLimit                        *bool `ddl:"keyword" sql:"CLIENT_MEMORY_LIMIT"`
 	ClientMetadataRequestUseConnectionCtx    *bool `ddl:"keyword" sql:"CLIENT_METADATA_REQUEST_USE_CONNECTION_CTX"`
 	ClientPrefetchThreads                    *bool `ddl:"keyword" sql:"CLIENT_PREFETCH_THREADS"`
@@ -1477,10 +1523,12 @@ type SessionParametersUnset struct {
 	ErrorOnNondeterministicUpdate            *bool `ddl:"keyword" sql:"ERROR_ON_NONDETERMINISTIC_UPDATE"`
 	GeographyOutputFormat                    *bool `ddl:"keyword" sql:"GEOGRAPHY_OUTPUT_FORMAT"`
 	GeometryOutputFormat                     *bool `ddl:"keyword" sql:"GEOMETRY_OUTPUT_FORMAT"`
+	HybridTableLockTimeout                   *bool `ddl:"keyword" sql:"HYBRID_TABLE_LOCK_TIMEOUT"`
 	JdbcTreatDecimalAsInt                    *bool `ddl:"keyword" sql:"JDBC_TREAT_DECIMAL_AS_INT"`
 	JdbcTreatTimestampNtzAsUtc               *bool `ddl:"keyword" sql:"JDBC_TREAT_TIMESTAMP_NTZ_AS_UTC"`
 	JdbcUseSessionTimezone                   *bool `ddl:"keyword" sql:"JDBC_USE_SESSION_TIMEZONE"`
 	JSONIndent                               *bool `ddl:"keyword" sql:"JSON_INDENT"`
+	JsTreatIntegerAsBigInt                   *bool `ddl:"keyword" sql:"JS_TREAT_INTEGER_AS_BIGINT"`
 	LockTimeout                              *bool `ddl:"keyword" sql:"LOCK_TIMEOUT"`
 	LogLevel                                 *bool `ddl:"keyword" sql:"LOG_LEVEL"`
 	MultiStatementCount                      *bool `ddl:"keyword" sql:"MULTI_STATEMENT_COUNT"`
@@ -1516,8 +1564,8 @@ type SessionParametersUnset struct {
 }
 
 func (v *SessionParametersUnset) validate() error {
-	if !anyValueSet(v.AbortDetachedQuery, v.Autocommit, v.BinaryInputFormat, v.BinaryOutputFormat, v.ClientMemoryLimit, v.ClientMetadataRequestUseConnectionCtx, v.ClientPrefetchThreads, v.ClientResultChunkSize, v.ClientResultColumnCaseInsensitive, v.ClientMetadataUseSessionDatabase, v.ClientSessionKeepAlive, v.ClientSessionKeepAliveHeartbeatFrequency, v.ClientTimestampTypeMapping, v.DateInputFormat, v.DateOutputFormat, v.EnableUnloadPhysicalTypeOptimization, v.ErrorOnNondeterministicMerge, v.ErrorOnNondeterministicUpdate, v.GeographyOutputFormat, v.GeometryOutputFormat, v.JdbcTreatDecimalAsInt, v.JdbcTreatTimestampNtzAsUtc, v.JdbcUseSessionTimezone, v.JSONIndent, v.LockTimeout, v.LogLevel, v.MultiStatementCount, v.NoorderSequenceAsDefault, v.OdbcTreatDecimalAsInt, v.QueryTag, v.QuotedIdentifiersIgnoreCase, v.RowsPerResultset, v.S3StageVpceDnsName, v.SearchPath, v.SimulatedDataSharingConsumer, v.StatementQueuedTimeoutInSeconds, v.StatementTimeoutInSeconds, v.StrictJSONOutput, v.TimestampDayIsAlways24h, v.TimestampInputFormat, v.TimestampLTZOutputFormat, v.TimestampNTZOutputFormat, v.TimestampOutputFormat, v.TimestampTypeMapping, v.TimestampTZOutputFormat, v.Timezone, v.TimeInputFormat, v.TimeOutputFormat, v.TraceLevel, v.TransactionAbortOnError, v.TransactionDefaultIsolationLevel, v.TwoDigitCenturyStart, v.UnsupportedDDLAction, v.UseCachedResult, v.WeekOfYearPolicy, v.WeekStart) {
-		return errors.Join(errAtLeastOneOf("SessionParametersUnset", "AbortDetachedQuery", "Autocommit", "BinaryInputFormat", "BinaryOutputFormat", "ClientMemoryLimit", "ClientMetadataRequestUseConnectionCtx", "ClientPrefetchThreads", "ClientResultChunkSize", "ClientResultColumnCaseInsensitive", "ClientMetadataUseSessionDatabase", "ClientSessionKeepAlive", "ClientSessionKeepAliveHeartbeatFrequency", "ClientTimestampTypeMapping", "DateInputFormat", "DateOutputFormat", "EnableUnloadPhysicalTypeOptimization", "ErrorOnNondeterministicMerge", "ErrorOnNondeterministicUpdate", "GeographyOutputFormat", "GeometryOutputFormat", "JdbcTreatDecimalAsInt", "JdbcTreatTimestampNtzAsUtc", "JdbcUseSessionTimezone", "JSONIndent", "LockTimeout", "LogLevel", "MultiStatementCount", "NoorderSequenceAsDefault", "OdbcTreatDecimalAsInt", "QueryTag", "QuotedIdentifiersIgnoreCase", "RowsPerResultset", "S3StageVpceDnsName", "SearchPath", "SimulatedDataSharingConsumer", "StatementQueuedTimeoutInSeconds", "StatementTimeoutInSeconds", "StrictJSONOutput", "TimestampDayIsAlways24h", "TimestampInputFormat", "TimestampLTZOutputFormat", "TimestampNTZOutputFormat", "TimestampOutputFormat", "TimestampTypeMapping", "TimestampTZOutputFormat", "Timezone", "TimeInputFormat", "TimeOutputFormat", "TraceLevel", "TransactionAbortOnError", "TransactionDefaultIsolationLevel", "TwoDigitCenturyStart", "UnsupportedDDLAction", "UseCachedResult", "WeekOfYearPolicy", "WeekStart"))
+	if !anyValueSet(v.AbortDetachedQuery, v.Autocommit, v.BinaryInputFormat, v.BinaryOutputFormat, v.ClientEnableLogInfoStatementParameters, v.ClientMemoryLimit, v.ClientMetadataRequestUseConnectionCtx, v.ClientPrefetchThreads, v.ClientResultChunkSize, v.ClientResultColumnCaseInsensitive, v.ClientMetadataUseSessionDatabase, v.ClientSessionKeepAlive, v.ClientSessionKeepAliveHeartbeatFrequency, v.ClientTimestampTypeMapping, v.DateInputFormat, v.DateOutputFormat, v.EnableUnloadPhysicalTypeOptimization, v.ErrorOnNondeterministicMerge, v.ErrorOnNondeterministicUpdate, v.GeographyOutputFormat, v.GeometryOutputFormat, v.HybridTableLockTimeout, v.JdbcTreatDecimalAsInt, v.JdbcTreatTimestampNtzAsUtc, v.JdbcUseSessionTimezone, v.JSONIndent, v.JsTreatIntegerAsBigInt, v.LockTimeout, v.LogLevel, v.MultiStatementCount, v.NoorderSequenceAsDefault, v.OdbcTreatDecimalAsInt, v.QueryTag, v.QuotedIdentifiersIgnoreCase, v.RowsPerResultset, v.S3StageVpceDnsName, v.SearchPath, v.SimulatedDataSharingConsumer, v.StatementQueuedTimeoutInSeconds, v.StatementTimeoutInSeconds, v.StrictJSONOutput, v.TimestampDayIsAlways24h, v.TimestampInputFormat, v.TimestampLTZOutputFormat, v.TimestampNTZOutputFormat, v.TimestampOutputFormat, v.TimestampTypeMapping, v.TimestampTZOutputFormat, v.Timezone, v.TimeInputFormat, v.TimeOutputFormat, v.TraceLevel, v.TransactionAbortOnError, v.TransactionDefaultIsolationLevel, v.TwoDigitCenturyStart, v.UnsupportedDDLAction, v.UseCachedResult, v.WeekOfYearPolicy, v.WeekStart) {
+		return errors.Join(errAtLeastOneOf("SessionParametersUnset", "AbortDetachedQuery", "Autocommit", "BinaryInputFormat", "BinaryOutputFormat", "ClientEnableLogInfoStatementParameters", "ClientMemoryLimit", "ClientMetadataRequestUseConnectionCtx", "ClientPrefetchThreads", "ClientResultChunkSize", "ClientResultColumnCaseInsensitive", "ClientMetadataUseSessionDatabase", "ClientSessionKeepAlive", "ClientSessionKeepAliveHeartbeatFrequency", "ClientTimestampTypeMapping", "DateInputFormat", "DateOutputFormat", "EnableUnloadPhysicalTypeOptimization", "ErrorOnNondeterministicMerge", "ErrorOnNondeterministicUpdate", "GeographyOutputFormat", "GeometryOutputFormat", "HybridTableLockTimeout", "JdbcTreatDecimalAsInt", "JdbcTreatTimestampNtzAsUtc", "JdbcUseSessionTimezone", "JSONIndent", "JsTreatIntegerAsBigInt", "LockTimeout", "LogLevel", "MultiStatementCount", "NoorderSequenceAsDefault", "OdbcTreatDecimalAsInt", "QueryTag", "QuotedIdentifiersIgnoreCase", "RowsPerResultset", "S3StageVpceDnsName", "SearchPath", "SimulatedDataSharingConsumer", "StatementQueuedTimeoutInSeconds", "StatementTimeoutInSeconds", "StrictJSONOutput", "TimestampDayIsAlways24h", "TimestampInputFormat", "TimestampLTZOutputFormat", "TimestampNTZOutputFormat", "TimestampOutputFormat", "TimestampTypeMapping", "TimestampTZOutputFormat", "Timezone", "TimeInputFormat", "TimeOutputFormat", "TraceLevel", "TransactionAbortOnError", "TransactionDefaultIsolationLevel", "TwoDigitCenturyStart", "UnsupportedDDLAction", "UseCachedResult", "WeekOfYearPolicy", "WeekStart"))
 	}
 	return nil
 }

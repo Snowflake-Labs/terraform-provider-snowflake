@@ -33,6 +33,8 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		sessionParameters.BinaryInputFormat = Pointer(BinaryInputFormat(value))
 	case SessionParameterBinaryOutputFormat:
 		sessionParameters.BinaryOutputFormat = Pointer(BinaryOutputFormat(value))
+	case SessionParameterClientEnableLogInfoStatementParameters:
+		err = setBooleanValue(parameter, value, &sessionParameters.ClientEnableLogInfoStatementParameters)
 	case SessionParameterClientMemoryLimit:
 		err = setIntegerValue(parameter, value, &sessionParameters.ClientMemoryLimit)
 	case SessionParameterClientMetadataRequestUseConnectionCtx:
@@ -65,6 +67,8 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		sessionParameters.GeographyOutputFormat = Pointer(GeographyOutputFormat(value))
 	case SessionParameterGeometryOutputFormat:
 		sessionParameters.GeometryOutputFormat = Pointer(GeometryOutputFormat(value))
+	case SessionParameterHybridTableLockTimeout:
+		err = setIntegerValue(parameter, value, &sessionParameters.HybridTableLockTimeout)
 	case SessionParameterJdbcTreatDecimalAsInt:
 		err = setBooleanValue(parameter, value, &sessionParameters.JdbcTreatDecimalAsInt)
 	case SessionParameterJdbcTreatTimestampNtzAsUtc:
@@ -73,6 +77,8 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		err = setBooleanValue(parameter, value, &sessionParameters.JdbcUseSessionTimezone)
 	case SessionParameterJSONIndent:
 		err = setIntegerValue(parameter, value, &sessionParameters.JSONIndent)
+	case SessionParameterJsTreatIntegerAsBigInt:
+		err = setBooleanValue(parameter, value, &sessionParameters.JsTreatIntegerAsBigInt)
 	case SessionParameterLockTimeout:
 		err = setIntegerValue(parameter, value, &sessionParameters.LockTimeout)
 	case SessionParameterLogLevel:
@@ -183,6 +189,8 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.BinaryInputFormat
 	case SessionParameterBinaryOutputFormat:
 		unsetField = &sessionParametersUnset.BinaryOutputFormat
+	case SessionParameterClientEnableLogInfoStatementParameters:
+		unsetField = &sessionParametersUnset.ClientEnableLogInfoStatementParameters
 	case SessionParameterClientMemoryLimit:
 		unsetField = &sessionParametersUnset.ClientMemoryLimit
 	case SessionParameterClientMetadataRequestUseConnectionCtx:
@@ -215,6 +223,8 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.GeographyOutputFormat
 	case SessionParameterGeometryOutputFormat:
 		unsetField = &sessionParametersUnset.GeometryOutputFormat
+	case SessionParameterHybridTableLockTimeout:
+		unsetField = &sessionParametersUnset.HybridTableLockTimeout
 	case SessionParameterJdbcTreatDecimalAsInt:
 		unsetField = &sessionParametersUnset.JdbcTreatDecimalAsInt
 	case SessionParameterJdbcTreatTimestampNtzAsUtc:
@@ -223,6 +233,8 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.JdbcUseSessionTimezone
 	case SessionParameterJSONIndent:
 		unsetField = &sessionParametersUnset.JSONIndent
+	case SessionParameterJsTreatIntegerAsBigInt:
+		unsetField = &sessionParametersUnset.JsTreatIntegerAsBigInt
 	case SessionParameterLockTimeout:
 		unsetField = &sessionParametersUnset.LockTimeout
 	case SessionParameterLogLevel:
