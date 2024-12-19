@@ -366,7 +366,6 @@ func Test_ToExtendedAuthenticatorType(t *testing.T) {
 		{input: "OAUTH", want: gosnowflake.AuthTypeOAuth},
 		{input: "EXTERNALBROWSER", want: gosnowflake.AuthTypeExternalBrowser},
 		{input: "OKTA", want: gosnowflake.AuthTypeOkta},
-		{input: "JWT", want: gosnowflake.AuthTypeJwt},
 		{input: "SNOWFLAKE_JWT", want: gosnowflake.AuthTypeJwt},
 		{input: "TOKENACCESSOR", want: gosnowflake.AuthTypeTokenAccessor},
 		{input: "USERNAMEPASSWORDMFA", want: gosnowflake.AuthTypeUsernamePasswordMFA},
@@ -376,6 +375,7 @@ func Test_ToExtendedAuthenticatorType(t *testing.T) {
 	invalid := []test{
 		{input: "   "},
 		{input: "foo"},
+		{input: "JWT"},
 	}
 
 	for _, tc := range valid {
