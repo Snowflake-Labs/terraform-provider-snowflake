@@ -42,7 +42,7 @@ func (s *Operation) withShowObjectMethods(structName string, showObjectMethodsKi
 				log.Printf("[WARN] struct '%s' does not contain needed fields to build ID() helper method. Create the method manually in _ext file or add missing fields: %v.\n", structName, idTypeParts[id])
 				continue
 			}
-			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectIDMethod(structName, s.HelperStructs, id))
+			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectIDMethod(structName, id))
 		case ShowObjectTypeMethod:
 			s.ShowObjectMethods = append(s.ShowObjectMethods, newShowObjectTypeMethod(structName))
 		default:
@@ -84,7 +84,7 @@ func containsFieldNames(fields []*Field, names ...string) bool {
 	return true
 }
 
-func newShowObjectIDMethod(structName string, helperStructs []*Field, idType objectIdentifierKind) *ShowObjectMethod {
+func newShowObjectIDMethod(structName string, idType objectIdentifierKind) *ShowObjectMethod {
 	requiredFields := idTypeParts[idType]
 	var args string
 	for _, field := range requiredFields {
