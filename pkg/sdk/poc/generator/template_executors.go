@@ -21,9 +21,19 @@ func GenerateInterface(writer io.Writer, def *Interface) {
 		if o.OptsField != nil {
 			generateOptionsStruct(writer, o)
 		}
-		for _, m := range o.ShowObjectMethods {
-			generateShowObjectMethods(writer, m)
+
+		if o.Name == string(OperationKindShow) {
+			idKind, err := toObjectIdentifierKind(def.IdentifierKind)
+			if err != nil {
+				log.Printf("[WARN] for showObjectIdMethod: %v", err)
+			}
+			if checkRequiredFieldsForIDMethod(def.NameSingular, o.HelperStructs, idKind) {
+				generateShowObjectMethods(writer, newShowObjectIDMethod(def.NameSingular, idKind))
+			}
+
+			generateShowObjectMethods(writer, newShowObjectTypeMethod(def.NameSingular))
 		}
+
 	}
 }
 

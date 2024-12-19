@@ -11,7 +11,7 @@ const (
 	SchemaObjectIdentifierWithArguments objectIdentifierKind = "SchemaObjectIdentifierWithArguments"
 )
 
-func identifierStringToObjectIdentifier(s string) (objectIdentifierKind, error) {
+func toObjectIdentifierKind(s string) (objectIdentifierKind, error) {
 	switch s {
 	case "AccountObjectIdentifier":
 		return AccountObjectIdentifier, nil

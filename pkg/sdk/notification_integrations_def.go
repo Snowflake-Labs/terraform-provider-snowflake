@@ -180,7 +180,6 @@ var NotificationIntegrationsDef = g.NewInterface(
 			Show().
 			SQL("NOTIFICATION INTEGRATIONS").
 			OptionalLike(),
-		g.ShowObjectIdMethod,
 	).
 	ShowByIdOperationWithFiltering(
 		g.ShowByIDLikeFiltering,

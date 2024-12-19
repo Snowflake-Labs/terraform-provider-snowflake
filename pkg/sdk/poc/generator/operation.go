@@ -40,8 +40,6 @@ type Operation struct {
 	DescribeMapping *Mapping
 	// ShowByIDFiltering defines a kind of filterings performed in ShowByID operation
 	ShowByIDFiltering []ShowByIDFiltering
-	// ShowObjectMethods contains helper methods for the Interface file (i.e. ID(), ObjectType())
-	ShowObjectMethods []*ShowObjectMethod
 }
 
 type Mapping struct {
@@ -124,7 +122,6 @@ func (i *Interface) newOperationWithDBMapping(
 	resourceRepresentation *plainStruct,
 	queryStruct *QueryStruct,
 	addMappingFunc func(op *Operation, from, to *Field),
-	showObjectMethods ...ShowObjectMethodType,
 ) *Operation {
 	db := dbRepresentation.IntoField()
 	res := resourceRepresentation.IntoField()
@@ -134,10 +131,7 @@ func (i *Interface) newOperationWithDBMapping(
 	op := newOperation(kind, doc).
 		withHelperStruct(db).
 		withHelperStruct(res).
-		withOptionsStruct(queryStruct.IntoField()).
-		withObjectInterface(i).
-		withShowObjectMethods(res.Name, showObjectMethods...)
-
+		withOptionsStruct(queryStruct.IntoField())
 	addMappingFunc(op, db, res)
 	i.Operations = append(i.Operations, op)
 	return op
@@ -167,8 +161,8 @@ func (i *Interface) RevokeOperation(doc string, queryStruct *QueryStruct) *Inter
 	return i.newSimpleOperation(string(OperationKindRevoke), doc, queryStruct)
 }
 
-func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct, showObjectMethods ...ShowObjectMethodType) *Interface {
-	i.newOperationWithDBMapping(string(OperationKindShow), doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping, showObjectMethods...)
+func (i *Interface) ShowOperation(doc string, dbRepresentation *dbStruct, resourceRepresentation *plainStruct, queryStruct *QueryStruct) *Interface {
+	i.newOperationWithDBMapping(string(OperationKindShow), doc, dbRepresentation, resourceRepresentation, queryStruct, addShowMapping)
 	return i
 }
 
