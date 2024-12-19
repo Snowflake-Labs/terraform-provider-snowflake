@@ -27,18 +27,21 @@ func GenerateInterface(writer io.Writer, def *Interface) {
 			if err != nil {
 				log.Printf("[WARN] for showObjectIdMethod: %v", err)
 			}
-			if checkRequiredFieldsForIDMethod(def.NameSingular, o.HelperStructs, idKind) {
-				generateShowObjectMethods(writer, newShowObjectIDMethod(def.NameSingular, idKind))
+			if checkRequiredFieldsForIdMethod(def.NameSingular, o.HelperStructs, idKind) {
+				generateShowObjectIdMethod(writer, newShowObjectIDMethod(def.NameSingular, idKind))
 			}
 
-			generateShowObjectMethods(writer, newShowObjectTypeMethod(def.NameSingular))
+			generateShowObjectTypeMethod(writer, newShowObjectTypeMethod(def.NameSingular))
 		}
-
 	}
 }
 
-func generateShowObjectMethods(writer io.Writer, hm *ShowObjectMethod) {
-	printTo(writer, ShowObjectMethodTemplate, hm)
+func generateShowObjectIdMethod(writer io.Writer, m *ShowObjectIdMethod) {
+	printTo(writer, ShowObjectIdMethodTemplate, m)
+}
+
+func generateShowObjectTypeMethod(writer io.Writer, m *ShowObjectTypeMethod) {
+	printTo(writer, ShowObjectTypeMethodTemplate, m)
 }
 
 func generateOptionsStruct(writer io.Writer, operation *Operation) {

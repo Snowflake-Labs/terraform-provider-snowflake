@@ -1,33 +1,31 @@
 package generator
 
 import (
-	"fmt"
 	"log"
 	"slices"
 )
 
-
-type ShowObjectMethod struct {
-	Name        string
-	StructName  string
-	ReturnValue string
-	ReturnType  string
-}
-
 type ShowObjectIdMethod struct {
-
+	StructName     string
+	IdentifierKind objectIdentifierKind
+	Args           []string
 }
 
-func newShowObjectMethod(name, structName, returnValue string, returnType string) *ShowObjectMethod {
-	return &ShowObjectMethod{
-		Name:        name,
-		StructName:  structName,
-		ReturnValue: returnValue,
-		ReturnType:  returnType,
+func newShowObjectIDMethod(structName string, idType objectIdentifierKind) *ShowObjectIdMethod {
+	return &ShowObjectIdMethod{
+		StructName:     structName,
+		IdentifierKind: idType,
+		Args:           idTypeParts[idType],
 	}
 }
 
-func checkRequiredFieldsForIDMethod(structName string, helperStructs []*Field, idKind objectIdentifierKind) bool {
+var idTypeParts map[objectIdentifierKind][]string = map[objectIdentifierKind][]string{
+	AccountObjectIdentifier:  {"Name"},
+	DatabaseObjectIdentifier: {"DatabaseName", "Name"},
+	SchemaObjectIdentifier:   {"DatabaseName", "SchemaName", "Name"},
+}
+
+func checkRequiredFieldsForIdMethod(structName string, helperStructs []*Field, idKind objectIdentifierKind) bool {
 	if requiredFields, ok := idTypeParts[idKind]; ok {
 		for _, field := range helperStructs {
 			if field.Name == structName {
@@ -37,12 +35,6 @@ func checkRequiredFieldsForIDMethod(structName string, helperStructs []*Field, i
 	}
 	log.Printf("[WARN] no required fields mapping defined for identifier %s", idKind)
 	return false
-}
-
-var idTypeParts map[objectIdentifierKind][]string = map[objectIdentifierKind][]string{
-	AccountObjectIdentifier:  {"Name"},
-	DatabaseObjectIdentifier: {"DatabaseName", "Name"},
-	SchemaObjectIdentifier:   {"DatabaseName", "SchemaName", "Name"},
 }
 
 func containsFieldNames(fields []*Field, names ...string) bool {
@@ -59,17 +51,10 @@ func containsFieldNames(fields []*Field, names ...string) bool {
 	return true
 }
 
-func newShowObjectIDMethod(structName string, idType objectIdentifierKind) *ShowObjectMethod {
-	requiredFields := idTypeParts[idType]
-	var args string
-	for _, field := range requiredFields {
-		args += fmt.Sprintf("v.%v, ", field)
-	}
-
-	returnValue := fmt.Sprintf("New%v(%v)", idType, args)
-	return newShowObjectMethod("ID", structName, returnValue, string(idType))
+type ShowObjectTypeMethod struct {
+	StructName string
 }
 
-func newShowObjectTypeMethod(structName string) *ShowObjectMethod {
-	return newShowObjectMethod("ObjectType", structName, "ObjectType"+structName, "ObjectType")
+func newShowObjectTypeMethod(structName string) *ShowObjectTypeMethod {
+	return &ShowObjectTypeMethod{StructName: structName}
 }
