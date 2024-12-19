@@ -13,14 +13,13 @@ resource "snowflake_schema" "test" {
 }
 
 resource "snowflake_procedure_javascript" "test" {
-  name                = var.procedure_name
-  database            = snowflake_database.test.name
-  schema              = snowflake_schema.test.name
-  return_type         = "FLOAT"
-  execute_as          = "CALLER"
-  return_behavior     = "VOLATILE"
-  null_input_behavior = "RETURNS NULL ON NULL INPUT"
-  statement           = <<EOT
+  name                 = var.procedure_name
+  database             = snowflake_database.test.name
+  schema               = snowflake_schema.test.name
+  return_type          = "FLOAT"
+  execute_as           = "CALLER"
+  null_input_behavior  = "RETURNS NULL ON NULL INPUT"
+  procedure_definition = <<EOT
 var X=1
 return X
 EOT
