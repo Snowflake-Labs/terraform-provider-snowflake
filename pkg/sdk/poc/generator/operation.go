@@ -79,6 +79,11 @@ func (s *Operation) withHelperStructs(helperStructs ...*Field) *Operation {
 	return s
 }
 
+func (s *Operation) withObjectInterface(objectInterface *Interface) *Operation {
+	s.ObjectInterface = objectInterface
+	return s
+}
+
 func addShowMapping(op *Operation, from, to *Field) {
 	op.ShowMapping = newMapping("convert", from, to)
 }
@@ -170,9 +175,9 @@ func (i *Interface) ShowByIdOperationWithNoFiltering() *Interface {
 
 // ShowByIdOperationWithFiltering adds a ShowByID operation to the interface with filtering. Should be used for objects that implement filtering options e.g. Like or In.
 func (i *Interface) ShowByIdOperationWithFiltering(filter ShowByIDFilteringKind, filtering ...ShowByIDFilteringKind) *Interface {
-	op := newNoSqlOperation(string(OperationKindShowByID))
-	op.ObjectInterface = i
-	op.withFiltering(append([]ShowByIDFilteringKind{filter}, filtering...)...)
+	op := newNoSqlOperation(string(OperationKindShowByID)).
+		withObjectInterface(i).
+		withFiltering(append(filtering, filter)...)
 	i.Operations = append(i.Operations, op)
 	return i
 }
