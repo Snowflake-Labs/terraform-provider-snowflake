@@ -22,7 +22,7 @@ var accountParameterSchema = map[string]*schema.Schema{
 		ForceNew:         true,
 		ValidateDiagFunc: sdkValidation(sdk.ToAccountParameter),
 		DiffSuppressFunc: NormalizeAndCompare(sdk.ToAccountParameter),
-		Description:      fmt.Sprintf("Name of account parameter. Valid values are (case-insensitive): %s.", possibleValuesListed(sdk.AsStringList(sdk.AllAccountParameters))),
+		Description:      fmt.Sprintf("Name of account parameter. Valid values are (case-insensitive): %s. Deprecated parameters are not supported in the provider.", possibleValuesListed(sdk.AsStringList(sdk.AllAccountParameters))),
 	},
 	"value": {
 		Type:        schema.TypeString,

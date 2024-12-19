@@ -27,6 +27,8 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
 		err = setBooleanValue(parameter, value, &sessionParameters.AbortDetachedQuery)
+	case SessionParameterActivePythonProfiler:
+		sessionParameters.ActivePythonProfiler = Pointer(ActivePythonProfiler(value))
 	case SessionParameterAutocommit:
 		err = setBooleanValue(parameter, value, &sessionParameters.Autocommit)
 	case SessionParameterBinaryInputFormat:
@@ -89,6 +91,10 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		err = setBooleanValue(parameter, value, &sessionParameters.NoorderSequenceAsDefault)
 	case SessionParameterOdbcTreatDecimalAsInt:
 		err = setBooleanValue(parameter, value, &sessionParameters.OdbcTreatDecimalAsInt)
+	case SessionParameterPythonProfilerModules:
+		sessionParameters.PythonProfilerModules = &value
+	case SessionParameterPythonProfilerTargetStage:
+		sessionParameters.PythonProfilerTargetStage = &value
 	case SessionParameterQueryTag:
 		sessionParameters.QueryTag = &value
 	case SessionParameterQuotedIdentifiersIgnoreCase:
@@ -183,6 +189,8 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
 		unsetField = &sessionParametersUnset.AbortDetachedQuery
+	case SessionParameterActivePythonProfiler:
+		unsetField = &sessionParametersUnset.ActivePythonProfiler
 	case SessionParameterAutocommit:
 		unsetField = &sessionParametersUnset.Autocommit
 	case SessionParameterBinaryInputFormat:
@@ -245,6 +253,10 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.NoorderSequenceAsDefault
 	case SessionParameterOdbcTreatDecimalAsInt:
 		unsetField = &sessionParametersUnset.OdbcTreatDecimalAsInt
+	case SessionParameterPythonProfilerModules:
+		unsetField = &sessionParametersUnset.PythonProfilerModules
+	case SessionParameterPythonProfilerTargetStage:
+		unsetField = &sessionParametersUnset.PythonProfilerTargetStage
 	case SessionParameterQueryTag:
 		unsetField = &sessionParametersUnset.QueryTag
 	case SessionParameterQuotedIdentifiersIgnoreCase:

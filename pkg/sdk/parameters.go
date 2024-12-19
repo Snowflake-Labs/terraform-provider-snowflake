@@ -520,6 +520,7 @@ const (
 
 	// Session Parameters (inherited)
 	AccountParameterAbortDetachedQuery                       AccountParameter = "ABORT_DETACHED_QUERY"
+	AccountParameterActivePythonProfiler                     AccountParameter = "ACTIVE_PYTHON_PROFILER"
 	AccountParameterAutocommit                               AccountParameter = "AUTOCOMMIT"
 	AccountParameterBinaryInputFormat                        AccountParameter = "BINARY_INPUT_FORMAT"
 	AccountParameterBinaryOutputFormat                       AccountParameter = "BINARY_OUTPUT_FORMAT"
@@ -550,6 +551,8 @@ const (
 	AccountParameterMultiStatementCount                      AccountParameter = "MULTI_STATEMENT_COUNT"
 	AccountParameterNoorderSequenceAsDefault                 AccountParameter = "NOORDER_SEQUENCE_AS_DEFAULT"
 	AccountParameterOdbcTreatDecimalAsInt                    AccountParameter = "ODBC_TREAT_DECIMAL_AS_INT"
+	AccountParameterPythonProfilerModules                    AccountParameter = "PYTHON_PROFILER_MODULES"
+	AccountParameterPythonProfilerTargetStage                AccountParameter = "PYTHON_PROFILER_TARGET_STAGE"
 	AccountParameterQueryTag                                 AccountParameter = "QUERY_TAG"
 	AccountParameterQuotedIdentifiersIgnoreCase              AccountParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
 	AccountParameterRowsPerResultset                         AccountParameter = "ROWS_PER_RESULTSET"
@@ -629,6 +632,7 @@ var AllAccountParameters = []AccountParameter{
 	AccountParameterSSOLoginPage,
 
 	AccountParameterAbortDetachedQuery,
+	AccountParameterActivePythonProfiler,
 	AccountParameterAutocommit,
 	AccountParameterBinaryInputFormat,
 	AccountParameterBinaryOutputFormat,
@@ -659,6 +663,8 @@ var AllAccountParameters = []AccountParameter{
 	AccountParameterMultiStatementCount,
 	AccountParameterNoorderSequenceAsDefault,
 	AccountParameterOdbcTreatDecimalAsInt,
+	AccountParameterPythonProfilerModules,
+	AccountParameterPythonProfilerTargetStage,
 	AccountParameterQueryTag,
 	AccountParameterQuotedIdentifiersIgnoreCase,
 	AccountParameterRowsPerResultset,
@@ -722,6 +728,7 @@ type SessionParameter string
 
 const (
 	SessionParameterAbortDetachedQuery                       SessionParameter = "ABORT_DETACHED_QUERY"
+	SessionParameterActivePythonProfiler                     SessionParameter = "ACTIVE_PYTHON_PROFILER"
 	SessionParameterAutocommit                               SessionParameter = "AUTOCOMMIT"
 	SessionParameterBinaryInputFormat                        SessionParameter = "BINARY_INPUT_FORMAT"
 	SessionParameterBinaryOutputFormat                       SessionParameter = "BINARY_OUTPUT_FORMAT"
@@ -753,6 +760,8 @@ const (
 	SessionParameterMultiStatementCount                      SessionParameter = "MULTI_STATEMENT_COUNT"
 	SessionParameterNoorderSequenceAsDefault                 SessionParameter = "NOORDER_SEQUENCE_AS_DEFAULT"
 	SessionParameterOdbcTreatDecimalAsInt                    SessionParameter = "ODBC_TREAT_DECIMAL_AS_INT"
+	SessionParameterPythonProfilerModules                    SessionParameter = "PYTHON_PROFILER_MODULES"
+	SessionParameterPythonProfilerTargetStage                SessionParameter = "PYTHON_PROFILER_TARGET_STAGE"
 	SessionParameterQueryTag                                 SessionParameter = "QUERY_TAG"
 	SessionParameterQuotedIdentifiersIgnoreCase              SessionParameter = "QUOTED_IDENTIFIERS_IGNORE_CASE"
 	SessionParameterRowsPerResultset                         SessionParameter = "ROWS_PER_RESULTSET"
@@ -1233,6 +1242,24 @@ type AccountParametersUnset struct {
 	SSOLoginPage                                     *bool `ddl:"keyword" sql:"SSO_LOGIN_PAGE"`
 }
 
+type ActivePythonProfiler string
+
+const (
+	ActivePythonProfilerLine   ActivePythonProfiler = "LINE"
+	ActivePythonProfilerMemory ActivePythonProfiler = "MEMORY"
+)
+
+func ToActivePythonProfiler(s string) (ActivePythonProfiler, error) {
+	switch strings.ToUpper(s) {
+	case string(ActivePythonProfilerLine):
+		return ActivePythonProfilerLine, nil
+	case string(ActivePythonProfilerMemory):
+		return ActivePythonProfilerMemory, nil
+	default:
+		return "", fmt.Errorf("invalid active python profiler: %s", s)
+	}
+}
+
 type GeographyOutputFormat string
 
 const (
@@ -1401,6 +1428,7 @@ func ToUnsupportedDDLAction(s string) (UnsupportedDDLAction, error) {
 // SessionParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#session-parameters.
 type SessionParameters struct {
 	AbortDetachedQuery                       *bool                             `ddl:"parameter" sql:"ABORT_DETACHED_QUERY"`
+	ActivePythonProfiler                     *ActivePythonProfiler             `ddl:"parameter,single_quotes" sql:"ACTIVE_PYTHON_PROFILER"`
 	Autocommit                               *bool                             `ddl:"parameter" sql:"AUTOCOMMIT"`
 	BinaryInputFormat                        *BinaryInputFormat                `ddl:"parameter,single_quotes" sql:"BINARY_INPUT_FORMAT"`
 	BinaryOutputFormat                       *BinaryOutputFormat               `ddl:"parameter,single_quotes" sql:"BINARY_OUTPUT_FORMAT"`
@@ -1432,6 +1460,8 @@ type SessionParameters struct {
 	MultiStatementCount                      *int                              `ddl:"parameter" sql:"MULTI_STATEMENT_COUNT"`
 	NoorderSequenceAsDefault                 *bool                             `ddl:"parameter" sql:"NOORDER_SEQUENCE_AS_DEFAULT"`
 	OdbcTreatDecimalAsInt                    *bool                             `ddl:"parameter" sql:"ODBC_TREAT_DECIMAL_AS_INT"`
+	PythonProfilerModules                    *string                           `ddl:"parameter" sql:"PYTHON_PROFILER_MODULES"`
+	PythonProfilerTargetStage                *string                           `ddl:"parameter" sql:"PYTHON_PROFILER_TARGET_STAGE"`
 	QueryTag                                 *string                           `ddl:"parameter,single_quotes" sql:"QUERY_TAG"`
 	QuotedIdentifiersIgnoreCase              *bool                             `ddl:"parameter" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
 	RowsPerResultset                         *int                              `ddl:"parameter" sql:"ROWS_PER_RESULTSET"`
@@ -1503,6 +1533,7 @@ func (v *SessionParameters) validate() error {
 
 type SessionParametersUnset struct {
 	AbortDetachedQuery                       *bool `ddl:"keyword" sql:"ABORT_DETACHED_QUERY"`
+	ActivePythonProfiler                     *bool `ddl:"keyword" sql:"ACTIVE_PYTHON_PROFILER"`
 	Autocommit                               *bool `ddl:"keyword" sql:"AUTOCOMMIT"`
 	BinaryInputFormat                        *bool `ddl:"keyword" sql:"BINARY_INPUT_FORMAT"`
 	BinaryOutputFormat                       *bool `ddl:"keyword" sql:"BINARY_OUTPUT_FORMAT"`
@@ -1534,6 +1565,8 @@ type SessionParametersUnset struct {
 	MultiStatementCount                      *bool `ddl:"keyword" sql:"MULTI_STATEMENT_COUNT"`
 	NoorderSequenceAsDefault                 *bool `ddl:"keyword" sql:"NOORDER_SEQUENCE_AS_DEFAULT"`
 	OdbcTreatDecimalAsInt                    *bool `ddl:"keyword" sql:"ODBC_TREAT_DECIMAL_AS_INT"`
+	PythonProfilerModules                    *bool `ddl:"keyword" sql:"PYTHON_PROFILER_MODULES"`
+	PythonProfilerTargetStage                *bool `ddl:"keyword" sql:"PYTHON_PROFILER_TARGET_STAGE"`
 	QueryTag                                 *bool `ddl:"keyword" sql:"QUERY_TAG"`
 	QuotedIdentifiersIgnoreCase              *bool `ddl:"keyword" sql:"QUOTED_IDENTIFIERS_IGNORE_CASE"`
 	RowsPerResultset                         *bool `ddl:"keyword" sql:"ROWS_PER_RESULTSET"`
@@ -1564,8 +1597,8 @@ type SessionParametersUnset struct {
 }
 
 func (v *SessionParametersUnset) validate() error {
-	if !anyValueSet(v.AbortDetachedQuery, v.Autocommit, v.BinaryInputFormat, v.BinaryOutputFormat, v.ClientEnableLogInfoStatementParameters, v.ClientMemoryLimit, v.ClientMetadataRequestUseConnectionCtx, v.ClientPrefetchThreads, v.ClientResultChunkSize, v.ClientResultColumnCaseInsensitive, v.ClientMetadataUseSessionDatabase, v.ClientSessionKeepAlive, v.ClientSessionKeepAliveHeartbeatFrequency, v.ClientTimestampTypeMapping, v.DateInputFormat, v.DateOutputFormat, v.EnableUnloadPhysicalTypeOptimization, v.ErrorOnNondeterministicMerge, v.ErrorOnNondeterministicUpdate, v.GeographyOutputFormat, v.GeometryOutputFormat, v.HybridTableLockTimeout, v.JdbcTreatDecimalAsInt, v.JdbcTreatTimestampNtzAsUtc, v.JdbcUseSessionTimezone, v.JSONIndent, v.JsTreatIntegerAsBigInt, v.LockTimeout, v.LogLevel, v.MultiStatementCount, v.NoorderSequenceAsDefault, v.OdbcTreatDecimalAsInt, v.QueryTag, v.QuotedIdentifiersIgnoreCase, v.RowsPerResultset, v.S3StageVpceDnsName, v.SearchPath, v.SimulatedDataSharingConsumer, v.StatementQueuedTimeoutInSeconds, v.StatementTimeoutInSeconds, v.StrictJSONOutput, v.TimestampDayIsAlways24h, v.TimestampInputFormat, v.TimestampLTZOutputFormat, v.TimestampNTZOutputFormat, v.TimestampOutputFormat, v.TimestampTypeMapping, v.TimestampTZOutputFormat, v.Timezone, v.TimeInputFormat, v.TimeOutputFormat, v.TraceLevel, v.TransactionAbortOnError, v.TransactionDefaultIsolationLevel, v.TwoDigitCenturyStart, v.UnsupportedDDLAction, v.UseCachedResult, v.WeekOfYearPolicy, v.WeekStart) {
-		return errors.Join(errAtLeastOneOf("SessionParametersUnset", "AbortDetachedQuery", "Autocommit", "BinaryInputFormat", "BinaryOutputFormat", "ClientEnableLogInfoStatementParameters", "ClientMemoryLimit", "ClientMetadataRequestUseConnectionCtx", "ClientPrefetchThreads", "ClientResultChunkSize", "ClientResultColumnCaseInsensitive", "ClientMetadataUseSessionDatabase", "ClientSessionKeepAlive", "ClientSessionKeepAliveHeartbeatFrequency", "ClientTimestampTypeMapping", "DateInputFormat", "DateOutputFormat", "EnableUnloadPhysicalTypeOptimization", "ErrorOnNondeterministicMerge", "ErrorOnNondeterministicUpdate", "GeographyOutputFormat", "GeometryOutputFormat", "HybridTableLockTimeout", "JdbcTreatDecimalAsInt", "JdbcTreatTimestampNtzAsUtc", "JdbcUseSessionTimezone", "JSONIndent", "JsTreatIntegerAsBigInt", "LockTimeout", "LogLevel", "MultiStatementCount", "NoorderSequenceAsDefault", "OdbcTreatDecimalAsInt", "QueryTag", "QuotedIdentifiersIgnoreCase", "RowsPerResultset", "S3StageVpceDnsName", "SearchPath", "SimulatedDataSharingConsumer", "StatementQueuedTimeoutInSeconds", "StatementTimeoutInSeconds", "StrictJSONOutput", "TimestampDayIsAlways24h", "TimestampInputFormat", "TimestampLTZOutputFormat", "TimestampNTZOutputFormat", "TimestampOutputFormat", "TimestampTypeMapping", "TimestampTZOutputFormat", "Timezone", "TimeInputFormat", "TimeOutputFormat", "TraceLevel", "TransactionAbortOnError", "TransactionDefaultIsolationLevel", "TwoDigitCenturyStart", "UnsupportedDDLAction", "UseCachedResult", "WeekOfYearPolicy", "WeekStart"))
+	if !anyValueSet(v.AbortDetachedQuery, v.ActivePythonProfiler, v.Autocommit, v.BinaryInputFormat, v.BinaryOutputFormat, v.ClientEnableLogInfoStatementParameters, v.ClientMemoryLimit, v.ClientMetadataRequestUseConnectionCtx, v.ClientPrefetchThreads, v.ClientResultChunkSize, v.ClientResultColumnCaseInsensitive, v.ClientMetadataUseSessionDatabase, v.ClientSessionKeepAlive, v.ClientSessionKeepAliveHeartbeatFrequency, v.ClientTimestampTypeMapping, v.DateInputFormat, v.DateOutputFormat, v.EnableUnloadPhysicalTypeOptimization, v.ErrorOnNondeterministicMerge, v.ErrorOnNondeterministicUpdate, v.GeographyOutputFormat, v.GeometryOutputFormat, v.HybridTableLockTimeout, v.JdbcTreatDecimalAsInt, v.JdbcTreatTimestampNtzAsUtc, v.JdbcUseSessionTimezone, v.JSONIndent, v.JsTreatIntegerAsBigInt, v.LockTimeout, v.LogLevel, v.MultiStatementCount, v.NoorderSequenceAsDefault, v.OdbcTreatDecimalAsInt, v.PythonProfilerModules, v.PythonProfilerTargetStage, v.QueryTag, v.QuotedIdentifiersIgnoreCase, v.RowsPerResultset, v.S3StageVpceDnsName, v.SearchPath, v.SimulatedDataSharingConsumer, v.StatementQueuedTimeoutInSeconds, v.StatementTimeoutInSeconds, v.StrictJSONOutput, v.TimestampDayIsAlways24h, v.TimestampInputFormat, v.TimestampLTZOutputFormat, v.TimestampNTZOutputFormat, v.TimestampOutputFormat, v.TimestampTypeMapping, v.TimestampTZOutputFormat, v.Timezone, v.TimeInputFormat, v.TimeOutputFormat, v.TraceLevel, v.TransactionAbortOnError, v.TransactionDefaultIsolationLevel, v.TwoDigitCenturyStart, v.UnsupportedDDLAction, v.UseCachedResult, v.WeekOfYearPolicy, v.WeekStart) {
+		return errors.Join(errAtLeastOneOf("SessionParametersUnset", "AbortDetachedQuery", "ActivePythonProfiler", "Autocommit", "BinaryInputFormat", "BinaryOutputFormat", "ClientEnableLogInfoStatementParameters", "ClientMemoryLimit", "ClientMetadataRequestUseConnectionCtx", "ClientPrefetchThreads", "ClientResultChunkSize", "ClientResultColumnCaseInsensitive", "ClientMetadataUseSessionDatabase", "ClientSessionKeepAlive", "ClientSessionKeepAliveHeartbeatFrequency", "ClientTimestampTypeMapping", "DateInputFormat", "DateOutputFormat", "EnableUnloadPhysicalTypeOptimization", "ErrorOnNondeterministicMerge", "ErrorOnNondeterministicUpdate", "GeographyOutputFormat", "GeometryOutputFormat", "HybridTableLockTimeout", "JdbcTreatDecimalAsInt", "JdbcTreatTimestampNtzAsUtc", "JdbcUseSessionTimezone", "JSONIndent", "JsTreatIntegerAsBigInt", "LockTimeout", "LogLevel", "MultiStatementCount", "NoorderSequenceAsDefault", "OdbcTreatDecimalAsInt", "PythonProfilerModules", "PythonProfilerTargetStage", "QueryTag", "QuotedIdentifiersIgnoreCase", "RowsPerResultset", "S3StageVpceDnsName", "SearchPath", "SimulatedDataSharingConsumer", "StatementQueuedTimeoutInSeconds", "StatementTimeoutInSeconds", "StrictJSONOutput", "TimestampDayIsAlways24h", "TimestampInputFormat", "TimestampLTZOutputFormat", "TimestampNTZOutputFormat", "TimestampOutputFormat", "TimestampTypeMapping", "TimestampTZOutputFormat", "Timezone", "TimeInputFormat", "TimeOutputFormat", "TraceLevel", "TransactionAbortOnError", "TransactionDefaultIsolationLevel", "TwoDigitCenturyStart", "UnsupportedDDLAction", "UseCachedResult", "WeekOfYearPolicy", "WeekStart"))
 	}
 	return nil
 }

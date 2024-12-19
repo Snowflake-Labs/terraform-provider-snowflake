@@ -90,6 +90,7 @@ func TestToAccountParameter(t *testing.T) {
 
 		// Session Parameters (inherited)
 		{input: "ABORT_DETACHED_QUERY", want: AccountParameterAbortDetachedQuery},
+		{input: "ACTIVE_PYTHON_PROFILER", want: AccountParameterActivePythonProfiler},
 		{input: "AUTOCOMMIT", want: AccountParameterAutocommit},
 		{input: "BINARY_INPUT_FORMAT", want: AccountParameterBinaryInputFormat},
 		{input: "BINARY_OUTPUT_FORMAT", want: AccountParameterBinaryOutputFormat},
@@ -120,6 +121,8 @@ func TestToAccountParameter(t *testing.T) {
 		{input: "MULTI_STATEMENT_COUNT", want: AccountParameterMultiStatementCount},
 		{input: "NOORDER_SEQUENCE_AS_DEFAULT", want: AccountParameterNoorderSequenceAsDefault},
 		{input: "ODBC_TREAT_DECIMAL_AS_INT", want: AccountParameterOdbcTreatDecimalAsInt},
+		{input: "PYTHON_PROFILER_MODULES", want: AccountParameterPythonProfilerModules},
+		{input: "PYTHON_PROFILER_TARGET_STAGE", want: AccountParameterPythonProfilerTargetStage},
 		{input: "QUERY_TAG", want: AccountParameterQueryTag},
 		{input: "QUOTED_IDENTIFIERS_IGNORE_CASE", want: AccountParameterQuotedIdentifiersIgnoreCase},
 		{input: "ROWS_PER_RESULTSET", want: AccountParameterRowsPerResultset},

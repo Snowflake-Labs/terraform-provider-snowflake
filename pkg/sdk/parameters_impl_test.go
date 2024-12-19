@@ -15,6 +15,7 @@ func TestSessionParameters_setParam(t *testing.T) {
 		accessor      func(*SessionParameters) any
 	}{
 		{parameter: SessionParameterAbortDetachedQuery, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.AbortDetachedQuery }},
+		{parameter: SessionParameterActivePythonProfiler, value: "LINE", expectedValue: ActivePythonProfilerLine, accessor: func(sp *SessionParameters) any { return *sp.ActivePythonProfiler }},
 		{parameter: SessionParameterAutocommit, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.Autocommit }},
 		{parameter: SessionParameterBinaryInputFormat, value: "some", expectedValue: BinaryInputFormat("some"), accessor: func(sp *SessionParameters) any { return *sp.BinaryInputFormat }},
 		{parameter: SessionParameterBinaryOutputFormat, value: "some", expectedValue: BinaryOutputFormat("some"), accessor: func(sp *SessionParameters) any { return *sp.BinaryOutputFormat }},
@@ -43,6 +44,8 @@ func TestSessionParameters_setParam(t *testing.T) {
 		{parameter: SessionParameterMultiStatementCount, value: "1", expectedValue: 1, accessor: func(sp *SessionParameters) any { return *sp.MultiStatementCount }},
 		{parameter: SessionParameterNoorderSequenceAsDefault, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.NoorderSequenceAsDefault }},
 		{parameter: SessionParameterOdbcTreatDecimalAsInt, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.OdbcTreatDecimalAsInt }},
+		{parameter: SessionParameterPythonProfilerModules, value: "some", expectedValue: "some", accessor: func(sp *SessionParameters) any { return *sp.PythonProfilerModules }},
+		{parameter: SessionParameterPythonProfilerTargetStage, value: "some", expectedValue: "some", accessor: func(sp *SessionParameters) any { return *sp.PythonProfilerTargetStage }},
 		{parameter: SessionParameterQueryTag, value: "some", expectedValue: "some", accessor: func(sp *SessionParameters) any { return *sp.QueryTag }},
 		{parameter: SessionParameterQuotedIdentifiersIgnoreCase, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.QuotedIdentifiersIgnoreCase }},
 		{parameter: SessionParameterRowsPerResultset, value: "1", expectedValue: 1, accessor: func(sp *SessionParameters) any { return *sp.RowsPerResultset }},
@@ -87,6 +90,7 @@ func TestSessionParameters_setParam(t *testing.T) {
 		value     string
 	}{
 		{parameter: SessionParameterAbortDetachedQuery, value: "true123"},
+		// {parameter: SessionParameterActivePythonProfiler, value: "some"}, // add validation
 		{parameter: SessionParameterAutocommit, value: "true123"},
 		// {parameter: SessionParameterBinaryInputFormat, value: "some"}, // add validation
 		// {parameter: SessionParameterBinaryOutputFormat, value: "some"}, // add validation
