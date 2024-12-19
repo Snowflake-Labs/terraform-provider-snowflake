@@ -6,40 +6,35 @@ resource "snowflake_api_integration" "test_api_int" {
   enabled              = true
 }
 
-resource "snowflake_function" "test_func_req_translator" {
+resource "snowflake_function_javascript" "test_func_req_translator" {
   name     = "${var.name}_request_translator"
   database = var.database
   schema   = var.schema
   arguments {
-    name = "EVENT"
-    type = "OBJECT"
+    arg_name      = "EVENT"
+    arg_data_type = "OBJECT"
   }
-  comment     = "Terraform acceptance test"
-  return_type = "OBJECT"
-  language    = "javascript"
-  statement   = <<EOH
+  return_type         = "OBJECT"
+  function_definition = <<EOT
 		  	let exeprimentName = EVENT.body.data[0][1]
 		  	return { "body": { "name": test }}
-	  	EOH
+	  	EOT
 }
 
 
-resource "snowflake_function" "test_func_res_translator" {
+resource "snowflake_function_javascript" "test_func_res_translator" {
   name     = "${var.name}_response_translator"
   database = var.database
   schema   = var.schema
   arguments {
-    name = "EVENT"
-    type = "OBJECT"
+    arg_name      = "EVENT"
+    arg_data_type = "OBJECT"
   }
-  comment     = "Terraform acceptance test"
-  return_type = "OBJECT"
-  language    = "javascript"
-  statement   = <<EOH
+  return_type         = "OBJECT"
+  function_definition = <<EOT
 			  return { "body": { "data" :  [[0, EVENT]] } };
-		  EOH
+		  EOT
 }
-
 
 resource "snowflake_external_function" "external_function" {
   name            = var.name
@@ -54,7 +49,7 @@ resource "snowflake_external_function" "external_function" {
     value = "snowflake"
   }
   max_batch_rows            = 500
-  request_translator        = "${var.database}.${var.schema}.${snowflake_function.test_func_req_translator.name}"
-  response_translator       = "${var.database}.${var.schema}.${snowflake_function.test_func_res_translator.name}"
+  request_translator        = "${var.database}.${var.schema}.${snowflake_function_javascript.test_func_req_translator.name}"
+  response_translator       = "${var.database}.${var.schema}.${snowflake_function_javascript.test_func_res_translator.name}"
   url_of_proxy_and_resource = var.url_of_proxy_and_resource
 }

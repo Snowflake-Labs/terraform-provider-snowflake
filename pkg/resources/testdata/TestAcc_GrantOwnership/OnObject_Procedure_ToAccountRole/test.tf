@@ -16,14 +16,13 @@ resource "snowflake_procedure_javascript" "test" {
   database = snowflake_database.test.name
   schema   = snowflake_schema.test.name
   arguments {
-    name = "ARG1"
-    type = "FLOAT"
+    arg_name      = "ARG1"
+    arg_data_type = "FLOAT"
   }
-  return_type         = "FLOAT"
-  execute_as          = "CALLER"
-  return_behavior     = "VOLATILE"
-  null_input_behavior = "RETURNS NULL ON NULL INPUT"
-  statement           = <<EOT
+  return_type          = "FLOAT"
+  execute_as           = "CALLER"
+  null_input_behavior  = "RETURNS NULL ON NULL INPUT"
+  procedure_definition = <<EOT
 var X=1
 return X
 EOT
