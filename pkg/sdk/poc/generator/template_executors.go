@@ -21,7 +21,14 @@ func GenerateInterface(writer io.Writer, def *Interface) {
 		if o.OptsField != nil {
 			generateOptionsStruct(writer, o)
 		}
+		for _, m := range o.ShowObjectMethods {
+			generateShowObjectMethods(writer, m)
+		}
 	}
+}
+
+func generateShowObjectMethods(writer io.Writer, hm *ShowObjectMethod) {
+	printTo(writer, ShowObjectMethodTemplate, hm)
 }
 
 func generateOptionsStruct(writer io.Writer, operation *Operation) {

@@ -24,6 +24,10 @@ var (
 	structTemplateContent string
 	StructTemplate, _     = template.New("structTemplate").Parse(structTemplateContent)
 
+	//go:embed templates/show_object_method.tmpl
+	showObjectMethodTemplateContent string
+	ShowObjectMethodTemplate, _     = template.New("helperMethodTemplate").Parse(showObjectMethodTemplateContent)
+
 	//go:embed templates/dto_declarations.tmpl
 	dtoDeclarationsTemplateContent string
 	DtoTemplate, _                 = template.New("dtoTemplate").Parse(dtoDeclarationsTemplateContent)
