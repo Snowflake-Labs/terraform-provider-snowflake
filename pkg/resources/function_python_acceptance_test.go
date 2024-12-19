@@ -23,6 +23,10 @@ import (
 )
 
 func TestAcc_FunctionPython_InlineBasic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	funcName := "some_function"
 	argName := "x"
 	dataType := testdatatypes.DataTypeNumber_36_2
@@ -64,6 +68,22 @@ func TestAcc_FunctionPython_InlineBasic(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(functionModel.ResourceReference(), "arguments.0.arg_default_value", "")),
 				),
 			},
+			// REMOVE EXTERNALLY (CHECK RECREATION)
+			{
+				PreConfig: func() {
+					acc.TestClient().Function.DropFunctionFunc(t, id)()
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(functionModel.ResourceReference(), plancheck.ResourceActionCreate),
+					},
+				},
+				Config: config.FromModels(t, functionModel),
+				Check: assert.AssertThat(t,
+					resourceassert.FunctionPythonResource(t, functionModel.ResourceReference()).
+						HasNameString(id.Name()),
+				),
+			},
 			// IMPORT
 			{
 				ResourceName:            functionModel.ResourceReference(),
@@ -94,6 +114,7 @@ func TestAcc_FunctionPython_InlineBasic(t *testing.T) {
 func TestAcc_FunctionPython_InlineFull(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	secretId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	secretId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
