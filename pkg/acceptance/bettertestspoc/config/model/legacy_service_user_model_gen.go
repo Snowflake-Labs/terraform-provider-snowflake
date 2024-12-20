@@ -383,12 +383,12 @@ func (l *LegacyServiceUserModel) WithRowsPerResultset(rowsPerResultset int) *Leg
 }
 
 func (l *LegacyServiceUserModel) WithRsaPublicKey(rsaPublicKey string) *LegacyServiceUserModel {
-	l.RsaPublicKey = tfconfig.StringVariable(rsaPublicKey)
+	l.RsaPublicKey = config.MultilineWrapperVariable(rsaPublicKey)
 	return l
 }
 
 func (l *LegacyServiceUserModel) WithRsaPublicKey2(rsaPublicKey2 string) *LegacyServiceUserModel {
-	l.RsaPublicKey2 = tfconfig.StringVariable(rsaPublicKey2)
+	l.RsaPublicKey2 = config.MultilineWrapperVariable(rsaPublicKey2)
 	return l
 }
 

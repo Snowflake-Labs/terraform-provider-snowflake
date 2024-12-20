@@ -115,7 +115,7 @@ func (f *FunctionSqlModel) WithFullyQualifiedName(fullyQualifiedName string) *Fu
 }
 
 func (f *FunctionSqlModel) WithFunctionDefinition(functionDefinition string) *FunctionSqlModel {
-	f.FunctionDefinition = tfconfig.StringVariable(functionDefinition)
+	f.FunctionDefinition = config.MultilineWrapperVariable(functionDefinition)
 	return f
 }
 

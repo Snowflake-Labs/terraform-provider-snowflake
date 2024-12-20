@@ -146,7 +146,7 @@ func (p *ProcedureJavascriptModel) WithNullInputBehavior(nullInputBehavior strin
 }
 
 func (p *ProcedureJavascriptModel) WithProcedureDefinition(procedureDefinition string) *ProcedureJavascriptModel {
-	p.ProcedureDefinition = tfconfig.StringVariable(procedureDefinition)
+	p.ProcedureDefinition = config.MultilineWrapperVariable(procedureDefinition)
 	return p
 }
 

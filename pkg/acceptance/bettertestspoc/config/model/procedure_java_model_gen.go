@@ -173,7 +173,7 @@ func (p *ProcedureJavaModel) WithNullInputBehavior(nullInputBehavior string) *Pr
 // packages attribute type is not yet supported, so WithPackages can't be generated
 
 func (p *ProcedureJavaModel) WithProcedureDefinition(procedureDefinition string) *ProcedureJavaModel {
-	p.ProcedureDefinition = tfconfig.StringVariable(procedureDefinition)
+	p.ProcedureDefinition = config.MultilineWrapperVariable(procedureDefinition)
 	return p
 }
 

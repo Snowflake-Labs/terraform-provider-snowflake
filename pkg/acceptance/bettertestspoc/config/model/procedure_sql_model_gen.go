@@ -146,7 +146,7 @@ func (p *ProcedureSqlModel) WithNullInputBehavior(nullInputBehavior string) *Pro
 }
 
 func (p *ProcedureSqlModel) WithProcedureDefinition(procedureDefinition string) *ProcedureSqlModel {
-	p.ProcedureDefinition = tfconfig.StringVariable(procedureDefinition)
+	p.ProcedureDefinition = config.MultilineWrapperVariable(procedureDefinition)
 	return p
 }
 

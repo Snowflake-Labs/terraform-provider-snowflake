@@ -129,7 +129,7 @@ func (f *FunctionScalaModel) WithFullyQualifiedName(fullyQualifiedName string) *
 }
 
 func (f *FunctionScalaModel) WithFunctionDefinition(functionDefinition string) *FunctionScalaModel {
-	f.FunctionDefinition = tfconfig.StringVariable(functionDefinition)
+	f.FunctionDefinition = config.MultilineWrapperVariable(functionDefinition)
 	return f
 }
 

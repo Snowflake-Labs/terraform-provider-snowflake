@@ -129,7 +129,7 @@ func (f *FunctionPythonModel) WithFullyQualifiedName(fullyQualifiedName string) 
 }
 
 func (f *FunctionPythonModel) WithFunctionDefinition(functionDefinition string) *FunctionPythonModel {
-	f.FunctionDefinition = tfconfig.StringVariable(functionDefinition)
+	f.FunctionDefinition = config.MultilineWrapperVariable(functionDefinition)
 	return f
 }
 

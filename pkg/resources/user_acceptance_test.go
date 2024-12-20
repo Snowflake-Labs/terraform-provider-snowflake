@@ -64,8 +64,8 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 		WithDefaultRole("some_role").
 		WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
 		WithMinsToBypassMfa(10).
-		WithRsaPublicKeyValue(config.MultilineWrapperVariable(key1)).
-		WithRsaPublicKey2Value(config.MultilineWrapperVariable(key2)).
+		WithRsaPublicKey(key1).
+		WithRsaPublicKey2(key2).
 		WithComment(comment).
 		WithDisableMfa("true")
 
@@ -87,8 +87,8 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 			WithDefaultRole("other_role").
 			WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
 			WithMinsToBypassMfa(14).
-			WithRsaPublicKeyValue(config.MultilineWrapperVariable(key2)).
-			WithRsaPublicKey2Value(config.MultilineWrapperVariable(key1)).
+			WithRsaPublicKey(key2).
+			WithRsaPublicKey2(key1).
 			WithComment(newComment).
 			WithDisableMfa("false")
 	}
@@ -696,15 +696,15 @@ func TestAcc_User_issue2970(t *testing.T) {
 
 	userModel := model.User(resourceName, userId.Name()).
 		WithPassword(pass).
-		WithRsaPublicKeyValue(config.MultilineWrapperVariable(key))
+		WithRsaPublicKey(key)
 
 	newUserModelIncorrectNewKey := model.User(resourceName, userId.Name()).
 		WithPassword(newPass).
-		WithRsaPublicKeyValue(config.MultilineWrapperVariable(incorrectlyFormattedNewKey))
+		WithRsaPublicKey(incorrectlyFormattedNewKey)
 
 	newUserModel := model.User(resourceName, userId.Name()).
 		WithPassword(newPass).
-		WithRsaPublicKeyValue(config.MultilineWrapperVariable(newKey))
+		WithRsaPublicKey(newKey)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
