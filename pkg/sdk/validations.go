@@ -89,7 +89,7 @@ func valueSet(value interface{}) bool {
 	return true
 }
 
-func validateIntInRange(value int, min int, max int) bool {
+func validateIntInRangeInclusive(value int, min int, max int) bool {
 	if value < min || value > max {
 		return false
 	}

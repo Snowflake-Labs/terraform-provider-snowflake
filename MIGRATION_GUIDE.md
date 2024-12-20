@@ -7,6 +7,51 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.0 ➞ v1.0.1
+
+### Fixes in account parameters
+As a follow-up of reworked `snowflake_account_parameter`, this version has several improvements regarding handling parameters.
+
+#### Add missing parameters based on the docs and output of SHOW PARAMETERS IN ACCOUNT
+Based on [parameters docs](https://docs.snowflake.com/en/sql-reference/parameters) and `SHOW PARAMETERS IN ACCOUNT`, we established a list of supported parameters. New supported or fixed parameters in `snowflake_account_parameter`:
+- `ACTIVE_PYTHON_PROFILER`
+- `CLIENT_ENABLE_LOG_INFO_STATEMENT_PARAMETERS`
+- `CORTEX_ENABLED_CROSS_REGION`
+- `CSV_TIMESTAMP_FORMAT`
+- `ENABLE_PERSONAL_DATABASE`
+- `ENABLE_UNHANDLED_EXCEPTIONS_REPORTING`
+- `ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES`
+- `HYBRID_TABLE_LOCK_TIMEOUT`
+- `JS_TREAT_INTEGER_AS_BIGINT`
+- `PREVENT_UNLOAD_TO_INLINE_URL`
+- `PREVENT_UNLOAD_TO_INTERNAL_STAGES`
+- `PYTHON_PROFILER_MODULES`
+- `PYTHON_PROFILER_TARGET_STAGE`
+- `STORAGE_SERIALIZATION_POLICY`
+- `TASK_AUTO_RETRY_ATTEMPTS`
+
+#### Adjusted validations
+Validations for number parameters are now relaxed. This is because a few of the value limits are soft limits in Snowflake, and can be changed externally.
+We decided to keep validations for non-negative values. Affected parameters:
+- `QUERY_TAG`
+- `TWO_DIGIT_CENTURY_START`
+- `WEEK_OF_YEAR_POLICY`
+- `WEEK_START`
+- `USER_TASK_TIMEOUT_MS`
+
+We added non-negative validations for the following parameters:
+- `CLIENT_PREFETCH_THREADS`
+- `CLIENT_RESULT_CHUNK_SIZE`
+- `CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY`
+- `HYBRID_TABLE_LOCK_TIMEOUT`
+- `JSON_INDENT`
+- `STATEMENT_QUEUED_TIMEOUT_IN_SECONDS`
+- `STATEMENT_TIMEOUT_IN_SECONDS`
+- `TASK_AUTO_RETRY_ATTEMPTS`
+- `USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS`
+
+Note that enum parameters are still not validated by the provider - they are only validated in Snowflake. We will handle this during a small rework of the parameters in the future.
+
 ## v0.100.0 ➞ v1.0.0
 
 ### Preview features flag

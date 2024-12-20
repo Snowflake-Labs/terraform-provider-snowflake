@@ -155,7 +155,7 @@ func (opts *CreateWarehouseOptions) validate() error {
 	if valueSet(opts.MinClusterCount) && valueSet(opts.MaxClusterCount) && !validateIntGreaterThanOrEqual(*opts.MaxClusterCount, *opts.MinClusterCount) {
 		errs = append(errs, fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount"))
 	}
-	if valueSet(opts.QueryAccelerationMaxScaleFactor) && !validateIntInRange(*opts.QueryAccelerationMaxScaleFactor, 0, 100) {
+	if valueSet(opts.QueryAccelerationMaxScaleFactor) && !validateIntInRangeInclusive(*opts.QueryAccelerationMaxScaleFactor, 0, 100) {
 		errs = append(errs, errIntBetween("CreateWarehouseOptions", "QueryAccelerationMaxScaleFactor", 0, 100))
 	}
 	return errors.Join(errs...)
@@ -250,7 +250,7 @@ type WarehouseSet struct {
 func (v *WarehouseSet) validate() error {
 	// we validate only the case then both are set together, if only MinClusterCount is set, we leave it for Snowflake to validate
 	if v.MinClusterCount != nil && valueSet(v.MaxClusterCount) {
-		if ok := validateIntInRange(*v.MinClusterCount, 1, *v.MaxClusterCount); !ok {
+		if ok := validateIntInRangeInclusive(*v.MinClusterCount, 1, *v.MaxClusterCount); !ok {
 			return fmt.Errorf("MinClusterCount must be less than or equal to MaxClusterCount")
 		}
 	}
@@ -260,7 +260,7 @@ func (v *WarehouseSet) validate() error {
 		}
 	}
 	if v.QueryAccelerationMaxScaleFactor != nil {
-		if ok := validateIntInRange(*v.QueryAccelerationMaxScaleFactor, 0, 100); !ok {
+		if ok := validateIntInRangeInclusive(*v.QueryAccelerationMaxScaleFactor, 0, 100); !ok {
 			return fmt.Errorf("QueryAccelerationMaxScaleFactor must be between 0 and 100")
 		}
 	}

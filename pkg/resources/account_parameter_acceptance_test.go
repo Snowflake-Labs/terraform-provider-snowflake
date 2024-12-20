@@ -131,4 +131,46 @@ func TestAcc_AccountParameter_Issue3025(t *testing.T) {
 	})
 }
 
-// TODO(next pr): add more acc tests for the remaining parameters
+func TestAcc_AccountParameter_ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES(t *testing.T) {
+	model := model.AccountParameter("test", string(sdk.AccountParameterRequireStorageIntegrationForStageCreation), "true")
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountParameterUnset(t, sdk.AccountParameterRequireStorageIntegrationForStageCreation),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.AccountParameterResource(t, model.ResourceReference()).
+					HasKeyString(string(sdk.AccountParameterRequireStorageIntegrationForStageCreation)).
+					HasValueString("true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_AccountParameter_INITIAL_REPLICATION_SIZE_LIMIT_IN_TB(t *testing.T) {
+	model := model.AccountParameter("test", string(sdk.AccountParameterInitialReplicationSizeLimitInTB), "3.0")
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountParameterUnset(t, sdk.AccountParameterInitialReplicationSizeLimitInTB),
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModel(t, model),
+				Check: assert.AssertThat(t, resourceassert.AccountParameterResource(t, model.ResourceReference()).
+					HasKeyString(string(sdk.AccountParameterInitialReplicationSizeLimitInTB)).
+					HasValueString("3.0"),
+				),
+			},
+		},
+	})
+}
+
+// TODO(SNOW-1866453): add more acc tests for the remaining parameters

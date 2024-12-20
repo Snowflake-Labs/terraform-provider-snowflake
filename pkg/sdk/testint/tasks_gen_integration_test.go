@@ -142,7 +142,7 @@ func TestInt_Tasks(t *testing.T) {
 		GeometryOutputFormat:                     sdk.Pointer(sdk.GeometryOutputFormatWKB),
 		JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
 		JdbcUseSessionTimezone:                   sdk.Bool(false),
-		JSONIndent:                               sdk.Int(4),
+		JsonIndent:                               sdk.Int(4),
 		LockTimeout:                              sdk.Int(21222),
 		LogLevel:                                 sdk.Pointer(sdk.LogLevelError),
 		MultiStatementCount:                      sdk.Int(0),
@@ -155,7 +155,7 @@ func TestInt_Tasks(t *testing.T) {
 		SearchPath:                               sdk.String("$public, $current"),
 		StatementQueuedTimeoutInSeconds:          sdk.Int(10),
 		StatementTimeoutInSeconds:                sdk.Int(10),
-		StrictJSONOutput:                         sdk.Bool(true),
+		StrictJsonOutput:                         sdk.Bool(true),
 		TimestampDayIsAlways24h:                  sdk.Bool(true),
 		TimestampInputFormat:                     sdk.String("YYYY-MM-DD"),
 		TimestampLTZOutputFormat:                 sdk.String("YYYY-MM-DD HH24:MI:SS"),
@@ -276,7 +276,7 @@ func TestInt_Tasks(t *testing.T) {
 			WithConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
 			WithAllowOverlappingExecution(true).
 			WithSessionParameters(sdk.SessionParameters{
-				JSONIndent: sdk.Int(4),
+				JsonIndent: sdk.Int(4),
 			}).
 			WithUserTaskTimeoutMs(500).
 			WithSuspendTaskAfterNumFailures(3).
@@ -667,7 +667,7 @@ func TestInt_Tasks(t *testing.T) {
 				GeometryOutputFormat:                     sdk.Bool(true),
 				JdbcTreatTimestampNtzAsUtc:               sdk.Bool(true),
 				JdbcUseSessionTimezone:                   sdk.Bool(true),
-				JSONIndent:                               sdk.Bool(true),
+				JsonIndent:                               sdk.Bool(true),
 				LockTimeout:                              sdk.Bool(true),
 				LogLevel:                                 sdk.Bool(true),
 				MultiStatementCount:                      sdk.Bool(true),
@@ -680,7 +680,7 @@ func TestInt_Tasks(t *testing.T) {
 				SearchPath:                               sdk.Bool(true),
 				StatementQueuedTimeoutInSeconds:          sdk.Bool(true),
 				StatementTimeoutInSeconds:                sdk.Bool(true),
-				StrictJSONOutput:                         sdk.Bool(true),
+				StrictJsonOutput:                         sdk.Bool(true),
 				TimestampDayIsAlways24h:                  sdk.Bool(true),
 				TimestampInputFormat:                     sdk.Bool(true),
 				TimestampLTZOutputFormat:                 sdk.Bool(true),
