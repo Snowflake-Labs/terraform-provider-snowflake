@@ -125,12 +125,7 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 		}
 		opts.Set.Parameters.AccountParameters.ExternalOAuthAddPrivilegedRolesToBlockedList = b
 	case AccountParameterInitialReplicationSizeLimitInTB:
-		v, err := strconv.ParseFloat(value, 64)
-		if err != nil {
-			return fmt.Errorf("INITIAL_REPLICATION_SIZE_LIMIT_IN_TB session parameter is an integer, got %v", value)
-		}
-		opts.Set.Parameters.AccountParameters.InitialReplicationSizeLimitInTB = Pointer(v)
-
+		opts.Set.Parameters.AccountParameters.InitialReplicationSizeLimitInTB = &value
 	case AccountParameterMinDataRetentionTimeInDays:
 		v, err := strconv.Atoi(value)
 		if err != nil {
@@ -196,7 +191,7 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 	return nil
 }
 
-// TODO(next pr): add integration tests
+// TODO(SNOW-1866453): add integration tests
 func (parameters *parameters) UnsetAccountParameter(ctx context.Context, parameter AccountParameter) error {
 	opts := AlterAccountOptions{
 		Unset: &AccountUnset{
@@ -506,7 +501,6 @@ type AccountParameter string
 // Account Parameters include Session Parameters, Object Parameters and User Parameters
 const (
 	// Account Parameters
-
 	AccountParameterAllowClientMFACaching                            AccountParameter = "ALLOW_CLIENT_MFA_CACHING"
 	AccountParameterAllowIDToken                                     AccountParameter = "ALLOW_ID_TOKEN" // #nosec G101
 	AccountParameterClientEncryptionKeySize                          AccountParameter = "CLIENT_ENCRYPTION_KEY_SIZE"
@@ -1181,31 +1175,33 @@ var AllProcedureParameters = []ProcedureParameter{
 // AccountParameters is based on https://docs.snowflake.com/en/sql-reference/parameters#account-parameters.
 type AccountParameters struct {
 	// Account Parameters
-	AllowClientMFACaching                            *bool    `ddl:"parameter" sql:"ALLOW_CLIENT_MFA_CACHING"`
-	AllowIDToken                                     *bool    `ddl:"parameter" sql:"ALLOW_ID_TOKEN"`
-	ClientEncryptionKeySize                          *int     `ddl:"parameter" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
-	CortexEnabledCrossRegion                         *string  `ddl:"parameter,single_quotes" sql:"CORTEX_ENABLED_CROSS_REGION"`
-	EnableIdentifierFirstLogin                       *bool    `ddl:"parameter" sql:"ENABLE_IDENTIFIER_FIRST_LOGIN"`
-	EnableInternalStagesPrivatelink                  *bool    `ddl:"parameter" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
-	EnablePersonalDatabase                           *bool    `ddl:"parameter" sql:"ENABLE_PERSONAL_DATABASE"`
-	EnableUnredactedQuerySyntaxError                 *bool    `ddl:"parameter" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
-	EnableTriSecretAndRekeyOptOutForImageRepository  *bool    `ddl:"parameter" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"`
-	EnableTriSecretAndRekeyOptOutForSpcsBlockStorage *bool    `ddl:"parameter" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE"`
-	EnableUnhandledExceptionsReporting               *bool    `ddl:"parameter" sql:"ENABLE_UNHANDLED_EXCEPTIONS_REPORTING"`
-	EnforceNetworkRulesForInternalStages             *bool    `ddl:"keyword" sql:"ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES"`
-	EventTable                                       *string  `ddl:"parameter,single_quotes" sql:"EVENT_TABLE"`
-	ExternalOAuthAddPrivilegedRolesToBlockedList     *bool    `ddl:"parameter" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
-	InitialReplicationSizeLimitInTB                  *float64 `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
-	MinDataRetentionTimeInDays                       *int     `ddl:"parameter" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
-	NetworkPolicy                                    *string  `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
-	OAuthAddPrivilegedRolesToBlockedList             *bool    `ddl:"parameter" sql:"OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
-	PeriodicDataRekeying                             *bool    `ddl:"parameter" sql:"PERIODIC_DATA_REKEYING"`
-	PreventLoadFromInlineURL                         *bool    `ddl:"parameter" sql:"PREVENT_LOAD_FROM_INLINE_URL"`
-	PreventUnloadToInlineURL                         *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
-	PreventUnloadToInternalStages                    *bool    `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
-	RequireStorageIntegrationForStageCreation        *bool    `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
-	RequireStorageIntegrationForStageOperation       *bool    `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
-	SSOLoginPage                                     *bool    `ddl:"parameter" sql:"SSO_LOGIN_PAGE"`
+	AllowClientMFACaching                            *bool   `ddl:"parameter" sql:"ALLOW_CLIENT_MFA_CACHING"`
+	AllowIDToken                                     *bool   `ddl:"parameter" sql:"ALLOW_ID_TOKEN"`
+	ClientEncryptionKeySize                          *int    `ddl:"parameter" sql:"CLIENT_ENCRYPTION_KEY_SIZE"`
+	CortexEnabledCrossRegion                         *string `ddl:"parameter,single_quotes" sql:"CORTEX_ENABLED_CROSS_REGION"`
+	EnableIdentifierFirstLogin                       *bool   `ddl:"parameter" sql:"ENABLE_IDENTIFIER_FIRST_LOGIN"`
+	EnableInternalStagesPrivatelink                  *bool   `ddl:"parameter" sql:"ENABLE_INTERNAL_STAGES_PRIVATELINK"`
+	EnablePersonalDatabase                           *bool   `ddl:"parameter" sql:"ENABLE_PERSONAL_DATABASE"`
+	EnableUnredactedQuerySyntaxError                 *bool   `ddl:"parameter" sql:"ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"`
+	EnableTriSecretAndRekeyOptOutForImageRepository  *bool   `ddl:"parameter" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_IMAGE_REPOSITORY"`
+	EnableTriSecretAndRekeyOptOutForSpcsBlockStorage *bool   `ddl:"parameter" sql:"ENABLE_TRI_SECRET_AND_REKEY_OPT_OUT_FOR_SPCS_BLOCK_STORAGE"`
+	EnableUnhandledExceptionsReporting               *bool   `ddl:"parameter" sql:"ENABLE_UNHANDLED_EXCEPTIONS_REPORTING"`
+	EnforceNetworkRulesForInternalStages             *bool   `ddl:"keyword" sql:"ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES"`
+	EventTable                                       *string `ddl:"parameter,single_quotes" sql:"EVENT_TABLE"`
+	ExternalOAuthAddPrivilegedRolesToBlockedList     *bool   `ddl:"parameter" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
+	// InitialReplicationSizeLimitInTB is a string because values like 3.0 get rounded to 3, resulting in an error in Snowflake.
+	// This is still validated below.
+	InitialReplicationSizeLimitInTB            *string `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
+	MinDataRetentionTimeInDays                 *int    `ddl:"parameter" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
+	NetworkPolicy                              *string `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
+	OAuthAddPrivilegedRolesToBlockedList       *bool   `ddl:"parameter" sql:"OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
+	PeriodicDataRekeying                       *bool   `ddl:"parameter" sql:"PERIODIC_DATA_REKEYING"`
+	PreventLoadFromInlineURL                   *bool   `ddl:"parameter" sql:"PREVENT_LOAD_FROM_INLINE_URL"`
+	PreventUnloadToInlineURL                   *bool   `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
+	PreventUnloadToInternalStages              *bool   `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
+	RequireStorageIntegrationForStageCreation  *bool   `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
+	RequireStorageIntegrationForStageOperation *bool   `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
+	SSOLoginPage                               *bool   `ddl:"parameter" sql:"SSO_LOGIN_PAGE"`
 }
 
 func (v *AccountParameters) validate() error {
@@ -1216,10 +1212,11 @@ func (v *AccountParameters) validate() error {
 		}
 	}
 	if valueSet(v.InitialReplicationSizeLimitInTB) {
-		l := *v.InitialReplicationSizeLimitInTB
-		if l < 0.0 {
-			errs = append(errs, fmt.Errorf("InitialReplicationSizeLimitInTB must be 0.0 and above with a scale of at least 1 (e.g. 20.5, 32.25, 33.333, etc.), got %f", l))
+		value, err := strconv.ParseFloat(*v.InitialReplicationSizeLimitInTB, 64)
+		if err != nil || value < 0 {
+			return fmt.Errorf("InitialReplicationSizeLimitInTB must be a non-negative float, got %v", *v.InitialReplicationSizeLimitInTB)
 		}
+
 	}
 	if valueSet(v.MinDataRetentionTimeInDays) {
 		if !validateIntInRangeInclusive(*v.MinDataRetentionTimeInDays, 0, 90) {

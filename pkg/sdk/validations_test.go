@@ -168,7 +168,7 @@ func TestValueSet(t *testing.T) {
 	})
 }
 
-func TestValidateIntInRange(t *testing.T) {
+func TestValidateIntInRangeInclusive(t *testing.T) {
 	t.Run("with value in range", func(t *testing.T) {
 		ok := validateIntInRangeInclusive(5, 0, 10)
 		assert.Equal(t, ok, true)

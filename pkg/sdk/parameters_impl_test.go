@@ -19,6 +19,7 @@ func TestSessionParameters_setParam(t *testing.T) {
 		{parameter: SessionParameterAutocommit, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.Autocommit }},
 		{parameter: SessionParameterBinaryInputFormat, value: "some", expectedValue: BinaryInputFormat("some"), accessor: func(sp *SessionParameters) any { return *sp.BinaryInputFormat }},
 		{parameter: SessionParameterBinaryOutputFormat, value: "some", expectedValue: BinaryOutputFormat("some"), accessor: func(sp *SessionParameters) any { return *sp.BinaryOutputFormat }},
+		{parameter: SessionParameterClientEnableLogInfoStatementParameters, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.ClientEnableLogInfoStatementParameters }},
 		{parameter: SessionParameterClientMemoryLimit, value: "1", expectedValue: 1, accessor: func(sp *SessionParameters) any { return *sp.ClientMemoryLimit }},
 		{parameter: SessionParameterClientMetadataRequestUseConnectionCtx, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.ClientMetadataRequestUseConnectionCtx }},
 		{parameter: SessionParameterClientPrefetchThreads, value: "1", expectedValue: 1, accessor: func(sp *SessionParameters) any { return *sp.ClientPrefetchThreads }},
@@ -36,10 +37,12 @@ func TestSessionParameters_setParam(t *testing.T) {
 		{parameter: SessionParameterErrorOnNondeterministicUpdate, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.ErrorOnNondeterministicUpdate }},
 		{parameter: SessionParameterGeographyOutputFormat, value: "some", expectedValue: GeographyOutputFormat("some"), accessor: func(sp *SessionParameters) any { return *sp.GeographyOutputFormat }},
 		{parameter: SessionParameterGeometryOutputFormat, value: "some", expectedValue: GeometryOutputFormat("some"), accessor: func(sp *SessionParameters) any { return *sp.GeometryOutputFormat }},
+		{parameter: SessionParameterHybridTableLockTimeout, value: "1", expectedValue: 1, accessor: func(sp *SessionParameters) any { return *sp.HybridTableLockTimeout }},
 		{parameter: SessionParameterJdbcTreatDecimalAsInt, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.JdbcTreatDecimalAsInt }},
 		{parameter: SessionParameterJdbcTreatTimestampNtzAsUtc, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.JdbcTreatTimestampNtzAsUtc }},
 		{parameter: SessionParameterJdbcUseSessionTimezone, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.JdbcUseSessionTimezone }},
 		{parameter: SessionParameterJsonIndent, value: "1", expectedValue: 1, accessor: func(sp *SessionParameters) any { return *sp.JsonIndent }},
+		{parameter: SessionParameterJsTreatIntegerAsBigInt, value: "true", expectedValue: true, accessor: func(sp *SessionParameters) any { return *sp.JsTreatIntegerAsBigInt }},
 		{parameter: SessionParameterLockTimeout, value: "1", expectedValue: 1, accessor: func(sp *SessionParameters) any { return *sp.LockTimeout }},
 		{parameter: SessionParameterLogLevel, value: "some", expectedValue: LogLevel("some"), accessor: func(sp *SessionParameters) any { return *sp.LogLevel }},
 		{parameter: SessionParameterMultiStatementCount, value: "1", expectedValue: 1, accessor: func(sp *SessionParameters) any { return *sp.MultiStatementCount }},
@@ -91,7 +94,6 @@ func TestSessionParameters_setParam(t *testing.T) {
 		value     string
 	}{
 		{parameter: SessionParameterAbortDetachedQuery, value: "true123"},
-		// {parameter: SessionParameterActivePythonProfiler, value: "some"}, // add validation
 		{parameter: SessionParameterAutocommit, value: "true123"},
 		// {parameter: SessionParameterBinaryInputFormat, value: "some"}, // add validation
 		// {parameter: SessionParameterBinaryOutputFormat, value: "some"}, // add validation
