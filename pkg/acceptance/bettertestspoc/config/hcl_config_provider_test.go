@@ -103,5 +103,4 @@ EOT
 		_, err := config.DefaultHclConfigProvider.HclFromJson([]byte(resourceJson))
 		require.ErrorContains(t, err, "object expected closing RBRACE got: EOF")
 	})
-
 }
