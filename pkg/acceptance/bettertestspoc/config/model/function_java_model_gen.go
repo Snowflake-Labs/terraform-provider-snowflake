@@ -125,7 +125,7 @@ func (f *FunctionJavaModel) WithFullyQualifiedName(fullyQualifiedName string) *F
 }
 
 func (f *FunctionJavaModel) WithFunctionDefinition(functionDefinition string) *FunctionJavaModel {
-	f.FunctionDefinition = tfconfig.StringVariable(functionDefinition)
+	f.FunctionDefinition = config.MultilineWrapperVariable(functionDefinition)
 	return f
 }
 
