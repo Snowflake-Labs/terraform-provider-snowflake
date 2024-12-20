@@ -142,7 +142,7 @@ func TestAcc_AccountParameter_ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES(t *testi
 		CheckDestroy: acc.CheckAccountParameterUnset(t, sdk.AccountParameterRequireStorageIntegrationForStageCreation),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, model),
+				Config: config.FromModel(t, model),
 				Check: assert.AssertThat(t, resourceassert.AccountParameterResource(t, model.ResourceReference()).
 					HasKeyString(string(sdk.AccountParameterRequireStorageIntegrationForStageCreation)).
 					HasValueString("true"),
@@ -163,7 +163,7 @@ func TestAcc_AccountParameter_INITIAL_REPLICATION_SIZE_LIMIT_IN_TB(t *testing.T)
 		CheckDestroy: acc.CheckAccountParameterUnset(t, sdk.AccountParameterInitialReplicationSizeLimitInTB),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, model),
+				Config: config.FromModel(t, model),
 				Check: assert.AssertThat(t, resourceassert.AccountParameterResource(t, model.ResourceReference()).
 					HasKeyString(string(sdk.AccountParameterInitialReplicationSizeLimitInTB)).
 					HasValueString("3.0"),
