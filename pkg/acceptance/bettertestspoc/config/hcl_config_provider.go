@@ -10,7 +10,7 @@ import (
 	hclv1parser "github.com/hashicorp/hcl/json/parser"
 )
 
-var DefaultHclConfigProvider = NewHclV1ConfigProvider(unquoteBlockType, fixBlockArguments, fixMultilinePrivateKey, unquoteArguments, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
+var DefaultHclConfigProvider = NewHclV1ConfigProvider(replaceNullPlaceholders, unquoteBlockType, fixBlockArguments, fixMultilinePrivateKey, unquoteArguments, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
 
 // HclConfigProvider defines methods to generate .tf config from .tf.json configs.
 type HclConfigProvider interface {
@@ -77,6 +77,16 @@ func unquoteBlockType(s string) (string, error) {
 func fixBlockArguments(s string) (string, error) {
 	argumentRegex := regexp.MustCompile(`( +)"(\w+)"( +)= ({\n)`)
 	return argumentRegex.ReplaceAllString(s, `$1$2$3$4`), nil
+}
+
+func replaceNullPlaceholders(s string) (string, error) {
+	argumentRegex := regexp.MustCompile(fmt.Sprintf(`"%[1]s"`, SnowflakeProviderConfigNull))
+	submatches := argumentRegex.FindStringSubmatch(s)
+	if len(submatches) < 1 {
+		return s, nil
+	} else {
+		return argumentRegex.ReplaceAllString(s, `null`), nil
+	}
 }
 
 // TODO [SNOW-1501905]: fix new lines replacement totally in this method, consider better placeholders (now there can't be multilinekeys for private key)

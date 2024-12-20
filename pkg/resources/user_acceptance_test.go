@@ -1056,7 +1056,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 	userModelLowercaseValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOption("all")
 	userModelIncorrectValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOption("OTHER")
 	userModelEmptyValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOption("")
-	userModelNullValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOptionValue(config.NullVariable())
+	userModelNullValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOptionValue(config.ReplacementPlaceholderVariable(config.SnowflakeProviderConfigNull))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1203,7 +1203,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 	userModelLowercaseValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOption("all")
 	userModelIncorrectValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOption("OTHER")
 	userModelEmptyValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOption("")
-	userModelNullValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOptionValue(config.NullVariable())
+	userModelNullValue := model.UserWithDefaultMeta(userId.Name()).WithDefaultSecondaryRolesOptionValue(config.ReplacementPlaceholderVariable(config.SnowflakeProviderConfigNull))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
