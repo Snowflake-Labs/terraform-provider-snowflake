@@ -5,6 +5,7 @@ import (
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
@@ -18,7 +19,7 @@ func FunctionScalaBasicInline(
 	handler string,
 	functionDefinition string,
 ) *FunctionScalaModel {
-	return FunctionScala(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), runtimeVersion, id.SchemaName()).WithFunctionDefinition(functionDefinition)
+	return FunctionScala(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), runtimeVersion, id.SchemaName()).WithFunctionDefinitionValue(config.MultilineWrapperVariable(functionDefinition))
 }
 
 func (f *FunctionScalaModel) WithArgument(argName string, argDataType datatypes.DataType) *FunctionScalaModel {

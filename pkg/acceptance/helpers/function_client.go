@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
@@ -200,92 +201,93 @@ func (c *FunctionClient) DescribeDetails(t *testing.T, id sdk.SchemaObjectIdenti
 	return c.client().DescribeDetails(ctx, id)
 }
 
+// formatFunctionDefinition removes the first newline and replaces all tabs with spaces.
+func (c *FunctionClient) formatFunctionDefinition(definition string) string {
+	return strings.Replace(strings.ReplaceAll(definition, "\t", "  "), "\n", "", 1)
+}
+
 func (c *FunctionClient) SampleJavaDefinition(t *testing.T, className string, funcName string, argName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
+	return c.formatFunctionDefinition(fmt.Sprintf(`
 	class %[1]s {
 		public static String %[2]s(String %[3]s) {
 			return %[3]s;
 		}
 	}
-`, className, funcName, argName)
+`, className, funcName, argName))
 }
 
 func (c *FunctionClient) SampleJavaDefinitionNoArgs(t *testing.T, className string, funcName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
+	return c.formatFunctionDefinition(fmt.Sprintf(`
 	class %[1]s {
 		public static String %[2]s() {
 			return "hello";
 		}
 	}
-`, className, funcName)
+`, className, funcName))
 }
 
 func (c *FunctionClient) SampleJavascriptDefinition(t *testing.T, argName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
-	if (%[1]s <= 0) {
+	return c.formatFunctionDefinition(fmt.Sprintf(`
+	if (%[1]s == 0) {
 		return 1;
 	} else {
-		var result = 1;
-		for (var i = 2; i <= %[1]s; i++) {
-			result = result * i;
-		}
-		return result;
+		return 2;
 	}
-`, argName)
+`, argName))
 }
 
 func (c *FunctionClient) SampleJavascriptDefinitionNoArgs(t *testing.T) string {
 	t.Helper()
-	return `return 1;`
+	return c.formatFunctionDefinition(`return 1;`)
 }
 
 func (c *FunctionClient) SamplePythonDefinition(t *testing.T, funcName string, argName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
+	return c.formatFunctionDefinition(fmt.Sprintf(`
 def %[1]s(%[2]s):
-	result = ""
+	result = ''
 	for a in range(5):
 		result += %[2]s
 	return result
-`, funcName, argName)
+`, funcName, argName))
 }
 
 func (c *FunctionClient) SampleScalaDefinition(t *testing.T, className string, funcName string, argName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
+	return c.formatFunctionDefinition(fmt.Sprintf(`
 	class %[1]s {
 		def %[2]s(%[3]s : String): String = {
 			return %[3]s
 		}
 	}
-`, className, funcName, argName)
+`, className, funcName, argName))
 }
 
 // TODO [SNOW-1850370]: use input argument like in other samples
 func (c *FunctionClient) SampleSqlDefinition(t *testing.T) string {
 	t.Helper()
 
-	return "3.141592654::FLOAT"
+	return c.formatFunctionDefinition("3.141592654::FLOAT")
 }
 
 func (c *FunctionClient) SampleSqlDefinitionWithArgument(t *testing.T, argName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
+	return c.formatFunctionDefinition(fmt.Sprintf(`
 %s
-`, argName)
+`, argName))
 }
 
 func (c *FunctionClient) PythonIdentityDefinition(t *testing.T, funcName string, argName string) string {
 	t.Helper()
 
-	return fmt.Sprintf("def %[1]s(%[2]s): %[2]s", funcName, argName)
+	return c.formatFunctionDefinition(fmt.Sprintf("def %[1]s(%[2]s): %[2]s", funcName, argName))
 }

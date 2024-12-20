@@ -5,6 +5,7 @@ import (
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
@@ -17,7 +18,7 @@ func FunctionJavaBasicInline(
 	handler string,
 	functionDefinition string,
 ) *FunctionJavaModel {
-	return FunctionJava(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), id.SchemaName()).WithFunctionDefinition(functionDefinition)
+	return FunctionJava(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), id.SchemaName()).WithFunctionDefinitionValue(config.MultilineWrapperVariable(functionDefinition))
 }
 
 func FunctionJavaBasicStaged(
