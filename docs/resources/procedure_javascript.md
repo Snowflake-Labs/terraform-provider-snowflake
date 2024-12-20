@@ -40,7 +40,13 @@ resource "snowflake_procedure_javascript" "basic" {
     arg_name      = "x"
   }
   return_type          = "VARCHAR(100)"
-  procedure_definition = "\n\tif (x \u003c= 0) {\n\t\treturn 1;\n\t} else {\n\t\tvar result = 1;\n\t\tfor (var i = 2; i \u003c= x; i++) {\n\t\t\tresult = result * i;\n\t\t}\n\t\treturn result;\n\t}\n"
+  procedure_definition = <<EOT
+  if (x == 0) {
+    return 1;
+  } else {
+    return 2;
+  }
+EOT
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).

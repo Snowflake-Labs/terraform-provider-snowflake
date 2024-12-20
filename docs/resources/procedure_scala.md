@@ -38,7 +38,14 @@ resource "snowflake_procedure_scala" "w" {
   }
   return_type          = "VARCHAR(100)"
   handler              = "TestFunc.echoVarchar"
-  procedure_definition = "\n\timport com.snowflake.snowpark_java.Session\n\n\tclass TestFunc {\n\t\tdef echoVarchar(session : Session, x : String): String = {\n\t\t\treturn x\n\t\t}\n\t}\n"
+  procedure_definition = <<EOT
+  import com.snowflake.snowpark_java.Session
+  class TestFunc {
+    def echoVarchar(session : Session, x : String): String = {
+      return x
+    }
+  }
+EOT
   runtime_version      = "2.12"
   snowpark_package     = "1.14.0"
 }

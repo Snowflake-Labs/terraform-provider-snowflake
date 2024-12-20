@@ -40,7 +40,13 @@ resource "snowflake_function_java" "w" {
   }
   return_type         = "VARCHAR(100)"
   handler             = "TestFunc.echoVarchar"
-  function_definition = "\n\tclass TestFunc {\n\t\tpublic static String echoVarchar(String x) {\n\t\t\treturn x;\n\t\t}\n\t}\n"
+  function_definition = <<EOT
+  class TestFunc {
+    public static String echoVarchar(String x) {
+      return x;
+    }
+  }
+EOT
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).

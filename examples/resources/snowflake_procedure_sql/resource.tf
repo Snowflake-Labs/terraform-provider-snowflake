@@ -7,5 +7,9 @@ resource "snowflake_procedure_sql" "w" {
     arg_name      = "x"
   }
   return_type          = "VARCHAR(100)"
-  procedure_definition = "\nBEGIN\n  RETURN message;\nEND;\n"
+  procedure_definition = <<EOT
+BEGIN
+  RETURN message;
+END;
+EOT
 }

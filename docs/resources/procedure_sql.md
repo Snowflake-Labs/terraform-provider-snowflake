@@ -37,7 +37,11 @@ resource "snowflake_procedure_sql" "w" {
     arg_name      = "x"
   }
   return_type          = "VARCHAR(100)"
-  procedure_definition = "\nBEGIN\n  RETURN message;\nEND;\n"
+  procedure_definition = <<EOT
+BEGIN
+  RETURN message;
+END;
+EOT
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).

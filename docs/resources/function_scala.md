@@ -37,16 +37,16 @@ resource "snowflake_function_scala" "minimal" {
     arg_data_type = "VARCHAR(100)"
     arg_name      = "x"
   }
-  function_definition = <<EOF
+  return_type         = "VARCHAR(100)"
+  runtime_version     = "2.12"
+  handler             = "TestFunc.echoVarchar"
+  function_definition = <<EOT
   class TestFunc {
     def echoVarchar(x : String): String = {
       return x
     }
   }
-  EOF
-  runtime_version     = "2.12"
-  handler             = "TestFunc.echoVarchar"
-  return_type         = "VARCHAR(100)"
+EOT
 }
 
 # Complete
@@ -61,13 +61,13 @@ resource "snowflake_function_scala" "complete" {
   }
   comment                      = "some comment"
   external_access_integrations = ["external_access_integration_name", "external_access_integration_name_2"]
-  function_definition          = <<EOF
+  function_definition          = <<EOT
   class TestFunc {
     def echoVarchar(x : String): String = {
       return x
     }
   }
-  EOF
+EOT
   handler                      = "TestFunc.echoVarchar"
   null_input_behavior          = "CALLED ON NULL INPUT"
   return_results_behavior      = "VOLATILE"

@@ -8,10 +8,13 @@ resource "snowflake_function_python" "minimal" {
     arg_data_type = "NUMBER(36, 2)"
     arg_name      = "x"
   }
-  function_definition = <<EOF
-    def some_function(x):
-      return x
-  EOF
-  handler             = "some_function"
   return_type         = "NUMBER(36, 2)"
+  handler             = "some_function"
+  function_definition = <<EOT
+def some_function(x):
+  result = ''
+  for a in range(5):
+    result += x
+  return result
+EOT
 }

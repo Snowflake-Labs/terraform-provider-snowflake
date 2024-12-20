@@ -8,5 +8,11 @@ resource "snowflake_function_java" "w" {
   }
   return_type         = "VARCHAR(100)"
   handler             = "TestFunc.echoVarchar"
-  function_definition = "\n\tclass TestFunc {\n\t\tpublic static String echoVarchar(String x) {\n\t\t\treturn x;\n\t\t}\n\t}\n"
+  function_definition = <<EOT
+  class TestFunc {
+    public static String echoVarchar(String x) {
+      return x;
+    }
+  }
+EOT
 }

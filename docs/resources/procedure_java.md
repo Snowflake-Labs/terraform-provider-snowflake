@@ -41,7 +41,14 @@ resource "snowflake_procedure_java" "basic" {
   }
   return_type          = "VARCHAR(100)"
   handler              = "TestFunc.echoVarchar"
-  procedure_definition = "\n\timport com.snowflake.snowpark_java.*;\n\tclass TestFunc {\n\t\tpublic static String echoVarchar(Session session, String x) {\n\t\t\treturn x;\n\t\t}\n\t}\n"
+  procedure_definition = <<EOT
+  import com.snowflake.snowpark_java.*;
+  class TestFunc {
+    public static String echoVarchar(Session session, String x) {
+      return x;
+    }
+  }
+EOT
   runtime_version      = "11"
   snowpark_package     = "1.14.0"
 }
@@ -57,7 +64,14 @@ resource "snowflake_procedure_java" "full" {
   }
   return_type          = "VARCHAR(100)"
   handler              = "TestFunc.echoVarchar"
-  procedure_definition = "\n\timport com.snowflake.snowpark_java.*;\n\tclass TestFunc {\n\t\tpublic static String echoVarchar(Session session, String x) {\n\t\t\treturn x;\n\t\t}\n\t}\n"
+  procedure_definition = <<EOT
+    import com.snowflake.snowpark_java.*;
+  class TestFunc {
+    public static String echoVarchar(Session session, String x) {
+      return x;
+    }
+  }
+EOT
   runtime_version      = "11"
   snowpark_package     = "1.14.0"
 
