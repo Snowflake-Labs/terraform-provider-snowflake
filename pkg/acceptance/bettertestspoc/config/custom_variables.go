@@ -1,6 +1,9 @@
 package config
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type emptyListVariable struct{}
 
@@ -26,4 +29,18 @@ func (v replacementPlaceholderVariable) MarshalJSON() ([]byte, error) {
 // ReplacementPlaceholderVariable returns Variable containing one of the ReplacementPlaceholder which is later replaced by HclFormatter.
 func ReplacementPlaceholderVariable(placeholder ReplacementPlaceholder) replacementPlaceholderVariable {
 	return replacementPlaceholderVariable{placeholder}
+}
+
+type multilineWrapperVariable struct {
+	content string
+}
+
+// MarshalJSON returns the JSON encoding of multilineWrapperVariable.
+func (v multilineWrapperVariable) MarshalJSON() ([]byte, error) {
+	return json.Marshal(fmt.Sprintf(`%[1]s%[2]s%[1]s`, SnowflakeProviderConfigMultilineMarker, v.content))
+}
+
+// MultilineWrapperVariable returns Variable containing multiline content wrapped with SnowflakeProviderConfigMultilineMarker later replaced by HclFormatter.
+func MultilineWrapperVariable(content string) multilineWrapperVariable {
+	return multilineWrapperVariable{content}
 }

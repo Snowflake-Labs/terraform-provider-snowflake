@@ -37,6 +37,7 @@ resource "snowflake_share" "test" {
 			WithSingleObject("one", 2).
 			WithTextFieldExplicitNull().
 			WithListFieldEmpty().
+			WithMultilineField("some\nmultiline\ncontent").
 			WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
 		expectedOutput := strings.TrimPrefix(`
 resource "snowflake_share" "test" {
@@ -58,6 +59,11 @@ resource "snowflake_share" "test" {
   }
   text_field = null
   list_field = []
+  multiline_field = <<EOT
+some
+multiline
+content
+EOT
   depends_on = [some_other_resource.some_name, other_resource.some_other_name, third_resource.third_name]
 }
 `, "\n")

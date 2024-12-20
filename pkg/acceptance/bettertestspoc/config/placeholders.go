@@ -2,5 +2,5 @@ package config
 
 type ReplacementPlaceholder string
 
-const SnowflakeProviderConfigPrivateKey ReplacementPlaceholder = "SF_TF_TEST_MULTILINE_PLACEHOLDER_PRIVATE_KEY"
 const SnowflakeProviderConfigNull ReplacementPlaceholder = "SF_TF_TEST_NULL_PLACEHOLDER"
+const SnowflakeProviderConfigMultilineMarker ReplacementPlaceholder = "SF_TF_TEST_MULTILINE_MARKER_PLACEHOLDER"

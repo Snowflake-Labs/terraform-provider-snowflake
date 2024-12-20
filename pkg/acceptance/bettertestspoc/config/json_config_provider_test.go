@@ -51,6 +51,24 @@ func Test_JsonConfigProvider(t *testing.T) {
 		assert.Equal(t, expectedResult, string(result))
 	})
 
+	t.Run("test multiline variable", func(t *testing.T) {
+		model := Some("some_name", "abc").WithMultilineField("some\nmultiline\ncontent")
+		expectedResult := fmt.Sprintf(`{
+    "resource": {
+        "snowflake_share": {
+            "some_name": {
+                "name": "abc",
+                "multiline_field": "%[1]s%[2]s%[1]s"
+            }
+        }
+    }
+}`, config.SnowflakeProviderConfigMultilineMarker, "some\\nmultiline\\ncontent")
+
+		result, err := config.DefaultJsonConfigProvider.ResourceJsonFromModel(model)
+		require.NoError(t, err)
+		assert.Equal(t, expectedResult, string(result))
+	})
+
 	t.Run("test resource json config when proper marshaller is absent", func(t *testing.T) {
 		model := SomeOther("some_name", "abc").WithDependsOn("abc.def")
 		expectedResult := `{

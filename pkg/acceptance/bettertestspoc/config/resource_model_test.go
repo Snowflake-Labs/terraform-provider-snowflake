@@ -26,8 +26,9 @@ type SomeModel struct {
 	ObjectList   tfconfig.Variable `json:"object_list,omitempty"`
 	SingleObject tfconfig.Variable `json:"single_object,omitempty"`
 
-	TextField tfconfig.Variable `json:"text_field,omitempty"`
-	ListField tfconfig.Variable `json:"list_field,omitempty"`
+	TextField      tfconfig.Variable `json:"text_field,omitempty"`
+	ListField      tfconfig.Variable `json:"list_field,omitempty"`
+	MultilineField tfconfig.Variable `json:"multiline_field,omitempty"`
 
 	*config.ResourceModelMeta
 }
@@ -101,6 +102,11 @@ func (m *SomeModel) WithTextFieldExplicitNull() *SomeModel {
 
 func (m *SomeModel) WithListFieldEmpty() *SomeModel {
 	m.ListField = config.EmptyListVariable()
+	return m
+}
+
+func (m *SomeModel) WithMultilineField(multilineContent string) *SomeModel {
+	m.MultilineField = config.MultilineWrapperVariable(multilineContent)
 	return m
 }
 
