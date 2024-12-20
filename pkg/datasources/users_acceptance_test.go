@@ -46,8 +46,8 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 		WithDefaultRole("some_role").
 		WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
 		WithMinsToBypassMfa(10).
-		WithRsaPublicKey(key1).
-		WithRsaPublicKey2(key2).
+		WithRsaPublicKeyValue(config.MultilineWrapperVariable(key1)).
+		WithRsaPublicKey2Value(config.MultilineWrapperVariable(key2)).
 		WithComment(comment).
 		WithDisableMfa("true")
 
@@ -204,8 +204,8 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 		WithDefaultNamespace("some.namespace").
 		WithDefaultRole("some_role").
 		WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
-		WithRsaPublicKey(key1).
-		WithRsaPublicKey2(key2).
+		WithRsaPublicKeyValue(config.MultilineWrapperVariable(key1)).
+		WithRsaPublicKey2Value(config.MultilineWrapperVariable(key2)).
 		WithComment(comment)
 
 	resource.Test(t, resource.TestCase{
@@ -364,8 +364,8 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 		WithDefaultNamespace("some.namespace").
 		WithDefaultRole("some_role").
 		WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
-		WithRsaPublicKey(key1).
-		WithRsaPublicKey2(key2).
+		WithRsaPublicKeyValue(config.MultilineWrapperVariable(key1)).
+		WithRsaPublicKey2Value(config.MultilineWrapperVariable(key2)).
 		WithComment(comment)
 
 	resource.Test(t, resource.TestCase{

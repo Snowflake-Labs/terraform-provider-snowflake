@@ -224,7 +224,7 @@ func (c *FunctionClient) SampleJavaDefinitionNoArgs(t *testing.T, className stri
 	return c.formatFunctionDefinition(fmt.Sprintf(`
 	class %[1]s {
 		public static String %[2]s() {
-			return "hello";
+			return null;
 		}
 	}
 `, className, funcName))
@@ -244,7 +244,9 @@ func (c *FunctionClient) SampleJavascriptDefinition(t *testing.T, argName string
 
 func (c *FunctionClient) SampleJavascriptDefinitionNoArgs(t *testing.T) string {
 	t.Helper()
-	return c.formatFunctionDefinition(`return 1;`)
+	return c.formatFunctionDefinition(`
+return 1;
+`)
 }
 
 func (c *FunctionClient) SamplePythonDefinition(t *testing.T, funcName string, argName string) string {

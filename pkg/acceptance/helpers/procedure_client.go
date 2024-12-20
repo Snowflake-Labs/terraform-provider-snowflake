@@ -192,7 +192,7 @@ func (c *ProcedureClient) SampleJavaDefinitionNoArgs(t *testing.T, className str
 	import com.snowflake.snowpark_java.*;
 	class %[1]s {
 		public static String %[2]s(Session session) {
-			return "hello";
+			return null;
 		}
 	}
 `, className, funcName))

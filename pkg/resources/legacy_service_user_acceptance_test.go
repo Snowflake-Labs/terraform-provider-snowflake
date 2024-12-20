@@ -56,8 +56,8 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 		WithDefaultNamespace("some.namespace").
 		WithDefaultRole("some_role").
 		WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
-		WithRsaPublicKey(key1).
-		WithRsaPublicKey2(key2).
+		WithRsaPublicKeyValue(config.MultilineWrapperVariable(key1)).
+		WithRsaPublicKey2Value(config.MultilineWrapperVariable(key2)).
 		WithComment(comment)
 
 	userModelAllAttributesChanged := func(loginName string) *model.LegacyServiceUserModel {
@@ -74,8 +74,8 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 			WithDefaultNamespace("one_part_namespace").
 			WithDefaultRole("other_role").
 			WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
-			WithRsaPublicKey(key2).
-			WithRsaPublicKey2(key1).
+			WithRsaPublicKeyValue(config.MultilineWrapperVariable(key2)).
+			WithRsaPublicKey2Value(config.MultilineWrapperVariable(key1)).
 			WithComment(newComment)
 	}
 
