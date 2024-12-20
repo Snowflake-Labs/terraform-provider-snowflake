@@ -1216,7 +1216,6 @@ func (v *AccountParameters) validate() error {
 		if err != nil || value < 0 {
 			return fmt.Errorf("InitialReplicationSizeLimitInTB must be a non-negative float, got %v", *v.InitialReplicationSizeLimitInTB)
 		}
-
 	}
 	if valueSet(v.MinDataRetentionTimeInDays) {
 		if !validateIntInRangeInclusive(*v.MinDataRetentionTimeInDays, 0, 90) {

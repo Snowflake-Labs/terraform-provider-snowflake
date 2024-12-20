@@ -42,12 +42,15 @@ resource "snowflake_function_python" "minimal" {
     arg_data_type = "NUMBER(36, 2)"
     arg_name      = "x"
   }
-  function_definition = <<EOF
-    def some_function(x):
-      return x
-  EOF
-  handler             = "some_function"
   return_type         = "NUMBER(36, 2)"
+  handler             = "some_function"
+  function_definition = <<EOT
+def some_function(x):
+  result = ''
+  for a in range(5):
+    result += x
+  return result
+EOT
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -97,7 +100,7 @@ resource "snowflake_function_python" "minimal" {
 Required:
 
 - `arg_data_type` (String) The argument type.
-- `arg_name` (String) The argument name.
+- `arg_name` (String) The argument name. The provider wraps it in double quotes by default, so be aware of that while referencing the argument in the function definition.
 
 Optional:
 

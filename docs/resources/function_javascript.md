@@ -39,10 +39,14 @@ resource "snowflake_function_javascript" "minimal" {
     arg_data_type = "VARIANT"
     arg_name      = "x"
   }
-  function_definition = <<EOF
-    return x;
-  EOF
   return_type         = "VARIANT"
+  function_definition = <<EOT
+  if (x == 0) {
+    return 1;
+  } else {
+    return 2;
+  }
+EOT
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -85,7 +89,7 @@ resource "snowflake_function_javascript" "minimal" {
 Required:
 
 - `arg_data_type` (String) The argument type.
-- `arg_name` (String) The argument name.
+- `arg_name` (String) The argument name. The provider wraps it in double quotes by default, so be aware of that while referencing the argument in the function definition.
 
 Optional:
 
