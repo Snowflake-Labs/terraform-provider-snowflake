@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
@@ -197,13 +198,13 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally(t *testing.T) {
 				CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 				Steps: []resource.TestStep{
 					{
-						Config: config.FromModel(t, databaseConfigModel) + configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), testCase.Dependency, databaseId.Name(), schemaName),
+						Config: config.FromModels(t, databaseConfigModel) + configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), testCase.Dependency, databaseId.Name(), schemaName),
 					},
 					{
 						ConfigPlanChecks: resource.ConfigPlanChecks{
 							PreApply: preApplyChecksAfterRename,
 						},
-						Config: config.FromModel(t, databaseConfigModelWithNewId) + schemaConfigAfterRename,
+						Config: config.FromModels(t, databaseConfigModelWithNewId) + schemaConfigAfterRename,
 					},
 				},
 			})
@@ -249,9 +250,9 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally(t *testing.T) {
 			var schemaConfigAfterRename string
 
 			if testCase.IsRenamedDatabaseReferencedAfterRenameInDatabase {
-				databaseConfigAfterRename = config.FromModel(t, databaseConfigModelWithNewId)
+				databaseConfigAfterRename = config.FromModels(t, databaseConfigModelWithNewId)
 			} else {
-				databaseConfigAfterRename = config.FromModel(t, databaseConfigModel)
+				databaseConfigAfterRename = config.FromModels(t, databaseConfigModel)
 			}
 
 			switch testCase.Dependency {
@@ -273,7 +274,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally(t *testing.T) {
 				CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 				Steps: []resource.TestStep{
 					{
-						Config: config.FromModel(t, databaseConfigModel) + configSchemaWithDatabaseReference(databaseConfigModel.ResourceReference(), schemaName),
+						Config: config.FromModels(t, databaseConfigModel) + configSchemaWithDatabaseReference(databaseConfigModel.ResourceReference(), schemaName),
 					},
 					{
 						PreConfig: func() {
@@ -318,7 +319,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModelsDeprecated(t, databaseConfigModel, schemaModelConfig),
+				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
 			},
 			{
 				// This step has inconsistent results, and it depends on the Terraform execution order which seems to be non-deterministic in this case
@@ -333,7 +334,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
 					},
 				},
-				Config: config.FromModelsDeprecated(t, databaseConfigModel, schemaModelConfig),
+				Config: config.FromModels(t, databaseConfigModel, schemaModelConfig),
 				// ExpectError: regexp.MustCompile("does not exist or not authorized"),
 			},
 		},
@@ -362,7 +363,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModelsDeprecated(t, schemaModelConfig, databaseConfigModel),
+				Config: config.FromModels(t, schemaModelConfig, databaseConfigModel),
 			},
 			{
 				PreConfig: func() {
@@ -376,7 +377,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 						plancheck.ExpectResourceAction("snowflake_schema.test", plancheck.ResourceActionCreate),
 					},
 				},
-				Config:      config.FromModelsDeprecated(t, schemaModelConfig, databaseConfigModel),
+				Config:      config.FromModels(t, schemaModelConfig, databaseConfigModel),
 				ExpectError: regexp.MustCompile("does not exist or not authorized"),
 			},
 		},
@@ -422,7 +423,7 @@ func TestAcc_ShallowHierarchy_IsNotInConfig_RenamedExternally(t *testing.T) {
 							_, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
 							t.Cleanup(databaseCleanup)
 						},
-						Config: config.FromModel(t, schemaModelConfig),
+						Config: config.FromModels(t, schemaModelConfig),
 					},
 					{
 						PreConfig: func() {
@@ -496,7 +497,7 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedInternally(t *testing.T) {
 
 			testSteps := []resource.TestStep{
 				{
-					Config: config.FromModel(t, databaseConfigModel) +
+					Config: config.FromModels(t, databaseConfigModel) +
 						configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), testCase.DatabaseInSchemaDependency, databaseId.Name(), schemaName) +
 						configTableWithReferences(t, databaseConfigModel.ResourceReference(), testCase.DatabaseDependency, "snowflake_schema.test", testCase.SchemaDependency, databaseId.Name(), schemaName, tableName),
 					ExpectError: testCase.ExpectedFirstStepError,
@@ -513,7 +514,7 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedInternally(t *testing.T) {
 								plancheck.ExpectResourceAction("snowflake_table.test", plancheck.ResourceActionDestroyBeforeCreate),
 							},
 						},
-						Config: config.FromModel(t, databaseConfigModelWithNewId) +
+						Config: config.FromModels(t, databaseConfigModelWithNewId) +
 							configSchemaWithReferences(t, databaseConfigModelWithNewId.ResourceReference(), testCase.DatabaseInSchemaDependency, newDatabaseId.Name(), schemaName) +
 							configTableWithReferences(t, databaseConfigModelWithNewId.ResourceReference(), testCase.DatabaseDependency, "snowflake_schema.test", testCase.SchemaDependency, newDatabaseId.Name(), schemaName, tableName),
 					},
@@ -566,7 +567,7 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedInternally(t *testing.T) {
 
 			testSteps := []resource.TestStep{
 				{
-					Config: config.FromModel(t, databaseConfigModel) +
+					Config: config.FromModels(t, databaseConfigModel) +
 						configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), ImplicitDependency, databaseId.Name(), schemaName) +
 						configTableWithReferences(t, databaseConfigModel.ResourceReference(), testCase.DatabaseDependency, "snowflake_schema.test", testCase.SchemaDependency, databaseId.Name(), schemaName, tableName),
 					ExpectError: testCase.ExpectedFirstStepError,
@@ -583,7 +584,7 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedInternally(t *testing.T) {
 								plancheck.ExpectResourceAction("snowflake_table.test", plancheck.ResourceActionDestroyBeforeCreate),
 							},
 						},
-						Config: config.FromModel(t, databaseConfigModel) +
+						Config: config.FromModels(t, databaseConfigModel) +
 							configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), ImplicitDependency, databaseId.Name(), newSchemaName) +
 							configTableWithReferences(t, databaseConfigModel.ResourceReference(), testCase.DatabaseDependency, "snowflake_schema.test", testCase.SchemaDependency, databaseId.Name(), newSchemaName, tableName),
 					},
@@ -639,7 +640,7 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedExternally(t *testing.T) {
 
 			testSteps := []resource.TestStep{
 				{
-					Config: config.FromModel(t, databaseConfigModel) +
+					Config: config.FromModels(t, databaseConfigModel) +
 						configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), testCase.DatabaseInSchemaDependency, databaseId.Name(), schemaName) +
 						configTableWithReferences(t, databaseConfigModel.ResourceReference(), testCase.DatabaseDependency, "snowflake_schema.test", testCase.SchemaDependency, databaseId.Name(), schemaName, tableName),
 					ExpectError: testCase.ExpectedFirstStepError,
@@ -653,7 +654,7 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedExternally(t *testing.T) {
 							NewName: &newDatabaseId,
 						})
 					},
-					Config: config.FromModel(t, databaseConfigModelWithNewId) +
+					Config: config.FromModels(t, databaseConfigModelWithNewId) +
 						configSchemaWithReferences(t, databaseConfigModelWithNewId.ResourceReference(), testCase.DatabaseInSchemaDependency, newDatabaseId.Name(), schemaName) +
 						configTableWithReferences(t, databaseConfigModelWithNewId.ResourceReference(), testCase.DatabaseDependency, "snowflake_schema.test", testCase.SchemaDependency, newDatabaseId.Name(), schemaName, tableName),
 					ExpectError: testCase.ExpectedSecondStepError,
@@ -709,7 +710,7 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedExternally(t *testing.T) {
 
 			testSteps := []resource.TestStep{
 				{
-					Config: config.FromModel(t, databaseConfigModel) +
+					Config: config.FromModels(t, databaseConfigModel) +
 						configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), testCase.DatabaseInSchemaDependency, databaseId.Name(), schemaId.Name()) +
 						configTableWithReferences(t, databaseConfigModel.ResourceReference(), testCase.DatabaseDependency, "snowflake_schema.test", testCase.SchemaDependency, databaseId.Name(), schemaId.Name(), tableName),
 					ExpectError: testCase.ExpectedFirstStepError,
@@ -723,7 +724,7 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedExternally(t *testing.T) {
 							NewName: &newSchemaId,
 						})
 					},
-					Config: config.FromModel(t, databaseConfigModel) +
+					Config: config.FromModels(t, databaseConfigModel) +
 						configSchemaWithReferences(t, databaseConfigModel.ResourceReference(), testCase.DatabaseInSchemaDependency, databaseId.Name(), newSchemaId.Name()) +
 						configTableWithReferences(t, databaseConfigModel.ResourceReference(), testCase.DatabaseDependency, "snowflake_schema.test", testCase.SchemaDependency, databaseId.Name(), newSchemaId.Name(), tableName),
 					ExpectError: testCase.ExpectedSecondStepError,

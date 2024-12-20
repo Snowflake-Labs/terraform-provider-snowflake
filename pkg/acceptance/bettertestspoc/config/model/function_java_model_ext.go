@@ -1,26 +1,15 @@
 package model
 
 import (
-	"encoding/json"
 	"strings"
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
-
-func (f *FunctionJavaModel) MarshalJSON() ([]byte, error) {
-	type Alias FunctionJavaModel
-	return json.Marshal(&struct {
-		*Alias
-		DependsOn []string `json:"depends_on,omitempty"`
-	}{
-		Alias:     (*Alias)(f),
-		DependsOn: f.DependsOn(),
-	})
-}
 
 func FunctionJavaBasicInline(
 	resourceName string,
@@ -29,7 +18,7 @@ func FunctionJavaBasicInline(
 	handler string,
 	functionDefinition string,
 ) *FunctionJavaModel {
-	return FunctionJava(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), id.SchemaName()).WithFunctionDefinition(functionDefinition)
+	return FunctionJava(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), id.SchemaName()).WithFunctionDefinitionValue(config.MultilineWrapperVariable(functionDefinition))
 }
 
 func FunctionJavaBasicStaged(

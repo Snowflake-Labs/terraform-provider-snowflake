@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -57,6 +59,26 @@ func StreamOnTableWithDefaultMeta(
 	s.WithName(name)
 	s.WithSchema(schema)
 	s.WithTable(table)
+	return s
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (s *StreamOnTableModel) MarshalJSON() ([]byte, error) {
+	type Alias StreamOnTableModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(s),
+		DependsOn: s.DependsOn(),
+	})
+}
+
+func (s *StreamOnTableModel) WithDependsOn(values ...string) *StreamOnTableModel {
+	s.SetDependsOn(values...)
 	return s
 }
 

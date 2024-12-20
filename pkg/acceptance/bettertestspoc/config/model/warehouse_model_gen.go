@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -49,6 +51,26 @@ func WarehouseWithDefaultMeta(
 ) *WarehouseModel {
 	w := &WarehouseModel{ResourceModelMeta: config.DefaultMeta(resources.Warehouse)}
 	w.WithName(name)
+	return w
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (w *WarehouseModel) MarshalJSON() ([]byte, error) {
+	type Alias WarehouseModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(w),
+		DependsOn: w.DependsOn(),
+	})
+}
+
+func (w *WarehouseModel) WithDependsOn(values ...string) *WarehouseModel {
+	w.SetDependsOn(values...)
 	return w
 }
 

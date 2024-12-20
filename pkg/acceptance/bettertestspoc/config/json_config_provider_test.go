@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -25,6 +26,43 @@ func Test_JsonConfigProvider(t *testing.T) {
         }
     }
 }`
+
+		result, err := config.DefaultJsonConfigProvider.ResourceJsonFromModel(model)
+		require.NoError(t, err)
+		assert.Equal(t, expectedResult, string(result))
+	})
+
+	t.Run("test special variables", func(t *testing.T) {
+		model := Some("some_name", "abc").WithTextFieldExplicitNull().WithListFieldEmpty()
+		expectedResult := fmt.Sprintf(`{
+    "resource": {
+        "snowflake_share": {
+            "some_name": {
+                "name": "abc",
+                "text_field": "%[1]s",
+                "list_field": []
+            }
+        }
+    }
+}`, config.SnowflakeProviderConfigNull)
+
+		result, err := config.DefaultJsonConfigProvider.ResourceJsonFromModel(model)
+		require.NoError(t, err)
+		assert.Equal(t, expectedResult, string(result))
+	})
+
+	t.Run("test multiline variable", func(t *testing.T) {
+		model := Some("some_name", "abc").WithMultilineField("some\nmultiline\ncontent")
+		expectedResult := fmt.Sprintf(`{
+    "resource": {
+        "snowflake_share": {
+            "some_name": {
+                "name": "abc",
+                "multiline_field": "%[1]s%[2]s%[1]s"
+            }
+        }
+    }
+}`, config.SnowflakeProviderConfigMultilineMarker, "some\\nmultiline\\ncontent")
 
 		result, err := config.DefaultJsonConfigProvider.ResourceJsonFromModel(model)
 		require.NoError(t, err)

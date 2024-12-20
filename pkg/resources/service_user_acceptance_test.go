@@ -51,8 +51,8 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 		WithDefaultNamespace("some.namespace").
 		WithDefaultRole("some_role").
 		WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
-		WithRsaPublicKey(key1).
-		WithRsaPublicKey2(key2).
+		WithRsaPublicKeyValue(config.MultilineWrapperVariable(key1)).
+		WithRsaPublicKey2Value(config.MultilineWrapperVariable(key2)).
 		WithComment(comment)
 
 	userModelAllAttributesChanged := func(loginName string) *model.ServiceUserModel {
@@ -67,8 +67,8 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			WithDefaultNamespace("one_part_namespace").
 			WithDefaultRole("other_role").
 			WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll).
-			WithRsaPublicKey(key2).
-			WithRsaPublicKey2(key1).
+			WithRsaPublicKeyValue(config.MultilineWrapperVariable(key2)).
+			WithRsaPublicKey2Value(config.MultilineWrapperVariable(key1)).
 			WithComment(newComment)
 	}
 
@@ -82,7 +82,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE WITHOUT ATTRIBUTES
 			{
-				Config: config.FromModel(t, userModelNoAttributes),
+				Config: config.FromModels(t, userModelNoAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.ServiceUserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
@@ -107,7 +107,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			},
 			// RENAME AND CHANGE ONE PROP
 			{
-				Config: config.FromModel(t, userModelNoAttributesRenamed),
+				Config: config.FromModels(t, userModelNoAttributesRenamed),
 				Check: assert.AssertThat(t,
 					resourceassert.ServiceUserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id2.Name()).
@@ -133,12 +133,12 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			},
 			// DESTROY
 			{
-				Config:  config.FromModel(t, userModelNoAttributes),
+				Config:  config.FromModels(t, userModelNoAttributes),
 				Destroy: true,
 			},
 			// CREATE WITH ALL ATTRIBUTES
 			{
-				Config: config.FromModel(t, userModelAllAttributes),
+				Config: config.FromModels(t, userModelAllAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.ServiceUserResource(t, userModelAllAttributes.ResourceReference()).
 						HasNameString(id.Name()).
@@ -160,7 +160,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: config.FromModel(t, userModelAllAttributesChanged(id.Name()+"_other_login")),
+				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_other_login")),
 				Check: assert.AssertThat(t,
 					resourceassert.ServiceUserResource(t, userModelAllAttributesChanged(id.Name()+"_other_login").ResourceReference()).
 						HasNameString(id.Name()).
@@ -197,7 +197,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().User.SetLoginName(t, id, id.Name()+"_different_login")
 				},
-				Config: config.FromModel(t, userModelAllAttributesChanged(id.Name()+"_different_login")),
+				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_different_login")),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -206,7 +206,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			},
 			// UNSET ALL
 			{
-				Config: config.FromModel(t, userModelNoAttributes),
+				Config: config.FromModels(t, userModelNoAttributes),
 				Check: assert.AssertThat(t,
 					resourceassert.ServiceUserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
@@ -311,7 +311,7 @@ func TestAcc_ServiceUser_AllParameters(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create with default values for all the parameters
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
@@ -331,7 +331,7 @@ func TestAcc_ServiceUser_AllParameters(t *testing.T) {
 			},
 			// set all parameters
 			{
-				Config: config.FromModel(t, userModelWithAllParametersSet),
+				Config: config.FromModels(t, userModelWithAllParametersSet),
 				Check: assert.AssertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAbortDetachedQuery(true).
@@ -521,7 +521,7 @@ func TestAcc_ServiceUser_AllParameters(t *testing.T) {
 			},
 			// unset all the parameters
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
@@ -548,7 +548,7 @@ func TestAcc_ServiceUser_handleExternalTypeChange(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ServiceUser),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				Check: assert.AssertThat(t,
 					resourceassert.ServiceUserResource(t, userModel.ResourceReference()).HasNameString(userId.Name()).HasUserTypeString("SERVICE"),
 					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType("SERVICE"),
@@ -559,7 +559,7 @@ func TestAcc_ServiceUser_handleExternalTypeChange(t *testing.T) {
 					acc.TestClient().User.SetType(t, userId, sdk.UserTypePerson)
 					objectassert.User(t, userId).HasType(string(sdk.UserTypePerson))
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(userModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
@@ -575,7 +575,7 @@ func TestAcc_ServiceUser_handleExternalTypeChange(t *testing.T) {
 					acc.TestClient().User.UnsetType(t, userId)
 					objectassert.User(t, userId).HasType("")
 				},
-				Config: config.FromModel(t, userModel),
+				Config: config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(userModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
