@@ -130,11 +130,11 @@ Please refer to [this document](https://github.com/Snowflake-Labs/terraform-prov
 
 [GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2432#issuecomment-1915074774)
 
-**Problem**: getting `Error: 260000: account is empty` error with non-empty `account` configuration after upgrading to v1, with the same provider configuration which worked up to v0.100.0
+**Problem**: Getting `Error: 260000: account is empty` error with non-empty `account` configuration after upgrading to v1, with the same provider configuration which worked up to v0.100.0
 
-**Solution**: `account` configuration [has been removed in v1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#removed-deprecated-objects). Please specify your organization name and account name separately as mentioned in the [migration guide])(https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#removed-deprecated-objects):
+**Solution**: `account` configuration [has been removed in v1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#removed-deprecated-objects). Please specify your organization name and account name separately as mentioned in the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#removed-deprecated-objects):
 * `account_name` (`accountname` if you're sourcing it from `config` TOML)
-* `organization-name` (`organizationname` if you're sourcing it from `config` TOML)
+* `organization_name` (`organizationname` if you're sourcing it from `config` TOML)
 
 GitHub issue reference: [#3198](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3198), [#3308](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3308)
 
