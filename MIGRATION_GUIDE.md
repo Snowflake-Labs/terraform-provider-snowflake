@@ -72,7 +72,7 @@ Updated the docs and the previous migration guide entry.
 
 References: #3298
 
-### python procedure docs were updated
+### python procedure docs updated
 
 Importing python procedure is currently limited to procedures with snowflake-snowpark-python version explicitly set in Snowflake. Docs were updated.
 
