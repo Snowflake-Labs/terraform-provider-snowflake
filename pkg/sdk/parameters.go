@@ -1530,7 +1530,7 @@ func (v *SessionParameters) validate() error {
 	}
 	if valueSet(v.JsonIndent) {
 		if !validateIntGreaterThanOrEqual(*v.JsonIndent, 0) {
-			errs = append(errs, errIntValue("SessionParameters", "JsonIndent", IntErrGreaterOrEqual, 16))
+			errs = append(errs, errIntValue("SessionParameters", "JsonIndent", IntErrGreaterOrEqual, 0))
 		}
 	}
 	if valueSet(v.LockTimeout) {
