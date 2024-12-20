@@ -37,7 +37,11 @@ resource "snowflake_procedure_sql" "w" {
     arg_name      = "x"
   }
   return_type          = "VARCHAR(100)"
-  procedure_definition = "\nBEGIN\n  RETURN message;\nEND;\n"
+  procedure_definition = <<EOT
+BEGIN
+  RETURN message;
+END;
+EOT
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -80,7 +84,7 @@ resource "snowflake_procedure_sql" "w" {
 Required:
 
 - `arg_data_type` (String) The argument type.
-- `arg_name` (String) The argument name.
+- `arg_name` (String) The argument name. The provider wraps it in double quotes by default, so be aware of that while referencing the argument in the procedure definition.
 
 Optional:
 

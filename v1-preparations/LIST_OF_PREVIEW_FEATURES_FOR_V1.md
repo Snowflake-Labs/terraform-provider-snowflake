@@ -1,6 +1,6 @@
 # List of preview resources and data sources that are available in V1
 
-[Preview features](../ROADMAP.md#preview-resourcesdata sources) for the V1:
+[Preview features](../ROADMAP.md#preview-resourcesdatasources) for the V1:
 
 * [snowflake_current_account](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/data-sources/current_account) (data source)
 * [snowflake_account_password_policy_attachment](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs/resources/account_password_policy_attachment)
