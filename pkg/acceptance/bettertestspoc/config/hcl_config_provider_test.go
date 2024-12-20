@@ -80,4 +80,20 @@ EOT
 
 		fmt.Printf("%s", result)
 	})
+
+	t.Run("document improper null handling", func(t *testing.T) {
+		resourceJson := `{
+            "resource": {
+                "snowflake_share": {
+                    "test": {
+                        "attribute": null
+                    }
+                }
+            }
+        }`
+
+		_, err := config.DefaultHclConfigProvider.HclFromJson([]byte(resourceJson))
+		require.ErrorContains(t, err, "object expected closing RBRACE got: EOF")
+	})
+
 }
