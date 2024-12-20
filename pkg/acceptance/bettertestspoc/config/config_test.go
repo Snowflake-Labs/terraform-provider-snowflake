@@ -35,6 +35,8 @@ resource "snowflake_share" "test" {
 				Item{IntField: 2, StringField: "second item"},
 			).
 			WithSingleObject("one", 2).
+			WithTextFieldExplicitNull().
+			WithListFieldEmpty().
 			WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
 		expectedOutput := strings.TrimPrefix(`
 resource "snowflake_share" "test" {
@@ -54,6 +56,8 @@ resource "snowflake_share" "test" {
     a = "one"
     b = 2
   }
+  text_field = null
+  list_field = []
   depends_on = [some_other_resource.some_name, other_resource.some_other_name, third_resource.third_name]
 }
 `, "\n")
