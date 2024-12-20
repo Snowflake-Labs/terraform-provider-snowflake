@@ -136,7 +136,7 @@ Please refer to [this document](https://github.com/Snowflake-Labs/terraform-prov
 * `account_name` (`accountname` if you're sourcing it from `config` TOML)
 * `organization-name` (`organizationname` if you're sourcing it from `config` TOML)
 
-GitHub issue reference: https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3198, https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3308
+GitHub issue reference: [#3198](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3198), [#3308](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3308)
 
 ### How to set up the connection with the private key?
 **Problem:** From the version v0.78.0, we introduced a lot of provider configuration changes. One of them was deprecating `private_key_path` in favor of `private_key`.
