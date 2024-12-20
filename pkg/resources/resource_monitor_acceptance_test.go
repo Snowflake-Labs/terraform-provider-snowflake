@@ -488,7 +488,7 @@ func TestAcc_ResourceMonitor_PartialUpdate(t *testing.T) {
 // It can be fixed with them.
 func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	configNoUsers := model.ResourceMonitor("test", id.Name()).WithNotifyUsersValue(configvariable.SetVariable())
+	configNoUsers := model.ResourceMonitor("test", id.Name()).WithNotifyUsersValue(config.EmptyListVariable())
 	configWithNonExistingUser := model.ResourceMonitor("test", id.Name()).WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("non_existing_user")))
 
 	resource.Test(t, resource.TestCase{
