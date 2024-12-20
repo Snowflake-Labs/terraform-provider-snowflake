@@ -52,6 +52,26 @@ We added non-negative validations for the following parameters:
 
 Note that enum parameters are still not validated by the provider - they are only validated in Snowflake. We will handle this during a small rework of the parameters in the future.
 
+### Add missing preview features to config
+
+Values:
+- `snowflake_functions_datasource`
+- `snowflake_procedures_datasource`
+- `snowflake_tables_datasource`
+  were missing in the `preview_features_enabled` attribute in the provider's config. They were added.
+
+References: #3302
+
+### functions and procedures docs updated
+
+Argument names are automatically wrapped in double quotes, so:
+- uppercase names should be used or
+- argument name should be quoted in the procedure/function definition.
+
+Updated the docs and the previous migration guide entry.
+
+References: #3298
+
 ## v0.100.0 ➞ v1.0.0
 
 ### Preview features flag
@@ -184,6 +204,8 @@ The new resources are more aligned with current features like:
 - secrets support
 - argument default values
 
+**Note**: argument names are now quoted automatically by the provider so remember about this while writing the function definition (argument name should be quoted or uppercase should be used for the argument name).
+
 `snowflake_procedure` is now deprecated in favor of 5 new preview resources:
 
 - `snowflake_procedure_java`
@@ -199,6 +221,8 @@ The new resources are more aligned with current features like:
 - external access integrations support
 - secrets support
 - argument default values
+
+**Note**: argument names are now quoted automatically by the provider so remember about this while writing the procedure definition (argument name should be quoted or uppercase should be used for the argument name).
 
 ### *(new feature)* Account role data source
 Added a new `snowflake_account_roles` data source for account roles. Now it reflects It's based on `snowflake_roles` data source.

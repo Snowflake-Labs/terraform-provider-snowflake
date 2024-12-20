@@ -226,7 +226,7 @@ func functionBaseSchema() map[string]schema.Schema {
 						Type:     schema.TypeString,
 						Required: true,
 						// TODO [SNOW-1348103]: adjust diff suppression accordingly.
-						Description: "The argument name.",
+						Description: "The argument name. The provider wraps it in double quotes by default, so be aware of that while referencing the argument in the function definition.",
 					},
 					// TODO [SNOW-1348103]: after testing weird names add limitations to the docs and add validation here
 					"arg_data_type": {
