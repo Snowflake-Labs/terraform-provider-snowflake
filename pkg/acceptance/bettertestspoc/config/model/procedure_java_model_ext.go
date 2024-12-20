@@ -1,10 +1,10 @@
 package model
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
@@ -17,7 +17,7 @@ func ProcedureJavaBasicInline(
 	procedureDefinition string,
 ) *ProcedureJavaModel {
 	return ProcedureJava(resourceName, id.DatabaseName(), handler, id.Name(), returnType.ToSql(), "11", id.SchemaName(), "1.14.0").
-		WithProcedureDefinition(procedureDefinition)
+		WithProcedureDefinitionValue(config.MultilineWrapperVariable(procedureDefinition))
 }
 
 func ProcedureJavaBasicStaged(

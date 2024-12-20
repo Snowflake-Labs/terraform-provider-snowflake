@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
@@ -164,94 +165,94 @@ func (c *ProcedureClient) DescribeDetails(t *testing.T, id sdk.SchemaObjectIdent
 	return c.client().DescribeDetails(ctx, id)
 }
 
+// formatProcedureDefinition removes the first newline and replaces all tabs with spaces.
+func (c *ProcedureClient) formatProcedureDefinition(definition string) string {
+	return strings.Replace(strings.ReplaceAll(definition, "\t", "  "), "\n", "", 1)
+}
+
 // Session argument is needed: https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#data-access-example
 // More references: https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java
 func (c *ProcedureClient) SampleJavaDefinition(t *testing.T, className string, funcName string, argName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
+	return c.formatProcedureDefinition(fmt.Sprintf(`
 	import com.snowflake.snowpark_java.*;
 	class %[1]s {
 		public static String %[2]s(Session session, String %[3]s) {
 			return %[3]s;
 		}
 	}
-`, className, funcName, argName)
+`, className, funcName, argName))
 }
 
 func (c *ProcedureClient) SampleJavaDefinitionNoArgs(t *testing.T, className string, funcName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
+	return c.formatProcedureDefinition(fmt.Sprintf(`
 	import com.snowflake.snowpark_java.*;
 	class %[1]s {
 		public static String %[2]s(Session session) {
 			return "hello";
 		}
 	}
-`, className, funcName)
+`, className, funcName))
 }
 
 // For more references: https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-javascript
 func (c *ProcedureClient) SampleJavascriptDefinition(t *testing.T, argName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
-	if (%[1]s <= 0) {
+	return c.formatProcedureDefinition(fmt.Sprintf(`
+	if (%[1]s == 0) {
 		return 1;
 	} else {
-		var result = 1;
-		for (var i = 2; i <= %[1]s; i++) {
-			result = result * i;
-		}
-		return result;
+		return 2;
 	}
-`, argName)
+`, argName))
 }
 
 func (c *ProcedureClient) SamplePythonDefinition(t *testing.T, funcName string, argName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
+	return c.formatProcedureDefinition(fmt.Sprintf(`
 def %[1]s(%[2]s):
-	result = ""
+	result = ''
 	for a in range(5):
 		result += %[2]s
 	return result
-`, funcName, argName)
+`, funcName, argName))
 }
 
 // https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-scala
 func (c *ProcedureClient) SampleScalaDefinition(t *testing.T, className string, funcName string, argName string) string {
 	t.Helper()
 
-	return fmt.Sprintf(`
+	return c.formatProcedureDefinition(fmt.Sprintf(`
 	import com.snowflake.snowpark_java.Session
-
 	class %[1]s {
 		def %[2]s(session : Session, %[3]s : String): String = {
 			return %[3]s
 		}
 	}
-`, className, funcName, argName)
+`, className, funcName, argName))
 }
 
 func (c *ProcedureClient) SampleSqlDefinition(t *testing.T) string {
 	t.Helper()
 
-	return `
+	return c.formatProcedureDefinition(`
 BEGIN
 	RETURN 3.141592654::FLOAT;
 END;
-`
+`)
 }
 
 func (c *ProcedureClient) SampleSqlDefinitionWithArgument(t *testing.T) string {
 	t.Helper()
 
-	return `
+	return c.formatProcedureDefinition(`
 BEGIN
   RETURN message;
 END;
-`
+`)
 }

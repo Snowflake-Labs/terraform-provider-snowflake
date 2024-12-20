@@ -3,6 +3,7 @@ package model
 import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
@@ -13,7 +14,8 @@ func ProcedureJavascriptBasicInline(
 	returnType datatypes.DataType,
 	procedureDefinition string,
 ) *ProcedureJavascriptModel {
-	return ProcedureJavascript(resourceName, id.DatabaseName(), id.Name(), procedureDefinition, returnType.ToSql(), id.SchemaName())
+	return ProcedureJavascript(resourceName, id.DatabaseName(), id.Name(), procedureDefinition, returnType.ToSql(), id.SchemaName()).
+		WithProcedureDefinitionValue(config.MultilineWrapperVariable(procedureDefinition))
 }
 
 func (f *ProcedureJavascriptModel) WithArgument(argName string, argDataType datatypes.DataType) *ProcedureJavascriptModel {
