@@ -67,6 +67,11 @@ All of the preview features objects are now disabled by default. This includes:
 	- `snowflake_external_volume`
 	- `snowflake_failover_group`
 	- `snowflake_file_format`
+	- `snowflake_function_java`
+	- `snowflake_function_javascript`
+	- `snowflake_function_python`
+	- `snowflake_function_scala`
+	- `snowflake_function_sql`
 	- `snowflake_managed_account`
 	- `snowflake_materialized_view`
 	- `snowflake_network_policy_attachment`
@@ -76,10 +81,16 @@ All of the preview features objects are now disabled by default. This includes:
 	- `snowflake_object_parameter`
 	- `snowflake_password_policy`
 	- `snowflake_pipe`
+    - `snowflake_procedure_java`
+    - `snowflake_procedure_javascript`
+    - `snowflake_procedure_python`
+    - `snowflake_procedure_scala`
+    - `snowflake_procedure_sql`
 	- `snowflake_sequence`
 	- `snowflake_share`
 	- `snowflake_stage`
 	- `snowflake_storage_integration`
+	- `snowflake_table`
 	- `snowflake_table_column_masking_policy_application`
 	- `snowflake_table_constraint`
 	- `snowflake_user_public_keys`
@@ -95,8 +106,10 @@ All of the preview features objects are now disabled by default. This includes:
 	- `snowflake_external_tables`
 	- `snowflake_failover_groups`
 	- `snowflake_file_formats`
+	- `snowflake_functions`
 	- `snowflake_materialized_views`
 	- `snowflake_pipes`
+	- `snowflake_procedures`
 	- `snowflake_current_role`
 	- `snowflake_sequences`
 	- `snowflake_shares`
@@ -107,6 +120,7 @@ All of the preview features objects are now disabled by default. This includes:
 	- `snowflake_system_get_aws_sns_iam_policy`
 	- `snowflake_system_get_privatelink_config`
 	- `snowflake_system_get_snowflake_platform_info`
+    - `snowflake_tables`
 
 If you want to have them enabled, add the feature name to the provider configuration (with `_datasource` or `_resource` suffix), like this:
 ```terraform
