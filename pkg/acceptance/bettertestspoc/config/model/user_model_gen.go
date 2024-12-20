@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -113,6 +115,26 @@ func UserWithDefaultMeta(
 ) *UserModel {
 	u := &UserModel{ResourceModelMeta: config.DefaultMeta(resources.User)}
 	u.WithName(name)
+	return u
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (u *UserModel) MarshalJSON() ([]byte, error) {
+	type Alias UserModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(u),
+		DependsOn: u.DependsOn(),
+	})
+}
+
+func (u *UserModel) WithDependsOn(values ...string) *UserModel {
+	u.SetDependsOn(values...)
 	return u
 }
 

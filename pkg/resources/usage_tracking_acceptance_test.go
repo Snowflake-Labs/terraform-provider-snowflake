@@ -5,23 +5,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_CompleteUsageTracking(t *testing.T) {
@@ -61,7 +59,7 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create
 			{
-				Config: config.FromModel(t, schemaModel),
+				Config: config.FromModels(t, schemaModel),
 				Check: assert.AssertThat(t,
 					resourceassert.SchemaResource(t, schemaModel.ResourceReference()).
 						HasNameString(id.Name()).
@@ -83,7 +81,7 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 			},
 			// Update + CustomDiff (parameters) + Read
 			{
-				Config: config.FromModel(t, schemaModelWithComment),
+				Config: config.FromModels(t, schemaModelWithComment),
 				Check: assert.AssertThat(t,
 					resourceassert.SchemaResource(t, schemaModelWithComment.ResourceReference()).
 						HasNameString(id.Name()).
@@ -95,7 +93,7 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 			},
 			// Delete
 			{
-				Config:  config.FromModel(t, schemaModelWithComment),
+				Config:  config.FromModels(t, schemaModelWithComment),
 				Destroy: true,
 				Check: assert.AssertThat(t,
 					assert.Check(assertQueryMetadataExists(t, tracking.DeleteOperation, fmt.Sprintf(`DROP SCHEMA IF EXISTS %s`, id.FullyQualifiedName()))),

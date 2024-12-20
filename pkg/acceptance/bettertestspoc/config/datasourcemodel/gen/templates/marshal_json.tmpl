@@ -1,0 +1,24 @@
+{{- /*gotype: github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model/gen.ResourceConfigBuilderModel*/ -}}
+
+{{- $modelName := .Name | printf "%sModel" -}}
+{{- $nameLowerCase := FirstLetterLowercase .Name -}}
+{{- $modelVar := FirstLetter $nameLowerCase }}
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func ({{ $modelVar }} *{{ $modelName }}) MarshalJSON() ([]byte, error) {
+    type Alias {{ $modelName }}
+    return json.Marshal(&struct {
+        *Alias
+        DependsOn []string `json:"depends_on,omitempty"`
+    }{
+        Alias:     (*Alias)({{ $modelVar }}),
+        DependsOn: {{ $modelVar }}.DependsOn(),
+    })
+}
+
+func ({{ $modelVar }} *{{ $modelName }}) WithDependsOn(values ...string) *{{ $modelName }} {
+    {{ $modelVar }}.SetDependsOn(values...)
+    return {{ $modelVar }}
+}

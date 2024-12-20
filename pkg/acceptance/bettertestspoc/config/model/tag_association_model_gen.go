@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -51,6 +53,26 @@ func TagAssociationWithDefaultMeta(
 	t.WithObjectType(objectType)
 	t.WithTagId(tagId)
 	t.WithTagValue(tagValue)
+	return t
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (t *TagAssociationModel) MarshalJSON() ([]byte, error) {
+	type Alias TagAssociationModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(t),
+		DependsOn: t.DependsOn(),
+	})
+}
+
+func (t *TagAssociationModel) WithDependsOn(values ...string) *TagAssociationModel {
+	t.SetDependsOn(values...)
 	return t
 }
 

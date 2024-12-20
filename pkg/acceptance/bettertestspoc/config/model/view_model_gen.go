@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -60,6 +62,26 @@ func ViewWithDefaultMeta(
 	v.WithName(name)
 	v.WithSchema(schema)
 	v.WithStatement(statement)
+	return v
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (v *ViewModel) MarshalJSON() ([]byte, error) {
+	type Alias ViewModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(v),
+		DependsOn: v.DependsOn(),
+	})
+}
+
+func (v *ViewModel) WithDependsOn(values ...string) *ViewModel {
+	v.SetDependsOn(values...)
 	return v
 }
 

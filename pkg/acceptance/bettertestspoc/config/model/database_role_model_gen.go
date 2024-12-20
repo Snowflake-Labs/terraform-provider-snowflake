@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -40,6 +42,26 @@ func DatabaseRoleWithDefaultMeta(
 	d := &DatabaseRoleModel{ResourceModelMeta: config.DefaultMeta(resources.DatabaseRole)}
 	d.WithDatabase(database)
 	d.WithName(name)
+	return d
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (d *DatabaseRoleModel) MarshalJSON() ([]byte, error) {
+	type Alias DatabaseRoleModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(d),
+		DependsOn: d.DependsOn(),
+	})
+}
+
+func (d *DatabaseRoleModel) WithDependsOn(values ...string) *DatabaseRoleModel {
+	d.SetDependsOn(values...)
 	return d
 }
 

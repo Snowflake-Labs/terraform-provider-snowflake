@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -47,6 +49,26 @@ func OauthIntegrationForPartnerApplicationsWithDefaultMeta(
 	o := &OauthIntegrationForPartnerApplicationsModel{ResourceModelMeta: config.DefaultMeta(resources.OauthIntegrationForPartnerApplications)}
 	o.WithName(name)
 	o.WithOauthClient(oauthClient)
+	return o
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (o *OauthIntegrationForPartnerApplicationsModel) MarshalJSON() ([]byte, error) {
+	type Alias OauthIntegrationForPartnerApplicationsModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(o),
+		DependsOn: o.DependsOn(),
+	})
+}
+
+func (o *OauthIntegrationForPartnerApplicationsModel) WithDependsOn(values ...string) *OauthIntegrationForPartnerApplicationsModel {
+	o.SetDependsOn(values...)
 	return o
 }
 

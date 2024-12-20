@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -56,6 +58,26 @@ func SecretWithBasicAuthenticationWithDefaultMeta(
 	s.WithPassword(password)
 	s.WithSchema(schema)
 	s.WithUsername(username)
+	return s
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (s *SecretWithBasicAuthenticationModel) MarshalJSON() ([]byte, error) {
+	type Alias SecretWithBasicAuthenticationModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(s),
+		DependsOn: s.DependsOn(),
+	})
+}
+
+func (s *SecretWithBasicAuthenticationModel) WithDependsOn(values ...string) *SecretWithBasicAuthenticationModel {
+	s.SetDependsOn(values...)
 	return s
 }
 

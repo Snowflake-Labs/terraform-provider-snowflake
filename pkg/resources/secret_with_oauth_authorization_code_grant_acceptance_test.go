@@ -6,6 +6,9 @@ import (
 	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	tfjson "github.com/hashicorp/terraform-json"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
@@ -15,9 +18,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -53,7 +54,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create
 			{
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
@@ -89,7 +90,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 			},
 			// set all
 			{
-				Config: config.FromModel(t, secretModelAllSet),
+				Config: config.FromModels(t, secretModelAllSet),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretName, plancheck.ResourceActionUpdate),
@@ -128,7 +129,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 						),
 					))
 				},
-				Config: config.FromModel(t, secretModelAllSet),
+				Config: config.FromModels(t, secretModelAllSet),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretName, plancheck.ResourceActionUpdate),
@@ -200,7 +201,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_DifferentTimeFormats(t *testing.T)
 		Steps: []resource.TestStep{
 			// create with DateOnly
 			{
-				Config: config.FromModel(t, secretModelDateOnly),
+				Config: config.FromModels(t, secretModelDateOnly),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModelDateOnly.ResourceReference()).
@@ -211,7 +212,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_DifferentTimeFormats(t *testing.T)
 			},
 			// update with DateTime without seconds
 			{
-				Config: config.FromModel(t, secretModelWithoutSeconds),
+				Config: config.FromModels(t, secretModelWithoutSeconds),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModelWithoutSeconds.ResourceReference()).
@@ -222,7 +223,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_DifferentTimeFormats(t *testing.T)
 			},
 			// update with DateTime
 			{
-				Config: config.FromModel(t, secretModelDateTime),
+				Config: config.FromModels(t, secretModelDateTime),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModelDateTime.ResourceReference()).
@@ -233,7 +234,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_DifferentTimeFormats(t *testing.T)
 			},
 			// update with DateTime with PDT timezone
 			{
-				Config: config.FromModel(t, secretModelWithPDT),
+				Config: config.FromModels(t, secretModelWithPDT),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModelWithPDT.ResourceReference()).
@@ -272,7 +273,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalRefreshTokenExpiryTimeChan
 		Steps: []resource.TestStep{
 			// create
 			{
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
@@ -305,7 +306,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalRefreshTokenExpiryTimeChan
 						),
 					)
 				},
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -346,7 +347,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChange(t *testin
 		Steps: []resource.TestStep{
 			// create
 			{
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
@@ -363,7 +364,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChange(t *testin
 					_, cleanup := acc.TestClient().Secret.CreateWithBasicAuthenticationFlow(t, id, "test_pswd", "test_usr")
 					t.Cleanup(cleanup)
 				},
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
@@ -405,7 +406,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChangeToOAuthCli
 		Steps: []resource.TestStep{
 			// create
 			{
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
@@ -424,7 +425,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChangeToOAuthCli
 					_, cleanup := acc.TestClient().Secret.CreateWithOAuthClientCredentialsFlow(t, id, integrationId, []sdk.ApiIntegrationScope{})
 					t.Cleanup(cleanup)
 				},
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
