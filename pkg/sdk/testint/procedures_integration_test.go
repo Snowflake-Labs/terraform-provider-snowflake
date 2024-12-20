@@ -2093,7 +2093,7 @@ def filter_by_role(session, table_name, role):
 		assert.Equal(t, "(x FLOAT)", *pairs["signature"])
 		assert.Equal(t, "FLOAT", *pairs["returns"])
 		assert.Equal(t, "SQL", *pairs["language"])
-		assert.Equal(t, "\nBEGIN\n\tRETURN 3.141592654::FLOAT;\nEND;\n", *pairs["body"])
+		assert.Equal(t, "BEGIN\n  RETURN 3.141592654::FLOAT;\nEND;\n", *pairs["body"])
 		assert.Equal(t, "OWNER", *pairs["execute as"])
 	})
 
