@@ -111,7 +111,7 @@ func TestAccountAlter(t *testing.T) {
 						PreventUnloadToInternalStages: Bool(true),
 					},
 					SessionParameters: &SessionParameters{
-						JSONIndent: Int(16),
+						JsonIndent: Int(16),
 					},
 					ObjectParameters: &ObjectParameters{
 						MaxDataExtensionTimeInDays: Int(30),

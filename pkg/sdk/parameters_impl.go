@@ -55,6 +55,8 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		err = setIntegerValue(parameter, value, &sessionParameters.ClientSessionKeepAliveHeartbeatFrequency)
 	case SessionParameterClientTimestampTypeMapping:
 		sessionParameters.ClientTimestampTypeMapping = Pointer(ClientTimestampTypeMapping(value))
+	case SessionParameterCsvTimestampFormat:
+		sessionParameters.CsvTimestampFormat = &value
 	case SessionParameterDateInputFormat:
 		sessionParameters.DateInputFormat = &value
 	case SessionParameterDateOutputFormat:
@@ -77,8 +79,8 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		err = setBooleanValue(parameter, value, &sessionParameters.JdbcTreatTimestampNtzAsUtc)
 	case SessionParameterJdbcUseSessionTimezone:
 		err = setBooleanValue(parameter, value, &sessionParameters.JdbcUseSessionTimezone)
-	case SessionParameterJSONIndent:
-		err = setIntegerValue(parameter, value, &sessionParameters.JSONIndent)
+	case SessionParameterJsonIndent:
+		err = setIntegerValue(parameter, value, &sessionParameters.JsonIndent)
 	case SessionParameterJsTreatIntegerAsBigInt:
 		err = setBooleanValue(parameter, value, &sessionParameters.JsTreatIntegerAsBigInt)
 	case SessionParameterLockTimeout:
@@ -111,8 +113,8 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		err = setIntegerValue(parameter, value, &sessionParameters.StatementQueuedTimeoutInSeconds)
 	case SessionParameterStatementTimeoutInSeconds:
 		err = setIntegerValue(parameter, value, &sessionParameters.StatementTimeoutInSeconds)
-	case SessionParameterStrictJSONOutput:
-		err = setBooleanValue(parameter, value, &sessionParameters.StrictJSONOutput)
+	case SessionParameterStrictJsonOutput:
+		err = setBooleanValue(parameter, value, &sessionParameters.StrictJsonOutput)
 	case SessionParameterTimestampDayIsAlways24h:
 		err = setBooleanValue(parameter, value, &sessionParameters.TimestampDayIsAlways24h)
 	case SessionParameterTimestampInputFormat:
@@ -217,6 +219,8 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.ClientSessionKeepAliveHeartbeatFrequency
 	case SessionParameterClientTimestampTypeMapping:
 		unsetField = &sessionParametersUnset.ClientTimestampTypeMapping
+	case SessionParameterCsvTimestampFormat:
+		unsetField = &sessionParametersUnset.CsvTimestampFormat
 	case SessionParameterDateInputFormat:
 		unsetField = &sessionParametersUnset.DateInputFormat
 	case SessionParameterDateOutputFormat:
@@ -239,8 +243,8 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.JdbcTreatTimestampNtzAsUtc
 	case SessionParameterJdbcUseSessionTimezone:
 		unsetField = &sessionParametersUnset.JdbcUseSessionTimezone
-	case SessionParameterJSONIndent:
-		unsetField = &sessionParametersUnset.JSONIndent
+	case SessionParameterJsonIndent:
+		unsetField = &sessionParametersUnset.JsonIndent
 	case SessionParameterJsTreatIntegerAsBigInt:
 		unsetField = &sessionParametersUnset.JsTreatIntegerAsBigInt
 	case SessionParameterLockTimeout:
@@ -273,8 +277,8 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.StatementQueuedTimeoutInSeconds
 	case SessionParameterStatementTimeoutInSeconds:
 		unsetField = &sessionParametersUnset.StatementTimeoutInSeconds
-	case SessionParameterStrictJSONOutput:
-		unsetField = &sessionParametersUnset.StrictJSONOutput
+	case SessionParameterStrictJsonOutput:
+		unsetField = &sessionParametersUnset.StrictJsonOutput
 	case SessionParameterTimestampDayIsAlways24h:
 		unsetField = &sessionParametersUnset.TimestampDayIsAlways24h
 	case SessionParameterTimestampInputFormat:
