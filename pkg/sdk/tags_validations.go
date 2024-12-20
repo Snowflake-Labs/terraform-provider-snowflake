@@ -36,7 +36,7 @@ func (opts *createTagOptions) validate() error {
 }
 
 func (v *AllowedValues) validate() error {
-	if !validateIntInRange(len(v.Values), 1, 300) {
+	if !validateIntInRangeInclusive(len(v.Values), 1, 300) {
 		return errIntBetween("AllowedValues", "Values", 1, 300)
 	}
 	return nil

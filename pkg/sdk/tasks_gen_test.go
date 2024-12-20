@@ -45,9 +45,9 @@ func TestTasks_Create(t *testing.T) {
 	t.Run("validation: opts.SessionParameters.SessionParameters should be valid", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SessionParameters = &SessionParameters{
-			JSONIndent: Int(25),
+			JsonIndent: Int(-1),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("SessionParameters", "JSONIndent", 0, 16))
+		assertOptsInvalidJoinedErrors(t, opts, errIntValue("SessionParameters", "JsonIndent", IntErrGreaterOrEqual, 0))
 	})
 
 	t.Run("basic", func(t *testing.T) {
@@ -78,7 +78,7 @@ func TestTasks_Create(t *testing.T) {
 		opts.Config = String(`$${"output_dir": "/temp/test_directory/", "learning_rate": 0.1}$$`)
 		opts.AllowOverlappingExecution = Bool(true)
 		opts.SessionParameters = &SessionParameters{
-			JSONIndent:  Int(10),
+			JsonIndent:  Int(10),
 			LockTimeout: Int(5),
 		}
 		opts.UserTaskTimeoutMs = Int(5)
@@ -131,7 +131,7 @@ func TestTasks_CreateOrAlter(t *testing.T) {
 	t.Run("validation: opts.SessionParameters.SessionParameters should be valid", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SessionParameters = &SessionParameters{
-			JSONIndent: Int(25),
+			JsonIndent: Int(25),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("SessionParameters", "JSONIndent", 0, 16))
 	})
@@ -155,7 +155,7 @@ func TestTasks_CreateOrAlter(t *testing.T) {
 		opts.AllowOverlappingExecution = Bool(true)
 		opts.UserTaskTimeoutMs = Int(5)
 		opts.SessionParameters = &SessionParameters{
-			JSONIndent:  Int(10),
+			JsonIndent:  Int(10),
 			LockTimeout: Int(5),
 		}
 		opts.SuspendTaskAfterNumFailures = Int(6)
@@ -265,7 +265,7 @@ func TestTasks_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &TaskSet{}
 		opts.Set.SessionParameters = &SessionParameters{
-			JSONIndent: Int(25),
+			JsonIndent: Int(25),
 		}
 		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("SessionParameters", "JSONIndent", 0, 16))
 	})
@@ -337,7 +337,7 @@ func TestTasks_Alter(t *testing.T) {
 		opts := defaultOpts()
 		opts.Set = &TaskSet{
 			SessionParameters: &SessionParameters{
-				JSONIndent: Int(15),
+				JsonIndent: Int(15),
 			},
 		}
 		assertOptsValidAndSQLEquals(t, opts, "ALTER TASK %s SET JSON_INDENT = 15", id.FullyQualifiedName())
