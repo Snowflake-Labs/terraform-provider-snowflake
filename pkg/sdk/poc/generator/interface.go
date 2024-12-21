@@ -1,5 +1,31 @@
 package generator
 
+import "fmt"
+
+type objectIdentifierKind string
+
+const (
+	AccountObjectIdentifier             objectIdentifierKind = "AccountObjectIdentifier"
+	DatabaseObjectIdentifier            objectIdentifierKind = "DatabaseObjectIdentifier"
+	SchemaObjectIdentifier              objectIdentifierKind = "SchemaObjectIdentifier"
+	SchemaObjectIdentifierWithArguments objectIdentifierKind = "SchemaObjectIdentifierWithArguments"
+)
+
+func toObjectIdentifierKind(s string) (objectIdentifierKind, error) {
+	switch s {
+	case "AccountObjectIdentifier":
+		return AccountObjectIdentifier, nil
+	case "DatabaseObjectIdentifier":
+		return DatabaseObjectIdentifier, nil
+	case "SchemaObjectIdentifier":
+		return SchemaObjectIdentifier, nil
+	case "SchemaObjectIdentifierWithArguments":
+		return SchemaObjectIdentifierWithArguments, nil
+	default:
+		return "", fmt.Errorf("invalid string identifier type: %s", s)
+	}
+}
+
 // Interface groups operations for particular object or objects family (e.g. DATABASE ROLE)
 type Interface struct {
 	// Name is the interface's name, e.g. "DatabaseRoles"
@@ -28,6 +54,5 @@ func (i *Interface) NameLowerCased() string {
 
 // ObjectIdentifierKind returns the level of the object identifier (e.g. for DatabaseObjectIdentifier, it returns the prefix "Database")
 func (i *Interface) ObjectIdentifierPrefix() idPrefix {
-	// return strings.Replace(i.IdentifierKind, "ObjectIdentifier", "", 1)
 	return identifierStringToPrefix(i.IdentifierKind)
 }
