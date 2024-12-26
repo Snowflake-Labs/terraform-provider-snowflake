@@ -43,9 +43,7 @@ resource "snowflake_stage" "example_stage" {
 - `credentials` (String, Sensitive) Specifies the credentials for the stage.
 - `directory` (String) Specifies the directory settings for the stage.
 - `encryption` (String) Specifies the encryption settings for the stage.
-- `file_format` (String) Specifies the file format for the stage. Specifying the default Snowflake value (e.g. TYPE = CSV) will currently result in a permadiff (check [#2679](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2679)). For now, omit the default values; it will be fixed in the upcoming provider versions.
-
-  Examples of usage:
+- `file_format` (String) Specifies the file format for the stage. Specifying the default Snowflake value (e.g. TYPE = CSV) will currently result in a permadiff (check [#2679](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2679)). For now, omit the default values; it will be fixed in the upcoming provider versions. Examples of usage:
   * with hardcoding value: `file_format="FORMAT_NAME = DB.SCHEMA.FORMATNAME"`
   * from dynamic value: `file_format = "FORMAT_NAME = ${snowflake_database.mydb.name}.${snowflake_schema.myschema.name}.${snowflake_file_format.myfileformat.name}"`
   * from expression: `file_format = format("FORMAT_NAME =%s.%s.MYFILEFORMAT", var.db_name, each.value.schema_name)`
