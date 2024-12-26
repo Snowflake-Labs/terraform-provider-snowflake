@@ -57,7 +57,7 @@ var stageSchema = map[string]*schema.Schema{
 	"file_format": {
 		Type:             schema.TypeString,
 		Optional:         true,
-		Description:      "Specifies the file format for the stage. Specifying the default Snowflake value (e.g. TYPE = CSV) will currently result in a permadiff (check [#2679](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2679)). For now, omit the default values; it will be fixed in the upcoming provider versions.",
+		Description:      "Specifies the file format for the stage. Specifying the default Snowflake value (e.g. TYPE = CSV) will currently result in a permadiff (check [#2679](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2679)). For now, omit the default values; it will be fixed in the upcoming provider versions. Examples of usage: <b>1. with hardcoding value:</b> `file_format=\"FORMAT_NAME = DB.SCHEMA.FORMATNAME\"` <b>2. from dynamic value:</b> `file_format = \"FORMAT_NAME = ${snowflake_database.mydb.name}.${snowflake_schema.myschema.name}.${snowflake_file_format.myfileformat.name}\"` <b>3. from expression:</b> `file_format = format(\"FORMAT_NAME =%s.%s.MYFILEFORMAT\", var.db_name, each.value.schema_name)`. Reference: [#265](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/265)",
 		DiffSuppressFunc: suppressQuoting,
 	},
 	"copy_options": {
