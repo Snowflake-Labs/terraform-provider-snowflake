@@ -44,7 +44,7 @@ resource "snowflake_external_table" "external_table" {
 - `column` (Block List, Min: 1) Definitions of a column to create in the external table. Minimum one required. (see [below for nested schema](#nestedblock--column))
 - `database` (String) The database in which to create the external table.
 - `file_format` (String) Specifies the file format for the external table.
-- `location` (String) Specifies a location for the external table.
+- `location` (String) Specifies a location for the external table, using its FQDN. You can hardcode it (`"@MYDB.MYSCHEMA.MYSTAGE"`), or populate dynamically (`"@${snowflake_database.mydb.name}.${snowflake_schema.myschema.name}.${snowflake_stage.mystage.name}"`)
 - `name` (String) Specifies the identifier for the external table; must be unique for the database and schema in which the externalTable is created.
 - `schema` (String) The schema in which to create the external table.
 
