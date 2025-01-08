@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.0...v1.0.1) (2024-12-20)
+
+
+### 🔧 **Misc**
+
+* Add external removal tests to functions and procedures ([#3305](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3305)) ([e2d0705](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e2d07055015803b86f3c165851a63350beba350f))
+* Add holidays note, change the disclaimer, and fix an example ([#3288](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3288)) ([39a0cb7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/39a0cb76a1e64f2c4b5ee5923223d6e0df0ddb46))
+* Adjust GitHub templates to the new development branch ([#3286](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3286)) ([fc10672](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fc10672318af90ab6d879dfa63b8efaf93589e62))
+* Fix tests after v1 release ([#3306](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3306)) ([32983fe](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/32983fe0d3ff502117b9c81d0d2c49b9d18958ba))
+* Generate marshal json for each model ([#3307](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3307)) ([7ebbe36](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7ebbe364c5829546a70843d249629f8fcc3cdcf6))
+* remove generating integration tests placeholder file ([#3256](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3256)) ([e0ed15b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e0ed15b09017ddfc89c727a6f5a8e4bdaf7aa34d))
+* Update docs and migration guide ([#3313](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3313)) ([c98e449](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c98e44922a090495feb7b5c31c23b01d07f31bfc))
+
+
+### 🐛 **Bug fixes:**
+
+* Fixes in account parameters ([#3310](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3310)) ([0de5733](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0de57338fe32200a44bdd89730eb8bccaeeac3d5))
+
 ## [1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.100.0...v1.0.0) (2024-12-12)
 
 
