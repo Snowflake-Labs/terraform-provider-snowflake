@@ -21,6 +21,17 @@ resource "snowflake_stage" "example_stage" {
   schema      = "EXAMPLE_SCHEMA"
   credentials = "AWS_KEY_ID='${var.example_aws_key_id}' AWS_SECRET_KEY='${var.example_aws_secret_key}'"
 }
+
+# with an existing hardcoded file format
+# please see other examples in the resource documentation
+resource "snowflake_stage" "example_stage_with_file_format" {
+  name        = "EXAMPLE_STAGE"
+  url         = "s3://com.example.bucket/prefix"
+  database    = "EXAMPLE_DB"
+  schema      = "EXAMPLE_SCHEMA"
+  credentials = "AWS_KEY_ID='${var.example_aws_key_id}' AWS_SECRET_KEY='${var.example_aws_secret_key}'"
+  file_format = "FORMAT_NAME = DB.SCHEMA.FORMATNAME"
+}
 ```
 
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -43,7 +54,7 @@ resource "snowflake_stage" "example_stage" {
 - `credentials` (String, Sensitive) Specifies the credentials for the stage.
 - `directory` (String) Specifies the directory settings for the stage.
 - `encryption` (String) Specifies the encryption settings for the stage.
-- `file_format` (String) Specifies the file format for the stage. Specifying the default Snowflake value (e.g. TYPE = CSV) will currently result in a permadiff (check [#2679](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2679)). For now, omit the default values; it will be fixed in the upcoming provider versions. Examples of usage: <b>1. with hardcoding value:</b> `file_format="FORMAT_NAME = DB.SCHEMA.FORMATNAME"` <b>2. from dynamic value:</b> `file_format = "FORMAT_NAME = ${snowflake_database.mydb.name}.${snowflake_schema.myschema.name}.${snowflake_file_format.myfileformat.name}"` <b>3. from expression:</b> `file_format = format("FORMAT_NAME =%s.%s.MYFILEFORMAT", var.db_name, each.value.schema_name)`. Reference: [#265](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/265)
+- `file_format` (String) Specifies the file format for the stage. Specifying the default Snowflake value (e.g. TYPE = CSV) will currently result in a permadiff (check [#2679](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2679)). For now, omit the default values; it will be fixed in the upcoming provider versions. Examples of usage: <b>1. with hardcoding value:</b> `file_format="FORMAT_NAME = DB.SCHEMA.FORMATNAME"` <b>2. from dynamic value:</b> `file_format = "FORMAT_NAME = ${snowflake_file_format.myfileformat.fully_qualified_name}"` <b>3. from expression:</b> `file_format = format("FORMAT_NAME =%s.%s.MYFILEFORMAT", var.db_name, each.value.schema_name)`. Reference: [#265](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/265)
 - `snowflake_iam_user` (String) An AWS IAM user created for your Snowflake account. This user is the same for every external S3 stage created in your account.
 - `storage_integration` (String) Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.
 - `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
