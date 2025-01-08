@@ -7,6 +7,11 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.1 ➞ v1.0.2
+
+### Fixed migration of account resource
+Previously, during upgrading the provider from v0.99.0, when account fields `must_change_password` or `is_org_admin` were not set in state, the provider panicked. It has been fixed in this version.
+
 ## v1.0.0 ➞ v1.0.1
 
 ### Fixes in account parameters
