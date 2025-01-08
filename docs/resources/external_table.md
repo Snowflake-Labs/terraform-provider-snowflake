@@ -31,6 +31,20 @@ resource "snowflake_external_table" "external_table" {
     type = "text"
   }
 }
+
+# with a location pointing to an existing stage
+# name is hardcoded, please see resource documentation for other options
+resource "snowflake_external_table" "external_table_with_location" {
+  database = "db"
+  schema   = "schema"
+  name     = "external_table_with_location"
+  location = "@MYDB.MYSCHEMA.MYSTAGE"
+
+  column {
+    name = "id"
+    type = "int"
+  }
+}
 ```
 
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
@@ -44,7 +58,7 @@ resource "snowflake_external_table" "external_table" {
 - `column` (Block List, Min: 1) Definitions of a column to create in the external table. Minimum one required. (see [below for nested schema](#nestedblock--column))
 - `database` (String) The database in which to create the external table.
 - `file_format` (String) Specifies the file format for the external table.
-- `location` (String) Specifies a location for the external table, using its FQDN. You can hardcode it (`"@MYDB.MYSCHEMA.MYSTAGE"`), or populate dynamically (`"@${snowflake_database.mydb.name}.${snowflake_schema.myschema.name}.${snowflake_stage.mystage.name}"`)
+- `location` (String) Specifies a location for the external table, using its FQDN. You can hardcode it (`"@MYDB.MYSCHEMA.MYSTAGE"`), or populate dynamically (`"@${snowflake_stage.mystage.fully_qualified_name}"`)
 - `name` (String) Specifies the identifier for the external table; must be unique for the database and schema in which the externalTable is created.
 - `schema` (String) The schema in which to create the external table.
 
