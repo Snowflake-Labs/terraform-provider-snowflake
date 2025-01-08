@@ -278,8 +278,8 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		t.Cleanup(resourceMonitorCleanup)
 
 		frequency := sdk.FrequencyNever
-		startTimeStamp := "2025-01-01 12:34"
-		endTimeStamp := "2026-01-01 12:34"
+		startTimeStamp := "2050-01-01 12:34"
+		endTimeStamp := "2051-01-01 12:34"
 
 		err := client.ResourceMonitors.Alter(ctx, resourceMonitor.ID(), &sdk.AlterResourceMonitorOptions{
 			Set: &sdk.ResourceMonitorSet{

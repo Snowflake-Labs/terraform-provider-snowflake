@@ -656,7 +656,7 @@ resource "snowflake_account" "test" {
 	last_name = "%[7]s"
 	must_change_password = %[8]t
 	region = "%[9]s"
-	grace_period_in_days = %[10]d 
+	grace_period_in_days = %[10]d
 	comment = "%[11]s"
 }
 `,
@@ -673,3 +673,5 @@ resource "snowflake_account" "test" {
 		comment,
 	)
 }
+
+// TODO(SNOW-1875369): add a state upgrader test for an imported account with optional parameters
