@@ -7,6 +7,11 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.1 ➞ v1.0.2
+
+### Fixed migration of account resource
+Previously, during upgrading the provider from v0.99.0, when account fields `must_change_password` or `is_org_admin` were not set in state, the provider panicked. It has been fixed in this version.
+
 ## v1.0.0 ➞ v1.0.1
 
 ### Fixes in account parameters
@@ -154,6 +159,8 @@ provider "snowflake" {
 	preview_features_enabled = ["snowflake_current_account_datasource", "snowflake_alert_resource"]
 }
 ```
+
+Do not forget to add this line to all provider configurations using these features, including [provider aliases](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations).
 
 ### Removed deprecated objects
 All of the deprecated objects are removed from v1 release. This includes:
@@ -669,7 +676,6 @@ If you use TOML configuration file, adjust it from
 ```toml
 [default]
 	account = "ORGANIZATION-ACCOUNT"
-}
 ```
 
 to
@@ -677,7 +683,6 @@ to
 [default]
 	organizationname = "ORGANIZATION"
 	accountname    = "ACCOUNT"
-}
 ```
 
 If you use environmental variables, adjust them from

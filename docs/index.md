@@ -150,7 +150,9 @@ To export the variables into your provider:
 
 ```shell
 export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY="~/.ssh/snowflake_key"
+export SNOWFLAKE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----..."
+# Alternatively, source from a file.
+export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_key.p8)
 ```
 
 ### Keypair Authentication Passphrase
@@ -172,7 +174,7 @@ To export the variables into your provider:
 
 ```shell
 export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY="~/.ssh/snowflake_key.p8"
+export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_key.p8)
 export SNOWFLAKE_PRIVATE_KEY_PASSPHRASE="..."
 ```
 
