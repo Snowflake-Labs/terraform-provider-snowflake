@@ -27,12 +27,16 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
 		err = setBooleanValue(parameter, value, &sessionParameters.AbortDetachedQuery)
+	case SessionParameterActivePythonProfiler:
+		sessionParameters.ActivePythonProfiler = Pointer(ActivePythonProfiler(value))
 	case SessionParameterAutocommit:
 		err = setBooleanValue(parameter, value, &sessionParameters.Autocommit)
 	case SessionParameterBinaryInputFormat:
 		sessionParameters.BinaryInputFormat = Pointer(BinaryInputFormat(value))
 	case SessionParameterBinaryOutputFormat:
 		sessionParameters.BinaryOutputFormat = Pointer(BinaryOutputFormat(value))
+	case SessionParameterClientEnableLogInfoStatementParameters:
+		err = setBooleanValue(parameter, value, &sessionParameters.ClientEnableLogInfoStatementParameters)
 	case SessionParameterClientMemoryLimit:
 		err = setIntegerValue(parameter, value, &sessionParameters.ClientMemoryLimit)
 	case SessionParameterClientMetadataRequestUseConnectionCtx:
@@ -51,6 +55,8 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		err = setIntegerValue(parameter, value, &sessionParameters.ClientSessionKeepAliveHeartbeatFrequency)
 	case SessionParameterClientTimestampTypeMapping:
 		sessionParameters.ClientTimestampTypeMapping = Pointer(ClientTimestampTypeMapping(value))
+	case SessionParameterCsvTimestampFormat:
+		sessionParameters.CsvTimestampFormat = &value
 	case SessionParameterDateInputFormat:
 		sessionParameters.DateInputFormat = &value
 	case SessionParameterDateOutputFormat:
@@ -65,14 +71,18 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		sessionParameters.GeographyOutputFormat = Pointer(GeographyOutputFormat(value))
 	case SessionParameterGeometryOutputFormat:
 		sessionParameters.GeometryOutputFormat = Pointer(GeometryOutputFormat(value))
+	case SessionParameterHybridTableLockTimeout:
+		err = setIntegerValue(parameter, value, &sessionParameters.HybridTableLockTimeout)
 	case SessionParameterJdbcTreatDecimalAsInt:
 		err = setBooleanValue(parameter, value, &sessionParameters.JdbcTreatDecimalAsInt)
 	case SessionParameterJdbcTreatTimestampNtzAsUtc:
 		err = setBooleanValue(parameter, value, &sessionParameters.JdbcTreatTimestampNtzAsUtc)
 	case SessionParameterJdbcUseSessionTimezone:
 		err = setBooleanValue(parameter, value, &sessionParameters.JdbcUseSessionTimezone)
-	case SessionParameterJSONIndent:
-		err = setIntegerValue(parameter, value, &sessionParameters.JSONIndent)
+	case SessionParameterJsonIndent:
+		err = setIntegerValue(parameter, value, &sessionParameters.JsonIndent)
+	case SessionParameterJsTreatIntegerAsBigInt:
+		err = setBooleanValue(parameter, value, &sessionParameters.JsTreatIntegerAsBigInt)
 	case SessionParameterLockTimeout:
 		err = setIntegerValue(parameter, value, &sessionParameters.LockTimeout)
 	case SessionParameterLogLevel:
@@ -83,6 +93,10 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		err = setBooleanValue(parameter, value, &sessionParameters.NoorderSequenceAsDefault)
 	case SessionParameterOdbcTreatDecimalAsInt:
 		err = setBooleanValue(parameter, value, &sessionParameters.OdbcTreatDecimalAsInt)
+	case SessionParameterPythonProfilerModules:
+		sessionParameters.PythonProfilerModules = &value
+	case SessionParameterPythonProfilerTargetStage:
+		sessionParameters.PythonProfilerTargetStage = &value
 	case SessionParameterQueryTag:
 		sessionParameters.QueryTag = &value
 	case SessionParameterQuotedIdentifiersIgnoreCase:
@@ -99,8 +113,8 @@ func (sessionParameters *SessionParameters) setParam(parameter SessionParameter,
 		err = setIntegerValue(parameter, value, &sessionParameters.StatementQueuedTimeoutInSeconds)
 	case SessionParameterStatementTimeoutInSeconds:
 		err = setIntegerValue(parameter, value, &sessionParameters.StatementTimeoutInSeconds)
-	case SessionParameterStrictJSONOutput:
-		err = setBooleanValue(parameter, value, &sessionParameters.StrictJSONOutput)
+	case SessionParameterStrictJsonOutput:
+		err = setBooleanValue(parameter, value, &sessionParameters.StrictJsonOutput)
 	case SessionParameterTimestampDayIsAlways24h:
 		err = setBooleanValue(parameter, value, &sessionParameters.TimestampDayIsAlways24h)
 	case SessionParameterTimestampInputFormat:
@@ -177,12 +191,16 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 	switch parameter {
 	case SessionParameterAbortDetachedQuery:
 		unsetField = &sessionParametersUnset.AbortDetachedQuery
+	case SessionParameterActivePythonProfiler:
+		unsetField = &sessionParametersUnset.ActivePythonProfiler
 	case SessionParameterAutocommit:
 		unsetField = &sessionParametersUnset.Autocommit
 	case SessionParameterBinaryInputFormat:
 		unsetField = &sessionParametersUnset.BinaryInputFormat
 	case SessionParameterBinaryOutputFormat:
 		unsetField = &sessionParametersUnset.BinaryOutputFormat
+	case SessionParameterClientEnableLogInfoStatementParameters:
+		unsetField = &sessionParametersUnset.ClientEnableLogInfoStatementParameters
 	case SessionParameterClientMemoryLimit:
 		unsetField = &sessionParametersUnset.ClientMemoryLimit
 	case SessionParameterClientMetadataRequestUseConnectionCtx:
@@ -201,6 +219,8 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.ClientSessionKeepAliveHeartbeatFrequency
 	case SessionParameterClientTimestampTypeMapping:
 		unsetField = &sessionParametersUnset.ClientTimestampTypeMapping
+	case SessionParameterCsvTimestampFormat:
+		unsetField = &sessionParametersUnset.CsvTimestampFormat
 	case SessionParameterDateInputFormat:
 		unsetField = &sessionParametersUnset.DateInputFormat
 	case SessionParameterDateOutputFormat:
@@ -215,14 +235,18 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.GeographyOutputFormat
 	case SessionParameterGeometryOutputFormat:
 		unsetField = &sessionParametersUnset.GeometryOutputFormat
+	case SessionParameterHybridTableLockTimeout:
+		unsetField = &sessionParametersUnset.HybridTableLockTimeout
 	case SessionParameterJdbcTreatDecimalAsInt:
 		unsetField = &sessionParametersUnset.JdbcTreatDecimalAsInt
 	case SessionParameterJdbcTreatTimestampNtzAsUtc:
 		unsetField = &sessionParametersUnset.JdbcTreatTimestampNtzAsUtc
 	case SessionParameterJdbcUseSessionTimezone:
 		unsetField = &sessionParametersUnset.JdbcUseSessionTimezone
-	case SessionParameterJSONIndent:
-		unsetField = &sessionParametersUnset.JSONIndent
+	case SessionParameterJsonIndent:
+		unsetField = &sessionParametersUnset.JsonIndent
+	case SessionParameterJsTreatIntegerAsBigInt:
+		unsetField = &sessionParametersUnset.JsTreatIntegerAsBigInt
 	case SessionParameterLockTimeout:
 		unsetField = &sessionParametersUnset.LockTimeout
 	case SessionParameterLogLevel:
@@ -233,6 +257,10 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.NoorderSequenceAsDefault
 	case SessionParameterOdbcTreatDecimalAsInt:
 		unsetField = &sessionParametersUnset.OdbcTreatDecimalAsInt
+	case SessionParameterPythonProfilerModules:
+		unsetField = &sessionParametersUnset.PythonProfilerModules
+	case SessionParameterPythonProfilerTargetStage:
+		unsetField = &sessionParametersUnset.PythonProfilerTargetStage
 	case SessionParameterQueryTag:
 		unsetField = &sessionParametersUnset.QueryTag
 	case SessionParameterQuotedIdentifiersIgnoreCase:
@@ -249,8 +277,8 @@ func (sessionParametersUnset *SessionParametersUnset) setParam(parameter Session
 		unsetField = &sessionParametersUnset.StatementQueuedTimeoutInSeconds
 	case SessionParameterStatementTimeoutInSeconds:
 		unsetField = &sessionParametersUnset.StatementTimeoutInSeconds
-	case SessionParameterStrictJSONOutput:
-		unsetField = &sessionParametersUnset.StrictJSONOutput
+	case SessionParameterStrictJsonOutput:
+		unsetField = &sessionParametersUnset.StrictJsonOutput
 	case SessionParameterTimestampDayIsAlways24h:
 		unsetField = &sessionParametersUnset.TimestampDayIsAlways24h
 	case SessionParameterTimestampInputFormat:

@@ -39,10 +39,10 @@ resource "snowflake_function_sql" "minimal" {
     arg_data_type = "FLOAT"
     arg_name      = "arg_name"
   }
-  function_definition = <<EOF
-    arg_name
-  EOF
   return_type         = "FLOAT"
+  function_definition = <<EOT
+arg_name
+EOT
 }
 
 # Complete
@@ -55,10 +55,10 @@ resource "snowflake_function_sql" "complete" {
     arg_data_type = "FLOAT"
     arg_name      = "arg_name"
   }
-  function_definition     = <<EOF
-    arg_name
-  EOF
   return_type             = "FLOAT"
+  function_definition     = <<EOT
+arg_name
+EOT
   return_results_behavior = "VOLATILE"
   comment                 = "some comment"
 }
@@ -102,7 +102,7 @@ resource "snowflake_function_sql" "complete" {
 Required:
 
 - `arg_data_type` (String) The argument type.
-- `arg_name` (String) The argument name.
+- `arg_name` (String) The argument name. The provider wraps it in double quotes by default, so be aware of that while referencing the argument in the function definition.
 
 Optional:
 

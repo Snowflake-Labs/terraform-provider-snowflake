@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	tfjson "github.com/hashicorp/terraform-json"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
@@ -17,7 +19,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -51,7 +52,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create
 			{
-				Config: config.FromModel(t, connectionModel),
+				Config: config.FromModels(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
@@ -78,7 +79,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 			},
 			// set comment
 			{
-				Config: config.FromModel(t, connectionModelWithComment),
+				Config: config.FromModels(t, connectionModelWithComment),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModelWithComment.ResourceReference()).
@@ -104,7 +105,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 			},
 			// unset comment
 			{
-				Config: config.FromModel(t, connectionModel),
+				Config: config.FromModels(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
@@ -117,7 +118,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 			},
 			// enable failover to second account
 			{
-				Config: config.FromModel(t, connectionModelWithFailover),
+				Config: config.FromModels(t, connectionModelWithFailover),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModelWithFailover.ResourceReference()).
@@ -133,7 +134,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 			},
 			// disable failover to second account
 			{
-				Config: config.FromModel(t, connectionModel),
+				Config: config.FromModels(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
@@ -176,7 +177,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create
 			{
-				Config: config.FromModel(t, connectionModel),
+				Config: config.FromModels(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
@@ -205,7 +206,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 						WithSet(*sdk.NewConnectionSetRequest().
 							WithComment("external comment")))
 				},
-				Config: config.FromModel(t, connectionModel),
+				Config: config.FromModels(t, connectionModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(connectionModel.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -229,7 +230,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 							[]sdk.AccountIdentifier{secondaryAccountId})),
 					)
 				},
-				Config: config.FromModel(t, connectionModel),
+				Config: config.FromModels(t, connectionModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(connectionModel.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -256,7 +257,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(id).WithDisableConnectionFailover(*sdk.NewDisableConnectionFailoverRequest()))
 				},
-				Config: config.FromModel(t, connectionModelWithFailover),
+				Config: config.FromModels(t, connectionModelWithFailover),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(connectionModelWithFailover.ResourceReference(), plancheck.ResourceActionUpdate),

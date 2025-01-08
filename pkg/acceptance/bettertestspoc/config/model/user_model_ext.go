@@ -63,7 +63,7 @@ func (u *UserModel) WithNetworkPolicyId(networkPolicy sdk.AccountObjectIdentifie
 }
 
 func (u *UserModel) WithNullPassword() *UserModel {
-	return u.WithPasswordValue(config.NullVariable())
+	return u.WithPasswordValue(config.ReplacementPlaceholderVariable(config.SnowflakeProviderConfigNull))
 }
 
 func (u *UserModel) WithDefaultSecondaryRolesOptionEnum(option sdk.SecondaryRolesOption) *UserModel {

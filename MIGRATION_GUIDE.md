@@ -7,61 +7,146 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.0 ➞ v1.0.1
+
+### Fixes in account parameters
+As a follow-up of reworked `snowflake_account_parameter`, this version has several improvements regarding handling parameters.
+
+#### Add missing parameters based on the docs and output of SHOW PARAMETERS IN ACCOUNT
+Based on [parameters docs](https://docs.snowflake.com/en/sql-reference/parameters) and `SHOW PARAMETERS IN ACCOUNT`, we established a list of supported parameters. New supported or fixed parameters in `snowflake_account_parameter`:
+- `ACTIVE_PYTHON_PROFILER`
+- `CLIENT_ENABLE_LOG_INFO_STATEMENT_PARAMETERS`
+- `CORTEX_ENABLED_CROSS_REGION`
+- `CSV_TIMESTAMP_FORMAT`
+- `ENABLE_PERSONAL_DATABASE`
+- `ENABLE_UNHANDLED_EXCEPTIONS_REPORTING`
+- `ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES`
+- `HYBRID_TABLE_LOCK_TIMEOUT`
+- `JS_TREAT_INTEGER_AS_BIGINT`
+- `PREVENT_UNLOAD_TO_INLINE_URL`
+- `PREVENT_UNLOAD_TO_INTERNAL_STAGES`
+- `PYTHON_PROFILER_MODULES`
+- `PYTHON_PROFILER_TARGET_STAGE`
+- `STORAGE_SERIALIZATION_POLICY`
+- `TASK_AUTO_RETRY_ATTEMPTS`
+
+#### Adjusted validations
+Validations for number parameters are now relaxed. This is because a few of the value limits are soft limits in Snowflake, and can be changed externally.
+We decided to keep validations for non-negative values. Affected parameters:
+- `QUERY_TAG`
+- `TWO_DIGIT_CENTURY_START`
+- `WEEK_OF_YEAR_POLICY`
+- `WEEK_START`
+- `USER_TASK_TIMEOUT_MS`
+
+We added non-negative validations for the following parameters:
+- `CLIENT_PREFETCH_THREADS`
+- `CLIENT_RESULT_CHUNK_SIZE`
+- `CLIENT_SESSION_KEEP_ALIVE_HEARTBEAT_FREQUENCY`
+- `HYBRID_TABLE_LOCK_TIMEOUT`
+- `JSON_INDENT`
+- `STATEMENT_QUEUED_TIMEOUT_IN_SECONDS`
+- `STATEMENT_TIMEOUT_IN_SECONDS`
+- `TASK_AUTO_RETRY_ATTEMPTS`
+- `USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS`
+
+Note that enum parameters are still not validated by the provider - they are only validated in Snowflake. We will handle this during a small rework of the parameters in the future.
+
+### Add missing preview features to config
+
+Values:
+- `snowflake_functions_datasource`
+- `snowflake_procedures_datasource`
+- `snowflake_tables_datasource`
+  were missing in the `preview_features_enabled` attribute in the provider's config. They were added.
+
+References: #3302
+
+### functions and procedures docs updated
+
+Argument names are automatically wrapped in double quotes, so:
+- uppercase names should be used or
+- argument name should be quoted in the procedure/function definition.
+
+Updated the docs and the previous migration guide entry.
+
+References: #3298
+
+### python procedure docs updated
+
+Importing python procedure is currently limited to procedures with snowflake-snowpark-python version explicitly set in Snowflake. Docs were updated.
+
+References: #3303
+
 ## v0.100.0 ➞ v1.0.0
 
 ### Preview features flag
 All of the preview features objects are now disabled by default. This includes:
 - Resources
-	- `snowflake_account_password_policy_attachment`
-	- `snowflake_alert`
-	- `snowflake_api_integration`
-	- `snowflake_cortex_search_service`
-	- `snowflake_dynamic_table`
-	- `snowflake_external_function`
-	- `snowflake_external_table`
-	- `snowflake_external_volume`
-	- `snowflake_failover_group`
-	- `snowflake_file_format`
-	- `snowflake_managed_account`
-	- `snowflake_materialized_view`
-	- `snowflake_network_policy_attachment`
-	- `snowflake_network_rule`
-	- `snowflake_email_notification_integration`
-	- `snowflake_notification_integration`
-	- `snowflake_object_parameter`
-	- `snowflake_password_policy`
-	- `snowflake_pipe`
-	- `snowflake_sequence`
-	- `snowflake_share`
-	- `snowflake_stage`
-	- `snowflake_storage_integration`
-	- `snowflake_table_column_masking_policy_application`
-	- `snowflake_table_constraint`
-	- `snowflake_user_public_keys`
-	- `snowflake_user_password_policy_attachment`
+  - `snowflake_account_password_policy_attachment`
+  - `snowflake_alert`
+  - `snowflake_api_integration`
+  - `snowflake_cortex_search_service`
+  - `snowflake_dynamic_table`
+  - `snowflake_external_function`
+  - `snowflake_external_table`
+  - `snowflake_external_volume`
+  - `snowflake_failover_group`
+  - `snowflake_file_format`
+  - `snowflake_function_java`
+  - `snowflake_function_javascript`
+  - `snowflake_function_python`
+  - `snowflake_function_scala`
+  - `snowflake_function_sql`
+  - `snowflake_managed_account`
+  - `snowflake_materialized_view`
+  - `snowflake_network_policy_attachment`
+  - `snowflake_network_rule`
+  - `snowflake_email_notification_integration`
+  - `snowflake_notification_integration`
+  - `snowflake_object_parameter`
+  - `snowflake_password_policy`
+  - `snowflake_pipe`
+  - `snowflake_procedure_java`
+  - `snowflake_procedure_javascript`
+  - `snowflake_procedure_python`
+  - `snowflake_procedure_scala`
+  - `snowflake_procedure_sql`
+  - `snowflake_sequence`
+  - `snowflake_share`
+  - `snowflake_stage`
+  - `snowflake_storage_integration`
+  - `snowflake_table`
+  - `snowflake_table_column_masking_policy_application`
+  - `snowflake_table_constraint`
+  - `snowflake_user_public_keys`
+  - `snowflake_user_password_policy_attachment`
 - Data sources
-	- `snowflake_current_account`
-	- `snowflake_alerts`
-	- `snowflake_cortex_search_services`
-	- `snowflake_database`
-	- `snowflake_database_role`
-	- `snowflake_dynamic_tables`
-	- `snowflake_external_functions`
-	- `snowflake_external_tables`
-	- `snowflake_failover_groups`
-	- `snowflake_file_formats`
-	- `snowflake_materialized_views`
-	- `snowflake_pipes`
-	- `snowflake_current_role`
-	- `snowflake_sequences`
-	- `snowflake_shares`
-	- `snowflake_parameters`
-	- `snowflake_stages`
-	- `snowflake_storage_integrations`
-	- `snowflake_system_generate_scim_access_token`
-	- `snowflake_system_get_aws_sns_iam_policy`
-	- `snowflake_system_get_privatelink_config`
-	- `snowflake_system_get_snowflake_platform_info`
+  - `snowflake_current_account`
+  - `snowflake_alerts`
+  - `snowflake_cortex_search_services`
+  - `snowflake_database`
+  - `snowflake_database_role`
+  - `snowflake_dynamic_tables`
+  - `snowflake_external_functions`
+  - `snowflake_external_tables`
+  - `snowflake_failover_groups`
+  - `snowflake_file_formats`
+  - `snowflake_functions`
+  - `snowflake_materialized_views`
+  - `snowflake_pipes`
+  - `snowflake_procedures`
+  - `snowflake_current_role`
+  - `snowflake_sequences`
+  - `snowflake_shares`
+  - `snowflake_parameters`
+  - `snowflake_stages`
+  - `snowflake_storage_integrations`
+  - `snowflake_system_generate_scim_access_token`
+  - `snowflake_system_get_aws_sns_iam_policy`
+  - `snowflake_system_get_privatelink_config`
+  - `snowflake_system_get_snowflake_platform_info`
+  - `snowflake_tables`
 
 If you want to have them enabled, add the feature name to the provider configuration (with `_datasource` or `_resource` suffix), like this:
 ```terraform
@@ -125,6 +210,8 @@ The new resources are more aligned with current features like:
 - secrets support
 - argument default values
 
+**Note**: argument names are now quoted automatically by the provider so remember about this while writing the function definition (argument name should be quoted or uppercase should be used for the argument name).
+
 `snowflake_procedure` is now deprecated in favor of 5 new preview resources:
 
 - `snowflake_procedure_java`
@@ -140,6 +227,8 @@ The new resources are more aligned with current features like:
 - external access integrations support
 - secrets support
 - argument default values
+
+**Note**: argument names are now quoted automatically by the provider so remember about this while writing the procedure definition (argument name should be quoted or uppercase should be used for the argument name).
 
 ### *(new feature)* Account role data source
 Added a new `snowflake_account_roles` data source for account roles. Now it reflects It's based on `snowflake_roles` data source.

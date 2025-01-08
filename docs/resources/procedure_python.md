@@ -7,6 +7,8 @@ description: |-
 
 !> **Caution: Preview Feature** This feature is considered a preview feature in the provider, regardless of the state of the resource in Snowflake. We do not guarantee its stability. It will be reworked and marked as a stable feature in future releases. Breaking changes are expected, even without bumping the major version. To use this feature, add the relevant feature name to `preview_features_enabled field` in the [provider configuration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#schema). Please always refer to the [Getting Help](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
 
+!> **Caution: Import limitation** To import the python procedure, snowflake-snowpark-python version must be explicitly set in Snowflake (i.e. `snowflake-snowpark-python==1.14.0`). You can verify it by running `DESCRIBE PROCEDURE <your_procedure>` and checking the `packages`. Check [#3303](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3303) for reference.
+
 -> **Note** External changes to `is_secure` and `null_input_behavior` are not currently supported. They will be handled in the following versions of the provider which may still affect this resource.
 
 -> **Note** `COPY GRANTS` and `OR REPLACE` are not currently supported.
@@ -42,7 +44,13 @@ resource "snowflake_procedure_python" "w" {
   }
   return_type          = "VARCHAR(100)"
   handler              = "echoVarchar"
-  procedure_definition = "\ndef echoVarchar(x):\n\tresult = \"\"\n\tfor a in range(5):\n\t\tresult += x\n\treturn result\n"
+  procedure_definition = <<EOT
+  def echoVarchar(x):
+  result = ''
+  for a in range(5):
+    result += x
+  return result
+EOT
   runtime_version      = "3.8"
   snowpark_package     = "1.14.0"
 }
@@ -94,7 +102,7 @@ resource "snowflake_procedure_python" "w" {
 Required:
 
 - `arg_data_type` (String) The argument type.
-- `arg_name` (String) The argument name.
+- `arg_name` (String) The argument name. The provider wraps it in double quotes by default, so be aware of that while referencing the argument in the procedure definition.
 
 Optional:
 

@@ -457,7 +457,7 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 		require.NotEmpty(t, parameters)
 
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterMinDataRetentionTimeInDays))
-		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterJSONIndent))
+		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterJsonIndent))
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterUserTaskTimeoutMs))
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterEnableUnredactedQuerySyntaxError))
 
@@ -468,7 +468,7 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 						MinDataRetentionTimeInDays: sdk.Int(15), // default is 0
 					},
 					SessionParameters: &sdk.SessionParameters{
-						JSONIndent: sdk.Int(8), // default is 2
+						JsonIndent: sdk.Int(8), // default is 2
 					},
 					ObjectParameters: &sdk.ObjectParameters{
 						UserTaskTimeoutMs: sdk.Int(100), // default is 3600000
@@ -486,7 +486,7 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 		require.NotEmpty(t, parameters)
 
 		assertParameterValueSetOnAccount(t, parameters, string(sdk.AccountParameterMinDataRetentionTimeInDays), "15")
-		assertParameterValueSetOnAccount(t, parameters, string(sdk.AccountParameterJSONIndent), "8")
+		assertParameterValueSetOnAccount(t, parameters, string(sdk.AccountParameterJsonIndent), "8")
 		assertParameterValueSetOnAccount(t, parameters, string(sdk.AccountParameterUserTaskTimeoutMs), "100")
 		assertParameterValueSetOnAccount(t, parameters, string(sdk.AccountParameterEnableUnredactedQuerySyntaxError), "true")
 
@@ -497,7 +497,7 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 						MinDataRetentionTimeInDays: sdk.Bool(true),
 					},
 					SessionParameters: &sdk.SessionParametersUnset{
-						JSONIndent: sdk.Bool(true),
+						JsonIndent: sdk.Bool(true),
 					},
 					ObjectParameters: &sdk.ObjectParametersUnset{
 						UserTaskTimeoutMs: sdk.Bool(true),
@@ -515,7 +515,7 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 		require.NotEmpty(t, parameters)
 
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterMinDataRetentionTimeInDays))
-		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterJSONIndent))
+		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterJsonIndent))
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterUserTaskTimeoutMs))
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterEnableUnredactedQuerySyntaxError))
 	})

@@ -8,7 +8,13 @@ resource "snowflake_procedure_python" "w" {
   }
   return_type          = "VARCHAR(100)"
   handler              = "echoVarchar"
-  procedure_definition = "\ndef echoVarchar(x):\n\tresult = \"\"\n\tfor a in range(5):\n\t\tresult += x\n\treturn result\n"
+  procedure_definition = <<EOT
+  def echoVarchar(x):
+  result = ''
+  for a in range(5):
+    result += x
+  return result
+EOT
   runtime_version      = "3.8"
   snowpark_package     = "1.14.0"
 }

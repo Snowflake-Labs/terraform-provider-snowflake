@@ -2,7 +2,6 @@ package providermodel
 
 import (
 	"encoding/json"
-	"fmt"
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
@@ -40,7 +39,7 @@ func (m *SnowflakeModel) WithAuthenticatorType(authenticationType sdk.Authentica
 }
 
 func (m *SnowflakeModel) WithPrivateKeyMultiline(privateKey string) *SnowflakeModel {
-	return m.WithPrivateKey(fmt.Sprintf(`%[1]s%[2]s%[1]s`, config.SnowflakeProviderConfigPrivateKey, privateKey))
+	return m.WithPrivateKeyValue(config.MultilineWrapperVariable(privateKey))
 }
 
 func (m *SnowflakeModel) WithClientStoreTemporaryCredentialBool(clientStoreTemporaryCredential bool) *SnowflakeModel {

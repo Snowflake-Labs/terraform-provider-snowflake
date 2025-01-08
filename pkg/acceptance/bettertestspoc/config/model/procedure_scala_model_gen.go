@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -80,6 +82,26 @@ func ProcedureScalaWithDefaultMeta(
 	p.WithRuntimeVersion(runtimeVersion)
 	p.WithSchema(schema)
 	p.WithSnowparkPackage(snowparkPackage)
+	return p
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (p *ProcedureScalaModel) MarshalJSON() ([]byte, error) {
+	type Alias ProcedureScalaModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(p),
+		DependsOn: p.DependsOn(),
+	})
+}
+
+func (p *ProcedureScalaModel) WithDependsOn(values ...string) *ProcedureScalaModel {
+	p.SetDependsOn(values...)
 	return p
 }
 
