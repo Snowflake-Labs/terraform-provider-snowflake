@@ -109,5 +109,5 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-terraform import snowflake_object_parameter.s <key>❄️<object_type>❄️<object_identifier>
+terraform import snowflake_object_parameter.s <key>|<object_type>|<object_identifier>
 ```

@@ -116,7 +116,7 @@ func (f *FunctionJavascriptModel) WithFullyQualifiedName(fullyQualifiedName stri
 }
 
 func (f *FunctionJavascriptModel) WithFunctionDefinition(functionDefinition string) *FunctionJavascriptModel {
-	f.FunctionDefinition = tfconfig.StringVariable(functionDefinition)
+	f.FunctionDefinition = config.MultilineWrapperVariable(functionDefinition)
 	return f
 }
 
