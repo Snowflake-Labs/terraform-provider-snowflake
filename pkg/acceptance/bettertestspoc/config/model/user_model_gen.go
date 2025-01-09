@@ -413,12 +413,12 @@ func (u *UserModel) WithRowsPerResultset(rowsPerResultset int) *UserModel {
 }
 
 func (u *UserModel) WithRsaPublicKey(rsaPublicKey string) *UserModel {
-	u.RsaPublicKey = tfconfig.StringVariable(rsaPublicKey)
+	u.RsaPublicKey = config.MultilineWrapperVariable(rsaPublicKey)
 	return u
 }
 
 func (u *UserModel) WithRsaPublicKey2(rsaPublicKey2 string) *UserModel {
-	u.RsaPublicKey2 = tfconfig.StringVariable(rsaPublicKey2)
+	u.RsaPublicKey2 = config.MultilineWrapperVariable(rsaPublicKey2)
 	return u
 }
 
