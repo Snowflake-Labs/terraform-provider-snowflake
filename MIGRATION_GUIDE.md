@@ -674,7 +674,6 @@ If you use TOML configuration file, adjust it from
 ```toml
 [default]
 	account = "ORGANIZATION-ACCOUNT"
-}
 ```
 
 to
@@ -682,7 +681,6 @@ to
 [default]
 	organizationname = "ORGANIZATION"
 	accountname    = "ACCOUNT"
-}
 ```
 
 If you use environmental variables, adjust them from
