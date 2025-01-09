@@ -76,7 +76,7 @@ var externalTableSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		ForceNew:    true,
-		Description: "Specifies a location for the external table.",
+		Description: "Specifies a location for the external table, using its FQDN. You can hardcode it (`\"@MYDB.MYSCHEMA.MYSTAGE\"`), or populate dynamically (`\"@${snowflake_stage.mystage.fully_qualified_name}\"`)",
 	},
 	"file_format": {
 		Type:        schema.TypeString,

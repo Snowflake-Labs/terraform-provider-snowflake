@@ -371,12 +371,12 @@ func (s *ServiceUserModel) WithRowsPerResultset(rowsPerResultset int) *ServiceUs
 }
 
 func (s *ServiceUserModel) WithRsaPublicKey(rsaPublicKey string) *ServiceUserModel {
-	s.RsaPublicKey = tfconfig.StringVariable(rsaPublicKey)
+	s.RsaPublicKey = config.MultilineWrapperVariable(rsaPublicKey)
 	return s
 }
 
 func (s *ServiceUserModel) WithRsaPublicKey2(rsaPublicKey2 string) *ServiceUserModel {
-	s.RsaPublicKey2 = tfconfig.StringVariable(rsaPublicKey2)
+	s.RsaPublicKey2 = config.MultilineWrapperVariable(rsaPublicKey2)
 	return s
 }
 
