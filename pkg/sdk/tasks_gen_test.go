@@ -131,9 +131,9 @@ func TestTasks_CreateOrAlter(t *testing.T) {
 	t.Run("validation: opts.SessionParameters.SessionParameters should be valid", func(t *testing.T) {
 		opts := defaultOpts()
 		opts.SessionParameters = &SessionParameters{
-			JsonIndent: Int(25),
+			JsonIndent: Int(-1),
 		}
-		assertOptsInvalidJoinedErrors(t, opts, errIntBetween("SessionParameters", "JSONIndent", 0, 16))
+		assertOptsInvalidJoinedErrors(t, opts, errIntValue("SessionParameters", "JsonIndent", IntErrGreaterOrEqual, 0))
 	})
 
 	t.Run("basic", func(t *testing.T) {
