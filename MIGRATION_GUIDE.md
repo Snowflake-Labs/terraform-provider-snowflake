@@ -160,6 +160,8 @@ provider "snowflake" {
 }
 ```
 
+Do not forget to add this line to all provider configurations using these features, including [provider aliases](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations).
+
 ### Removed deprecated objects
 All of the deprecated objects are removed from v1 release. This includes:
 - Resources
