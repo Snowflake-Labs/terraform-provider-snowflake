@@ -37,14 +37,22 @@ output "limit_output" {
 }
 
 # Filtering (in)
-data "snowflake_views" "in" {
+data "snowflake_views" "in_account" {
   in {
-    database = "database"
+    account = true
   }
 }
 
-output "in_output" {
-  value = data.snowflake_views.in.views
+data "snowflake_views" "in_database" {
+  in {
+    database = "<database_name>"
+  }
+}
+
+data "snowflake_views" "in_schema" {
+  in {
+    schema = "<database_name>.<schema_name>"
+  }
 }
 
 # Without additional data (to limit the number of calls make for every found view)

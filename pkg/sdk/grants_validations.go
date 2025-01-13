@@ -48,6 +48,7 @@ var validGrantOwnershipObjectTypes = []ObjectType{
 	ObjectTypePasswordPolicy,
 	ObjectTypeProjectionPolicy,
 	ObjectTypeReplicationGroup,
+	ObjectTypeResourceMonitor,
 	ObjectTypeRole,
 	ObjectTypeRowAccessPolicy,
 	ObjectTypeSchema,

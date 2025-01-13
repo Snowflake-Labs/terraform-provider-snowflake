@@ -3,7 +3,6 @@ package provider_test
 import (
 	"fmt"
 	"net"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -21,6 +20,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -234,9 +234,6 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 		return helpers.FullTomlConfigForServiceUser(t, profile, tmpServiceUser.UserId, tmpServiceUser.RoleId, tmpServiceUser.WarehouseId, tmpServiceUser.AccountId, tmpServiceUser.PrivateKey)
 	})
 
-	oktaUrl, err := url.Parse("https://example.com")
-	require.NoError(t, err)
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck: func() {
@@ -266,7 +263,7 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 					assert.Equal(t, 443, config.Port)
 					assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
 					assert.Equal(t, false, config.PasscodeInPassword)
-					assert.Equal(t, oktaUrl, config.OktaURL)
+					assert.Equal(t, testvars.ExampleOktaUrl, config.OktaURL)
 					assert.Equal(t, 30*time.Second, config.LoginTimeout)
 					assert.Equal(t, 40*time.Second, config.RequestTimeout)
 					assert.Equal(t, 50*time.Second, config.JWTExpireTimeout)
@@ -309,9 +306,6 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 		return helpers.FullInvalidTomlConfigForServiceUser(t, profile)
 	})
 
-	oktaUrlFromEnv, err := url.Parse("https://example-env.com")
-	require.NoError(t, err)
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck: func() {
@@ -342,7 +336,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.Host, "")
 					t.Setenv(snowflakeenvs.Passcode, "")
 					t.Setenv(snowflakeenvs.PasscodeInPassword, "false")
-					t.Setenv(snowflakeenvs.OktaUrl, "https://example-env.com")
+					t.Setenv(snowflakeenvs.OktaUrl, testvars.ExampleOktaUrlFromEnvString)
 					t.Setenv(snowflakeenvs.LoginTimeout, "100")
 					t.Setenv(snowflakeenvs.RequestTimeout, "200")
 					t.Setenv(snowflakeenvs.JwtExpireTimeout, "300")
@@ -377,7 +371,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					assert.Equal(t, 443, config.Port)
 					assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
 					assert.Equal(t, false, config.PasscodeInPassword)
-					assert.Equal(t, oktaUrlFromEnv, config.OktaURL)
+					assert.Equal(t, testvars.ExampleOktaUrlFromEnv, config.OktaURL)
 					assert.Equal(t, 100*time.Second, config.LoginTimeout)
 					assert.Equal(t, 200*time.Second, config.RequestTimeout)
 					assert.Equal(t, 300*time.Second, config.JWTExpireTimeout)
@@ -420,9 +414,6 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 		return helpers.FullInvalidTomlConfigForServiceUser(t, profile)
 	})
 
-	oktaUrlFromTf, err := url.Parse("https://example-tf.com")
-	require.NoError(t, err)
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck: func() {
@@ -454,7 +445,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					t.Setenv(snowflakeenvs.Authenticator, "invalid")
 					t.Setenv(snowflakeenvs.Passcode, "")
 					t.Setenv(snowflakeenvs.PasscodeInPassword, "false")
-					t.Setenv(snowflakeenvs.OktaUrl, "https://example-env.com")
+					t.Setenv(snowflakeenvs.OktaUrl, testvars.ExampleOktaUrlFromEnvString)
 					t.Setenv(snowflakeenvs.LoginTimeout, "100")
 					t.Setenv(snowflakeenvs.RequestTimeout, "200")
 					t.Setenv(snowflakeenvs.JwtExpireTimeout, "300")
@@ -489,7 +480,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					assert.Equal(t, 443, config.Port)
 					assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
 					assert.Equal(t, false, config.PasscodeInPassword)
-					assert.Equal(t, oktaUrlFromTf, config.OktaURL)
+					assert.Equal(t, testvars.ExampleOktaUrl, config.OktaURL)
 					assert.Equal(t, 101*time.Second, config.LoginTimeout)
 					assert.Equal(t, 201*time.Second, config.RequestTimeout)
 					assert.Equal(t, 301*time.Second, config.JWTExpireTimeout)
