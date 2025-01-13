@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -25,7 +26,7 @@ warehouse = '%[4]s'
 clientip = '1.2.3.4'
 protocol = 'https'
 port = 443
-oktaurl = 'https://example.com'
+oktaurl = '%[8]s'
 clienttimeout = 10
 jwtclienttimeout = 20
 logintimeout = 30
@@ -50,7 +51,7 @@ disableconsolelogin = true
 
 [%[1]s.params]
 foo = 'bar'
-`, profile, userId.Name(), roleId.Name(), warehouseId.Name(), accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey)
+`, profile, userId.Name(), roleId.Name(), warehouseId.Name(), accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey, testvars.ExampleOktaUrlString)
 }
 
 // FullInvalidTomlConfigForServiceUser is a temporary function used to test provider configuration

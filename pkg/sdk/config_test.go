@@ -5,11 +5,11 @@ import (
 	"encoding/pem"
 	"fmt"
 	"net"
-	"net/url"
 	"testing"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/snowflakedb/gosnowflake"
@@ -96,7 +96,7 @@ func TestProfileConfig(t *testing.T) {
 	passcode='passcode'
 	port=1
 	passcodeinpassword=true
-	oktaurl='https://example.com'
+	oktaurl='%[3]s'
 	clienttimeout=10
 	jwtclienttimeout=20
 	logintimeout=30
@@ -109,8 +109,8 @@ func TestProfileConfig(t *testing.T) {
 	ocspfailopen=true
 	token='token'
 	keepsessionalive=true
-	privatekey="""%s"""
-	privatekeypassphrase='%s'
+	privatekey="""%[1]s"""
+	privatekeypassphrase='%[2]s'
 	disabletelemetry=true
 	validatedefaultparameters=true
 	clientrequestmfatoken=true
@@ -123,7 +123,7 @@ func TestProfileConfig(t *testing.T) {
 
 	[securityadmin.params]
 	foo = 'bar'
-	`, encryptedKey, "password")
+	`, encryptedKey, "password", testvars.ExampleOktaUrlString)
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
 	t.Run("with found profile", func(t *testing.T) {
@@ -156,7 +156,7 @@ func TestProfileConfig(t *testing.T) {
 		assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
 		assert.Equal(t, "passcode", config.Passcode)
 		assert.Equal(t, true, config.PasscodeInPassword)
-		assert.Equal(t, "https://example.com", config.OktaURL.String())
+		assert.Equal(t, testvars.ExampleOktaUrlString, config.OktaURL.String())
 		assert.Equal(t, 10*time.Second, config.ClientTimeout)
 		assert.Equal(t, 20*time.Second, config.JWTClientTimeout)
 		assert.Equal(t, 30*time.Second, config.LoginTimeout)
@@ -199,11 +199,6 @@ func TestProfileConfig(t *testing.T) {
 }
 
 func Test_MergeConfig(t *testing.T) {
-	oktaUrl1, err := url.Parse("https://example1.com")
-	require.NoError(t, err)
-	oktaUrl2, err := url.Parse("https://example2.com")
-	require.NoError(t, err)
-
 	config1 := &gosnowflake.Config{
 		Account:                   "account1",
 		User:                      "user1",
@@ -221,7 +216,7 @@ func Test_MergeConfig(t *testing.T) {
 		Authenticator:                  gosnowflake.AuthTypeSnowflake,
 		Passcode:                       "passcode1",
 		PasscodeInPassword:             false,
-		OktaURL:                        oktaUrl1,
+		OktaURL:                        testvars.ExampleOktaUrl,
 		LoginTimeout:                   1,
 		RequestTimeout:                 1,
 		JWTExpireTimeout:               1,
@@ -261,7 +256,7 @@ func Test_MergeConfig(t *testing.T) {
 		Authenticator:                  gosnowflake.AuthTypeOAuth,
 		Passcode:                       "passcode2",
 		PasscodeInPassword:             true,
-		OktaURL:                        oktaUrl2,
+		OktaURL:                        testvars.ExampleOktaUrlFromEnv,
 		LoginTimeout:                   2,
 		RequestTimeout:                 2,
 		JWTExpireTimeout:               2,
