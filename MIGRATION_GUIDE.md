@@ -12,6 +12,11 @@ across different versions.
 ### Fixed migration of account resource
 Previously, during upgrading the provider from v0.99.0, when account fields `must_change_password` or `is_org_admin` were not set in state, the provider panicked. It has been fixed in this version.
 
+### Add missing resource monitor in `snowflake_grant_ownership` resource
+Resource monitor in not currently listed as option in `GRANT OWNERSHIP` documentation ([here](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters)) but this is a valid option. `snowflake_grant_ownership` was updated to support resource monitors.
+
+References: [#3318](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3318)
+
 ## v1.0.0 ➞ v1.0.1
 
 ### Fixes in account parameters

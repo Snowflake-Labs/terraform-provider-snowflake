@@ -417,6 +417,7 @@ func GetOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		sdk.ObjectTypeIntegration,
 		sdk.ObjectTypeNetworkPolicy,
 		sdk.ObjectTypeReplicationGroup,
+		sdk.ObjectTypeResourceMonitor,
 		sdk.ObjectTypeRole,
 		sdk.ObjectTypeUser,
 		sdk.ObjectTypeWarehouse:
