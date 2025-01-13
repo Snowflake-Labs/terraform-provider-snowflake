@@ -17,6 +17,11 @@ Resource monitor in not currently listed as option in `GRANT OWNERSHIP` document
 
 References: [#3318](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3318)
 
+### Timeouts in `snowflake_execute`
+By default, resource operation timeouts after 20 minutes ([reference](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/retries-and-customizable-timeouts#default-timeouts-and-deadline-exceeded-errors)). Because of generic nature of `snowflake_execute`, we decided to bump its default timeouts to 60 minutes; We also allowed setting them on the resource config level (following [official documentation](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts)).
+
+References: [#3334](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3334)
+
 ## v1.0.0 ➞ v1.0.1
 
 ### Fixes in account parameters
