@@ -33,7 +33,7 @@ You can remove resources from the state with the `terraform state rm <resource_a
 In our example, `terraform state rm snowflake_database_grant.old_resource`. After running the command, you can remove the resource from the configuration
 (again, removing the state will "detach" the resource block from the Snowflake resource. That's why after removing it, the Terraform won't try to revoke USAGE from our roles).
 
-#### 3. Two options from here
+#### 3. Three options from here
 
 At this point, we have several options for creating new grant resources that will replace the old ones.
 We will cover three options:
