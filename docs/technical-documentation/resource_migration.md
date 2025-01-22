@@ -1,10 +1,10 @@
 
 # Resource migration
 
-Here's a guide on how to migrate deprecated resources to their new counter-parts.
-The migration can be done in two ways. Either you can remove old grant resources and replace them with new ones or perform
-more complicated migration, but without revoking any grant (no downtime migration). We'll focus on the second one as the first approach
-is pretty straight forward. As an example we'll take `snowflake_database_grant` to `snowflake_grant_privileges_to_account_role` migration with one privilege granted to two roles:
+Here's a guide on how to migrate deprecated resources to their new counterparts.
+The migration can be done in two ways. Either you can remove old grant resources and replace them with new ones or perform a
+more complicated migration, but without revoking any grant (no downtime migration). We'll focus on the second one, as the first approach
+is pretty straightforward. As an example, we'll take `snowflake_database_grant` to `snowflake_grant_privileges_to_account_role` migration with one privilege granted to two roles:
 
 ```terraform
 resource "snowflake_database_grant" "old_resource" {
@@ -15,23 +15,37 @@ resource "snowflake_database_grant" "old_resource" {
 }
 ```
 
-> **Important note:** **Always** save your state, before any state manipulation, so in case of failed migration, you will be able to recover from having incorrect state files.
+> **Important note:** **Always** save your state before any state manipulation, so in case of failed migration, you will be able to recover from having incorrect state files.
 
 #### 1. terraform list
 
 First, we need to list all the grant resources that will need to be migrated.
 We can do that by running the `terraform state list` command.
 
-> **Tip:** for larger configurations, it's best to filter the results using the grep command. For example: `terraform state list | grep "snowflake_database_grant"`.
+> **Tip:** For larger configurations, it's best to filter the results using the grep command. For example: `terraform state list | grep "snowflake_database_grant"`.
 
 #### 2. terraform rm
 
-Now choose which one you would to migrate next and remove it from the state, so when you remove the old resource,
-no grant will be revoked. More specifically, the Terraform Delete operation won't be run for removed resource.
+Now choose which one to migrate next and remove it from the state, so when you remove the old resource,
+no grant will be revoked. More specifically, the Terraform Delete operation won't be run for the removed resource.
 It will detach the resource block in your configuration from the actual Snowflake resource.
 You can remove resources from the state with the `terraform state rm <resource_address>` command.
 In our example, `terraform state rm snowflake_database_grant.old_resource`. After running the command, you can remove the resource from the configuration
 (again, removing the state will "detach" the resource block from the Snowflake resource. That's why after removing it, the Terraform won't try to revoke USAGE from our roles).
+
+Alternatively, use the [removed block](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) which is available in Terraform v1.7 and later. Replace the resource configuration with the following:
+
+```terraform
+removed {
+  from = snowflake_database_grant.old_resource
+
+  lifecycle {
+    destroy = false
+  }
+}
+```
+
+After running `terraform apply`, the resource is removed from the state. The `removed` block can now be deleted.
 
 #### 3. Three options from here
 
@@ -120,15 +134,15 @@ import {
 }
 ```
 
-If you are using terraform 1.7 or above you could use a `for_each` to import multiple resources at once.
+If you are using Terraform 1.7 or above, you can use a `for_each` to import multiple resources at once.
 For more details, take a look at [importing multiple instances with for_each](https://developer.hashicorp.com/terraform/language/v1.7.x/import?product_intent=terraform#import-multiple-instances-with-for_each).
 
 [Hashicorp documentation reference on import block](https://developer.hashicorp.com/terraform/language/import)
 
 #### 3.3.2. terraform plan -generate-config-out
 
-After specifying the import block run the `terraform plan -generate-config-out=generated.tf` command,
-which will scan your configuration files search for import blocks, and put the generated configurations inside the `generated.tf` file.
+After specifying the import block, run the `terraform plan -generate-config-out=generated.tf` command,
+which will scan your configuration files to search for import blocks, and put the generated configurations inside the `generated.tf` file.
 
 ```terraform
 # __generated__ by Terraform
@@ -153,7 +167,7 @@ resource "snowflake_grant_privileges_to_account_role" "new_resource_role_a" {
 #### 3.3.3. terraform plan and apply
 
 After running `terraform plan` you'll see if there are any changes we have to do before applying our generated configuration.
-If no errors are appearing you can run `terraform apply` to import state into generated configurations.
+If no errors appear, you can run `terraform apply` to import state into generated configurations.
 
 #### 3.3.4. Limitations of Generating Configurations
 
@@ -164,6 +178,6 @@ Config generation may be a good solution for a few reasons, but it also comes wi
     - You cannot specify `for_each` in the import block like in the second approach which promotes incremental migration
     - Generated configurations can't use `for_each` which results in much more configuration code
 - No resource reference
-    - As you can see `account_role_name` and `object_name` are plain values, but the values most likely should be referenced by other resources' names.
+    - As you can see, `account_role_name` and `object_name` are plain values, but the values most likely should be referenced by other resources' names.
 
 [Hashicorp documentation reference on limitations of generating configurations](https://developer.hashicorp.com/terraform/language/import/generating-configuration)
