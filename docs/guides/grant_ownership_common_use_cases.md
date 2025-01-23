@@ -6,7 +6,7 @@ description: |-
 ---
 # Grant ownership - common use cases
 
-That is a follow-up for the [grant_ownership resource overview](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/grant_ownership_resource_overview.md) document.
+This guide is a follow-up for the [grant_ownership resource overview](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/grant_ownership_resource_overview.md) document.
 Those examples should help you to work with difficulties imposed by Snowflake role management and Terraform.
 Here's a list of grant ownership common use cases:
 
@@ -14,13 +14,15 @@ Here's a list of grant ownership common use cases:
 - [Granting ownership with a less privileged role (granting MANAGED ACCESS)](#granting-ownership-with-a-less-privileged-role-granting-managed-access)
 - [Modifying objects you don't own after transferring the ownership](#modifying-objects-you-dont-own-after-transferring-the-ownership)
 
-#### Basic RBAC example
-Here's an easy example of using RBAC. Of course, there are many ways to perform RBAC, and here, we are not proposing any 
-option over the other. It only supposed to show, more or less, how the grant_ownership could be used in such a scenario.
+If other problematic cases arise, we will add new examples to this list.
+
+### Basic RBAC example
+Here's an easy example of using RBAC (Role-based Access Control). Of course, there are many ways to perform RBAC, and here, we are not proposing any
+option over the other. It is only supposed to show, more or less, how the grant_ownership could be used in such a scenario.
 Keep in mind that this example uses highly privileged role (ACCOUNTADMIN) and for lower privileges roles, you should look into
 other examples to see what else is needed to perform the same actions.
 
-##### First deployment
+#### First deployment
 This configuration imitates the "main" Terraform deployment that manages the account 
 
 ```terraform
@@ -60,7 +62,7 @@ resource "snowflake_grant_ownership" "grant_team_a_database" {
 }
 ```
 
-##### Second deployment
+#### Second deployment
 If the second deployment uses different user, then the TEST_A_ROLE should be granted to that user in the first deployment first.
 By using our ownership of the TEST_DATABASE, we can manage its further access to other teams.
 
@@ -84,9 +86,9 @@ resource "snowflake_grant_privileges_to_account_role" "grant_privileges_to_team_
 }
 ```
 
-Then a team using TEAM_B_ROlE can take it from here and create all the tables / views they need.
+Then a team using TEAM_B_ROLE can take it from here and create all the tables / views they need.
 
-#### Granting ownership with a less privileged role (granting MANAGED ACCESS)
+### Granting ownership with a less privileged role (granting MANAGED ACCESS)
 
 This example shows how less privileged can be used to transfer ownership of the objects they currently own.
 Read more in the [official Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#access-control-requirements).
@@ -134,7 +136,7 @@ Currently, the least privileged role that is able to transfer ownership has to h
 In the future, we are planning to support other mechanisms that would allow you to use roles without MANAGE GRANTS.
 However, other assumptions would be imposed, e.g., that the current user is granted to the role it transfers the ownership to.
 
-#### Modifying objects you don't own after transferring the ownership
+### Modifying objects you don't own after transferring the ownership
 
 By transferring ownership of an object to another role, you are limiting currently used role's access control on this object.
 This can lead to another common error of updating object after its ownership was transferred to another role. Note that
