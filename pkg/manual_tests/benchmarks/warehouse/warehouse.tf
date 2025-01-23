@@ -1,4 +1,8 @@
 # Test setup.
+module "id" {
+  source = "../id"
+}
+
 variable "resource_count" {
   type = number
 }
@@ -17,23 +21,24 @@ locals {
     for index, val in range(0, var.resource_count) :
     val => tostring(val)
   }
+  test_prefix = format("PERFORMANCE_TESTS_%s", module.id.test_id)
 }
 
 resource "snowflake_resource_monitor" "monitor" {
   count = var.resource_count > 0 ? 1 : 0
-  name  = "perf_resource_monitor"
+  name  = local.test_prefix
 }
 
 # Resource with required fields
 resource "snowflake_warehouse" "basic" {
   for_each = local.id_number_list
-  name     = format("perf_basic_%v", each.key)
+  name     = format("%s_BASIC_%v", local.test_prefix, each.key)
 }
 
 # Resource with all fields
 resource "snowflake_warehouse" "complete" {
   for_each                            = local.id_number_list
-  name                                = format("perf_complete_%v", each.key)
+  name                                = format("%s_COMPLETE_%v", local.test_prefix, each.key)
   warehouse_type                      = "SNOWPARK-OPTIMIZED"
   warehouse_size                      = "MEDIUM"
   max_cluster_count                   = 4

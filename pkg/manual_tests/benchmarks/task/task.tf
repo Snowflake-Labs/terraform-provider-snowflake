@@ -1,4 +1,8 @@
 # Test setup.
+module "id" {
+  source = "../id"
+}
+
 variable "resource_count" {
   type = number
 }
@@ -17,15 +21,17 @@ locals {
     for index, val in range(0, var.resource_count) :
     val => tostring(val)
   }
+  test_prefix = format("PERFORMANCE_TESTS_%s", module.id.test_id)
 }
+
 
 resource "snowflake_database" "database" {
   count = var.resource_count > 0 ? 1 : 0
-  name  = "PERFORMANCE_TESTS"
+  name  = local.test_prefix
 }
 
 resource "snowflake_schema" "schema" {
-  database = snowflake_database.database.name
+  database = snowflake_database.database[0].name
   count    = var.resource_count > 0 ? 1 : 0
   name     = "PERFORMANCE_TESTS"
 }
