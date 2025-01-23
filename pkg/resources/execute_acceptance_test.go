@@ -8,11 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -864,4 +863,75 @@ func testAccCheckDatabaseExistence(t *testing.T, id sdk.AccountObjectIdentifier,
 		}
 		return nil
 	}
+}
+
+// Result of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3334.
+func TestAcc_Execute_gh3334_allTimeouts(t *testing.T) {
+	resourceName := "snowflake_execute.test"
+	createConfigVariables := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"execute":        config.StringVariable("CALL SYSTEM$WAIT(5, 'SECONDS');"),
+			"revert":         config.StringVariable("select 2"),
+			"query":          config.StringVariable("select 3"),
+			"create_timeout": config.StringVariable("1m"),
+			"read_timeout":   config.StringVariable("31m"),
+			"update_timeout": config.StringVariable("32m"),
+			"delete_timeout": config.StringVariable("33m"),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_withTimeouts"),
+				ConfigVariables: createConfigVariables(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "timeouts.create", "1m"),
+					resource.TestCheckResourceAttr(resourceName, "timeouts.read", "31m"),
+					resource.TestCheckResourceAttr(resourceName, "timeouts.update", "32m"),
+					resource.TestCheckResourceAttr(resourceName, "timeouts.delete", "33m"),
+				),
+			},
+		},
+	})
+}
+
+// Result of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3334.
+func TestAcc_Execute_gh3334_longRunningCreate(t *testing.T) {
+	createConfigVariables := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"execute":        config.StringVariable("CALL SYSTEM$WAIT(15, 'SECONDS');"),
+			"revert":         config.StringVariable("select 2"),
+			"query":          config.StringVariable("select 3"),
+			"create_timeout": config.StringVariable("5s"),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Execute_withTimeouts"),
+				ConfigVariables: createConfigVariables(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectNonEmptyPlan()},
+				},
+				ExpectError: regexp.MustCompile("Error: context deadline exceeded"),
+			},
+		},
+	})
 }

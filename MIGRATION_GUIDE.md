@@ -7,6 +7,21 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.1 ➞ v1.0.2
+
+### Fixed migration of account resource
+Previously, during upgrading the provider from v0.99.0, when account fields `must_change_password` or `is_org_admin` were not set in state, the provider panicked. It has been fixed in this version.
+
+### Add missing resource monitor in `snowflake_grant_ownership` resource
+Resource monitor in not currently listed as option in `GRANT OWNERSHIP` documentation ([here](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters)) but this is a valid option. `snowflake_grant_ownership` was updated to support resource monitors.
+
+References: [#3318](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3318)
+
+### Timeouts in `snowflake_execute`
+By default, resource operation timeouts after 20 minutes ([reference](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/retries-and-customizable-timeouts#default-timeouts-and-deadline-exceeded-errors)). Because of generic nature of `snowflake_execute`, we decided to bump its default timeouts to 60 minutes; We also allowed setting them on the resource config level (following [official documentation](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts)).
+
+References: [#3334](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3334)
+
 ## v1.0.0 ➞ v1.0.1
 
 ### Fixes in account parameters
@@ -154,6 +169,8 @@ provider "snowflake" {
 	preview_features_enabled = ["snowflake_current_account_datasource", "snowflake_alert_resource"]
 }
 ```
+
+Do not forget to add this line to all provider configurations using these features, including [provider aliases](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations).
 
 ### Removed deprecated objects
 All of the deprecated objects are removed from v1 release. This includes:
@@ -669,7 +686,6 @@ If you use TOML configuration file, adjust it from
 ```toml
 [default]
 	account = "ORGANIZATION-ACCOUNT"
-}
 ```
 
 to
@@ -677,7 +693,6 @@ to
 [default]
 	organizationname = "ORGANIZATION"
 	accountname    = "ACCOUNT"
-}
 ```
 
 If you use environmental variables, adjust them from

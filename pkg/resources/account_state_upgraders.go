@@ -15,8 +15,12 @@ func v0_99_0_AccountStateUpgrader(ctx context.Context, state map[string]any, met
 	}
 
 	client := meta.(*provider.Context).Client
-	state["must_change_password"] = booleanStringFromBool(state["must_change_password"].(bool))
-	state["is_org_admin"] = booleanStringFromBool(state["is_org_admin"].(bool))
+	if v, ok := state["must_change_password"]; ok && v != nil {
+		state["must_change_password"] = booleanStringFromBool(v.(bool))
+	}
+	if v, ok := state["is_org_admin"]; ok && v != nil {
+		state["is_org_admin"] = booleanStringFromBool(v.(bool))
+	}
 	account, err := client.Accounts.ShowByID(ctx, sdk.NewAccountObjectIdentifier(state["name"].(string)))
 	if err != nil {
 		return nil, err

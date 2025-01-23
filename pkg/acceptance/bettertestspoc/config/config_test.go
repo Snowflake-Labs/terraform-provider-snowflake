@@ -25,6 +25,25 @@ resource "snowflake_share" "test" {
 		require.Equal(t, expectedOutput, result)
 	})
 
+	// TODO [SNOW-1501905]: replace \t characters with actual tabs
+	t.Run("test tabs in multiline", func(t *testing.T) {
+		someModel := Some("test", "Some Name").
+			WithMultilineField("some\n\tmulti\tline\n\t\t\tcontent")
+		expectedOutput := strings.TrimPrefix(`
+resource "snowflake_share" "test" {
+  name = "Some Name"
+  multiline_field = <<EOT
+some
+\tmulti\tline
+\t\t\tcontent
+EOT
+}
+`, "\n")
+		result := config.ResourceFromModel(t, someModel)
+
+		require.Equal(t, expectedOutput, result)
+	})
+
 	t.Run("test full", func(t *testing.T) {
 		someModel := Some("test", "Some Name").
 			WithComment("Some Comment").

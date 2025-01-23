@@ -113,11 +113,22 @@ resource "snowflake_execute" "test" {
 ### Optional
 
 - `query` (String) Optional SQL statement to do a read. Invoked on every resource refresh and every time it is changed.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
 - `query_results` (List of Map of String) List of key-value maps (text to text) retrieved after executing read query. Will be empty if the query results in an error.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 
