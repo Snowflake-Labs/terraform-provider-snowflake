@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.1...v1.0.2) (2025-01-20)
+
+
+### 🔧 **Misc**
+
+* Generate ID and ObjectType Show Object Methods ([#3292](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3292)) ([f7ff70a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f7ff70ab0fe571d1fc616a6b202501533d132d43))
+* Generate multiline by default ([#3315](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3315)) ([520bb4c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/520bb4c57b8ec26d6a6284e219e45133ffb6be9f))
+* Overview of the grant ownership resource ([#3342](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3342)) ([9f891d6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9f891d64692fbe357ba96369fbed2629c665c402))
+* Update docs and migration guide ([#3313](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3313)) ([59e333a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/59e333aeaf188760e35c1e14a40433af9b79d8ca))
+
+
+### 🐛 **Bug fixes:**
+
+* Fixes in account parameters ([#3310](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3310)) ([96a1f17](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/96a1f17ce839288566b9c4b58d168e2cfe1fac89))
+* Handle optional account fields in the state upgrader correctly ([#3330](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3330)) ([4eae4c8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4eae4c8a3f27e81286479e0522513c745c83d41c)), closes [#3332](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3332)
+* Small fixes ([#3337](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3337)) ([8807839](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8807839f14b0757071ac62dfff50774cb144b4ac))
+
 ## [1.0.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.0...v1.0.1) (2024-12-20)
 
 
