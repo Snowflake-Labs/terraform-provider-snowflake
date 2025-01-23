@@ -10,7 +10,7 @@ The tests are organized by the resource type, e.g. schemas, tasks, and warehouse
 - If you want to test different resource configurations, adjust them in the relevant module.
 - Run `terraform init -upgrade` to enable the modules.
 - Run regular Terraform commands, like `terraform apply`.
-- The top-level objects names contain test ID and resource index, utilizing the format like `PERFORMANCE_TESTS_BED9310F_F8CE_D2CD_D4B6_B82F56D6FD42_BASIC_0`.
+- The top-level objects names contain test ID and resource index, utilizing the format like `PERFORMANCE_TESTS_BED9310F_F8CE_D2CD_D4B6_B82F56D6FD42_BASIC_0`. The test ID is regenerated for every run.
 - Do not forget to remove the resources with `terraform destroy`.
 - To speed up the commands, you can use `-refresh=false` and `-parallelism=N` (default is 10).
 
