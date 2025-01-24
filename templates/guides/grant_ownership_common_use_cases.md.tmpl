@@ -14,7 +14,7 @@ Here's a list of grant ownership common use cases:
 - [Granting ownership with a less privileged role (granting MANAGED ACCESS)](#granting-ownership-with-a-less-privileged-role-granting-managed-access)
 - [Modifying objects you don't own after transferring the ownership](#modifying-objects-you-dont-own-after-transferring-the-ownership)
 
-If other problematic cases arise, we will add new examples to this list.
+If other common problematic cases arise, we will add them to this list.
 
 ### Basic RBAC example
 Here's an easy example of using RBAC (Role-based Access Control). Of course, there are many ways to perform RBAC, and here, we are not proposing any
@@ -23,7 +23,7 @@ Keep in mind that this example uses highly privileged role (ACCOUNTADMIN) and fo
 other examples to see what else is needed to perform the same actions.
 
 #### First deployment
-This configuration imitates the "main" Terraform deployment that manages the account 
+This configuration imitates the "main" Terraform deployment that manages the account objects
 
 ```terraform
 provider "snowflake" {
@@ -39,13 +39,15 @@ resource "snowflake_account_role" "team_b" {
   name = "TEAM_B_ROLE"
 }
 
+# Make <team_a_user> able to use the TEAM_A_ROLE
 resource "snowflake_grant_account_role" "grant_team_a_role" {
   role_name = snowflake_account_role.team_a.name
   user_name = "<team_a_user>"
 }
 
+# Make <team_b_user> able to use the TEAM_B_ROLE
 resource "snowflake_grant_account_role" "grant_team_b_role" {
-  role_name = snowflake_account_role.team_a.name
+  role_name = snowflake_account_role.team_b.name
   user_name = "<team_b_user>"
 }
 
@@ -77,6 +79,23 @@ resource "snowflake_schema" "team_b_schema" {
   name = "TEAM_B_SCHEMA"
 }
 
+resource "snowflake_grant_privileges_to_account_role" "grant_access_to_database" {
+  account_role_name = "TEAM_B_ROLE"
+  privileges = ["USAGE"]
+  on_account_object {
+    object_type = "DATABASE"
+    object_name = "TEST_DATABASE"
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "grant_access_to_schema" {
+  account_role_name = "TEAM_B_ROLE"
+  privileges = ["USAGE"]
+  on_schema {
+    schema_name = snowflake_schema.team_b_schema.fully_qualified_name
+  }
+}
+
 resource "snowflake_grant_privileges_to_account_role" "grant_privileges_to_team_b" {
   account_role_name = "TEAM_B_ROLE"
   privileges = ["USAGE", "CREATE TABLE", "CREATE VIEW"]
@@ -86,7 +105,17 @@ resource "snowflake_grant_privileges_to_account_role" "grant_privileges_to_team_
 }
 ```
 
-Then a team using TEAM_B_ROLE can take it from here and create all the tables / views they need.
+Then a team using TEAM_B_ROLE can take it from here and create all the tables / views they need (in the worksheet SQL or in any other way).
+Just to confirm the above configuration work, you can use the following script:
+
+```snowflake
+USE ROLE TEAM_B_ROLE;
+USE DATABASE TEST_DATABASE;
+USE SCHEMA TEAM_B_SCHEMA;
+CREATE TABLE TEST_TABLE(N INT);
+-- Has only privilege to create tables and views, so the following command will fail:
+CREATE TASK TEST_TASK SCHEDULE = '60 MINUTES' AS SELECT CURRENT_TIMESTAMP;
+```
 
 ### Granting ownership with a less privileged role (granting MANAGED ACCESS)
 
@@ -125,7 +154,7 @@ resource "snowflake_grant_ownership" "grant_ownership_to_another_role" {
 The ownership transfer is possible because here you have both:
 - Ownership of the created above database.
 - MANAGE GRANTS privilege on the currently used role.
- 
+
 Once the ownership is taken away, you still must be able to take the ownership away, so that
 the Terraform is able to perform successful delete operation once the resource is removed from the configuration.
 That being said, granting ownership would be still possible without MANAGE GRANTS, but you wouldn't be able to grant
@@ -251,7 +280,7 @@ resource "snowflake_grant_privileges_to_account_role" "test" {
 
 resource "snowflake_grant_ownership" "test" {
   depends_on = [ snowflake_grant_privileges_to_account_role.test ]
-  
+
   account_role_name = snowflake_account_role.test.name
   on {
     object_type = "DATABASE"
@@ -259,3 +288,7 @@ resource "snowflake_grant_ownership" "test" {
   }
 }
 ```
+
+This shows that using ownership transfer (either in provider or only in Snowflake)
+requires pre-planning on the overall access architecture and foresight in possible incoming changes.
+Otherwise, It may be challenging to introduce certain changes afterward.
