@@ -44,16 +44,18 @@ We performed these tests on the local backend (see more in the [Environment](#en
 
 Here are the results for the `terraform apply` (which results in creating the resources) and the `terraform plan`:
 
-| Execution time of `terraform apply` |  |  |  |  |  |
-| ----- | :---- | :---- | :---- | :---- | :---- |
+Execution time of `terraform apply`:
+
 | Resource count | 1 | 10 | 100 | 1000 | 4000 |
+| ----- | ----- | :---- | :---- | :---- | :---- |
 | Task | 6s | 9s | 29s | 4m 41s | 38m 9s |
 | Schema | 6s | 7s | 28s | 3m 58s | 19m 0s |
 | Warehouse | 6s | 8s | 21s | 3m 6s | 33m 41s |
 
-| Execution time of `terraform plan` |  |  |  |  |  |
-| ----- | :---- | :---- | :---- | :---- | :---- |
+Execution time of `terraform plan`:
+
 | Resource count | 1 | 10 | 100 | 1000 | 4000 |
+| ----- | :---- | :---- | :---- | :---- | :---- |
 | Task | 3s | 6s | 20s | 2m 24s | 9m 48s |
 | Schema | 3s | 7s | 24s | 2m 35s | 9m 57s |
 | Warehouse | 3s | 5s | 17s | 2m 5s | 8m 34s |
