@@ -1,4 +1,4 @@
-# Authentication methods manual tests
+# Manual performance benchmarks
 
 This directory is dedicated to hold steps for manual performance tests in the provider. These tests use simple Terraform files and are run with `terraform` CLI manually to imitate the user workflow and reduce bias with Terraform SDK testing libraries and the binary itself.
 The tests are organized by the resource type, e.g. schemas, tasks, and warehouses.
