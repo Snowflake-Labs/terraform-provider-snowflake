@@ -42,7 +42,7 @@ The most requested issue is performance degradation in recent versions ([\#3118]
 
 We performed these tests on the local backend (see more in the [Environment](#environment) section).
 
-Here are the results for the `terraform apply` (which results in creating the resources) and the `terraform plan`:
+The results for the `terraform apply` (which results in creating the resources) and the `terraform plan` are presented in the tables below.
 
 Execution time of `terraform apply`:
 
@@ -77,11 +77,12 @@ A standard solution HashiCorp recommends is splitting the deployments into small
 
 ## State size
 
-We measured the state sizes of the selected resources. We considered allowing a conditional removal of the `parameters` output field from the state. This was one of our ideas to reduce the state size (see [\#3118](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3118#issuecomment-2402618666)). We verified that removing this output is achievable because we do not use this field anymore in handling logic of resource parameters. Here are the results:
+We measured the state sizes of the selected resources. We considered allowing a conditional removal of the `parameters` output field from the state. This was one of our ideas to reduce the state size (see [\#3118](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3118#issuecomment-2402618666)). We verified that removing this output is achievable because we do not use this field anymore in handling logic of resource parameters. The results are presented in the table below.
 
-| State size with different parallelism values |  |  |  |
-| ----- | :---- | :---- | :---- |
+State size with different parallelism values:
+
 | Resource count | 100 | 1000 | 4000 |
+| ----- | :---- | :---- | :---- |
 | Task  | 2.7MB | 27.1MB | 108MB |
 | Task without parameters | 0.5MB | 5.0MB | 19MB |
 | Schema | 0.8MB | 8.2MB | 33MB |
@@ -108,11 +109,12 @@ This flag can only be safely used to destroy resources because of the underlying
 After Terraform computes a resource graph, it traverses the graph concurrently to act on some resources (see more [here](https://developer.hashicorp.com/terraform/internals/graph#walking-the-graph)). The concurrency can be controlled by the  `-parallelism=N` flag for applying and planning. The concurrency is limited by default to 10 to avoid overwhelming the upstream.
 Remember that, according to Terraform docs, “Setting \-parallelism is considered an advanced operation and should not be necessary for normal usage of Terraform.”
 
-We tested a few configurations of schema resources with different values of parallelism. Here are the results:
+We tested a few configurations of schema resources with different values of parallelism. The results are presented in the table below.
 
-| Execution time with varying values of parallelism |  |  |  |
-| ----- | :---- | :---- | :---- |
+Execution time with varying values of parallelism:
+
 | Resource count | 100 | 1000 | 4000 |
+| ----- | :---- | :---- | :---- |
 | \-parallelism=10 (default) | 28s | 3m 58s | 19m 0s |
 | \-parallelism=20 | 21s | 2m 19s | 13m 28s |
 | \-parallelism=40 | 16s | 1m 24s | 12m 4s |
