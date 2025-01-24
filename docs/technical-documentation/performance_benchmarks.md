@@ -1,6 +1,6 @@
 # Performance Analysis
 
-This document provides a basic performance analysis of the Snowflake Terraform Provider. It is not a complete analysis, but a basic outline, allowing us to give a few recommendations for the current provider versions. The document’s purpose is to set performance expectations for using the provider and give suggestions to users on how to improve its performance. We decided to perform such benchmarks because of concerns reported by our users ([\#3118](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3118), [\#3169](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3169)). They are related to the performance of large workloads (a few thousand resources). These issues have been reported only in recent versions because of the [changes in the reworked objects](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md) (more queries and bigger state sizes in some resources).
+This document provides a basic performance analysis of the Snowflake Terraform Provider. It is not a complete analysis, but a basic outline, allowing us to give a few recommendations for the current provider versions. The document’s purpose is to set performance expectations for using the provider and give suggestions to users on how to improve its performance. We decided to perform such benchmarks because of concerns reported by our users ([\#3118](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3118), [\#3169](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3169)). They are related to the performance of large workloads (a few thousand resources). These issues have been reported only in recent versions because of the [changes in the reworked objects](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/c4b1bebce4bc5a81031248592b34af5e80ca2fc1/v1-preparations/CHANGES_BEFORE_V1.md) (more queries and bigger state sizes in some resources).
 
 ## Methodology
 
@@ -28,13 +28,11 @@ During our road to v1, we decided to include the outputs of SHOW, DESCRIBE, and 
 
 ### Additional requests
 
-Some resources make additional requests to handle all of the object fields in Snowflake, such as getting [policy references](https://docs.snowflake.com/en/sql-reference/account-usage/policy_references) in views or parameters [in users](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#breaking-change-user-parameters-added-to-snowflake_user-resource). As mentioned above, these requests usually take \~300-400ms, but in large-scale deployments, they can substantially increase the execution time.
+Some resources make additional requests to handle all of the object fields in Snowflake, such as getting [policy references](https://docs.snowflake.com/en/sql-reference/account-usage/policy_references) in views or parameters [in users](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/c4b1bebce4bc5a81031248592b34af5e80ca2fc1/MIGRATION_GUIDE.md#breaking-change-user-parameters-added-to-snowflake_user-resource). As mentioned above, these requests usually take \~300-400ms, but in large-scale deployments, they can substantially increase the execution time.
 
 ## System stability
 
-First, we tested system stability to check if subsequent runs take a similar amount of time. In this case, we created a deployment of 100 schemas with different fields and measured the execution of `terraform apply --auto-approve`. The consecutive runs of this test are the following: 28s, 29s, 27s, 29s, 30s. The differences are marginal and may be caused by network instability.
-
-**Conclusion**: The provider's performance is expected to be stable between consecutive runs.
+The tests utilize the network extensively and the results may vary depending on your deployment and the machine it runs on. However, the benchmarks were run consecutively a few times and the results proved to be close enough to call those times stable.
 
 ## Execution time
 
