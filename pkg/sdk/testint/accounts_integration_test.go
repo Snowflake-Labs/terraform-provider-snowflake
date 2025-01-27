@@ -195,7 +195,7 @@ func TestInt_Account(t *testing.T) {
 			RegionGroup:        sdk.String("PUBLIC"),
 			Region:             sdk.String(currentRegion.SnowflakeRegion),
 			Comment:            sdk.String(comment),
-			// TODO(SNOW-1844776): with polaris Snowflake returns an error saying: "invalid property polaris for account"
+			// TODO(SNOW-1895880): with polaris Snowflake returns an error saying: "invalid property polaris for account"
 			// Polaris: sdk.Bool(true),
 		})
 		require.NoError(t, err)

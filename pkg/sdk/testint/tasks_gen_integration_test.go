@@ -613,7 +613,7 @@ func TestInt_Tasks(t *testing.T) {
 		t.Cleanup(taskCleanup)
 
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSet(*sdk.NewTaskSetRequest().
-			// TODO(SNOW-1843489): Cannot set warehouse due to Snowflake error
+			// TODO(SNOW-1519496): Cannot set warehouse due to Snowflake error
 			// WithWarehouse(testClientHelper().Ids.WarehouseId()).
 			WithErrorIntegration(errorIntegration.ID()).
 			WithSessionParameters(sessionParametersSet).
