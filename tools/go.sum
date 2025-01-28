@@ -374,6 +374,8 @@ github.com/hashicorp/terraform-plugin-docs v0.18.0 h1:2bINhzXc+yDeAcafurshCrIjtd
 github.com/hashicorp/terraform-plugin-docs v0.18.0/go.mod h1:iIUfaJpdUmpi+rI42Kgq+63jAjI8aZVTyxp3Bvk9Hg8=
 github.com/hashicorp/terraform-plugin-docs v0.19.0 h1:ufXLte5Kx20LazYmGN2UZG2bN4aF0PmlDyuS1iKWSXo=
 github.com/hashicorp/terraform-plugin-docs v0.19.0/go.mod h1:NPfKCSfzTtq+YCFHr2qTAMknWUxR8C4KgTbGkHULSV8=
+github.com/hashicorp/terraform-plugin-docs v0.19.1 h1:XYIlGCfnUDVTyKPIHFKRDfB4INU+pyPKk6VZ/1apPIc=
+github.com/hashicorp/terraform-plugin-docs v0.19.1/go.mod h1:NPfKCSfzTtq+YCFHr2qTAMknWUxR8C4KgTbGkHULSV8=
 github.com/hexops/gotextdiff v1.0.3 h1:gitA9+qJrrTCsiCl7+kh75nPqQt1cx4ZkudSTLoUqJM=
 github.com/hexops/gotextdiff v1.0.3/go.mod h1:pSWU5MAI3yDq+fZBTazCSJysOMbxWL1BSow5/V2vxeg=
 github.com/huandu/xstrings v1.3.3 h1:/Gcsuc1x8JVbJ9/rlye4xZnVAbEkGauT8lbebqcQws4=
