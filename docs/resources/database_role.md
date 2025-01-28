@@ -7,6 +7,8 @@ description: |-
 
 # snowflake_database_role (Resource)
 
+~> **Deprecation** REMOVE <deprecation>
+
 Resource used to manage database roles. For more information, check [database roles documentation](https://docs.snowflake.com/en/sql-reference/sql/create-database-role).
 
 ## Example Usage
