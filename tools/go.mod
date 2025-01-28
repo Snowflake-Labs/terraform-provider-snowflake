@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/golangci/golangci-lint v1.55.0
-	github.com/hashicorp/terraform-plugin-docs v0.19.1
+	github.com/hashicorp/terraform-plugin-docs v0.19.2
 	mvdan.cc/gofumpt v0.5.0
 )
 
@@ -154,7 +154,6 @@ require (
 	github.com/quasilyte/regex/syntax v0.0.0-20210819130434-b3f0c404a727 // indirect
 	github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/ryancurrah/gomodguard v1.3.0 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.5.1 // indirect
 	github.com/sanposhiho/wastedassign/v2 v2.0.7 // indirect
@@ -194,7 +193,7 @@ require (
 	github.com/yagipy/maintidx v1.0.0 // indirect
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.3 // indirect
-	github.com/yuin/goldmark v1.7.0 // indirect
+	github.com/yuin/goldmark v1.7.1 // indirect
 	github.com/yuin/goldmark-meta v1.1.0 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
 	gitlab.com/bosi/decorder v0.4.1 // indirect
