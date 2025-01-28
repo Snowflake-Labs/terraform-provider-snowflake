@@ -29,6 +29,7 @@ func init() {
 	// useful links:
 	// - https://github.com/hashicorp/terraform-plugin-docs/issues/10#issuecomment-767682837
 	// - https://github.com/hashicorp/terraform-plugin-docs/issues/156#issuecomment-1600427216
+	// TODO(SNOW-1901053): Rework handling deprecated objects' descriptions.
 	schema.ResourceDescriptionBuilder = func(r *schema.Resource) string {
 		desc := r.Description
 		if r.DeprecationMessage != "" {
