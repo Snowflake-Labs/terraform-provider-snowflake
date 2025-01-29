@@ -53,6 +53,18 @@ provider "snowflake" {
 }
 ```
 
+Snowflake authenticator is a default value, but it may change over time, so if you want to be explicit about it you can specify the following configuration:
+
+```terraform
+provider "snowflake" {
+  organization_name = "<organization_name>"
+  account_name      = "<account_name>"
+  user              = "<user_name>"
+  password          = "<password>"
+  authenticator     = "Snowflake"
+}
+```
+
 In case of any problems, please go to the [common issues section](#common-issues).
 
 ### JWT authenticator flow 
@@ -133,8 +145,22 @@ In case of any problems, please go to the [common issues section](#common-issues
 
 ### Okta authenticator flow
 
-[//]: # (TODO: ?)
-[//]: # (TODO: what about external browser, we don't have enough data to document it?)
+To set up a new Okta account for this flow, follow [this guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/pkg/manual_tests/authentication_methods/README.md#okta-authenticator-test).
+If you already have an Okta account, skip the first point and follow the next steps.
+The guide includes writing the provider configuration in the TOML file, but here's what it should look like fully in HCL:
+
+```terraform
+provider "snowflake" {
+  organization_name = "<organization_name>"
+  account_name      = "<account_name>"
+  user              = "<user_name>"
+  password          = "<password>"
+  authenticator     = "Okta"
+  okta_url          = "https://dev-123456.okta.com"
+}
+```
+
+In case of any problems, please go to the [common issues section](#common-issues).
 
 ## Common issues
 ### How can I get my organization name?
