@@ -7,6 +7,11 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.2 ➞ v1.0.3
+
+### Fixed ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES parameter
+ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES account parameter did not work correctly before. This resulted in invalid SQL used during altering accounts. It has been fixed in this version.
+
 ## v1.0.1 ➞ v1.0.2
 
 ### Fixed migration of account resource

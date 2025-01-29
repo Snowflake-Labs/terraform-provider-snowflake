@@ -25,7 +25,7 @@ func TestSetObjectParameterOnObject(t *testing.T) {
 	})
 }
 
-func TestUnSetObjectParameterNetworkPolicyOnAccount(t *testing.T) {
+func TestUnsetObjectParameterNetworkPolicyOnAccount(t *testing.T) {
 	opts := &AlterAccountOptions{
 		Unset: &AccountUnset{
 			Parameters: &AccountLevelParametersUnset{
@@ -40,7 +40,7 @@ func TestUnSetObjectParameterNetworkPolicyOnAccount(t *testing.T) {
 	})
 }
 
-func TestUnSetObjectParameterNetworkPolicyOnUser(t *testing.T) {
+func TestUnsetObjectParameterNetworkPolicyOnUser(t *testing.T) {
 	opts := &AlterUserOptions{
 		name: NewAccountObjectIdentifierFromFullyQualifiedName("TEST_USER"),
 		Unset: &UserUnset{
@@ -54,6 +54,7 @@ func TestUnSetObjectParameterNetworkPolicyOnUser(t *testing.T) {
 	})
 }
 
+// Proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3344 is fixed.
 func TestSetAccountParameterEnforceNetworkRulesForInternalStages(t *testing.T) {
 	opts := &AlterAccountOptions{
 		Set: &AccountSet{

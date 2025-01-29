@@ -19,7 +19,7 @@ func NewDataMetricFunctionReferencesClient(context *TestClientContext) *DataMetr
 }
 
 // GetDataMetricFunctionReferences is based on https://docs.snowflake.com/en/sql-reference/functions/data_metric_function_references.
-func (c *DataMetricFunctionReferencesClient) GetDataMetricFunctionReferences(t *testing.T, id sdk.SchemaObjectIdentifier, domain sdk.DataMetricFuncionRefEntityDomainOption) []sdk.DataMetricFunctionReference {
+func (c *DataMetricFunctionReferencesClient) GetDataMetricFunctionReferences(t *testing.T, id sdk.SchemaObjectIdentifier, domain sdk.DataMetricFunctionRefEntityDomainOption) []sdk.DataMetricFunctionReference {
 	t.Helper()
 	ctx := context.Background()
 

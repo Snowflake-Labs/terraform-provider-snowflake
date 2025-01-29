@@ -44,7 +44,8 @@ resource "snowflake_tag_association" "table_association" {
 }
 
 resource "snowflake_tag_association" "column_association" {
-  object_identifiers = [snowflake_database.test.fully_qualified_name]
+  # For now, column fully qualified names have to be constructed manually.
+  object_identifiers = [format("%s.\"column1\"", snowflake_table.test.fully_qualified_name)]
   object_type        = "COLUMN"
   tag_id             = snowflake_tag.test.fully_qualified_name
   tag_value          = "engineering"

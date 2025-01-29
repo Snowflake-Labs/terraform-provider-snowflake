@@ -452,7 +452,7 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			}
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*req))
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error setting data matric schedule in view %v err = %w", id.Name(), err))
+				return diag.FromErr(fmt.Errorf("error setting data metric schedule in view %v err = %w", id.Name(), err))
 			}
 		}
 
@@ -470,7 +470,7 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			}
 			err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest(added)))
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+				return diag.FromErr(fmt.Errorf("error adding data metric functions in view %v err = %w", id.Name(), err))
 			}
 			changeSchedule := make([]sdk.ViewModifyDataMetricFunction, 0, len(addedRaw))
 			for i := range addedRaw {
@@ -498,7 +498,7 @@ func CreateView(orReplace bool) schema.CreateContextFunc {
 			if len(changeSchedule) > 0 {
 				err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithModifyDataMetricFunction(*sdk.NewViewModifyDataMetricFunctionsRequest(changeSchedule)))
 				if err != nil {
-					return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+					return diag.FromErr(fmt.Errorf("error adding data metric functions in view %v err = %w", id.Name(), err))
 				}
 			}
 		}
@@ -724,7 +724,7 @@ func handlePolicyReferences(policyRefs []sdk.PolicyReference, d *schema.Resource
 }
 
 func handleDataMetricFunctions(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, d *schema.ResourceData) error {
-	dataMetricFunctionReferences, err := client.DataMetricFunctionReferences.GetForEntity(ctx, sdk.NewGetForEntityDataMetricFunctionReferenceRequest(id, sdk.DataMetricFuncionRefEntityDomainView))
+	dataMetricFunctionReferences, err := client.DataMetricFunctionReferences.GetForEntity(ctx, sdk.NewGetForEntityDataMetricFunctionReferenceRequest(id, sdk.DataMetricFunctionRefEntityDomainView))
 	if err != nil {
 		return err
 	}
@@ -942,12 +942,12 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			}
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithSetDataMetricSchedule(*req))
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error setting data matric schedule in view %v err = %w", id.Name(), err))
+				return diag.FromErr(fmt.Errorf("error setting data metric schedule in view %v err = %w", id.Name(), err))
 			}
 		} else {
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithUnsetDataMetricSchedule(*sdk.NewViewUnsetDataMetricScheduleRequest()))
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error unsetting data matric schedule in view %v err = %w", id.Name(), err))
+				return diag.FromErr(fmt.Errorf("error unsetting data metric schedule in view %v err = %w", id.Name(), err))
 			}
 		}
 	}
@@ -990,7 +990,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			}
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithDropDataMetricFunction(*sdk.NewViewDropDataMetricFunctionRequest(removed)))
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+				return diag.FromErr(fmt.Errorf("error adding data metric functions in view %v err = %w", id.Name(), err))
 			}
 		}
 
@@ -1004,7 +1004,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			}
 			err := client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithAddDataMetricFunction(*sdk.NewViewAddDataMetricFunctionRequest(added)))
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+				return diag.FromErr(fmt.Errorf("error adding data metric functions in view %v err = %w", id.Name(), err))
 			}
 		}
 
@@ -1034,7 +1034,7 @@ func UpdateView(ctx context.Context, d *schema.ResourceData, meta any) diag.Diag
 			}
 			err = client.Views.Alter(ctx, sdk.NewAlterViewRequest(id).WithModifyDataMetricFunction(*sdk.NewViewModifyDataMetricFunctionsRequest(changeSchedule)))
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error adding data matric functions in view %v err = %w", id.Name(), err))
+				return diag.FromErr(fmt.Errorf("error adding data metric functions in view %v err = %w", id.Name(), err))
 			}
 		}
 	}

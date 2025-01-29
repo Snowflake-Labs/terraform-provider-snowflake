@@ -6,7 +6,7 @@ import ()
 
 func NewGetForEntityDataMetricFunctionReferenceRequest(
 	refEntityName ObjectIdentifier,
-	RefEntityDomain DataMetricFuncionRefEntityDomainOption,
+	RefEntityDomain DataMetricFunctionRefEntityDomainOption,
 ) *GetForEntityDataMetricFunctionReferenceRequest {
 	s := GetForEntityDataMetricFunctionReferenceRequest{}
 	s.refEntityName = refEntityName

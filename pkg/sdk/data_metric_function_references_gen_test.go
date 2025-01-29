@@ -24,7 +24,7 @@ func TestDataMetricFunctionReferences_GetForEntity(t *testing.T) {
 		opts := &GetForEntityDataMetricFunctionReferenceOptions{
 			parameters: &dataMetricFunctionReferenceParameters{
 				arguments: &dataMetricFunctionReferenceFunctionArguments{
-					refEntityDomain: Pointer(DataMetricFuncionRefEntityDomainView),
+					refEntityDomain: Pointer(DataMetricFunctionRefEntityDomainView),
 				},
 			},
 		}
@@ -47,7 +47,7 @@ func TestDataMetricFunctionReferences_GetForEntity(t *testing.T) {
 			parameters: &dataMetricFunctionReferenceParameters{
 				arguments: &dataMetricFunctionReferenceFunctionArguments{
 					refEntityName:   []ObjectIdentifier{NewSchemaObjectIdentifier("a", "b", "c")},
-					refEntityDomain: Pointer(DataMetricFuncionRefEntityDomainView),
+					refEntityDomain: Pointer(DataMetricFunctionRefEntityDomainView),
 				},
 			},
 		}
