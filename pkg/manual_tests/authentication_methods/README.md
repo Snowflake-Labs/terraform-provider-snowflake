@@ -40,7 +40,7 @@ oktaurl='https://dev-123456.okta.com' # URL of your Okta environment
 This test checks `UsernamePasswordMFA` authenticator option. It requires manual steps because of additional verification via MFA device. It assumes that `default` profile uses a standard values of account name, user, password, etc.
 1. Make sure the user you're testing with has enabled MFA (see [docs](https://docs.snowflake.com/en/user-guide/ui-snowsight-profile#enroll-in-multi-factor-authentication-mfa)) and an MFA bypass is not set (check `mins_to_bypass_mfa` in `SHOW USERS` output for the given user).
 1. After running the test, you should get pinged 3 times in MFA app:
-    - The first two notifiactions are just test setups, also present in other acceptance tests.
+    - The first two notifications are just test setups, also present in other acceptance tests.
     - The third notification verifies that MFA is used for the first test step.
     - For the second test step we are caching MFA token, so there is not any notification.
 
@@ -48,6 +48,6 @@ This test checks `UsernamePasswordMFA` authenticator option. It requires manual 
 This test checks `UsernamePasswordMFA` authenticator option with using `passcode`. It requires manual steps because of additional verification via MFA device. It assumes that `default_with_passcode` profile uses a standard values of account name, user, password, etc. with `passcode` set to a value in your MFA app.
 1. Make sure the user you're testing with has enabled MFA (see [docs](https://docs.snowflake.com/en/user-guide/ui-snowsight-profile#enroll-in-multi-factor-authentication-mfa)) and an MFA bypass is not set (check `mins_to_bypass_mfa` in `SHOW USERS` output for the given user).
 1. After running the test, you should get pinged 2 times in MFA app:
-    - The first two notifiactions are just test setups, also present in other acceptance tests.
-    - The first step asks for permition to access your device keychain.
+    - The first two notifications are just test setups, also present in other acceptance tests.
+    - The first step asks for permission to access your device keychain.
     - For the second test step we are caching MFA token, so there is not any notification.

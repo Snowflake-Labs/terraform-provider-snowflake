@@ -271,6 +271,8 @@ Provider uses an established hierarchy of sources. The current behavior is that 
 1. Check if it is present in the environment variables. If yes, use this value. If not, go to step 3.
 1. Check if it is present in the TOML config file (specifically, use the profile name configured in one of the steps above). If yes, use this value. If not, the value is considered empty.
 
+-> **Note** Currently `private_key` and `private_key_passphrase` are coupled and must be set in one source (both on Terraform side or both in TOML config, see https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3332). This will be fixed in the future.
+
 An example TOML file contents:
 
 ```toml
