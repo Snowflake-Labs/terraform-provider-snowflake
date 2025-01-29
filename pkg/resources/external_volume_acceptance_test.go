@@ -172,7 +172,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment("").
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -210,7 +210,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -255,7 +255,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -290,7 +290,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -317,7 +317,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -344,7 +344,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -371,7 +371,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -398,7 +398,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -425,7 +425,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -470,7 +470,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -505,7 +505,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -532,7 +532,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -559,7 +559,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -586,7 +586,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment("").
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -649,7 +649,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment("").
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -687,7 +687,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -732,7 +732,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -767,7 +767,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -794,7 +794,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -821,7 +821,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -848,7 +848,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -875,7 +875,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -920,7 +920,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -955,7 +955,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -982,7 +982,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -1009,7 +1009,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment("").
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -1067,7 +1067,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment("").
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -1105,7 +1105,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -1150,7 +1150,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -1185,7 +1185,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -1212,7 +1212,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment2).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "4")),
 				),
 			},
@@ -1239,7 +1239,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment("").
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "3")),
 				),
 			},
@@ -1328,7 +1328,7 @@ func TestAcc_External_Volume_All_Options(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1434,7 +1434,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1489,7 +1489,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1536,7 +1536,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1593,7 +1593,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "7")),
 				),
 			},
@@ -1640,7 +1640,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1687,7 +1687,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1734,7 +1734,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1791,7 +1791,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "7")),
 				),
 			},
@@ -1838,7 +1838,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1885,7 +1885,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1932,7 +1932,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -1989,7 +1989,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "7")),
 				),
 			},
@@ -2036,7 +2036,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -2093,7 +2093,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "7")),
 				),
 			},
@@ -2140,7 +2140,7 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesTrue),
+						HasAllowWrites(true),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "6")),
 				),
 			},
@@ -2206,7 +2206,7 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -2294,7 +2294,7 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -2334,7 +2334,7 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -2376,7 +2376,7 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},
@@ -2418,7 +2418,7 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 					resourceshowoutputassert.ExternalVolumeShowOutput(t, "snowflake_external_volume.complete").
 						HasName(externalVolumeName).
 						HasComment(comment).
-						HasAllowWrites(allowWritesFalse),
+						HasAllowWrites(false),
 					assert.Check(resource.TestCheckResourceAttr("snowflake_external_volume.complete", "describe_output.#", "5")),
 				),
 			},

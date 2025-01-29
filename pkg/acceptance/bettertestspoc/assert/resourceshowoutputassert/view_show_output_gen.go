@@ -19,21 +19,21 @@ type ViewShowOutputAssert struct {
 func ViewShowOutput(t *testing.T, name string) *ViewShowOutputAssert {
 	t.Helper()
 
-	v := ViewShowOutputAssert{
+	viewAssert := ViewShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	v.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &v
+	viewAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &viewAssert
 }
 
 func ImportedViewShowOutput(t *testing.T, id string) *ViewShowOutputAssert {
 	t.Helper()
 
-	v := ViewShowOutputAssert{
+	viewAssert := ViewShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	v.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &v
+	viewAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &viewAssert
 }
 
 ////////////////////////////
@@ -102,5 +102,202 @@ func (v *ViewShowOutputAssert) HasOwnerRoleType(expected string) *ViewShowOutput
 
 func (v *ViewShowOutputAssert) HasChangeTracking(expected string) *ViewShowOutputAssert {
 	v.AddAssertion(assert.ResourceShowOutputValueSet("change_tracking", expected))
+	return v
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+func (v *ViewShowOutputAssert) HasNoCreatedOn() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("created_on"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoName() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("name"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoKind() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("kind"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoReserved() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("reserved"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoDatabaseName() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("database_name"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoSchemaName() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("schema_name"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoOwner() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("owner"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoComment() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("comment"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoText() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("text"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoIsSecure() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_secure"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoIsMaterialized() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_materialized"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoOwnerRoleType() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("owner_role_type"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNoChangeTracking() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueNotSet("change_tracking"))
+	return v
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (v *ViewShowOutputAssert) HasCreatedOnEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("created_on", ""))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNameEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("name", ""))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasKindEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("kind", ""))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasReservedEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("reserved", ""))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasDatabaseNameEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("database_name", ""))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasSchemaNameEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("schema_name", ""))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasOwnerEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("owner", ""))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasCommentEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("comment", ""))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasTextEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("text", ""))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasOwnerRoleTypeEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", ""))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasChangeTrackingEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValueSet("change_tracking", ""))
+	return v
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (v *ViewShowOutputAssert) HasCreatedOnNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasNameNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("name"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasKindNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("kind"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasReservedNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("reserved"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasDatabaseNameNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("database_name"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasSchemaNameNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("schema_name"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasOwnerNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasCommentNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("comment"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasTextNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("text"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasIsSecureNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_secure"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasIsMaterializedNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_materialized"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasOwnerRoleTypeNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("owner_role_type"))
+	return v
+}
+
+func (v *ViewShowOutputAssert) HasChangeTrackingNotEmpty() *ViewShowOutputAssert {
+	v.AddAssertion(assert.ResourceShowOutputValuePresent("change_tracking"))
 	return v
 }

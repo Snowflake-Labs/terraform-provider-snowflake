@@ -6,11 +6,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 )
 
-func (r *RowAccessPolicyShowOutputAssert) HasCreatedOnNotEmpty() *RowAccessPolicyShowOutputAssert {
-	r.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
-	return r
-}
-
 // RowAccessPoliciesDatasourceShowOutput is a temporary workaround to have better show output assertions in data source acceptance tests.
 func RowAccessPoliciesDatasourceShowOutput(t *testing.T, name string) *RowAccessPolicyShowOutputAssert {
 	t.Helper()

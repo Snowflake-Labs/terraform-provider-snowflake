@@ -163,7 +163,7 @@ func TestAcc_FunctionJavascript_InlineFull(t *testing.T) {
 						HasCommentString("some comment").
 						HasFunctionLanguageString("JAVASCRIPT").
 						HasNullInputBehaviorString(string(sdk.NullInputBehaviorReturnsNullInput)).
-						HasReturnBehaviorString(string(sdk.ReturnResultsBehaviorVolatile)).
+						HasReturnResultsBehaviorString(string(sdk.ReturnResultsBehaviorVolatile)).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					resourceshowoutputassert.FunctionShowOutput(t, functionModel.ResourceReference()).
 						HasIsSecure(false),
@@ -199,7 +199,7 @@ func TestAcc_FunctionJavascript_InlineFull(t *testing.T) {
 						HasCommentString("some other comment").
 						HasFunctionLanguageString("JAVASCRIPT").
 						HasNullInputBehaviorString(string(sdk.NullInputBehaviorReturnsNullInput)).
-						HasReturnBehaviorString(string(sdk.ReturnResultsBehaviorVolatile)).
+						HasReturnResultsBehaviorString(string(sdk.ReturnResultsBehaviorVolatile)).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					resourceshowoutputassert.FunctionShowOutput(t, functionModelUpdateWithoutRecreation.ResourceReference()).
 						HasIsSecure(false),

@@ -1,8 +1,6 @@
 package resourceshowoutputassert
 
 import (
-	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
@@ -17,22 +15,4 @@ func TagsDatasourceShowOutput(t *testing.T, name string) *TagShowOutputAssert {
 	}
 	s.AddAssertion(assert.ValueSet("show_output.#", "1"))
 	return &s
-}
-
-func (s *TagShowOutputAssert) HasCreatedOnNotEmpty() *TagShowOutputAssert {
-	s.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
-	return s
-}
-
-func (s *TagShowOutputAssert) HasAllowedValues(expected ...string) *TagShowOutputAssert {
-	s.AddAssertion(assert.ResourceShowOutputValueSet("allowed_values.#", strconv.FormatInt(int64(len(expected)), 10)))
-	for i := range expected {
-		s.AddAssertion(assert.ResourceShowOutputValueSet(fmt.Sprintf("allowed_values.%d", i), expected[i]))
-	}
-	return s
-}
-
-func (s *TagShowOutputAssert) HasNoAllowedValues(expected ...string) *TagShowOutputAssert {
-	s.AddAssertion(assert.ResourceShowOutputValueSet("allowed_values.#", "0"))
-	return s
 }

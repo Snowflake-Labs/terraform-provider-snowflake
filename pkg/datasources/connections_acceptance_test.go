@@ -61,7 +61,7 @@ func TestAcc_Connections_Minimal(t *testing.T) {
 						HasComment("").
 						HasIsPrimary(true).
 						HasPrimaryIdentifier(primaryConnectionAsExternalId).
-						HasFailoverAllowedToAccounts(accountId).
+						HasFailoverAllowedToAccountsList(accountId).
 						HasConnectionUrl(
 							acc.TestClient().Connection.GetConnectionUrl(accountId.OrganizationName(), id.Name()),
 						),
@@ -109,7 +109,7 @@ func TestAcc_Connections_Complete(t *testing.T) {
 						HasComment("test comment").
 						HasIsPrimary(true).
 						HasPrimaryIdentifier(primaryConnectionAsExternalId).
-						HasFailoverAllowedToAccounts(accountId, secondaryAccountId).
+						HasFailoverAllowedToAccountsList(accountId, secondaryAccountId).
 						HasConnectionUrl(
 							acc.TestClient().Connection.GetConnectionUrl(accountId.OrganizationName(), id.Name()),
 						),

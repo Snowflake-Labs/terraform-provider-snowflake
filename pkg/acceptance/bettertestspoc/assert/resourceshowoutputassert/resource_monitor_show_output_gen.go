@@ -3,6 +3,7 @@
 package resourceshowoutputassert
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -20,21 +21,21 @@ type ResourceMonitorShowOutputAssert struct {
 func ResourceMonitorShowOutput(t *testing.T, name string) *ResourceMonitorShowOutputAssert {
 	t.Helper()
 
-	r := ResourceMonitorShowOutputAssert{
+	resourceMonitorAssert := ResourceMonitorShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	r.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &r
+	resourceMonitorAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &resourceMonitorAssert
 }
 
 func ImportedResourceMonitorShowOutput(t *testing.T, id string) *ResourceMonitorShowOutputAssert {
 	t.Helper()
 
-	r := ResourceMonitorShowOutputAssert{
+	resourceMonitorAssert := ResourceMonitorShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	r.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &r
+	resourceMonitorAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &resourceMonitorAssert
 }
 
 ////////////////////////////
@@ -81,6 +82,11 @@ func (r *ResourceMonitorShowOutputAssert) HasEndTime(expected string) *ResourceM
 	return r
 }
 
+func (r *ResourceMonitorShowOutputAssert) HasNotifyAt(expected []int) *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueSet("notify_at", fmt.Sprintf("%v", expected)))
+	return r
+}
+
 func (r *ResourceMonitorShowOutputAssert) HasSuspendAt(expected int) *ResourceMonitorShowOutputAssert {
 	r.AddAssertion(assert.ResourceShowOutputIntValueSet("suspend_at", expected))
 	return r
@@ -103,5 +109,197 @@ func (r *ResourceMonitorShowOutputAssert) HasOwner(expected string) *ResourceMon
 
 func (r *ResourceMonitorShowOutputAssert) HasComment(expected string) *ResourceMonitorShowOutputAssert {
 	r.AddAssertion(assert.ResourceShowOutputValueSet("comment", expected))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNotifyUsers(expected []string) *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueSet("notify_users", fmt.Sprintf("%v", expected)))
+	return r
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+func (r *ResourceMonitorShowOutputAssert) HasNoName() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueNotSet("name"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoCreditQuota() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputFloatValueNotSet("credit_quota"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoUsedCredits() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputFloatValueNotSet("used_credits"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoRemainingCredits() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputFloatValueNotSet("remaining_credits"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoLevel() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueNotSet("level"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoFrequency() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueNotSet("frequency"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoStartTime() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueNotSet("start_time"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoEndTime() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueNotSet("end_time"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoNotifyAt() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueNotSet("notify_at"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoSuspendAt() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputIntValueNotSet("suspend_at"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoSuspendImmediateAt() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputIntValueNotSet("suspend_immediate_at"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoCreatedOn() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueNotSet("created_on"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoOwner() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueNotSet("owner"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoComment() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueNotSet("comment"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNoNotifyUsers() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueNotSet("notify_users"))
+	return r
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (r *ResourceMonitorShowOutputAssert) HasNameEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueSet("name", ""))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasStartTimeEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueSet("start_time", ""))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasEndTimeEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueSet("end_time", ""))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasOwnerEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueSet("owner", ""))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasCommentEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValueSet("comment", ""))
+	return r
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (r *ResourceMonitorShowOutputAssert) HasNameNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValuePresent("name"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasCreditQuotaNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputFloatValuePresent("credit_quota"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasUsedCreditsNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputFloatValuePresent("used_credits"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasRemainingCreditsNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputFloatValuePresent("remaining_credits"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasLevelNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputStringUnderlyingValuePresent("level"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasFrequencyNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputStringUnderlyingValuePresent("frequency"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasStartTimeNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValuePresent("start_time"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasEndTimeNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValuePresent("end_time"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNotifyAtNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValuePresent("notify_at"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasSuspendAtNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputIntValuePresent("suspend_at"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasSuspendImmediateAtNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputIntValuePresent("suspend_immediate_at"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasCreatedOnNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasOwnerNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasCommentNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValuePresent("comment"))
+	return r
+}
+
+func (r *ResourceMonitorShowOutputAssert) HasNotifyUsersNotEmpty() *ResourceMonitorShowOutputAssert {
+	r.AddAssertion(assert.ResourceShowOutputValuePresent("notify_users"))
 	return r
 }

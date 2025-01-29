@@ -20,21 +20,21 @@ type UserShowOutputAssert struct {
 func UserShowOutput(t *testing.T, name string) *UserShowOutputAssert {
 	t.Helper()
 
-	u := UserShowOutputAssert{
+	userAssert := UserShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	u.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &u
+	userAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &userAssert
 }
 
 func ImportedUserShowOutput(t *testing.T, id string) *UserShowOutputAssert {
 	t.Helper()
 
-	u := UserShowOutputAssert{
+	userAssert := UserShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	u.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &u
+	userAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &userAssert
 }
 
 ////////////////////////////
@@ -178,5 +178,382 @@ func (u *UserShowOutputAssert) HasType(expected string) *UserShowOutputAssert {
 
 func (u *UserShowOutputAssert) HasHasMfa(expected bool) *UserShowOutputAssert {
 	u.AddAssertion(assert.ResourceShowOutputBoolValueSet("has_mfa", expected))
+	return u
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+func (u *UserShowOutputAssert) HasNoName() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("name"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoCreatedOn() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("created_on"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoLoginName() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("login_name"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoDisplayName() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("display_name"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoFirstName() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("first_name"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoLastName() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("last_name"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoEmail() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("email"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoMinsToUnlock() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("mins_to_unlock"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoDaysToExpiry() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("days_to_expiry"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoComment() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("comment"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoDisabled() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("disabled"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoMustChangePassword() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("must_change_password"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoSnowflakeLock() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("snowflake_lock"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoDefaultWarehouse() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("default_warehouse"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoDefaultNamespace() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("default_namespace"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoDefaultRole() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("default_role"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoDefaultSecondaryRoles() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("default_secondary_roles"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoExtAuthnDuo() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("ext_authn_duo"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoExtAuthnUid() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("ext_authn_uid"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoMinsToBypassMfa() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("mins_to_bypass_mfa"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoOwner() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("owner"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoLastSuccessLogin() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("last_success_login"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoExpiresAtTime() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("expires_at_time"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoLockedUntilTime() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("locked_until_time"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoHasPassword() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("has_password"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoHasRsaPublicKey() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("has_rsa_public_key"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoType() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueNotSet("type"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasNoHasMfa() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("has_mfa"))
+	return u
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (u *UserShowOutputAssert) HasNameEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("name", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasLoginNameEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("login_name", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDisplayNameEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("display_name", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasFirstNameEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("first_name", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasLastNameEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("last_name", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasEmailEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("email", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasMinsToUnlockEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("mins_to_unlock", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDaysToExpiryEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("days_to_expiry", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasCommentEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("comment", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDefaultWarehouseEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("default_warehouse", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDefaultNamespaceEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("default_namespace", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDefaultRoleEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("default_role", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDefaultSecondaryRolesEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("default_secondary_roles", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasExtAuthnUidEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("ext_authn_uid", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasMinsToBypassMfaEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("mins_to_bypass_mfa", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasOwnerEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("owner", ""))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasTypeEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValueSet("type", ""))
+	return u
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (u *UserShowOutputAssert) HasNameNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("name"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasCreatedOnNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasLoginNameNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("login_name"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDisplayNameNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("display_name"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasFirstNameNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("first_name"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasLastNameNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("last_name"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasEmailNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("email"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasMinsToUnlockNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("mins_to_unlock"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDaysToExpiryNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("days_to_expiry"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasCommentNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("comment"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDisabledNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValuePresent("disabled"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasMustChangePasswordNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValuePresent("must_change_password"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasSnowflakeLockNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValuePresent("snowflake_lock"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDefaultWarehouseNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("default_warehouse"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDefaultNamespaceNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("default_namespace"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDefaultRoleNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("default_role"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasDefaultSecondaryRolesNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("default_secondary_roles"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasExtAuthnDuoNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValuePresent("ext_authn_duo"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasExtAuthnUidNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("ext_authn_uid"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasMinsToBypassMfaNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("mins_to_bypass_mfa"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasOwnerNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasLastSuccessLoginNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("last_success_login"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasExpiresAtTimeNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("expires_at_time"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasLockedUntilTimeNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("locked_until_time"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasHasPasswordNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValuePresent("has_password"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasHasRsaPublicKeyNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValuePresent("has_rsa_public_key"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasTypeNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputValuePresent("type"))
+	return u
+}
+
+func (u *UserShowOutputAssert) HasHasMfaNotEmpty() *UserShowOutputAssert {
+	u.AddAssertion(assert.ResourceShowOutputBoolValuePresent("has_mfa"))
 	return u
 }

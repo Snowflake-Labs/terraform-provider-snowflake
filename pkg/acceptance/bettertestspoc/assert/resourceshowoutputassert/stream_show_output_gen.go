@@ -3,6 +3,7 @@
 package resourceshowoutputassert
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -20,21 +21,21 @@ type StreamShowOutputAssert struct {
 func StreamShowOutput(t *testing.T, name string) *StreamShowOutputAssert {
 	t.Helper()
 
-	s := StreamShowOutputAssert{
+	streamAssert := StreamShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	s.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &s
+	streamAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &streamAssert
 }
 
 func ImportedStreamShowOutput(t *testing.T, id string) *StreamShowOutputAssert {
 	t.Helper()
 
-	s := StreamShowOutputAssert{
+	streamAssert := StreamShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	s.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &s
+	streamAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &streamAssert
 }
 
 ////////////////////////////
@@ -81,13 +82,18 @@ func (s *StreamShowOutputAssert) HasSourceType(expected sdk.StreamSourceType) *S
 	return s
 }
 
+func (s *StreamShowOutputAssert) HasBaseTables(expected []string) *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueSet("base_tables", fmt.Sprintf("%v", expected)))
+	return s
+}
+
 func (s *StreamShowOutputAssert) HasType(expected string) *StreamShowOutputAssert {
 	s.AddAssertion(assert.ResourceShowOutputValueSet("type", expected))
 	return s
 }
 
-func (s *StreamShowOutputAssert) HasStale(expected string) *StreamShowOutputAssert {
-	s.AddAssertion(assert.ResourceShowOutputValueSet("stale", expected))
+func (s *StreamShowOutputAssert) HasStale(expected bool) *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputBoolValueSet("stale", expected))
 	return s
 }
 
@@ -108,5 +114,212 @@ func (s *StreamShowOutputAssert) HasInvalidReason(expected string) *StreamShowOu
 
 func (s *StreamShowOutputAssert) HasOwnerRoleType(expected string) *StreamShowOutputAssert {
 	s.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", expected))
+	return s
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+func (s *StreamShowOutputAssert) HasNoCreatedOn() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("created_on"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoName() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("name"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoDatabaseName() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("database_name"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoSchemaName() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("schema_name"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoOwner() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("owner"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoComment() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("comment"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoTableName() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("table_name"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoSourceType() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueNotSet("source_type"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoBaseTables() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("base_tables"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoType() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("type"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoStale() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("stale"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoMode() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputStringUnderlyingValueNotSet("mode"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoStaleAfter() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("stale_after"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoInvalidReason() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("invalid_reason"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNoOwnerRoleType() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueNotSet("owner_role_type"))
+	return s
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (s *StreamShowOutputAssert) HasNameEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueSet("name", ""))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasDatabaseNameEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueSet("database_name", ""))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasSchemaNameEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueSet("schema_name", ""))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasOwnerEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueSet("owner", ""))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasCommentEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueSet("comment", ""))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasTableNameEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueSet("table_name", ""))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasTypeEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueSet("type", ""))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasInvalidReasonEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueSet("invalid_reason", ""))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasOwnerRoleTypeEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", ""))
+	return s
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (s *StreamShowOutputAssert) HasCreatedOnNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasNameNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("name"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasDatabaseNameNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("database_name"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasSchemaNameNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("schema_name"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasOwnerNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("owner"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasCommentNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("comment"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasTableNameNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("table_name"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasSourceTypeNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputStringUnderlyingValuePresent("source_type"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasBaseTablesNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("base_tables"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasTypeNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("type"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasStaleNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputBoolValuePresent("stale"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasModeNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputStringUnderlyingValuePresent("mode"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasStaleAfterNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("stale_after"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasInvalidReasonNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("invalid_reason"))
+	return s
+}
+
+func (s *StreamShowOutputAssert) HasOwnerRoleTypeNotEmpty() *StreamShowOutputAssert {
+	s.AddAssertion(assert.ResourceShowOutputValuePresent("owner_role_type"))
 	return s
 }

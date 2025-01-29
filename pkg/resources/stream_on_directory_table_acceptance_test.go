@@ -72,7 +72,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 						HasSourceType(sdk.StreamSourceTypeStage).
 						HasBaseTablesPartiallyQualified(stage.ID().Name()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeDefault).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -127,7 +127,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 						HasSourceType(sdk.StreamSourceTypeStage).
 						HasBaseTablesPartiallyQualified(stage.ID().Name()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeDefault).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -177,7 +177,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 						HasSourceType(sdk.StreamSourceTypeStage).
 						HasBaseTablesPartiallyQualified(stage.ID().Name()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeDefault).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
@@ -224,7 +224,7 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 						HasSourceType(sdk.StreamSourceTypeStage).
 						HasBaseTablesPartiallyQualified(stage.ID().Name()).
 						HasType("DELTA").
-						HasStale("false").
+						HasStale(false).
 						HasMode(sdk.StreamModeDefault).
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
