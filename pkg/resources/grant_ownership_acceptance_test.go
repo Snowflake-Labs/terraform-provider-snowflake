@@ -1557,24 +1557,22 @@ func TestAcc_GrantOwnership_OnObject_ResourceMonitor_ToAccountRole(t *testing.T)
 	})
 }
 
-// This test proves that granting ownership on HYBRID TABLE is not supported in Snowflake.
+// This test proves that managing grants on HYBRID TABLE is not supported in Snowflake. TABLE should be used instead.
 func TestAcc_GrantOwnership_OnObject_HybridTable_ToAccountRole_Fails(t *testing.T) {
 	acc.TestAccPreCheck(t)
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	databaseName := databaseId.Name()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	schemaName := schemaId.Name()
 	hybridTableId, hybridTableCleanup := acc.TestClient().HybridTable.Create(t)
 	t.Cleanup(hybridTableCleanup)
 
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountRoleName := accountRoleId.Name()
 
-	configVariables := config.Variables{
-		"account_role_name":                 config.StringVariable(accountRoleName),
-		"database_name":                     config.StringVariable(databaseName),
-		"schema_name":                       config.StringVariable(schemaName),
-		"hybrid_table_fully_qualified_name": config.StringVariable(hybridTableId.FullyQualifiedName()),
+	configVariables := func(objectType sdk.ObjectType) config.Variables {
+		cfg := config.Variables{
+			"account_role_name":                 config.StringVariable(accountRoleName),
+			"hybrid_table_fully_qualified_name": config.StringVariable(hybridTableId.FullyQualifiedName()),
+			"object_type":                       config.StringVariable(string(objectType)),
+		}
+		return cfg
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -1585,8 +1583,12 @@ func TestAcc_GrantOwnership_OnObject_HybridTable_ToAccountRole_Fails(t *testing.
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_HybridTable_ToAccountRole"),
-				ConfigVariables: configVariables,
+				ConfigVariables: configVariables(sdk.ObjectTypeHybridTable),
 				ExpectError:     regexp.MustCompile("syntax error line 1 at position 26 unexpected 'TABLE"),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_HybridTable_ToAccountRole"),
+				ConfigVariables: configVariables(sdk.ObjectTypeTable),
 			},
 		},
 	})
