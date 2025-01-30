@@ -16,7 +16,7 @@ description: |-
 
 ## Example Usage
 
-For more examples, head over to our usage guide where we present how to use the grant_ownership resource in [common use cases](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/grant_ownership_common_use_cases).
+For more examples, head over to our usage guide where we present how to use the grant_ownership resource in [common use cases](../guides/grant_ownership_common_use_cases).
 
 ```terraform
 ##################################

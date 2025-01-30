@@ -23,6 +23,7 @@
   * [Granting on Functions or Procedures](#granting-on-functions-or-procedures)
   * [Infinite diffs, empty privileges, errors when revoking on grant resources](#infinite-diffs-empty-privileges-errors-when-revoking-on-grant-resources)
   * [Granting PUBLIC role fails](#granting-public-role-fails)
+  * [Issues with grant_ownership resource](#issues-with-grant_ownership)
 
 This guide was made to aid with creating the GitHub issues, so you can maximize your chances of getting help as quickly as possible.
 To correctly report the issue, we suggest going through the following steps.
@@ -276,3 +277,8 @@ Terraform may fail with:
 **Related issues:** [#3001](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3001), [#2848](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2848)
 
 **Solution:** This happens, because the PUBLIC role is a "pseudo-role" (see [docs](https://docs.snowflake.com/en/user-guide/security-access-control-overview#system-defined-roles)) that is already assigned to every role and user, so there is no need to grant it through Terraform. If you have an issue with removing the resources please use `terraform state rm <id>` to remove the resource from the state (and you can safely remove the configuration).
+
+### Issues with grant_ownership
+
+Please read our [guide for grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/grant_ownership_common_use_cases) resource.
+It contains common use cases and issues that you may encounter when dealing with ownership transfers.
