@@ -11,7 +11,7 @@ Each method includes steps for setting dependencies, like MFA app, and getting e
 For now, we provide examples for the most common use cases.
 The rest of the options (Okta, ExternalBrowser, TokenAccessor) are planned to be added later on.
 
-[//]: # (TODO: https://snowflakecomputing.atlassian.net/browse/SNOW-1791729)
+[//]: # (TODO: SNOW-1791729)
 
 ## Protecting secret values
 
@@ -53,7 +53,8 @@ provider "snowflake" {
 }
 ```
 
-Snowflake authenticator is a default value, but it may change over time, so if you want to be explicit about it you can specify the following configuration:
+Without passing any authenticator, we depend on the underlying Go Snowflake driver and Snowflake itself to fill this field out.
+This means that we do not provision the default, and it may change at some point, so if you want to be explicit, you can define Snowflake authenticator like so:
 
 ```terraform
 provider "snowflake" {
@@ -65,13 +66,11 @@ provider "snowflake" {
 }
 ```
 
-In case of any problems, please go to the [common issues section](#common-issues).
-
 ### JWT authenticator flow 
 
 To use JWT authentication, you have to firstly generate key-pairs used by Snowflake.
 To correctly generate the necessary keys, follow [this guide](https://docs.snowflake.com/en/user-guide/key-pair-auth#configuring-key-pair-authentication) from the official Snowflake documentation.
-After you [set the generated public key](https://docs.snowflake.com/en/user-guide/key-pair-auth#assign-the-public-key-to-a-snowflake-user) to the Terraform user and [verified it](https://docs.snowflake.com/en/user-guide/key-pair-auth#verify-the-user-s-public-key-fingerprint),
+After you [set the generated public key](https://docs.snowflake.com/en/user-guide/key-pair-auth#assign-the-public-key-to-a-snowflake-user) to the Terraform user and [verify it](https://docs.snowflake.com/en/user-guide/key-pair-auth#verify-the-user-s-public-key-fingerprint),
 you can proceed with the following provider configuration:
 
 ```terraform
@@ -79,13 +78,33 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
   authenticator     = "JWT"
-  private_key = file("~/.ssh/snowflake_private_key.p8")
+  private_key       = file("~/.ssh/snowflake_private_key.p8")
 }
 ```
 
 To load the private key you can utilize the built-in [file](https://developer.hashicorp.com/terraform/language/functions/file) function.
+If you have any issues with this method, one of the possible root causes could be an additional newline at the end of the file that causes error in the underlying Go Snowflake driver.
+If this doesn't help, you can try other methods of supplying this field:
+- Filling the key directly by using [multi-string notation](https://developer.hashicorp.com/terraform/language/expressions/strings#heredoc-strings)
+- Sourcing it from the environment variable:
+```shell
+export SNOWFLAKE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----..."
+# Alternatively, source from a file.
+export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_private_key.p8)
+
+export SNOWFLAKE_PRIVATE_KEY_PASSPHRASE="..."
+```
+- Using TOML configuration file:
+```toml
+[default]
+private_key = "..."
+private_key_passphrase = "..."
+```
+
+In case of any other issues, take a look at related topics:
+- https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3332#issuecomment-2618957814
+- https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3350#issuecomment-2604851052
 
 #### JWT authenticator flow using passphrase
 
@@ -96,14 +115,11 @@ provider "snowflake" {
   organization_name      = "<organization_name>"
   account_name           = "<account_name>"
   user                   = "<user_name>"
-  password               = "<password>"
   authenticator          = "JWT"
-  private_key = file("~/.ssh/snowflake_private_key.p8")
+  private_key            = file("~/.ssh/snowflake_private_key.p8")
   private_key_passphrase = "<passphrase>"
 }
 ```
-
-In case of any problems, please go to the [common issues section](#common-issues).
 
 ### MFA authenticator flow
 
@@ -141,11 +157,9 @@ provider "snowflake" {
 MFA token caching can help to reduce the number of prompts that must be acknowledged while connecting and authenticating to Snowflake, especially when multiple connection attempts are made within a relatively short time interval.
 Follow [this guide](https://docs.snowflake.com/en/user-guide/security-mfa#using-mfa-token-caching-to-minimize-the-number-of-prompts-during-authentication-optional) to enable it.
 
-In case of any problems, please go to the [common issues section](#common-issues).
-
 ### Okta authenticator flow
 
-To set up a new Okta account for this flow, follow [this guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/pkg/manual_tests/authentication_methods/README.md#okta-authenticator-test).
+To set up a new Okta account for this flow, follow [this guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/b863d2e79ae6ae021552c4348e3012b8053ede17/pkg/manual_tests/authentication_methods/README.md#okta-authenticator-test).
 If you already have an Okta account, skip the first point and follow the next steps.
 The guide includes writing the provider configuration in the TOML file, but here's what it should look like fully in HCL:
 
@@ -160,9 +174,8 @@ provider "snowflake" {
 }
 ```
 
-In case of any problems, please go to the [common issues section](#common-issues).
-
 ## Common issues
+
 ### How can I get my organization name?
 
 If you are logged into account that is in the same organization as Terraform user (or logged in as Terraform user), you can run:
@@ -179,7 +192,18 @@ SELECT CURRENT_ACCOUNT_NAME();
 ```
 The output of this command is your `<account_name>`.
 
-### Errors similar to (http: 404): open snowflake connection: 261004 (08004): failed to auth for unknown reason.
+## General recommendations
 
-This can be caused by missing or incorrect host. When the host field is not set, it's being guessed based on organization name, account name, and other parameters.
-For some deployments it will work fine, but for more custom ones, setting the host is necessary to successfully establish the connection.
+### Be sure you are passing all the required fields
+
+This point is not only referring to double-checking the fields you are passing, but also to inform you that depending on the account 
+you want to log into, a different set of parameters may be required.
+
+Whenever you are on a Snowflake deployment that has different url than the default one:
+`<organization_name>-<account_name>.snowflakecomputing.com`, you may encounter errors similar to:
+
+```text
+open snowflake connection: 261004 (08004): failed to auth for unknown reason.
+```
+
+This error can be raised for a number of reasons, but explicitly specifying the host has effectively prevented such occurrences so far.
