@@ -2,7 +2,7 @@
 page_title: "snowflake_primary_connection Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  Resource used to manage primary connections. For managing replicated connection check resource snowflakesecondaryconnection ./secondary_connection. For more information, check connection documentation https://docs.snowflake.com/en/sql-reference/sql/create-connection.html.
+  Resource used to manage primary connections. For managing replicated connection check resource snowflake_secondary_connection ./secondary_connection. For more information, check connection documentation https://docs.snowflake.com/en/sql-reference/sql/create-connection.html.
 ---
 
 # snowflake_primary_connection (Resource)

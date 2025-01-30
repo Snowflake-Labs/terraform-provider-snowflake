@@ -54,6 +54,21 @@ func TestUnSetObjectParameterNetworkPolicyOnUser(t *testing.T) {
 	})
 }
 
+func TestSetAccountParameterEnforceNetworkRulesForInternalStages(t *testing.T) {
+	opts := &AlterAccountOptions{
+		Set: &AccountSet{
+			Parameters: &AccountLevelParameters{
+				AccountParameters: &AccountParameters{
+					EnforceNetworkRulesForInternalStages: Bool(true),
+				},
+			},
+		},
+	}
+	t.Run("Set Enforce Network Rules for Internal Stages", func(t *testing.T) {
+		assertOptsValidAndSQLEquals(t, opts, "ALTER ACCOUNT SET ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES = true")
+	})
+}
+
 func TestToAccountParameter(t *testing.T) {
 	type test struct {
 		input string
