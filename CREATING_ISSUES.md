@@ -24,6 +24,7 @@
   * [Infinite diffs, empty privileges, errors when revoking on grant resources](#infinite-diffs-empty-privileges-errors-when-revoking-on-grant-resources)
   * [Granting PUBLIC role fails](#granting-public-role-fails)
   * [Issues with grant_ownership resource](#issues-with-grant_ownership)
+  * [Using QUOTED_IDENTIFIERS_IGNORE_CASE with the provider](#using-quoted_identifiers_ignore_case-with-the-provider)
 
 This guide was made to aid with creating the GitHub issues, so you can maximize your chances of getting help as quickly as possible.
 To correctly report the issue, we suggest going through the following steps.
@@ -282,3 +283,12 @@ Terraform may fail with:
 
 Please read our [guide for grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/grant_ownership_common_use_cases) resource.
 It contains common use cases and issues that you may encounter when dealing with ownership transfers.
+
+### Using QUOTED_IDENTIFIERS_IGNORE_CASE with the provider
+
+**Problem:** When `QUOTED_IDENTIFIERS_IGNORE_CASE` parameter is set to true, but resource identifier fields are filled with lowercase letters,
+during `terrform apply` they may fail with the `Error: Provider produced inconsistent result after apply` error (removing themselves from the state in the meantime).
+
+**Related issues:** [#2967](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2967)
+
+**Solution:** Either turn off the parameter or adjust your configurations to use only upper-cased names for identifiers and import back the resources.
