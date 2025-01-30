@@ -145,7 +145,7 @@ var accountSchema = map[string]*schema.Schema{
 
 func Account() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The account resource allows you to create and manage Snowflake accounts.",
+		Description:   "The account resource allows you to create and manage Snowflake accounts. For more information, check [account documentation](https://docs.snowflake.com/en/user-guide/organizations-manage-accounts).",
 		CreateContext: TrackingCreateWrapper(resources.Account, CreateAccount),
 		ReadContext:   TrackingReadWrapper(resources.Account, ReadAccount(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.Account, UpdateAccount),

@@ -2,12 +2,12 @@
 page_title: "snowflake_account Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  The account resource allows you to create and manage Snowflake accounts.
+  The account resource allows you to create and manage Snowflake accounts. For more information, check account documentation https://docs.snowflake.com/en/user-guide/organizations-manage-accounts.
 ---
 
 # snowflake_account (Resource)
 
-The account resource allows you to create and manage Snowflake accounts.
+The account resource allows you to create and manage Snowflake accounts. For more information, check [account documentation](https://docs.snowflake.com/en/user-guide/organizations-manage-accounts).
 
 ~> **Note** To use this resource you have to use an account with a privilege to use the ORGADMIN role.
 

@@ -1680,11 +1680,11 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 		WithFinalize(rootTaskId.FullyQualifiedName())
 	childTaskModel.SetDependsOn(rootTaskModel.ResourceReference())
 
-	rootTaskTaskStandaloneModelDisabled := model.TaskWithId("root", rootTaskId, false, statement).
+	rootTaskStandaloneModelDisabled := model.TaskWithId("root", rootTaskId, false, statement).
 		WithScheduleMinutes(schedule)
 	childTaskStandaloneModelDisabled := model.TaskWithId("child", finalizerTaskId, false, statement).
 		WithScheduleMinutes(schedule)
-	childTaskStandaloneModelDisabled.SetDependsOn(rootTaskTaskStandaloneModelDisabled.ResourceReference())
+	childTaskStandaloneModelDisabled.SetDependsOn(rootTaskStandaloneModelDisabled.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1740,13 +1740,13 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 			// Change tasks in DAG to standalone tasks (disabled to check if resuming/suspending works correctly)
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
-				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskTaskStandaloneModelDisabled, childTaskStandaloneModelDisabled),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskStandaloneModelDisabled, childTaskStandaloneModelDisabled),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, rootTaskTaskStandaloneModelDisabled.ResourceReference()).
+					resourceassert.TaskResource(t, rootTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse).
 						HasSuspendTaskAfterNumFailuresString("10"),
-					resourceshowoutputassert.TaskShowOutput(t, rootTaskTaskStandaloneModelDisabled.ResourceReference()).
+					resourceshowoutputassert.TaskShowOutput(t, rootTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
