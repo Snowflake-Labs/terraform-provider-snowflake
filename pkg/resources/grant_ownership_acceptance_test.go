@@ -1556,3 +1556,38 @@ func TestAcc_GrantOwnership_OnObject_ResourceMonitor_ToAccountRole(t *testing.T)
 		},
 	})
 }
+
+// This test proves that granting ownership on HYBRID TABLE is not supported in Snowflake.
+func TestAcc_GrantOwnership_OnObject_HybridTable_ToAccountRole_Fails(t *testing.T) {
+	acc.TestAccPreCheck(t)
+	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	databaseName := databaseId.Name()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+	schemaName := schemaId.Name()
+	hybridTableId, hybridTableCleanup := acc.TestClient().HybridTable.Create(t)
+	t.Cleanup(hybridTableCleanup)
+
+	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	accountRoleName := accountRoleId.Name()
+
+	configVariables := config.Variables{
+		"account_role_name":                 config.StringVariable(accountRoleName),
+		"database_name":                     config.StringVariable(databaseName),
+		"schema_name":                       config.StringVariable(schemaName),
+		"hybrid_table_fully_qualified_name": config.StringVariable(hybridTableId.FullyQualifiedName()),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_HybridTable_ToAccountRole"),
+				ConfigVariables: configVariables,
+				ExpectError:     regexp.MustCompile("syntax error line 1 at position 26 unexpected 'TABLE"),
+			},
+		},
+	})
+}
