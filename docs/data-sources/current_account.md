@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_current_account Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

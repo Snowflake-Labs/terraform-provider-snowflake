@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_schema Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage schema objects. For more information, check schema documentation https://docs.snowflake.com/en/sql-reference/sql/create-schema.
 ---

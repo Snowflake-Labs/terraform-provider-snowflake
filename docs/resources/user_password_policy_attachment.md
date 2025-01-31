@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_user_password_policy_attachment Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   Specifies the password policy to use for a certain user.
 ---

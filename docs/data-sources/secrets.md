@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_secrets Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered secrets. Filtering is aligned with the current possibilities for SHOW SECRETS https://docs.snowflake.com/en/sql-reference/sql/show-secrets query. The results of SHOW and DESCRIBE are encapsulated in one output collection secrets.
 ---

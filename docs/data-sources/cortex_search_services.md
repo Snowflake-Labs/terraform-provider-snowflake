@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_cortex_search_services Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

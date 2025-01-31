@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_warehouses Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered warehouses. Filtering is aligned with the current possibilities for SHOW WAREHOUSES https://docs.snowflake.com/en/sql-reference/sql/show-warehouses query (only like is supported). The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.
 ---

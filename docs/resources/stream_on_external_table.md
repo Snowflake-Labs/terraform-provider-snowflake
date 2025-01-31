@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_stream_on_external_table Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage streams on external tables. For more information, check stream documentation https://docs.snowflake.com/en/sql-reference/sql/create-stream.
 ---

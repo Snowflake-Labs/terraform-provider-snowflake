@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_scim_integration Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage scim security integration objects. For more information, check security integrations documentation https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim.
 ---

@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_secret_with_generic_string Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage secret objects with Generic String. For more information, check secret documentation https://docs.snowflake.com/en/sql-reference/sql/create-secret.
 ---

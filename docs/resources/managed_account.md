@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_managed_account Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

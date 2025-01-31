@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_dynamic_tables Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

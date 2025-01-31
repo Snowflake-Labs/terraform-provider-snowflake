@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_schemas Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered schemas. Filtering is aligned with the current possibilities for SHOW SCHEMAS https://docs.snowflake.com/en/sql-reference/sql/show-schemas query. The results of SHOW, DESCRIBE, and SHOW PARAMETERS IN are encapsulated in one output collection.
 ---
