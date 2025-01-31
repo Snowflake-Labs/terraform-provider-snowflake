@@ -16,6 +16,6 @@ resource "snowflake_grant_privileges_to_database_role" "test" {
 
   on_schema_object {
     object_type = "TABLE"
-    object_name = snowflake_table.fully_qualified_name
+    object_name = snowflake_table.test.fully_qualified_name
   }
 }
