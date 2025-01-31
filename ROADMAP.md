@@ -19,7 +19,7 @@ We have released a long-awaited [v1.0.0](https://github.com/Snowflake-Labs/terra
 Since the last update we have focused on:
 
 * [Reducing the feature gap](#reducing-the-feature-gap) (focusing on the Snowflake essential GA resources)
-* Redesigning identifiers (check [\#3045](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/3045) and [identifiers_rework_design_decisions](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md))
+* Redesigning identifiers (check [\#3045](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/3045) and [identifiers_rework_design_decisions](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/identifiers_rework_design_decisions.md))
 * Reworking the provider's configuration (the doc/discussion will be shared when ready)
 * Researching the object renaming in our provider (the doc will be shared when ready)
 

@@ -3,7 +3,7 @@
 page_title: "snowflake_grant_privileges_to_share Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-
+  
 ---
 
 # snowflake_grant_privileges_to_share (Resource)

@@ -3,10 +3,10 @@
 page_title: "snowflake_grant_ownership Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-
+  
 ---
 
-~> **Note** For more details about granting ownership, please visit [`GRANT OWNERSHIP` Snowflake documentation page](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership), and our [grant ownership resource overview](https://github.com/Snowflake-Labs/terraform-provider-snowflake/tree/main/docs/technical-documentation/grant_ownership_resource_overview.md).
+~> **Note** For more details about granting ownership, please visit [`GRANT OWNERSHIP` Snowflake documentation page](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership), and our [grant ownership resource overview](../guides/grant_ownership_resource_overview).
 
 ~> **Note** Manage grants on `HYBRID TABLE` by specifying `TABLE` or `TABLES` in `object_type` field. This applies to a single object, all objects, or future objects. This reflects the current behavior in Snowflake.
 

@@ -28,7 +28,7 @@ resource "snowflake_secondary_connection" "complete" {
 
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).
 
--> **Note** To promote `snowflake_secondary_connection` to [`snowflake_primary_connection`](./primary_connection), resources need to be migrated manually. For guidance on removing and importing resources into the state check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md). Remove the resource from the state with [terraform state rm](https://developer.hashicorp.com/terraform/cli/commands/state/rm), then promote it manually using:
+-> **Note** To promote `snowflake_secondary_connection` to [`snowflake_primary_connection`](./primary_connection), resources need to be migrated manually. For guidance on removing and importing resources into the state check [resource migration](../guides/resource_migration). Remove the resource from the state with [terraform state rm](https://developer.hashicorp.com/terraform/cli/commands/state/rm), then promote it manually using:
     ```
     ALTER CONNECTION <name> PRIMARY;
     ```
@@ -41,7 +41,7 @@ and then import it as the `snowflake_primary_connection`.
 ### Required
 
 - `as_replica_of` (String) Specifies the identifier for a primary connection from which to create a replica (i.e. a secondary connection). For more information about this resource, see [docs](./primary_connection).
-- `name` (String) String that specifies the identifier (i.e. name) for the connection. Must start with an alphabetic character and may only contain letters, decimal digits (0-9), and underscores (_). For a secondary connection, the name must match the name of its primary connection. Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
+- `name` (String) String that specifies the identifier (i.e. name) for the connection. Must start with an alphabetic character and may only contain letters, decimal digits (0-9), and underscores (_). For a secondary connection, the name must match the name of its primary connection. Due to technical limitations (read more [here](../guides/identifiers_rework_design_decisions#known-limitations-and-identifier-recommendations)), avoid using the following characters: `|`, `.`, `"`.
 
 ### Optional
 

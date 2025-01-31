@@ -94,15 +94,15 @@ To see what SQLs are being run you have to set the `TF_LOG=DEBUG` environment va
 To confirm the correctness of the SQLs, refer to the [official Snowflake documentation](https://docs.snowflake.com/).
 
 ### How can I import already existing Snowflake infrastructure into Terraform?
-Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#3-two-options-from-here)
-as it describes different approaches of importing the existing Snowflake infrastructure into Terrafrom as configuration.
+Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/resource_migration.md#3-two-options-from-here)
+as it describes different approaches of importing the existing Snowflake infrastructure into Terraform as configuration.
 One thing worth noting is that some approaches can be automated by scripts interacting with Snowflake and generating needed configuration blocks,
 which is highly recommended for large-scale migrations.
 
 ### What identifiers are valid inside the provider and how to reference one resource inside the other one?
-Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)
-- For the recommended identifier format, take a look at the ["Known limitations and identifier recommendations"](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations) section.
-- For a new way of referencing object identifiers in resources, take a look at the ["New computed fully qualified name field in resources" ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#new-computed-fully-qualified-name-field-in-resources) section.
+Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/identifiers_rework_design_decisions.md)
+- For the recommended identifier format, take a look at the ["Known limitations and identifier recommendations"](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations) section.
+- For a new way of referencing object identifiers in resources, take a look at the ["New computed fully qualified name field in resources" ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/identifiers_rework_design_decisions.md#new-computed-fully-qualified-name-field-in-resources) section.
 
 ## Commonly known issues
 ### Old Terraform CLI version

@@ -3,7 +3,7 @@
 page_title: "snowflake_grant_privileges_to_account_role Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-
+  
 ---
 
 

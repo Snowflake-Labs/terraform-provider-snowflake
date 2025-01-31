@@ -2,7 +2,7 @@
 page_title: "snowflake_grant_application_role Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-
+  
 ---
 
 # snowflake_grant_application_role (Resource)
