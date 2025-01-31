@@ -1543,3 +1543,43 @@ resource "snowflake_grant_privileges_to_database_role" "test" {
 }
 `, databaseRoleId.Name(), databaseRoleId.DatabaseName(), strings.Join(collections.Map(privileges, strconv.Quote), ","), objectTypePlural, databaseName)
 }
+
+// This test proves that managing grants on HYBRID TABLE is not supported in Snowflake. TABLE should be used instead.
+func TestAcc_GrantPrivileges_OnObject_HybridTable_ToDatabaseRole_Fails(t *testing.T) {
+	acc.TestAccPreCheck(t)
+	hybridTableId, hybridTableCleanup := acc.TestClient().HybridTable.Create(t)
+	t.Cleanup(hybridTableCleanup)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
+	configVariables := func(objectType sdk.ObjectType) config.Variables {
+		cfg := config.Variables{
+			"database_role_name": config.StringVariable(databaseRole.ID().FullyQualifiedName()),
+			"privileges": config.ListVariable(
+				config.StringVariable(string(sdk.SchemaObjectPrivilegeApplyBudget)),
+			),
+			"hybrid_table_fully_qualified_name": config.StringVariable(hybridTableId.FullyQualifiedName()),
+			"object_type":                       config.StringVariable(string(objectType)),
+		}
+		return cfg
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject_HybridTable"),
+				ConfigVariables: configVariables(sdk.ObjectTypeHybridTable),
+				ExpectError:     regexp.MustCompile("syntax error line 1 at position 28 unexpected 'TABLE"),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject_HybridTable"),
+				ConfigVariables: configVariables(sdk.ObjectTypeTable),
+			},
+		},
+	})
+}

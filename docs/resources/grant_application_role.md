@@ -13,7 +13,7 @@ description: |-
 
 ```terraform
 locals {
-  application_role_identifier = "\"my_appplication\".\"app_role_1\""
+  application_role_identifier = "\"my_application\".\"app_role_1\""
 }
 
 ##################################
