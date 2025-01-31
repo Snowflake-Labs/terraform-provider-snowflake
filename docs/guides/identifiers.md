@@ -1,10 +1,11 @@
 ---
-page_title: "Identifiers rework"
+page_title: "Identifiers Guide"
 subcategory: ""
 description: |-
 
 ---
-# Identifiers rework
+
+# Identifiers Guide
 
 ## New computed fully qualified name field in resources
 
