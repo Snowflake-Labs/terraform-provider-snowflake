@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
 
@@ -1678,11 +1680,11 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 		WithFinalize(rootTaskId.FullyQualifiedName())
 	childTaskModel.SetDependsOn(rootTaskModel.ResourceReference())
 
-	firstTaskStandaloneModelDisabled := model.TaskWithId("root", rootTaskId, false, statement).
+	rootTaskStandaloneModelDisabled := model.TaskWithId("root", rootTaskId, false, statement).
 		WithScheduleMinutes(schedule)
-	secondTaskStandaloneModelDisabled := model.TaskWithId("child", finalizerTaskId, false, statement).
+	childTaskStandaloneModelDisabled := model.TaskWithId("child", finalizerTaskId, false, statement).
 		WithScheduleMinutes(schedule)
-	secondTaskStandaloneModelDisabled.SetDependsOn(firstTaskStandaloneModelDisabled.ResourceReference())
+	childTaskStandaloneModelDisabled.SetDependsOn(rootTaskStandaloneModelDisabled.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1724,9 +1726,10 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 						HasSuspendTaskAfterNumFailuresString("2"),
 					resourceshowoutputassert.TaskShowOutput(t, rootTaskModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						// TODO(SNOW-1843489): Create ticket and report; this field in task relations seems to have mixed chances of appearing (needs deeper digging, doesn't affect the resource; could be removed for now)
-						// HasTaskRelations(sdk.TaskRelations{FinalizerTask: &finalizerTaskId}).
 						HasState(sdk.TaskStateStarted),
+					// For task relations to be present, in show_output we would have to modify the root task in a way that would
+					// trigger show_output recomputing by our custom diff.
+					objectassert.Task(t, rootTaskId).HasTaskRelations(sdk.TaskRelations{FinalizerTask: &finalizerTaskId}),
 					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
@@ -1737,20 +1740,20 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 			// Change tasks in DAG to standalone tasks (disabled to check if resuming/suspending works correctly)
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
-				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModelDisabled, secondTaskStandaloneModelDisabled),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskStandaloneModelDisabled, childTaskStandaloneModelDisabled),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, firstTaskStandaloneModelDisabled.ResourceReference()).
+					resourceassert.TaskResource(t, rootTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse).
 						HasSuspendTaskAfterNumFailuresString("10"),
-					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModelDisabled.ResourceReference()).
+					resourceshowoutputassert.TaskShowOutput(t, rootTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
-					resourceassert.TaskResource(t, secondTaskStandaloneModelDisabled.ResourceReference()).
+					resourceassert.TaskResource(t, childTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse),
-					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModelDisabled.ResourceReference()).
+					resourceshowoutputassert.TaskShowOutput(t, childTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
