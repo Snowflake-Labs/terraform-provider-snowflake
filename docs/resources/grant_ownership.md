@@ -3,7 +3,7 @@
 page_title: "snowflake_grant_ownership Resource - terraform-provider-snowflake"
 subcategory: ""
 description: |-
-  
+
 ---
 
 ~> **Note** For more details about granting ownership, please visit [`GRANT OWNERSHIP` Snowflake documentation page](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership), and our [grant ownership resource overview](https://github.com/Snowflake-Labs/terraform-provider-snowflake/tree/main/docs/technical-documentation/grant_ownership_resource_overview.md).
@@ -209,7 +209,7 @@ resource "snowflake_schema" "test" {
   name       = "schema"
 }
 ```
--> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
+-> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
 ## Granting ownership on pipes

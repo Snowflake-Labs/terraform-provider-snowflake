@@ -64,7 +64,7 @@ resource "snowflake_table_column_masking_policy_application" "application" {
   masking_policy = snowflake_masking_policy.policy.fully_qualified_name
 }
 ```
--> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
+-> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
 
