@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_warehouse Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage warehouse objects. For more information, check warehouse documentation https://docs.snowflake.com/en/sql-reference/commands-warehouse.
 ---

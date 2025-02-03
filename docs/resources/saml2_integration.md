@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_saml2_integration Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage SAML2 security integration objects. For more information, check security integrations documentation https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2.
 ---

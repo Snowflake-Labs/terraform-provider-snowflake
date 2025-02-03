@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_password_policy Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   A password policy specifies the requirements that must be met to create and reset a password to authenticate to Snowflake.
 ---

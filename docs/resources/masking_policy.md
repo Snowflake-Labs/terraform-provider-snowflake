@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_masking_policy Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage masking policies. For more information, check masking policies documentation https://docs.snowflake.com/en/sql-reference/sql/create-masking-policy.
 ---

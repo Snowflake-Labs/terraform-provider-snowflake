@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_database Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Represents a standard database. If replication configuration is specified, the database is promoted to serve as a primary database for replication.
 ---

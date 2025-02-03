@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_function_javascript Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   Resource used to manage javascript function objects. For more information, check function documentation https://docs.snowflake.com/en/sql-reference/sql/create-function.
 ---

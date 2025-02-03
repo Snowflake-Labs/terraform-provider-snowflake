@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_shared_database Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   A shared database creates a database from a share provided by another Snowflake account. For more information about shares, see Introduction to Secure Data Sharing https://docs.snowflake.com/en/user-guide/data-sharing-intro.
 ---

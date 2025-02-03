@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_email_notification_integration Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

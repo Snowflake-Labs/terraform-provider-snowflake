@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_task Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage task objects. For more information, check task documentation https://docs.snowflake.com/en/user-guide/tasks-intro.
 ---

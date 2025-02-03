@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_secret_with_authorization_code_grant Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage secret objects with OAuth Authorization Code Grant. For more information, check secret documentation https://docs.snowflake.com/en/sql-reference/sql/create-secret.
 ---

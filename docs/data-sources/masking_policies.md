@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_masking_policies Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered masking policies. Filtering is aligned with the current possibilities for SHOW MASKING POLICIES https://docs.snowflake.com/en/sql-reference/sql/show-masking-policies query. The results of SHOW and DESCRIBE are encapsulated in one output collection masking_policies.
 ---

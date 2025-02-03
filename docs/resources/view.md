@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_view Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage view objects. For more information, check view documentation https://docs.snowflake.com/en/sql-reference/sql/create-view.
 ---

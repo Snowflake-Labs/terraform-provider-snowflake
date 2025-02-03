@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_alert Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

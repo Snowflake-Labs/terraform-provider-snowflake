@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_stage Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_network_rule Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

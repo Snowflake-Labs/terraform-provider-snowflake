@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_function_sql Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   Resource used to manage sql function objects. For more information, check function documentation https://docs.snowflake.com/en/sql-reference/sql/create-function.
 ---

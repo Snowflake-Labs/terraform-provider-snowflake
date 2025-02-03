@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_failover_group Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

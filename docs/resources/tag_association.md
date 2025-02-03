@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_tag_association Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage tag associations. For more information, check object tagging documentation https://docs.snowflake.com/en/user-guide/object-tagging.
 ---

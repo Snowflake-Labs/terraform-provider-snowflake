@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_streamlit Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage streamlits objects. For more information, check streamlit documentation https://docs.snowflake.com/en/sql-reference/commands-streamlit.
 ---

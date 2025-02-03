@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_account_role Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   The resource is used for role management, where roles can be assigned privileges and, in turn, granted to users and other roles. When granted to roles they can create hierarchies of privilege structures. For more details, refer to the official documentation https://docs.snowflake.com/en/user-guide/security-access-control-overview.
 ---

@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_api_authentication_integration_with_jwt_bearer Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage api authentication security integration objects with jwt bearer. For more information, check security integrations documentation https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.
 ---

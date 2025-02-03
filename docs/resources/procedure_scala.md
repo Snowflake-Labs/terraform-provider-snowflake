@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_procedure_scala Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   Resource used to manage scala procedure objects. For more information, check procedure documentation https://docs.snowflake.com/en/sql-reference/sql/create-procedure.
 ---

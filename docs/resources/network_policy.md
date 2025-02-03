@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_network_policy Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to control network traffic. For more information, check an official guide https://docs.snowflake.com/en/user-guide/network-policies on controlling network traffic with network policies.
 ---
