@@ -17,6 +17,8 @@ description: |-
 
 ## Example Usage
 
+For more examples, head over to our usage guide where we present how to use the grant_ownership resource in [common use cases](../guides/grant_ownership_common_use_cases).
+
 ```terraform
 ##################################
 ### on object to account role
