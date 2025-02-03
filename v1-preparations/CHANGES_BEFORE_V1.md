@@ -69,7 +69,7 @@ we will be removing the option to clone (if they exist in the current implementa
 Because of that, we would like to shelve the idea of introducing cloning to the resources (at least for V1). After V1,
 object cloning is one of the topics we would like to take a closer look at. Right now, the cloning can be done manually
 and imported into normal resources, but in case there is any divergence between the normal and cloned object, the resources
-may act in an unexpected way. An alternative solution is to use plain SQL with [unsafe execute resources](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/unsafe_execute) for now.
+may act in an unexpected way. An alternative solution is to use plain SQL with [execute resources](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/execute) for now.
 
 ## Identifier design decisions
 The summary of design decisions taken during the [identifiers rework](../ROADMAP.md#identifiers-rework)

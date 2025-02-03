@@ -11,6 +11,8 @@ description: |-
 
 ~> **Note** For more details about resource monitor usage, please visit [this guide on Snowflake documentation page](https://docs.snowflake.com/en/user-guide/resource-monitors).
 
+~> **Note** Currently assigning a resource monitor to account is not supported. This will be available in a new resource for managing account dependencies. For now, please use [execute](./execute) instead.
+
 **! Warning !** Due to Snowflake limitations, the following actions are not supported:
 - Cannot create resource monitors with only triggers set, any other attribute has to be set.
 - Once a resource monitor has at least one trigger assigned, it cannot fully unset them (has to have at least one trigger, doesn't matter of which type). That's why when you unset all the triggers on a resource monitor, it will be automatically recreated.
