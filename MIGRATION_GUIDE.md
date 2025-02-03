@@ -7,6 +7,12 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.2 ➞ v1.0.3
+
+### Changed documentation structure
+We added `Preview` and `Stable` categories to the resources and data sources documentation, which clearly separates the preview and stable features in the documentation feature list.
+This is a part of our effort to improve the provider documentation. We are open for your feedback and suggestions.
+
 ## v1.0.1 ➞ v1.0.2
 
 ### Fixed migration of account resource
