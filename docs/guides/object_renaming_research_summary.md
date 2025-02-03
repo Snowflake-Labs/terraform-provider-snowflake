@@ -1,3 +1,10 @@
+---
+page_title: "Object Renaming"
+subcategory: ""
+description: |-
+
+---
+
 # Object Renaming Support
 
 The Terraform Provider team recently started a short research project on object renaming and other similar topics. This document will cover the topics we looked into, explain how we tested them, and discuss their effects on the provider. We'll also list the topics we want to explore more in our next research.

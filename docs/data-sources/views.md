@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_views Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered views. Filtering is aligned with the current possibilities for SHOW VIEWS https://docs.snowflake.com/en/sql-reference/sql/show-views query (only like is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection views.
 ---

@@ -1,9 +1,9 @@
 # Design decisions before v1
 
-This document is a supplement to all the resource changes described in the [migration guide](../MIGRATION_GUIDE.md) on our road to V1 (check the [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#05052024-roadmap-overview)). Its purpose is to give explanation/context for the decisions spanning multiple resources. It will be updated with more findings/conventions.
+This document is a supplement to all the resource changes described in the [migration guide](../MIGRATION_GUIDE.md) on our road to V1 (check the [roadmap](../ROADMAP.md#05052024-roadmap-overview)). Its purpose is to give explanation/context for the decisions spanning multiple resources. It will be updated with more findings/conventions.
 
 ## Default values
-For any resource that went through the rework as part of the [resource preparation for V1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1),
+For any resource that went through the rework as part of the [resource preparation for V1](../ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1),
 the behaviour for default values may change from the previous one.
 
 In the past, the provider copied defaults from Snowflake, creating a tight coupling between them.
@@ -47,7 +47,7 @@ It won't be possible to use the above values directly (it will be for the string
 Currently, not setting a value for the given attribute inside the config results in populating this field in state with the value extracted from Snowflake (usually by running `SHOW`/`DESCRIBE`). This poses a challenge to identify if the change happened externally or is it just a default Snowflake value (multiple issues reported describe the issue with the infinite plans or weird drifts - this is one of the main reasons). With getting rid of the Snowflake defaults from the provider, it's not an easy thing to do in the currently used [Terraform SDK v2](https://github.com/hashicorp/terraform-plugin-sdk). We have considered and tested a variety of options, including custom diff suppression, setting these fields as optional and computed, and others, but there were smaller or bigger problems with these approaches. What we ended up with, and what will be a guideline for the V1 is:
 - we do not fill the given attribute in the state if it is not present inside a config (for the optional attributes; the required ones are always present)
 - we encourage to always use the value directly if you don't want to depend on the Snowflake default (consult [default values](#default-values) section)
-- this may result in change detection with migrations to the newer versions of the provider (because currently, the value is stored independently of being present in the config or not and there is no way to deduce its presence in the automatic state migrations we can provide) - alternative would be to follow our [resource migration guide](../docs/technical-documentation/resource_migration.md)
+- this may result in change detection with migrations to the newer versions of the provider (because currently, the value is stored independently of being present in the config or not and there is no way to deduce its presence in the automatic state migrations we can provide) - alternative would be to follow our [resource migration guide](../docs/guides/resource_migration.md)
 - we will provide a `show_output` and `describe_output` in each resource (more in [Raw Snowflake output](#raw-snowflake-output) section)
 
 ## Raw Snowflake output
@@ -60,7 +60,7 @@ This way, it is still possible to obtain the values in your configs, even withou
 
 ## Object cloning
 Some of the Snowflake objects (like [Database](https://docs.snowflake.com/en/sql-reference/sql/create-database)) can create clones from already existing objects.
-For now, we decided to drop the support for object cloning. That's why during the [resource preparation for V1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1)
+For now, we decided to drop the support for object cloning. That's why during the [resource preparation for V1](../ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1)
 we will be removing the option to clone (if they exist in the current implementation). The main reasons behind that decision are
 - With [object cloning](https://docs.snowflake.com/en/user-guide/object-clone) we have to keep in mind additional things that still have to be researched to check how they're matching within the Terraform ecosystem.
 - There is potentially not enough information in Snowflake available for the end users (like us) to track the information about the connection between cloned objects.
@@ -69,11 +69,11 @@ we will be removing the option to clone (if they exist in the current implementa
 Because of that, we would like to shelve the idea of introducing cloning to the resources (at least for V1). After V1,
 object cloning is one of the topics we would like to take a closer look at. Right now, the cloning can be done manually
 and imported into normal resources, but in case there is any divergence between the normal and cloned object, the resources
-may act in an unexpected way. An alternative solution is to use plain SQL with [unsafe execute resources](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/unsafe_execute) for now.
+may act in an unexpected way. An alternative solution is to use plain SQL with [execute resources](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/execute) for now.
 
 ## Identifier design decisions
-The summary of design decisions taken during the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework)
-was put into a separate document ([here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)).
+The summary of design decisions taken during the [identifiers rework](../ROADMAP.md#identifiers-rework)
+was put into a separate document ([here](../docs/guides/identifiers_rework_design_decisions.md)).
 
 ## Supporting COPY GRANTS
 Some Snowflake objects, like [views](https://docs.snowflake.com/en/sql-reference/sql/create-view#examples), support the `COPY GRANTS` property. This retains the access permissions from the original object when a new object is created using the `OR REPLACE` clause. We have decided to support this property in the relevant resources. By default, the resources are not created with `COPY GRANTS` , but you can do this with `copy_grants=true`. However, a detected diff in some of the fields requires resource recreation and setting a new field during `CREATE`. This means that we can not use ForceNew, because Terraform calls `DROP` and `CREATE`, and the grants are not copied. To mitigate this, when Terraform detects a change in such a field, we have decided not to use ForceNew. Instead, the provider runs `CREATE OR REPLACE` in the `UPDATE` function. During such changes, the objects are recreated, but in the plan, it looks like they're being updated. This should not cause problems in objects that are stateless. We will revisit this topic with the migration to [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework).

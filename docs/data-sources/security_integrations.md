@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_security_integrations Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered security integrations. Filtering is aligned with the current possibilities for SHOW SECURITY INTEGRATIONS https://docs.snowflake.com/en/sql-reference/sql/show-integrations query (only like is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection security_integrations.
 ---

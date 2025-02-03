@@ -12,6 +12,12 @@ across different versions.
 ### Fixed ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES parameter
 ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES account parameter did not work correctly before ([#3344]). This parameter was of incorrect type, and the constructed queries did not provide the parameter's value during altering accounts. It has been fixed in this version.
 
+### Changed documentation structure
+We added `Preview` and `Stable` categories to the resources and data sources documentation, which clearly separates the preview and stable features in the documentation feature list.
+We moved our technical guides to `guides` directory. This means that all such guides are available natively in the registry, similarly to [Unassigning policies](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies) guide.
+We also updated the links to point to the docs inside the registry. Note that our [Roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md) and [Migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) are available in Github only.
+This is a part of our effort to improve the provider documentation. We are open for your feedback and suggestions.
+
 ## v1.0.1 ➞ v1.0.2
 
 ### Fixed migration of account resource
@@ -225,7 +231,7 @@ Additionally, `JWT` value is no longer available for `authenticator` field in th
 - `snowflake_function_sql`
 
 It will be removed with the v1 release. Please check the docs for the new resources and adjust your configuration files.
-For no downtime migration, follow our [guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+For no downtime migration, follow our [guide](./docs/guides/resource_migration.md).
 
 The new resources are more aligned with current features like:
 - external access integrations support
@@ -243,7 +249,7 @@ The new resources are more aligned with current features like:
 - `snowflake_procedure_sql`
 
 It will be removed with the v1 release. Please check the docs for the new resources and adjust your configuration files.
-For no downtime migration, follow our [guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+For no downtime migration, follow our [guide](./docs/guides/resource_migration.md).
 
 The new resources are more aligned with current features like:
 - external access integrations support
@@ -286,7 +292,7 @@ The `snowflake_unsafe_execute` gets deprecated in favor of the new resource `sno
 The `snowflake_execute` was build on top of `snowflake_unsafe_execute` with a few improvements.
 The unsafe version will be removed with the v1 release, so please migrate to the `snowflake_execute` resource.
 
-For no downtime migration, follow our [guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+For no downtime migration, follow our [guide](./docs/guides/resource_migration.md).
 When importing, remember that the given resource id has to be unique (using UUIDs is recommended).
 Also, because of the nature of the resource, first apply after importing is necessary to "copy" values from the configuration to the state.
 
@@ -636,7 +642,7 @@ CREATE CONNECTION <name> AS REPLICA OF <organization_name>.<account_name>.<conne
 ```
 and then imported as `snowflake_secondary_connection`.
 
-For guidance on removing and importing resources into the state check [resource migration](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+For guidance on removing and importing resources into the state check [resource migration](./docs/guides/resource_migration.md).
 
 See reference [docs](https://docs.snowflake.com/en/sql-reference/sql/create-connection).
 
@@ -790,7 +796,7 @@ resource "snowflake_stream_on_view" "stream" {
 }
 ```
 
-Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+Then, follow our [Resource migration guide](./docs/guides/resource_migration.md).
 
 ### *(new feature)* Secret resources
 Added a new secrets resources for managing secrets.
@@ -866,7 +872,7 @@ resource "snowflake_stream_on_table" "stream" {
 ```
 
 
-Then, follow our [Resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+Then, follow our [Resource migration guide](./docs/guides/resource_migration.md).
 
 ### *(new feature)* new snowflake_service_user and snowflake_legacy_service_user resources
 
@@ -892,7 +898,7 @@ Both resources have schemas almost identical to the `snowflake_user` resource wi
 
 `snowflake_users` datasource was adjusted to handle different user types and `type` field was added to the `describe_output`.
 
-If you used to manage service or legacy service users through `snowflake_user` resource (e.g. using `lifecycle.ignore_changes`) or `snowflake_unsafe_execute`, please migrate to the new resources following [our guidelines on resource migration](docs/technical-documentation/resource_migration.md).
+If you used to manage service or legacy service users through `snowflake_user` resource (e.g. using `lifecycle.ignore_changes`) or `snowflake_unsafe_execute`, please migrate to the new resources following [our guidelines on resource migration](docs/guides/resource_migration.md).
 
 E.g. change the old config from:
 
@@ -925,7 +931,7 @@ resource "snowflake_service_user" "service_user" {
 
 ```
 
-Then, follow our [resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+Then, follow our [resource migration guide](./docs/guides/resource_migration.md).
 
 Connected issues: [#2951](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2951)
 
@@ -1241,7 +1247,7 @@ Connected issues: [#3007](https://github.com/Snowflake-Labs/terraform-provider-s
 
 ### snowflake_user resource changes
 
-Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping. Also, check the [design decisions](./v1-preparations/CHANGES_BEFORE_V1.md).
+Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](./docs/guides/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping. Also, check the [design decisions](./v1-preparations/CHANGES_BEFORE_V1.md).
 
 #### *(breaking change)* user parameters added to snowflake_user resource
 
@@ -1323,7 +1329,7 @@ Connected issues: [#2662](https://github.com/Snowflake-Labs/terraform-provider-s
 
 #### *(bugfix)* Correctly handle `default_warehouse`, `default_namespace`, and `default_role`
 
-During the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework), we generalized how we compute the differences correctly for the identifier fields (read more in [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)). Proper suppressor was applied to `default_warehouse`, `default_namespace`, and `default_role`. Also, all these three attributes were corrected (e.g. handling spaces/hyphens in names).
+During the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework), we generalized how we compute the differences correctly for the identifier fields (read more in [this document](./docs/guides/identifiers_rework_design_decisions.md)). Proper suppressor was applied to `default_warehouse`, `default_namespace`, and `default_role`. Also, all these three attributes were corrected (e.g. handling spaces/hyphens in names).
 
 Connected issues: [#2836](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2836), [#2942](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2942)
 
@@ -1400,7 +1406,7 @@ Because the logic handling the keys in `snowflake_user` was fixed, it is advised
 
 To migrate, in case of having two resources:
 - copy the keys to `rsa_public_key` and `rsa_public_key2` in `snowflake_user`
-- remove `snowflake_user_public_keys` from state (following https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#resource-migration)
+- remove `snowflake_user_public_keys` from state (following [Resource migration guide](./docs/guides/resource_migration.md#resource-migration))
 - remove `snowflake_user_public_keys` from config
 
 #### *(breaking change)* snowflake_network_policy_attachment usage with snowflake_user
@@ -1409,7 +1415,7 @@ To migrate, in case of having two resources:
 
 To migrate, in case of having two resources:
 - copy network policy to [network_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.95.0/docs/resources/user#network_policy) attribute in the `snowflake_user` resource
-- remove `snowflake_network_policy_attachment` from state (following https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#resource-migration)
+- remove `snowflake_network_policy_attachment` from state (following [Resource migration guide](./docs/guides/resource_migration.md#resource-migration))
 - remove `snowflake_network_policy_attachment` from config
 
 References: [#3048](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/3048), [#3058](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3058)
@@ -1656,7 +1662,7 @@ ForceNew was added for the following attributes (because there are no usable SQL
 
 ### snowflake_warehouse resource changes
 
-Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping. Also, check the [design decisions](./v1-preparations/CHANGES_BEFORE_V1.md).
+Because of the multiple changes in the resource, the easiest migration way is to follow our [migration guide](./docs/guides/resource_migration.md) to perform zero downtime migration. Alternatively, it is possible to follow some pointers below. Either way, familiarize yourself with the resource changes before version bumping. Also, check the [design decisions](./v1-preparations/CHANGES_BEFORE_V1.md).
 
 #### *(potential behavior change)* Default values removed
 As part of the [redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) we are removing the default values for attributes having their defaults on Snowflake side to reduce coupling with the provider (read more in [default values](./v1-preparations/CHANGES_BEFORE_V1.md#default-values)). Because of that the following defaults were removed:
@@ -1795,7 +1801,7 @@ resource "snowflake_database" "test" {
 }
 ```
 
-If you had `from_database` set, you should follow our [resource migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to remove
+If you had `from_database` set, you should follow our [resource migration guide](./docs/guides/resource_migration.md) to remove
 the database from state to later import it in the newer version of the provider.
 Otherwise, it may cause issues when migrating to v0.93.0.
 For now, we're dropping the possibility to create a clone database from other databases.
@@ -1803,10 +1809,10 @@ The only way will be to clone a database manually and import it as `snowflake_da
 cloned databases diverge in behavior from standard databases, it may cause issues.
 
 For databases with one of the fields mentioned above, manual migration will be needed.
-Please refer to our [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md) to perform zero downtime migration.
+Please refer to our [migration guide](./docs/guides/resource_migration.md) to perform zero downtime migration.
 
 If you would like to upgrade to the latest version and postpone the upgrade, you still have to perform the manual migration
-to the `snowflake_database_old` resource by following the [zero downtime migrations document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md).
+to the `snowflake_database_old` resource by following the [zero downtime migrations document](./docs/guides/resource_migration.md).
 The only difference would be that instead of writing/generating new configurations you have to just rename the existing ones to contain `_old` suffix.
 
 ### *(behavior change)* snowflake_databases datasource
@@ -1997,7 +2003,7 @@ It is noted as a behavior change but in some way it is not; with the previous im
 We will consider adding `NOT NULL` back because it can be set by `ALTER COLUMN columnX SET NOT NULL`, but first we want to revisit the whole resource design.
 
 #### *(behavior change)* table_id reference
-The docs were inconsistent. Example prior to 0.86.0 version showed using the `table.id` as the `table_id` reference. The description of the `table_id` parameter never allowed such a value (`table.id` is a `|`-delimited identifier representation and only the `.`-separated values were listed in the docs: https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.85.0/docs/resources/table_constraint#required. The misuse of `table.id` parameter will result in error after migrating to 0.86.0. To make the config work, please remove and reimport the constraint resource from the state as described in [resource migration doc](./docs/technical-documentation/resource_migration.md).
+The docs were inconsistent. Example prior to 0.86.0 version showed using the `table.id` as the `table_id` reference. The description of the `table_id` parameter never allowed such a value (`table.id` is a `|`-delimited identifier representation and only the `.`-separated values were listed in the docs: https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.85.0/docs/resources/table_constraint#required. The misuse of `table.id` parameter will result in error after migrating to 0.86.0. To make the config work, please remove and reimport the constraint resource from the state as described in [resource migration doc](./docs/guides/resource_migration.md).
 
 After discussions in [#2535](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2535) we decided to provide a temporary workaround in 0.87.0 version, so that the manual migration is not necessary. It allows skipping the migration and jumping straight to 0.87.0 version. However, the temporary workaround will be gone in one of the future versions. Please adjust to the newly suggested reference with the new resources you create.
 
@@ -2020,7 +2026,7 @@ The `schema` attribute is now required with `database` attribute to match old im
 
 In recent changes, we introduced a new grant resources to replace the old ones.
 To aid with the migration, we wrote a guide to show one of the possible ways to migrate deprecated resources to their new counter-parts.
-As the guide is more general and applies to every version (and provider), we moved it [here](./docs/technical-documentation/resource_migration.md).
+As the guide is more general and applies to every version (and provider), we moved it [here](./docs/guides/resource_migration.md).
 
 ### snowflake_procedure resource changes
 #### *(deprecation)* return_behavior

@@ -1,4 +1,11 @@
-# Grant ownership summary
+---
+page_title: "Grant Ownership"
+subcategory: ""
+description: |-
+
+---
+
+# Grant ownership
 
 The [grant\_ownership resource](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) was introduced in version 0.88.0.
 Since its release, feedback indicates that it can be challenging to understand and use effectively in certain scenarios.

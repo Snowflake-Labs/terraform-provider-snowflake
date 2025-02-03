@@ -34,7 +34,7 @@ func withPrivilegedRolesDescription(description, paramName string) string {
 }
 
 func blocklistedCharactersFieldDescription(description string) string {
-	return fmt.Sprintf(`%s Due to technical limitations (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations)), avoid using the following characters: %s.`, description, characterList([]rune{'|', '.', '"'}))
+	return fmt.Sprintf(`%s Due to technical limitations (read more [here](../guides/identifiers_rework_design_decisions#known-limitations-and-identifier-recommendations)), avoid using the following characters: %s.`, description, characterList([]rune{'|', '.', '"'}))
 }
 
 func diffSuppressStatementFieldDescription(description string) string {

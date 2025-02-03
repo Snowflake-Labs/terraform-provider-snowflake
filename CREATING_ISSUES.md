@@ -23,6 +23,8 @@
   * [Granting on Functions or Procedures](#granting-on-functions-or-procedures)
   * [Infinite diffs, empty privileges, errors when revoking on grant resources](#infinite-diffs-empty-privileges-errors-when-revoking-on-grant-resources)
   * [Granting PUBLIC role fails](#granting-public-role-fails)
+  * [Issues with grant_ownership resource](#issues-with-grant_ownership)
+  * [Using QUOTED_IDENTIFIERS_IGNORE_CASE with the provider](#using-quoted_identifiers_ignore_case-with-the-provider)
 
 This guide was made to aid with creating the GitHub issues, so you can maximize your chances of getting help as quickly as possible.
 To correctly report the issue, we suggest going through the following steps.
@@ -94,15 +96,15 @@ To see what SQLs are being run you have to set the `TF_LOG=DEBUG` environment va
 To confirm the correctness of the SQLs, refer to the [official Snowflake documentation](https://docs.snowflake.com/).
 
 ### How can I import already existing Snowflake infrastructure into Terraform?
-Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md#3-two-options-from-here)
-as it describes different approaches of importing the existing Snowflake infrastructure into Terrafrom as configuration.
+Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/resource_migration.md#3-two-options-from-here)
+as it describes different approaches of importing the existing Snowflake infrastructure into Terraform as configuration.
 One thing worth noting is that some approaches can be automated by scripts interacting with Snowflake and generating needed configuration blocks,
 which is highly recommended for large-scale migrations.
 
 ### What identifiers are valid inside the provider and how to reference one resource inside the other one?
-Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md)
-- For the recommended identifier format, take a look at the ["Known limitations and identifier recommendations"](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations) section.
-- For a new way of referencing object identifiers in resources, take a look at the ["New computed fully qualified name field in resources" ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/identifiers_rework_design_decisions.md#new-computed-fully-qualified-name-field-in-resources) section.
+Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/identifiers_rework_design_decisions.md)
+- For the recommended identifier format, take a look at the ["Known limitations and identifier recommendations"](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/identifiers_rework_design_decisions.md#known-limitations-and-identifier-recommendations) section.
+- For a new way of referencing object identifiers in resources, take a look at the ["New computed fully qualified name field in resources" ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/identifiers_rework_design_decisions.md#new-computed-fully-qualified-name-field-in-resources) section.
 
 ## Commonly known issues
 ### Old Terraform CLI version
@@ -276,3 +278,17 @@ Terraform may fail with:
 **Related issues:** [#3001](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3001), [#2848](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2848)
 
 **Solution:** This happens, because the PUBLIC role is a "pseudo-role" (see [docs](https://docs.snowflake.com/en/user-guide/security-access-control-overview#system-defined-roles)) that is already assigned to every role and user, so there is no need to grant it through Terraform. If you have an issue with removing the resources please use `terraform state rm <id>` to remove the resource from the state (and you can safely remove the configuration).
+
+### Issues with grant_ownership
+
+Please read our [guide for grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/grant_ownership_common_use_cases) resource.
+It contains common use cases and issues that you may encounter when dealing with ownership transfers.
+
+### Using QUOTED_IDENTIFIERS_IGNORE_CASE with the provider
+
+**Problem:** When `QUOTED_IDENTIFIERS_IGNORE_CASE` parameter is set to true, but resource identifier fields are filled with lowercase letters,
+during `terrform apply` they may fail with the `Error: Provider produced inconsistent result after apply` error (removing themselves from the state in the meantime).
+
+**Related issues:** [#2967](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2967)
+
+**Solution:** Either turn off the parameter or adjust your configurations to use only upper-cased names for identifiers and import back the resources.
