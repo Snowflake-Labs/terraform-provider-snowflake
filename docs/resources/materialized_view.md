@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_materialized_view Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

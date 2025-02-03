@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_account_authentication_policy_attachment Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   Specifies the authentication policy to use for the current account. To set the authentication policy of a different account, use a provider alias.
 ---

@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_oauth_integration_for_partner_applications Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage oauth security integration for partner applications objects. For more information, check security integrations documentation https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake.
 ---

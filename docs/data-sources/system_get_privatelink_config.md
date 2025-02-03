@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_system_get_privatelink_config Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

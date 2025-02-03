@@ -1,11 +1,9 @@
 ---
 page_title: "snowflake_account_parameter Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage current account parameters. For more information, check parameters documentation https://docs.snowflake.com/en/sql-reference/parameters.
 ---
-
-!> **V1 release candidate** This resource was reworked and is a release candidate for the V1. We do not expect significant changes in it before the V1. We will welcome any feedback and adjust the resource if needed. Any errors reported will be resolved with a higher priority. We encourage checking this resource out before the V1 release. Please follow the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0990--v01000) to use it.
 
 -> **Note** This resource does not support all account parameters. The supported ones are listed below. This feature gap will be addressed in future releases.
 

@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_network_policy_attachment Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

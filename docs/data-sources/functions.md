@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_functions Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_tags Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered tags. Filtering is aligned with the current possibilities for SHOW TAGS https://docs.snowflake.com/en/sql-reference/sql/show-tags query. The results of SHOW are encapsulated in one output collection tags.
 ---

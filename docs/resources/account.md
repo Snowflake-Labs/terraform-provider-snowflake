@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_account Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   The account resource allows you to create and manage Snowflake accounts. For more information, check account documentation https://docs.snowflake.com/en/user-guide/organizations-manage-accounts.
 ---

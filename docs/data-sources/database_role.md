@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_database_role Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

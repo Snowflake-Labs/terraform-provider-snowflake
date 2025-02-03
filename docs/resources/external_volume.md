@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_external_volume Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   Resource used to manage external volume objects. For more information, check external volume documentation https://docs.snowflake.com/en/sql-reference/commands-data-loading#external-volume.
 ---

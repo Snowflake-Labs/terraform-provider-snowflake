@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_tasks Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered tasks. Filtering is aligned with the current possibilities for SHOW TASKS https://docs.snowflake.com/en/sql-reference/sql/show-tasks query. The results of SHOW and SHOW PARAMETERS IN are encapsulated in one output collection tasks.
 ---

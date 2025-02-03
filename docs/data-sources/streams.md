@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_streams Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered streams. Filtering is aligned with the current possibilities for SHOW STREAMS https://docs.snowflake.com/en/sql-reference/sql/show-streams query. The results of SHOW and DESCRIBE are encapsulated in one output collection streams.
 ---

@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_resource_monitor Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage resource monitor objects. For more information, check resource monitor documentation https://docs.snowflake.com/en/user-guide/resource-monitors.
 ---

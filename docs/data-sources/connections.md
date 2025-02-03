@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_connections Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered connections. Filtering is aligned with the current possibilities for SHOW CONNECTIONS https://docs.snowflake.com/en/sql-reference/sql/show-connections query. The results of SHOW is encapsulated in one output collection connections.
 ---

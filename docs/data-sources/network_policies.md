@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_network_policies Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered network policies. Filtering is aligned with the current possibilities for SHOW NETWORK POLICIES https://docs.snowflake.com/en/sql-reference/sql/show-network-policies query (like is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection.
 ---

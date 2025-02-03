@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_tag Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage tags. For more information, check tag documentation https://docs.snowflake.com/en/sql-reference/sql/create-tag. For asssigning tags to Snowflake objects, see tag_association resource ./tag_association.
 ---

@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_stream_on_directory_table Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage streams on directory tables. For more information, check stream documentation https://docs.snowflake.com/en/sql-reference/sql/create-stream.
 ---

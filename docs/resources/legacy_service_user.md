@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_legacy_service_user Resource - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Resource used to manage legacy service user objects. For more information, check user documentation https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management.
 ---
