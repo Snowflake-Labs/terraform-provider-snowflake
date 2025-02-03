@@ -9,7 +9,7 @@ description: |-
 {{- end }}
 ---
 
-!> **Note** Setting a network policy with lowercase letters does not work correctly in Snowflake (see [issue](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3229)). As a workaround, set the network policy with uppercase letters only, or use unsafe_execute with network policy ID wrapped in `'`.
+!> **Note** Setting a network policy with lowercase letters does not work correctly in Snowflake (see [issue](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3229)). As a workaround, set the network policy with uppercase letters only, or use [execute](./execute) with network policy ID wrapped in `'`.
 
 !> **Note** The provider does not detect external changes on security integration type. In this case, remove the integration of wrong type manually with `terraform destroy` and recreate the resource. It will be addressed in the future.
 
@@ -21,7 +21,7 @@ description: |-
 ## Example Usage
 
 {{ tffile .ExampleFile }}
--> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers#new-computed-fully-qualified-name-field-in-resources).
+-> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
 
 {{- end }}

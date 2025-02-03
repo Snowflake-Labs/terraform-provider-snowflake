@@ -1,4 +1,11 @@
-# Grant ownership summary
+---
+page_title: "Grant Ownership"
+subcategory: ""
+description: |-
+
+---
+
+# Grant ownership
 
 The [grant\_ownership resource](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) was introduced in version 0.88.0.
 Since its release, feedback indicates that it can be challenging to understand and use effectively in certain scenarios.
@@ -15,7 +22,7 @@ where granting ownership is crucial and a role-based approach is not feasible.
 After reviewing these use cases, we decided to offer this resource, but with only essential functionalities to keep it simple while meeting necessary requirements.
 
 Over time, we've found it challenging to use, especially when debugging role-based access errors.
-Because of that, we provided [examples of common use cases and error handling](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/grant_ownership_common_use_cases) to help resolve most frustrations that come up when using the grant\_ownership resource.
+Therefore, in the coming week, we will provide examples for common use cases and error handling to help resolve most frustrations that come up when using the grant\_ownership resource.
 
 ## Limitations and workarounds
 

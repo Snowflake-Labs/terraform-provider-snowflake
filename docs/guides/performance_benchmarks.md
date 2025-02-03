@@ -1,3 +1,10 @@
+---
+page_title: "Performance Analysis"
+subcategory: ""
+description: |-
+
+---
+
 # Performance Analysis
 
 This document provides a basic performance analysis of the Snowflake Terraform Provider. It is not a complete analysis, but a basic outline, allowing us to give a few recommendations for the current provider versions. The document’s purpose is to set performance expectations for using the provider and give suggestions to users on how to improve its performance. We decided to perform such benchmarks because of concerns reported by our users ([\#3118](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3118), [\#3169](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3169)). They are related to the performance of large workloads (a few thousand resources). These issues have been reported only in recent versions because of the [changes in the reworked objects](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/c4b1bebce4bc5a81031248592b34af5e80ca2fc1/v1-preparations/CHANGES_BEFORE_V1.md) (more queries and bigger state sizes in some resources).
