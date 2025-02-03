@@ -11,6 +11,8 @@ across different versions.
 
 ### Changed documentation structure
 We added `Preview` and `Stable` categories to the resources and data sources documentation, which clearly separates the preview and stable features in the documentation feature list.
+We moved our technical guides to `guides` directory. This means that all such guides are available natively in the registry, similarly to [Unassigning policies](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies) guide.
+We also updated the links to point to the docs inside the registry. Note that our [Roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md) and [Migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) are available in Github only.
 This is a part of our effort to improve the provider documentation. We are open for your feedback and suggestions.
 
 ## v1.0.1 ➞ v1.0.2
